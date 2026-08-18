@@ -1,0 +1,70 @@
+Configs: {
+	FurnaceOffsetConfig: {
+		DisplayName: Furnace Offset Config
+
+		OffsetX: {
+			Label: Offset X
+			Tooltip: ""
+		}
+
+		OffsetY: {
+			Label: Offset Y
+			Tooltip: ""
+		}
+
+		animationOffset: {
+			Label: animation Offset
+			Tooltip: ""
+		}
+
+		fireCropOffset: {
+			Label: fire Crop Offset
+			Tooltip: ""
+		}
+
+		animationSpeedDivider: {
+			Label: animation Speed Divider
+			Tooltip: ""
+		}
+
+		EnableDebugs: {
+			Label: Enable Debugs
+			Tooltip: ""
+		}
+
+		VItemOffset: {
+			Label: V Item Offset
+			Tooltip: ""
+		}
+	}
+}
+
+Items: {
+	CopperWire: {
+		DisplayName: Copper Wire
+		Tooltip:
+			'''
+			Can be placed
+			Broken with a pickaxe
+			'''
+	}
+
+	TinWire: {
+		DisplayName: Tin Wire
+		Tooltip:
+			'''
+			Can be placed
+			Broken with a pickaxe
+			'''
+	}
+
+	ClockwisePriorityConveyor: {
+		DisplayName: Clockwise Priority Conveyor
+		Tooltip: ""
+	}
+
+	CounterClockwisePriorityConveyor: {
+		DisplayName: Counter Clockwise Priority Conveyor
+		Tooltip: ""
+	}
+}

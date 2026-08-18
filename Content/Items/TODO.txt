@@ -1,0 +1,5 @@
+TODO:
+1- make the gel burner and autohammer as two working machines like the furnace
+2- Make the grid network and let machines connect to the network
+3- make a small icon to make them (Bright -> Classic -> Faded)
+4- Spawn electric arc particles along the wires when the grid shutsdown + electric sounds
