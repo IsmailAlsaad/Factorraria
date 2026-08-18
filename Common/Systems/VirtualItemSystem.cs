@@ -268,6 +268,14 @@ namespace Factorraria.Content.VirtualItems
             return false;
         }
 
+        static Vector2[] Neighbors4 = new Vector2[4]
+        {
+            (0,1),
+            (1,0),
+            (0,-1),
+            (-1,0)
+        };
+
         // Converts loose dropped world items into Virtual Items if they land on a conveyor
         public static void ConvertItemsToVItems()
         {
@@ -285,19 +293,27 @@ namespace Factorraria.Content.VirtualItems
                     continue;
                 }
 
-                int tileX = (int)(worldItem.Center.X / 16f);
+                int centerTileX = (int)(worldItem.Center.X / 16f);
+                int centerTileY = (int)(worldItem.Center.Y / 16f);
 
-                // Target the tile directly beneath the item's center
-                int tileY = (int)(worldItem.Center.Y / 16f) + 1;
+                int tileX;
+                int tileY;
 
-                if (IsConveyorTile(tileX, tileY,out _) == true)
+                for (int i = 0; i < Neighbors4.Length; i++)
                 {
-                    if (IsTileOccupied(tileX, tileY - 1) == false)
-                    {
-                        SpawnVirtualItem(worldItem.type, worldItem.stack, tileX, tileY - 1);
+                    tileX = centerTileX + Neighbors4[i].X;
+                    tileY = centerTileY + Neighbors4[i].Y;
 
-                        worldItem.active = false;
-                        worldItem.TurnToAir();
+                    if (IsConveyorTile(tileX, tileY, out _) == true)
+                    {
+                        if (IsTileOccupied(tileX, tileY) == false)
+                        {
+                            SpawnVirtualItem(worldItem.type, worldItem.stack, centerTileX, centerTileY);
+
+                            worldItem.active = false;
+                            worldItem.TurnToAir();
+                            return;
+                        }
                     }
                 }
             }
@@ -362,10 +378,10 @@ namespace Factorraria.Content.VirtualItems
                 }
 
                 // Convert player hitbox to tile bounds
-                int minTileX = (int)(player.Hitbox.Left / 16f);
-                int maxTileX = (int)(player.Hitbox.Right / 16f);
-                int minTileY = (int)(player.Hitbox.Top / 16f);
-                int maxTileY = (int)(player.Hitbox.Bottom / 16f);
+                int minTileX = (int)(player.Hitbox.Left / 16f) - 1;
+                int maxTileX = (int)(player.Hitbox.Right / 16f) + 1;
+                int minTileY = (int)(player.Hitbox.Top / 16f) - 1;
+                int maxTileY = (int)(player.Hitbox.Bottom / 16f) + 1;
 
                 for (int x = minTileX; x <= maxTileX; x++)
                 {
