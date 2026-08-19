@@ -37,6 +37,12 @@ namespace Factorraria.Content.VirtualItems
         float MaxFallVelocity = 10f;
         float CurrentFallVelocity;
 
+        int MaxConveyorPriority;
+        bool FoundValidPath;
+        bool FoundConveyor;
+        Dictionary<int,Vector2> totalPushDictionary = new Dictionary<int, Vector2>();
+        Vector2 totalPush;
+
         // --- CONSTRUCTOR ---
         public VirtualItem(int type, int stack, int startTileX, int startTileY)
         {
@@ -71,8 +77,6 @@ namespace Factorraria.Content.VirtualItems
         }
 
         // --- TARGET ASSIGNMENT ---
-        bool FoundValidPath;
-        bool FoundConveyor;
         public void SetTargetTile(int newTargetX, int newTargetY)
         {
             // If target hasn't changed, do nothing
@@ -174,11 +178,11 @@ namespace Factorraria.Content.VirtualItems
             [(0, 1)] = new Vector2(-1, 0)
         };
 
-        bool GetConveyorVector(int checkX, int checkY, int offsetX, int offsetY, out Vector2 push)
+        bool GetConveyorVector(int checkX, int checkY, int offsetX, int offsetY, out Vector2 push, out int ConveyorPriority)
         {
             push = Vector2.Zero;
 
-            if (!VirtualItemSystem.IsConveyorTile(checkX, checkY, out bool isClockwise))
+            if (!VirtualItemSystem.IsConveyorTile(checkX, checkY, out bool isClockwise, out ConveyorPriority))
             {
                 return false;
             }
@@ -197,12 +201,13 @@ namespace Factorraria.Content.VirtualItems
             int currentItemPositionX = checkX - offsetX;
             int currentItemPositionY = checkY - offsetY;
 
-            if (IsDestinationTileValid(currentItemPositionX + (int)push.X, currentItemPositionY) && push.X != 0)
+            if (IsTilePassable(currentItemPositionX + (int)push.X, currentItemPositionY) && push.X != 0)
             {
                 push = new Vector2(push.X, 0);
                 FoundValidPath = true;
                 return true;
-            }else if(IsDestinationTileValid(currentItemPositionX, currentItemPositionY + (int)push.Y) && push.Y != 0) 
+            }
+            else if (IsTilePassable(currentItemPositionX, currentItemPositionY + (int)push.Y) && push.Y != 0)
             {
                 push = new Vector2(0, push.Y);
                 FoundValidPath = true;
@@ -214,122 +219,132 @@ namespace Factorraria.Content.VirtualItems
             return false;
         }
 
-        private bool IsDestinationTileValid(int targetX, int targetY)
+        // Scan 3x3 neighborhood (current tile + 8 surrounding neighbors)
+        void ScanNeighborsForConveyors()
         {
-            if (!WorldGen.InWorld(targetX, targetY))
+            for (int offsetX = -1; offsetX <= 1; offsetX++)
             {
-                return false;
+                for (int offsetY = -1; offsetY <= 1; offsetY++)
+                {
+                    int checkX = currentTileX + offsetX;
+                    int checkY = currentTileY + offsetY;
+
+                    // here we assign FoundValidPath = true
+                    if (GetConveyorVector(checkX, checkY, offsetX, offsetY, out Vector2 push, out int conveyorPriority))
+                    {
+                        // We are only assigining MaxConveyorPriority on conveyors that had a valid path, if a higher priority didn't have a valid path it won't affect MaxConveyorPriority
+                        if (MaxConveyorPriority < conveyorPriority)
+                        {
+                            MaxConveyorPriority = conveyorPriority;
+                        }
+
+                        if (!totalPushDictionary.ContainsKey(conveyorPriority))
+                        {
+                            totalPushDictionary.Add(conveyorPriority, Vector2.Zero);
+                        }
+
+                        totalPushDictionary[conveyorPriority] += push;
+                    }
+                }
             }
-
-            // Reject if another VirtualItem occupies or has reserved this tile
-            if (VirtualItemSystem.IsTileOccupied(targetX, targetY, this))
-            {
-                TryMergeWithVirtualItem(VirtualItemSystem.GetVirtualItemAtTile(targetX, targetY));
-                return false;
-            }
-
-            Tile tile = Main.tile[targetX, targetY];
-
-            // Reject solid blocks unless it's an open conveyor tile
-            if (tile.HasTile && Main.tileSolid[tile.TileType] && !isPlatform(targetX,targetY))
-            {
-                return false;
-            }
-
-            return true;
         }
 
-        // Executes vector tallying, destination validation, and constant-speed tile movement
-        public void MoveVirtualItem()
+        //Executes vector tallying and destination validation
+        void CalculateMovementPath()
         {
             // --- RECALCULATION TRIGGER: IDLE / ARRIVED AT TARGET CENTER ---
             if (currentTileX == targetTileX && currentTileY == targetTileY)
             {
+                MaxConveyorPriority = 0;
                 FoundConveyor = false;
                 FoundValidPath = false;
-                Vector2 totalPush = Vector2.Zero;
+                totalPush = Vector2.Zero;
+                totalPushDictionary.Clear();
 
-                // do a while priority >= 0 && FoundValidPath = false
-                // Scan 3x3 neighborhood (current tile + 8 surrounding neighbors)
-                for (int offsetX = -1; offsetX <= 1; offsetX++)
+                // Scan 3x3 neighborhood
+                ScanNeighborsForConveyors();
+
+                if (totalPushDictionary.Count > 0)
                 {
-                    for (int offsetY = -1; offsetY <= 1; offsetY++)
-                    {
-                        int checkX = currentTileX + offsetX;
-                        int checkY = currentTileY + offsetY;
-
-                        if (GetConveyorVector(checkX, checkY, offsetX, offsetY, out Vector2 push) == true)
-                        {
-                            // here we assign FoundValidPath = true, if false we go down priority
-                            totalPush += push;
-                        }
-                    }
+                    totalPush = totalPushDictionary[MaxConveyorPriority];
                 }
 
-                if (IsDestinationTileValid(currentTileX + (int)totalPush.X, currentTileY) && totalPush.X != 0)
+                // Refine push axis using terrain passability (no side-effects)
+                if (IsTilePassable(currentTileX + (int)totalPush.X, currentTileY) && totalPush.X != 0)
                 {
                     totalPush = new Vector2(totalPush.X, 0);
                 }
-                else if (IsDestinationTileValid(currentTileX, currentTileY + (int)totalPush.Y) && totalPush.Y != 0)
+                else if (IsTilePassable(currentTileX, currentTileY + (int)totalPush.Y) && totalPush.Y != 0)
                 {
                     totalPush = new Vector2(0, totalPush.Y);
                 }
 
-                // Normalize tallied forces to a single King's Move step (-1, 0, or 1)
-                int dx = 0;
-                int dy = 0;
-                if (totalPush.X > 0)
-                {
-                    dx = 1;
-                }
-                else if (totalPush.X < 0)
-                {
-                    dx = -1;
-                }
-                if (totalPush.Y > 0)
-                {
-                    dy = 1;
-                }
-                else if (totalPush.Y < 0)
-                {
-                    dy = -1;
-                }
+                int dx = Math.Sign(totalPush.X);
+                int dy = Math.Sign(totalPush.Y);
 
-                // Evaluate destination tile pathing
-                if (dx != 0 || dy != 0)
+                bool movedOrMergedX = false;
+
+                // --- 1. ALWAYS TRY X MOVEMENT FIRST ---
+                if (dx != 0)
                 {
-                    if (IsDestinationTileValid(currentTileX + dx, currentTileY + dy))
+                    int nextX = currentTileX + dx;
+                    VirtualItem targetItemX = VirtualItemSystem.GetVirtualItemAtTile(nextX, currentTileY, this);
+
+                    if (targetItemX != null)
                     {
-                        SetTargetTile(currentTileX + dx, currentTileY + dy);
-
+                        TryMergeWithVirtualItem(targetItemX);
+                        movedOrMergedX = true;
                     }
-                    else if (dx != 0 && dy != 0)
+                    else if (IsTileClear(nextX, currentTileY))
                     {
-                        if (IsDestinationTileValid(currentTileX + dx, currentTileY))
-                        {
-                            SetTargetTile(currentTileX + dx, currentTileY);
-                        }
-                        else if (IsDestinationTileValid(currentTileX, currentTileY + dy))
-                        {
-                            SetTargetTile(currentTileX, currentTileY + dy);
-                        }
+                        SetTargetTile(nextX, currentTileY);
+                        movedOrMergedX = true;
+                    }
+                }
+
+                // --- 2. TRY Y MOVEMENT ONLY IF X WAS ZERO OR BLOCKED ---
+                if (!movedOrMergedX && dy != 0)
+                {
+                    int nextY = currentTileY + dy;
+                    VirtualItem targetItemY = VirtualItemSystem.GetVirtualItemAtTile(currentTileX, nextY, this);
+
+                    if (targetItemY != null)
+                    {
+                        TryMergeWithVirtualItem(targetItemY);
+                    }
+                    else if (IsTileClear(currentTileX, nextY))
+                    {
+                        SetTargetTile(currentTileX, nextY);
                     }
                 }
             }
 
+            // --- GRAVITY CHECK ---
             if (FoundValidPath || FoundConveyor)
             {
                 CurrentFallVelocity = 1f;
             }
-            else if(IsDestinationTileValid(currentTileX, currentTileY + 1) && !isPlatform(currentTileX, currentTileY + 1))
+            else if (IsTilePassable(currentTileX, currentTileY + 1) && !isPlatform(currentTileX, currentTileY + 1))
             {
-                SetTargetTile(currentTileX, currentTileY + 1);
-                CurrentFallVelocity = Math.Clamp(CurrentFallVelocity + Gravity, 0f, MaxFallVelocity);
+                VirtualItem targetItem = VirtualItemSystem.GetVirtualItemAtTile(currentTileX, currentTileY + 1, this);
+                
+                if (!TryMergeWithVirtualItem(targetItem) && IsTileClear(currentTileX, currentTileY + 1))
+                {
+                    SetTargetTile(currentTileX, currentTileY + 1);
+
+                    CurrentFallVelocity = Math.Clamp(CurrentFallVelocity + Gravity, 0f, MaxFallVelocity);
+                }
             }
             else
             {
                 CurrentFallVelocity = 1f;
             }
+        }
+
+        // Execute constant-speed tile movement
+        public void MoveVirtualItem()
+        {
+            CalculateMovementPath();
 
             // --- CONSTANT-SPEED MOVEMENT (NO INTERMEDIATE RECALCULATIONS) ---
             float targetPixelX = (targetTileX * 16) + 8;
@@ -354,6 +369,28 @@ namespace Factorraria.Content.VirtualItems
                 direction.Normalize();
                 worldPosition = worldPosition + (direction * moveSpeed * CurrentFallVelocity);
             }
+        }
+        // Checks physical terrain and world bounds
+        private bool IsTilePassable(int targetX, int targetY)
+        {
+            if (!WorldGen.InWorld(targetX, targetY))
+            {
+                return false;
+            }
+
+            Tile tile = Main.tile[targetX, targetY];
+            if (tile.HasTile && Main.tileSolid[tile.TileType] && !isPlatform(targetX, targetY))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        // Checks terrain AND verifies the tile has no item occupied or reserved
+        private bool IsTileClear(int targetX, int targetY)
+        {
+            return IsTilePassable(targetX, targetY) && !VirtualItemSystem.IsTileOccupied(targetX, targetY, this);
         }
 
         bool isPlatform(int tileX,int tileY)
@@ -433,14 +470,14 @@ namespace Factorraria.Content.VirtualItems
 
                 Tile adjTile = Main.tile[adjX, adjY];
 
-                if (adjTile.HasTile && VirtualItemSystem.IsConveyorTile(adjX, adjY, out bool isClockwise))
+                if (adjTile.HasTile && VirtualItemSystem.IsConveyorTile(adjX, adjY, out bool isClockwise, out _))
                 {
                     // World center of the nth neighbor tile (16px per tile + 8px center offset)
                     Vector2 conveyorWorldCenter = new Vector2(adjX * 16 + 8, adjY * 16 + 8);
 
                     // Fetch the vector from your dictionary (using frame, state key, or tile key)
-                    GetConveyorVector(adjX, adjY, offset.X, offset.Y, out Vector2 pushVector);
-
+                    GetConveyorVector(adjX, adjY, offset.X, offset.Y, out Vector2 pushVector, out _);
+                    
                     // Convert world coords to screen space for drawing
                     Vector2 startScreenPos = conveyorWorldCenter - Main.screenPosition;
                     Vector2 endScreenPos = startScreenPos + (pushVector * 16f); // Scale length as needed

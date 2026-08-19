@@ -358,9 +358,9 @@ namespace Factorraria.Content.VirtualItems
                     tileX = centerTileX + (int)Neighbors4[k].X;
                     tileY = centerTileY + (int)Neighbors4[k].Y;
 
-                    if (IsConveyorTile(tileX, tileY, out _) == true)
+                    if (IsConveyorTile(tileX, tileY, out _,out _))
                     {
-                        if (IsTileOccupied(tileX, tileY) == false)
+                        if (!IsTileOccupied(tileX, tileY))
                         {
                             SpawnVirtualItem(worldItem.type, worldItem.stack, centerTileX, centerTileY);
 
@@ -475,8 +475,9 @@ namespace Factorraria.Content.VirtualItems
         }
 
         // Checks if a tile coordinate is a valid conveyor belt
-        public static bool IsConveyorTile(int tileX, int tileY, out bool isClockwise)
+        public static bool IsConveyorTile(int tileX, int tileY, out bool isClockwise, out int ConveyorPriority)
         {
+            ConveyorPriority = 0;
             isClockwise = true;
             if (WorldGen.InWorld(tileX, tileY) == false)
             {
@@ -505,12 +506,14 @@ namespace Factorraria.Content.VirtualItems
             if (tile.TileType == ModContent.TileType<ClockwisePriorityConveyorTile>())
             {
                 isClockwise = true;
+                ConveyorPriority = 1;
                 return true;
             }
 
             if (tile.TileType == ModContent.TileType<CounterClockwisePriorityConveyorTile>())
             {
                 isClockwise = false;
+                ConveyorPriority = 1;
                 return true;
             }
 
@@ -558,7 +561,7 @@ namespace Factorraria.Content.VirtualItems
                     int scanX = item.currentTileX + offsetX;
                     int scanY = item.currentTileY + offsetY;
 
-                    if (VirtualItemSystem.IsConveyorTile(scanX, scanY, out _) == true)
+                    if (IsConveyorTile(scanX, scanY, out _, out _))
                     {
                         Vector2 scanScreen = new Vector2(scanX * 16, scanY * 16) - Main.screenPosition;
                         Rectangle scanRect = new Rectangle((int)scanScreen.X, (int)scanScreen.Y, 16, 16);
