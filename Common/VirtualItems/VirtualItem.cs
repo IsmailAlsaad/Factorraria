@@ -383,6 +383,13 @@ namespace Factorraria.Content.VirtualItems
                 return false;
             }
 
+            // Wait until the two are about touching
+            float distance = Vector2.Distance(worldPosition, targetItem.worldPosition);
+            if(distance > 17f)
+            {
+                return false;
+            }
+
             // Calculate how much space remains in the target item's stack
             int spaceRemaining = sampleTarget.maxStack - targetItem.stackSize;
             if (spaceRemaining <= 0)
