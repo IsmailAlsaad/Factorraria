@@ -166,9 +166,9 @@ namespace Factorraria.Content.VirtualItems
         {
             new Vector2(0f, 0f),      // Base sprite
             new Vector2(6f, 6f),    // Layer 2
-            new Vector2(-6f, 6f),     // Layer 3
-            new Vector2(-3f, -6f),    // Layer 4
-            new Vector2(3f, -6f),      // Layer 5
+            new Vector2(-6f, 4f),     // Layer 3
+            new Vector2(-3f, -4f),    // Layer 4
+            new Vector2(3f, -4f),      // Layer 5
         };
 
         private static readonly int[] PileLayerThreshold = new int[]
