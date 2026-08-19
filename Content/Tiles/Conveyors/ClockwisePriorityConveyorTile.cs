@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Content.VirtualItems;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
@@ -41,6 +42,41 @@ namespace Factorraria.Content.Tiles.Conveyors
                 {
                     frame = 0;
                 }
+            }
+        }
+
+        public override bool RightClick(int i, int j)
+        {
+            Player player = Main.LocalPlayer;
+            Item heldItem = player.HeldItem;
+
+            // Reject empty hand / air items
+            if (heldItem == null || heldItem.IsAir || heldItem.type == ItemID.None)
+            {
+                return false;
+            }
+
+            // Apply filter across entire network group
+            if (VirtualItemSystem.SetConveyorFilter(i, j, heldItem.type))
+            {
+                // Visual feedback sound
+                Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick, new Microsoft.Xna.Framework.Vector2(i * 16, j * 16));
+                return true;
+            }
+
+            return false;
+        }
+
+        public override void PlaceInWorld(int i, int j, Item item)
+        {
+            VirtualItemSystem.OnPriorityConveyorPlaced(i, j);
+        }
+
+        public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
+        {
+            if (!fail && !effectOnly)
+            {
+                VirtualItemSystem.OnPriorityConveyorKilled(i, j);
             }
         }
     }

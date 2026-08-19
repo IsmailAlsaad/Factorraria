@@ -22,6 +22,7 @@ namespace Factorraria.Content.VirtualItems
 
         // Fast O(1) position lookup dictionary
         public static Dictionary<Point, VirtualItem> tileItemMap = new Dictionary<Point, VirtualItem>();
+        public static Dictionary<Point, PriorityConveyorNetwork> ConveyorNetworkMap { get; private set; } = new Dictionary<Point, PriorityConveyorNetwork>();
 
         // --- ITEM ID SAFETY GUARD ---
         public static bool IsValidItemID(int type)
@@ -96,6 +97,22 @@ namespace Factorraria.Content.VirtualItems
             }
 
             tag["virtualItemsData"] = savedItemList;
+
+            List<Point> filterPoints = new List<Point>();
+            List<int> filterIds = new List<int>();
+
+            // Only save tiles that actually have an active filter set
+            foreach (var pair in ConveyorNetworkMap)
+            {
+                if (pair.Value.FilteredItemId != ItemID.None)
+                {
+                    filterPoints.Add(pair.Key);
+                    filterIds.Add(pair.Value.FilteredItemId);
+                }
+            }
+
+            tag["PriorityFilterPoints"] = filterPoints;
+            tag["PriorityFilterIds"] = filterIds;
         }
 
         // --- LOAD DATA FROM WORLD ---
@@ -136,6 +153,26 @@ namespace Factorraria.Content.VirtualItems
                         item.worldPosition.Y = posY;
 
                         item.SetTargetTile(targetX, targetY);
+                    }
+                }
+            }
+
+            ConveyorNetworkMap.Clear();
+
+            if (tag.ContainsKey("PriorityFilterPoints") && tag.ContainsKey("PriorityFilterIds"))
+            {
+                IList<Point> points = tag.Get<List<Point>>("PriorityFilterPoints");
+                IList<int> ids = tag.Get<List<int>>("PriorityFilterIds");
+
+                for (int i = 0; i < points.Count; i++)
+                {
+                    Point pt = points[i];
+                    int filterId = ids[i];
+
+                    // Reconstruct networks and re-apply saved filters on world load
+                    if (IsPriorityConveyorTile(pt.X, pt.Y))
+                    {
+                        SetConveyorFilter(pt.X, pt.Y, filterId);
                     }
                 }
             }
@@ -180,7 +217,7 @@ namespace Factorraria.Content.VirtualItems
             500,  // stack < 100 => Layer 5
         };
 
-        // --- DRAWING ITEMS IN WORLD ---
+        // --- DRAWING ITEMS & FILTER ICONS IN WORLD ---
         public override void PostDrawTiles()
         {
             Main.spriteBatch.Begin(
@@ -193,55 +230,102 @@ namespace Factorraria.Content.VirtualItems
                 Main.GameViewMatrix.TransformationMatrix
             );
 
-            // Screen bounds in world space with a 64px safety margin for item texture sizes
             const float padding = 128f;
             float minX = Main.screenPosition.X - padding;
             float maxX = Main.screenPosition.X + Main.screenWidth + padding;
             float minY = Main.screenPosition.Y - padding;
             float maxY = Main.screenPosition.Y + Main.screenHeight + padding;
 
+            // --- 1. DRAW FILTER ICONS ON PRIORITY CONVEYORS ---
+            HashSet<PriorityConveyorNetwork> drawnNetworks = new HashSet<PriorityConveyorNetwork>();
+
+            foreach (var pair in ConveyorNetworkMap)
+            {
+                PriorityConveyorNetwork network = pair.Value;
+
+                if (!IsValidItemID(network.FilteredItemId) || drawnNetworks.Contains(network))
+                {
+                    continue;
+                }
+
+                drawnNetworks.Add(network);
+
+                Texture2D filterTexture = TextureAssets.Item[network.FilteredItemId].Value;
+                Rectangle sourceRect = Main.itemAnimations[network.FilteredItemId] != null
+                    ? new Rectangle(0, 0, filterTexture.Width, filterTexture.Height / Main.itemAnimations[network.FilteredItemId].FrameCount)
+                    : filterTexture.Frame();
+
+                Vector2 filterOrigin = sourceRect.Size() / 2f;
+
+                // Scale icon down to fit within a 16x16 tile space (0.5f scale for standard 32x32 textures)
+                //float maxDimension = Math.Max(sourceRect.Width, sourceRect.Height);
+                //float iconScale = maxDimension > 0 ? (12f / maxDimension) : 0.5f;
+                float iconScale = 0.5f;
+
+                foreach (Point tilePt in network.Tiles)
+                {
+                    float worldX = (tilePt.X * 16) + 8;
+                    float worldY = (tilePt.Y * 16) + 8;
+
+                    // Viewport culling
+                    if (worldX < minX || worldX > maxX || worldY < minY || worldY > maxY)
+                    {
+                        continue;
+                    }
+
+                    Vector2 screenPos = new Vector2(worldX, worldY) - Main.screenPosition;
+                    Color lightColor = Lighting.GetColor(tilePt.X, tilePt.Y);
+
+                    // Draw semi-transparent background backing or direct icon render
+                    Main.spriteBatch.Draw(
+                        filterTexture,
+                        screenPos,
+                        sourceRect,
+                        lightColor * 0.85f,
+                        0f,
+                        filterOrigin,
+                        iconScale,
+                        SpriteEffects.None,
+                        0f
+                    );
+                }
+            }
+
+            // --- 2. DRAW VIRTUAL ITEMS ---
             for (int i = 0; i < virtualItems.Count; i++)
             {
                 VirtualItem item = virtualItems[i];
 
                 if (!item.active)
-                {
                     continue;
-                }
 
-                // --- CULLING CHECK ---
-                // Skip items outside the active camera viewport
                 if (item.worldPosition.X < minX || item.worldPosition.X > maxX ||
                     item.worldPosition.Y < minY || item.worldPosition.Y > maxY)
                 {
                     continue;
                 }
 
-                // Debug visualizers
                 FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
-                if (config.EnableDebugs)
+                if (config != null && config.EnableDebugs)
                 {
                     DrawItemDebug(Main.spriteBatch, item);
                     item.DrawAdjacentConveyorVectors(Main.spriteBatch, item.currentTileX, item.currentTileY);
                 }
 
-                // Get single-frame source rectangle and texture
                 Texture2D texture = TextureAssets.Item[item.itemType].Value;
                 Rectangle sourceRect = item.GetSourceRectangle(texture);
 
                 Vector2 screenPosition = item.worldPosition - Main.screenPosition;
                 Vector2 origin = sourceRect.Size() / 2f;
 
-                // Tile lighting lookups only run for visible items
                 int tileX = (int)(item.worldPosition.X / 16f);
                 int tileY = (int)(item.worldPosition.Y / 16f);
                 Color lightColor = Lighting.GetColor(tileX, tileY);
 
-                // Determine stack visual depth
                 int drawCount = 1;
                 for (int j = 0; j < PileLayerThreshold.Length; j++)
                 {
-                    if(item.stackSize > PileLayerThreshold[j])
+                    if (item.stackSize > PileLayerThreshold[j])
                     {
                         drawCount = Math.Clamp(drawCount + 1,1,PileOffsets.Length);
                     }
@@ -515,6 +599,165 @@ namespace Factorraria.Content.VirtualItems
                 isClockwise = false;
                 ConveyorPriority = 1;
                 return true;
+            }
+
+            return false;
+        }
+
+        // --- PRIORITY CONVEYOR NETWORK SYSTEM ---
+
+        // 4 Cardinal Directions (Up, Down, Left, Right)
+        private static readonly Point[] CardinalOffsets = new Point[]
+        {
+            new Point(0, -1), // North
+            new Point(0, 1),  // South
+            new Point(-1, 0), // West
+            new Point(1, 0)   // East
+        };
+
+        public static bool IsPriorityConveyorTile(int x, int y)
+        {
+            if (!WorldGen.InWorld(x, y))
+                return false;
+
+            Tile tile = Main.tile[x, y];
+            if (!tile.HasTile)
+                return false;
+
+            // TODO: Replace 'ModContent.TileType<PriorityConveyorTile>()' with your actual Priority Conveyor TileType
+            return IsConveyorTile(x, y, out _, out int priority) && priority > 0;
+        }
+
+        /// <summary>
+        /// Rebuilds or merges connected priority conveyors into a single PriorityConveyorNetwork using 4-cardinal BFS.
+        /// </summary>
+        public static PriorityConveyorNetwork RebuildNetworkAt(int startX, int startY)
+        {
+            Point startPt = new Point(startX, startY);
+
+            if (!IsPriorityConveyorTile(startX, startY))
+            {
+                return null;
+            }
+
+            // Determine filter if any neighboring existing network already has one
+            int existingFilter = ItemID.None;
+
+            // 4-Cardinal BFS
+            Queue<Point> queue = new Queue<Point>();
+            HashSet<Point> visited = new HashSet<Point>();
+
+            queue.Enqueue(startPt);
+            visited.Add(startPt);
+
+            while (queue.Count > 0)
+            {
+                Point current = queue.Dequeue();
+
+                if (ConveyorNetworkMap.TryGetValue(current, out PriorityConveyorNetwork existingNet))
+                {
+                    if (existingNet.FilteredItemId != ItemID.None)
+                    {
+                        existingFilter = existingNet.FilteredItemId;
+                    }
+                }
+
+                foreach (Point offset in CardinalOffsets)
+                {
+                    Point neighbor = new Point(current.X + offset.X, current.Y + offset.Y);
+
+                    if (!visited.Contains(neighbor) && IsPriorityConveyorTile(neighbor.X, neighbor.Y))
+                    {
+                        visited.Add(neighbor);
+                        queue.Enqueue(neighbor);
+                    }
+                }
+            }
+
+            // Instantiate new network containing all visited tiles
+            PriorityConveyorNetwork newNetwork = new PriorityConveyorNetwork(existingFilter);
+            foreach (Point pt in visited)
+            {
+                newNetwork.Tiles.Add(pt);
+                ConveyorNetworkMap[pt] = newNetwork;
+            }
+
+            return newNetwork;
+        }
+
+        /// <summary>
+        /// Triggered when a priority conveyor tile is placed.
+        /// </summary>
+        public static void OnPriorityConveyorPlaced(int x, int y)
+        {
+            RebuildNetworkAt(x, y);
+        }
+
+        /// <summary>
+        /// Triggered when a priority conveyor tile is broken.
+        /// Removes the tile and re-evaluates graph splits along 4 cardinal neighbors.
+        /// </summary>
+        public static void OnPriorityConveyorKilled(int x, int y)
+        {
+            Point removedPoint = new Point(x, y);
+
+            if (!ConveyorNetworkMap.TryGetValue(removedPoint, out PriorityConveyorNetwork oldNetwork))
+            {
+                return;
+            }
+
+            int previousFilter = oldNetwork.FilteredItemId;
+
+            // Remove tile from old network and map
+            oldNetwork.Tiles.Remove(removedPoint);
+            ConveyorNetworkMap.Remove(removedPoint);
+
+            // Re-evaluate 4 cardinal neighbors in case the network split into isolated groups
+            foreach (Point offset in CardinalOffsets)
+            {
+                Point neighbor = new Point(x + offset.X, y + offset.Y);
+
+                if (IsPriorityConveyorTile(neighbor.X, neighbor.Y))
+                {
+                    PriorityConveyorNetwork splitNet = RebuildNetworkAt(neighbor.X, neighbor.Y);
+                    if (splitNet != null && previousFilter != ItemID.None)
+                    {
+                        splitNet.FilteredItemId = previousFilter;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Assigns item filter to the network belonging to tile (x, y).
+        /// </summary>
+        public static bool SetConveyorFilter(int x, int y, int itemId)
+        {
+            if (!ConveyorNetworkMap.TryGetValue(new Point(x, y), out PriorityConveyorNetwork network))
+            {
+                network = RebuildNetworkAt(x, y);
+            }
+
+            if (network != null)
+            {
+                network.FilteredItemId = itemId;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Helper to query if a tile has an active network filter.
+        /// </summary>
+        public static bool TryGetConveyorFilter(int tileX, int tileY, out int filterItemId)
+        {
+            filterItemId = ItemID.None;
+
+            if (ConveyorNetworkMap.TryGetValue(new Point(tileX, tileY), out PriorityConveyorNetwork network))
+            {
+                filterItemId = network.FilteredItemId;
+                return filterItemId != ItemID.None;
             }
 
             return false;
