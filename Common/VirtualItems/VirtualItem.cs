@@ -224,6 +224,7 @@ namespace Factorraria.Content.VirtualItems
             // Reject if another VirtualItem occupies or has reserved this tile
             if (VirtualItemSystem.IsTileOccupied(targetX, targetY, this))
             {
+                TryMergeWithVirtualItem(VirtualItemSystem.GetVirtualItemAtTile(targetX, targetY));
                 return false;
             }
 
@@ -365,6 +366,43 @@ namespace Factorraria.Content.VirtualItems
             Tile tile = Main.tile[tileX, tileY];
 
             return tile.HasTile && Main.tileSolidTop[tile.TileType];
+        }
+
+        public bool TryMergeWithVirtualItem(VirtualItem targetItem)
+        {
+            if (targetItem == null || !targetItem.active || targetItem == this)
+            {
+                return false;
+            }
+
+            Item sampleTarget = ContentSamples.ItemsByType[targetItem.itemType];
+
+            // Verify matching types
+            if (targetItem.itemType != itemType)
+            {
+                return false;
+            }
+
+            // Calculate how much space remains in the target item's stack
+            int spaceRemaining = sampleTarget.maxStack - targetItem.stackSize;
+            if (spaceRemaining <= 0)
+            {
+                return false;
+            }
+
+            // Partial or full transfer logic
+            int transferAmount = Math.Min(stackSize, spaceRemaining);
+            targetItem.stackSize += transferAmount;
+            stackSize -= transferAmount;
+
+            // Deactivate and remove if stack is emptied
+            if (stackSize <= 0)
+            {
+                Remove();
+                return true;
+            }
+
+            return false;
         }
 
         // DEBUG
