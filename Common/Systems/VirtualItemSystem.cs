@@ -258,9 +258,8 @@ namespace Factorraria.Content.VirtualItems
                 Vector2 filterOrigin = sourceRect.Size() / 2f;
 
                 // Scale icon down to fit within a 16x16 tile space (0.5f scale for standard 32x32 textures)
-                //float maxDimension = Math.Max(sourceRect.Width, sourceRect.Height);
-                //float iconScale = maxDimension > 0 ? (12f / maxDimension) : 0.5f;
-                float iconScale = 0.5f;
+                float maxDimension = Math.Max(sourceRect.Width, sourceRect.Height);
+                float iconScale = maxDimension > 0 ? (12f / maxDimension) : 0.5f;
 
                 foreach (Point tilePt in network.Tiles)
                 {
