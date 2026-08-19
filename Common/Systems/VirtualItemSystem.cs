@@ -174,31 +174,46 @@ namespace Factorraria.Content.VirtualItems
                 Main.GameViewMatrix.TransformationMatrix
             );
 
+            // Screen bounds in world space with a 64px safety margin for item texture sizes
+            const float padding = 128f;
+            float minX = Main.screenPosition.X - padding;
+            float maxX = Main.screenPosition.X + Main.screenWidth + padding;
+            float minY = Main.screenPosition.Y - padding;
+            float maxY = Main.screenPosition.Y + Main.screenHeight + padding;
+
             for (int i = 0; i < virtualItems.Count; i++)
             {
                 VirtualItem item = virtualItems[i];
 
-                if (item.active == false)
+                if (!item.active)
                 {
                     continue;
                 }
 
-                //
+                // --- CULLING CHECK ---
+                // Skip items outside the active camera viewport
+                if (item.worldPosition.X < minX || item.worldPosition.X > maxX ||
+                    item.worldPosition.Y < minY || item.worldPosition.Y > maxY)
+                {
+                    continue;
+                }
+
+                // Debug visualizers
                 FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
                 if (config.EnableDebugs)
                 {
                     DrawItemDebug(Main.spriteBatch, item);
-                    item.DrawAdjacentConveyorVectors(Main.spriteBatch,item.currentTileX,item.currentTileY);
+                    item.DrawAdjacentConveyorVectors(Main.spriteBatch, item.currentTileX, item.currentTileY);
                 }
-                //
 
-                // Get the single-frame source rectangle and texture
+                // Get single-frame source rectangle and texture
                 Texture2D texture = TextureAssets.Item[item.itemType].Value;
                 Rectangle sourceRect = item.GetSourceRectangle(texture);
 
                 Vector2 screenPosition = item.worldPosition - Main.screenPosition;
                 Vector2 origin = sourceRect.Size() / 2f;
 
+                // Tile lighting lookups only run for visible items
                 int tileX = (int)(item.worldPosition.X / 16f);
                 int tileY = (int)(item.worldPosition.Y / 16f);
                 Color lightColor = Lighting.GetColor(tileX, tileY);
@@ -211,7 +226,7 @@ namespace Factorraria.Content.VirtualItems
                     lightColor,
                     0f,
                     origin,
-                    1f, // Native 1:1 scale
+                    1f,
                     SpriteEffects.None,
                     0f
                 );
