@@ -270,10 +270,10 @@ namespace Factorraria.Content.VirtualItems
 
         static Vector2[] Neighbors4 = new Vector2[4]
         {
-            (0,1),
-            (1,0),
-            (0,-1),
-            (-1,0)
+            new Vector2(0,1),
+            new Vector2(1,0),
+            new Vector2(0,-1),
+            new Vector2(-1,0)
         };
 
         // Converts loose dropped world items into Virtual Items if they land on a conveyor
@@ -299,10 +299,10 @@ namespace Factorraria.Content.VirtualItems
                 int tileX;
                 int tileY;
 
-                for (int i = 0; i < Neighbors4.Length; i++)
+                for (int k = 0; k < Neighbors4.Length; k++)
                 {
-                    tileX = centerTileX + Neighbors4[i].X;
-                    tileY = centerTileY + Neighbors4[i].Y;
+                    tileX = centerTileX + (int)Neighbors4[k].X;
+                    tileY = centerTileY + (int)Neighbors4[k].Y;
 
                     if (IsConveyorTile(tileX, tileY, out _) == true)
                     {

@@ -33,6 +33,9 @@ namespace Factorraria.Content.VirtualItems
         // --- MOVEMENT & POSITION ---
         public Vector2 worldPosition;  // Visual world position in pixels
         public float moveSpeed;        // Speed in pixels per frame
+        float Gravity = 0.07f;
+        float MaxFallVelocity = 10f;
+        float CurrentFallVelocity;
 
         // --- CONSTRUCTOR ---
         public VirtualItem(int type, int stack, int startTileX, int startTileY)
@@ -68,6 +71,7 @@ namespace Factorraria.Content.VirtualItems
         }
 
         // --- TARGET ASSIGNMENT ---
+        bool FoundValidPath;
         public void SetTargetTile(int newTargetX, int newTargetY)
         {
             // If target hasn't changed, do nothing
@@ -191,10 +195,12 @@ namespace Factorraria.Content.VirtualItems
             if (IsDestinationTileValid(currentItemPositionX + (int)push.X, currentItemPositionY) && push.X != 0)
             {
                 push = new Vector2(push.X, 0);
+                FoundValidPath = true;
                 return true;
             }else if(IsDestinationTileValid(currentItemPositionX, currentItemPositionY + (int)push.Y) && push.Y != 0) 
             {
                 push = new Vector2(0, push.Y);
+                FoundValidPath = true;
                 return true;
             }
 
@@ -233,6 +239,7 @@ namespace Factorraria.Content.VirtualItems
             // --- RECALCULATION TRIGGER: IDLE / ARRIVED AT TARGET CENTER ---
             if (currentTileX == targetTileX && currentTileY == targetTileY)
             {
+                FoundValidPath = false;
                 Vector2 totalPush = Vector2.Zero;
 
                 // do a while priority >= 0 && FoundValidPath = false
@@ -284,22 +291,37 @@ namespace Factorraria.Content.VirtualItems
                 // Evaluate destination tile pathing
                 if (dx != 0 || dy != 0)
                 {
-                    if (IsDestinationTileValid(currentTileX + dx, currentTileY + dy) == true)
+                    if (IsDestinationTileValid(currentTileX + dx, currentTileY + dy))
                     {
                         SetTargetTile(currentTileX + dx, currentTileY + dy);
+
                     }
                     else if (dx != 0 && dy != 0)
                     {
-                        if (IsDestinationTileValid(currentTileX + dx, currentTileY) == true)
+                        if (IsDestinationTileValid(currentTileX + dx, currentTileY))
                         {
                             SetTargetTile(currentTileX + dx, currentTileY);
                         }
-                        else if (IsDestinationTileValid(currentTileX, currentTileY + dy) == true)
+                        else if (IsDestinationTileValid(currentTileX, currentTileY + dy))
                         {
                             SetTargetTile(currentTileX, currentTileY + dy);
                         }
                     }
                 }
+            }
+
+            if (FoundValidPath)
+            {
+                CurrentFallVelocity = 1f;
+            }
+            else if(IsDestinationTileValid(currentTileX, currentTileY + 1))
+            {
+                SetTargetTile(currentTileX, currentTileY + 1);
+                CurrentFallVelocity = Math.Clamp(CurrentFallVelocity + Gravity, 0f, MaxFallVelocity);
+            }
+            else
+            {
+                CurrentFallVelocity = 1f;
             }
 
             // --- CONSTANT-SPEED MOVEMENT (NO INTERMEDIATE RECALCULATIONS) ---
@@ -309,7 +331,7 @@ namespace Factorraria.Content.VirtualItems
 
             float distanceToTarget = Vector2.Distance(worldPosition, targetPixelPosition);
 
-            if (distanceToTarget <= moveSpeed)
+            if (distanceToTarget <= moveSpeed * CurrentFallVelocity)
             {
                 if (currentTileX != targetTileX || currentTileY != targetTileY)
                 {
@@ -323,7 +345,7 @@ namespace Factorraria.Content.VirtualItems
             {
                 Vector2 direction = targetPixelPosition - worldPosition;
                 direction.Normalize();
-                worldPosition = worldPosition + (direction * moveSpeed);
+                worldPosition = worldPosition + (direction * moveSpeed * CurrentFallVelocity);
             }
         }
 
