@@ -72,6 +72,7 @@ namespace Factorraria.Content.VirtualItems
 
         // --- TARGET ASSIGNMENT ---
         bool FoundValidPath;
+        bool FoundConveyor;
         public void SetTargetTile(int newTargetX, int newTargetY)
         {
             // If target hasn't changed, do nothing
@@ -79,6 +80,8 @@ namespace Factorraria.Content.VirtualItems
             {
                 return;
             }
+
+            VirtualItemSystem.UnregisterItemTile(new Point(targetTileX, targetTileY), this);
 
             // Set new target coordinates
             targetTileX = newTargetX;
@@ -180,6 +183,8 @@ namespace Factorraria.Content.VirtualItems
                 return false;
             }
 
+            FoundConveyor = true;
+
             if (isClockwise)
             {
                 push = ClockwiseConveyorPushTable[(offsetX, offsetY)];
@@ -225,7 +230,7 @@ namespace Factorraria.Content.VirtualItems
             Tile tile = Main.tile[targetX, targetY];
 
             // Reject solid blocks unless it's an open conveyor tile
-            if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
+            if (tile.HasTile && Main.tileSolid[tile.TileType] && !isPlatform(targetX,targetY))
             {
                 return false;
             }
@@ -239,6 +244,7 @@ namespace Factorraria.Content.VirtualItems
             // --- RECALCULATION TRIGGER: IDLE / ARRIVED AT TARGET CENTER ---
             if (currentTileX == targetTileX && currentTileY == targetTileY)
             {
+                FoundConveyor = false;
                 FoundValidPath = false;
                 Vector2 totalPush = Vector2.Zero;
 
@@ -310,11 +316,11 @@ namespace Factorraria.Content.VirtualItems
                 }
             }
 
-            if (FoundValidPath)
+            if (FoundValidPath || FoundConveyor)
             {
                 CurrentFallVelocity = 1f;
             }
-            else if(IsDestinationTileValid(currentTileX, currentTileY + 1))
+            else if(IsDestinationTileValid(currentTileX, currentTileY + 1) && !isPlatform(currentTileX, currentTileY + 1))
             {
                 SetTargetTile(currentTileX, currentTileY + 1);
                 CurrentFallVelocity = Math.Clamp(CurrentFallVelocity + Gravity, 0f, MaxFallVelocity);
@@ -347,6 +353,18 @@ namespace Factorraria.Content.VirtualItems
                 direction.Normalize();
                 worldPosition = worldPosition + (direction * moveSpeed * CurrentFallVelocity);
             }
+        }
+
+        bool isPlatform(int tileX,int tileY)
+        {
+            if (!WorldGen.InWorld(tileX, tileY))
+            {
+                return false;
+            }
+
+            Tile tile = Main.tile[tileX, tileY];
+
+            return tile.HasTile && Main.tileSolidTop[tile.TileType];
         }
 
         // DEBUG
