@@ -1,6 +1,0 @@
-TODO:
-1- Furnace is emitting light when not smelting
-2- Add particles when is smelting
-3- Cycling inventory silhouettes for valid items on the slots
-4- Revealing the product slot dynamically in UI
-5- Add a pop up text on hover of the slot a text that says "Fuel slot" or "Input slot" near the mouse
