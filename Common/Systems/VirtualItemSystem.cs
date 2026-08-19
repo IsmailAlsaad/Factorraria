@@ -161,6 +161,25 @@ namespace Factorraria.Content.VirtualItems
             }
         }
 
+        // Offsets (in pixels) for stacking sprites upward into a pile
+        private static readonly Vector2[] PileOffsets = new Vector2[]
+        {
+            new Vector2(0f, 0f),      // Base sprite
+            new Vector2(6f, 6f),    // Layer 2
+            new Vector2(-6f, 6f),     // Layer 3
+            new Vector2(-3f, -6f),    // Layer 4
+            new Vector2(3f, -6f),      // Layer 5
+        };
+
+        private static readonly int[] PileLayerThreshold = new int[]
+        {
+            1,    // stack = 1 => Layer 1
+            10,    // stack < 2 => Layer 2
+            50,   // stack < 10 => Layer 3
+            100,   // stack < 50 => Layer 4
+            500,  // stack < 100 => Layer 5
+        };
+
         // --- DRAWING ITEMS IN WORLD ---
         public override void PostDrawTiles()
         {
@@ -218,18 +237,37 @@ namespace Factorraria.Content.VirtualItems
                 int tileY = (int)(item.worldPosition.Y / 16f);
                 Color lightColor = Lighting.GetColor(tileX, tileY);
 
-                // Render at native size (1f scale)
-                Main.spriteBatch.Draw(
-                    texture,
-                    screenPosition,
-                    sourceRect,
-                    lightColor,
-                    0f,
-                    origin,
-                    1f,
-                    SpriteEffects.None,
-                    0f
-                );
+                // Determine stack visual depth
+                int drawCount = 1;
+                for (int j = 0; j < PileLayerThreshold.Length; j++)
+                {
+                    if(item.stackSize > PileLayerThreshold[j])
+                    {
+                        drawCount = Math.Clamp(drawCount + 1,1,PileOffsets.Length);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // Draw layered pile from bottom to top
+                for (int layer = drawCount - 1; layer >= 0; layer--)
+                {
+                    Vector2 layerPosition = screenPosition + PileOffsets[layer];
+
+                    Main.spriteBatch.Draw(
+                        texture,
+                        layerPosition,
+                        sourceRect,
+                        lightColor,
+                        0f,
+                        origin,
+                        1f,
+                        SpriteEffects.None,
+                        0f
+                    );
+                }
             }
 
             Main.spriteBatch.End();
@@ -298,7 +336,8 @@ namespace Factorraria.Content.VirtualItems
             {
                 Item worldItem = Main.item[i];
 
-                if (worldItem.active == false || worldItem.GetGlobalItem<VItemGlobalItem>().ConveyorImmunityTimer > 0)
+                // Safely check for VItemGlobalItem without throwing KeyNotFoundException
+                if (!worldItem.TryGetGlobalItem<VItemGlobalItem>(out VItemGlobalItem globalItem) || globalItem.ConveyorImmunityTimer > 0)
                 {
                     continue;
                 }
