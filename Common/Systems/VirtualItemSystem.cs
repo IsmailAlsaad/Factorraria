@@ -425,7 +425,7 @@ namespace Factorraria.Content.VirtualItems
                     continue;
                 }
 
-                if (IsValidItemID(worldItem.type) == false)
+                if (!IsValidItemID(worldItem.type))
                 {
                     continue;
                 }
@@ -443,7 +443,7 @@ namespace Factorraria.Content.VirtualItems
 
                     if (IsConveyorTile(tileX, tileY, out _,out _))
                     {
-                        if (!IsTileOccupied(tileX, tileY))
+                        if (!IsTileOccupied(centerTileX, centerTileY))
                         {
                             SpawnVirtualItem(worldItem.type, worldItem.stack, centerTileX, centerTileY);
 
@@ -744,7 +744,7 @@ namespace Factorraria.Content.VirtualItems
 
             if (network != null)
             {
-                network.FilteredItemId = itemId;
+                network.FilteredItemId = itemId == network.FilteredItemId ? ItemID.None : itemId;
                 return true;
             }
 

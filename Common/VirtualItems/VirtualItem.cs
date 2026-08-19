@@ -232,6 +232,14 @@ namespace Factorraria.Content.VirtualItems
                     // here we assign FoundValidPath = true
                     if (GetConveyorVector(checkX, checkY, offsetX, offsetY, out Vector2 push, out int conveyorPriority))
                     {
+                        if (VirtualItemSystem.TryGetConveyorFilter(checkX,checkY, out int FilterID))
+                        {
+                            if(FilterID != itemType && FilterID != ItemID.None)
+                            {
+                                conveyorPriority = 0;
+                            }
+                        }
+
                         // We are only assigining MaxConveyorPriority on conveyors that had a valid path, if a higher priority didn't have a valid path it won't affect MaxConveyorPriority
                         if (MaxConveyorPriority < conveyorPriority)
                         {

@@ -48,9 +48,7 @@ namespace Factorraria.Content.Tiles.Conveyors
             Item heldItem = player.HeldItem;
 
             // If holding an item, use its ID; otherwise, reset to ItemID.None
-            int targetFilterId = (heldItem != null && !heldItem.IsAir && heldItem.type != ItemID.None)
-                ? heldItem.type
-                : ItemID.None;
+            int targetFilterId = !heldItem.IsAir ? heldItem.type : ItemID.None;
 
             if (VirtualItemSystem.SetConveyorFilter(i, j, targetFilterId))
             {
