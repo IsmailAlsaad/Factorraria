@@ -630,10 +630,16 @@ namespace Factorraria.Content.VirtualItems
 
         /// <summary>
         /// Rebuilds or merges connected priority conveyors into a single PriorityConveyorNetwork using 4-cardinal BFS.
+        /// Pass an optional ignorePoint to exclude a tile currently being mined.
         /// </summary>
-        public static PriorityConveyorNetwork RebuildNetworkAt(int startX, int startY)
+        public static PriorityConveyorNetwork RebuildNetworkAt(int startX, int startY, Point? ignorePoint = null)
         {
             Point startPt = new Point(startX, startY);
+
+            if (ignorePoint.HasValue && startPt == ignorePoint.Value)
+            {
+                return null;
+            }
 
             if (!IsPriorityConveyorTile(startX, startY))
             {
@@ -665,6 +671,12 @@ namespace Factorraria.Content.VirtualItems
                 foreach (Point offset in CardinalOffsets)
                 {
                     Point neighbor = new Point(current.X + offset.X, current.Y + offset.Y);
+
+                    // Skip the tile that is being mined
+                    if (ignorePoint.HasValue && neighbor == ignorePoint.Value)
+                    {
+                        continue;
+                    }
 
                     if (!visited.Contains(neighbor) && IsPriorityConveyorTile(neighbor.X, neighbor.Y))
                     {
@@ -701,29 +713,22 @@ namespace Factorraria.Content.VirtualItems
         {
             Point removedPoint = new Point(x, y);
 
-            if (!ConveyorNetworkMap.TryGetValue(removedPoint, out PriorityConveyorNetwork oldNetwork))
+            if (ConveyorNetworkMap.TryGetValue(removedPoint, out PriorityConveyorNetwork oldNetwork))
             {
-                return;
+                oldNetwork.Tiles.Remove(removedPoint);
             }
 
-            int previousFilter = oldNetwork.FilteredItemId;
-
-            // Remove tile from old network and map
-            oldNetwork.Tiles.Remove(removedPoint);
+            // Completely erase destroyed tile from map lookup
             ConveyorNetworkMap.Remove(removedPoint);
 
-            // Re-evaluate 4 cardinal neighbors in case the network split into isolated groups
+            // Re-evaluate 4 cardinal neighbors while explicitly ignoring the mined tile
             foreach (Point offset in CardinalOffsets)
             {
                 Point neighbor = new Point(x + offset.X, y + offset.Y);
 
-                if (IsPriorityConveyorTile(neighbor.X, neighbor.Y))
+                if (neighbor != removedPoint && IsPriorityConveyorTile(neighbor.X, neighbor.Y))
                 {
-                    PriorityConveyorNetwork splitNet = RebuildNetworkAt(neighbor.X, neighbor.Y);
-                    if (splitNet != null && previousFilter != ItemID.None)
-                    {
-                        splitNet.FilteredItemId = previousFilter;
-                    }
+                    RebuildNetworkAt(neighbor.X, neighbor.Y, ignorePoint: removedPoint);
                 }
             }
         }

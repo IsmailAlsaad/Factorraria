@@ -47,16 +47,13 @@ namespace Factorraria.Content.Tiles.Conveyors
             Player player = Main.LocalPlayer;
             Item heldItem = player.HeldItem;
 
-            // Reject empty hand / air items
-            if (heldItem == null || heldItem.IsAir || heldItem.type == ItemID.None)
-            {
-                return false;
-            }
+            // If holding an item, use its ID; otherwise, reset to ItemID.None
+            int targetFilterId = (heldItem != null && !heldItem.IsAir && heldItem.type != ItemID.None)
+                ? heldItem.type
+                : ItemID.None;
 
-            // Apply filter across entire network group
-            if (VirtualItemSystem.SetConveyorFilter(i, j, heldItem.type))
+            if (VirtualItemSystem.SetConveyorFilter(i, j, targetFilterId))
             {
-                // Visual feedback sound
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick, new Microsoft.Xna.Framework.Vector2(i * 16, j * 16));
                 return true;
             }
