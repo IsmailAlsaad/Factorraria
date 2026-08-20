@@ -1,3 +1,45 @@
+Items: {
+	CopperWire: {
+		DisplayName: Copper Wire
+		Tooltip:
+			'''
+			Can be placed
+			Used to connect machines together
+			Broken with a pickaxe
+			'''
+	}
+
+	TinWire: {
+		DisplayName: Tin Wire
+		Tooltip:
+			'''
+			Can be placed
+			Used to connect machines together
+			Broken with a pickaxe
+			'''
+	}
+
+	ClockwisePriorityConveyor: {
+		DisplayName: Priority Conveyor Belt (Clockwise)
+		Tooltip:
+			'''
+			Right click on the conveyor tile while holding an item to set a filter
+			Only items matching the filter will take the conveyor as priority
+			Right click in inventory to swap direction
+			'''
+	}
+
+	CounterClockwisePriorityConveyor: {
+		DisplayName: Priority Conveyor Belt (Counter Clockwise)
+		Tooltip:
+			'''
+			Right click on the conveyor tile while holding an item to set a filter
+			Only items matching the filter will take the conveyor as priority
+			Right click in inventory to swap direction
+			'''
+	}
+}
+
 Configs: {
 	FurnaceOffsetConfig: {
 		DisplayName: Furnace Offset Config
@@ -36,35 +78,5 @@ Configs: {
 			Label: V Item Offset
 			Tooltip: ""
 		}
-	}
-}
-
-Items: {
-	CopperWire: {
-		DisplayName: Copper Wire
-		Tooltip:
-			'''
-			Can be placed
-			Broken with a pickaxe
-			'''
-	}
-
-	TinWire: {
-		DisplayName: Tin Wire
-		Tooltip:
-			'''
-			Can be placed
-			Broken with a pickaxe
-			'''
-	}
-
-	ClockwisePriorityConveyor: {
-		DisplayName: Priority Conveyor Belt (Clockwise)
-		Tooltip: ""
-	}
-
-	CounterClockwisePriorityConveyor: {
-		DisplayName: Priority Conveyor Belt (Counter Clockwise)
-		Tooltip: ""
 	}
 }
