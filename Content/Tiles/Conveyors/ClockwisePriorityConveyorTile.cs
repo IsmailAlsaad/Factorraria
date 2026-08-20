@@ -74,5 +74,13 @@ namespace Factorraria.Content.Tiles.Conveyors
                 VirtualItemSystem.OnPriorityConveyorKilled(i, j);
             }
         }
+
+        public override bool CanDrop(int i, int j)
+        {
+            VirtualItemSystem.OnPriorityConveyorKilled(i, j);
+
+            // Return true so the conveyor item still drops normally into the world
+            return true;
+        }
     }
 }
