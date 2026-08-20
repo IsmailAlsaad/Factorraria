@@ -11,6 +11,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using Terraria.UI;
 using Terraria.UI.Chat;
 
 namespace Factorraria.Content.VirtualItems
@@ -23,6 +24,10 @@ namespace Factorraria.Content.VirtualItems
         // Fast O(1) position lookup dictionary
         public static Dictionary<Point, VirtualItem> tileItemMap = new Dictionary<Point, VirtualItem>();
         public static Dictionary<Point, PriorityConveyorNetwork> ConveyorNetworkMap { get; private set; } = new Dictionary<Point, PriorityConveyorNetwork>();
+
+        private static string hoveredVItemText = null;
+        private static int hoveredVItemRarity = ItemRarityID.White;
+        private static Vector2 cachedMouseWorld;
 
         // --- ITEM ID SAFETY GUARD ---
         public static bool IsValidItemID(int type)
@@ -290,19 +295,27 @@ namespace Factorraria.Content.VirtualItems
                 }
             }
 
+            hoveredVItemText = null;
+            hoveredVItemRarity = ItemRarityID.White;
+            cachedMouseWorld = GetZoomCorrectedMouseWorld();
+
             // --- 2. DRAW VIRTUAL ITEMS ---
             for (int i = 0; i < virtualItems.Count; i++)
             {
                 VirtualItem item = virtualItems[i];
 
                 if (!item.active)
+                {
                     continue;
+                }
 
                 if (item.worldPosition.X < minX || item.worldPosition.X > maxX ||
                     item.worldPosition.Y < minY || item.worldPosition.Y > maxY)
                 {
                     continue;
                 }
+
+                CheckVirtualItemHover(item);
 
                 FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
                 if (config != null && config.EnableDebugs)
@@ -354,6 +367,43 @@ namespace Factorraria.Content.VirtualItems
             }
 
             Main.spriteBatch.End();
+        }
+
+        private void CheckVirtualItemHover(VirtualItem item)
+        {
+            Rectangle tileHitbox = new Rectangle(
+                    (int)item.worldPosition.X - 8,
+                    (int)item.worldPosition.Y - 8,
+                    24,
+                    24
+                );
+
+            if (tileHitbox.Contains(cachedMouseWorld.ToPoint()))
+            {
+                string itemName = Lang.GetItemNameValue(item.itemType);
+                hoveredVItemText = item.stackSize > 1 ? $"{itemName} ({item.stackSize})" : itemName;
+                hoveredVItemRarity = ContentSamples.ItemsByType[item.itemType].rare;
+            }
+        }
+
+        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+        {
+            int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
+            if (mouseTextIndex != -1)
+            {
+                layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
+                    "Factorraria: Virtual Item Hover Text",
+                    delegate
+                    {
+                        if (!string.IsNullOrEmpty(hoveredVItemText) && Main.mouseItem.type == ItemID.None)
+                        {
+                            Main.instance.MouseText(hoveredVItemText, hoveredVItemRarity);
+                        }
+                        return true;
+                    },
+                    InterfaceScaleType.UI)
+                );
+            }
         }
 
         // --- HELPER METHODS ---
@@ -765,6 +815,13 @@ namespace Factorraria.Content.VirtualItems
             }
 
             return false;
+        }
+
+        private static Vector2 GetZoomCorrectedMouseWorld()
+        {
+            Vector2 mouseScreen = new Vector2(Main.mouseX, Main.mouseY);
+            Vector2 transformed = Vector2.Transform(mouseScreen, Matrix.Invert(Main.GameViewMatrix.TransformationMatrix));
+            return transformed + Main.screenPosition;
         }
 
         // DEBUG
