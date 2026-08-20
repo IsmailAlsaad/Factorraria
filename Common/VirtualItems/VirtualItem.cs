@@ -234,6 +234,10 @@ namespace Factorraria.Content.VirtualItems
                     {
                         if (VirtualItemSystem.TryGetConveyorFilter(checkX,checkY, out int FilterID))
                         {
+                            if(FilterID == itemType)
+                            {
+                                conveyorPriority++;
+                            }
                             if(FilterID != itemType && FilterID != ItemID.None)
                             {
                                 conveyorPriority = 0;
