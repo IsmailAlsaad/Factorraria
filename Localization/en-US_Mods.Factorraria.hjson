@@ -59,12 +59,12 @@ Items: {
 	}
 
 	ClockwisePriorityConveyor: {
-		DisplayName: Clockwise Priority Conveyor
+		DisplayName: Priority Conveyor Belt (Clockwise)
 		Tooltip: ""
 	}
 
 	CounterClockwisePriorityConveyor: {
-		DisplayName: Counter Clockwise Priority Conveyor
+		DisplayName: Priority Conveyor Belt (Counter Clockwise)
 		Tooltip: ""
 	}
 }
