@@ -4,7 +4,7 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Items.Conveyors
 {
-    public class ClockwisePriorityConveyor : ModItem
+    public class CounterClockwisePriorityConveyor : ModItem
     {
         public override void SetDefaults()
         {
@@ -26,7 +26,26 @@ namespace Factorraria.Content.Items.Conveyors
             Item.rare = ItemRarityID.White;
 
             // Binds this item to place your custom tile
-            Item.createTile = ModContent.TileType<Tiles.Conveyors.ClockwisePriorityConveyorTile>();
+            Item.createTile = ModContent.TileType<Tiles.Conveyors.CounterClockwisePriorityConveyorTile>();
         }
+
+        // 1. Allow right-clicking this item inside the inventory
+        public override bool CanRightClick() => true;
+
+        // 2. Perform the transformation
+        public override void RightClick(Player player)
+        {
+            int currentStack = Item.stack;
+
+            // Swap to the counter-clockwise item type
+            Item.SetDefaults(ModContent.ItemType<ClockwisePriorityConveyor>());
+            Item.stack = currentStack;
+
+            // Tactile audio feedback
+            Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick);
+        }
+
+        // 3. Prevent tModLoader from consuming 1 item from the stack upon right-click
+        public override bool ConsumeItem(Player player) => false;
     }
 }
