@@ -22,6 +22,7 @@ namespace Factorraria.Content.Items.Conveyors
         public override void RightClick(Item item, Player player)
         {
             int currentStack = item.stack;
+            bool isFavorited = item.favorited;
 
             // Swap between vanilla left and right conveyor IDs
             int nextType = (item.type == ItemID.ConveyorBeltLeft) ? ItemID.ConveyorBeltRight : ItemID.ConveyorBeltLeft;
@@ -29,6 +30,7 @@ namespace Factorraria.Content.Items.Conveyors
             // Re-initialize item properties to match the new item type
             item.SetDefaults(nextType);
             item.stack = currentStack;
+            item.favorited = isFavorited;
 
             Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick);
         }

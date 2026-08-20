@@ -40,10 +40,12 @@ namespace Factorraria.Content.Items.Conveyors
         public override void RightClick(Player player)
         {
             int currentStack = Item.stack;
+            bool isFavorited = Item.favorited;
 
             // Swap to the counter-clockwise item type
             Item.SetDefaults(ModContent.ItemType<CounterClockwisePriorityConveyor>());
             Item.stack = currentStack;
+            Item.favorited = isFavorited;
 
             // Tactile audio feedback
             Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick);
