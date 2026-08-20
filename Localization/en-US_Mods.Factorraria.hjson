@@ -24,7 +24,6 @@ Items: {
 		Tooltip:
 			'''
 			Right click on the conveyor tile while holding an item to set a filter
-			Only items matching the filter will take the conveyor as priority
 			Right click in inventory to swap direction
 			'''
 	}
@@ -34,7 +33,6 @@ Items: {
 		Tooltip:
 			'''
 			Right click on the conveyor tile while holding an item to set a filter
-			Only items matching the filter will take the conveyor as priority
 			Right click in inventory to swap direction
 			'''
 	}
