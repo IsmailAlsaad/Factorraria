@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using Microsoft.Xna.Framework.Input;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -30,7 +31,10 @@ namespace Factorraria.Content.Items.Conveyors
         }
 
         // 1. Allow right-clicking this item inside the inventory
-        public override bool CanRightClick() => true;
+        public override bool CanRightClick()
+        {
+            return Main.keyState.IsKeyDown(Keys.LeftShift) || Main.keyState.IsKeyDown(Keys.RightShift);
+        }
 
         // 2. Perform the transformation
         public override void RightClick(Player player)

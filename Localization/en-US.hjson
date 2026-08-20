@@ -1,0 +1,9 @@
+ItemName: {
+	ConveyorBeltLeft: Conveyor Belt (Clockwise)
+	ConveyorBeltRight: Conveyor Belt (Counter Clockwise)
+}
+
+ItemTooltip: {
+	ConveyorBeltLeft: Shift + Right click in inventory to swap direction
+	ConveyorBeltRight: Shift + Right click in inventory to swap direction
+}
