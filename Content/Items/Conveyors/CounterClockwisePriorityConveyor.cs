@@ -23,7 +23,7 @@ namespace Factorraria.Content.Items.Conveyors
 
             // Economy and rarity
             Item.value = Item.buyPrice(copper: 50);
-            Item.rare = ItemRarityID.White;
+            Item.rare = ItemRarityID.Yellow;
 
             // Binds this item to place your custom tile
             Item.createTile = ModContent.TileType<Tiles.Conveyors.CounterClockwisePriorityConveyorTile>();
