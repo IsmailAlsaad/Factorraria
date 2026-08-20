@@ -334,6 +334,7 @@ namespace Factorraria.Content.VirtualItems
             }
             else if (IsTilePassable(currentTileX, currentTileY + 1) && !isPlatform(currentTileX, currentTileY + 1))
             {
+                pickupCooldown = 0;
                 VirtualItem targetItem = VirtualItemSystem.GetVirtualItemAtTile(currentTileX, currentTileY + 1, this);
                 
                 if (!TryMergeWithVirtualItem(targetItem) && IsTileClear(currentTileX, currentTileY + 1))
@@ -345,6 +346,7 @@ namespace Factorraria.Content.VirtualItems
             }
             else
             {
+                pickupCooldown = 0;
                 CurrentFallVelocity = 1f;
             }
         }
