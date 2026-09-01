@@ -19,8 +19,8 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
 
         public FireUIElement(Func<float> _GetProgress)
         {
-            fireFullTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Furnace/Fire_Full");
-            fireEmptyTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Furnace/Fire_Empty");
+            fireFullTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Machines/General Machines/Furnace/Fire_Full");
+            fireEmptyTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Machines/General Machines/Furnace/Fire_Empty");
 
             GetProgress = _GetProgress;
 

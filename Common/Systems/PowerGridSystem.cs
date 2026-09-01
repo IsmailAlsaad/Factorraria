@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Interfaces;
+﻿
+using Factorraria.Common.Machines;
 using Factorraria.Common.PowerGrid;
 using Microsoft.Xna.Framework;
 using System;
@@ -43,7 +44,7 @@ namespace Factorraria.Common.Systems
         {
             foreach (TileEntity te in TileEntity.ByPosition.Values)
             {
-                if (te is IElectricProducer || te is IElectricConsumer)
+                if (te is ElectricProducerMachine || te is ElectricConsumerMachine)
                 {
                     AllMachines.Add(te);
                 }
@@ -130,15 +131,15 @@ namespace Factorraria.Common.Systems
 
         void RegisterMachineToNetwork(TileEntity machine, PowerNetwork network, HashSet<TileEntity> remainingMachines)
         {
-            if (machine is IElectricConsumer consumer) { network.electricConsumers.Add(consumer); }
-            if (machine is IElectricProducer producer) { network.electricProducers.Add(producer); }
+            if (machine is ElectricConsumerMachine consumer) { network.electricConsumers.Add(consumer); }
+            if (machine is ElectricProducerMachine producer) { network.electricProducers.Add(producer); }
 
             remainingMachines.Remove(machine);
         }
 
         public static void RegisterMachineToMasterList(TileEntity newMachine)
         {
-            if (newMachine is IElectricConsumer || newMachine is IElectricProducer) 
+            if (newMachine is ElectricConsumerMachine || newMachine is ElectricProducerMachine) 
             {
                 AllMachines.Add(newMachine);
                 gridNeedsRebuilding = true;

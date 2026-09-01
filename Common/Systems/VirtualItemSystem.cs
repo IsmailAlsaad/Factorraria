@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.VirtualItems;
+﻿using Factorraria.Common.Networks;
+using Factorraria.Common.VirtualItems;
 using Factorraria.Content.Configs;
 using Factorraria.Content.Tiles.Conveyors;
 using Microsoft.Xna.Framework;

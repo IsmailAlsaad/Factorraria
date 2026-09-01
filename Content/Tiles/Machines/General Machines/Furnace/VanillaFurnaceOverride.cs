@@ -1,7 +1,6 @@
-﻿using Factorraria.Common;
+﻿using Factorraria.Common.Machines;
 using Factorraria.Common.Systems;
 using Factorraria.Content.Configs;
-using Factorraria.Content.Tiles.Autohammer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -20,8 +19,8 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
 
         public override void Load()
         {
-            FurnaceLitTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Furnace/Furnace_Lit");
-            FurnaceOffTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Furnace/Furnace_Off");
+            FurnaceLitTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_On");
+            FurnaceOffTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_Off");
         }
 
         public override bool PreDraw(int i, int j, int type, SpriteBatch spriteBatch)

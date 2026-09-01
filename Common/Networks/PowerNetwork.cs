@@ -1,16 +1,12 @@
-﻿using Factorraria.Common.Interfaces;
-using System;
+﻿using Factorraria.Common.Machines;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Factorraria.Common.PowerGrid
 {
     public class PowerNetwork
     {
-        public List<IElectricConsumer> electricConsumers = new List<IElectricConsumer>();
-        public List<IElectricProducer> electricProducers = new List<IElectricProducer>();
+        public List<ElectricConsumerMachine> electricConsumers = new List<ElectricConsumerMachine>();
+        public List<ElectricProducerMachine> electricProducers = new List<ElectricProducerMachine>();
 
         public void Tick()
         {
@@ -41,12 +37,12 @@ namespace Factorraria.Common.PowerGrid
 
             foreach (var producer in electricProducers)
             {
-                producer.isGenerating = isGridStable;
+                producer.isOn = isGridStable;
             }
 
             foreach (var consumer in electricConsumers)
             {
-                consumer.isPowered = isGridStable;
+                consumer.isOn = isGridStable;
             }
         }
 

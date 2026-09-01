@@ -1,94 +1,26 @@
-﻿using Factorraria.Common;
-using Factorraria.Common.Interfaces;
-using Factorraria.Common.Systems;
-using Factorraria.Content.Tiles.Furnace;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria;
-using Terraria.DataStructures;
+﻿using Factorraria.Common.Machines;
 using Terraria.ID;
-using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 
 namespace Factorraria.Content.Tiles.Machines.Solidifier
 {
-    public class SolidifierTileEntity : ModTileEntity , IElectricConsumer
+    public class SolidifierTileEntity : ElectricConsumerMachine
     {
-        // it will be taking two floats as liquid values
-        public Item inputItem = new Item();
-        //
-        public float PowerDemand => 100f;
-        public bool isPowered { get; set; }
-        public bool isWorking { get; set; }
+        public override int ValidTileType => TileID.Solidifier;
+        public override float PowerDemand => 100f;
 
-        int WorkProgress;
-        int WorkDuration = 120; // 60 ticks = 1 second
+        // Protected override liquidHolderOrSmt later
 
         public override void Update()
         {
-            // isWorking == true when has valid inputs and can output product, so count towards total demand
-            // isWorking could still be true when isPowered == false, i.e. power grid failed but it can still use energy when on
-            // so determine isWorking before returning on !isPowered
+            // isWorking == true is determined when the generator has valid & enough fuel to burn & product slot is not full, so count its power output
+            // isOn is set to false by the PowerNetwork not the machine when the grid is overloaded, so stop consuming fuel and turn off, but you could still be working!
+            // i.e. have enough fuel to work once the grid is not overloaded
             isWorking = true;
 
-            if (!isPowered)
+            if (!isOn)
             {
-                // set sprite to off
                 return;
             }
-
-            //TEST
-            //WorkProgress++;
-
-            //if (WorkProgress >= WorkDuration)
-            //{
-            //    isPowered = !isPowered;
-            //    WorkProgress = 0;
-            //}
-            //TEST
-        }
-
-        public override bool IsTileValidForEntity(int x, int y)
-        {
-            Tile tile = Framing.GetTileSafely(x, y);
-            return tile.HasTile && tile.TileType == TileID.Solidifier;
-        }
-
-        public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
-        {
-            // Multiplayer stuff I don't know
-            //if (Main.netMode == NetmodeID.MultiplayerClient)
-            //{
-            //    // Synchronize the 3x2 tile area across the network
-            //    NetMessage.SendTileSquare(Main.myPlayer, i, j, 3, 2);
-            //    NetMessage.SendData(MessageID.TileEntityPlacement, number: -1, number2: i, number3: j, number4: Type);
-            //    return -1;
-            //}
-            if (type != TileID.Solidifier)
-            {
-                return -1;
-            }
-
-            return Place(i, j);
-        }
-
-        public override void OnKill()
-        {
-            PowerGridSystem.AllMachines.Remove(this);
-            PowerGridSystem.gridNeedsRebuilding = true;
-        }
-
-        public override void SaveData(TagCompound tag)
-        {
-            tag["InputItem"] = inputItem;
-        }
-
-        public override void LoadData(TagCompound tag)
-        {
-            inputItem = tag.Get<Item>("InputItem");
         }
     }
 }

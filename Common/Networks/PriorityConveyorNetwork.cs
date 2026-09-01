@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Terraria.ID;
 
-namespace Factorraria.Content.VirtualItems
+namespace Factorraria.Common.Networks
 {
     public class PriorityConveyorNetwork
     {

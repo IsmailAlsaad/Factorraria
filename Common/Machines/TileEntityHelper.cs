@@ -14,7 +14,7 @@ using Terraria.ModLoader;
 using Terraria.ObjectData;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Factorraria.Common
+namespace Factorraria.Common.Machines
 {
     public static class TileEntityHelper
     {
