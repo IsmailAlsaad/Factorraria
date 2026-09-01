@@ -1,7 +1,6 @@
 ﻿using Factorraria.Common;
 using Factorraria.Common.Interfaces;
 using Factorraria.Common.Systems;
-using Factorraria.Content.Tiles.Furnace;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,41 +12,35 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace Factorraria.Content.Tiles.Autohammer
+namespace Factorraria.Content.Tiles.Machines.Autohammer
 {
-    public class GelBurnerTileEntity : ModTileEntity, IElectricProducer
+    public class AutohammerTileEntity : ModTileEntity, IElectricConsumer
     {
         public Item inputItem = new Item();
-        public bool isGenerating { get; set; }
+        public bool isPowered { get; set; }
         public bool isWorking { get; set; }
-        public float PowerSupply => 500f;
-
-        // later add burn rate based on smelt count for fuel item
+        public float PowerDemand => 100f;
         int WorkProgress;
         int WorkDuration = 120; // 60 ticks = 1 second
-        //
 
         public override void Update()
         {
-            // isWorking == true is determined when the generator has valid & enough fuel to burn, so count its power output
-            // isGenerating == false when grid is overloaded, so stop consuming fuel and turn off, but you could still be working!
-            // i.e. have enough fuel to work once the grid is not overloaded
+            // isWorking == true when has valid inputs and can output product
+            // isWorking could still be true when isPowered == false, i.e. power grid failed but it can still use energy when on
+            // so determine isWorking before returning on !isPower
             isWorking = true;
-
-            if (!isGenerating)
+            if (!isPowered)
             {
                 // set sprite to off
                 return;
             }
 
-
-
             //TEST
             //WorkProgress++;
 
-            //if (WorkProgress >= WorkDuration)
+            //if(WorkProgress >= WorkDuration)
             //{
-            //    isGenerating = !isGenerating;
+            //    isPowered = !isPowered;
             //    WorkProgress = 0;
             //}
             //TEST
@@ -56,7 +49,7 @@ namespace Factorraria.Content.Tiles.Autohammer
         public override bool IsTileValidForEntity(int x, int y)
         {
             Tile tile = Framing.GetTileSafely(x, y);
-            return tile.HasTile && tile.TileType == TileID.SteampunkBoiler;
+            return tile.HasTile && tile.TileType == TileID.Autohammer;
         }
 
         public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
@@ -69,7 +62,7 @@ namespace Factorraria.Content.Tiles.Autohammer
             //    NetMessage.SendData(MessageID.TileEntityPlacement, number: -1, number2: i, number3: j, number4: Type);
             //    return -1;
             //}
-            if (type != TileID.SteampunkBoiler)
+            if (type != TileID.Autohammer)
             {
                 return -1;
             }

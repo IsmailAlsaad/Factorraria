@@ -8,7 +8,7 @@ using Terraria.ModLoader;
 using Terraria.UI;
 using tModPorter;
 
-namespace Factorraria.Content.Tiles.Furnace
+namespace Factorraria.Content.Tiles.Machines.Furnace
 {
     public class FurnaceUIState : UIState
     {

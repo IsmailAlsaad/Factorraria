@@ -13,23 +13,27 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace Factorraria.Content.Tiles.Autohammer
+namespace Factorraria.Content.Tiles.Machines.Solidifier
 {
-    public class AutohammerTileEntity : ModTileEntity, IElectricConsumer
+    public class SolidifierTileEntity : ModTileEntity , IElectricConsumer
     {
+        // it will be taking two floats as liquid values
         public Item inputItem = new Item();
+        //
+        public float PowerDemand => 100f;
         public bool isPowered { get; set; }
         public bool isWorking { get; set; }
-        public float PowerDemand => 100f;
+
         int WorkProgress;
         int WorkDuration = 120; // 60 ticks = 1 second
 
         public override void Update()
         {
-            // isWorking == true when has valid inputs and can output product
+            // isWorking == true when has valid inputs and can output product, so count towards total demand
             // isWorking could still be true when isPowered == false, i.e. power grid failed but it can still use energy when on
-            // so determine isWorking before returning on !isPower
+            // so determine isWorking before returning on !isPowered
             isWorking = true;
+
             if (!isPowered)
             {
                 // set sprite to off
@@ -39,7 +43,7 @@ namespace Factorraria.Content.Tiles.Autohammer
             //TEST
             //WorkProgress++;
 
-            //if(WorkProgress >= WorkDuration)
+            //if (WorkProgress >= WorkDuration)
             //{
             //    isPowered = !isPowered;
             //    WorkProgress = 0;
@@ -50,7 +54,7 @@ namespace Factorraria.Content.Tiles.Autohammer
         public override bool IsTileValidForEntity(int x, int y)
         {
             Tile tile = Framing.GetTileSafely(x, y);
-            return tile.HasTile && tile.TileType == TileID.Autohammer;
+            return tile.HasTile && tile.TileType == TileID.Solidifier;
         }
 
         public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
@@ -63,7 +67,7 @@ namespace Factorraria.Content.Tiles.Autohammer
             //    NetMessage.SendData(MessageID.TileEntityPlacement, number: -1, number2: i, number3: j, number4: Type);
             //    return -1;
             //}
-            if (type != TileID.Autohammer)
+            if (type != TileID.Solidifier)
             {
                 return -1;
             }

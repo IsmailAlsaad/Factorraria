@@ -1,5 +1,5 @@
 ﻿using Factorraria.Content.Configs;
-using Factorraria.Content.Tiles.Furnace;
+using Factorraria.Content.Tiles.Machines.Furnace;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;

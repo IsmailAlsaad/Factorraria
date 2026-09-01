@@ -6,7 +6,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace Factorraria.Content.Tiles.Furnace
+namespace Factorraria.Content.Tiles.Machines.Furnace
 {
     public class FurnaceTileEntity : ModTileEntity
     {

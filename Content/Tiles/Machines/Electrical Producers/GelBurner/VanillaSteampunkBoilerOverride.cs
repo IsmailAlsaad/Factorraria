@@ -10,7 +10,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace Factorraria.Content.Tiles.Autohammer
+namespace Factorraria.Content.Tiles.Machines.GelBurner
 {
     public class VanillaSteampunkBoilerOverride : GlobalTile
     {

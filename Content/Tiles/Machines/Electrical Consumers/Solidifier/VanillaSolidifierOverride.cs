@@ -1,5 +1,6 @@
-﻿using Factorraria.Content.Configs;
+﻿using Factorraria.Common;
 using Factorraria.Common.Systems;
+using Factorraria.Content.Configs;
 using Factorraria.Content.Tiles.Furnace;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,45 +9,44 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Factorraria.Common;
 
-namespace Factorraria.Content.Tiles.Autohammer
+namespace Factorraria.Content.Tiles.Machines.Solidifier
 {
-    public class VanillaAutohammerOverride : GlobalTile
+    public class VanillaSolidiferOverride : GlobalTile
     {
-        Asset<Texture2D> autohammerOnTexture;
-        Asset<Texture2D> autohammerOffTexture;
-        AutohammerTileEntity tileEntity;
+        Asset<Texture2D> SolidifierOnTexture;
+        Asset<Texture2D> SolidifierOffTexture;
+        SolidifierTileEntity tileEntity;
+
         public override void Load()
         {
-            autohammerOnTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Autohammer/Autohammer_On");
-            autohammerOffTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Autohammer/Autohammer_Off");
+            SolidifierOnTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Solidifier/Solidifier_On");
+            SolidifierOffTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Solidifier/Solidifier_Off");
         }
 
         public override bool PreDraw(int i, int j, int type, SpriteBatch spriteBatch)
         {
-            if (type != TileID.Autohammer)
+            if (type != TileID.Solidifier)
             {
                 return true;
             }
-
-            tileEntity = TileEntityHelper.GetOrCreateEntity<AutohammerTileEntity>(i, j);
+            
+            tileEntity = TileEntityHelper.GetOrCreateEntity<SolidifierTileEntity>(i, j);
 
             if (tileEntity.isPowered)
             {
-                TileEntityHelper.AnimateTileEntity(spriteBatch, autohammerOnTexture.Value, i, j);
+                TileEntityHelper.AnimateTileEntity(spriteBatch, SolidifierOnTexture.Value, i, j);
             }
             else
             {
-                TileEntityHelper.AnimateTileEntity(spriteBatch, autohammerOffTexture.Value, i, j);
+                TileEntityHelper.AnimateTileEntity(spriteBatch, SolidifierOffTexture.Value, i, j);
             }
-            
             return false;
         }
 
         public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
-            if (type != TileID.Autohammer)
+            if (type != TileID.Solidifier)
             {
                 return;
             }
@@ -55,9 +55,11 @@ namespace Factorraria.Content.Tiles.Autohammer
 
             //ModContent.GetInstance<FurnaceUISystem>().CloseFurnaceUI();
             TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity entity, out Point16 position);
-            AutohammerTileEntity tileEntity = TileEntityHelper.GetOrCreateEntity<AutohammerTileEntity>(position.X, position.Y);
+            SolidifierTileEntity tileEntity = TileEntityHelper.GetOrCreateEntity<SolidifierTileEntity>(position.X, position.Y);
 
+            // it wont output the liquids inside
             Item.NewItem(new EntitySource_TileEntity(tileEntity), position.X * 16 + 16, position.Y * 16 + 8, 16, 16, tileEntity.inputItem.type, tileEntity.inputItem.stack);
+            // or maybe? it would be cool
 
             tileEntity.Kill(position.X, position.Y);
         }

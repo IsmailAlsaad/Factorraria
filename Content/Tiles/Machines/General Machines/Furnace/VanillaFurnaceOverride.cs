@@ -10,7 +10,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace Factorraria.Content.Tiles.Furnace
+namespace Factorraria.Content.Tiles.Machines.Furnace
 {
     public class VanillaFurnaceOverride : GlobalTile
     {

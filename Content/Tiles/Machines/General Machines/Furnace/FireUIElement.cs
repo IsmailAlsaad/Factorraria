@@ -7,7 +7,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
 
-namespace Factorraria.Content.Tiles.Furnace
+namespace Factorraria.Content.Tiles.Machines.Furnace
 {
     public class FireUIElement : UIElement
     {
