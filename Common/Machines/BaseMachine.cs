@@ -48,6 +48,16 @@ namespace Factorraria.Common.Machines
             return Place(i, j);
         }
 
+        int lastAnimationFrame = -1;
+        public void NotifyAnimationFrame(int frame)
+        {
+            if (frame == lastAnimationFrame || frame == -1) return;
+            OnAnimationFrameChanged(frame, lastAnimationFrame);
+            lastAnimationFrame = frame;
+        }
+
+        protected virtual void OnAnimationFrameChanged(int newFrame, int previousFrame) { }
+
         public override void SaveData(TagCompound tag)
         {
             for (int i = 0; i < InputSlots.Length; i++) tag[$"Input{i}"] = InputSlots[i];

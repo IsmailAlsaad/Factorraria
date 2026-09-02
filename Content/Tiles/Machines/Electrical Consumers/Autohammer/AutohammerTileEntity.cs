@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Terraria;
 using Terraria.ID;
 
 namespace Factorraria.Content.Tiles.Machines.Autohammer
@@ -20,6 +21,21 @@ namespace Factorraria.Content.Tiles.Machines.Autohammer
             if (!isOn)
             {
                 return;
+            }
+        }
+
+        protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
+        {
+            if (!isWorking) 
+            { 
+                return; 
+            }
+
+            // TEST
+            if (newFrame == 3)
+            {
+                // spawn sparks/dust at Position
+                //Main.NewText("HammerHit");
             }
         }
     }

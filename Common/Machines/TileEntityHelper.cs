@@ -96,7 +96,7 @@ namespace Factorraria.Common.Machines
             return null;
         }
 
-        public static void AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j)
+        public static int AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j)
         {
             Tile thisTile = Framing.GetTileSafely(i, j);
             TileObjectData data = TileObjectData.GetTileData(thisTile.TileType, 0);
@@ -105,7 +105,7 @@ namespace Factorraria.Common.Machines
                 //
                 Main.NewText("TileEntityheler is facing issues lmao");
                 //
-                return;
+                return -1;
             }
 
             int frameY = thisTile.TileFrameY % data.CoordinateFullHeight;
@@ -144,6 +144,8 @@ namespace Factorraria.Common.Machines
             Rectangle textureSlice = new Rectangle(thisTile.TileFrameX, thisTile.TileFrameY + frameHeight * frameYOffset, 16, data.CoordinateHeights[subY]);
             Color lightingColor = Lighting.GetColor(i, j);
             spriteBatch.Draw(targetTexture, drawPosition, textureSlice, lightingColor);
+
+            return frameYOffset;
         }
     }
 }

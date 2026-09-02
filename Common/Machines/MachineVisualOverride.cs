@@ -59,7 +59,8 @@ namespace Factorraria.Common.Machines
 
             BaseMachine entity = def.GetEntity(i, j);
             var texture = entity.isOn ? def.OnTexture : def.OffTexture;
-            TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j);
+            int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j);
+            entity.NotifyAnimationFrame(frame);
             return false;
         }
 
