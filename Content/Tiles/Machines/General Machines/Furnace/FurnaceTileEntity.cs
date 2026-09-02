@@ -1,57 +1,53 @@
 ﻿using Factorraria.Common;
+using Factorraria.Common.Machines;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
-using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
 namespace Factorraria.Content.Tiles.Machines.Furnace
 {
-    public class FurnaceTileEntity : ModTileEntity
+    public class FurnaceTileEntity : BaseMachine
     {
-        public bool isSmelting;
-        public int FuelRemaining = 0;
-        public Item FuelItem = new Item();
-        public Item OreItem = new Item();
+        public override int ValidTileType => TileID.Furnaces;
+        protected override int InputSlotCount => 2;
 
-        int smeltProgress = 0;
-        // 120 = 60 ticks * 2 seconds
-        const int SmeltDuration = 120;
+        public int FuelRemaining = 0;
 
         public override void Update()
         {
             if (!isValidInput())
             {
-                smeltProgress = 0;
-                isSmelting = false;
+                WorkProgress = 0; 
+                isWorking = false;
                 return;
             }
 
-            if (!CanAcceptInput(OreItem.type))
+            if (!CanAcceptInput(InputSlots[0].type)) 
             {
-                isSmelting = false;
+                isWorking = false;
                 return;
             }
 
             if (FuelRemaining <= 0)
             {
-                if (FuelItem.stack <= 0)
+                if (InputSlots[1].stack <= 0)
                 {
-                    isSmelting = false;
+                    isWorking = false;
                     return;
                 }
                 else
                 {
-                    FuelRemaining += FurnaceRecipeRegistry.ValidFuels[FuelItem.type];
-                    FuelItem.stack--;
+                    FuelRemaining += FurnaceRecipeRegistry.ValidFuels[InputSlots[1].type];
+                    InputSlots[1].stack--; 
                 }
             }
 
-            isSmelting = true;
-            smeltProgress++;
+            isWorking = true; 
+            WorkProgress++;   
 
-            if (smeltProgress >= SmeltDuration)
+            if (WorkProgress >= WorkDuration) 
             {
                 FinishSmelting();
             }
@@ -59,12 +55,12 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
 
         bool isValidInput()
         {
-            return !OreItem.IsAir && OreItem.stack >= FurnaceRecipeRegistry.SmeltingRecipes[OreItem.type].InputItemCount;
+            return !InputSlots[0].IsAir && InputSlots[0].stack >= FurnaceRecipeRegistry.SmeltingRecipes[InputSlots[0].type].InputItemCount;
         }
 
-        void FinishSmelting()
+        void FinishSmelting() // Later make it output to the productSlot too
         {
-            RecipeData data = FurnaceRecipeRegistry.SmeltingRecipes[OreItem.type];
+            RecipeData data = FurnaceRecipeRegistry.SmeltingRecipes[InputSlots[0].type];
             int ProductID = data.OutputItemID;
             Vector2 spawnPosition = Position.ToWorldCoordinates();
             int ProductIndex = Item.NewItem(
@@ -78,34 +74,30 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
             Main.item[ProductIndex].velocity = new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(2f, 3f));
 
             FuelRemaining--;
-            OreItem.stack -= data.InputItemCount;
-            if (OreItem.stack <= 0) 
+            InputSlots[0].stack -= data.InputItemCount; 
+            if (InputSlots[0].stack <= 0)
             {
-                OreItem = new Item();
+                InputSlots[0] = new Item(); 
             }
 
-            smeltProgress = 0;
+            WorkProgress = 0; 
         }
 
         int fuelSmeltCount = 3;
         public float GetSmeltPercent()
         {
-            if (!isValidInput())
+            if (!isValidInput() || FuelRemaining <= 0f)
             {
-                return 0f;
+                return -1f;
             }
 
-            if (FuelItem.type != ItemID.None)
+            if (InputSlots[1].type != ItemID.None) 
             {
-                fuelSmeltCount = FurnaceRecipeRegistry.ValidFuels[FuelItem.type];
+                fuelSmeltCount = FurnaceRecipeRegistry.ValidFuels[InputSlots[1].type];
             }
 
             float fuelPercent = FuelRemaining / (float)fuelSmeltCount;
-            float smeltPercent = (float)smeltProgress / (float)SmeltDuration;
-
-            //
-            //Main.NewText($"Smelt percent = {smeltPercent}");
-            //
+            float smeltPercent = (float)WorkProgress / (float)WorkDuration;
 
             return fuelPercent - smeltPercent / (float)fuelSmeltCount;
         }
@@ -120,44 +112,18 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
             return FurnaceRecipeRegistry.ValidFuels.ContainsKey(FuelID);
         }
 
-        public override bool IsTileValidForEntity(int x, int y)
-        {
-            Tile tile = Framing.GetTileSafely(x, y);
-            return tile.HasTile && tile.TileType == TileID.Furnaces;
-        }
-
-        public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
-        {
-            // Multiplayer stuff I don't know
-            //if (Main.netMode == NetmodeID.MultiplayerClient)
-            //{
-            //    // Synchronize the 3x2 tile area across the network
-            //    NetMessage.SendTileSquare(Main.myPlayer, i, j, 3, 2);
-            //    NetMessage.SendData(MessageID.TileEntityPlacement, number: -1, number2: i, number3: j, number4: Type);
-            //    return -1;
-            //}
-            if(type != TileID.Furnaces)
-            {
-                return -1;
-            }
-
-            return Place(i, j);
-        }
-
         public override void SaveData(TagCompound tag)
         {
-            tag["InputItem"] = OreItem;
-            tag["FuelItem"] = FuelItem;
+            base.SaveData(tag); 
             tag["FuelRemaining"] = FuelRemaining;
-            tag["SmeltProgress"] = smeltProgress;
+            tag["WorkProgress"] = WorkProgress;
         }
 
         public override void LoadData(TagCompound tag)
         {
-            OreItem = tag.Get<Item>("InputItem");
-            FuelItem = tag.Get<Item>("FuelItem");
+            base.LoadData(tag);
             FuelRemaining = tag.GetInt("FuelRemaining");
-            smeltProgress = tag.GetInt("SmeltProgress");
+            WorkProgress = tag.GetInt("WorkProgress");
         }
     }
 }

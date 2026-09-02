@@ -1,7 +1,9 @@
-﻿using Factorraria.Content.Configs;
+﻿using Factorraria.Common.UI;
+using Factorraria.Content.Configs;
 using Factorraria.Content.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ModLoader;
@@ -10,65 +12,36 @@ using tModPorter;
 
 namespace Factorraria.Content.Tiles.Machines.Furnace
 {
-    public class FurnaceUIState : UIState
+    public class FurnaceUIState : MachineUIStateBase
     {
-        public FurnaceTileEntity currentTileEntity;
-        public UIElement panel;
+        FurnaceTileEntity Furnace => (FurnaceTileEntity)CurrentEntity;
 
-        UIItemSlotWrapper OreSlot;
-        public Item GetOreItem() { return currentTileEntity.OreItem; }
-        public void SetOreItem(Item newItem) { currentTileEntity.OreItem = newItem; }
-        public bool CanAcceptOre(Item InputItem) { return FurnaceRecipeRegistry.SmeltingRecipes.ContainsKey(InputItem.type); }
+        protected override Vector2 BasePanelSize => new Vector2(100, 200);
 
-        FireUIElement fireUI;
-        public float GetProgress() { return currentTileEntity.GetSmeltPercent(); }
-
-        UIItemSlotWrapper FuelSlot;
-        public Item GetFuelItem() { return currentTileEntity.FuelItem; }
-        public void SetFuelItem(Item newItem) { currentTileEntity.FuelItem = newItem; }
-        public bool CanAcceptFuel(Item InputItem) { return FurnaceRecipeRegistry.ValidFuels.ContainsKey(InputItem.type); }
-
-        public override void OnInitialize()
+        protected override List<MachineUIElementEntry> BuildElements()
         {
-            panel = new UIElement();
+            var list = new List<MachineUIElementEntry>();
 
-            panel.Height.Set(200, 0);
-            panel.Width.Set(100, 0);
-            Append(panel);
+            var oreSlot = new UIItemSlotWrapper(
+                ItemSlot.Context.ChestItem,
+                () => Furnace.InputSlots[0],
+                v => Furnace.InputSlots[0] = v,
+                item => FurnaceRecipeRegistry.SmeltingRecipes.ContainsKey(item.type)
+            );
+            list.Add(new MachineUIElementEntry(oreSlot, new Vector2(0, 0), new Vector2(54, 54)));
 
-            FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            var fireUI = new FireUIElement(() => Furnace.GetSmeltPercent());
+            list.Add(new MachineUIElementEntry(fireUI, new Vector2(0, 50), new Vector2(54, 54)));
 
-            OreSlot = new UIItemSlotWrapper(ItemSlot.Context.ChestItem, 1f, GetOreItem, SetOreItem, CanAcceptOre);
-            panel.Append(OreSlot);
+            var fuelSlot = new UIItemSlotWrapper(
+                ItemSlot.Context.ChestItem,
+                () => Furnace.InputSlots[1],
+                v => Furnace.InputSlots[1] = v,
+                item => FurnaceRecipeRegistry.ValidFuels.ContainsKey(item.type)
+            );
+            list.Add(new MachineUIElementEntry(fuelSlot, new Vector2(0, 100), new Vector2(54, 54)));
 
-            fireUI = new FireUIElement(GetProgress);
-            panel.Append(fireUI);
-
-            FuelSlot = new UIItemSlotWrapper(ItemSlot.Context.ChestItem, 1f, GetFuelItem, SetFuelItem, CanAcceptFuel);
-            panel.Append(FuelSlot);
-        }
-
-        public void SetZoomScale(float zoomScale)
-        {
-            if(OreSlot == null || FuelSlot == null)
-            {
-                return;
-            }
-
-            panel.Height.Set(200 * zoomScale, 0);
-            panel.Width.Set(100 * zoomScale, 0);
-
-            OreSlot.setScale(zoomScale);
-            OreSlot.Top.Set(0, 0);
-            OreSlot.Left.Set(0, 0);
-            fireUI.setScale(zoomScale * 0.84375f); // 54 slot size / 64 fire icon size
-            fireUI.Top.Set(50 * zoomScale, 0);
-            fireUI.Left.Set(0, 0);
-            FuelSlot.setScale(zoomScale);
-            FuelSlot.Top.Set(100 * zoomScale, 0);
-            FuelSlot.Left.Set(0, 0);
-
-            panel.Recalculate();
+            return list;
         }
     }
 }

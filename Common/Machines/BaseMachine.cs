@@ -1,4 +1,6 @@
-﻿using Terraria;
+﻿using Factorraria.Common.Systems;
+using Factorraria.Common.UI;
+using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -54,6 +56,15 @@ namespace Factorraria.Common.Machines
             if (frame == lastAnimationFrame || frame == -1) return;
             OnAnimationFrameChanged(frame, lastAnimationFrame);
             lastAnimationFrame = frame;
+        }
+
+        public virtual void OnRightClick(int i, int j)
+        {
+            if (MachineUIRegistry.Definitions.ContainsKey(ValidTileType))
+            {
+                ModContent.GetInstance<MachineUISystem>().OpenUI(i, j, ValidTileType, this);
+
+            }
         }
 
         protected virtual void OnAnimationFrameChanged(int newFrame, int previousFrame) { }

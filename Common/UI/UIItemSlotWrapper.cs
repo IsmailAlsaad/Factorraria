@@ -10,40 +10,24 @@ namespace Factorraria.Content.UI
     public class UIItemSlotWrapper : UIElement
     {
         int context;
-        float scale;
 
         Func<Item> getItem;
         Action<Item> setItem;
         Func<Item, bool> canAcceptItem;
 
-        public UIItemSlotWrapper(int _context,float _scale,Func<Item> _getItem,Action<Item> _setItem,Func<Item, bool> _canAcceptItem)
+        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<Item, bool> _canAcceptItem)
         {
             context = _context;
-            scale = _scale;
             getItem = _getItem;
             setItem = _setItem;
             canAcceptItem = _canAcceptItem;
 
-            ApplyScale();
-        }
-
-        void ApplyScale()
-        {
-            float slotDimension = TextureAssets.InventoryBack.Value.Width * scale;
-            Height.Set(slotDimension, 0f);
-            Width.Set(slotDimension, 0f);
-        }
-
-        public void setScale(float _scale)
-        {
-            scale = _scale;
-            ApplyScale();
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
             Item item = getItem();
-            if (item == null) 
+            if (item == null)
             {
                 item = new Item();
                 setItem(item);
@@ -52,14 +36,14 @@ namespace Factorraria.Content.UI
             CalculatedStyle dimesions = GetDimensions();
             Vector2 drawPosition = new Vector2(dimesions.X, dimesions.Y);
 
+            // NEW: work out the current scale from our actual on-screen width vs. the
+            // real vanilla slot-background texture width — same idea as FireUIElement above.
+            float scale = dimesions.Width / TextureAssets.InventoryBack.Value.Width;
+
             float oldScale = Main.inventoryScale;
             Main.inventoryScale = scale;
-            ItemSlot.Draw(spriteBatch,ref item,context,drawPosition);
+            ItemSlot.Draw(spriteBatch, ref item, context, drawPosition);
             Main.inventoryScale = oldScale;
-
-            //
-            //Main.NewText($"hovering={IsMouseHovering} dims={dimesions.X},{dimesions.Y},{dimesions.Width}x{dimesions.Height} mouse={Main.MouseScreen}");
-            //
 
             if (!IsMouseHovering)
             {
@@ -69,7 +53,7 @@ namespace Factorraria.Content.UI
             Main.LocalPlayer.mouseInterface = true;
 
             bool allowInteraction = true;
-            if (!Main.mouseItem.IsAir && canAcceptItem != null) 
+            if (!Main.mouseItem.IsAir && canAcceptItem != null)
             {
                 allowInteraction = canAcceptItem(Main.mouseItem);
             }

@@ -15,33 +15,20 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
         Asset<Texture2D> fireEmptyTexture;
         Func<float> GetProgress;
 
-        float scale;
-
         public FireUIElement(Func<float> _GetProgress)
         {
             fireFullTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Machines/General Machines/Furnace/Fire_Full");
             fireEmptyTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Machines/General Machines/Furnace/Fire_Empty");
 
             GetProgress = _GetProgress;
-
-            setScale(1f);
-        }
-
-        public void setScale(float _scale)
-        {
-            scale = _scale;
-            Height.Set(fireEmptyTexture.Height() * scale, 0f);
-            Width.Set(fireEmptyTexture.Width() * scale, 0f);
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
-            // 1. Pause the game's default UI drawing layer
             spriteBatch.End();
-            // 2. Restart it using NonPremultiplied blending rules to support standard PNG transparency
             spriteBatch.Begin(
                 SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied, // <--- THE FIX
+                BlendState.NonPremultiplied,
                 Main.DefaultSamplerState,
                 DepthStencilState.None,
                 RasterizerState.CullCounterClockwise,
@@ -52,18 +39,17 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
             CalculatedStyle dimensions = GetDimensions();
             Vector2 drawPosition = dimensions.Position();
 
-            spriteBatch.Draw(fireEmptyTexture.Value, drawPosition,null, Color.White,0f, Vector2.Zero,scale,SpriteEffects.None,0f);
+            // NEW: work out the current scale by comparing our actual on-screen width
+            // (set externally, every frame, by MachineUIStateBase.SetZoomScale) to the
+            // texture's real pixel width. This replaces the old remembered "scale" field.
+            float scale = dimensions.Width / fireEmptyTexture.Width();
 
-            //
+            spriteBatch.Draw(fireEmptyTexture.Value, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+
             FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
-            //
 
-            float drawPercent = Math.Clamp(GetProgress(),0f,1f);
-            drawPercent = Remap(drawPercent, 0f, 1f, config.fireCropOffset, 1f);
-
-            //
-            //Main.NewText($"Smelt percentage = {drawPercent}");
-            //
+            float drawPercent = GetProgress();
+            drawPercent = drawPercent == -1 ? 0f : Remap(drawPercent, 0f, 1f, config.fireCropOffset, 1f);
 
             int drawWidth = fireFullTexture.Width();
             int drawHeight = (int)(fireFullTexture.Height() * drawPercent);
@@ -71,23 +57,21 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
 
             Rectangle spriteSlice = new Rectangle(0, yOffset, drawWidth, drawHeight);
             Vector2 overlayPosition = drawPosition + new Vector2(0, yOffset * scale);
-            //overlayPosition *= scale;
 
-            spriteBatch.Draw(fireFullTexture.Value,overlayPosition, spriteSlice, Color.White,0f,Vector2.Zero,scale,SpriteEffects.None,0f);
+            spriteBatch.Draw(fireFullTexture.Value, overlayPosition, spriteSlice, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 
-            // 3. Close your custom pass and return the batch to default behavior so other UI elements don't break
             spriteBatch.End();
             spriteBatch.Begin(
-                SpriteSortMode.Deferred, 
-                BlendState.AlphaBlend, 
-                Main.DefaultSamplerState, 
-                DepthStencilState.None, 
-                RasterizerState.CullCounterClockwise, 
-                null, 
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                Main.DefaultSamplerState,
+                DepthStencilState.None,
+                RasterizerState.CullCounterClockwise,
+                null,
                 Main.UIScaleMatrix);
         }
 
-        float Remap(float value, float fromLow, float fromHigh,float toLow, float toHigh)
+        float Remap(float value, float fromLow, float fromHigh, float toLow, float toHigh)
         {
             float temp1 = (value - fromLow) / (fromHigh - fromLow);
             float temp2 = toHigh - toLow;

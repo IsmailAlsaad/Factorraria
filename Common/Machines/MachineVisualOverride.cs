@@ -1,4 +1,5 @@
 ﻿using Factorraria.Content.Tiles.Machines.Autohammer;
+using Factorraria.Content.Tiles.Machines.Furnace;
 using Factorraria.Content.Tiles.Machines.GelBurner;
 using Factorraria.Content.Tiles.Machines.Solidifier;
 using Microsoft.Xna.Framework.Graphics;
@@ -42,6 +43,9 @@ namespace Factorraria.Common.Machines
     {
         public override void Load()
         {
+            MachineVisualRegistry.Register<FurnaceTileEntity>(TileID.Furnaces,
+                "Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_On", "Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_Off");
+
             MachineVisualRegistry.Register<AutohammerTileEntity>(TileID.Autohammer,
                 "Factorraria/Content/Tiles/Machines/Electrical Consumers/Autohammer/Autohammer_On", "Factorraria/Content/Tiles/Machines/Electrical Consumers/Autohammer/Autohammer_Off");
 
@@ -62,6 +66,16 @@ namespace Factorraria.Common.Machines
             int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j);
             entity.NotifyAnimationFrame(frame);
             return false;
+        }
+        public override void RightClick(int i, int j, int type)
+        {
+            if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var visualDef))
+                return; // not a registered machine, ignore
+
+            TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity entity, out Point16 topLeft);
+            BaseMachine machine = visualDef.GetEntity(topLeft.X, topLeft.Y);
+
+            machine.OnRightClick(topLeft.X, topLeft.Y); // machine decides what happens
         }
 
         public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
