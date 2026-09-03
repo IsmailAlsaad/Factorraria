@@ -159,16 +159,13 @@ namespace Factorraria.Common.Systems
         {
             Direction mouthDirection = DirectionExtensions.FromOffset(offset);
 
-            if (PipeTierRegistry.IsPipeTile(Main.tile[pipePos.X, pipePos.Y].TileType))
-            {
-                if (!DirectionExtensions.IsPipeMouthOpen(pipePos.X, pipePos.Y, mouthDirection))
-                    return;
-            }
-
             if (TileEntityHelper.TryGetEntityFromTile(neighborPos.X, neighborPos.Y, out TileEntity entity, out _))
             {
                 if (entity is MotorTileEntityBase motor)
                 {
+                    if (!PipeConnectionHelper.CanConnect(neighborPos.X, neighborPos.Y, mouthDirection))
+                        return; // perpendicular to Facing — not a valid attachment point
+
                     if (!network.Motors.Exists(m => m.Position == neighborPos))
                         network.Motors.Add(new MotorAttachment { Position = neighborPos, Motor = motor });
 

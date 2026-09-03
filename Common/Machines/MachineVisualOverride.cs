@@ -1,20 +1,13 @@
-﻿using Factorraria.Content.Tiles.Liquids.Motors;
-using Factorraria.Content.Tiles.Machines.Autohammer;
-using Factorraria.Content.Tiles.Machines.Furnace;
-using Factorraria.Content.Tiles.Machines.GelBurner;
-using Factorraria.Content.Tiles.Machines.Solidifier;
+﻿using Factorraria.Common.Liquids;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.DataStructures;
-using Terraria.ID;
 using Terraria.ModLoader;
-using static Terraria.GameContent.Bestiary.IL_BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions;
 
 namespace Factorraria.Common.Machines
 {
@@ -58,10 +51,23 @@ namespace Factorraria.Common.Machines
 
             BaseMachine entity = def.GetEntity(i, j);
             var texture = entity.isOn ? def.OnTexture : def.OffTexture;
-            int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j);
+
+            float rotation = entity is MotorTileEntityBase motor ? GetMotorRotation(motor.Facing) : 0f;
+
+            int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j, rotation);
             entity.NotifyAnimationFrame(frame);
             return false;
         }
+
+        // Assumes the motor art is drawn facing Right at 0 rotation — Facing's default value.
+        static float GetMotorRotation(Direction facing) => facing switch
+        {
+            Direction.Right => 0f,
+            Direction.Down => MathHelper.PiOver2,
+            Direction.Left => MathHelper.Pi,
+            Direction.Up => -MathHelper.PiOver2,
+            _ => 0f
+        };
         public override void RightClick(int i, int j, int type)
         {
             if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var visualDef))

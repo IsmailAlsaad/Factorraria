@@ -77,7 +77,7 @@ namespace Factorraria.Common.Liquids
             ReframeSelf(i, j);
         }
 
-        void ReframeSelfAndNeighbors(int i, int j)
+        static void ReframeSelfAndNeighbors(int i, int j)
         {
             ReframeSelf(i, j);
             ReframeIfPipe(i - 1, j);
@@ -86,29 +86,32 @@ namespace Factorraria.Common.Liquids
             ReframeIfPipe(i, j + 1);
         }
 
-        void ReframeIfPipe(int i, int j)
+        static void ReframeIfPipe(int i, int j)
         {
             if (PipeTierRegistry.IsPipeTile(Main.tile[i, j].TileType))
                 ReframeSelf(i, j);
         }
 
-        // Looks at the 4 neighbors, builds a 4-bit mask of which sides connect to
-        // another pipe, and picks the matching sprite frame.
-        // NOTE: the mask -> frame math below (connectionMask * 18) is a placeholder —
-        // 18 = 16px tile + 2px sheet padding, standard Terraria spacing, but the actual
-        // frame each mask value should show depends entirely on how you lay out the
-        // sprite sheet. Treat this as "structurally correct, numbers need matching to art."
-        void ReframeSelf(int i, int j)
+        // Entry point for non-pipe tiles (motors) to say "something about me changed, any pipe
+        // touching me should reconsider its sprite." Motor rotation is the main case — that has
+        // no natural tile-frame event to piggyback on the way placement/breaking does.
+        public static void ReframeNeighbors(int i, int j)
         {
-            bool up = PipeTierRegistry.IsPipeTile(Main.tile[i, j - 1].TileType);
-            bool down = PipeTierRegistry.IsPipeTile(Main.tile[i, j + 1].TileType);
-            bool left = PipeTierRegistry.IsPipeTile(Main.tile[i - 1, j].TileType);
-            bool right = PipeTierRegistry.IsPipeTile(Main.tile[i + 1, j].TileType);
+            ReframeIfPipe(i - 1, j);
+            ReframeIfPipe(i + 1, j);
+            ReframeIfPipe(i, j - 1);
+            ReframeIfPipe(i, j + 1);
+        }
+
+        static void ReframeSelf(int i, int j)
+        {
+            bool up = PipeConnectionHelper.CanConnect(i, j - 1, Direction.Up);
+            bool down = PipeConnectionHelper.CanConnect(i, j + 1, Direction.Down);
+            bool left = PipeConnectionHelper.CanConnect(i - 1, j, Direction.Left);
+            bool right = PipeConnectionHelper.CanConnect(i + 1, j, Direction.Right);
 
             int connectionMask = (up ? 1 : 0) | (down ? 2 : 0) | (left ? 4 : 0) | (right ? 8 : 0);
 
-            // A lone pipe with no neighbors defaults to looking like a horizontal
-            // segment, per spec — fake "left+right" so it draws that way.
             if (connectionMask == 0) connectionMask = 4 | 8;
 
             Main.tile[i, j].TileFrameX = (short)(connectionMask * 18);

@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Liquids;
+using Factorraria.Common.Systems;
 using Terraria.ModLoader.IO;
 
 namespace Factorraria.Common.Machines
@@ -25,11 +26,11 @@ namespace Factorraria.Common.Machines
         public override void OnRightClick(int i, int j)
         {
             Facing = Facing.Rotate90();
-            // NOTE: no base.OnRightClick() call here — this deliberately does NOT
-            // open a UI, matching your earlier point that right-click doesn't have
-            // to always mean "open panel." A motor with no MachineUIRegistry entry
-            // would've done nothing anyway, so this just replaces "nothing" with
-            // "rotate," rather than overriding a UI-opening behavior.
+
+            // Facing changed → sprite rotation (MachineVisualOverride reads this.Facing)
+            // and which pipe sides are even allowed to attach both need re-evaluating.
+            LiquidNetworkSystem.networkNeedsRebuilding = true;
+            PipeTileBase.ReframeNeighbors(i, j);
         }
 
         public override void SaveData(TagCompound tag)

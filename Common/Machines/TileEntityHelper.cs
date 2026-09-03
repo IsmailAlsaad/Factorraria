@@ -96,7 +96,7 @@ namespace Factorraria.Common.Machines
             return null;
         }
 
-        public static int AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j)
+        public static int AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j,float rotation = 0f)
         {
             Tile thisTile = Framing.GetTileSafely(i, j);
             TileObjectData data = TileObjectData.GetTileData(thisTile.TileType, 0);
@@ -123,7 +123,8 @@ namespace Factorraria.Common.Machines
             }
 
             Vector2 offset = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
-            Vector2 drawPosition = new Vector2(i, j) * 16 - Main.screenPosition + offset + new Vector2(0,data.DrawYOffset);
+            Vector2 origin = new Vector2(8f, data.CoordinateHeights[subY] / 2f);
+            Vector2 drawPosition = new Vector2(i, j) * 16 - Main.screenPosition + offset + new Vector2(0, data.DrawYOffset) + origin;
             int frameCount = targetTexture.Height / frameHeight;
 
             //
@@ -143,7 +144,7 @@ namespace Factorraria.Common.Machines
 
             Rectangle textureSlice = new Rectangle(thisTile.TileFrameX, thisTile.TileFrameY + frameHeight * frameYOffset, 16, data.CoordinateHeights[subY]);
             Color lightingColor = Lighting.GetColor(i, j);
-            spriteBatch.Draw(targetTexture, drawPosition, textureSlice, lightingColor);
+            spriteBatch.Draw(targetTexture, drawPosition, textureSlice, lightingColor, rotation, origin, 1f, SpriteEffects.None, 0f);
 
             return frameYOffset;
         }
