@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Systems;
+﻿using Factorraria.Common.Liquids;
+using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
 using Terraria;
 using Terraria.ModLoader;
@@ -26,6 +27,21 @@ namespace Factorraria.Common.Machines
         {
             var arr = new Item[count];
             for (int i = 0; i < count; i++) arr[i] = new Item();
+            return arr;
+        }
+
+        protected virtual int InputLiquidCount => 0;
+        protected virtual int OutputLiquidCount => 0;
+
+        LiquidStack[] inputLiquids;
+        LiquidStack[] outputLiquids;
+        public LiquidStack[] InputLiquids => inputLiquids ??= CreateLiquidArray(InputLiquidCount);
+        public LiquidStack[] OutputLiquids => outputLiquids ??= CreateLiquidArray(OutputLiquidCount);
+
+        static LiquidStack[] CreateLiquidArray(int count)
+        {
+            var arr = new LiquidStack[count];
+            for (int i = 0; i < count; i++) arr[i] = new LiquidStack();
             return arr;
         }
 
@@ -71,14 +87,46 @@ namespace Factorraria.Common.Machines
 
         public override void SaveData(TagCompound tag)
         {
-            for (int i = 0; i < InputSlots.Length; i++) tag[$"Input{i}"] = InputSlots[i];
-            for (int i = 0; i < OutputSlots.Length; i++) tag[$"Output{i}"] = OutputSlots[i];
+            for (int i = 0; i < InputSlots.Length; i++)
+            {
+                tag[$"Input{i}"] = InputSlots[i];
+            }
+            for (int i = 0; i < OutputSlots.Length; i++)
+            {
+                tag[$"Output{i}"] = OutputSlots[i];
+            }
+            for (int i = 0; i < InputLiquids.Length; i++)
+            {
+                tag[$"InputLiquidType{i}"] = InputLiquids[i].LiquidType;
+                tag[$"InputLiquidAmount{i}"] = InputLiquids[i].Amount;
+            }
+            for (int i = 0; i < OutputLiquids.Length; i++)
+            {
+                tag[$"OutputLiquidType{i}"] = OutputLiquids[i].LiquidType;
+                tag[$"OutputLiquidAmount{i}"] = OutputLiquids[i].Amount;
+            }
         }
 
         public override void LoadData(TagCompound tag)
         {
-            for (int i = 0; i < InputSlots.Length; i++) InputSlots[i] = tag.Get<Item>($"Input{i}");
-            for (int i = 0; i < OutputSlots.Length; i++) OutputSlots[i] = tag.Get<Item>($"Output{i}");
+            for (int i = 0; i < InputSlots.Length; i++)
+            {
+                InputSlots[i] = tag.Get<Item>($"Input{i}");
+            }
+            for (int i = 0; i < OutputSlots.Length; i++)
+            {
+                OutputSlots[i] = tag.Get<Item>($"Output{i}");
+            }
+            for (int i = 0; i < InputLiquids.Length; i++)
+            {
+                InputLiquids[i].LiquidType = tag.GetInt($"InputLiquidType{i}");
+                InputLiquids[i].Amount = tag.GetFloat($"InputLiquidAmount{i}");
+            }
+            for (int i = 0; i < OutputLiquids.Length; i++)
+            {
+                OutputLiquids[i].LiquidType = tag.GetInt($"OutputLiquidType{i}");
+                OutputLiquids[i].Amount = tag.GetFloat($"OutputLiquidAmount{i}");
+            }
         }
     }
 }

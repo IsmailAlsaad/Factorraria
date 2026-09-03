@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.Tiles.Machines.Autohammer;
+﻿using Factorraria.Content.Tiles.Liquids.Motors;
+using Factorraria.Content.Tiles.Machines.Autohammer;
 using Factorraria.Content.Tiles.Machines.Furnace;
 using Factorraria.Content.Tiles.Machines.GelBurner;
 using Factorraria.Content.Tiles.Machines.Solidifier;
@@ -30,6 +31,15 @@ namespace Factorraria.Common.Machines
 
         public static void Register<T>(int tileType, string onPath, string offPath) where T : BaseMachine, new()
         {
+            if (tileType <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(tileType),
+                    $"Failed to register {typeof(T).Name}: Tile ID was {tileType}. " +
+                    $"Ensure registration runs in ModSystem.PostSetupContent()."
+                );
+            }
+
             Definitions[tileType] = new MachineVisualDefinition
             {
                 GetEntity = (i, j) => TileEntityHelper.GetOrCreateEntity<T>(i, j),
@@ -41,21 +51,6 @@ namespace Factorraria.Common.Machines
 
     public class MachineVisualOverride : GlobalTile
     {
-        public override void Load()
-        {
-            MachineVisualRegistry.Register<FurnaceTileEntity>(TileID.Furnaces,
-                "Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_On", "Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_Off");
-
-            MachineVisualRegistry.Register<AutohammerTileEntity>(TileID.Autohammer,
-                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Autohammer/Autohammer_On", "Factorraria/Content/Tiles/Machines/Electrical Consumers/Autohammer/Autohammer_Off");
-
-            MachineVisualRegistry.Register<SolidifierTileEntity>(TileID.Solidifier,
-                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_On", "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_Off");
-
-            MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
-                "Factorraria/Content/Tiles/Machines/Electrical Producers/GelBurner/GelBurner_On", "Factorraria/Content/Tiles/Machines/Electrical Producers/GelBurner/GelBurner_Off");
-        }
-
         public override bool PreDraw(int i, int j, int type, SpriteBatch spriteBatch)
         {
             if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var def))

@@ -36,6 +36,16 @@ Items: {
 			Shift + Right click in inventory to swap direction
 			'''
 	}
+
+	MotorMK1Item: {
+		DisplayName: Motor MK1
+		Tooltip: ""
+	}
+
+	PipeMK1Item: {
+		DisplayName: Pipe MK1
+		Tooltip: ""
+	}
 }
 
 Configs: {

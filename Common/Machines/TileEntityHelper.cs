@@ -123,7 +123,7 @@ namespace Factorraria.Common.Machines
             }
 
             Vector2 offset = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
-            Vector2 drawPosition = new Vector2(i, j) * 16 - Main.screenPosition + offset + new Vector2(0, 2);
+            Vector2 drawPosition = new Vector2(i, j) * 16 - Main.screenPosition + offset + new Vector2(0,data.DrawYOffset);
             int frameCount = targetTexture.Height / frameHeight;
 
             //

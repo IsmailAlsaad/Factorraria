@@ -30,11 +30,6 @@ namespace Factorraria.Common.Systems
             if (Main.dedServ) return; // server has no screen, skip UI setup entirely
 
             machineInterface = new UserInterface();
-
-            // --- Register every machine's UI here, once. This is the only place you add a line
-            //     when you build a new machine's UI. Same spot/pattern as MachineVisualRegistry.Load(). ---
-            MachineUIRegistry.Register(TileID.Furnaces, new FurnaceUIState());
-            // MachineUIRegistry.Register(TileID.Autohammer, new AutohammerUIState()); // add later if it needs one
         }
 
         // Call this from a machine's right-click handler, e.g.:
@@ -122,14 +117,6 @@ namespace Factorraria.Common.Systems
 
             openState.SetZoomScale(zoomScale);
             openState.Recalculate();
-        }
-
-        public override void PostAddRecipes()
-        {
-            // --- Register every machine's Recipes here, once. This is the only place you add a line
-            FurnaceRecipeRegistry.BuildFromExistingRecipes();
-            // AutohammerRecipeRegistry.BuildFromExistingRecipes();
-            // etc...
         }
     }
 }
