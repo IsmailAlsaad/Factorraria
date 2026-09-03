@@ -2,6 +2,7 @@
 using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -62,8 +63,16 @@ namespace Factorraria.Common.Machines
             //    return -1;
             //}
 
-            if (type != ValidTileType) return -1;
-            return Place(i, j);
+            Tile tile = Framing.GetTileSafely(i, j);
+            if (!tile.HasTile || tile.TileType != ValidTileType)
+                return -1;
+
+            int id = Place(i, j);
+            if (id != -1 && TileEntity.ByID.TryGetValue(id, out TileEntity entity))
+            {
+                PowerGridSystem.RegisterMachineToMasterList(entity);
+            }
+            return id;
         }
 
         int lastAnimationFrame = -1;
@@ -79,7 +88,6 @@ namespace Factorraria.Common.Machines
             if (MachineUIRegistry.Definitions.ContainsKey(ValidTileType))
             {
                 ModContent.GetInstance<MachineUISystem>().OpenUI(i, j, ValidTileType, this);
-
             }
         }
 

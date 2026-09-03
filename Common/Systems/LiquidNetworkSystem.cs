@@ -9,6 +9,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace Factorraria.Common.Systems
 {
@@ -66,6 +67,26 @@ namespace Factorraria.Common.Systems
             ActiveNetworks.Clear();
         }
 
+        public override void SaveWorldData(TagCompound tag)
+        {
+            List<int[]> pipePositions = AllPipeTiles.Select(p => new int[] { p.X, p.Y }).ToList();
+            tag["AllPipeTiles"] = pipePositions;
+        }
+
+        public override void LoadWorldData(TagCompound tag)
+        {
+            AllPipeTiles.Clear();
+            if (tag.ContainsKey("AllPipeTiles"))
+            {
+                var list = tag.GetList<int[]>("AllPipeTiles");
+                foreach (var pos in list)
+                {
+                    AllPipeTiles.Add(new Point(pos[0], pos[1]));
+                }
+            }
+            networkNeedsRebuilding = true;
+        }
+
         static readonly Point[] Offsets = { new Point(0, -1), new Point(0, 1), new Point(-1, 0), new Point(1, 0) };
 
         void RebuildNetworks()
@@ -89,12 +110,13 @@ namespace Factorraria.Common.Systems
         {
             LiquidNetwork network = new LiquidNetwork();
             Queue<Point> queue = new Queue<Point>();
+            HashSet<Point> visited = new HashSet<Point>();
 
             queue.Enqueue(start);
             remainingPipes.Remove(start);
+            visited.Add(start);
             network.PipeTiles.Add(start);
             NarrowCapacity(network, start);
-            ResolveFlow(network);
 
             while (queue.Count > 0)
             {
@@ -110,6 +132,7 @@ namespace Factorraria.Common.Systems
                         if (remainingPipes.Contains(neighbor))
                         {
                             remainingPipes.Remove(neighbor);
+                            visited.Add(neighbor);
                             network.PipeTiles.Add(neighbor);
                             NarrowCapacity(network, neighbor);
                             queue.Enqueue(neighbor);
@@ -117,10 +140,11 @@ namespace Factorraria.Common.Systems
                         continue;
                     }
 
-                    RecordAttachmentIfAny(network, current, neighbor, offset, queue, remainingPipes);
+                    RecordAttachmentIfAny(network, current, neighbor, offset, queue, visited);
                 }
             }
 
+            ResolveFlow(network);
             return network;
         }
 
@@ -131,36 +155,25 @@ namespace Factorraria.Common.Systems
             network.MaxFlowRate = Math.Min(network.MaxFlowRate, thisPipeCapacity);
         }
 
-        void RecordAttachmentIfAny(LiquidNetwork network, Point pipePos, Point neighborPos, Point offset, Queue<Point> pipeQueue, HashSet<Point> remainingPipes)
+        void RecordAttachmentIfAny(LiquidNetwork network, Point pipePos, Point neighborPos, Point offset, Queue<Point> pipeQueue, HashSet<Point> visited)
         {
             Direction mouthDirection = DirectionExtensions.FromOffset(offset);
 
-            // NEW: if this pipe's rendered mouth doesn't actually face this neighbor,
-            // it's not a usable connection, even though the tiles are adjacent.
-            if (!DirectionExtensions.IsPipeMouthOpen(pipePos.X, pipePos.Y, mouthDirection))
+            if (PipeTierRegistry.IsPipeTile(Main.tile[pipePos.X, pipePos.Y].TileType))
             {
-                return;
+                if (!DirectionExtensions.IsPipeMouthOpen(pipePos.X, pipePos.Y, mouthDirection))
+                    return;
             }
 
             if (TileEntityHelper.TryGetEntityFromTile(neighborPos.X, neighborPos.Y, out TileEntity entity, out _))
             {
-                // Motors are the one exception to "machines are endpoints" — record it
-                // AND keep flood-filling through it, so pipes on either side of a motor
-                // end up in the same network (the whole point of a motor is connecting
-                // an intake run to a discharge run).
                 if (entity is MotorTileEntityBase motor)
                 {
-                    // Avoid double-recording the same motor if the scan reaches it from
-                    // more than one side (e.g. a motor with pipes on 3 sides).
-                    bool alreadyRecorded = network.Motors.Exists(m => m.Position == neighborPos);
-                    if (!alreadyRecorded)
+                    if (!network.Motors.Exists(m => m.Position == neighborPos))
                         network.Motors.Add(new MotorAttachment { Position = neighborPos, Motor = motor });
 
-                    // Treat the motor's own tile as if it were a pipe tile for traversal
-                    // purposes only — this is what makes it a bridge instead of a dead end.
-                    if (remainingPipes.Contains(neighborPos))
+                    if (visited.Add(neighborPos))
                     {
-                        remainingPipes.Remove(neighborPos);
                         pipeQueue.Enqueue(neighborPos);
                     }
                     return;
@@ -172,6 +185,7 @@ namespace Factorraria.Common.Systems
                     {
                         Position = neighborPos,
                         PipePosition = pipePos,
+                        MouthDirection = mouthDirection,
                         Machine = machine
                     });
                     return;
@@ -185,6 +199,7 @@ namespace Factorraria.Common.Systems
                 {
                     Position = neighborPos,
                     PipePosition = pipePos,
+                    MouthDirection = mouthDirection,
                     Machine = null
                 });
             }
@@ -211,7 +226,12 @@ namespace Factorraria.Common.Systems
             while (frontier.TryDequeue(out var packet, out _))
             {
                 var (tile, dir, magnitude) = packet;
-                if (!PipeTierRegistry.IsPipeTile(Main.tile[tile.X, tile.Y].TileType)) continue;
+
+                // FIX: Allow flow calculation to pass through motor tiles as well as pipe tiles
+                bool isPipe = PipeTierRegistry.IsPipeTile(Main.tile[tile.X, tile.Y].TileType);
+                bool isMotor = TileEntityHelper.TryGetEntityFromTile(tile.X, tile.Y, out TileEntity te, out _) && te is MotorTileEntityBase;
+
+                if (!isPipe && !isMotor) continue;
 
                 if (network.ResolvedFlow.TryGetValue(tile, out var existing))
                 {
@@ -219,14 +239,13 @@ namespace Factorraria.Common.Systems
                     {
                         if (magnitude <= existing.Magnitude)
                         {
-                            continue; // weaker duplicate, discard
-                            // no addition here — just let the stronger value overwrite below
+                            continue;
                         }
                     }
                     else
                     {
                         float net = magnitude - existing.Magnitude;
-                        if (net <= 0) 
+                        if (net <= 0)
                         {
                             continue;
                         }
@@ -234,14 +253,10 @@ namespace Factorraria.Common.Systems
                     }
                 }
 
-                magnitude = Math.Min(magnitude, network.MaxFlowRate); // capped by weakest pipe tier
+                magnitude = Math.Min(magnitude, network.MaxFlowRate);
                 network.ResolvedFlow[tile] = (dir, magnitude);
 
-                // If ANOTHER motor sits on this exact tile, inject its strength right here,
-                // in the same direction, before continuing to propagate outward — this is
-                // literally "motor B adds its pump power at the position of the motor."
-                if (TileEntityHelper.TryGetEntityFromTile(tile.X, tile.Y, out TileEntity te, out _)
-                    && te is MotorTileEntityBase otherMotor && otherMotor.Facing == dir)
+                if (isMotor && te is MotorTileEntityBase otherMotor && otherMotor.Facing == dir)
                 {
                     magnitude += otherMotor.PumpStrength;
                     magnitude = Math.Min(magnitude, network.MaxFlowRate);
@@ -251,9 +266,9 @@ namespace Factorraria.Common.Systems
                 foreach (Point offset in Offsets)
                 {
                     Point neighbor = new Point(tile.X + offset.X, tile.Y + offset.Y);
-                    bool climbed = offset.Y < 0; // moving to smaller Y = upward = penalized
+                    bool climbed = offset.Y < 0;
                     float decayed = magnitude - (climbed ? DecayPerClimbTile : 0f);
-                    if (decayed <= 0) continue; // fully decayed, nothing left to propagate
+                    if (decayed <= 0) continue;
 
                     frontier.Enqueue((neighbor, dir, decayed), decayed);
                 }

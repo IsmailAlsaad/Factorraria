@@ -65,11 +65,13 @@ namespace Factorraria.Common.Liquids
         public override void PlaceInWorld(int i, int j, Item item)
         {
             LiquidNetworkSystem.networkNeedsRebuilding = true;
+            PowerGridSystem.gridNeedsRebuilding = true;
         }
 
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             LiquidNetworkSystem.networkNeedsRebuilding = true;
+            PowerGridSystem.gridNeedsRebuilding = true;
         }
     }
 }
