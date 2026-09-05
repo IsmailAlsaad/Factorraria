@@ -33,6 +33,14 @@ namespace Factorraria.Common.Networks
         public List<MotorAttachment> Motors = new();
         public Dictionary<Point, (Direction Direction, float Magnitude)> ResolvedFlow = new();
 
+        // Per-world-tile fractional carry — world liquid is a byte (whole units only), but
+        // flow rates are fractional (PumpStrength/3600 per tick). Without this, any rate
+        // below 1.0/tick truncates to zero forever via (int) casts and nothing ever moves.
+        // Banking the remainder here lets sub-1 rates accumulate into real whole-unit
+        // changes over several ticks instead of vanishing every tick.
+        Dictionary<Point, float> worldWithdrawRemainder = new();
+        Dictionary<Point, float> worldDepositRemainder = new();
+
         // Narrowed down to the WEAKEST pipe tier found while scanning — the whole
         // network can never move faster than its slowest link.
         public float MaxFlowRate = float.MaxValue;
@@ -269,20 +277,39 @@ namespace Factorraria.Common.Networks
         float WithdrawFromWorldTile(Point pos, float amount)
         {
             Tile tile = Main.tile[pos.X, pos.Y];
-            if (tile.LiquidAmount <= 0) return 0f;
+            if (tile.LiquidAmount <= 0)
+            {
+                worldWithdrawRemainder.Remove(pos);
+                return 0f;
+            }
 
             if (IsInfiniteSource(pos))
-                return amount; // bottomless — world tile untouched, same as vanilla infinite sources
+                return amount; // bottomless — no quantization concern, tile is never touched anyway
 
-            int drained = (int)Math.Min(amount, tile.LiquidAmount);
-            if (drained <= 0) return 0f;
+            float pool = worldWithdrawRemainder.GetValueOrDefault(pos) + amount;
+            int wholeUnits = (int)pool;
+            float leftover = pool - wholeUnits;
 
-            tile.LiquidAmount -= (byte)drained; // mutates the world directly, no write-back needed
-            if (tile.LiquidAmount <= 0)
-                tile.ClearTile(); // fully drained — clear liquid type/flags cleanly instead of leaving a 0-amount ghost
+            int actualDrain = Math.Min(wholeUnits, tile.LiquidAmount);
 
-            WorldGen.SquareTileFrame(pos.X, pos.Y); // needed so neighboring liquid tiles reframe/settle correctly
-            return drained;
+            if (actualDrain > 0)
+            {
+                tile.LiquidAmount -= (byte)actualDrain;
+                if (tile.LiquidAmount <= 0)
+                    tile.ClearTile();
+                WorldGen.SquareTileFrame(pos.X, pos.Y);
+            }
+
+            if (actualDrain < wholeUnits)
+            {
+                // Tile ran dry mid-bank — the surplus we thought we had doesn't really
+                // exist, so drop the banked fraction instead of carrying phantom liquid.
+                worldWithdrawRemainder[pos] = 0f;
+                return actualDrain;
+            }
+
+            worldWithdrawRemainder[pos] = leftover;
+            return amount; // whole part physically drained now, fraction banked for next time
         }
 
         void DepositToResolved(int type, float amount)
@@ -306,20 +333,34 @@ namespace Factorraria.Common.Networks
             return amount;
         }
 
-        static float DepositToWorldTile(Point pos, int liquidType, float amount)
+        float DepositToWorldTile(Point pos, int liquidType, float amount) // becomes instance method, see note below
         {
             Tile tile = Main.tile[pos.X, pos.Y];
 
+            float pool = worldDepositRemainder.GetValueOrDefault(pos) + amount;
+            int wholeUnits = (int)pool;
+            float leftover = pool - wholeUnits;
+
             float space = 255f - tile.LiquidAmount;
-            int give = (int)Math.Min(amount, space);
-            if (give <= 0) return 0f;
+            int actualGive = (int)Math.Min(wholeUnits, space);
 
-            if (tile.LiquidAmount <= 0)
-                tile.LiquidType = ToTileLiquidId(liquidType); // first drop into an empty tile decides its type
+            if (actualGive > 0)
+            {
+                if (tile.LiquidAmount <= 0)
+                    tile.LiquidType = ToTileLiquidId(liquidType);
 
-            tile.LiquidAmount += (byte)give;
-            WorldGen.SquareTileFrame(pos.X, pos.Y);
-            return give;
+                tile.LiquidAmount += (byte)actualGive;
+                WorldGen.SquareTileFrame(pos.X, pos.Y);
+            }
+
+            if (actualGive < wholeUnits)
+            {
+                worldDepositRemainder[pos] = 0f; // sink is full — drop the excess banked fraction
+                return actualGive;
+            }
+
+            worldDepositRemainder[pos] = leftover;
+            return amount;
         }
 
         static byte ToTileLiquidId(int liquidType) => liquidType == LiquidTypeRegistry.Lava ? (byte)LiquidID.Lava : (byte)LiquidID.Water;
