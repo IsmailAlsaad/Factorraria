@@ -189,17 +189,32 @@ namespace Factorraria.Common.Systems
                 }
             }
 
-            Tile neighborTile = Main.tile[neighborPos.X, neighborPos.Y];
-            if (neighborTile.LiquidAmount > 0)
+            // World liquid/open-air: only valid on a side the pipe treats as an open mouth (real
+            // neighbor, or the auto-opened far end of a straight run), and only if nothing solid
+            // is in the way. Registered regardless of current liquid amount so it can serve as a
+            // drain OR a dump target later — LiquidNetwork.Tick() decides which, per-tick, from flow direction.
+            PipeConnectionHelper.GetOpenSides(pipePos.X, pipePos.Y, out bool up, out bool down, out bool left, out bool right);
+            bool isOpenSide = mouthDirection switch
             {
-                network.WorldLiquidAttachments.Add(new PipeAttachment
-                {
-                    Position = neighborPos,
-                    PipePosition = pipePos,
-                    MouthDirection = mouthDirection,
-                    Machine = null
-                });
-            }
+                Direction.Up => up,
+                Direction.Down => down,
+                Direction.Left => left,
+                Direction.Right => right,
+                _ => false
+            };
+
+            if (!isOpenSide) return;
+
+            Tile neighborTile = Main.tile[neighborPos.X, neighborPos.Y];
+            if (neighborTile.HasTile && Main.tileSolid[neighborTile.TileType]) return; // can't dump into or drain solid rock
+
+            network.WorldLiquidAttachments.Add(new PipeAttachment
+            {
+                Position = neighborPos,
+                PipePosition = pipePos,
+                MouthDirection = mouthDirection,
+                Machine = null
+            });
         }
 
         void ResolveFlow(LiquidNetwork network)

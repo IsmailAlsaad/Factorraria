@@ -105,14 +105,9 @@ namespace Factorraria.Common.Liquids
 
         static void ReframeSelf(int i, int j)
         {
-            bool up = PipeConnectionHelper.CanConnect(i, j - 1, Direction.Up);
-            bool down = PipeConnectionHelper.CanConnect(i, j + 1, Direction.Down);
-            bool left = PipeConnectionHelper.CanConnect(i - 1, j, Direction.Left);
-            bool right = PipeConnectionHelper.CanConnect(i + 1, j, Direction.Right);
+            PipeConnectionHelper.GetOpenSides(i, j, out bool up, out bool down, out bool left, out bool right);
 
             int connectionMask = (up ? 1 : 0) | (down ? 2 : 0) | (left ? 4 : 0) | (right ? 8 : 0);
-
-            if (connectionMask == 0) connectionMask = 4 | 8;
 
             Main.tile[i, j].TileFrameX = (short)(connectionMask * 18);
             Main.tile[i, j].TileFrameY = 0;
