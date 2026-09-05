@@ -1,10 +1,12 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
+using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace Factorraria.Common.Networks
 {
@@ -51,7 +53,14 @@ namespace Factorraria.Common.Networks
 
         public void Tick()
         {
-            if (ResolvedFlow.Count == 0) return; // no motor driving this network right now
+            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            bool logThisTick = config.EnableDebugs && Main.GameUpdateCount % 60 == 0;
+
+            if (ResolvedFlow.Count == 0)
+            {
+                if (logThisTick) Main.NewText("[LiquidDebug] Tick: ResolvedFlow empty, nothing to do", Color.Gray);
+                return;
+            }
 
             sourceBuffer.Clear();
             sinkBuffer.Clear();
@@ -70,18 +79,33 @@ namespace Factorraria.Common.Networks
 
             foreach (var att in WorldLiquidAttachments)
             {
-                if (!ResolvedFlow.TryGetValue(att.PipePosition, out var flow)) continue;
+                if (!ResolvedFlow.TryGetValue(att.PipePosition, out var flow))
+                {
+                    if (logThisTick) Main.NewText($"[LiquidDebug] World attachment {att.Position} has NO resolved flow at pipe {att.PipePosition}", Color.OrangeRed);
+                    continue;
+                }
+
                 float rateThisTick = flow.Magnitude / TicksPerMinute;
                 if (rateThisTick <= 0f) continue;
 
-                // Same MouthDirection convention as machines: flow moving TOWARD the world
-                // tile (== MouthDirection) is dumping OUT; flow moving away from it
-                // (opposite) is draining IN.
                 if (flow.Direction == att.MouthDirection)
+                {
                     sinkBuffer.Add(LiquidEndpoint.ForWorld(att.Position, rateThisTick));
+                    if (logThisTick) Main.NewText($"[LiquidDebug] World {att.Position} classified as SINK, rate={rateThisTick:F3}", Color.SkyBlue);
+                }
                 else if (flow.Direction == att.MouthDirection.Opposite())
+                {
                     sourceBuffer.Add(LiquidEndpoint.ForWorld(att.Position, rateThisTick));
+                    if (logThisTick) Main.NewText($"[LiquidDebug] World {att.Position} classified as SOURCE, rate={rateThisTick:F3}", Color.SkyBlue);
+                }
+                else if (logThisTick)
+                {
+                    Main.NewText($"[LiquidDebug] World {att.Position} mouth={att.MouthDirection} matches NEITHER flow.Direction={flow.Direction} nor its opposite", Color.OrangeRed);
+                }
             }
+
+            if (logThisTick)
+                Main.NewText($"[LiquidDebug] Tick: sources={sourceBuffer.Count} sinks={sinkBuffer.Count}", Color.Gray);
 
             if (sourceBuffer.Count > 0 && sinkBuffer.Count > 0)
                 TransferBetween(sourceBuffer, sinkBuffer);
@@ -94,6 +118,9 @@ namespace Factorraria.Common.Networks
         // Each endpoint contributes AT MOST one slot/tile — first valid match only.
         void TransferBetween(List<LiquidEndpoint> sources, List<LiquidEndpoint> sinks)
         {
+            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            bool logThisTick = config.EnableDebugs && Main.GameUpdateCount % 60 == 0;
+
             resolvedSources.Clear();
             int type = -1;
             float totalAvailable = 0f;
@@ -106,7 +133,11 @@ namespace Factorraria.Common.Networks
                 if (source.IsWorld)
                 {
                     Tile tile = Main.tile[source.WorldPos.X, source.WorldPos.Y];
-                    if (tile.LiquidAmount <= 0) continue;
+                    if (tile.LiquidAmount <= 0)
+                    {
+                        if (logThisTick) Main.NewText($"[LiquidDebug] Source world tile {source.WorldPos} is EMPTY", Color.OrangeRed);
+                        continue;
+                    }
 
                     int worldType = FromTileLiquidId((byte)tile.LiquidType);
                     if (type != -1 && worldType != type) continue;
@@ -130,7 +161,11 @@ namespace Factorraria.Common.Networks
                 totalAvailable += amountHere;
             }
 
-            if (type == -1 || totalAvailable <= 0f) return; // no source had anything to give
+            if (type == -1 || totalAvailable <= 0f)
+            {
+                if (logThisTick) Main.NewText("[LiquidDebug] No usable source this tick — aborting transfer", Color.OrangeRed);
+                return;
+            }
 
             resolvedSinks.Clear();
             float totalAccepted = 0f;
@@ -144,8 +179,16 @@ namespace Factorraria.Common.Networks
                 {
                     Tile tile = Main.tile[sink.WorldPos.X, sink.WorldPos.Y];
 
-                    if (tile.HasTile && Main.tileSolid[tile.TileType]) continue;
-                    if (tile.LiquidAmount > 0 && FromTileLiquidId((byte)tile.LiquidType) != type) continue; // mismatch handling is a future item
+                    if (tile.HasTile && Main.tileSolid[tile.TileType])
+                    {
+                        if (logThisTick) Main.NewText($"[LiquidDebug] Sink world tile {sink.WorldPos} blocked by solid tile", Color.OrangeRed);
+                        continue;
+                    }
+                    if (tile.LiquidAmount > 0 && FromTileLiquidId((byte)tile.LiquidType) != type)
+                    {
+                        if (logThisTick) Main.NewText($"[LiquidDebug] Sink world tile {sink.WorldPos} has MISMATCHED liquid type", Color.OrangeRed);
+                        continue;
+                    }
 
                     float space = 255f - tile.LiquidAmount;
                     capHere = Math.Min(sink.RateThisTick, space);
@@ -165,11 +208,18 @@ namespace Factorraria.Common.Networks
                 totalAccepted += capHere;
             }
 
-            if (totalAccepted <= 0f) return; // no sink had room
+            if (totalAccepted <= 0f)
+            {
+                if (logThisTick) Main.NewText("[LiquidDebug] No usable sink this tick — aborting transfer", Color.OrangeRed);
+                return;
+            }
 
             float amountToMove = Math.Min(totalAvailable, totalAccepted);
             float withdrawn = WithdrawFromResolved(amountToMove);
-            DepositToResolved(type, withdrawn); // deposit exactly what was actually withdrawn
+            DepositToResolved(type, withdrawn);
+
+            if (logThisTick)
+                Main.NewText($"[LiquidDebug] COMMITTED transfer: type={type} amount={withdrawn:F3}", Color.Lime);
         }
 
         static LiquidStack FindSourceSlot(LiquidStack[] slots, int requiredType)

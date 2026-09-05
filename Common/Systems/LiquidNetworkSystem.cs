@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
 using Factorraria.Common.Networks;
+using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -145,6 +146,15 @@ namespace Factorraria.Common.Systems
             }
 
             ResolveFlow(network);
+
+            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            if (config.EnableDebugs)
+            {
+                Main.NewText($"[LiquidDebug] Network built — Pipes:{network.PipeTiles.Count} Motors:{network.Motors.Count} " +
+                             $"MachineAtt:{network.MachineAttachments.Count} WorldAtt:{network.WorldLiquidAttachments.Count} " +
+                             $"ResolvedFlow:{network.ResolvedFlow.Count}", Color.Cyan);
+            }
+
             return network;
         }
 
@@ -157,6 +167,7 @@ namespace Factorraria.Common.Systems
 
         void RecordAttachmentIfAny(LiquidNetwork network, Point pipePos, Point neighborPos, Point offset, Queue<Point> pipeQueue, HashSet<Point> visited)
         {
+            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
             Direction mouthDirection = DirectionExtensions.FromOffset(offset);
 
             if (TileEntityHelper.TryGetEntityFromTile(neighborPos.X, neighborPos.Y, out TileEntity entity, out _))
@@ -164,10 +175,18 @@ namespace Factorraria.Common.Systems
                 if (entity is MotorTileEntityBase motor)
                 {
                     if (!PipeConnectionHelper.CanConnect(neighborPos.X, neighborPos.Y, mouthDirection))
-                        return; // perpendicular to Facing — not a valid attachment point
+                    {
+                        if (config.EnableDebugs)
+                            Main.NewText($"[LiquidDebug] Motor at {neighborPos} REJECTED — facing={motor.Facing}, pipe approached from {mouthDirection}", Color.OrangeRed);
+                        return;
+                    }
 
                     if (!network.Motors.Exists(m => m.Position == neighborPos))
+                    {
                         network.Motors.Add(new MotorAttachment { Position = neighborPos, Motor = motor });
+                        if (config.EnableDebugs)
+                            Main.NewText($"[LiquidDebug] Motor REGISTERED at {neighborPos}, facing={motor.Facing}", Color.Lime);
+                    }
 
                     if (visited.Add(neighborPos))
                     {
@@ -185,14 +204,12 @@ namespace Factorraria.Common.Systems
                         MouthDirection = mouthDirection,
                         Machine = machine
                     });
+                    if (config.EnableDebugs)
+                        Main.NewText($"[LiquidDebug] Machine attachment at {neighborPos}, mouth={mouthDirection}", Color.Lime);
                     return;
                 }
             }
 
-            // World liquid/open-air: only valid on a side the pipe treats as an open mouth (real
-            // neighbor, or the auto-opened far end of a straight run), and only if nothing solid
-            // is in the way. Registered regardless of current liquid amount so it can serve as a
-            // drain OR a dump target later — LiquidNetwork.Tick() decides which, per-tick, from flow direction.
             PipeConnectionHelper.GetOpenSides(pipePos.X, pipePos.Y, out bool up, out bool down, out bool left, out bool right);
             bool isOpenSide = mouthDirection switch
             {
@@ -203,10 +220,20 @@ namespace Factorraria.Common.Systems
                 _ => false
             };
 
-            if (!isOpenSide) return;
+            if (!isOpenSide)
+            {
+                if (config.EnableDebugs)
+                    Main.NewText($"[LiquidDebug] World tile at {neighborPos} REJECTED — side not open (mouth={mouthDirection})", Color.OrangeRed);
+                return;
+            }
 
             Tile neighborTile = Main.tile[neighborPos.X, neighborPos.Y];
-            if (neighborTile.HasTile && Main.tileSolid[neighborTile.TileType]) return; // can't dump into or drain solid rock
+            if (neighborTile.HasTile && Main.tileSolid[neighborTile.TileType])
+            {
+                if (config.EnableDebugs)
+                    Main.NewText($"[LiquidDebug] World tile at {neighborPos} REJECTED — solid tile in the way", Color.OrangeRed);
+                return;
+            }
 
             network.WorldLiquidAttachments.Add(new PipeAttachment
             {
@@ -215,26 +242,33 @@ namespace Factorraria.Common.Systems
                 MouthDirection = mouthDirection,
                 Machine = null
             });
+
+            if (config.EnableDebugs)
+                Main.NewText($"[LiquidDebug] World attachment REGISTERED at {neighborPos}, mouth={mouthDirection}, liquidAmount={neighborTile.LiquidAmount}", Color.Lime);
         }
 
         void ResolveFlow(LiquidNetwork network)
         {
+            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
             network.ResolvedFlow.Clear();
             if (network.Motors.Count == 0) return;
 
-            var frontier = new PriorityQueueLite<(Point tile, Direction dir, float magnitude, MotorTileEntityBase sourceMotor)>();
+            var frontier = new PriorityQueueLite<(Point tile, Direction dir, float magnitude)>();
 
             foreach (var m in network.Motors)
             {
                 Point discharge = m.Position + m.Motor.Facing.ToOffset();
                 Point intake = m.Position - m.Motor.Facing.ToOffset();
-                frontier.Enqueue((discharge, m.Motor.Facing, m.Motor.PumpStrength, m.Motor), m.Motor.PumpStrength);
-                frontier.Enqueue((intake, m.Motor.Facing, m.Motor.PumpStrength, m.Motor), m.Motor.PumpStrength);
+                frontier.Enqueue((discharge, m.Motor.Facing, m.Motor.PumpStrength), m.Motor.PumpStrength);
+                frontier.Enqueue((intake, m.Motor.Facing, m.Motor.PumpStrength), m.Motor.PumpStrength);
+
+                if (config.EnableDebugs)
+                    Main.NewText($"[LiquidDebug] Seeding motor {m.Position} — discharge={discharge}, intake={intake}, strength={m.Motor.PumpStrength}", Color.Yellow);
             }
 
             while (frontier.TryDequeue(out var packet, out _))
             {
-                var (tile, dir, magnitude, sourceMotor) = packet;
+                var (tile, dir, magnitude) = packet;
 
                 bool isPipe = PipeTierRegistry.IsPipeTile(Main.tile[tile.X, tile.Y].TileType);
                 bool isMotor = TileEntityHelper.TryGetEntityFromTile(tile.X, tile.Y, out TileEntity te, out _) && te is MotorTileEntityBase;
@@ -245,18 +279,12 @@ namespace Factorraria.Common.Systems
                 {
                     if (existing.Direction == dir)
                     {
-                        if (magnitude <= existing.Magnitude)
-                        {
-                            continue;
-                        }
+                        if (magnitude <= existing.Magnitude) continue;
                     }
                     else
                     {
                         float net = magnitude - existing.Magnitude;
-                        if (net <= 0)
-                        {
-                            continue;
-                        }
+                        if (net <= 0) continue;
                         magnitude = net;
                     }
                 }
@@ -264,16 +292,14 @@ namespace Factorraria.Common.Systems
                 magnitude = Math.Min(magnitude, network.MaxFlowRate);
                 network.ResolvedFlow[tile] = (dir, magnitude);
 
-                // Only reinforce when this is a GENUINELY different motor than the one whose
-                // strength is already baked into `magnitude` — otherwise a lone motor's two
-                // waves (from its own discharge and intake) converge on its own tile and it
-                // ends up double-adding its own PumpStrength to itself.
-                if (isMotor && te is MotorTileEntityBase otherMotor && otherMotor.Facing == dir && otherMotor != sourceMotor)
+                if (config.EnableDebugs)
+                    Main.NewText($"[LiquidDebug] ResolvedFlow[{tile}] = dir:{dir} mag:{magnitude}", Color.Yellow);
+
+                if (isMotor && te is MotorTileEntityBase otherMotor && otherMotor.Facing == dir)
                 {
                     magnitude += otherMotor.PumpStrength;
                     magnitude = Math.Min(magnitude, network.MaxFlowRate);
                     network.ResolvedFlow[tile] = (dir, magnitude);
-                    sourceMotor = otherMotor; // reinforcement now attributed onward to this motor
                 }
 
                 foreach (Point offset in Offsets)
@@ -283,7 +309,7 @@ namespace Factorraria.Common.Systems
                     float decayed = magnitude - (climbed ? DecayPerClimbTile : 0f);
                     if (decayed <= 0) continue;
 
-                    frontier.Enqueue((neighbor, dir, decayed, sourceMotor), decayed);
+                    frontier.Enqueue((neighbor, dir, decayed), decayed);
                 }
             }
         }
