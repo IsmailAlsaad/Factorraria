@@ -222,24 +222,20 @@ namespace Factorraria.Common.Systems
             network.ResolvedFlow.Clear();
             if (network.Motors.Count == 0) return;
 
-            var frontier = new PriorityQueueLite<(Point tile, Direction dir, float magnitude)>();
+            var frontier = new PriorityQueueLite<(Point tile, Direction dir, float magnitude, MotorTileEntityBase sourceMotor)>();
 
-            // Seed every motor's discharge AND intake side at once — this is what lets
-            // motors in the same network compete or reinforce each other in one pass,
-            // instead of resolving each motor in isolation first.
             foreach (var m in network.Motors)
             {
                 Point discharge = m.Position + m.Motor.Facing.ToOffset();
                 Point intake = m.Position - m.Motor.Facing.ToOffset();
-                frontier.Enqueue((discharge, m.Motor.Facing, m.Motor.PumpStrength), m.Motor.PumpStrength);
-                frontier.Enqueue((intake, m.Motor.Facing, m.Motor.PumpStrength), m.Motor.PumpStrength);
+                frontier.Enqueue((discharge, m.Motor.Facing, m.Motor.PumpStrength, m.Motor), m.Motor.PumpStrength);
+                frontier.Enqueue((intake, m.Motor.Facing, m.Motor.PumpStrength, m.Motor), m.Motor.PumpStrength);
             }
 
             while (frontier.TryDequeue(out var packet, out _))
             {
-                var (tile, dir, magnitude) = packet;
+                var (tile, dir, magnitude, sourceMotor) = packet;
 
-                // FIX: Allow flow calculation to pass through motor tiles as well as pipe tiles
                 bool isPipe = PipeTierRegistry.IsPipeTile(Main.tile[tile.X, tile.Y].TileType);
                 bool isMotor = TileEntityHelper.TryGetEntityFromTile(tile.X, tile.Y, out TileEntity te, out _) && te is MotorTileEntityBase;
 
@@ -268,11 +264,16 @@ namespace Factorraria.Common.Systems
                 magnitude = Math.Min(magnitude, network.MaxFlowRate);
                 network.ResolvedFlow[tile] = (dir, magnitude);
 
-                if (isMotor && te is MotorTileEntityBase otherMotor && otherMotor.Facing == dir)
+                // Only reinforce when this is a GENUINELY different motor than the one whose
+                // strength is already baked into `magnitude` — otherwise a lone motor's two
+                // waves (from its own discharge and intake) converge on its own tile and it
+                // ends up double-adding its own PumpStrength to itself.
+                if (isMotor && te is MotorTileEntityBase otherMotor && otherMotor.Facing == dir && otherMotor != sourceMotor)
                 {
                     magnitude += otherMotor.PumpStrength;
                     magnitude = Math.Min(magnitude, network.MaxFlowRate);
                     network.ResolvedFlow[tile] = (dir, magnitude);
+                    sourceMotor = otherMotor; // reinforcement now attributed onward to this motor
                 }
 
                 foreach (Point offset in Offsets)
@@ -282,7 +283,7 @@ namespace Factorraria.Common.Systems
                     float decayed = magnitude - (climbed ? DecayPerClimbTile : 0f);
                     if (decayed <= 0) continue;
 
-                    frontier.Enqueue((neighbor, dir, decayed), decayed);
+                    frontier.Enqueue((neighbor, dir, decayed, sourceMotor), decayed);
                 }
             }
         }
