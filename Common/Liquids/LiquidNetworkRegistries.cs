@@ -40,6 +40,8 @@ namespace Factorraria.Common.Liquids
         // Built-ins, filled in once at load by whatever ModSystem owns startup registration.
         public static int Water;
         public static int Lava;
+        public static int Honey;
+        public static int Shimmer;
     }
 
     // Maps a pipe TILE TYPE to its max flow-rate capacity. MK1 registers one rate,
@@ -64,6 +66,8 @@ namespace Factorraria.Common.Liquids
         {
             LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Water", RenderColor = new Color(40, 110, 190), VanillaTileLiquidId = (byte?)LiquidID.Water });
             LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Lava", RenderColor = new Color(200, 70, 20), VanillaTileLiquidId = (byte?)LiquidID.Lava });
+            LiquidTypeRegistry.Honey = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Honey", RenderColor = new Color(247, 167, 8), VanillaTileLiquidId = (byte?)LiquidID.Honey });
+            LiquidTypeRegistry.Shimmer = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Shimmer", RenderColor = new Color(146, 125, 125), VanillaTileLiquidId = (byte?)LiquidID.Shimmer });
         }
 
         public override void Unload()
