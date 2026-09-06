@@ -303,6 +303,10 @@ namespace Factorraria.Common.Systems
                     if (decayed <= 0) continue;
 
                     Direction stepDir = DirectionExtensions.FromOffset(offset);
+
+                    if (isDischarge && isMotor && te is MotorTileEntityBase currentMotor && stepDir == currentMotor.Facing.Opposite())
+                        continue;
+
                     Direction newDir = isDischarge ? stepDir : stepDir.Opposite();
 
                     frontier.Enqueue((neighbor, newDir, decayed, isDischarge, sourceMotor), decayed);
