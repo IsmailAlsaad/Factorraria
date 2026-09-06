@@ -1,7 +1,6 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
 using Factorraria.Common.Networks;
-using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -155,15 +154,6 @@ namespace Factorraria.Common.Systems
             }
 
             ResolveFlow(network);
-
-            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
-            if (config.EnableDebugs)
-            {
-                Main.NewText($"[LiquidDebug] Network built — Pipes:{network.PipeTiles.Count} Motors:{network.Motors.Count} " +
-                             $"MachineAtt:{network.MachineAttachments.Count} WorldAtt:{network.WorldLiquidAttachments.Count} " +
-                             $"ResolvedFlow:{network.ResolvedFlow.Count}", Color.Cyan);
-            }
-
             return network;
         }
 
@@ -176,7 +166,6 @@ namespace Factorraria.Common.Systems
 
         void RecordAttachmentIfAny(LiquidNetwork network, Point pipePos, Point neighborPos, Point offset, Queue<Point> pipeQueue, HashSet<Point> visited)
         {
-            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
             Direction mouthDirection = DirectionExtensions.FromOffset(offset);
 
             if (TileEntityHelper.TryGetEntityFromTile(neighborPos.X, neighborPos.Y, out TileEntity entity, out _))
@@ -184,18 +173,10 @@ namespace Factorraria.Common.Systems
                 if (entity is MotorTileEntityBase motor)
                 {
                     if (!PipeConnectionHelper.CanConnect(neighborPos.X, neighborPos.Y, mouthDirection))
-                    {
-                        if (config.EnableDebugs)
-                            Main.NewText($"[LiquidDebug] Motor at {neighborPos} REJECTED — facing={motor.Facing}, pipe approached from {mouthDirection}", Color.OrangeRed);
-                        return;
-                    }
+                        return; // perpendicular to Facing — not a valid attachment point
 
                     if (!network.Motors.Exists(m => m.Position == neighborPos))
-                    {
                         network.Motors.Add(new MotorAttachment { Position = neighborPos, Motor = motor });
-                        if (config.EnableDebugs)
-                            Main.NewText($"[LiquidDebug] Motor REGISTERED at {neighborPos}, facing={motor.Facing}", Color.Lime);
-                    }
 
                     if (visited.Add(neighborPos))
                     {
@@ -213,12 +194,14 @@ namespace Factorraria.Common.Systems
                         MouthDirection = mouthDirection,
                         Machine = machine
                     });
-                    if (config.EnableDebugs)
-                        Main.NewText($"[LiquidDebug] Machine attachment at {neighborPos}, mouth={mouthDirection}", Color.Lime);
                     return;
                 }
             }
 
+            // World liquid/open-air: only valid on a side the pipe treats as an open mouth (real
+            // neighbor, or the auto-opened far end of a straight run), and only if nothing solid
+            // is in the way. Registered regardless of current liquid amount so it can serve as a
+            // drain OR a dump target later — LiquidNetwork.Tick() decides which, per-tick, from flow direction.
             PipeConnectionHelper.GetOpenSides(pipePos.X, pipePos.Y, out bool up, out bool down, out bool left, out bool right);
             bool isOpenSide = mouthDirection switch
             {
@@ -229,20 +212,10 @@ namespace Factorraria.Common.Systems
                 _ => false
             };
 
-            if (!isOpenSide)
-            {
-                if (config.EnableDebugs)
-                    Main.NewText($"[LiquidDebug] World tile at {neighborPos} REJECTED — side not open (mouth={mouthDirection})", Color.OrangeRed);
-                return;
-            }
+            if (!isOpenSide) return;
 
             Tile neighborTile = Main.tile[neighborPos.X, neighborPos.Y];
-            if (neighborTile.HasTile && Main.tileSolid[neighborTile.TileType])
-            {
-                if (config.EnableDebugs)
-                    Main.NewText($"[LiquidDebug] World tile at {neighborPos} REJECTED — solid tile in the way", Color.OrangeRed);
-                return;
-            }
+            if (neighborTile.HasTile && Main.tileSolid[neighborTile.TileType]) return; // can't dump into or drain solid rock
 
             network.WorldLiquidAttachments.Add(new PipeAttachment
             {
@@ -251,9 +224,6 @@ namespace Factorraria.Common.Systems
                 MouthDirection = mouthDirection,
                 Machine = null
             });
-
-            if (config.EnableDebugs)
-                Main.NewText($"[LiquidDebug] World attachment REGISTERED at {neighborPos}, mouth={mouthDirection}, liquidAmount={neighborTile.LiquidAmount}", Color.Lime);
         }
 
         void ResolveFlow(LiquidNetwork network)
