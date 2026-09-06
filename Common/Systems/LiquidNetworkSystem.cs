@@ -21,10 +21,10 @@ namespace Factorraria.Common.Systems
         public static HashSet<Point> AllPipeTiles = new();
         public static List<LiquidNetwork> ActiveNetworks = new();
         public static bool networkNeedsRebuilding = true;
+        public static bool flowNeedsRecalculating = false;
 
         const float DecayPerClimbTile = 0.5f * 3600f; // tunable, not a locked design value
 
-        public static bool flowNeedsRecalculating = false;
 
         public override void PostUpdateWorld()
         {
@@ -33,7 +33,7 @@ namespace Factorraria.Common.Systems
 
             if (networkNeedsRebuilding)
             {
-                RebuildNetworks(); // this already calls ResolveFlow per network internally
+                RebuildNetworks(); // already calls ResolveFlow per network internally
                 networkNeedsRebuilding = false;
                 flowNeedsRecalculating = false;
             }
@@ -41,11 +41,12 @@ namespace Factorraria.Common.Systems
             {
                 foreach (var network in ActiveNetworks)
                     ResolveFlow(network);
+
                 flowNeedsRecalculating = false;
             }
 
             for (int i = 0; i < ActiveNetworks.Count; i++)
-            { 
+            {
                 ActiveNetworks[i].Tick();
             }
         }
@@ -231,14 +232,25 @@ namespace Factorraria.Common.Systems
             network.ResolvedFlow.Clear();
             if (network.Motors.Count == 0) return;
 
+            // An off motor caps the network at its pipe-tier rate instead of its pump
+            // strength — computed fresh here (not cached on the network) since isOn can
+            // flip without a topology rebuild.
+            float effectiveMaxFlowRate = network.MaxFlowRate;
+            foreach (var m in network.Motors)
+            {
+                if (!m.Motor.isOn)
+                    effectiveMaxFlowRate = Math.Min(effectiveMaxFlowRate, m.Motor.PipeEquivalentMaxFlowRate);
+            }
+
             var frontier = new PriorityQueueLite<(Point tile, Direction dir, float magnitude, bool isDischarge, MotorTileEntityBase sourceMotor)>();
 
             foreach (var m in network.Motors)
             {
-                if (!m.Motor.isOn) continue;
+                if (!m.Motor.isOn) continue; // dead motor pumps nothing
 
                 Point discharge = m.Position + m.Motor.Facing.ToOffset();
                 Point intake = m.Position - m.Motor.Facing.ToOffset();
+
                 frontier.Enqueue((discharge, m.Motor.Facing, m.Motor.PumpStrength, true, m.Motor), m.Motor.PumpStrength);
                 frontier.Enqueue((intake, m.Motor.Facing, m.Motor.PumpStrength, false, m.Motor), m.Motor.PumpStrength);
             }
@@ -272,16 +284,13 @@ namespace Factorraria.Common.Systems
                     }
                 }
 
-                magnitude = Math.Min(magnitude, network.MaxFlowRate);
+                magnitude = Math.Min(magnitude, effectiveMaxFlowRate);
                 network.ResolvedFlow[tile] = (dir, magnitude);
 
-                // Only reinforce when this is a GENUINELY different motor than the one already
-                // contributing to `magnitude` — otherwise a lone motor's own discharge/intake
-                // waves converge on its own tile and double-add its own PumpStrength.
-                if (isMotor && te is MotorTileEntityBase otherMotor && otherMotor.Facing == dir && otherMotor != sourceMotor)
+                if (isMotor && te is MotorTileEntityBase otherMotor && otherMotor.isOn && otherMotor.Facing == dir && otherMotor != sourceMotor)
                 {
                     magnitude += otherMotor.PumpStrength;
-                    magnitude = Math.Min(magnitude, network.MaxFlowRate);
+                    magnitude = Math.Min(magnitude, effectiveMaxFlowRate);
                     network.ResolvedFlow[tile] = (dir, magnitude);
                     sourceMotor = otherMotor;
                 }
@@ -293,8 +302,6 @@ namespace Factorraria.Common.Systems
                     float decayed = magnitude - (climbed ? DecayPerClimbTile : 0f);
                     if (decayed <= 0) continue;
 
-                    // Recompute direction fresh for THIS hop instead of blindly copying `dir`
-                    // forward — this is what lets flow correctly rotate through a bend.
                     Direction stepDir = DirectionExtensions.FromOffset(offset);
                     Direction newDir = isDischarge ? stepDir : stepDir.Opposite();
 
@@ -302,7 +309,6 @@ namespace Factorraria.Common.Systems
                 }
             }
         }
-
     }
 
     // Small linear-scan priority queue — fine at this network scale, only recomputed

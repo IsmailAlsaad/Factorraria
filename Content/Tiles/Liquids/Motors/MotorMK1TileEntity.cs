@@ -9,11 +9,12 @@ namespace Factorraria.Content.Tiles.Liquids.Motors
         public override float PumpStrength => 5 * 3600f;
         public override float PowerDemand => 30f;
 
+        // Matches PipeMK1Tile.MaxFlowRate — kept as a separate duplicated constant since
+        // that property lives on a different ModTile instance and isn't cheaply shared.
+        public override float PipeEquivalentMaxFlowRate => 100f * 3600f;
+
         protected override void UpdateMotor()
         {
-            // isWorking == true is determined when the generator has valid & enough fuel to burn & product slot is not full, so count its power output
-            // isOn is set to false by the PowerNetwork not the machine when the grid is overloaded, so stop consuming fuel and turn off, but you could still be working!
-            // i.e. have enough fuel to work once the grid is not overloaded
             isWorking = true;
 
             if (!isOn)
@@ -21,6 +22,5 @@ namespace Factorraria.Content.Tiles.Liquids.Motors
                 return;
             }
         }
-
     }
 }

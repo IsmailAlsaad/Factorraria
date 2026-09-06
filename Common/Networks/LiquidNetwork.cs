@@ -29,6 +29,11 @@ namespace Factorraria.Common.Networks
         public List<MotorAttachment> Motors = new();
         public Dictionary<Point, (Direction Direction, float Magnitude)> ResolvedFlow = new();
 
+        // Caches IsInfiniteSource results so the flood-fill only actually runs once per
+        // InfiniteSourceRecheckInterval ticks per position, instead of every tick.
+        Dictionary<Point, (bool IsInfinite, long LastCheckedTick)> infiniteSourceCache = new();
+        const int InfiniteSourceRecheckInterval = 60; // ticks ≈ 1 second
+
         public float MaxFlowRate = float.MaxValue;
 
         const float TicksPerMinute = 3600f;
@@ -315,6 +320,21 @@ namespace Factorraria.Common.Networks
         }
 
         bool IsInfiniteSource(Point start)
+        {
+            long currentTick = (long)Main.GameUpdateCount;
+
+            if (infiniteSourceCache.TryGetValue(start, out var cached) &&
+                currentTick - cached.LastCheckedTick < InfiniteSourceRecheckInterval)
+            {
+                return cached.IsInfinite;
+            }
+
+            bool result = ComputeIsInfiniteSource(start);
+            infiniteSourceCache[start] = (result, currentTick);
+            return result;
+        }
+
+        bool ComputeIsInfiniteSource(Point start)
         {
             floodVisited.Clear();
             floodQueue.Clear();
