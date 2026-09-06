@@ -22,6 +22,19 @@ namespace Factorraria.Common.Machines
         // direction (like vanilla directional tiles) or a dedicated wrench-style
         // tool item instead, this is the one method to swap out.
         public Direction Facing = Direction.Right;
+        bool wasOn;
+        public sealed override void Update()
+        {
+            if (isOn != wasOn)
+            {
+                wasOn = isOn;
+                LiquidNetworkSystem.flowNeedsRecalculating = true;
+            }
+
+            UpdateMotor();
+        }
+
+        protected virtual void UpdateMotor() { }
 
         public override void OnRightClick(int i, int j)
         {

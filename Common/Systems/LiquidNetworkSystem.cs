@@ -25,6 +25,8 @@ namespace Factorraria.Common.Systems
 
         const float DecayPerClimbTile = 0.5f * 3600f; // tunable, not a locked design value
 
+        public static bool flowNeedsRecalculating = false;
+
         public override void PostUpdateWorld()
         {
             if (Main.netMode == NetmodeID.MultiplayerClient)
@@ -32,12 +34,19 @@ namespace Factorraria.Common.Systems
 
             if (networkNeedsRebuilding)
             {
-                RebuildNetworks();
+                RebuildNetworks(); // this already calls ResolveFlow per network internally
                 networkNeedsRebuilding = false;
+                flowNeedsRecalculating = false;
+            }
+            else if (flowNeedsRecalculating)
+            {
+                foreach (var network in ActiveNetworks)
+                    ResolveFlow(network);
+                flowNeedsRecalculating = false;
             }
 
             for (int i = 0; i < ActiveNetworks.Count; i++)
-            {
+            { 
                 ActiveNetworks[i].Tick();
             }
         }
@@ -256,17 +265,11 @@ namespace Factorraria.Common.Systems
 
             foreach (var m in network.Motors)
             {
+                if (!m.Motor.isOn) continue;
+
                 Point discharge = m.Position + m.Motor.Facing.ToOffset();
                 Point intake = m.Position - m.Motor.Facing.ToOffset();
-
-                // Discharge: physical direction here IS the traversal direction (moving away
-                // from the motor, along Facing).
                 frontier.Enqueue((discharge, m.Motor.Facing, m.Motor.PumpStrength, true, m.Motor), m.Motor.PumpStrength);
-
-                // Intake: physical direction here is ALSO Facing (liquid is moving toward the
-                // motor), even though BFS is about to explore away from it — isDischarge=false
-                // flips every subsequent hop so this side's direction rotates correctly through
-                // bends too, instead of just being correct for this one seed tile.
                 frontier.Enqueue((intake, m.Motor.Facing, m.Motor.PumpStrength, false, m.Motor), m.Motor.PumpStrength);
             }
 

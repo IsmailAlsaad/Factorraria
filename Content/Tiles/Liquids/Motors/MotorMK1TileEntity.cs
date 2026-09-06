@@ -9,7 +9,7 @@ namespace Factorraria.Content.Tiles.Liquids.Motors
         public override float PumpStrength => 5 * 3600f;
         public override float PowerDemand => 30f;
 
-        public override void Update()
+        protected override void UpdateMotor()
         {
             // isWorking == true is determined when the generator has valid & enough fuel to burn & product slot is not full, so count its power output
             // isOn is set to false by the PowerNetwork not the machine when the grid is overloaded, so stop consuming fuel and turn off, but you could still be working!

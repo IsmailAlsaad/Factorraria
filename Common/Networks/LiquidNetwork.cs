@@ -127,7 +127,7 @@ namespace Factorraria.Common.Networks
                         worldWithdrawBank[source.WorldPos] = bank;
                     }
 
-                    int worldType = FromTileLiquidId((byte)tile.LiquidType);
+                    int worldType = (int)LiquidTypeRegistry.FromTileLiquidId((byte)tile.LiquidType);
                     if (type != -1 && worldType != type) continue;
 
                     if (bank < FullTileAmount) continue; // still banking toward a full tile
@@ -170,7 +170,7 @@ namespace Factorraria.Common.Networks
                     float bank = worldDepositBank.GetValueOrDefault(sink.WorldPos) + sink.RateThisTick;
                     worldDepositBank[sink.WorldPos] = bank;
 
-                    if (tile.LiquidAmount > 0 && FromTileLiquidId((byte)tile.LiquidType) != type) continue; // mismatch — item #6
+                    if (tile.LiquidAmount > 0 && LiquidTypeRegistry.FromTileLiquidId((byte)tile.LiquidType) != type) continue; // mismatch — item #6
 
                     if (bank < FullTileAmount) continue; // still banking toward a full tile
 
@@ -303,7 +303,7 @@ namespace Factorraria.Common.Networks
             if (give <= 0) return 0f;
 
             if (tile.LiquidAmount <= 0)
-                tile.LiquidType = ToTileLiquidId(liquidType);
+                tile.LiquidType = (int)LiquidTypeRegistry.ToTileLiquidId(liquidType);
 
             tile.LiquidAmount += (byte)give;
             WorldGen.SquareTileFrame(pos.X, pos.Y);
@@ -313,9 +313,6 @@ namespace Factorraria.Common.Networks
 
             return give;
         }
-
-        static byte ToTileLiquidId(int liquidType) => liquidType == LiquidTypeRegistry.Lava ? (byte)LiquidID.Lava : (byte)LiquidID.Water;
-        static int FromTileLiquidId(byte tileLiquidId) => tileLiquidId == LiquidID.Lava ? LiquidTypeRegistry.Lava : LiquidTypeRegistry.Water;
 
         bool IsInfiniteSource(Point start)
         {

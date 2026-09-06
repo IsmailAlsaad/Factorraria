@@ -104,6 +104,13 @@ namespace Factorraria.Common.Systems
 
                 sb.Draw(pixel, rect, fill);
                 Utils.DrawRect(sb, rect, color);
+
+                if (network.ResolvedFlow.TryGetValue(pos, out var flow))
+                {
+                    string label = $"{flow.Magnitude:F0}";
+                    Vector2 labelPos = screenPos + new Vector2(8, -8); // tweak to taste
+                    Utils.DrawBorderString(sb, label, labelPos, Color.White, 0.6f);
+                }
             }
         }
 

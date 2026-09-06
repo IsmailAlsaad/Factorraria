@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Common.Liquids
@@ -9,7 +10,8 @@ namespace Factorraria.Common.Liquids
     public class LiquidTypeDefinition
     {
         public string Name;
-        public Color RenderColor; // used to draw liquid in pipes/tanks until real textures exist
+        public Color RenderColor; // why do i even need this
+        public byte? VanillaTileLiquidId; // null = no world-tile representation (pure custom liquid)
     }
 
     public static class LiquidTypeRegistry
@@ -25,6 +27,14 @@ namespace Factorraria.Common.Liquids
             return definitions.Count - 1;
         }
 
+        public static byte? ToTileLiquidId(int liquidType) => definitions[liquidType].VanillaTileLiquidId;
+
+        public static int? FromTileLiquidId(byte tileLiquidId)
+        {
+            for (int i = 0; i < definitions.Count; i++)
+                if (definitions[i].VanillaTileLiquidId == tileLiquidId) return i;
+            return null;
+        }
         public static LiquidTypeDefinition Get(int liquidTypeId) => definitions[liquidTypeId];
 
         // Built-ins, filled in once at load by whatever ModSystem owns startup registration.
@@ -52,17 +62,8 @@ namespace Factorraria.Common.Liquids
     {
         public override void Load()
         {
-            LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition
-            {
-                Name = "Water",
-                RenderColor = new Color(40, 110, 190)
-            });
-
-            LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition
-            {
-                Name = "Lava",
-                RenderColor = new Color(200, 70, 20)
-            });
+            LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Water", RenderColor = new Color(40, 110, 190), VanillaTileLiquidId = (byte?)LiquidID.Water });
+            LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Lava", RenderColor = new Color(200, 70, 20), VanillaTileLiquidId = (byte?)LiquidID.Lava });
         }
 
         public override void Unload()
