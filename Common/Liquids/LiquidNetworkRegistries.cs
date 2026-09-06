@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using Terraria.ModLoader;
 
 namespace Factorraria.Common.Liquids
 {
@@ -13,7 +14,7 @@ namespace Factorraria.Common.Liquids
 
     public static class LiquidTypeRegistry
     {
-        static List<LiquidTypeDefinition> definitions = new();
+        public static List<LiquidTypeDefinition> definitions = new();
 
         // Hands back an ID = wherever it landed in the list, same idea as tModLoader
         // auto-assigning IDs to ModItem/ModTile. This is what keeps the door open for
@@ -45,5 +46,28 @@ namespace Factorraria.Common.Liquids
         // Lets the network scanner ask "is this tile even a pipe" without knowing
         // how many tiers exist.
         public static bool IsPipeTile(int tileType) => MaxFlowRateByTileType.ContainsKey(tileType);
+    }
+
+    public class LiquidTypeRegistrationSystem : ModSystem
+    {
+        public override void Load()
+        {
+            LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition
+            {
+                Name = "Water",
+                RenderColor = new Color(40, 110, 190)
+            });
+
+            LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition
+            {
+                Name = "Lava",
+                RenderColor = new Color(200, 70, 20)
+            });
+        }
+
+        public override void Unload()
+        {
+            LiquidTypeRegistry.definitions.Clear();
+        }
     }
 }

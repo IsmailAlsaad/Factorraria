@@ -1,17 +1,13 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
-using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
-using Terraria.ModLoader;
 
 namespace Factorraria.Common.Networks
 {
-    // Records one non-pipe tile the network touches, and which pipe tile it's next to.
-    // Machine == null means this is a bare world-liquid attachment (a pool, not a machine).
     public struct PipeAttachment
     {
         public Point Position;      // where the THING BEING ATTACHED TO actually is (the machine or world-liquid tile)
@@ -33,24 +29,18 @@ namespace Factorraria.Common.Networks
         public List<MotorAttachment> Motors = new();
         public Dictionary<Point, (Direction Direction, float Magnitude)> ResolvedFlow = new();
 
-        // Per-world-tile fractional carry — world liquid is a byte (whole units only), but
-        // flow rates are fractional (PumpStrength/3600 per tick). Without this, any rate
-        // below 1.0/tick truncates to zero forever via (int) casts and nothing ever moves.
-        // Banking the remainder here lets sub-1 rates accumulate into real whole-unit
-        // changes over several ticks instead of vanishing every tick.
-        Dictionary<Point, float> worldWithdrawRemainder = new();
-        Dictionary<Point, float> worldDepositRemainder = new();
-
-        // Narrowed down to the WEAKEST pipe tier found while scanning — the whole
-        // network can never move faster than its slowest link.
         public float MaxFlowRate = float.MaxValue;
 
-        const float TicksPerMinute = 3600f; // 60 ticks/sec * 60 sec/min — PumpStrength is "per minute"
-        const float MachineLiquidCapacity = 100f; // TEMP flat cap per slot, tune later / move to BaseMachine
-        const int InfiniteSourceThreshold = 300; // bodies this size or bigger never deplete — matches vanilla's "infinite water source" idea
+        const float TicksPerMinute = 3600f;
+        const float MachineLiquidCapacity = 100f;
+        const int InfiniteSourceThreshold = 300;
 
-        // Reused across ticks — cleared, never reallocated, so a tick costs no heap
-        // allocation in steady state.
+        // A world tile only ever moves in whole-tile chunks — matches vanilla liquid
+        // amounts (byte, 0-255) and avoids the flicker/visual weirdness of draining a
+        // fraction of a unit every tick. Machines don't need this (LiquidStack is a
+        // float, fractional amounts are fine there).
+        const float FullTileAmount = 255f;
+
         List<LiquidEndpoint> sourceBuffer = new();
         List<LiquidEndpoint> sinkBuffer = new();
         List<(LiquidEndpoint Endpoint, LiquidStack Slot, float Cap)> resolvedSources = new();
@@ -59,16 +49,17 @@ namespace Factorraria.Common.Networks
         Queue<Point> floodQueue = new();
         static readonly Point[] FloodOffsets = { new(0, -1), new(0, 1), new(-1, 0), new(1, 0) };
 
+        // Per-world-tile "how close to a full tile have we banked" trackers. A world
+        // source/sink doesn't act every tick — it silently accumulates its tiny per-tick
+        // rate here until the bank crosses FullTileAmount, then one whole-tile transfer
+        // fires at once. Reset (fully or partially) whenever an actual withdrawal/deposit
+        // consumes some of the bank.
+        Dictionary<Point, float> worldWithdrawBank = new();
+        Dictionary<Point, float> worldDepositBank = new();
+
         public void Tick()
         {
-            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
-            bool logThisTick = config.EnableDebugs && Main.GameUpdateCount % 60 == 0;
-
-            if (ResolvedFlow.Count == 0)
-            {
-                if (logThisTick) Main.NewText("[LiquidDebug] Tick: ResolvedFlow empty, nothing to do", Color.Gray);
-                return;
-            }
+            if (ResolvedFlow.Count == 0) return;
 
             sourceBuffer.Clear();
             sinkBuffer.Clear();
@@ -87,48 +78,22 @@ namespace Factorraria.Common.Networks
 
             foreach (var att in WorldLiquidAttachments)
             {
-                if (!ResolvedFlow.TryGetValue(att.PipePosition, out var flow))
-                {
-                    if (logThisTick) Main.NewText($"[LiquidDebug] World attachment {att.Position} has NO resolved flow at pipe {att.PipePosition}", Color.OrangeRed);
-                    continue;
-                }
-
+                if (!ResolvedFlow.TryGetValue(att.PipePosition, out var flow)) continue;
                 float rateThisTick = flow.Magnitude / TicksPerMinute;
                 if (rateThisTick <= 0f) continue;
 
                 if (flow.Direction == att.MouthDirection)
-                {
                     sinkBuffer.Add(LiquidEndpoint.ForWorld(att.Position, rateThisTick));
-                    if (logThisTick) Main.NewText($"[LiquidDebug] World {att.Position} classified as SINK, rate={rateThisTick:F3}", Color.SkyBlue);
-                }
                 else if (flow.Direction == att.MouthDirection.Opposite())
-                {
                     sourceBuffer.Add(LiquidEndpoint.ForWorld(att.Position, rateThisTick));
-                    if (logThisTick) Main.NewText($"[LiquidDebug] World {att.Position} classified as SOURCE, rate={rateThisTick:F3}", Color.SkyBlue);
-                }
-                else if (logThisTick)
-                {
-                    Main.NewText($"[LiquidDebug] World {att.Position} mouth={att.MouthDirection} matches NEITHER flow.Direction={flow.Direction} nor its opposite", Color.OrangeRed);
-                }
             }
-
-            if (logThisTick)
-                Main.NewText($"[LiquidDebug] Tick: sources={sourceBuffer.Count} sinks={sinkBuffer.Count}", Color.Gray);
 
             if (sourceBuffer.Count > 0 && sinkBuffer.Count > 0)
                 TransferBetween(sourceBuffer, sinkBuffer);
         }
 
-        // Gather -> check -> commit: never mutates a real slot/tile until the exact
-        // transferable amount is known, so a tick can't pull more than sources actually
-        // have or push more than sinks can actually hold. A network carries exactly one
-        // liquid type per tick — the first source found fixes `type` for everything after.
-        // Each endpoint contributes AT MOST one slot/tile — first valid match only.
         void TransferBetween(List<LiquidEndpoint> sources, List<LiquidEndpoint> sinks)
         {
-            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
-            bool logThisTick = config.EnableDebugs && Main.GameUpdateCount % 60 == 0;
-
             resolvedSources.Clear();
             int type = -1;
             float totalAvailable = 0f;
@@ -143,14 +108,31 @@ namespace Factorraria.Common.Networks
                     Tile tile = Main.tile[source.WorldPos.X, source.WorldPos.Y];
                     if (tile.LiquidAmount <= 0)
                     {
-                        if (logThisTick) Main.NewText($"[LiquidDebug] Source world tile {source.WorldPos} is EMPTY", Color.OrangeRed);
+                        worldWithdrawBank.Remove(source.WorldPos);
                         continue;
+                    }
+
+                    // Bank this tick's contribution unconditionally, whether or not this
+                    // source ends up participating — otherwise banking would stall
+                    // whenever it's rejected below (type lock, not ready yet, etc).
+                    bool infinite = IsInfiniteSource(source.WorldPos);
+                    float bank;
+                    if (infinite)
+                    {
+                        bank = FullTileAmount;
+                    }
+                    else
+                    {
+                        bank = worldWithdrawBank.GetValueOrDefault(source.WorldPos) + source.RateThisTick;
+                        worldWithdrawBank[source.WorldPos] = bank;
                     }
 
                     int worldType = FromTileLiquidId((byte)tile.LiquidType);
                     if (type != -1 && worldType != type) continue;
 
-                    amountHere = Math.Min(source.RateThisTick, tile.LiquidAmount);
+                    if (bank < FullTileAmount) continue; // still banking toward a full tile
+
+                    amountHere = infinite ? FullTileAmount : Math.Min(FullTileAmount, tile.LiquidAmount);
                     if (amountHere <= 0f) continue;
 
                     type = worldType;
@@ -169,11 +151,7 @@ namespace Factorraria.Common.Networks
                 totalAvailable += amountHere;
             }
 
-            if (type == -1 || totalAvailable <= 0f)
-            {
-                if (logThisTick) Main.NewText("[LiquidDebug] No usable source this tick — aborting transfer", Color.OrangeRed);
-                return;
-            }
+            if (type == -1 || totalAvailable <= 0f) return;
 
             resolvedSinks.Clear();
             float totalAccepted = 0f;
@@ -187,19 +165,17 @@ namespace Factorraria.Common.Networks
                 {
                     Tile tile = Main.tile[sink.WorldPos.X, sink.WorldPos.Y];
 
-                    if (tile.HasTile && Main.tileSolid[tile.TileType])
-                    {
-                        if (logThisTick) Main.NewText($"[LiquidDebug] Sink world tile {sink.WorldPos} blocked by solid tile", Color.OrangeRed);
-                        continue;
-                    }
-                    if (tile.LiquidAmount > 0 && FromTileLiquidId((byte)tile.LiquidType) != type)
-                    {
-                        if (logThisTick) Main.NewText($"[LiquidDebug] Sink world tile {sink.WorldPos} has MISMATCHED liquid type", Color.OrangeRed);
-                        continue;
-                    }
+                    if (tile.HasTile && Main.tileSolid[tile.TileType]) continue;
+
+                    float bank = worldDepositBank.GetValueOrDefault(sink.WorldPos) + sink.RateThisTick;
+                    worldDepositBank[sink.WorldPos] = bank;
+
+                    if (tile.LiquidAmount > 0 && FromTileLiquidId((byte)tile.LiquidType) != type) continue; // mismatch — item #6
+
+                    if (bank < FullTileAmount) continue; // still banking toward a full tile
 
                     float space = 255f - tile.LiquidAmount;
-                    capHere = Math.Min(sink.RateThisTick, space);
+                    capHere = Math.Min(FullTileAmount, space);
                     if (capHere <= 0f) continue;
                 }
                 else
@@ -216,18 +192,11 @@ namespace Factorraria.Common.Networks
                 totalAccepted += capHere;
             }
 
-            if (totalAccepted <= 0f)
-            {
-                if (logThisTick) Main.NewText("[LiquidDebug] No usable sink this tick — aborting transfer", Color.OrangeRed);
-                return;
-            }
+            if (totalAccepted <= 0f) return;
 
             float amountToMove = Math.Min(totalAvailable, totalAccepted);
             float withdrawn = WithdrawFromResolved(amountToMove);
             DepositToResolved(type, withdrawn);
-
-            if (logThisTick)
-                Main.NewText($"[LiquidDebug] COMMITTED transfer: type={type} amount={withdrawn:F3}", Color.Lime);
         }
 
         static LiquidStack FindSourceSlot(LiquidStack[] slots, int requiredType)
@@ -236,7 +205,7 @@ namespace Factorraria.Common.Networks
             {
                 if (slot.IsEmpty) continue;
                 if (requiredType != -1 && slot.LiquidType != requiredType) continue;
-                return slot; // first valid slot only — rest of this attachment's slots ignored this tick
+                return slot;
             }
             return null;
         }
@@ -246,7 +215,7 @@ namespace Factorraria.Common.Networks
             foreach (var slot in slots)
             {
                 if (slot.IsEmpty || slot.LiquidType == requiredType)
-                    return slot; // first valid slot only
+                    return slot;
             }
             return null;
         }
@@ -279,37 +248,29 @@ namespace Factorraria.Common.Networks
             Tile tile = Main.tile[pos.X, pos.Y];
             if (tile.LiquidAmount <= 0)
             {
-                worldWithdrawRemainder.Remove(pos);
+                worldWithdrawBank.Remove(pos);
                 return 0f;
             }
 
             if (IsInfiniteSource(pos))
-                return amount; // bottomless — no quantization concern, tile is never touched anyway
+                return amount; // bottomless — tile untouched, no bank to spend
 
-            float pool = worldWithdrawRemainder.GetValueOrDefault(pos) + amount;
-            int wholeUnits = (int)pool;
-            float leftover = pool - wholeUnits;
+            int actualDrain = (int)Math.Min(amount, tile.LiquidAmount);
+            if (actualDrain <= 0) return 0f;
 
-            int actualDrain = Math.Min(wholeUnits, tile.LiquidAmount);
+            tile.LiquidAmount -= (byte)actualDrain;
+            if (tile.LiquidAmount <= 0)
+                tile.ClearTile();
 
-            if (actualDrain > 0)
-            {
-                tile.LiquidAmount -= (byte)actualDrain;
-                if (tile.LiquidAmount <= 0)
-                    tile.ClearTile();
-                WorldGen.SquareTileFrame(pos.X, pos.Y);
-            }
+            WorldGen.SquareTileFrame(pos.X, pos.Y);
 
-            if (actualDrain < wholeUnits)
-            {
-                // Tile ran dry mid-bank — the surplus we thought we had doesn't really
-                // exist, so drop the banked fraction instead of carrying phantom liquid.
-                worldWithdrawRemainder[pos] = 0f;
-                return actualDrain;
-            }
+            // Spend the bank by what was actually withdrawn — normally zeroes it out (a
+            // full tile just moved); if a sink capped the transfer lower, the unspent
+            // remainder stays banked so the next full-tile threshold arrives sooner.
+            float remaining = worldWithdrawBank.GetValueOrDefault(pos) - actualDrain;
+            worldWithdrawBank[pos] = Math.Max(0f, remaining);
 
-            worldWithdrawRemainder[pos] = leftover;
-            return amount; // whole part physically drained now, fraction banked for next time
+            return actualDrain;
         }
 
         void DepositToResolved(int type, float amount)
@@ -333,44 +294,29 @@ namespace Factorraria.Common.Networks
             return amount;
         }
 
-        float DepositToWorldTile(Point pos, int liquidType, float amount) // becomes instance method, see note below
+        float DepositToWorldTile(Point pos, int liquidType, float amount)
         {
             Tile tile = Main.tile[pos.X, pos.Y];
 
-            float pool = worldDepositRemainder.GetValueOrDefault(pos) + amount;
-            int wholeUnits = (int)pool;
-            float leftover = pool - wholeUnits;
-
             float space = 255f - tile.LiquidAmount;
-            int actualGive = (int)Math.Min(wholeUnits, space);
+            int give = (int)Math.Min(amount, space);
+            if (give <= 0) return 0f;
 
-            if (actualGive > 0)
-            {
-                if (tile.LiquidAmount <= 0)
-                    tile.LiquidType = ToTileLiquidId(liquidType);
+            if (tile.LiquidAmount <= 0)
+                tile.LiquidType = ToTileLiquidId(liquidType);
 
-                tile.LiquidAmount += (byte)actualGive;
-                WorldGen.SquareTileFrame(pos.X, pos.Y);
-            }
+            tile.LiquidAmount += (byte)give;
+            WorldGen.SquareTileFrame(pos.X, pos.Y);
 
-            if (actualGive < wholeUnits)
-            {
-                worldDepositRemainder[pos] = 0f; // sink is full — drop the excess banked fraction
-                return actualGive;
-            }
+            float remaining = worldDepositBank.GetValueOrDefault(pos) - give;
+            worldDepositBank[pos] = Math.Max(0f, remaining);
 
-            worldDepositRemainder[pos] = leftover;
-            return amount;
+            return give;
         }
 
         static byte ToTileLiquidId(int liquidType) => liquidType == LiquidTypeRegistry.Lava ? (byte)LiquidID.Lava : (byte)LiquidID.Water;
         static int FromTileLiquidId(byte tileLiquidId) => tileLiquidId == LiquidID.Lava ? LiquidTypeRegistry.Lava : LiquidTypeRegistry.Water;
 
-        // Bounded flood-fill capped at InfiniteSourceThreshold — big bodies (oceans, lava
-        // lakes) exit almost immediately once the cap is hit, so cost stays flat regardless
-        // of real size. Small, finite ponds pay for a full scan, but those are cheap by
-        // definition. NOT cached — if profiling later shows this hot (many small ponds
-        // being actively drained at once), add a periodic-invalidation cache here.
         bool IsInfiniteSource(Point start)
         {
             floodVisited.Clear();
@@ -402,9 +348,6 @@ namespace Factorraria.Common.Networks
         }
     }
 
-    // One "end" of a transfer this tick — either a machine's liquid slots or a world tile
-    // position. Discriminated by IsWorld so both share the same gather/check/commit path
-    // in TransferBetween without allocating wrapper objects per tick.
     struct LiquidEndpoint
     {
         public bool IsWorld;

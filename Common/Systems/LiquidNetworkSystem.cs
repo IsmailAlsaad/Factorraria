@@ -23,7 +23,7 @@ namespace Factorraria.Common.Systems
         public static List<LiquidNetwork> ActiveNetworks = new();
         public static bool networkNeedsRebuilding = true;
 
-        const float DecayPerClimbTile = 5f; // tunable, not a locked design value
+        const float DecayPerClimbTile = 0.5f * 3600f; // tunable, not a locked design value
 
         public override void PostUpdateWorld()
         {
@@ -249,26 +249,30 @@ namespace Factorraria.Common.Systems
 
         void ResolveFlow(LiquidNetwork network)
         {
-            var config = ModContent.GetInstance<FurnaceOffsetConfig>();
             network.ResolvedFlow.Clear();
             if (network.Motors.Count == 0) return;
 
-            var frontier = new PriorityQueueLite<(Point tile, Direction dir, float magnitude)>();
+            var frontier = new PriorityQueueLite<(Point tile, Direction dir, float magnitude, bool isDischarge, MotorTileEntityBase sourceMotor)>();
 
             foreach (var m in network.Motors)
             {
                 Point discharge = m.Position + m.Motor.Facing.ToOffset();
                 Point intake = m.Position - m.Motor.Facing.ToOffset();
-                frontier.Enqueue((discharge, m.Motor.Facing, m.Motor.PumpStrength), m.Motor.PumpStrength);
-                frontier.Enqueue((intake, m.Motor.Facing, m.Motor.PumpStrength), m.Motor.PumpStrength);
 
-                if (config.EnableDebugs)
-                    Main.NewText($"[LiquidDebug] Seeding motor {m.Position} — discharge={discharge}, intake={intake}, strength={m.Motor.PumpStrength}", Color.Yellow);
+                // Discharge: physical direction here IS the traversal direction (moving away
+                // from the motor, along Facing).
+                frontier.Enqueue((discharge, m.Motor.Facing, m.Motor.PumpStrength, true, m.Motor), m.Motor.PumpStrength);
+
+                // Intake: physical direction here is ALSO Facing (liquid is moving toward the
+                // motor), even though BFS is about to explore away from it — isDischarge=false
+                // flips every subsequent hop so this side's direction rotates correctly through
+                // bends too, instead of just being correct for this one seed tile.
+                frontier.Enqueue((intake, m.Motor.Facing, m.Motor.PumpStrength, false, m.Motor), m.Motor.PumpStrength);
             }
 
             while (frontier.TryDequeue(out var packet, out _))
             {
-                var (tile, dir, magnitude) = packet;
+                var (tile, dir, magnitude, isDischarge, sourceMotor) = packet;
 
                 bool isPipe = PipeTierRegistry.IsPipeTile(Main.tile[tile.X, tile.Y].TileType);
                 bool isMotor = TileEntityHelper.TryGetEntityFromTile(tile.X, tile.Y, out TileEntity te, out _) && te is MotorTileEntityBase;
@@ -279,12 +283,18 @@ namespace Factorraria.Common.Systems
                 {
                     if (existing.Direction == dir)
                     {
-                        if (magnitude <= existing.Magnitude) continue;
+                        if (magnitude <= existing.Magnitude)
+                        {
+                            continue;
+                        }
                     }
                     else
                     {
                         float net = magnitude - existing.Magnitude;
-                        if (net <= 0) continue;
+                        if (net <= 0)
+                        {
+                            continue;
+                        }
                         magnitude = net;
                     }
                 }
@@ -292,14 +302,15 @@ namespace Factorraria.Common.Systems
                 magnitude = Math.Min(magnitude, network.MaxFlowRate);
                 network.ResolvedFlow[tile] = (dir, magnitude);
 
-                if (config.EnableDebugs)
-                    Main.NewText($"[LiquidDebug] ResolvedFlow[{tile}] = dir:{dir} mag:{magnitude}", Color.Yellow);
-
-                if (isMotor && te is MotorTileEntityBase otherMotor && otherMotor.Facing == dir)
+                // Only reinforce when this is a GENUINELY different motor than the one already
+                // contributing to `magnitude` — otherwise a lone motor's own discharge/intake
+                // waves converge on its own tile and double-add its own PumpStrength.
+                if (isMotor && te is MotorTileEntityBase otherMotor && otherMotor.Facing == dir && otherMotor != sourceMotor)
                 {
                     magnitude += otherMotor.PumpStrength;
                     magnitude = Math.Min(magnitude, network.MaxFlowRate);
                     network.ResolvedFlow[tile] = (dir, magnitude);
+                    sourceMotor = otherMotor;
                 }
 
                 foreach (Point offset in Offsets)
@@ -309,7 +320,12 @@ namespace Factorraria.Common.Systems
                     float decayed = magnitude - (climbed ? DecayPerClimbTile : 0f);
                     if (decayed <= 0) continue;
 
-                    frontier.Enqueue((neighbor, dir, decayed), decayed);
+                    // Recompute direction fresh for THIS hop instead of blindly copying `dir`
+                    // forward — this is what lets flow correctly rotate through a bend.
+                    Direction stepDir = DirectionExtensions.FromOffset(offset);
+                    Direction newDir = isDischarge ? stepDir : stepDir.Opposite();
+
+                    frontier.Enqueue((neighbor, newDir, decayed, isDischarge, sourceMotor), decayed);
                 }
             }
         }
