@@ -11,7 +11,7 @@ namespace Factorraria.Content.Tiles.Liquids.Motors
 
         // Matches PipeMK1Tile.MaxFlowRate — kept as a separate duplicated constant since
         // that property lives on a different ModTile instance and isn't cheaply shared.
-        public override float PipeEquivalentMaxFlowRate => 100f * 3600f;
+        public override float PipeEquivalentMaxFlowRate => 20f * 3600f;
 
         protected override void UpdateMotor()
         {
