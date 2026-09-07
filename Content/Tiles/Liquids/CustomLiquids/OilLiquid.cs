@@ -2,11 +2,8 @@
 using ModLiquidLib.ModLoader;
 using Terraria.ID;
 
-namespace Factorraria.Content.Liquids.Oil
+namespace Factorraria.Content.Tiles.Liquids.CustomLiquids
 {
-    // A real, independent liquid type (not an alias of Honey) — ModLiquidLib
-    // reserves its own ID above LiquidID.Count and hooks vanilla's spread,
-    // movement, splash, and rendering systems for it automatically.
     public class OilLiquid : ModLiquid
     {
         public override void SetStaticDefaults()

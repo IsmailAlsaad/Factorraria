@@ -46,6 +46,11 @@ Items: {
 		DisplayName: Pipe MK1
 		Tooltip: ""
 	}
+
+	OilBucket: {
+		DisplayName: Oil Bucket
+		Tooltip: ""
+	}
 }
 
 Configs: {

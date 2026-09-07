@@ -1,11 +1,12 @@
-﻿using Factorraria.Content.Liquids.Oil;
+﻿using Factorraria.Content.Tiles.Liquids.CustomLiquids;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace Factorraria.Content.Items
+namespace Factorraria.Content.Items.Liquids.Buckets
 {
+
     public class OilBucket : ModItem
     {
         public override void SetStaticDefaults()
@@ -23,6 +24,7 @@ namespace Factorraria.Content.Items
             Item.maxStack = 9999;
             Item.consumable = true; // let tModLoader auto-decrement the stack by 1 on a successful UseItem
             Item.useStyle = ItemUseStyleID.Swing;
+            Item.autoReuse = true;
             Item.useTurn = true;
             Item.useAnimation = 15;
             Item.useTime = 10;
