@@ -9,5 +9,10 @@
 	</PropertyGroup>
 
 	<!-- References -->
+	<ItemGroup>
+		<Reference Include="ModLiquidLib">
+			<HintPath>..\ModAssemblies\ModLiquidLib_v2025.12.202601.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 
 </Project>
