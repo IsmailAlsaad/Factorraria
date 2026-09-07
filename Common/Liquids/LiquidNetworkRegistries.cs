@@ -66,7 +66,7 @@ namespace Factorraria.Common.Liquids
 
     public class LiquidTypeRegistrationSystem : ModSystem
     {
-        public override void Load()
+        public override void PostSetupContent()
         {
             LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Water", RenderColor = new Color(40, 110, 190), VanillaTileLiquidId = (byte?)LiquidID.Water });
             LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Lava", RenderColor = new Color(200, 70, 20), VanillaTileLiquidId = (byte?)LiquidID.Lava });
