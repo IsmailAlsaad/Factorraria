@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Content.Liquids.Oil;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -42,6 +43,9 @@ namespace Factorraria.Common.Liquids
         public static int Lava;
         public static int Honey;
         public static int Shimmer;
+        
+        // Custom Liquids
+        public static int Oil;
     }
 
     // Maps a pipe TILE TYPE to its max flow-rate capacity. MK1 registers one rate,
@@ -68,6 +72,7 @@ namespace Factorraria.Common.Liquids
             LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Lava", RenderColor = new Color(200, 70, 20), VanillaTileLiquidId = (byte?)LiquidID.Lava });
             LiquidTypeRegistry.Honey = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Honey", RenderColor = new Color(247, 167, 8), VanillaTileLiquidId = (byte?)LiquidID.Honey });
             LiquidTypeRegistry.Shimmer = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Shimmer", RenderColor = new Color(146, 125, 125), VanillaTileLiquidId = (byte?)LiquidID.Shimmer });
+            LiquidTypeRegistry.Oil = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Oil", RenderColor = new Color(0, 0, 0), VanillaTileLiquidId = (byte?)ModContent.GetInstance<OilLiquid>().Type });
         }
 
         public override void Unload()
