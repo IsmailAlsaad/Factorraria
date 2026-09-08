@@ -75,6 +75,8 @@ namespace Factorraria.Common.Systems
         {
             AllPipeTiles.Clear();
             ActiveNetworks.Clear();
+
+            LiquidTextureCache.Clear();
         }
 
         public override void SaveWorldData(TagCompound tag)
