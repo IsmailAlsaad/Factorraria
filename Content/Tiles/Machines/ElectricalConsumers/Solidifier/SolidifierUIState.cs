@@ -18,7 +18,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier
     {
         SolidifierTileEntity Entity => (SolidifierTileEntity)CurrentEntity;
 
-        protected override Vector2 BasePanelSize => new Vector2(300, 300);
+        protected override Vector2 BasePanelSize => new Vector2(100, 100);
         //protected override Vector2 BasePanelOffset => new Vector2(-130, 0);
 
         protected override List<MachineUIElementEntry> BuildElements()
@@ -29,7 +29,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier
             list.Add(new MachineUIElementEntry(LiquidTank1, new Vector2(-20, -20), new Vector2(16, 84)));
 
             var LiquidTank2 = new LiquidTankUIElement(() => Entity.InputLiquids[1]);
-            list.Add(new MachineUIElementEntry(LiquidTank2, new Vector2(-60, -20), new Vector2(16, 84)));
+            list.Add(new MachineUIElementEntry(LiquidTank2, new Vector2(-45, -20), new Vector2(16, 84)));
 
             return list;
         }
