@@ -25,7 +25,7 @@ namespace Factorraria.Content.Liquids.Oil
 
             SplashDustType = 36; //This is the dust ID for the oil splash dust, which is a black smoke effect.
 
-            SplashSound = SoundID.Splash;
+            SplashSound = SoundID.SplashWeak;
 
             FallDelay = 10;
             ChecksForDrowning = true;
