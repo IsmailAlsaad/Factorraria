@@ -78,6 +78,7 @@ namespace Factorraria.Common.Machines
         public override void OnKill()
         {
             LiquidNetworkSystem.networkNeedsRebuilding = true;
+            ModContent.GetInstance<MachineUISystem>().NotifyMachineKilled(this);
         }
 
         int lastAnimationFrame = -1;

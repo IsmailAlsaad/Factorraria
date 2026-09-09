@@ -67,6 +67,13 @@ namespace Factorraria.Common.Systems
             machineInterface.SetState(null);
             openState = null;
         }
+        public void NotifyMachineKilled(BaseMachine machine)
+        {
+            if (openState != null && openState.CurrentEntity == machine)
+            {
+                CloseUI();
+            }
+        }
 
         // tModLoader calls this every frame, automatically.
         public override void UpdateUI(GameTime gameTime)

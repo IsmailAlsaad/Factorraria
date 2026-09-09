@@ -15,7 +15,7 @@ namespace Factorraria.Common.Liquids
         // How much is currently held. Float, not int — lets flow rates move fractional
         // amounts per tick without everything rounding down to zero at low flow rates.
         public float Amount = 0f;
-        public float Capacity = 200f;
+        public float Capacity = 1000f;
 
         public bool IsEmpty => LiquidType == -1 || Amount <= 0f;
 

@@ -26,10 +26,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier
             var list = new List<MachineUIElementEntry>();
 
             var LiquidTank1 = new LiquidTankUIElement(() => Entity.InputLiquids[0]);
-            list.Add(new MachineUIElementEntry(LiquidTank1, new Vector2(0, 0), new Vector2(100, 84)));
+            list.Add(new MachineUIElementEntry(LiquidTank1, new Vector2(-20, -20), new Vector2(16, 84)));
 
             var LiquidTank2 = new LiquidTankUIElement(() => Entity.InputLiquids[1]);
-            list.Add(new MachineUIElementEntry(LiquidTank2, new Vector2(30, 0), new Vector2(100, 84)));
+            list.Add(new MachineUIElementEntry(LiquidTank2, new Vector2(-60, -20), new Vector2(16, 84)));
 
             return list;
         }
