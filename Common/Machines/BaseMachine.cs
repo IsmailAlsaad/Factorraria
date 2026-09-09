@@ -71,8 +71,13 @@ namespace Factorraria.Common.Machines
             if (id != -1 && TileEntity.ByID.TryGetValue(id, out TileEntity entity))
             {
                 PowerGridSystem.RegisterMachineToMasterList(entity);
+                LiquidNetworkSystem.networkNeedsRebuilding = true;
             }
             return id;
+        }
+        public override void OnKill()
+        {
+            LiquidNetworkSystem.networkNeedsRebuilding = true;
         }
 
         int lastAnimationFrame = -1;

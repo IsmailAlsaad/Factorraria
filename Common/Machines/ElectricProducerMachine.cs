@@ -8,6 +8,7 @@ namespace Factorraria.Common.Machines
 
         public override void OnKill()
         {
+            base.OnKill();
             PowerGridSystem.AllMachines.Remove(this);
             PowerGridSystem.gridNeedsRebuilding = true;
         }

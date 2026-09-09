@@ -88,6 +88,7 @@ namespace Factorraria.Common.Machines
                 if(newEntity is T tileEntity)
                 {
                     PowerGridSystem.RegisterMachineToMasterList(tileEntity);
+                    LiquidNetworkSystem.networkNeedsRebuilding = true;
 
                     return tileEntity;
                 }

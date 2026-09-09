@@ -1,8 +1,11 @@
-﻿using Factorraria.Common.Systems;
+﻿using Factorraria.Common.Liquids;
+using Factorraria.Common.Machines;
+using Factorraria.Common.Systems;
 using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using System.Text;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
@@ -109,7 +112,58 @@ public class PowerGridDebugSystem : ModSystem
             }
         }
 
+        // 3. Draw item/liquid slot readout over every machine tile entity, regardless
+        // of whether it participates in a power network (covers e.g. FurnaceTileEntity,
+        // which is a plain BaseMachine with no electric interface).
+        foreach (var te in TileEntity.ByPosition.Values)
+        {
+            if (te is BaseMachine machine)
+            {
+                DrawMachineSlotText(spriteBatch, machine);
+            }
+        }
+
         spriteBatch.End();
+    }
+
+    private void DrawMachineSlotText(SpriteBatch sb, BaseMachine machine)
+    {
+        if (machine.InputSlots.Length == 0 && machine.OutputSlots.Length == 0 &&
+            machine.InputLiquids.Length == 0 && machine.OutputLiquids.Length == 0)
+        {
+            return;
+        }
+
+        StringBuilder text = new StringBuilder();
+
+        for (int i = 0; i < machine.InputSlots.Length; i++)
+        {
+            Item item = machine.InputSlots[i];
+            text.AppendLine(item.IsAir ? $"In{i}: -" : $"In{i}: {item.type} x{item.stack}");
+        }
+
+        for (int i = 0; i < machine.OutputSlots.Length; i++)
+        {
+            Item item = machine.OutputSlots[i];
+            text.AppendLine(item.IsAir ? $"Out{i}: -" : $"Out{i}: {item.type} x{item.stack}");
+        }
+
+        for (int i = 0; i < machine.InputLiquids.Length; i++)
+        {
+            LiquidStack liquid = machine.InputLiquids[i];
+            text.AppendLine(liquid.IsEmpty ? $"InLiquid{i}: -" : $"InLiquid{i}: type {liquid.LiquidType} amt {liquid.Amount:F1}");
+        }
+
+        for (int i = 0; i < machine.OutputLiquids.Length; i++)
+        {
+            LiquidStack liquid = machine.OutputLiquids[i];
+            text.AppendLine(liquid.IsEmpty ? $"OutLiquid{i}: -" : $"OutLiquid{i}: type {liquid.LiquidType} amt {liquid.Amount:F1}");
+        }
+
+        Vector2 screenPos = machine.Position.ToVector2() * 16f - Main.screenPosition;
+        Vector2 labelPos = screenPos + new Vector2(20f, -10f); // offset right of the tile so it doesn't collide with the grid text on the left
+
+        Utils.DrawBorderString(sb, text.ToString(), labelPos, Color.White, 0.7f);
     }
 
     private void DrawEntityOverlay(SpriteBatch sb, TileEntity te, Color fillColor, Color borderColor)

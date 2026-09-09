@@ -75,13 +75,13 @@ namespace Factorraria.Common.Machines
                 return true;
 
             BaseMachine entity = def.GetEntity(i, j);
-            var texture = entity.isOn ? def.OnTexture : def.OffTexture;
+            var texture = entity.isOn && entity.isWorking ? def.OnTexture : def.OffTexture;
 
             float rotation = entity is MotorTileEntityBase motor ? GetMotorRotation(motor.Facing) : 0f;
 
             int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j, rotation);
 
-            if (entity.isOn)
+            if (entity.isOn && entity.isWorking)
             {
                 foreach (var layer in def.LiquidOverlays)
                 {
