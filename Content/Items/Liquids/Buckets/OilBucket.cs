@@ -1,4 +1,4 @@
-﻿using Factorraria.Content.Tiles.Liquids.CustomLiquids;
+﻿using Factorraria.Content.Liquids.Oil;
 using ModLiquidExampleMod.Content.Items;
 using ModLiquidLib.ID;
 using ModLiquidLib.ModLoader;

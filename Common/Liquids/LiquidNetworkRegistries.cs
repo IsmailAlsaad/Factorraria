@@ -1,4 +1,4 @@
-﻿using Factorraria.Content.Tiles.Liquids.CustomLiquids;
+﻿using Factorraria.Content.Liquids.Oil;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria.ID;
