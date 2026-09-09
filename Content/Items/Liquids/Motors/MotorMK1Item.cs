@@ -1,4 +1,4 @@
-﻿using Factorraria.Content.Tiles.Liquids.Motors;
+﻿using Factorraria.Content.Tiles.Machines.General_Machines.Motors;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;

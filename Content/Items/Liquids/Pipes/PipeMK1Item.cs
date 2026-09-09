@@ -1,4 +1,4 @@
-﻿using Factorraria.Content.Tiles.Liquids.Pipes;
+﻿using Factorraria.Content.Tiles.Machines.General_Machines.Pipes;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;

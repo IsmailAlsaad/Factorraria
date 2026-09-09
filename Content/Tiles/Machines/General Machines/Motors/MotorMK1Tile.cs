@@ -1,6 +1,5 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Content.Items.Liquids.Motors;
-using Factorraria.Content.Tiles.Liquids.Motors;
 using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.General_Machines.Motors

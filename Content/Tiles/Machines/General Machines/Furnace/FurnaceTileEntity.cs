@@ -6,7 +6,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader.IO;
 
-namespace Factorraria.Content.Tiles.Machines.Furnace
+namespace Factorraria.Content.Tiles.Machines.General_Machines.Furnace
 {
     public class FurnaceTileEntity : BaseMachine
     {

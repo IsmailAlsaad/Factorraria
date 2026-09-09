@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.UI;
 using Factorraria.Content.Configs;
+using Factorraria.Content.Tiles.Machines.Furnace;
 using Factorraria.Content.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,7 +11,7 @@ using Terraria.ModLoader;
 using Terraria.UI;
 using tModPorter;
 
-namespace Factorraria.Content.Tiles.Machines.Furnace
+namespace Factorraria.Content.Tiles.Machines.General_Machines.Furnace
 {
     public class FurnaceUIState : MachineUIStateBase
     {

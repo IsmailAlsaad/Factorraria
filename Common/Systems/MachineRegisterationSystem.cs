@@ -1,7 +1,7 @@
 ﻿using Factorraria.Common.UI;
-using Factorraria.Content.Tiles.Liquids.Motors;
+using Factorraria.Content.Tiles.Machines.General_Machines.Motors;
 using Factorraria.Content.Tiles.Machines.Autohammer;
-using Factorraria.Content.Tiles.Machines.Furnace;
+using Factorraria.Content.Tiles.Machines.General_Machines.Furnace;
 using Factorraria.Content.Tiles.Machines.GelBurner;
 using Factorraria.Content.Tiles.Machines.Solidifier;
 using Terraria.ID;

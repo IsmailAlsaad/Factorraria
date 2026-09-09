@@ -2,7 +2,7 @@
 using Factorraria.Content.Items.Liquids.Pipes;
 using Terraria.ModLoader;
 
-namespace Factorraria.Content.Tiles.Machines
+namespace Factorraria.Content.Tiles.Machines.General_Machines.Pipes
 {
     public class PipeMK1Tile : PipeTileBase
     {

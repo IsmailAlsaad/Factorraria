@@ -2,7 +2,7 @@
 using Terraria;
 using Terraria.ID;
 
-namespace Factorraria.Content.Tiles.Machines.Furnace
+namespace Factorraria.Content.Tiles.Machines.General_Machines.Furnace
 {
     public struct RecipeData
     {
