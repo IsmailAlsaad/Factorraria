@@ -52,11 +52,11 @@ namespace Factorraria.Content.UI
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
-            if (Main.GameUpdateCount % 60 == 0) // once a second, not spam
-            {
-                CalculatedStyle d = GetDimensions();
-                Main.NewText($"pos:{d.Position()} size:{d.Width}x{d.Height} borderNull:{borderTexture.Value == null}");
-            }
+            //if (Main.GameUpdateCount % 60 == 0) // once a second, not spam
+            //{
+            //    CalculatedStyle d = GetDimensions();
+            //    Main.NewText($"pos:{d.Position()} size:{d.Width}x{d.Height} borderNull:{borderTexture.Value == null}");
+            //}
 
             LiquidStack stack = GetLiquidStack();
             int currentType = (stack == null || stack.LiquidType == -1) ? 0 : stack.LiquidType;
