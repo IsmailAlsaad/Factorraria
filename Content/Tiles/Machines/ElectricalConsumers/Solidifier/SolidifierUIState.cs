@@ -18,7 +18,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier
         SolidifierTileEntity Entity => (SolidifierTileEntity)CurrentEntity;
 
         protected override Vector2 BasePanelSize => new Vector2(300, 300);
-        protected override Vector2 BasePanelOffset => new Vector2(-130, 0);
+        //protected override Vector2 BasePanelOffset => new Vector2(-130, 0);
 
         protected override List<MachineUIElementEntry> BuildElements()
         {

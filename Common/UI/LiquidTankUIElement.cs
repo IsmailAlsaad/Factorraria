@@ -9,13 +9,12 @@ using Terraria.UI;
 
 namespace Factorraria.Content.UI
 {
-    // General-purpose tank readout for ANY LiquidStack (machine InputLiquids/OutputLiquids
-    // slot). Same shape as FireUIElement: a Func<> getter passed in by whoever builds the
-    // UI, re-evaluated every draw so it always reflects the live machine state.
+    // Draw order: border (this element's own DrawSelf, bottom layer) -> liquid (a child
+    // with OverflowHidden = true, so Terraria's own UI clipping crops anything that
+    // overflows the tank rect — no manual scissor/render-target code needed) -> background
+    // (a second child, appended after liquid, so it draws on top and frames it).
     public class LiquidTankUIElement : UIElement
     {
-        // Cache keys — same string as the asset path, matching the convention
-        // MachineVisualOverride.LiquidOverlayLayer already uses (CacheKey = texturePath).
         const string BorderPath = "Factorraria/Common/UI/Fluid_tank_UI_Border";
         const string BackgroundPath = "Factorraria/Common/UI/Fluid_tank_UI_Background";
         const string LiquidPath = "Factorraria/Common/UI/Fluid_tank_UI_Liquid";
@@ -26,22 +25,8 @@ namespace Factorraria.Content.UI
 
         Func<LiquidStack> GetLiquidStack;
 
-        // Remembers the last real liquid type this tank held, since LiquidStack.LiquidType
-        // itself gets reset to -1 the moment Amount drains to 0 (see
-        // LiquidNetwork.WithdrawFromSlot) — the stack can't be trusted to remember its own
-        // last type, so the UI element has to. Only stays at Water if a real type never showed up.
-        //int lastKnownLiquidType = LiquidTypeRegistry.Water;
-
-        // Slush bob — deliberately tiny, in on-screen pixels (post-scale), so it reads as
-        // "liquid settling" rather than actual waves.
-        const float BobAmplitude = 1.2f;
-        const float BobSpeed = 0.05f;
-
-        static readonly RasterizerState ScissorRasterizer = new RasterizerState
-        {
-            CullMode = CullMode.CullCounterClockwiseFace,
-            ScissorTestEnable = true
-        };
+        LiquidLayer liquidLayer;
+        BackgroundLayer backgroundLayer;
 
         public LiquidTankUIElement(Func<LiquidStack> _GetLiquidStack)
         {
@@ -50,93 +35,90 @@ namespace Factorraria.Content.UI
             liquidTexture = ModContent.Request<Texture2D>(LiquidPath);
 
             GetLiquidStack = _GetLiquidStack;
+
+            // Both children sized as 100% of the parent (percent, not fixed pixels) so they
+            // auto-track this element's own Width/Height whenever zoom changes — no manual
+            // resize-on-Recalculate bookkeeping needed.
+            liquidLayer = new LiquidLayer { OverflowHidden = true };
+            liquidLayer.Width.Set(0f, 1f);
+            liquidLayer.Height.Set(0f, 1f);
+            Append(liquidLayer);
+
+            backgroundLayer = new BackgroundLayer();
+            backgroundLayer.Width.Set(0f, 1f);
+            backgroundLayer.Height.Set(0f, 1f);
+            Append(backgroundLayer);
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
             LiquidStack stack = GetLiquidStack();
-            int currentType = stack.LiquidType;
-
-            if (stack == null || stack.LiquidType == -1)
-            {
-                currentType = 0;
-            }
-
+            int currentType = (stack == null || stack.LiquidType == -1) ? 0 : stack.LiquidType;
             LiquidTypeDefinition liquidDef = LiquidTypeRegistry.Get(currentType);
 
             CalculatedStyle dimensions = GetDimensions();
-            Vector2 drawPosition = dimensions.Position();
             float scale = dimensions.Width / borderTexture.Width();
 
+            Texture2D borderTex = LiquidTextureCache.GetOrCreate(BorderPath, borderTexture.Value, liquidDef);
             Texture2D backgroundTex = LiquidTextureCache.GetOrCreate(BackgroundPath, backgroundTexture.Value, liquidDef);
             Texture2D liquidTex = LiquidTextureCache.GetOrCreate(LiquidPath, liquidTexture.Value, liquidDef);
-            Texture2D borderTex = LiquidTextureCache.GetOrCreate(BorderPath, borderTexture.Value, liquidDef);
 
             float fillPercent = (stack != null && stack.Capacity > 0f)
                 ? Math.Clamp(stack.Amount / stack.Capacity, 0f, 1f)
                 : 0f;
 
-            GraphicsDevice device = Main.graphics.GraphicsDevice;
-            Rectangle previousScissor = device.ScissorRectangle;
+            // 1. Border — bottom layer, drawn as part of this element's own DrawSelf, so it
+            // renders before either child (liquid, background) below it.
+            spriteBatch.Draw(borderTex, dimensions.Position(), null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 
-            // Convert this element's UI-space bounds to real back-buffer pixels — the
-            // inverse of what MachineUISystem.UpdateUIPosition does when it divides by
-            // Main.UIScale to go from screen pixels into UI space.
-            float uiScale = Main.UIScale;
-            Rectangle tankScissorRect = new Rectangle(
-                (int)(dimensions.X * uiScale),
-                (int)(dimensions.Y * uiScale),
-                (int)(dimensions.Width * uiScale),
-                (int)(dimensions.Height * uiScale)
-            );
-            tankScissorRect = Rectangle.Intersect(tankScissorRect, device.Viewport.Bounds);
+            // Hand this frame's values to the children — they draw themselves right after
+            // this method returns, in the order they were Appended (liquid, then background).
+            liquidLayer.Texture = liquidTex;
+            liquidLayer.Scale = scale;
+            liquidLayer.FillPercent = fillPercent;
 
-            spriteBatch.End();
-            spriteBatch.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied,
-                Main.DefaultSamplerState,
-                DepthStencilState.None,
-                ScissorRasterizer,
-                null,
-                Main.UIScaleMatrix
-            );
+            backgroundLayer.Texture = backgroundTex;
+            backgroundLayer.Scale = scale;
+        }
 
-            device.ScissorRectangle = tankScissorRect;
+        // 2. Liquid — clipped to this element's own rectangle by OverflowHidden, so anything
+        // that spills past the tank simply doesn't draw. Rectangular, not pixel-accurate to
+        // the background's shape — but simple, and good enough for a tank interior.
+        class LiquidLayer : UIElement
+        {
+            public Texture2D Texture;
+            public float Scale;
+            public float FillPercent;
 
-            // 1. Background — drawn first, ends up visually behind everything else.
-            spriteBatch.Draw(backgroundTex, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            const float BobAmplitude = 1.2f;
+            const float BobSpeed = 0.05f;
 
-            // 2. Liquid — NOT cropped. The full texture (surface art included) is
-            // translated down as the fill percent drops, so the surface always renders
-            // intact instead of being sliced away. The scissor rect (set above) hides
-            // whatever spills below the tank's bottom edge once it's translated down.
-            if (fillPercent > 0f)
+            protected override void DrawSelf(SpriteBatch spriteBatch)
             {
-                float fullHeightScaled = liquidTexture.Height() * scale;
-                float translateY = (1f - fillPercent) * fullHeightScaled;
+                if (Texture == null || FillPercent <= 0f) return;
 
+                CalculatedStyle dimensions = GetDimensions();
+                float translateY = (1f - FillPercent) * Texture.Height * Scale;
                 float bob = MathF.Sin(Main.GameUpdateCount * BobSpeed) * BobAmplitude;
-                Vector2 liquidPosition = drawPosition + new Vector2(0, translateY + bob);
+                Vector2 drawPosition = dimensions.Position() + new Vector2(0, translateY + bob);
 
-                spriteBatch.Draw(liquidTex, liquidPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                spriteBatch.Draw(Texture, drawPosition, null, Color.White, 0f, Vector2.Zero, Scale, SpriteEffects.None, 0f);
             }
+        }
 
-            // 3. Border — drawn last, on top, framing the tank.
-            spriteBatch.Draw(borderTex, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        // 3. Background — drawn last (appended after liquidLayer), so it renders on top.
+        class BackgroundLayer : UIElement
+        {
+            public Texture2D Texture;
+            public float Scale;
 
-            spriteBatch.End();
+            protected override void DrawSelf(SpriteBatch spriteBatch)
+            {
+                if (Texture == null) return;
 
-            device.ScissorRectangle = previousScissor;
-
-            spriteBatch.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                Main.DefaultSamplerState,
-                DepthStencilState.None,
-                RasterizerState.CullCounterClockwise,
-                null,
-                Main.UIScaleMatrix);
+                CalculatedStyle dimensions = GetDimensions();
+                spriteBatch.Draw(Texture, dimensions.Position(), null, Color.White, 0f, Vector2.Zero, Scale, SpriteEffects.None, 0f);
+            }
         }
     }
 }
