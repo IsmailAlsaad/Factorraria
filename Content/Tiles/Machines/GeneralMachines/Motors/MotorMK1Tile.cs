@@ -2,7 +2,7 @@
 using Factorraria.Content.Items.Liquids.Motors;
 using Terraria.ModLoader;
 
-namespace Factorraria.Content.Tiles.Machines.General_Machines.Motors
+namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Motors
 {
     public class MotorMK1Tile : MotorTileBase<MotorMK1TileEntity>
     {

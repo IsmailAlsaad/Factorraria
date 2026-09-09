@@ -1,7 +1,7 @@
 ﻿using Factorraria.Common.UI;
-using Factorraria.Content.Tiles.Machines.General_Machines.Motors;
+using Factorraria.Content.Tiles.Machines.GeneralMachines.Motors;
 using Factorraria.Content.Tiles.Machines.Autohammer;
-using Factorraria.Content.Tiles.Machines.General_Machines.Furnace;
+using Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace;
 using Factorraria.Content.Tiles.Machines.GelBurner;
 using Factorraria.Content.Tiles.Machines.Solidifier;
 using Terraria.ID;
@@ -23,34 +23,34 @@ namespace Factorraria.Common.Machines
         {
             // --- Register every machine's Texture here
             MachineVisualRegistry.Register<FurnaceTileEntity>(TileID.Furnaces,
-                "Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_On",
-                "Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_Off");
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/Furnace/Furnace_On",
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/Furnace/Furnace_Off");
 
 
             MachineVisualRegistry.Register<AutohammerTileEntity>(TileID.Autohammer,
-                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Autohammer/Autohammer_On",
-                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Autohammer/Autohammer_Off");
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Autohammer/Autohammer_On",
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Autohammer/Autohammer_Off");
 
 
             MachineVisualRegistry.Register<SolidifierTileEntity>(TileID.Solidifier,
-                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_On",
-                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_Off");
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Solidifier/Solidifier_On",
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Solidifier/Solidifier_Off");
             MachineVisualRegistry.RegisterLiquidOverlay(TileID.Solidifier,
-                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_On_FirstLiquid",
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Solidifier/Solidifier_On_FirstLiquid",
                 entity => entity.InputLiquids[0]);
             MachineVisualRegistry.RegisterLiquidOverlay(TileID.Solidifier,
-                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_On_SecondLiquid",
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Solidifier/Solidifier_On_SecondLiquid",
                 entity => entity.InputLiquids[1]);
 
 
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
-                "Factorraria/Content/Tiles/Machines/Electrical Producers/GelBurner/GelBurner_On",
-                "Factorraria/Content/Tiles/Machines/Electrical Producers/GelBurner/GelBurner_Off");
+                "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_On",
+                "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_Off");
 
 
             MachineVisualRegistry.Register<MotorMK1TileEntity>(ModContent.TileType<MotorMK1Tile>(),
-                "Factorraria/Content/Tiles/Liquids/Motors/MotorMK1_On",
-                "Factorraria/Content/Tiles/Liquids/Motors/MotorMK1_Off");
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/Motors/MotorMK1_On",
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/Motors/MotorMK1_Off");
         }
 
         public override void PostAddRecipes()

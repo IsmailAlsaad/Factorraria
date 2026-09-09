@@ -11,7 +11,7 @@ using Terraria.ModLoader;
 using Terraria.UI;
 using tModPorter;
 
-namespace Factorraria.Content.Tiles.Machines.General_Machines.Furnace
+namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 {
     public class FurnaceUIState : MachineUIStateBase
     {
