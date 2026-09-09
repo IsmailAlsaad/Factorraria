@@ -40,29 +40,29 @@ namespace Factorraria.Content.Tiles.Machines.Solidifier
             }
         }
 
-        int counter = 0;
-        public override void OnRightClick(int i, int j)
-        {
-            counter = (counter + 1) % 5;
+        //int counter = 0;
+        //public override void OnRightClick(int i, int j)
+        //{
+        //    counter = (counter + 1) % 5;
 
-            switch (counter)
-            {
-                case 0:
-                    InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Water, 50f);
-                    break;
-                case 1:
-                    InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Lava, 50f);
-                    break;
-                case 2:
-                    InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Honey, 50f);
-                    break;
-                case 3:
-                    InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Shimmer, 50f);
-                    break;
-                case 4:
-                    InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Oil, 50f);
-                    break;
-            }
-        }
+        //    switch (counter)
+        //    {
+        //        case 0:
+        //            InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Water, 50f);
+        //            break;
+        //        case 1:
+        //            InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Lava, 50f);
+        //            break;
+        //        case 2:
+        //            InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Honey, 50f);
+        //            break;
+        //        case 3:
+        //            InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Shimmer, 50f);
+        //            break;
+        //        case 4:
+        //            InputLiquids[0] = new LiquidStack(LiquidTypeRegistry.Oil, 50f);
+        //            break;
+        //    }
+        //}
     }
 }

@@ -15,7 +15,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 {
     public class FurnaceUIState : MachineUIStateBase
     {
-        FurnaceTileEntity Furnace => (FurnaceTileEntity)CurrentEntity;
+        FurnaceTileEntity Entity => (FurnaceTileEntity)CurrentEntity;
 
         protected override Vector2 BasePanelSize => new Vector2(100, 200);
 
@@ -25,19 +25,19 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
             var oreSlot = new UIItemSlotWrapper(
                 ItemSlot.Context.ChestItem,
-                () => Furnace.InputSlots[0],
-                v => Furnace.InputSlots[0] = v,
+                () => Entity.InputSlots[0],
+                v => Entity.InputSlots[0] = v,
                 item => FurnaceRecipeRegistry.SmeltingRecipes.ContainsKey(item.type)
             );
             list.Add(new MachineUIElementEntry(oreSlot, new Vector2(0, 0), new Vector2(54, 54)));
 
-            var fireUI = new FireUIElement(() => Furnace.GetSmeltPercent());
+            var fireUI = new FireUIElement(() => Entity.GetSmeltPercent());
             list.Add(new MachineUIElementEntry(fireUI, new Vector2(0, 50), new Vector2(54, 54)));
 
             var fuelSlot = new UIItemSlotWrapper(
                 ItemSlot.Context.ChestItem,
-                () => Furnace.InputSlots[1],
-                v => Furnace.InputSlots[1] = v,
+                () => Entity.InputSlots[1],
+                v => Entity.InputSlots[1] = v,
                 item => FurnaceRecipeRegistry.ValidFuels.ContainsKey(item.type)
             );
             list.Add(new MachineUIElementEntry(fuelSlot, new Vector2(0, 100), new Vector2(54, 54)));

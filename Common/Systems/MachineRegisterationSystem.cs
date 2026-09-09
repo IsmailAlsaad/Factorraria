@@ -6,6 +6,7 @@ using Factorraria.Content.Tiles.Machines.GelBurner;
 using Factorraria.Content.Tiles.Machines.Solidifier;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier;
 
 namespace Factorraria.Common.Machines
 {
@@ -15,7 +16,7 @@ namespace Factorraria.Common.Machines
         {
             // --- Register every machine's UI here
             MachineUIRegistry.Register(TileID.Furnaces, new FurnaceUIState());
-            // MachineUIRegistry.Register(TileID.Autohammer, new AutohammerUIState());
+            MachineUIRegistry.Register(TileID.Solidifier, new SolidifierUIState());
             // etc...
         }
 
