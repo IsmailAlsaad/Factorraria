@@ -37,8 +37,7 @@ namespace Factorraria.Common.Networks
         public float MaxFlowRate = float.MaxValue;
 
         const float TicksPerMinute = 3600f;
-        const float MachineLiquidCapacity = 100f;
-        const int InfiniteSourceThreshold = 300;
+        const int InfiniteSourceThreshold = 100;
 
         // A world tile only ever moves in whole-tile chunks — matches vanilla liquid
         // amounts (byte, 0-255) and avoids the flicker/visual weirdness of draining a
@@ -188,7 +187,7 @@ namespace Factorraria.Common.Networks
                     slot = FindSinkSlot(sink.MachineSlots, type);
                     if (slot == null) continue;
 
-                    float space = MachineLiquidCapacity - slot.Amount;
+                    float space = slot.Capacity - slot.Amount;
                     capHere = Math.Min(sink.RateThisTick, space);
                     if (capHere <= 0f) continue;
                 }
