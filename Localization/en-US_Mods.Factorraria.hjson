@@ -51,6 +51,16 @@ Items: {
 		DisplayName: Oil Bucket
 		Tooltip: ""
 	}
+
+	IronCutter: {
+		DisplayName: Iron Cutter
+		Tooltip: ""
+	}
+
+	LeadCutter: {
+		DisplayName: Lead Cutter
+		Tooltip: ""
+	}
 }
 
 Configs: {

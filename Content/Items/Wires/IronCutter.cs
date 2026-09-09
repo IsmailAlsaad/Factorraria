@@ -1,5 +1,4 @@
-﻿using Factorraria.Common;
-using Factorraria.Common.Systems;
+﻿using Factorraria.Common.Systems;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -8,23 +7,31 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Items.Wires
 {
-    public class PickaxeWireBreaker : GlobalItem
+    public class IronCutter : ModItem
     {
-        public override bool? UseItem(Item item, Player player)
-        //public override bool CanUseItem(Item item, Player player)
+        public override void SetDefaults()
         {
-            if(item.pick == 0)
-            {
-                return null;
-            }
+            Item.width = 20;
+            Item.height = 20;
+            Item.maxStack = 1;
+            Item.value = Item.buyPrice(copper: 50);
 
+            Item.useTurn = true;
+            Item.autoReuse = true;
+            Item.useAnimation = 5;
+            Item.useTime = 5;
+            Item.useStyle = ItemUseStyleID.Swing;
+        }
+
+        public override bool? UseItem(Player player)
+        {
             int tileX = Player.tileTargetX;
             int tileY = Player.tileTargetY;
 
             if (CustomWireSystem.RemoveWire(tileX, tileY, CustomWireType.Tin))
             {
                 Item.NewItem(
-                    player.GetSource_ItemUse(item),
+                    player.GetSource_ItemUse(Item),
                     tileX * 16,
                     tileY * 16,
                     16,
@@ -39,7 +46,7 @@ namespace Factorraria.Content.Items.Wires
             if (CustomWireSystem.RemoveWire(tileX, tileY, CustomWireType.Copper))
             {
                 Item.NewItem(
-                    player.GetSource_ItemUse(item),
+                    player.GetSource_ItemUse(Item),
                     tileX * 16,
                     tileY * 16,
                     16,
@@ -55,3 +62,4 @@ namespace Factorraria.Content.Items.Wires
         }
     }
 }
+

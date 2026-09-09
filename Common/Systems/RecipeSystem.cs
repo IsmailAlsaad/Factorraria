@@ -49,6 +49,18 @@ namespace Factorraria.Common.Systems
                 .AddIngredient(ItemID.TinBar, 1)
                 .AddTile(TileID.Anvils)
                 .Register();
+
+            // Iron Cutter
+            Recipe.Create(ModContent.ItemType<IronCutter>(), 1)
+                .AddIngredient(ItemID.IronBar, 5)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            // Lead Cutter
+            Recipe.Create(ModContent.ItemType<LeadCutter>(), 1)
+                .AddIngredient(ItemID.LeadBar, 5)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
 
         static int AnyIronHammerID;
