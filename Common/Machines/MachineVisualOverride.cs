@@ -11,11 +11,19 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Common.Machines
 {
+    public class LiquidOverlayLayer
+    {
+        public Asset<Texture2D> SourceTexture;
+        public Func<BaseMachine, LiquidStack> GetLiquidStack;
+        public string CacheKey;
+    }
+
     public class MachineVisualDefinition
     {
         public Func<int, int, BaseMachine> GetEntity;
         public Asset<Texture2D> OnTexture;
         public Asset<Texture2D> OffTexture;
+        public List<LiquidOverlayLayer> LiquidOverlays = new();
     }
 
     public static class MachineVisualRegistry
@@ -40,6 +48,23 @@ namespace Factorraria.Common.Machines
                 OffTexture = ModContent.Request<Texture2D>(offPath)
             };
         }
+        public static void RegisterLiquidOverlay(int tileType, string texturePath, Func<BaseMachine, LiquidStack> getLiquidStack)
+        {
+            if (!Definitions.TryGetValue(tileType, out var def))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(tileType),
+                    $"RegisterLiquidOverlay failed for tile type {tileType}: call MachineVisualRegistry.Register (base On/Off textures) first."
+                );
+            }
+
+            def.LiquidOverlays.Add(new LiquidOverlayLayer
+            {
+                SourceTexture = ModContent.Request<Texture2D>(texturePath),
+                GetLiquidStack = getLiquidStack,
+                CacheKey = texturePath // already unique per overlay, no need to invent a separate key
+            });
+        }
     }
 
     public class MachineVisualOverride : GlobalTile
@@ -55,6 +80,22 @@ namespace Factorraria.Common.Machines
             float rotation = entity is MotorTileEntityBase motor ? GetMotorRotation(motor.Facing) : 0f;
 
             int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j, rotation);
+
+            if (entity.isOn)
+            {
+                foreach (var layer in def.LiquidOverlays)
+                {
+                    LiquidStack stack = layer.GetLiquidStack(entity);
+                    if (stack == null || stack.IsEmpty)
+                        continue;
+
+                    LiquidTypeDefinition liquidDef = LiquidTypeRegistry.Get(stack.LiquidType);
+                    Texture2D recolored = LiquidTextureCache.GetOrCreate(layer.CacheKey, layer.SourceTexture.Value, liquidDef);
+
+                    TileEntityHelper.AnimateTileEntity(spriteBatch, recolored, i, j, rotation);
+                }
+            }
+
             entity.NotifyAnimationFrame(frame);
             return false;
         }

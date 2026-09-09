@@ -1,6 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
+using ModLiquidLib.ID;
 using ModLiquidLib.ModLoader;
+using Terraria.GameContent.Liquid;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Liquids.CustomLiquids
 {
@@ -8,22 +11,33 @@ namespace Factorraria.Content.Tiles.Liquids.CustomLiquids
     {
         public override void SetStaticDefaults()
         {
-            // Shown on the minimap when hovering over a pool of this liquid.
-            AddMapEntry(new Color(60, 45, 30));
+            LiquidRenderer.VISCOSITY_MASK[Type] = 240;
 
-            // Slows things down passing through it — similar viscosity to Honey.
-            PlayerMovementMultiplier = 0.6f;
-            NPCMovementMultiplierDefault = 0.6f;
-            ProjectileMovementMultiplier = 0.6f;
+            LiquidRenderer.WATERFALL_LENGTH[Type] = 20;
 
-            // Honey's fall delay is 10 (the max allowed) — oil is viscous too.
-            FallDelay = 10;
+            LiquidRenderer.DEFAULT_OPACITY[Type] = 1f;
+            SlopeOpacity = 1f;
+            LiquidfallOpacityMultiplier = 0.5f;
 
-            SlopeOpacity = 0.6f;
             WaterRippleMultiplier = 0.3f;
 
-            // If this mod is ever removed, existing world tiles fall back to Water
-            // instead of leaving an invalid/undefined liquid type behind.
+            SplashDustType = 36; //This is the dust ID for the oil splash dust, which is a black smoke effect.
+
+            SplashSound = SoundID.Splash;
+
+            FallDelay = 10;
+            ChecksForDrowning = true;
+            AllowEmitBreathBubbles = false;
+
+            PlayerMovementMultiplier = 0.2f;
+            StopWatchMPHMultiplier = PlayerMovementMultiplier; //We set stopwatch to the same multiplier as we don't want a different between whats felt and what the player can read their movement as.
+            NPCMovementMultiplierDefault = PlayerMovementMultiplier; //NPCs have a similar modifier but as a field, here we set the default value as some other NPCs set this multiplier to 0. We set this to PlayerMovementMultiplier as we need them to all be the same.
+            ProjectileMovementMultiplier = PlayerMovementMultiplier; //Simiarly to Players, Projectiles have this property for easy editing of a projectile velocity multiplier without needing to reimplement all of the projectile liquid movement code.
+
+            LiquidID_TLmod.Sets.CanBeAbsorbedBy[Type].Remove(ItemID.UltraAbsorbantSponge);
+
+            AddMapEntry(new Color(40, 40, 40));
+
             VanillaFallbackOnModDeletion = (ushort)LiquidID.Water;
         }
     }

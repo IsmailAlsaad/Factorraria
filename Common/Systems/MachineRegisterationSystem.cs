@@ -26,17 +26,27 @@ namespace Factorraria.Common.Machines
                 "Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_On",
                 "Factorraria/Content/Tiles/Machines/General Machines/Furnace/Furnace_Off");
 
+
             MachineVisualRegistry.Register<AutohammerTileEntity>(TileID.Autohammer,
                 "Factorraria/Content/Tiles/Machines/Electrical Consumers/Autohammer/Autohammer_On",
                 "Factorraria/Content/Tiles/Machines/Electrical Consumers/Autohammer/Autohammer_Off");
 
+
             MachineVisualRegistry.Register<SolidifierTileEntity>(TileID.Solidifier,
                 "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_On",
                 "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_Off");
+            MachineVisualRegistry.RegisterLiquidOverlay(TileID.Solidifier,
+                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_On_FirstLiquid",
+                entity => entity.InputLiquids[0]);
+            MachineVisualRegistry.RegisterLiquidOverlay(TileID.Solidifier,
+                "Factorraria/Content/Tiles/Machines/Electrical Consumers/Solidifier/Solidifier_On_SecondLiquid",
+                entity => entity.InputLiquids[1]);
+
 
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
                 "Factorraria/Content/Tiles/Machines/Electrical Producers/GelBurner/GelBurner_On",
                 "Factorraria/Content/Tiles/Machines/Electrical Producers/GelBurner/GelBurner_Off");
+
 
             MachineVisualRegistry.Register<MotorMK1TileEntity>(ModContent.TileType<MotorMK1Tile>(),
                 "Factorraria/Content/Tiles/Liquids/Motors/MotorMK1_On",

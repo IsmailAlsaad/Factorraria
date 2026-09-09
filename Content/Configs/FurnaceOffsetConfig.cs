@@ -18,11 +18,9 @@ namespace Factorraria.Content.Configs
 
         public int animationOffset;
 
-        public float fireCropOffset;
+        public float fireCropOffset = 0.15f;
 
-        [Slider]
-        [Range(1, 120)]
-        public int animationSpeedDivider;
+        public int animationSpeedDivider = 4;
 
         public bool EnableDebugs;
 
