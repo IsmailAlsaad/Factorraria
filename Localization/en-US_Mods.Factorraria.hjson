@@ -66,6 +66,11 @@ Items: {
 		DisplayName: Mechanical Arm Item
 		Tooltip: ""
 	}
+
+	MechSuitItem: {
+		DisplayName: Mech Suit Item
+		Tooltip: ""
+	}
 }
 
 Configs: {
@@ -109,4 +114,7 @@ Configs: {
 	}
 }
 
-Projectiles.MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
+Projectiles: {
+	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
+	MechSuitArmProjectile.DisplayName: Mech Suit Arm Projectile
+}

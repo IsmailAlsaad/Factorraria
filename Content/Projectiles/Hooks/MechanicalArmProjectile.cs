@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Common.Mounts;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
@@ -188,14 +189,14 @@ namespace Factorraria.Content.Projectiles.Hooks
 
             Vector2 shoulder = player.Center;
             Vector2 head = Projectile.Center;
-            Vector2 joint = SolveElbow(shoulder, head, UpperArmLength, ForearmLength, Projectile.ai[1], Projectile.localAI[0]);
+            Vector2 joint = MechanicalArmIK.SolveElbow(shoulder, head, UpperArmLength, ForearmLength, Projectile.ai[1], Projectile.localAI[0]);
 
             Texture2D beam = ArmSegmentTexture.Value;
             Texture2D headTexture = TextureAssets.Projectile[Type].Value;
             Color drawColor = Lighting.GetColor((int)(head.X / 16f), (int)(head.Y / 16f));
 
-            DrawSegment(beam, shoulder, joint, drawColor);
-            DrawSegment(beam, joint, head, drawColor);
+            MechanicalArmIK.DrawSegment(Main.spriteBatch,beam, shoulder, joint, drawColor);
+            MechanicalArmIK.DrawSegment(Main.spriteBatch,beam, joint, head, drawColor);
 
             Texture2D jointTexture = JointTexture.Value;
             Vector2 jointOrigin = jointTexture.Size() / 2f;
@@ -206,47 +207,6 @@ namespace Factorraria.Content.Projectiles.Hooks
             Main.spriteBatch.Draw(headTexture, head - Main.screenPosition, null, drawColor, Projectile.rotation, headOrigin, 1f, SpriteEffects.None, 0f);
 
             return false;
-        }
-
-        // Two-bone (elbow) IK: given fixed shoulder/target points and two fixed segment
-        // lengths, solve for the one elbow position that keeps both segments at their
-        // real length. Direction always points at the true target; only the DISTANCE fed
-        // into the law-of-cosines math gets clamped, so an out-of-reach target just
-        // renders as a taut straight arm instead of producing NaNs.
-        static Vector2 SolveElbow(Vector2 shoulder, Vector2 target, float l1, float l2, float bendSign, float fallbackAngle)
-        {
-            Vector2 delta = target - shoulder;
-            float d = delta.Length();
-
-            if (d < 1f)
-            {
-                // Not enough distance for the triangle to mean anything yet — use the
-                // cocked angle we locked in at spawn instead.
-                return shoulder + fallbackAngle.ToRotationVector2() * l1;
-            }
-
-            float clampedD = MathHelper.Clamp(d, MathF.Abs(l1 - l2) + 0.01f, l1 + l2 - 0.01f);
-
-            float baseAngle = delta.ToRotation();
-            float cosAngle = (l1 * l1 + clampedD * clampedD - l2 * l2) / (2f * l1 * clampedD);
-            cosAngle = MathHelper.Clamp(cosAngle, -1f, 1f);
-            float offsetAngle = MathF.Acos(cosAngle) * bendSign;
-
-            float elbowAngle = baseAngle + offsetAngle;
-            return shoulder + elbowAngle.ToRotationVector2() * l1;
-        }
-
-        static void DrawSegment(Texture2D texture, Vector2 start, Vector2 end, Color color)
-        {
-            Vector2 diff = end - start;
-            float length = diff.Length();
-            if (length < 0.01f) return;
-
-            float rotation = diff.ToRotation();
-            Vector2 origin = new Vector2(0f, texture.Height / 2f);
-            Vector2 scale = new Vector2(length / texture.Width, 0.7f);
-
-            Main.spriteBatch.Draw(texture, start - Main.screenPosition, null, color, rotation, origin, scale, SpriteEffects.None, 0f);
         }
 
         // Multiplayer stuff
