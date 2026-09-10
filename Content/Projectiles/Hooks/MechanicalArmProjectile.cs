@@ -23,7 +23,9 @@ namespace Factorraria.Content.Projectiles.Hooks
         const float DetachDistance = 230f;   // slightly more than UpperArm+Forearm, so the
                                             // arm reads as fully taut right as it lets go
         const float PushAcceleration = 0.8f;
-        const float MaxPushSpeed = 16f;
+        const float MaxPushSpeed = 16f; // 16 is a nice middle ground
+        const float playerSpeedCap = 25f; // 16 is a nice middle ground
+        Vector2 playerOldSpeed = Vector2.Zero; 
         Vector2 pushDirection = Vector2.Zero;
 
         static Asset<Texture2D> ArmSegmentTexture;
@@ -102,6 +104,11 @@ namespace Factorraria.Content.Projectiles.Hooks
             {
                 Projectile.timeLeft = 2;
 
+                if(playerOldSpeed == Vector2.Zero)
+                {
+                    playerOldSpeed = player.velocity;
+                }
+
                 if (Main.myPlayer == Projectile.owner && PlayerInput.Triggers.JustPressed.Jump)
                 {
                     Projectile.Kill(); // instant — no retract animation
@@ -164,8 +171,8 @@ namespace Factorraria.Content.Projectiles.Hooks
             player.velocity += pushDirection * PushAcceleration;
 
             float speed = player.velocity.Length();
-            if (speed > MaxPushSpeed)
-                player.velocity *= MaxPushSpeed / speed;
+            if (speed > MaxPushSpeed + playerOldSpeed.Length() || speed > playerSpeedCap)
+                player.velocity *= (Math.Min(MaxPushSpeed + playerOldSpeed.Length(), playerSpeedCap)) / speed;
 
             player.fallStart = (int)(player.position.Y / 16f);
 
