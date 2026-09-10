@@ -20,10 +20,11 @@ namespace Factorraria.Content.Projectiles.Hooks
         // --- TUNABLES ---
         const float UpperArmLength = 100f;   // shoulder -> elbow
         const float ForearmLength = 100f;    // elbow -> head
-        const float DetachDistance = 240f;   // slightly more than UpperArm+Forearm, so the
+        const float DetachDistance = 230f;   // slightly more than UpperArm+Forearm, so the
                                             // arm reads as fully taut right as it lets go
-        const float PushAcceleration = 0.6f;
+        const float PushAcceleration = 0.8f;
         const float MaxPushSpeed = 16f;
+        Vector2 pushDirection = Vector2.Zero;
 
         static Asset<Texture2D> ArmSegmentTexture;
         static Asset<Texture2D> JointTexture;
@@ -142,49 +143,36 @@ namespace Factorraria.Content.Projectiles.Hooks
             if (Latched)
                 return false;
 
+            // Lock in the push direction as the OPPOSITE of where the head was traveling/facing
+            // on impact — fixed for the rest of this latch, independent of player position.
+            pushDirection = oldVelocity != Vector2.Zero
+                ? -Vector2.Normalize(oldVelocity)
+                : new Vector2(0f, -1f); // degenerate fallback, shouldn't normally hit
+
             Projectile.velocity = Vector2.Zero;
             Projectile.ai[0] = 1f;
-            Projectile.tileCollide = false; // frozen in place now — don't let physics nudge it further
+            Projectile.tileCollide = false;
             Projectile.netUpdate = true;
 
             SoundEngine.PlaySound(SoundID.Dig, Projectile.position);
 
-            return false; // stay alive, embedded, instead of dying like a normal projectile on impact
+            return false;
         }
 
         void ApplyPush(Player player)
         {
-            Vector2 latchPoint = Projectile.Center;
-            Vector2 away = player.Center - latchPoint;
-            float distance = away.Length();
-
-            // Degenerate case: player is basically standing on the latch point. Push
-            // along whatever direction they're already moving so there's always SOME push.
-            Vector2 pushDirection = distance > 0.5f ? away / distance : SafeFallback(player);
-
             player.velocity += pushDirection * PushAcceleration;
 
             float speed = player.velocity.Length();
             if (speed > MaxPushSpeed)
                 player.velocity *= MaxPushSpeed / speed;
 
-            // Hooks conventionally protect you from fall damage while attached — you're
-            // being actively flung, not falling.
             player.fallStart = (int)(player.position.Y / 16f);
 
-            // Re-pressing the hook key while latched cuts the cord early, same idea as
-            // vanilla hooks letting you retract on demand instead of waiting out the threshold.
             if (Main.myPlayer == Projectile.owner && PlayerInput.Triggers.JustPressed.Grapple)
             {
                 BeginRetract();
             }
-        }
-
-        static Vector2 SafeFallback(Player player)
-        {
-            if (player.velocity != Vector2.Zero)
-                return Vector2.Normalize(player.velocity);
-            return new Vector2(0f, -1f);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -253,5 +241,16 @@ namespace Factorraria.Content.Projectiles.Hooks
 
             Main.spriteBatch.Draw(texture, start - Main.screenPosition, null, color, rotation, origin, scale, SpriteEffects.None, 0f);
         }
+
+        // Multiplayer stuff
+        //public override void SendExtraAI(System.IO.BinaryWriter writer)
+        //{
+        //    writer.WriteVector2(pushDirection);
+        //}
+
+        //public override void ReceiveExtraAI(System.IO.BinaryReader reader)
+        //{
+        //    pushDirection = reader.ReadVector2();
+        //}
     }
 }
