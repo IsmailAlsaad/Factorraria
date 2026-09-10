@@ -61,6 +61,11 @@ Items: {
 		DisplayName: Lead Cutter
 		Tooltip: ""
 	}
+
+	MechanicalArmItem: {
+		DisplayName: Mechanical Arm Item
+		Tooltip: ""
+	}
 }
 
 Configs: {
@@ -103,3 +108,5 @@ Configs: {
 		}
 	}
 }
+
+Projectiles.MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
