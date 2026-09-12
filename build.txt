@@ -1,4 +1,4 @@
 displayName = Factorraria
 author = Ismail
 version = 0.1
-modReferences = ModLiquidLib
+modReferences = ModLiquidLib, Luminance
