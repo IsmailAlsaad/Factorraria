@@ -87,6 +87,11 @@ Configs: {
 			Tooltip: ""
 		}
 
+		Offset: {
+			Tooltip: ""
+			Label: Offset
+		}
+
 		animationOffset: {
 			Label: animation Offset
 			Tooltip: ""
@@ -111,10 +116,21 @@ Configs: {
 			Label: V Item Offset
 			Tooltip: ""
 		}
+
+		AngleOffset: {
+			Label: Angle Offset
+			Tooltip: ""
+		}
+
+		AngleOffset2: {
+			Label: Angle Offset2
+			Tooltip: ""
+		}
 	}
 }
 
 Projectiles: {
 	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
 	MechSuitArmProjectile.DisplayName: Mech Suit Arm Projectile
+	IceBladeSwingProjectile.DisplayName: Ice Blade Swing Projectile
 }
