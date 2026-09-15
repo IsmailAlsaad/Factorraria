@@ -63,7 +63,7 @@ Items: {
 	}
 
 	MechanicalArmItem: {
-		DisplayName: Mechanical Arm Item
+		DisplayName: Mechanical Arm
 		Tooltip: ""
 	}
 

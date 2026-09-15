@@ -1,0 +1,20 @@
+{"frames": {
+
+"Puff_Explosion.png":
+{
+	"frame": {"x":1,"y":1,"w":32,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
+	"sourceSize": {"w":32,"h":32}
+}},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "Particles_Atlas.png",
+	"format": "RGBA8888",
+	"size": {"w":34,"h":34},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:f64426f6747d0ea831ac26c3b2fa3ee6:2c576e13c0b6a6157edc23e0e73e746b:26a66f523ee6bd9fb5662f117e2ce2c6$"
+}
+}

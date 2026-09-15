@@ -63,6 +63,7 @@ namespace Factorraria.Common.Systems
                 .Register();
         }
 
+        // Recipe Groups ID
         static int AnyIronHammerID;
         static int AnyCopperBarID;
         static int AnyTinPlatingID;

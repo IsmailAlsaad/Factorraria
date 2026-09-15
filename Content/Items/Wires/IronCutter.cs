@@ -16,10 +16,11 @@ namespace Factorraria.Content.Items.Wires
             Item.maxStack = 1;
             Item.value = Item.buyPrice(copper: 50);
 
+            Item.UseSound = SoundID.Item1;
             Item.useTurn = true;
             Item.autoReuse = true;
-            Item.useAnimation = 5;
-            Item.useTime = 5;
+            Item.useAnimation = 10;
+            Item.useTime = 10;
             Item.useStyle = ItemUseStyleID.Swing;
         }
 

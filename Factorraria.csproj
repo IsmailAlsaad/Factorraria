@@ -17,5 +17,8 @@
 			<HintPath>..\ModAssemblies\Luminance_v1.0.14.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Assets\Atlases\" />
+	</ItemGroup>
 
 </Project>
