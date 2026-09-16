@@ -1,8 +1,10 @@
 ﻿using Factorraria.Content.Configs;
 using Factorraria.Content.Particles;
 using Luminance.Common.Easings;
+using Luminance.Core.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
@@ -11,7 +13,7 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Projectiles.Weapons
 {
-    public class IceBladeSwingProjectile : ModProjectile
+    public class IceBladeSwingProjectile : ModProjectile, IPixelatedPrimitiveRenderer
     {
         private float START_ANGLE = MathHelper.ToRadians(-30f); // Starting angle of the swing
         private float END_ANGLE = MathHelper.ToRadians(60f); // Ending angle of the swing
@@ -65,8 +67,21 @@ namespace Factorraria.Content.Projectiles.Weapons
             Timer++;
         }
 
+        public void RenderPixelatedPrimitives(SpriteBatch spriteBatch)
+        {
+            PrimitiveRenderer.RenderTrail(
+                Projectile.oldPos,new(
+                    t => MathHelper.Lerp(20f, 0f, t), // Width Function
+                    _ => Color.White, // Color Function
+                    _ => new Vector2(20f,-20f).RotatedBy(Projectile.rotation), // Offset Function
+                true,
+                true),
+                20);
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
+
             // Calculate origin of sword (hilt) based on orientation and offset sword rotation (as sword is angled in its sprite)
             Vector2 origin;
             float rotationOffset = 0f;
@@ -151,6 +166,13 @@ namespace Factorraria.Content.Projectiles.Weapons
             Projectile.scale = Owner.GetAdjustedItemScale(Owner.HeldItem);
 
             Owner.heldProj = Projectile.whoAmI;
+
+            // Manually update oldPos array
+            for (int i = Projectile.oldPos.Length - 1; i > 0; i--)
+            {
+                Projectile.oldPos[i] = Projectile.oldPos[i - 1];
+            }
+            Projectile.oldPos[0] = Projectile.Center;
         }
 
         void ReleasedSwing()
