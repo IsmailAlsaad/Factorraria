@@ -13,6 +13,8 @@ namespace Factorraria.Content.VirtualItems
 {
     public class VirtualItem
     {
+        #region Variables
+
         // --- ITEM PAYLOAD ---
         public int itemType;        // Terraria Item ID
         public int stackSize;       // Stack count
@@ -43,7 +45,33 @@ namespace Factorraria.Content.VirtualItems
         Dictionary<int,Vector2> totalPushDictionary = new Dictionary<int, Vector2>();
         Vector2 totalPush;
 
-        // --- CONSTRUCTOR ---
+        static readonly Dictionary<(int, int), Vector2> ClockwiseConveyorPushTable = new Dictionary<(int, int), Vector2>
+        {
+            [(0, 0)] = new Vector2(0, 0),
+            [(1, 1)] = new Vector2(1, 0),
+            [(1, 0)] = new Vector2(0, -1),
+            [(1, -1)] = new Vector2(0, -1),
+            [(0, -1)] = new Vector2(-1, 0),
+            [(-1, -1)] = new Vector2(-1, 0),
+            [(-1, 0)] = new Vector2(0, 1),
+            [(-1, 1)] = new Vector2(0, 1),
+            [(0, 1)] = new Vector2(1, 0)
+        }; static readonly Dictionary<(int, int), Vector2> CounterClockwiseConveyorPushTable = new Dictionary<(int, int), Vector2>
+        {
+            [(0, 0)] = new Vector2(0, 0),
+            [(1, 1)] = new Vector2(0, 1),
+            [(1, 0)] = new Vector2(0, 1),
+            [(1, -1)] = new Vector2(1, 0),
+            [(0, -1)] = new Vector2(1, 0),
+            [(-1, -1)] = new Vector2(0, -1),
+            [(-1, 0)] = new Vector2(0, -1),
+            [(-1, 1)] = new Vector2(-1, 0),
+            [(0, 1)] = new Vector2(-1, 0)
+        };
+
+
+        #endregion 
+
         public VirtualItem(int type, int stack, int startTileX, int startTileY)
         {
             // Guard check: Reject invalid item IDs
@@ -76,6 +104,23 @@ namespace Factorraria.Content.VirtualItems
             VirtualItemSystem.RegisterItemTile(new Point(currentTileX, currentTileY), this);
         }
 
+        public void Update()
+        {
+            if (active == false)
+            {
+                return;
+            }
+
+            AnimateItem();
+            MoveVirtualItem();
+
+            // Countdown pickup timer
+            if (pickupCooldown > 0)
+            {
+                pickupCooldown = pickupCooldown - 1;
+            }
+        }
+
         // --- TARGET ASSIGNMENT ---
         public void SetTargetTile(int newTargetX, int newTargetY)
         {
@@ -93,24 +138,6 @@ namespace Factorraria.Content.VirtualItems
 
             // Register target tile in dictionary so other items know it's reserved
             VirtualItemSystem.RegisterItemTile(new Point(targetTileX, targetTileY), this);
-        }
-
-        // --- TICK UPDATE ---
-        public void Update()
-        {
-            if (active == false)
-            {
-                return;
-            }
-
-            AnimateItem();
-            MoveVirtualItem();
-
-            // Countdown pickup timer
-            if (pickupCooldown > 0)
-            {
-                pickupCooldown = pickupCooldown - 1;
-            }
         }
 
         void AnimateItem()
@@ -154,30 +181,6 @@ namespace Factorraria.Content.VirtualItems
         }
 
         // --- MOVEMENT ---
-        static readonly Dictionary<(int, int), Vector2> ClockwiseConveyorPushTable = new Dictionary<(int, int), Vector2>
-        {
-            [(0, 0)] = new Vector2(0, 0),
-            [(1, 1)] = new Vector2(1, 0),
-            [(1, 0)] = new Vector2(0, -1),
-            [(1, -1)] = new Vector2(0, -1),
-            [(0, -1)] = new Vector2(-1, 0),
-            [(-1, -1)] = new Vector2(-1, 0),
-            [(-1, 0)] = new Vector2(0, 1),
-            [(-1, 1)] = new Vector2(0, 1),
-            [(0, 1)] = new Vector2(1, 0)
-        }; static readonly Dictionary<(int, int), Vector2> CounterClockwiseConveyorPushTable = new Dictionary<(int, int), Vector2>
-        {
-            [(0, 0)] = new Vector2(0, 0),
-            [(1, 1)] = new Vector2(0, 1),
-            [(1, 0)] = new Vector2(0, 1),
-            [(1, -1)] = new Vector2(1, 0),
-            [(0, -1)] = new Vector2(1, 0),
-            [(-1, -1)] = new Vector2(0, -1),
-            [(-1, 0)] = new Vector2(0, -1),
-            [(-1, 1)] = new Vector2(-1, 0),
-            [(0, 1)] = new Vector2(-1, 0)
-        };
-
         bool GetConveyorVector(int checkX, int checkY, int offsetX, int offsetY, out Vector2 push, out int ConveyorPriority)
         {
             push = Vector2.Zero;
@@ -264,7 +267,6 @@ namespace Factorraria.Content.VirtualItems
         //Executes vector tallying and destination validation
         void CalculateMovementPath()
         {
-            // --- RECALCULATION TRIGGER: IDLE / ARRIVED AT TARGET CENTER ---
             if (currentTileX == targetTileX && currentTileY == targetTileY)
             {
                 MaxConveyorPriority = 0;
@@ -281,7 +283,6 @@ namespace Factorraria.Content.VirtualItems
                     totalPush = totalPushDictionary[MaxConveyorPriority];
                 }
 
-                // Refine push axis using terrain passability (no side-effects)
                 if (IsTilePassable(currentTileX + (int)totalPush.X, currentTileY) && totalPush.X != 0)
                 {
                     totalPush = new Vector2(totalPush.X, 0);
@@ -355,12 +356,10 @@ namespace Factorraria.Content.VirtualItems
             }
         }
 
-        // Execute constant-speed tile movement
         public void MoveVirtualItem()
         {
             CalculateMovementPath();
 
-            // --- CONSTANT-SPEED MOVEMENT (NO INTERMEDIATE RECALCULATIONS) ---
             float targetPixelX = (targetTileX * 16) + 8;
             float targetPixelY = (targetTileY * 16) + 8;
             Vector2 targetPixelPosition = new Vector2(targetPixelX, targetPixelY);
@@ -384,7 +383,7 @@ namespace Factorraria.Content.VirtualItems
                 worldPosition = worldPosition + (direction * moveSpeed * CurrentFallVelocity);
             }
         }
-        // Checks physical terrain and world bounds
+
         private bool IsTilePassable(int targetX, int targetY)
         {
             if (!WorldGen.InWorld(targetX, targetY))
@@ -463,7 +462,7 @@ namespace Factorraria.Content.VirtualItems
             return false;
         }
 
-        // DEBUG
+        #region Debugging
         public void DrawAdjacentConveyorVectors(SpriteBatch spriteBatch, int originTileX, int originTileY)
         {
             // All 8 neighboring tile offsets (Moore neighborhood)
@@ -517,5 +516,6 @@ namespace Factorraria.Content.VirtualItems
                 0f
             );
         }
+        #endregion
     }
 }

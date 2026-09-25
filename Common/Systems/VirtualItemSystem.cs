@@ -19,16 +19,38 @@ namespace Factorraria.Content.VirtualItems
 {
     public class VirtualItemSystem : ModSystem
     {
+        #region Variables
+
         // Master list of active items
         public static List<VirtualItem> virtualItems = new List<VirtualItem>();
 
-        // Fast O(1) position lookup dictionary
         public static Dictionary<Point, VirtualItem> tileItemMap = new Dictionary<Point, VirtualItem>();
         public static Dictionary<Point, PriorityConveyorNetwork> ConveyorNetworkMap { get; private set; } = new Dictionary<Point, PriorityConveyorNetwork>();
 
         private static string hoveredVItemText = null;
         private static int hoveredVItemRarity = ItemRarityID.White;
         private static Vector2 cachedMouseWorld;
+
+        #endregion
+
+        public override void PostUpdateWorld()
+        {
+            ConvertItemsToVItems();
+            CheckPlayerPickups();
+
+            for (int i = virtualItems.Count - 1; i >= 0; i--)
+            {
+                VirtualItem item = virtualItems[i];
+
+                item.Update();
+
+                if (item.active == false)
+                {
+                    item.Remove();
+                    virtualItems.RemoveAt(i);
+                }
+            }
+        }
 
         // --- ITEM ID SAFETY GUARD ---
         public static bool IsValidItemID(int type)
@@ -180,26 +202,6 @@ namespace Factorraria.Content.VirtualItems
                     {
                         SetConveyorFilter(pt.X, pt.Y, filterId);
                     }
-                }
-            }
-        }
-
-        // --- TICK UPDATE ---
-        public override void PostUpdateWorld()
-        {
-            ConvertItemsToVItems();
-            CheckPlayerPickups();
-
-            for (int i = virtualItems.Count - 1; i >= 0; i--)
-            {
-                VirtualItem item = virtualItems[i];
-
-                item.Update();
-
-                if (item.active == false)
-                {
-                    item.Remove();
-                    virtualItems.RemoveAt(i);
                 }
             }
         }
@@ -408,17 +410,16 @@ namespace Factorraria.Content.VirtualItems
         }
 
         // --- HELPER METHODS ---
-
         public static VirtualItem SpawnVirtualItem(int type, int stack, int tileX, int tileY)
         {
-            if (IsValidItemID(type) == false)
+            if (!IsValidItemID(type))
             {
                 return null;
             }
 
             VirtualItem newItem = new VirtualItem(type, stack, tileX, tileY);
 
-            if (newItem.active == false)
+            if (!newItem.active)
             {
                 return null;
             }
@@ -427,7 +428,6 @@ namespace Factorraria.Content.VirtualItems
             return newItem;
         }
 
-        // FAST O(1) LOOKUP USING DICTIONARY
         public static VirtualItem GetVirtualItemAtTile(int tileX, int tileY, VirtualItem ignoreItem = null)
         {
             Point searchPoint = new Point(tileX, tileY);
@@ -463,14 +463,10 @@ namespace Factorraria.Content.VirtualItems
             new Vector2(-1,0)
         };
 
-        // Converts loose dropped world items into Virtual Items if they land on a conveyor
         public static void ConvertItemsToVItems()
         {
-            for (int i = 0; i < Main.maxItems; i++)
+            foreach (var worldItem in Main.ActiveItems)
             {
-                Item worldItem = Main.item[i];
-
-                // Safely check for VItemGlobalItem without throwing KeyNotFoundException
                 if (!worldItem.TryGetGlobalItem<VItemGlobalItem>(out VItemGlobalItem globalItem) || globalItem.ConveyorImmunityTimer > 0)
                 {
                     continue;
@@ -554,18 +550,16 @@ namespace Factorraria.Content.VirtualItems
             {
                 Player player = Main.player[p];
 
-                if (player.active == false || player.dead == true || player.ghost == true)
+                if (!player.active || player.dead || player.ghost)
                 {
                     continue;
                 }
 
-                // Encumbering Stone prevents picking up items
-                if (player.HasItem(ItemID.EncumberingStone) == true)
+                if (player.HasItem(ItemID.EncumberingStone))
                 {
                     continue;
                 }
 
-                // Convert player hitbox to tile bounds
                 int minTileX = (int)(player.Hitbox.Left / 16f) - 1;
                 int maxTileX = (int)(player.Hitbox.Right / 16f) + 1;
                 int minTileY = (int)(player.Hitbox.Top / 16f) - 1;
@@ -587,13 +581,11 @@ namespace Factorraria.Content.VirtualItems
                             continue;
                         }
 
-                        // Create test item to evaluate inventory space
                         Item testItem = new Item();
                         testItem.SetDefaults(vItem.itemType);
                         testItem.stack = vItem.stackSize;
 
-                        // Check 2: Correct case-sensitive ItemSpace with ref parameter
-                        if (player.ItemSpace(testItem).CanTakeItem == true)
+                        if (player.ItemSpace(testItem).CanTakeItem)
                         {
                             Item spawnedItem = ConvertVItemsToItems(vItem);
                             spawnedItem.GetGlobalItem<VItemGlobalItem>().ConveyorImmunityTimer = 60;
@@ -825,7 +817,7 @@ namespace Factorraria.Content.VirtualItems
             return transformed + Main.screenPosition;
         }
 
-        // DEBUG
+        #region Debugging
 
         public static void DrawItemDebug(SpriteBatch spriteBatch, Content.VirtualItems.VirtualItem item)
         {
@@ -931,6 +923,7 @@ namespace Factorraria.Content.VirtualItems
             sb.Draw(pixel, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
             sb.Draw(pixel, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), color);
         }
-    }
 
+        #endregion
+    }
 }
