@@ -71,6 +71,26 @@ Items: {
 		DisplayName: Mech Suit Item
 		Tooltip: ""
 	}
+
+	CsharpLogoItem: {
+		DisplayName: Csharp Logo Item
+		Tooltip: ""
+	}
+
+	IsmailsCaneItem: {
+		DisplayName: Ismails Cane Item
+		Tooltip: ""
+	}
+
+	TerrariaLogoItem: {
+		DisplayName: Terraria Logo Item
+		Tooltip: ""
+	}
+
+	TmodloaderLogoItem: {
+		DisplayName: TModLoader
+		Tooltip: ""
+	}
 }
 
 Configs: {
