@@ -39,9 +39,6 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
             CalculatedStyle dimensions = GetDimensions();
             Vector2 drawPosition = dimensions.Position();
 
-            // NEW: work out the current scale by comparing our actual on-screen width
-            // (set externally, every frame, by MachineUIStateBase.SetZoomScale) to the
-            // texture's real pixel width. This replaces the old remembered "scale" field.
             float scale = dimensions.Width / fireEmptyTexture.Width();
 
             spriteBatch.Draw(fireEmptyTexture.Value, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
@@ -75,6 +72,7 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
         {
             float temp1 = (value - fromLow) / (fromHigh - fromLow);
             float temp2 = toHigh - toLow;
+
             return toLow + temp1 * temp2;
         }
     }

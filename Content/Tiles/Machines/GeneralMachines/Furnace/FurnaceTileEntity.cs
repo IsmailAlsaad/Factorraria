@@ -14,6 +14,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         protected override int InputSlotCount => 2;
 
         public int FuelRemaining = 0;
+        int fuelSmeltCount = 3;
 
         public override void Update()
         {
@@ -83,7 +84,6 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             WorkProgress = 0; 
         }
 
-        int fuelSmeltCount = 3;
         public float GetSmeltPercent()
         {
             if (!isValidInput() || FuelRemaining <= 0f)

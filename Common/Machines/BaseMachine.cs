@@ -10,6 +10,7 @@ namespace Factorraria.Common.Machines
 {
     public abstract class BaseMachine : ModTileEntity
     {
+        #region Variables
         public abstract int ValidTileType { get; }
         public bool isOn;
         public bool isWorking { get; protected set; }
@@ -18,6 +19,8 @@ namespace Factorraria.Common.Machines
 
         protected virtual int InputSlotCount => 0;
         protected virtual int OutputSlotCount => 0;
+
+        int lastAnimationFrame = -1;
 
         Item[] inputSlots;
         Item[] outputSlots;
@@ -45,6 +48,7 @@ namespace Factorraria.Common.Machines
             for (int i = 0; i < count; i++) arr[i] = new LiquidStack();
             return arr;
         }
+        #endregion
 
         public override bool IsTileValidForEntity(int x, int y)
         {
@@ -68,7 +72,7 @@ namespace Factorraria.Common.Machines
                 return -1;
 
             int id = Place(i, j);
-            if (id != -1 && TileEntity.ByID.TryGetValue(id, out TileEntity entity))
+            if (id != -1 && ByID.TryGetValue(id, out TileEntity entity))
             {
                 PowerGridSystem.RegisterMachineToMasterList(entity);
                 LiquidNetworkSystem.networkNeedsRebuilding = true;
@@ -81,7 +85,6 @@ namespace Factorraria.Common.Machines
             ModContent.GetInstance<MachineUISystem>().NotifyMachineKilled(this);
         }
 
-        int lastAnimationFrame = -1;
         public void NotifyAnimationFrame(int frame)
         {
             if (frame == lastAnimationFrame || frame == -1) return;
