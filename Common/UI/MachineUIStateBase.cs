@@ -1,6 +1,9 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using Terraria;
+using Terraria.ModLoader;
 using Terraria.UI;
 
 namespace Factorraria.Common.UI
@@ -42,6 +45,21 @@ namespace Factorraria.Common.UI
         // to that element's built-in Left/Top/Width/Height. That's it — nothing element-specific.
         public void SetZoomScale(float zoomScale)
         {
+            // DEBUGGING
+            //FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+
+            //if (config.EnableDebugs || Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.P))
+            //{
+            //    elements = BuildElements();
+            //    Panel.RemoveAllChildren();
+            //    foreach (var entry in elements)
+            //    {
+            //        Panel.Append(entry.Element);
+            //    }
+            //}
+            
+            // DEBUGGING
+
             if (elements == null) return;
 
             Panel.Width.Set(BasePanelSize.X * zoomScale, 0);
