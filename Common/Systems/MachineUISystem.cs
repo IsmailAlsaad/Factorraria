@@ -84,7 +84,6 @@ namespace Factorraria.Common.Systems
             machineInterface?.Update(gameTime);
         }
 
-        // tModLoader calls this once at startup so we can insert our draw step into its layer list.
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
             var customLayer = new LegacyGameInterfaceLayer(
@@ -103,6 +102,7 @@ namespace Factorraria.Common.Systems
 
             int inventoryLayerIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Inventory"));
             if (inventoryLayerIndex == -1) return;
+            //Main.NewText("layer inserted");
             layers.Insert(inventoryLayerIndex + 1, customLayer); // draw ours right after the inventory
         }
 
@@ -114,6 +114,7 @@ namespace Factorraria.Common.Systems
 
             Vector2 worldPosition = openPosition.ToVector2() * 16;
             Vector2 screenPosition = worldPosition - Main.screenPosition;
+            screenPosition += openState.BasePanelOffset;
             screenPosition = Vector2.Transform(screenPosition, Main.GameViewMatrix.ZoomMatrix);
             screenPosition /= Main.UIScale;
 

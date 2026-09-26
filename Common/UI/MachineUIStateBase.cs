@@ -22,7 +22,7 @@ namespace Factorraria.Common.UI
 
         // Every specific machine UI (e.g. FurnaceUIState) must say how big its panel is at normal (1x) zoom.
         protected abstract Vector2 BasePanelSize { get; }
-        //protected virtual Vector2 BasePanelOffset => Vector2.Zero;
+        public virtual Vector2 BasePanelOffset => Vector2.Zero;
 
         // Every specific machine UI must say which pieces go in its panel, and where.
         protected abstract List<MachineUIElementEntry> BuildElements();
@@ -57,15 +57,13 @@ namespace Factorraria.Common.UI
             //        Panel.Append(entry.Element);
             //    }
             //}
-            
+
             // DEBUGGING
 
             if (elements == null) return;
 
             Panel.Width.Set(BasePanelSize.X * zoomScale, 0);
             Panel.Height.Set(BasePanelSize.Y * zoomScale, 0);
-            //Panel.Top.Set(BasePanelOffset.Y * zoomScale, 0);
-            //Panel.Left.Set(BasePanelOffset.X * zoomScale, 0);
 
             foreach (var entry in elements)
             {
