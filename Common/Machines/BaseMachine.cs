@@ -1,11 +1,13 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
+using Factorraria.Content.VirtualItems;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using Terraria.ObjectData;
 
 namespace Factorraria.Common.Machines
 {
@@ -21,7 +23,11 @@ namespace Factorraria.Common.Machines
         protected virtual int InputSlotCount => 0;
         protected virtual int OutputSlotCount => 0;
 
-        Vector2 MachineCenter;
+        public Point16 cornerPosition;
+        public Vector2 MachineCenter;
+        public int MachineWidth;
+        public int MachineHeight;
+        public bool MachineInitialized;
 
         int lastAnimationFrame = -1;
 
@@ -80,9 +86,6 @@ namespace Factorraria.Common.Machines
                 PowerGridSystem.RegisterMachineToMasterList(entity);
                 LiquidNetworkSystem.networkNeedsRebuilding = true;
             }
-
-            //MachineCenter = ?
-
             return id;
         }
         public override void OnKill()
@@ -104,8 +107,22 @@ namespace Factorraria.Common.Machines
             }
 
             // scan hitbox for vItems
+            for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth; i++)
+            {
+                for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight; j++)
+                {
+                    VirtualItem vItem = VirtualItemSystem.GetVirtualItemAtTile(i, j);
 
-            // foreach input slot, check if vItem is valid input for that slot (run IsValidItemForInputIndex(i))
+                    if(vItem == null)
+                    {
+                        continue;
+                    }
+
+                    Main.NewText("FOUND ITEM");
+                }
+            }
+
+            // foreach input slot, check if vItem is valid input for that slot (run IsItemValidForInputSlotIndex(i))
             // if the vItem is not a valid item -> return
 
             // if the vItem is a valid item -> check if the stack size of the vItem can fit in the input slot (stack = 2 * the ingredient count of the current item in the current selected recipe)
@@ -150,6 +167,11 @@ namespace Factorraria.Common.Machines
                 tag[$"OutputLiquidType{i}"] = OutputLiquids[i].LiquidType;
                 tag[$"OutputLiquidAmount{i}"] = OutputLiquids[i].Amount;
             }
+
+            tag["MachineCenter"] = MachineCenter;
+            tag["CornerPosition"] = cornerPosition;
+            tag["MachineWidth"] = MachineWidth;
+            tag["MachineHeight"] = MachineHeight;
         }
 
         public override void LoadData(TagCompound tag)
@@ -172,6 +194,11 @@ namespace Factorraria.Common.Machines
                 OutputLiquids[i].LiquidType = tag.GetInt($"OutputLiquidType{i}");
                 OutputLiquids[i].Amount = tag.GetFloat($"OutputLiquidAmount{i}");
             }
+
+            MachineCenter = tag.Get<Vector2>("MachineCenter");
+            cornerPosition = tag.Get<Point16>("CornerPosition");
+            MachineHeight = tag.GetInt("MachineHeight");
+            MachineWidth = tag.GetInt("MachineWidth");
         }
     }
 }

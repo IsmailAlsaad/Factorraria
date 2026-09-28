@@ -8,6 +8,7 @@ using System.Linq;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
+using Terraria.ObjectData;
 
 namespace Factorraria.Common.Machines
 {
@@ -75,6 +76,9 @@ namespace Factorraria.Common.Machines
                 return true;
 
             BaseMachine entity = def.GetEntity(i, j);
+
+            InitializeMachine(entity);
+
             var texture = entity.isOn && entity.isWorking ? def.OnTexture : def.OffTexture;
 
             float rotation = entity is MotorTileEntityBase motor ? GetMotorRotation(motor.Facing) : 0f;
@@ -98,6 +102,23 @@ namespace Factorraria.Common.Machines
 
             entity.NotifyAnimationFrame(frame);
             return false;
+        }
+
+        void InitializeMachine(BaseMachine machine)
+        {
+            if (machine.MachineInitialized)
+            {
+                return;
+            }
+
+            TileEntityHelper.TryGetEntityFromTile(machine.Position.X, machine.Position.Y, out _, out machine.cornerPosition);
+            Tile tile = Framing.GetTileSafely(machine.Position.X, machine.Position.Y);
+            TileObjectData data = TileObjectData.GetTileData(tile.TileType, 0);
+            machine.MachineHeight = data.Height;
+            machine.MachineWidth = data.Width;
+            machine.MachineCenter = machine.cornerPosition.ToVector2() * 16 + new Vector2(machine.MachineWidth, machine.MachineHeight) * 8f;
+
+            machine.MachineInitialized = true;
         }
 
         // Assumes the motor art is drawn facing Right at 0 rotation — Facing's default value.
