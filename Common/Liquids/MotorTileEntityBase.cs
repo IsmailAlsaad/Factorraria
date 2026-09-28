@@ -20,6 +20,8 @@ namespace Factorraria.Common.Machines
         // and silently break isOn-change detection — they override UpdateMotor() instead.
         public sealed override void Update()
         {
+            base.Update();
+
             if (isOn != wasOn)
             {
                 wasOn = isOn;

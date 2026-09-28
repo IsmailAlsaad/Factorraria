@@ -18,6 +18,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
         public override void Update()
         {
+            base.Update();
+
             isOn = true;
 
             if (!isValidInput())

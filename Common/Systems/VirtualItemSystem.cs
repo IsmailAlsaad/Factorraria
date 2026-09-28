@@ -543,7 +543,6 @@ namespace Factorraria.Content.VirtualItems
             return null;
         }
 
-        // Checks if any player touches a VirtualItem and converts it to a real world item for pickup
         public static void CheckPlayerPickups()
         {
             for (int p = 0; p < Main.maxPlayers; p++)

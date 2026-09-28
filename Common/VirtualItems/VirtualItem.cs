@@ -114,14 +114,12 @@ namespace Factorraria.Content.VirtualItems
             AnimateItem();
             MoveVirtualItem();
 
-            // Countdown pickup timer
             if (pickupCooldown > 0)
             {
                 pickupCooldown = pickupCooldown - 1;
             }
         }
 
-        // --- TARGET ASSIGNMENT ---
         public void SetTargetTile(int newTargetX, int newTargetY)
         {
             // If target hasn't changed, do nothing
@@ -264,7 +262,6 @@ namespace Factorraria.Content.VirtualItems
             }
         }
 
-        //Executes vector tallying and destination validation
         void CalculateMovementPath()
         {
             if (currentTileX == targetTileX && currentTileY == targetTileY)

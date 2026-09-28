@@ -14,7 +14,7 @@ namespace Factorraria.Common.Machines
     {
         public override void Load()
         {
-            // --- Register every machine's UI here
+            // Register every machine's UI here
             MachineUIRegistry.Register(TileID.Furnaces, new FurnaceUIState());
             MachineUIRegistry.Register(TileID.Solidifier, new SolidifierUIState());
             // etc...
@@ -22,7 +22,7 @@ namespace Factorraria.Common.Machines
 
         public override void PostSetupContent()
         {
-            // --- Register every machine's Texture here
+            // Register every machine's Texture here
             MachineVisualRegistry.Register<FurnaceTileEntity>(TileID.Furnaces,
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/Furnace/Furnace_On",
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/Furnace/Furnace_Off");
@@ -56,7 +56,7 @@ namespace Factorraria.Common.Machines
 
         public override void PostAddRecipes()
         {
-            // --- Register every machine's Recipes here
+            // Register every machine's Recipes here
             FurnaceRecipeRegistry.BuildFromExistingRecipes();
             // AutohammerRecipeRegistry.BuildFromExistingRecipes();
             // etc...

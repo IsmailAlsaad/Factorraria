@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
@@ -19,6 +20,8 @@ namespace Factorraria.Common.Machines
 
         protected virtual int InputSlotCount => 0;
         protected virtual int OutputSlotCount => 0;
+
+        Vector2 MachineCenter;
 
         int lastAnimationFrame = -1;
 
@@ -77,12 +80,37 @@ namespace Factorraria.Common.Machines
                 PowerGridSystem.RegisterMachineToMasterList(entity);
                 LiquidNetworkSystem.networkNeedsRebuilding = true;
             }
+
+            //MachineCenter = ?
+
             return id;
         }
         public override void OnKill()
         {
             LiquidNetworkSystem.networkNeedsRebuilding = true;
             ModContent.GetInstance<MachineUISystem>().NotifyMachineKilled(this);
+        }
+
+        public override void Update()
+        {
+            PickUpVItems();
+        }
+
+        void PickUpVItems()
+        {
+            if (InputSlotCount == 0)
+            {
+                return;
+            }
+
+            // scan hitbox for vItems
+
+            // foreach input slot, check if vItem is valid input for that slot (run IsValidItemForInputIndex(i))
+            // if the vItem is not a valid item -> return
+
+            // if the vItem is a valid item -> check if the stack size of the vItem can fit in the input slot (stack = 2 * the ingredient count of the current item in the current selected recipe)
+
+            //add to input slot + remove vItem from world + play pickup animation
         }
 
         public void NotifyAnimationFrame(int frame)

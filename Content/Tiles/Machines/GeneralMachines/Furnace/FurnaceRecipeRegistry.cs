@@ -20,9 +20,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
     public static class FurnaceRecipeRegistry
     {
-        // (int InputItemID, RecipeData
+        // int InputItemID, RecipeData
         public static Dictionary<int, RecipeData> SmeltingRecipes = new Dictionary<int, RecipeData>();
-        // (int FuelItemID, int number of smelts)
+
+        // int FuelItemID, int number of smelts
         public static Dictionary<int, int> ValidFuels = new Dictionary<int, int>();
 
         public static void BuildFromExistingRecipes()
