@@ -1,4 +1,5 @@
 ﻿using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Common.VirtualItems
@@ -14,6 +15,14 @@ namespace Factorraria.Common.VirtualItems
             if (ConveyorImmunityTimer > 0)
             {
                 ConveyorImmunityTimer--;
+            }
+        }
+
+        public override void SetDefaults(Item entity)
+        {
+            if(entity.type == ItemID.Coal)
+            {
+                entity.maxStack = 9999;
             }
         }
     }

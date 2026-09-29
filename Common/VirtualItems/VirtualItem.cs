@@ -452,7 +452,7 @@ namespace Factorraria.Content.VirtualItems
             // Deactivate and remove if stack is emptied
             if (stackSize <= 0)
             {
-                Remove();
+                //Remove();
                 return true;
             }
 

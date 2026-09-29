@@ -44,7 +44,7 @@ namespace Factorraria.Content.VirtualItems
 
                 item.Update();
 
-                if (item.active == false)
+                if (item.active == false || item.stackSize <= 0)
                 {
                     item.Remove();
                     virtualItems.RemoveAt(i);
@@ -432,9 +432,9 @@ namespace Factorraria.Content.VirtualItems
         {
             Point searchPoint = new Point(tileX, tileY);
 
-            if (tileItemMap.TryGetValue(searchPoint, out VirtualItem item) == true)
+            if (tileItemMap.TryGetValue(searchPoint, out VirtualItem item))
             {
-                if (item != ignoreItem && item.active == true)
+                if (item != ignoreItem && item.active)
                 {
                     return item;
                 }

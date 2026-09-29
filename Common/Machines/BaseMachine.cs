@@ -3,6 +3,9 @@ using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
 using Factorraria.Content.VirtualItems;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
@@ -11,6 +14,87 @@ using Terraria.ObjectData;
 
 namespace Factorraria.Common.Machines
 {
+    public readonly struct RecipeIngredient
+    {
+        public readonly int Type;
+        public readonly int Stack;
+
+        public RecipeIngredient(int type, int stack)
+        {
+            Type = type;
+            Stack = stack;
+        }
+    }
+
+    public class CustomRecipe
+    {
+        public List<RecipeIngredient> Inputs { get; set; }
+        public RecipeIngredient Output { get; set; }
+
+        public CustomRecipe(List<RecipeIngredient> inputs, RecipeIngredient output)
+        {
+            Inputs = inputs;
+            Output = output;
+        }
+
+        public CustomRecipe(List<Item> inputs, Item output)
+        {
+            Inputs = inputs.Select(item => new RecipeIngredient(item.type, item.stack)).ToList();
+            Output = new RecipeIngredient(output.type, output.stack);
+        }
+
+        public static bool TryGetRecipeFromList(List<CustomRecipe> recipeList, List<Item> InputSlots, out CustomRecipe outputRecipe)
+        {
+            outputRecipe = null;
+
+            int activeSlotCount = 0;
+            for (int i = 0; i < InputSlots.Count; i++)
+            {
+                Item slot = InputSlots[i];
+                if (slot != null && !slot.IsAir && slot.stack > 0)
+                {
+                    activeSlotCount++;
+                }
+            }
+
+            foreach (CustomRecipe recipe in recipeList)
+            {
+                if (recipe.Inputs.Count != activeSlotCount)
+                    continue;
+
+                bool isMatch = true;
+
+                foreach (RecipeIngredient req in recipe.Inputs)
+                {
+                    int totalFoundInMachine = 0;
+
+                    for (int i = 0; i < InputSlots.Count; i++)
+                    {
+                        Item slot = InputSlots[i];
+                        if (slot != null && !slot.IsAir && slot.type == req.Type)
+                        {
+                            totalFoundInMachine += slot.stack;
+                        }
+                    }
+
+                    if (totalFoundInMachine < req.Stack)
+                    {
+                        isMatch = false;
+                        break;
+                    }
+                }
+
+                if (isMatch)
+                {
+                    outputRecipe = recipe;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
     public abstract class BaseMachine : ModTileEntity
     {
         #region Variables
@@ -23,6 +107,9 @@ namespace Factorraria.Common.Machines
         protected virtual int InputSlotCount => 0;
         protected virtual int OutputSlotCount => 0;
 
+        public CustomRecipe SelectedRecipe;
+
+        public int OutputMaxStack = 10;
         public Point16 cornerPosition;
         public Vector2 MachineCenter;
         public int MachineWidth;
@@ -96,38 +183,105 @@ namespace Factorraria.Common.Machines
 
         public override void Update()
         {
-            PickUpVItems();
+            ScanVItems();
         }
 
-        void PickUpVItems()
+        void ScanVItems()
         {
-            if (InputSlotCount == 0)
+            if (InputSlotCount == 0 || SelectedRecipe == null)
             {
                 return;
             }
+
+            VirtualItem vItem = null;
 
             // scan hitbox for vItems
             for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth; i++)
             {
                 for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight; j++)
                 {
-                    VirtualItem vItem = VirtualItemSystem.GetVirtualItemAtTile(i, j);
+                    vItem = VirtualItemSystem.GetVirtualItemAtTile(i, j);
+                }
+            }
+            
+            if(vItem == null)
+            {
+                return;
+            }
 
-                    if(vItem == null)
-                    {
-                        continue;
-                    }
+            bool isItemInRecipe = false;
+            int maxStack = 0;
 
-                    Main.NewText("FOUND ITEM");
+            foreach (RecipeIngredient ingredient in SelectedRecipe.Inputs)
+            {
+                if (vItem.itemType == ingredient.Type)
+                {
+                    isItemInRecipe = true;
+                    maxStack = ingredient.Stack * 2;
+                    break;
                 }
             }
 
-            // foreach input slot, check if vItem is valid input for that slot (run IsItemValidForInputSlotIndex(i))
-            // if the vItem is not a valid item -> return
+            int ValidSlotIndex = -1;
+            int EmptySlotIndex = -1;
+            bool foundMatching = false;
 
-            // if the vItem is a valid item -> check if the stack size of the vItem can fit in the input slot (stack = 2 * the ingredient count of the current item in the current selected recipe)
+            for (int i = 0; i < InputSlotCount; i++)
+            {
+                if (InputSlots[i].IsAir)
+                {
+                    EmptySlotIndex = i;
+                }
 
-            //add to input slot + remove vItem from world + play pickup animation
+                if (InputSlots[i].type == vItem.itemType)
+                {
+                    ValidSlotIndex = i;
+                    foundMatching = true;
+                    break;
+                }
+            }
+
+            if (!foundMatching)
+            {
+                ValidSlotIndex = EmptySlotIndex;
+            }
+
+            //Main.NewText("FOUND ITEM");
+
+            PickUpVItems(vItem,ValidSlotIndex,isItemInRecipe,maxStack);
+        }
+
+        public virtual void PickUpVItems(VirtualItem vItem, int ValidSlotIndex, bool isItemInRecipe, int maxStack)
+        {
+            if (!isItemInRecipe)
+            {
+                return;
+            }
+
+            if (InputSlots[ValidSlotIndex].stack < maxStack)
+            {
+                int spaceLeft = maxStack - InputSlots[ValidSlotIndex].stack;
+                int amountToAdd = Math.Min(spaceLeft, vItem.stackSize);
+
+                InputSlots[ValidSlotIndex] = new Item(vItem.itemType, amountToAdd + InputSlots[ValidSlotIndex].stack);
+                vItem.stackSize -= amountToAdd;
+
+                // play pickup animation for vItem to machineCenter
+
+                return;
+            }
+        }
+
+        public bool IsOnConveyorFloor()
+        {
+            for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth; i++)
+            {
+                if(VirtualItemSystem.IsConveyorTile(i, cornerPosition.Y + MachineHeight, out _, out _))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void NotifyAnimationFrame(int frame)

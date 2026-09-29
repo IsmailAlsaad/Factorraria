@@ -13,14 +13,14 @@ namespace Factorraria.Content.UI
 
         Func<Item> getItem;
         Action<Item> setItem;
-        Func<Item, bool> canAcceptItem;
+        //Func<Item, bool> canAcceptItem;
 
-        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<Item, bool> _canAcceptItem)
+        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem)//, Func<Item, bool> _canAcceptItem)
         {
             context = _context;
             getItem = _getItem;
             setItem = _setItem;
-            canAcceptItem = _canAcceptItem;
+            //canAcceptItem = _canAcceptItem;
 
         }
 
@@ -53,16 +53,19 @@ namespace Factorraria.Content.UI
             Main.LocalPlayer.mouseInterface = true;
 
             bool allowInteraction = true;
-            if (!Main.mouseItem.IsAir && canAcceptItem != null)
-            {
-                allowInteraction = canAcceptItem(Main.mouseItem);
-            }
+            //if (!Main.mouseItem.IsAir && canAcceptItem != null)
+            //{
+            //    allowInteraction = canAcceptItem(Main.mouseItem);
+            //}
 
             if (allowInteraction || (Main.mouseItem.IsAir && !item.IsAir))
             {
                 ItemSlot.Handle(ref item, context);
                 setItem(item);
             }
+
+            //ItemSlot.Handle(ref item, context);
+            //setItem(item);
         }
     }
 }

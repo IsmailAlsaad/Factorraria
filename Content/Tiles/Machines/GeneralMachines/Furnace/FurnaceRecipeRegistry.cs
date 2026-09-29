@@ -1,27 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using Factorraria.Common.Machines;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 
 namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 {
-    public struct RecipeData
-    {
-        public int InputItemCount;
-        public int OutputItemID;
-        public int OutputItemCount;
-
-        public RecipeData(int _InputItemCount, int _OutputItemID, int _OutputItemCount)
-        {
-            InputItemCount = _InputItemCount;
-            OutputItemID = _OutputItemID;
-            OutputItemCount = _OutputItemCount;
-        }
-    }
-
     public static class FurnaceRecipeRegistry
     {
-        // int InputItemID, RecipeData
-        public static Dictionary<int, RecipeData> SmeltingRecipes = new Dictionary<int, RecipeData>();
+        // List<Item> InputItems, Item OutputItem
+        public static List<CustomRecipe> SmeltingRecipes = new List<CustomRecipe>();
 
         // int FuelItemID, int number of smelts
         public static Dictionary<int, int> ValidFuels = new Dictionary<int, int>();
@@ -44,22 +31,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
                     continue;
                 }
 
-                if(recipe.requiredItem.Count != 1)
-                {
-                    continue;
-                }
-
-                int InputItemID = recipe.requiredItem[0].type;
-                int InputItemCount = recipe.requiredItem[0].stack;
-                int OutputItemID = recipe.createItem.type;
-                int OutputItemCount = recipe.createItem.stack;
-
-                RecipeData data = new RecipeData(InputItemCount, OutputItemID, OutputItemCount);
-
-                if (!SmeltingRecipes.ContainsKey(InputItemID))
-                {
-                    SmeltingRecipes.Add(InputItemID, data);
-                }
+                CustomRecipe recipeData = new CustomRecipe(recipe.requiredItem, recipe.createItem);
+                SmeltingRecipes.Add(recipeData);
 
                 recipe.DisableRecipe();
             }
@@ -70,7 +43,18 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
         static void RegisterManualRecipes()
         {
-            // wood -> charcoal, plants -> ash
+            // any wood -> coal
+            if(RecipeGroup.recipeGroups.TryGetValue(RecipeGroupID.Wood, out RecipeGroup woodGroup))
+            {
+                foreach (int itemID in woodGroup.ValidItems)
+                {
+                    Item item = new Item(itemID, 3);
+                    
+                    SmeltingRecipes.Add(new CustomRecipe(new List<Item> { item }, new Item(ItemID.Coal, 1)));
+                }
+            }
+
+            // any plant -> ash
         }
 
         static void RegisterValidFuels()
