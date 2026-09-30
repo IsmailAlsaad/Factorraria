@@ -225,6 +225,11 @@ namespace Factorraria.Common.Machines
             {
                 foreach (RecipeIngredient ingredient in recipe.Inputs)
                 {
+                    if(ManualRecipe == null && recipe.Inputs.Count != 1)
+                    {
+                        continue;
+                    }
+
                     if (vItem.itemType == ingredient.Type)
                     {
                         isItemInRecipe = true;

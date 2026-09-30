@@ -204,6 +204,7 @@ namespace Factorraria.Common.UI
         public readonly int Index;                 // original position in the registry
         public Action<RecipeElement> OnSelected;
 
+        public string ProductName;
         Texture2D recipeTexture;
         float zoom = 1f;
         bool selected;
@@ -225,6 +226,8 @@ namespace Factorraria.Common.UI
             SetPadding(0f);
             BackgroundColor = NormalColor;
             SetZoomScale(1f);
+
+            ProductName = ContentSamples.ItemsByType[CurrentRecipe.Output.Type].Name;
         }
 
         // UIGrid sorts its items with CompareTo. The default returns 0 for everything,
@@ -261,7 +264,7 @@ namespace Factorraria.Common.UI
 
             if (IsMouseHovering)
             {
-                Main.hoverItemName = ContentSamples.ItemsByType[CurrentRecipe.Output.Type].Name;
+                Main.hoverItemName = ProductName;
             }
 
             if (recipeTexture == null) return;
