@@ -19,8 +19,9 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
     {
         FurnaceTileEntity Entity => (FurnaceTileEntity)CurrentEntity;
 
-        protected override Vector2 BasePanelSize => new Vector2(400, 300);
-        public override Vector2 BasePanelOffset => new Vector2(-55, -60);
+        protected override Vector2 BasePanelSize => new Vector2(600, 300);
+        Vector2 ChildrenOffset = new Vector2(200f, 0f);
+        public override Vector2 BasePanelOffset => new Vector2(-55, -60) - ChildrenOffset;
 
         MachineUIElementEntry[] ingredientEntries;
         MachineUIElementEntry fireEntry, fuelEntry, productEntry, buttonEntry, browserEntry;
@@ -64,18 +65,18 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
                     () => Entity.OutputSlots[0],
                     v => Entity.OutputSlots[0] = v
             );
-            productEntry = new MachineUIElementEntry(productSlot, productSlotPosition, new Vector2(54, 54));
+            productEntry = new MachineUIElementEntry(productSlot, productSlotPosition + ChildrenOffset, new Vector2(54, 54));
             list.Add(productEntry);
 
             var recipeBrowserList = new RecipeBrowserPanel(
                 FurnaceRecipeRegistry.SmeltingRecipes,
                 () => Entity.ManualRecipe,
                 r => Entity.SetManualRecipe(r));
-            browserEntry = new MachineUIElementEntry(recipeBrowserList, productSlotPosition + new Vector2(80, 40), new Vector2(155, 200));
+            browserEntry = new MachineUIElementEntry(recipeBrowserList, productSlotPosition + new Vector2(80, 40) + ChildrenOffset, new Vector2(155, 200));
             list.Add(browserEntry);
 
             var recipeSelectButton = new RecipeSelectHammerIcon(recipeBrowserList);
-            buttonEntry = new MachineUIElementEntry(recipeSelectButton, productSlotPosition + new Vector2(50, 40), new Vector2(24, 24));
+            buttonEntry = new MachineUIElementEntry(recipeSelectButton, productSlotPosition + new Vector2(50, 40) + ChildrenOffset, new Vector2(24, 24));
             list.Add(buttonEntry);
 
             return list;
@@ -91,12 +92,12 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
             // Slot 0 stays put; each extra slot goes one step further left.
             for (int i = 0; i < ingredientEntries.Length; i++)
-                ingredientEntries[i].BasePosition = new Vector2(-i * step, 0);
+                ingredientEntries[i].BasePosition = new Vector2(-i * step, 0) + ChildrenOffset;
 
             // The row spans from -(n-1)*step to slotSize, so its center is half of the leftward extent.
             float centerX = -(n - 1) * step / 2f;
-            fireEntry.BasePosition = new Vector2(centerX, 50);
-            fuelEntry.BasePosition = new Vector2(centerX, 100);
+            fireEntry.BasePosition = new Vector2(centerX, 50) + ChildrenOffset;
+            fuelEntry.BasePosition = new Vector2(centerX, 100) + ChildrenOffset;
 
             // productEntry, buttonEntry and browserEntry are not touched, so they keep the
             // positions set in BuildElements.

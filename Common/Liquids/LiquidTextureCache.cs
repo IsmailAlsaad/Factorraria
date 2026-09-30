@@ -140,9 +140,23 @@ namespace Factorraria.Common.Liquids
         // cleanly and everything rebakes fresh on the next mod reload.
         public static void Clear()
         {
-            foreach (var tex in _cache.Values)
-                tex?.Dispose();
+            // Snapshot the textures, then reset the dictionary right away so the cache
+            // is always clean, even when this runs on a worker thread.
+            var textures = new List<Texture2D>(_cache.Values);
             _cache.Clear();
+
+            if (textures.Count == 0)
+                return;
+
+            // GPU resources can only be disposed on the main thread (FNA restriction).
+            Main.QueueMainThreadAction(() =>
+            {
+                foreach (var tex in textures)
+                {
+                    if (tex != null && !tex.IsDisposed)
+                        tex.Dispose();
+                }
+            });
         }
     }
 }
