@@ -15,8 +15,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
     {
         public override int ValidTileType => TileID.Furnaces;
 
-        // InputSlots[0] = Fuel, InputSlots[1] = Input Item
-        protected override int InputSlotCount => 2; // should be set dynamically after recipe selection
+        public const int FuelSlot = 0;
+        public const int FirstIngredientSlot = 1;
+        protected override int InputSlotCount => FirstIngredientSlot + FurnaceRecipeRegistry.MaxIngredientCount;
+        public int ActiveIngredientCount => ManualRecipe == null ? 1 : Math.Clamp(ManualRecipe.Inputs.Count, 1, FurnaceRecipeRegistry.MaxIngredientCount);
         protected override int OutputSlotCount => 1;
 
         protected override List<CustomRecipe> RecipeList => FurnaceRecipeRegistry.SmeltingRecipes;
@@ -27,6 +29,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         public override void Update()
         {
             base.Update();
+
+            ReleaseHiddenIngredientSlots();
 
             // MANUAL RECIPE SELECTED
             //SelectedRecipe = new CustomRecipe(new List<RecipeIngredient> { new(ItemID.Wood, 3) }, new(ItemID.Coal,1));
@@ -50,18 +54,18 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
             if (FuelRemaining <= 0)
             {
-                if (InputSlots[0].stack <= 0)
+                if (InputSlots[FuelSlot].stack <= 0)
                 {
                     isWorking = false;
                     return;
                 }
-                else if(CanAcceptFuel(InputSlots[0].type))
+                else if(CanAcceptFuel(InputSlots[FuelSlot].type))
                 {
-                    FuelRemaining += FurnaceRecipeRegistry.ValidFuels[InputSlots[0].type];
-                    InputSlots[0].stack--;
-                    if (InputSlots[0].stack <= 0)
+                    FuelRemaining += FurnaceRecipeRegistry.ValidFuels[InputSlots[FuelSlot].type];
+                    InputSlots[FuelSlot].stack--;
+                    if (InputSlots[FuelSlot].stack <= 0)
                     {
-                        InputSlots[0] = new Item();
+                        InputSlots[FuelSlot] = new Item();
                     }
                 }
             }
@@ -75,22 +79,32 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             }
         }
 
+        void ReleaseHiddenIngredientSlots()
+        {
+            for (int s = FirstIngredientSlot + ActiveIngredientCount; s < InputSlots.Length; s++)
+            {
+                Item item = InputSlots[s];
+                if (item.IsAir) continue;
+
+                Item.NewItem(new EntitySource_TileEntity(this),
+                    Position.X * 16 + 16, Position.Y * 16 + 8, 16, 16, item.type, item.stack);
+                InputSlots[s] = new Item();
+            }
+        }
+
         public override void PickUpVItems(VirtualItem vItem, int ValidSlotIndex, bool isItemInRecipe, int maxStack)
         {
             int currentMaxStack = maxStack;
-
-            ValidSlotIndex = Math.Clamp(ValidSlotIndex + 1, 0, InputSlotCount - 1);
             if (!isItemInRecipe)
             {
-                if(CanAcceptFuel(vItem.itemType))
-                {
-                    currentMaxStack = Math.Max(10 - FurnaceRecipeRegistry.ValidFuels[vItem.itemType],1);
-                    ValidSlotIndex = 0; // Fuel InputSlot index
-                }
-                else
-                {
-                    return;
-                }
+                if (!CanAcceptFuel(vItem.itemType)) return;
+                currentMaxStack = Math.Max(10 - FurnaceRecipeRegistry.ValidFuels[vItem.itemType], 1);
+                ValidSlotIndex = FuelSlot;
+            }
+            else
+            {
+                ValidSlotIndex = FindIngredientSlotFor(vItem.itemType);
+                if (ValidSlotIndex == -1) return;
             }
 
             Item target = InputSlots[ValidSlotIndex];
@@ -110,24 +124,37 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
                 return;
             }
         }
-
-        bool isValidInput() // should later check for each input slot
+        int FindIngredientSlotFor(int itemType)
         {
-            if (ManualRecipe != null)
+            int firstEmpty = -1;
+            for (int s = FirstIngredientSlot; s < FirstIngredientSlot + ActiveIngredientCount; s++)
             {
-                return !InputSlots[1].IsAir
-                    && CustomRecipe.TryGetRecipeFromList(
-                        new List<CustomRecipe> { ManualRecipe },
-                        new List<Item> { InputSlots[1] },
-                        out _);
+                Item slot = InputSlots[s];
+                if (slot.IsAir) { if (firstEmpty == -1) firstEmpty = s; }
+                else if (slot.type == itemType) return s;   // matching slot wins, even if full
             }
+            return firstEmpty;
+        }
 
-            // auto-detect, same as your original
-            return !InputSlots[1].IsAir
-                && CustomRecipe.TryGetRecipeFromList(
-                    FurnaceRecipeRegistry.SmeltingRecipes,
-                    new List<Item> { InputSlots[1] },
-                    out SelectedRecipe);
+        List<Item> ingredientBuffer;
+        List<Item> GetIngredientItems()
+        {
+            ingredientBuffer ??= new List<Item>();
+            ingredientBuffer.Clear();
+            for (int s = FirstIngredientSlot; s < FirstIngredientSlot + ActiveIngredientCount; s++)
+                ingredientBuffer.Add(InputSlots[s]);
+            return ingredientBuffer;
+        }
+
+        bool isValidInput()
+        {
+            List<Item> items = GetIngredientItems();
+            if (items.TrueForAll(i => i.IsAir)) return false;
+
+            if (ManualRecipe != null)
+                return CustomRecipe.TryGetRecipeFromList(new List<CustomRecipe> { ManualRecipe }, items, out _);
+
+            return CustomRecipe.TryGetRecipeFromList(FurnaceRecipeRegistry.SmeltingRecipes, items, out SelectedRecipe);
         }
 
         bool isValidOutput()
@@ -148,21 +175,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             return FurnaceRecipeRegistry.SmeltingRecipes;   // auto mode: accept any recipe's ingredient
         }
 
-        void FinishSmelting() // Later make it output to the productSlot too, and spawn a vItem instead of a regular item
+        void FinishSmelting()
         {
             if (IsOnConveyorFloor())
             {
-                // needs to check the whole SmeltingRecipe
-                //Vector2 spawnPosition = Position.ToWorldCoordinates();
-                //int ProductIndex = Item.NewItem(
-                //    new EntitySource_TileEntity(this),
-                //    (int)spawnPosition.X + 16,
-                //    (int)spawnPosition.Y,
-                //    16, 16,
-                //    SelectedRecipe.Output.Type,
-                //    SelectedRecipe.Output.Stack);
-                //Main.item[ProductIndex].velocity = new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(2f, 3f));
-
                 Vector2 position = (MachineCenter / 16f);
                 VirtualItemSystem.SpawnVirtualItem(SelectedRecipe.Output.Type, SelectedRecipe.Output.Stack, (int)position.X, (int)position.Y);
             }
@@ -175,10 +191,22 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
 
             FuelRemaining--;
-            InputSlots[1].stack -= SelectedRecipe.Inputs[0].Stack; // must do another foreach -> match the input item id with the recipe item ids -> then subtract the stack 
-            if (InputSlots[1].stack <= 0)
+            foreach (RecipeIngredient req in SelectedRecipe.Inputs)
             {
-                InputSlots[1] = new Item(); 
+                int remaining = req.Stack;
+                for (int s = FirstIngredientSlot; s < FirstIngredientSlot + ActiveIngredientCount && remaining > 0; s++)
+                {
+                    Item slot = InputSlots[s];
+                    if (slot.IsAir || slot.type != req.Type) continue;
+
+                    int take = Math.Min(remaining, slot.stack);
+                    slot.stack -= take;
+                    remaining -= take;
+                    if (slot.stack <= 0)
+                    {
+                        InputSlots[s] = new Item();
+                    }
+                }
             }
 
             WorkProgress = 0; 
@@ -191,7 +219,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
                 return -1f;
             }
 
-            if (InputSlots[0].type != ItemID.None && InputSlots[0].stack > 0 && FurnaceRecipeRegistry.ValidFuels.TryGetValue(InputSlots[0].type, out int fuelValue))
+            if (InputSlots[FuelSlot].type != ItemID.None && InputSlots[FuelSlot].stack > 0 && FurnaceRecipeRegistry.ValidFuels.TryGetValue(InputSlots[FuelSlot].type, out int fuelValue))
             {
                 fuelSmeltCount = fuelValue;
             }

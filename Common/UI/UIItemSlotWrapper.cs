@@ -13,19 +13,21 @@ namespace Factorraria.Content.UI
 
         Func<Item> getItem;
         Action<Item> setItem;
-        //Func<Item, bool> canAcceptItem;
+        Func<bool> isVisible;
 
-        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem)//, Func<Item, bool> _canAcceptItem)
+
+        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<bool> _isVisible = null)
         {
             context = _context;
             getItem = _getItem;
             setItem = _setItem;
-            //canAcceptItem = _canAcceptItem;
-
+            isVisible = _isVisible;
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
+            if (isVisible != null && !isVisible()) return;
+
             Item item = getItem();
             if (item == null)
             {

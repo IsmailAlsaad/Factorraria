@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
@@ -12,6 +13,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
         // int FuelItemID, int number of smelts
         public static Dictionary<int, int> ValidFuels = new Dictionary<int, int>();
+
+        public static int MaxIngredientCount = 1;
 
         public static void BuildFromExistingRecipes()
         {
@@ -39,6 +42,12 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
             RegisterManualRecipes();
             RegisterValidFuels();
+
+            MaxIngredientCount = 1;
+            foreach (CustomRecipe r in SmeltingRecipes) 
+            {
+                MaxIngredientCount = Math.Max(MaxIngredientCount, r.Inputs.Count);
+            }
         }
 
         static void RegisterManualRecipes()

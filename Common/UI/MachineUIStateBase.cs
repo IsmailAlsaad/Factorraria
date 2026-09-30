@@ -53,9 +53,13 @@ namespace Factorraria.Common.UI
             InitializeUIState();
         }
 
+        protected virtual void UpdateLayout() { }
+
         public void SetZoomScale(float zoomScale)
         {
             if (elements == null) return;
+
+            UpdateLayout();
 
             Panel.Width.Set(BasePanelSize.X * zoomScale, 0);
             Panel.Height.Set(BasePanelSize.Y * zoomScale, 0);
