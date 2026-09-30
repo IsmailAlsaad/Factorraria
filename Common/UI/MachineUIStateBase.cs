@@ -8,6 +8,8 @@ using Terraria.UI;
 
 namespace Factorraria.Common.UI
 {
+    public interface IZoomScalable { void SetZoomScale(float zoom); }
+
     public abstract class MachineUIStateBase : UIState
     {
         public BaseMachine CurrentEntity;
@@ -69,6 +71,9 @@ namespace Factorraria.Common.UI
                 entry.Element.Left.Set(entry.BasePosition.X * zoomScale, 0);
                 entry.Element.Width.Set(entry.BaseSize.X * zoomScale, 0);
                 entry.Element.Height.Set(entry.BaseSize.Y * zoomScale, 0);
+
+                if (entry.Element is IZoomScalable scalable)
+                    scalable.SetZoomScale(zoomScale);
             }
 
             Panel.Recalculate();
