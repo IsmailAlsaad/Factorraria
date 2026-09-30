@@ -28,7 +28,6 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
                 ItemSlot.Context.ChestItem,
                 () => Entity.InputSlots[1],
                 v => Entity.InputSlots[1] = v
-                //item => FurnaceRecipeRegistry.SmeltingRecipes.ContainsKey(item.type)
             );
             list.Add(new MachineUIElementEntry(oreSlot, new Vector2(0, 0), new Vector2(54, 54)));
 
@@ -39,17 +38,22 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
                 ItemSlot.Context.ChestItem,
                 () => Entity.InputSlots[0],
                 v => Entity.InputSlots[0] = v
-                //item => FurnaceRecipeRegistry.ValidFuels.ContainsKey(item.type)
             );
             list.Add(new MachineUIElementEntry(fuelSlot, new Vector2(0, 100), new Vector2(54, 54)));
 
+            Vector2 productSlotPosition = new Vector2(115, 50);
             var productSlot = new UIItemSlotWrapper(
                     ItemSlot.Context.ChestItem,
                     () => Entity.OutputSlots[0],
                     v => Entity.OutputSlots[0] = v
-                //item => FurnaceRecipeRegistry.SmeltingRecipes.ContainsKey(item.type)
-);
-            list.Add(new MachineUIElementEntry(productSlot, new Vector2(115, 50), new Vector2(54, 54)));
+            );
+            list.Add(new MachineUIElementEntry(productSlot, productSlotPosition, new Vector2(54, 54)));
+
+            var recipeBrowserList = new RecipeBrowserPanel(FurnaceRecipeRegistry.SmeltingRecipes);
+            list.Add(new MachineUIElementEntry(recipeBrowserList, productSlotPosition + new Vector2(80, 40), new Vector2(200, 200)));
+
+            var recipeSelectButton = new RecipeSelectHammerIcon(recipeBrowserList);
+            list.Add(new MachineUIElementEntry(recipeSelectButton, productSlotPosition + new Vector2(50, 40), new Vector2(24, 24)));
 
             return list;
         }

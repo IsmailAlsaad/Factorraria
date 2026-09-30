@@ -112,6 +112,10 @@ namespace Factorraria.Common.Systems
         {
             if (openState == null) return;
 
+            //
+            //openState.InitializeUIState();
+            //
+
             Vector2 worldPosition = openPosition.ToVector2() * 16;
             Vector2 screenPosition = worldPosition - Main.screenPosition;
             screenPosition += openState.BasePanelOffset;

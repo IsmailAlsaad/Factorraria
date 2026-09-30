@@ -21,7 +21,6 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
         public int FuelRemaining = 0;
         int fuelSmeltCount = 3;
-        CustomRecipe currentRecipe;
 
         public override void Update()
         {
@@ -34,7 +33,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             // doesn't need electricity -> always on
             isOn = true;
 
-            if (!isValidInput() || isValidOutput())
+            if (!isValidInput() || !isValidOutput())
             {
                 WorkProgress = 0; 
                 isWorking = false;
@@ -108,12 +107,12 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
         bool isValidInput() // should later check foreach input slot
         {
-            return !InputSlots[1].IsAir && CustomRecipe.TryGetRecipeFromList(FurnaceRecipeRegistry.SmeltingRecipes, new List<Item> { InputSlots[1] }, out currentRecipe);
+            return !InputSlots[1].IsAir && CustomRecipe.TryGetRecipeFromList(FurnaceRecipeRegistry.SmeltingRecipes, new List<Item> { InputSlots[1] }, out SelectedRecipe);
         }
 
         bool isValidOutput()
         {
-            return OutputSlots[0].stack >= OutputMaxStack || (OutputSlots[0].type != SelectedRecipe.Output.Type && !OutputSlots[0].IsAir);
+            return OutputSlots[0].stack < OutputMaxStack && (OutputSlots[0].type == SelectedRecipe.Output.Type || OutputSlots[0].IsAir) || IsOnConveyorFloor();
         }
 
         public bool CanAcceptFuel(int itemID)
@@ -132,23 +131,23 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
                 //    (int)spawnPosition.X + 16,
                 //    (int)spawnPosition.Y,
                 //    16, 16,
-                //    currentRecipe.Output.Type,
-                //    currentRecipe.Output.Stack);
+                //    SelectedRecipe.Output.Type,
+                //    SelectedRecipe.Output.Stack);
                 //Main.item[ProductIndex].velocity = new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(2f, 3f));
 
                 Vector2 position = (MachineCenter / 16f);
-                VirtualItemSystem.SpawnVirtualItem(currentRecipe.Output.Type, currentRecipe.Output.Stack, (int)position.X, (int)position.Y);
+                VirtualItemSystem.SpawnVirtualItem(SelectedRecipe.Output.Type, SelectedRecipe.Output.Stack, (int)position.X, (int)position.Y);
             }
             else
             {
                 OutputSlots[0] = OutputSlots[0] == null || OutputSlots[0].IsAir ?
-                    new Item(currentRecipe.Output.Type, currentRecipe.Output.Stack) :
-                    new Item(currentRecipe.Output.Type, currentRecipe.Output.Stack + OutputSlots[0].stack);
+                    new Item(SelectedRecipe.Output.Type, SelectedRecipe.Output.Stack) :
+                    new Item(SelectedRecipe.Output.Type, SelectedRecipe.Output.Stack + OutputSlots[0].stack);
             }
 
 
             FuelRemaining--;
-            InputSlots[1].stack -= currentRecipe.Inputs[0].Stack; // must do another foreach -> match the input item id with the recipe item ids -> then subtract the stack 
+            InputSlots[1].stack -= SelectedRecipe.Inputs[0].Stack; // must do another foreach -> match the input item id with the recipe item ids -> then subtract the stack 
             if (InputSlots[1].stack <= 0)
             {
                 InputSlots[1] = new Item(); 
