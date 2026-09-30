@@ -17,7 +17,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
     {
         FurnaceTileEntity Entity => (FurnaceTileEntity)CurrentEntity;
 
-        protected override Vector2 BasePanelSize => new Vector2(200, 200);
+        protected override Vector2 BasePanelSize => new Vector2(400, 300);
         public override Vector2 BasePanelOffset => new Vector2(-55, -60);
 
         protected override List<MachineUIElementEntry> BuildElements()
@@ -49,8 +49,11 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             );
             list.Add(new MachineUIElementEntry(productSlot, productSlotPosition, new Vector2(54, 54)));
 
-            var recipeBrowserList = new RecipeBrowserPanel(FurnaceRecipeRegistry.SmeltingRecipes);
-            list.Add(new MachineUIElementEntry(recipeBrowserList, productSlotPosition + new Vector2(80, 40), new Vector2(200, 200)));
+            var recipeBrowserList = new RecipeBrowserPanel(
+                FurnaceRecipeRegistry.SmeltingRecipes,
+                () => Entity.ManualRecipe,
+                r => Entity.SetManualRecipe(r));
+            list.Add(new MachineUIElementEntry(recipeBrowserList, productSlotPosition + new Vector2(80, 40), new Vector2(155, 200)));
 
             var recipeSelectButton = new RecipeSelectHammerIcon(recipeBrowserList);
             list.Add(new MachineUIElementEntry(recipeSelectButton, productSlotPosition + new Vector2(50, 40), new Vector2(24, 24)));

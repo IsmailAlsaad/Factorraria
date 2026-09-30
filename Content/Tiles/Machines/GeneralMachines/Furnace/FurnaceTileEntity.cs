@@ -27,7 +27,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             base.Update();
 
             // MANUAL RECIPE SELECTED
-            SelectedRecipe = new CustomRecipe(new List<RecipeIngredient> { new(ItemID.Wood, 3) }, new(ItemID.Coal,1));
+            //SelectedRecipe = new CustomRecipe(new List<RecipeIngredient> { new(ItemID.Wood, 3) }, new(ItemID.Coal,1));
             // TESTING
 
             // doesn't need electricity -> always on
@@ -105,9 +105,23 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             }
         }
 
-        bool isValidInput() // should later check foreach input slot
+        bool isValidInput() // should later check for each input slot
         {
-            return !InputSlots[1].IsAir && CustomRecipe.TryGetRecipeFromList(FurnaceRecipeRegistry.SmeltingRecipes, new List<Item> { InputSlots[1] }, out SelectedRecipe);
+            if (ManualRecipe != null)
+            {
+                return !InputSlots[1].IsAir
+                    && CustomRecipe.TryGetRecipeFromList(
+                        new List<CustomRecipe> { ManualRecipe },
+                        new List<Item> { InputSlots[1] },
+                        out _);
+            }
+
+            // auto-detect, same as your original
+            return !InputSlots[1].IsAir
+                && CustomRecipe.TryGetRecipeFromList(
+                    FurnaceRecipeRegistry.SmeltingRecipes,
+                    new List<Item> { InputSlots[1] },
+                    out SelectedRecipe);
         }
 
         bool isValidOutput()

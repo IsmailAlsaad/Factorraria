@@ -76,24 +76,78 @@ namespace Factorraria.Common.UI
 
         public bool showPanel;
         public UIGrid recipeList; 
-        public UIScrollbar scrollbar;
+        public ZoomScrollbar scrollbar;
         readonly List<CustomRecipe> machineRecipes;
         float zoom = 1f;
 
-        public RecipeBrowserPanel(List<CustomRecipe> recipes) => machineRecipes = recipes;
+        readonly Func<CustomRecipe> getSelectedRecipe;
+        readonly Action<CustomRecipe> setSelectedRecipe;
+
+        public RecipeBrowserPanel(List<CustomRecipe> recipes,Func<CustomRecipe> getSelected,Action<CustomRecipe> setSelected)
+        {
+            machineRecipes = recipes;
+            getSelectedRecipe = getSelected;
+            setSelectedRecipe = setSelected;
+        }
+
+        public void PopulateRecipeList()
+        {
+            recipeList.Clear();
+            CustomRecipe current = getSelectedRecipe?.Invoke();
+
+            for (int i = 0; i < machineRecipes.Count; i++)
+            {
+                var cell = new RecipeElement(machineRecipes[i], i);
+                cell.Selected = ReferenceEquals(machineRecipes[i], current);  // restores the highlight when the UI reopens
+                cell.OnSelected = SelectRecipe;
+                recipeList.Add(cell);
+            }
+
+            recipeList.Recalculate();
+        }
+
+        void SelectRecipe(RecipeElement chosen)
+        {
+            bool wasSelected = chosen.Selected;
+
+            foreach (var cell in recipeList.OfType<RecipeElement>())
+                cell.Selected = !wasSelected && cell == chosen;
+
+            setSelectedRecipe?.Invoke(wasSelected ? null : chosen.Recipe);
+
+            recipeList.UpdateOrder();      // selected goes first, or everything returns to registry order
+            recipeList.Recalculate();
+            scrollbar.ViewPosition = 0f;
+
+            SoundEngine.PlaySound(SoundID.MenuTick);
+        }
 
         public override void OnInitialize()
         {
-            scrollbar = new UIScrollbar();
-            scrollbar.HAlign = 1f;
-            Append(scrollbar);
-
             recipeList = new UIGrid();
-            recipeList.SetScrollbar(scrollbar); 
+
+            scrollbar = new ZoomScrollbar(
+                () => recipeList.GetInnerDimensions().Height,
+                () => recipeList.GetTotalHeight());
+            scrollbar.HAlign = 1f;
+
+            recipeList.SetScrollbar(scrollbar);
+
+            Append(scrollbar);
             Append(recipeList);
 
             PopulateRecipeList();
             SetZoomScale(zoom);
+        }
+        
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+
+            if (showPanel && IsMouseHovering)
+            {
+                Main.LocalPlayer.mouseInterface = true;
+            }
         }
 
         public void SetZoomScale(float z)
@@ -103,7 +157,7 @@ namespace Factorraria.Common.UI
 
             SetPadding(PanelPadding * z);
 
-            scrollbar.Width.Set(ScrollbarWidth * z, 0f);
+            scrollbar.SetZoomScale(z);
             scrollbar.Height.Set(0f, 1f);
 
             recipeList.Width.Set(-(ScrollbarWidth + Gap) * z, 1f);
@@ -124,6 +178,8 @@ namespace Factorraria.Common.UI
             base.Draw(spriteBatch);
         }
 
+        protected override void DrawSelf(SpriteBatch sb) => ScaledPanel.Draw(sb, GetDimensions().ToRectangle(), BackgroundColor, BorderColor, zoom);
+
         public override bool ContainsPoint(Vector2 point)
         {
             if (!showPanel)
@@ -134,54 +190,182 @@ namespace Factorraria.Common.UI
             return base.ContainsPoint(point);
         }
 
-        public void PopulateRecipeList()
-        {
-            recipeList.Clear();
-
-            foreach (var recipe in machineRecipes)
-            {
-                var recipeElement = new RecipeElement(recipe);
-                recipeList.Add(recipeElement);
-            }
-
-            recipeList.Recalculate();
-        }
     }
 
     public class RecipeElement : UIPanel
     {
         const float BaseSize = 50f;
-        readonly CustomRecipe recipe;
-        Texture2D recipeTexture;
+        const float IconBox = 34f;
 
-        public RecipeElement(CustomRecipe recipe)
+        static readonly Color NormalColor = new Color(63, 82, 151) * 0.7f;   // vanilla UIPanel default
+        static readonly Color SelectedColor = new Color(214, 178, 48) * 0.9f;
+
+        public readonly CustomRecipe Recipe;
+        public readonly int Index;                 // original position in the registry
+        public Action<RecipeElement> OnSelected;
+
+        Texture2D recipeTexture;
+        float zoom = 1f;
+        bool selected;
+
+        public bool Selected
         {
-            this.recipe = recipe;
-            Width.Set(BaseSize, 0f);
-            Height.Set(BaseSize, 0f);
+            get => selected;
+            set
+            {
+                selected = value;
+                BackgroundColor = value ? SelectedColor : NormalColor;
+            }
+        }
+
+        public RecipeElement(CustomRecipe recipe, int index)
+        {
+            Recipe = recipe;
+            Index = index;
+            SetPadding(0f);
+            BackgroundColor = NormalColor;
+            SetZoomScale(1f);
+        }
+
+        // UIGrid sorts its items with CompareTo. The default returns 0 for everything,
+        // which gives no guaranteed order, so we define one: selected first, then registry order.
+        public override int CompareTo(object obj) =>
+            obj is RecipeElement other ? SortKey.CompareTo(other.SortKey) : 0;
+
+        int SortKey => Selected ? -1 : Index;
+
+        public override void OnInitialize()
+        {
+            Main.instance.LoadItem(Recipe.Output.Type);
+            recipeTexture = TextureAssets.Item[Recipe.Output.Type].Value;
         }
 
         public void SetZoomScale(float z)
         {
+            zoom = z;
             Width.Set(BaseSize * z, 0f);
             Height.Set(BaseSize * z, 0f);
         }
 
-        public override void OnInitialize()
+        public override void LeftClick(UIMouseEvent evt)
         {
-            Main.instance.LoadItem(recipe.Output.Type);
-            recipeTexture = TextureAssets.Item[recipe.Output.Type].Value;
+            base.LeftClick(evt);
+            OnSelected?.Invoke(this);
         }
 
-        protected override void DrawSelf(SpriteBatch spriteBatch)
+        static readonly Color HoverBorderColor = new Color(255, 220, 60);
+        protected override void DrawSelf(SpriteBatch sb)
         {
-            base.DrawSelf(spriteBatch);
+            Color border = IsMouseHovering ? HoverBorderColor : BorderColor;
+            ScaledPanel.Draw(sb, GetDimensions().ToRectangle(), BackgroundColor, border, zoom);
+
             if (recipeTexture == null) return;
 
+            float fit = Math.Min(1f, IconBox / Math.Max(recipeTexture.Width, recipeTexture.Height));
+            sb.Draw(recipeTexture, GetDimensions().Center(), null, Color.White, 0f,
+                recipeTexture.Size() / 2f, fit * zoom, SpriteEffects.None, 0f);
+        }
+    }
+
+    public static class ScaledPanel
+    {
+        const int Corner = 12, Bar = 4;   // layout of vanilla's 28x28 panel textures
+        static readonly Asset<Texture2D> Bg = Main.Assets.Request<Texture2D>("Images/UI/PanelBackground", AssetRequestMode.ImmediateLoad);
+        static readonly Asset<Texture2D> Border = Main.Assets.Request<Texture2D>("Images/UI/PanelBorder", AssetRequestMode.ImmediateLoad);
+
+        public static void Draw(SpriteBatch sb, Rectangle r, Color bg, Color border, float zoom)
+        {
+            int c = Math.Max(1, (int)Math.Round(Corner * zoom));
+            c = Math.Min(c, Math.Min(r.Width, r.Height) / 2);
+            Slice(sb, Bg.Value, r, c, bg);
+            Slice(sb, Border.Value, r, c, border);
+        }
+
+        static void Slice(SpriteBatch sb, Texture2D tex, Rectangle r, int c, Color color)
+        {
+            int[] dx = { r.X, r.X + c, r.Right - c, r.Right };
+            int[] dy = { r.Y, r.Y + c, r.Bottom - c, r.Bottom };
+            int[] s = { 0, Corner, Corner + Bar, Corner * 2 + Bar };
+
+            for (int row = 0; row < 3; row++)
+                for (int col = 0; col < 3; col++)
+                    sb.Draw(tex,
+                        new Rectangle(dx[col], dy[row], dx[col + 1] - dx[col], dy[row + 1] - dy[row]),
+                        new Rectangle(s[col], s[row], s[col + 1] - s[col], s[row + 1] - s[row]),
+                        color);
+        }
+    }
+
+    public class ZoomScrollbar : UIScrollbar
+    {
+        const float BaseWidth = 20f, BaseCap = 6f, BasePad = 5f;
+
+        readonly Func<float> viewSize, maxSize;
+        readonly Asset<Texture2D> track = Main.Assets.Request<Texture2D>("Images/UI/Scrollbar", AssetRequestMode.ImmediateLoad);
+        readonly Asset<Texture2D> thumb = Main.Assets.Request<Texture2D>("Images/UI/ScrollbarInner", AssetRequestMode.ImmediateLoad);
+        float zoom = 1f, dragOffset;
+        bool dragging;
+
+        public ZoomScrollbar(Func<float> viewSize, Func<float> maxSize)
+        {
+            this.viewSize = viewSize;
+            this.maxSize = maxSize;
+        }
+
+        public void SetZoomScale(float z)
+        {
+            zoom = z;
+            Width.Set(BaseWidth * z, 0f);
+            MaxWidth.Set(BaseWidth * z, 0f);   // vanilla caps this at 20, which would block zoom > 1
+            PaddingTop = PaddingBottom = BasePad * z;
+        }
+
+        Rectangle ThumbRect()
+        {
             CalculatedStyle inner = GetInnerDimensions();
-            float scale = Math.Min(1f, Math.Min(inner.Width / recipeTexture.Width, inner.Height / recipeTexture.Height));
-            spriteBatch.Draw(recipeTexture, inner.Center(), null, Color.White, 0f,
-                recipeTexture.Size() / 2f, scale, SpriteEffects.None, 0f);
+            float view = viewSize();
+            float max = Math.Max(maxSize(), view);
+            if (max <= 0f) max = 1f;
+            return new Rectangle((int)inner.X, (int)(inner.Y + inner.Height * ViewPosition / max),
+                                 (int)inner.Width, (int)(inner.Height * view / max));
+        }
+
+        public override void LeftMouseDown(UIMouseEvent evt)
+        {
+            base.LeftMouseDown(evt);   // vanilla still handles click-the-track-to-jump
+            if (evt.Target != this) return;
+            Rectangle t = ThumbRect();
+            dragging = true;
+            dragOffset = MathHelper.Clamp(evt.MousePosition.Y - t.Y, 0f, t.Height);
+        }
+
+        protected override void DrawSelf(SpriteBatch sb)
+        {
+            CalculatedStyle inner = GetInnerDimensions();
+            Vector2 mouse = UserInterface.ActiveInstance.MousePosition;
+
+            if (dragging)
+            {
+                if (!Main.mouseLeft) dragging = false;
+                else
+                {
+                    float max = Math.Max(maxSize(), viewSize());
+                    ViewPosition = (mouse.Y - inner.Y - dragOffset) / inner.Height * max; // setter clamps
+                }
+            }
+
+            Rectangle t = ThumbRect();
+            bool hover = t.Contains(mouse.ToPoint());
+            DrawBar(sb, track.Value, GetDimensions().ToRectangle(), Color.White);
+            DrawBar(sb, thumb.Value, t, Color.White * (dragging || hover ? 1f : 0.85f));
+        }
+
+        void DrawBar(SpriteBatch sb, Texture2D tex, Rectangle r, Color c)
+        {
+            int cap = Math.Max(1, (int)(BaseCap * zoom));
+            sb.Draw(tex, new Rectangle(r.X, r.Y - cap, r.Width, cap), new Rectangle(0, 0, tex.Width, 6), c);
+            sb.Draw(tex, r, new Rectangle(0, 6, tex.Width, 4), c);
+            sb.Draw(tex, new Rectangle(r.X, r.Bottom, r.Width, cap), new Rectangle(0, tex.Height - 6, tex.Width, 6), c);
         }
     }
 }

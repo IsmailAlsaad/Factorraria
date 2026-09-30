@@ -107,7 +107,14 @@ namespace Factorraria.Common.Machines
         protected virtual int InputSlotCount => 0;
         protected virtual int OutputSlotCount => 0;
 
-        public CustomRecipe SelectedRecipe;
+        public CustomRecipe SelectedRecipe;   // what the machine is actually running (manual OR auto-detected)
+        public CustomRecipe ManualRecipe;     // only what the player picked; null = auto-detect
+
+        public void SetManualRecipe(CustomRecipe recipe)
+        {
+            ManualRecipe = recipe;
+            SelectedRecipe = recipe;   // null on un-toggle, so auto-detect starts fresh
+        }
 
         public int OutputMaxStack = 10;
         public Point16 cornerPosition;
