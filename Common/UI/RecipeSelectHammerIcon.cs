@@ -81,9 +81,6 @@ namespace Factorraria.Common.UI
         readonly List<CustomRecipe> machineRecipes;
         float zoom = 1f;
 
-        float baseScroll;      // scroll position at zoom = 1
-        bool pendingScrollRestore;
-
         const float SearchHeight = 24f;
         RecipeSearchBar searchBar;
         string searchFilter = "";
@@ -167,11 +164,6 @@ namespace Factorraria.Common.UI
         {
             base.Update(gameTime);
 
-            if (scrollbar != null && !pendingScrollRestore)
-            {
-                baseScroll = scrollbar.ViewPosition / zoom;
-            }
-
             if (!showPanel)
             {
                 searchBar?.Unfocus();
@@ -186,10 +178,6 @@ namespace Factorraria.Common.UI
 
         public void SetZoomScale(float z)
         {
-            if (!MathHelper.Equals(zoom, z))
-            {
-                pendingScrollRestore = true;
-            }
             zoom = z;
             if (scrollbar == null || recipeList == null || searchBar == null) return;
 
@@ -214,17 +202,6 @@ namespace Factorraria.Common.UI
 
             foreach (var cell in recipeList.OfType<RecipeElement>())
                 cell.SetZoomScale(z);
-        }
-        public override void Recalculate()
-        {
-            base.Recalculate();
-
-            if (pendingScrollRestore && scrollbar != null && recipeList != null)
-            {
-                pendingScrollRestore = false;
-                scrollbar.ViewPosition = baseScroll * zoom;
-                recipeList.Recalculate(); // re-lay out the cells at the restored offset
-            }
         }
 
         public override void Draw(SpriteBatch spriteBatch)
