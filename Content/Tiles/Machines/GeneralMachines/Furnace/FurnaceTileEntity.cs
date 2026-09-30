@@ -19,6 +19,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         protected override int InputSlotCount => 2; // should be set dynamically after recipe selection
         protected override int OutputSlotCount => 1;
 
+        protected override List<CustomRecipe> RecipeList => FurnaceRecipeRegistry.SmeltingRecipes;
+
         public int FuelRemaining = 0;
         int fuelSmeltCount = 3;
 
@@ -91,6 +93,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
                 }
             }
 
+            Item target = InputSlots[ValidSlotIndex];
+            if (!target.IsAir && target.type != vItem.itemType)
+                return;   // slot already holds something else
+
             if (InputSlots[ValidSlotIndex].stack < currentMaxStack)
             {
                 int spaceLeft = currentMaxStack - InputSlots[ValidSlotIndex].stack;
@@ -132,6 +138,14 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         public bool CanAcceptFuel(int itemID)
         {
             return FurnaceRecipeRegistry.ValidFuels.ContainsKey(itemID);
+        }
+
+        protected override IEnumerable<CustomRecipe> GetPickupRecipes()
+        {
+            if (ManualRecipe != null)
+                return new[] { ManualRecipe };
+
+            return FurnaceRecipeRegistry.SmeltingRecipes;   // auto mode: accept any recipe's ingredient
         }
 
         void FinishSmelting() // Later make it output to the productSlot too, and spawn a vItem instead of a regular item

@@ -151,6 +151,11 @@ namespace Factorraria.Common.Machines
             for (int i = 0; i < count; i++) arr[i] = new LiquidStack();
             return arr;
         }
+
+        // The list this machine's recipes come from (e.g. FurnaceRecipeRegistry.SmeltingRecipes).
+        // Used to save and restore the player's manual recipe. null = machine has no recipe list.
+        protected virtual List<CustomRecipe> RecipeList => null;
+
         #endregion
 
         public override bool IsTileValidForEntity(int x, int y)
@@ -193,40 +198,41 @@ namespace Factorraria.Common.Machines
             ScanVItems();
         }
 
+        // Recipes whose ingredients this machine accepts from conveyors right now.
+        protected virtual IEnumerable<CustomRecipe> GetPickupRecipes() =>
+            SelectedRecipe != null ? new[] { SelectedRecipe } : Array.Empty<CustomRecipe>();
+
         void ScanVItems()
         {
-            if (InputSlotCount == 0 || SelectedRecipe == null)
-            {
-                return;
-            }
+            if (InputSlotCount == 0) return;
+
+            var pickupRecipes = GetPickupRecipes();
+            if (pickupRecipes == null || !pickupRecipes.Any()) return;   // same effect as the old SelectedRecipe == null check
 
             VirtualItem vItem = null;
 
-            // scan hitbox for vItems
-            for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth; i++)
-            {
-                for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight; j++)
-                {
+            // scan hitbox for vItems (stops at the first one found)
+            for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth && vItem == null; i++)
+                for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight && vItem == null; j++)
                     vItem = VirtualItemSystem.GetVirtualItemAtTile(i, j);
-                }
-            }
-            
-            if(vItem == null)
-            {
-                return;
-            }
+
+            if (vItem == null) return;
 
             bool isItemInRecipe = false;
             int maxStack = 0;
 
-            foreach (RecipeIngredient ingredient in SelectedRecipe.Inputs)
+            foreach (CustomRecipe recipe in pickupRecipes)
             {
-                if (vItem.itemType == ingredient.Type)
+                foreach (RecipeIngredient ingredient in recipe.Inputs)
                 {
-                    isItemInRecipe = true;
-                    maxStack = ingredient.Stack * 2;
-                    break;
+                    if (vItem.itemType == ingredient.Type)
+                    {
+                        isItemInRecipe = true;
+                        maxStack = ingredient.Stack * 2;
+                        break;
+                    }
                 }
+                if (isItemInRecipe) break;
             }
 
             int ValidSlotIndex = -1;
@@ -236,9 +242,7 @@ namespace Factorraria.Common.Machines
             for (int i = 0; i < InputSlotCount; i++)
             {
                 if (InputSlots[i].IsAir)
-                {
                     EmptySlotIndex = i;
-                }
 
                 if (InputSlots[i].type == vItem.itemType)
                 {
@@ -249,13 +253,9 @@ namespace Factorraria.Common.Machines
             }
 
             if (!foundMatching)
-            {
                 ValidSlotIndex = EmptySlotIndex;
-            }
 
-            //Main.NewText("FOUND ITEM");
-
-            PickUpVItems(vItem,ValidSlotIndex,isItemInRecipe,maxStack);
+            PickUpVItems(vItem, ValidSlotIndex, isItemInRecipe, maxStack);
         }
 
         public virtual void PickUpVItems(VirtualItem vItem, int ValidSlotIndex, bool isItemInRecipe, int maxStack)
@@ -333,6 +333,13 @@ namespace Factorraria.Common.Machines
             tag["CornerPosition"] = cornerPosition;
             tag["MachineWidth"] = MachineWidth;
             tag["MachineHeight"] = MachineHeight;
+
+            if (ManualRecipe != null && RecipeList != null)
+            {
+                int recipeIndex = RecipeList.IndexOf(ManualRecipe);
+                if (recipeIndex >= 0)
+                    tag["ManualRecipe"] = recipeIndex;
+            }
         }
 
         public override void LoadData(TagCompound tag)
@@ -360,6 +367,13 @@ namespace Factorraria.Common.Machines
             cornerPosition = tag.Get<Point16>("CornerPosition");
             MachineHeight = tag.GetInt("MachineHeight");
             MachineWidth = tag.GetInt("MachineWidth");
+
+            if (RecipeList != null && tag.ContainsKey("ManualRecipe"))
+            {
+                int recipeIndex = tag.GetInt("ManualRecipe");
+                if (recipeIndex >= 0 && recipeIndex < RecipeList.Count)
+                    SetManualRecipe(RecipeList[recipeIndex]);
+            }
         }
     }
 }

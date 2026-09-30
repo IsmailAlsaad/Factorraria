@@ -113,7 +113,7 @@ namespace Factorraria.Common.UI
             foreach (var cell in recipeList.OfType<RecipeElement>())
                 cell.Selected = !wasSelected && cell == chosen;
 
-            setSelectedRecipe?.Invoke(wasSelected ? null : chosen.Recipe);
+            setSelectedRecipe?.Invoke(wasSelected ? null : chosen.CurrentRecipe);
 
             recipeList.UpdateOrder();      // selected goes first, or everything returns to registry order
             recipeList.Recalculate();
@@ -200,7 +200,7 @@ namespace Factorraria.Common.UI
         static readonly Color NormalColor = new Color(63, 82, 151) * 0.7f;   // vanilla UIPanel default
         static readonly Color SelectedColor = new Color(214, 178, 48) * 0.9f;
 
-        public readonly CustomRecipe Recipe;
+        public readonly CustomRecipe CurrentRecipe;
         public readonly int Index;                 // original position in the registry
         public Action<RecipeElement> OnSelected;
 
@@ -220,7 +220,7 @@ namespace Factorraria.Common.UI
 
         public RecipeElement(CustomRecipe recipe, int index)
         {
-            Recipe = recipe;
+            CurrentRecipe = recipe;
             Index = index;
             SetPadding(0f);
             BackgroundColor = NormalColor;
@@ -236,8 +236,8 @@ namespace Factorraria.Common.UI
 
         public override void OnInitialize()
         {
-            Main.instance.LoadItem(Recipe.Output.Type);
-            recipeTexture = TextureAssets.Item[Recipe.Output.Type].Value;
+            Main.instance.LoadItem(CurrentRecipe.Output.Type);
+            recipeTexture = TextureAssets.Item[CurrentRecipe.Output.Type].Value;
         }
 
         public void SetZoomScale(float z)
@@ -258,6 +258,11 @@ namespace Factorraria.Common.UI
         {
             Color border = IsMouseHovering ? HoverBorderColor : BorderColor;
             ScaledPanel.Draw(sb, GetDimensions().ToRectangle(), BackgroundColor, border, zoom);
+
+            if (IsMouseHovering)
+            {
+                Main.hoverItemName = ContentSamples.ItemsByType[CurrentRecipe.Output.Type].Name;
+            }
 
             if (recipeTexture == null) return;
 
