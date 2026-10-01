@@ -11,7 +11,8 @@ namespace Factorraria.Common.Machines
     {
         public List<CustomRecipe> All { get; } = new();
         public List<RecipeOutputGroup> Groups { get; } = new();   // same list instance forever; the UI holds a reference to it
-        public int MaxIngredientCount { get; private set; } = 1;
+        public int MaxIngredientCount { get; private set; } = 0;
+        public int MinIngredientCount { get; private set; } = 0;
 
         public RecipeBook Add(CustomRecipe recipe) { All.Add(recipe); return this; }
 
@@ -34,11 +35,17 @@ namespace Factorraria.Common.Machines
             Groups.Clear();
             Groups.AddRange(RecipeOutputGroup.Build(All));
 
-            MaxIngredientCount = 1;
+            MaxIngredientCount = 0;
+            MinIngredientCount = int.MaxValue;
             foreach (CustomRecipe r in All)
-                MaxIngredientCount = Math.Max(MaxIngredientCount, r.Inputs.Count);
+            {
+                int n = r.Inputs.Count;
+                MaxIngredientCount = Math.Max(MaxIngredientCount, n);
+                if (n > 0) MinIngredientCount = Math.Min(MinIngredientCount, n);  // liquid-only recipes must not drag the min to 0
+            }
+            if (MinIngredientCount == int.MaxValue) MinIngredientCount = 0;       // no recipe uses items at all
         }
 
-        public void Clear() { All.Clear(); Groups.Clear(); MaxIngredientCount = 1; }
+        public void Clear() { All.Clear(); Groups.Clear(); MaxIngredientCount = 0; MinIngredientCount = 0; }
     }
 }

@@ -94,6 +94,10 @@ namespace Factorraria.Common.Machines
         protected int IngredientStart => FuelSlotCount;
         public int IngredientSlotCount => Math.Max(0, InputSlotCount - FuelSlotCount);
 
+        // Item-ingredient slots auto mode (nothing picked in the browser) reads.
+        // Recipes with a different item-input count are manual-only.
+        protected virtual int AutoIngredientCount => Recipes?.MinIngredientCount ?? 0;
+
         // How many ingredient slots are shown/used right now
         public int ActiveIngredientCount
         {
@@ -101,7 +105,9 @@ namespace Factorraria.Common.Machines
             {
                 if (IngredientSlotCount == 0) return 0;
                 if (Recipes == null) return IngredientSlotCount;    // hand-written machine: every slot is live
-                return ManualGroup == null ? 1 : Math.Clamp(ManualGroup.MaxInputCount, 1, IngredientSlotCount);
+                return ManualGroup == null
+                    ? Math.Min(AutoIngredientCount, IngredientSlotCount)
+                    : Math.Clamp(ManualGroup.MaxInputCount, 1, IngredientSlotCount);
             }
         }
 
@@ -345,7 +351,7 @@ namespace Factorraria.Common.Machines
 
             foreach (CustomRecipe recipe in GetPickupRecipes())
             {
-                if (ManualGroup == null && recipe.Inputs.Count != 1) continue;   // auto mode only accepts single-ingredient recipes
+                if (ManualGroup == null && recipe.Inputs.Count != ActiveIngredientCount) continue;
                 foreach (RecipeIngredient ing in recipe.Inputs)
                 {
                     if (ing.Type != itemType) continue;
