@@ -18,9 +18,9 @@ namespace Factorraria.Common.Liquids
         public override void SetStaticDefaults()
         {
             Main.tileSolid[Type] = true;
-            Main.tileNoAttach[Type] = true;
             Main.tileLighted[Type] = true;
             Main.tileFrameImportant[Type] = true; // tells Terraria this tile's look depends on TileFrameX/Y, not a fixed sprite
+            Main.tileNoAttach[Type] = false;
 
             TileObjectData.newTile.CopyFrom(TileObjectData.Style1x1);
             // Prevent DivideByZeroException when external mods query tile style

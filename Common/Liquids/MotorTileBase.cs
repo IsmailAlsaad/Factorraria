@@ -23,7 +23,7 @@ namespace Factorraria.Common.Liquids
             Main.tileFrameImportant[Type] = true;
             Main.tileLighted[Type] = true;
             Main.tileSolid[Type] = true;
-            Main.tileNoAttach[Type] = true;
+            Main.tileNoAttach[Type] = false;
 
             TileObjectData.newTile.CopyFrom(TileObjectData.Style1x1);
             TileObjectData.newTile.Origin = new Point16(0, 0);
