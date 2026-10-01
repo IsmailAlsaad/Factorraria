@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
+using Factorraria.Common.Systems;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,14 @@ namespace Factorraria.Common.Networks
         const int InfiniteSourceRecheckInterval = 60; // ticks ≈ 1 second
 
         public float MaxFlowRate = float.MaxValue;
+
+        // The one liquid this network carries. -1 = not decided yet.
+        // Set by the first source that actually produces; reset on topology rebuild and
+        // flow recalculation (LiquidNetworkSystem); saved and restored across world reloads.
+        public int LiquidType = -1;
+
+        // A network never drains a machine output tank below this, so the tank keeps its liquid type.
+        const float MinTankKeep = 1f;
 
         const float TicksPerMinute = 3600f;
         const int InfiniteSourceThreshold = 100;
@@ -75,9 +84,9 @@ namespace Factorraria.Common.Networks
                 if (rateThisTick <= 0f) continue;
 
                 if (flow.Direction == att.MouthDirection)
-                    sinkBuffer.Add(LiquidEndpoint.ForMachine(att.Machine.InputLiquids, rateThisTick));
+                    sinkBuffer.Add(LiquidEndpoint.ForMachine(att.Machine, att.Machine.InputLiquids, rateThisTick));
                 else if (flow.Direction == att.MouthDirection.Opposite())
-                    sourceBuffer.Add(LiquidEndpoint.ForMachine(att.Machine.OutputLiquids, rateThisTick));
+                    sourceBuffer.Add(LiquidEndpoint.ForMachine(att.Machine, att.Machine.OutputLiquids, rateThisTick));
             }
 
             foreach (var att in WorldLiquidAttachments)
@@ -99,7 +108,6 @@ namespace Factorraria.Common.Networks
         void TransferBetween(List<LiquidEndpoint> sources, List<LiquidEndpoint> sinks)
         {
             resolvedSources.Clear();
-            int type = -1;
             float totalAvailable = 0f;
 
             foreach (var source in sources)
@@ -132,30 +140,32 @@ namespace Factorraria.Common.Networks
                     }
 
                     int worldType = (int)LiquidTypeRegistry.FromTileLiquidId((byte)tile.LiquidType);
-                    if (type != -1 && worldType != type) continue;
+                    if (LiquidType != -1 && worldType != LiquidType) continue;
 
                     if (bank < FullTileAmount) continue; // still banking toward a full tile
 
                     amountHere = infinite ? FullTileAmount : Math.Min(FullTileAmount, tile.LiquidAmount);
                     if (amountHere <= 0f) continue;
 
-                    type = worldType;
+                    LiquidType = worldType;   // the first source that actually produces fixes the network's liquid
                 }
                 else
                 {
-                    slot = FindSourceSlot(source.MachineSlots, type);
+                    slot = FindMachineSourceSlot(source);
                     if (slot == null) continue;
 
-                    type = slot.LiquidType;
-                    amountHere = Math.Min(source.RateThisTick, slot.Amount);
+                    amountHere = Math.Min(source.RateThisTick, slot.Amount - MinTankKeep);
                     if (amountHere <= 0f) continue;
+
+                    LiquidType = slot.LiquidType;   // no-op when already typed
                 }
 
                 resolvedSources.Add((source, slot, amountHere));
                 totalAvailable += amountHere;
             }
 
-            if (type == -1 || totalAvailable <= 0f) return;
+            if (LiquidType == -1 || totalAvailable <= 0f) return;
+            int type = LiquidType;
 
             resolvedSinks.Clear();
             float totalAccepted = 0f;
@@ -203,25 +213,59 @@ namespace Factorraria.Common.Networks
             DepositToResolved(type, withdrawn);
         }
 
-        static LiquidStack FindSourceSlot(LiquidStack[] slots, int requiredType)
+        // Which output tank of this machine does THIS network pump from?
+        LiquidStack FindMachineSourceSlot(LiquidEndpoint source)
         {
-            foreach (var slot in slots)
+            // Typed network: the first tank holding its liquid that is above the floor.
+            if (LiquidType != -1)
             {
-                if (slot.IsEmpty) continue;
-                if (requiredType != -1 && slot.LiquidType != requiredType) continue;
-                return slot;
+                foreach (var tank in source.MachineSlots)
+                    if (tank.LiquidType == LiquidType && tank.Amount > MinTankKeep) return tank;
+                return null;
+            }
+
+            // Unset network: the first pumpable tank that no sibling network of that liquid already pumps from.
+            foreach (var tank in source.MachineSlots)
+            {
+                if (tank.IsEmpty || tank.Amount <= MinTankKeep) continue;
+                if (IsPumpedOutBySibling(source.Machine, tank.LiquidType)) continue;
+                return tank;
             }
             return null;
         }
 
-        static LiquidStack FindSinkSlot(LiquidStack[] slots, int requiredType)
+        bool IsPumpedOutBySibling(BaseMachine machine, int liquidType)
         {
+            foreach (LiquidNetwork other in LiquidNetworkSystem.ActiveNetworks)
+                if (other != this && other.LiquidType == liquidType && other.IsPumpingOutOf(machine)) return true;
+            return false;
+        }
+
+        // Same in/out test Tick() uses: flow leaves the machine through this attachment.
+        bool IsPumpingOutOf(BaseMachine machine)
+        {
+            foreach (var att in MachineAttachments)
+            {
+                if (att.Machine != machine) continue;
+                if (ResolvedFlow.TryGetValue(att.PipePosition, out var flow) &&
+                    flow.Magnitude > 0f && flow.Direction == att.MouthDirection.Opposite())
+                    return true;
+            }
+            return false;
+        }
+
+        // Which input tank receives the liquid? A tank already holding it wins (even if full:
+        // that blocks the pump); otherwise the first empty tank that accepts the liquid.
+        static LiquidStack FindSinkSlot(LiquidStack[] slots, int liquidType)
+        {
+            LiquidStack firstEmpty = null;
             foreach (var slot in slots)
             {
-                if (slot.IsEmpty || slot.LiquidType == requiredType)
-                    return slot;
+                if (!slot.Accepts(liquidType)) continue;
+                if (slot.IsEmpty) { firstEmpty ??= slot; continue; }
+                if (slot.LiquidType == liquidType) return slot;
             }
-            return null;
+            return firstEmpty;
         }
 
         float WithdrawFromResolved(float amount)
@@ -241,10 +285,10 @@ namespace Factorraria.Common.Networks
 
         static float WithdrawFromSlot(LiquidStack slot, float amount)
         {
-            float take = Math.Min(amount, slot.Amount);
+            // Clamped here too: two attachments of one machine can resolve the same tank in a tick.
+            float take = Math.Min(amount, Math.Max(0f, slot.Amount - MinTankKeep));
             slot.Amount -= take;
-            if (slot.Amount <= 0f) slot.LiquidType = -1;
-            return take;
+            return take;   // never reaches 0, so the tank keeps its liquid type
         }
 
         float WithdrawFromWorldTile(Point pos, float amount)
@@ -371,8 +415,8 @@ namespace Factorraria.Common.Networks
         public Point WorldPos;
         public float RateThisTick;
 
-        public static LiquidEndpoint ForMachine(LiquidStack[] slots, float rate) =>
-            new LiquidEndpoint { IsWorld = false, MachineSlots = slots, RateThisTick = rate };
+        public static LiquidEndpoint ForMachine(BaseMachine machine, LiquidStack[] slots, float rate) =>
+            new LiquidEndpoint { IsWorld = false, Machine = machine, MachineSlots = slots, RateThisTick = rate };
 
         public static LiquidEndpoint ForWorld(Point pos, float rate) =>
             new LiquidEndpoint { IsWorld = true, WorldPos = pos, RateThisTick = rate };

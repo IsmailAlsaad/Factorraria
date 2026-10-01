@@ -15,6 +15,9 @@ namespace Factorraria.Common.Machines
         public int MaxIngredientCount { get; private set; } = 0;
         public int MinIngredientCount { get; private set; } = 0;
 
+        readonly HashSet<int> inputLiquidTypes = new();
+        public bool ConsumesLiquid(int liquidType) => inputLiquidTypes.Contains(liquidType);
+
         public virtual RecipeBook Add(CustomRecipe recipe) { All.Add(recipe); return this; }
 
         // Pull vanilla recipes that need this station into the book.
@@ -120,9 +123,14 @@ namespace Factorraria.Common.Machines
                 MaxIngredientCount = Math.Max(MaxIngredientCount, n);
                 if (n > 0) MinIngredientCount = Math.Min(MinIngredientCount, n);  // liquid-only recipes must not drag the min to 0
             }
+            inputLiquidTypes.Clear();
+            foreach (CustomRecipe r in All)
+                foreach (LiquidIngredient need in r.LiquidInputs)
+                    inputLiquidTypes.Add(need.LiquidType);
+
             if (MinIngredientCount == int.MaxValue) MinIngredientCount = 0;       // no recipe uses items at all
         }
 
-        public void Clear() { All.Clear(); Groups.Clear(); MaxIngredientCount = 0; MinIngredientCount = 0; imported.Clear(); }
+        public void Clear() { All.Clear(); inputLiquidTypes.Clear(); Groups.Clear(); MaxIngredientCount = 0; MinIngredientCount = 0; imported.Clear(); }
     }
 }

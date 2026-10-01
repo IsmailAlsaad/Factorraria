@@ -34,13 +34,17 @@ namespace Factorraria.Common.Systems
             if (networkNeedsRebuilding)
             {
                 RebuildNetworks(); // already calls ResolveFlow per network internally
+                RestoreSavedNetworkTypes();
                 networkNeedsRebuilding = false;
                 flowNeedsRecalculating = false;
             }
             else if (flowNeedsRecalculating)
             {
                 foreach (var network in ActiveNetworks)
+                {
                     ResolveFlow(network);
+                    network.LiquidType = -1;   // flow changed: the network re-decides its liquid
+                }
 
                 flowNeedsRecalculating = false;
             }
@@ -73,6 +77,7 @@ namespace Factorraria.Common.Systems
 
         public override void OnWorldUnload()
         {
+            pendingNetworkTypes.Clear();
             AllPipeTiles.Clear();
             ActiveNetworks.Clear();
 
@@ -83,6 +88,19 @@ namespace Factorraria.Common.Systems
         {
             List<int[]> pipePositions = AllPipeTiles.Select(p => new int[] { p.X, p.Y }).ToList();
             tag["AllPipeTiles"] = pipePositions;
+
+            // One anchor pipe + liquid NAME per typed network (names, not ids: ids are registration order).
+            var typedPipes = new List<int[]>();
+            var typedNames = new List<string>();
+            foreach (LiquidNetwork net in ActiveNetworks)
+            {
+                if (net.LiquidType == -1 || net.PipeTiles.Count == 0) continue;
+                Point anchor = net.PipeTiles.OrderBy(p => p.X).ThenBy(p => p.Y).First();
+                typedPipes.Add(new[] { anchor.X, anchor.Y });
+                typedNames.Add(LiquidTypeRegistry.Get(net.LiquidType).Name);
+            }
+            tag["NetworkTypePipes"] = typedPipes;
+            tag["NetworkTypeNames"] = typedNames;
         }
 
         public override void LoadWorldData(TagCompound tag)
@@ -96,10 +114,39 @@ namespace Factorraria.Common.Systems
                     AllPipeTiles.Add(new Point(pos[0], pos[1]));
                 }
             }
+
+            pendingNetworkTypes.Clear();
+            if (tag.ContainsKey("NetworkTypePipes") && tag.ContainsKey("NetworkTypeNames"))
+            {
+                var pipes = tag.GetList<int[]>("NetworkTypePipes");
+                var names = tag.GetList<string>("NetworkTypeNames");
+                for (int i = 0; i < Math.Min(pipes.Count, names.Count); i++)
+                    pendingNetworkTypes.Add((new Point(pipes[i][0], pipes[i][1]), names[i]));
+            }
             networkNeedsRebuilding = true;
         }
 
         static readonly Point[] Offsets = { new Point(0, -1), new Point(0, 1), new Point(-1, 0), new Point(1, 0) };
+
+        // Loaded from the world file, applied once after the first rebuild, then discarded.
+        static readonly List<(Point Anchor, string LiquidName)> pendingNetworkTypes = new();
+
+        void RestoreSavedNetworkTypes()
+        {
+            foreach (var (anchor, liquidName) in pendingNetworkTypes)
+            {
+                int type = LiquidTypeRegistry.definitions.FindIndex(d => d.Name == liquidName);
+                if (type == -1) continue;   // that liquid no longer exists
+
+                foreach (LiquidNetwork net in ActiveNetworks)
+                {
+                    if (!net.PipeTiles.Contains(anchor)) continue;
+                    net.LiquidType = type;
+                    break;
+                }
+            }
+            pendingNetworkTypes.Clear();
+        }
 
         void RebuildNetworks()
         {

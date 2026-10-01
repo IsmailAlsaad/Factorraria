@@ -63,7 +63,7 @@ namespace Factorraria.Common.Machines
 
         LiquidStack[] inputLiquids;
         LiquidStack[] outputLiquids;
-        public LiquidStack[] InputLiquids => inputLiquids ??= CreateLiquidArray(InputLiquidCount);
+        public LiquidStack[] InputLiquids => inputLiquids ??= CreateInputLiquids();
         public LiquidStack[] OutputLiquids => outputLiquids ??= CreateLiquidArray(OutputLiquidCount);
 
         static LiquidStack[] CreateLiquidArray(int count)
@@ -91,6 +91,21 @@ namespace Factorraria.Common.Machines
 
         protected virtual int RecipeDuration(CustomRecipe r) => r.DurationTicks ?? WorkDuration;
         protected virtual bool CanStartCraft(CustomRecipe recipe) => true;
+
+        LiquidStack[] CreateInputLiquids()
+        {
+            LiquidStack[] arr = CreateLiquidArray(InputLiquidCount);
+            for (int i = 0; i < arr.Length; i++)
+            {
+                int tank = i;   // capture a copy per tank
+                arr[i].Filter = type => AcceptsInputLiquid(tank, type);
+            }
+            return arr;
+        }
+
+        // What may the pipes put into input tank `tankIndex`? Default: anything a recipe consumes.
+        protected virtual bool AcceptsInputLiquid(int tankIndex, int liquidType) =>
+            Recipes == null || Recipes.ConsumesLiquid(liquidType);
 
         // Slot layout convention: [fuel slot (if any)] [ingredient slots...]
         public const int FuelSlotIndex = 0;

@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 
 namespace Factorraria.Common.Liquids
@@ -18,6 +19,10 @@ namespace Factorraria.Common.Liquids
         public float Capacity = 1000f;
 
         public bool IsEmpty => LiquidType == -1 || Amount <= 0f;
+
+        // Set on machine INPUT tanks: which liquids the pipes may put in here. null = anything.
+        public Func<int, bool> Filter;
+        public bool Accepts(int liquidType) => Filter == null || Filter(liquidType);
 
         public LiquidStack() { }
 

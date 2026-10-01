@@ -81,6 +81,7 @@ namespace Factorraria.Common.Systems
                         string text = $"[Liquid Net #{i + 1}]\n" +
                                       $"Pipes: {network.PipeTiles.Count}\n" +
                                       $"Max Rate: {network.MaxFlowRate}\n" +
+                                      $"Liquid: {(network.LiquidType == -1 ? "unset" : LiquidTypeRegistry.Get(network.LiquidType).Name)}\n" +
                                       $"Machines: {network.MachineAttachments.Count}\n" +
                                       $"World Sources: {network.WorldLiquidAttachments.Count}";
 
