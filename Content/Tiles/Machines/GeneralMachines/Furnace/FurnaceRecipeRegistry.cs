@@ -8,76 +8,36 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 {
     public static class FurnaceRecipeRegistry
     {
-        // List<Item> InputItems, Item OutputItem
-        public static List<CustomRecipe> SmeltingRecipes = new List<CustomRecipe>();
-
-        public static List<RecipeOutputGroup> SmeltingGroups = new List<RecipeOutputGroup>();
-
-        // int FuelItemID, int number of smelts
-        public static Dictionary<int, int> ValidFuels = new Dictionary<int, int>();
-
-        public static int MaxIngredientCount = 1;
+        public static readonly RecipeBook Book = new();
+        public static readonly FuelTable Fuels = new();
 
         public static void BuildFromExistingRecipes()
         {
-            SmeltingRecipes.Clear();
-
-            for (int i = 0; i < Main.recipe.Length; i++)
-            {
-                Recipe recipe = Main.recipe[i];
-
-                if(recipe == null)
-                {
-                    continue;
-                }
-
-                if (!recipe.requiredTile.Contains(TileID.Furnaces))
-                {
-                    continue;
-                }
-
-                CustomRecipe recipeData = new CustomRecipe(recipe.requiredItem, recipe.createItem);
-                SmeltingRecipes.Add(recipeData);
-
-                recipe.DisableRecipe();
-            }
-
+            Book.Clear();
+            Book.ImportVanillaRecipes(TileID.Furnaces);
             RegisterManualRecipes();
-            RegisterValidFuels();
+            Book.Rebuild();
 
-            SmeltingGroups.Clear();
-            SmeltingGroups.AddRange(RecipeOutputGroup.Build(SmeltingRecipes));
-
-            MaxIngredientCount = 1;
-            foreach (CustomRecipe r in SmeltingRecipes) 
-            {
-                MaxIngredientCount = Math.Max(MaxIngredientCount, r.Inputs.Count);
-            }
+            Fuels.Clear();
+            RegisterManualFuels();
+            Fuels.StackLimitRule = units => Math.Max(10 - units, 1);
         }
 
         static void RegisterManualRecipes()
         {
-            // any wood -> coal
-            if(RecipeGroup.recipeGroups.TryGetValue(RecipeGroupID.Wood, out RecipeGroup woodGroup))
+            if (RecipeGroup.recipeGroups.TryGetValue(RecipeGroupID.Wood, out RecipeGroup woodGroup))
             {
                 foreach (int itemID in woodGroup.ValidItems)
                 {
-                    Item item = new Item(itemID, 3);
-                    
-                    SmeltingRecipes.Add(new CustomRecipe(new List<Item> { item }, new Item(ItemID.Coal, 1)));
+                    Book.Add(new CustomRecipe(new List<Item> { new Item(itemID, 3) }, new Item(ItemID.Coal, 1)));
                 }
             }
-
-            // any plant -> ash
         }
 
-        static void RegisterValidFuels()
+        static void RegisterManualFuels()
         {
-            ValidFuels = new Dictionary<int, int>
-            {
-                {ItemID.Gel, 3},
-                {ItemID.Coal, 8}
-            };
+            Fuels.Add(ItemID.Gel, 3);
+            Fuels.Add(ItemID.Coal, 8);
         }
     }
 }

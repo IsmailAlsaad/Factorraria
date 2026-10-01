@@ -5,8 +5,8 @@ namespace Factorraria.Common.PowerGrid
 {
     public class PowerNetwork
     {
-        public List<ElectricConsumerMachine> electricConsumers = new List<ElectricConsumerMachine>();
-        public List<ElectricProducerMachine> electricProducers = new List<ElectricProducerMachine>();
+        public List<IElectricConsumer> electricConsumers = new List<IElectricConsumer>();
+        public List<IElectricProducer> electricProducers = new List<IElectricProducer>();
 
         public void Tick()
         {

@@ -7,8 +7,6 @@ namespace Factorraria.Content.Tiles.Machines.GelBurner
     {
         public override int ValidTileType => TileID.SteampunkBoiler;
         public override float PowerSupply => 500f;
-        protected override int InputSlotCount => 1;
-
         public override void Update()
         {
             base.Update();

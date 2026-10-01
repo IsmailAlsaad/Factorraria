@@ -14,139 +14,14 @@ using Terraria.ObjectData;
 
 namespace Factorraria.Common.Machines
 {
-    public readonly struct RecipeIngredient
-    {
-        public readonly int Type;
-        public readonly int Stack;
-
-        public RecipeIngredient(int type, int stack)
-        {
-            Type = type;
-            Stack = stack;
-        }
-    }
-
-    /// <summary>All CustomRecipes of one machine that produce the same output item type.</summary>
-    public class RecipeOutputGroup
-    {
-        public int OutputType { get; }
-        public List<CustomRecipe> Recipes { get; } = new List<CustomRecipe>();
-
-        /// <summary>Most ingredient slots any recipe in this group needs.</summary>
-        public int MaxInputCount { get; private set; } = 1;
-
-        public RecipeOutputGroup(int outputType)
-        {
-            OutputType = outputType;
-        }
-
-        public void Add(CustomRecipe recipe)
-        {
-            Recipes.Add(recipe);
-            MaxInputCount = Math.Max(MaxInputCount, recipe.Inputs.Count);
-        }
-
-        /// <summary>Groups recipes by output type, keeping first-appearance order.</summary>
-        public static List<RecipeOutputGroup> Build(IEnumerable<CustomRecipe> recipes)
-        {
-            var groups = new List<RecipeOutputGroup>();
-            var byOutput = new Dictionary<int, RecipeOutputGroup>();
-
-            foreach (CustomRecipe recipe in recipes)
-            {
-                int type = recipe.Output.Type;
-                if (!byOutput.TryGetValue(type, out RecipeOutputGroup group))
-                {
-                    group = new RecipeOutputGroup(type);
-                    byOutput[type] = group;
-                    groups.Add(group);
-                }
-                group.Add(recipe);
-            }
-
-            return groups;
-        }
-    }
-
-    public class CustomRecipe
-    {
-        public List<RecipeIngredient> Inputs { get; set; }
-        public RecipeIngredient Output { get; set; }
-
-        public CustomRecipe(List<RecipeIngredient> inputs, RecipeIngredient output)
-        {
-            Inputs = inputs;
-            Output = output;
-        }
-
-        public CustomRecipe(List<Item> inputs, Item output)
-        {
-            Inputs = inputs.Select(item => new RecipeIngredient(item.type, item.stack)).ToList();
-            Output = new RecipeIngredient(output.type, output.stack);
-        }
-
-        public static bool TryGetRecipeFromList(List<CustomRecipe> recipeList, List<Item> InputSlots, out CustomRecipe outputRecipe)
-        {
-            outputRecipe = null;
-
-            int activeSlotCount = 0;
-            for (int i = 0; i < InputSlots.Count; i++)
-            {
-                Item slot = InputSlots[i];
-                if (slot != null && !slot.IsAir && slot.stack > 0)
-                {
-                    activeSlotCount++;
-                }
-            }
-
-            foreach (CustomRecipe recipe in recipeList)
-            {
-                if (recipe.Inputs.Count != activeSlotCount)
-                    continue;
-
-                bool isMatch = true;
-
-                foreach (RecipeIngredient req in recipe.Inputs)
-                {
-                    int totalFoundInMachine = 0;
-
-                    for (int i = 0; i < InputSlots.Count; i++)
-                    {
-                        Item slot = InputSlots[i];
-                        if (slot != null && !slot.IsAir && slot.type == req.Type)
-                        {
-                            totalFoundInMachine += slot.stack;
-                        }
-                    }
-
-                    if (totalFoundInMachine < req.Stack)
-                    {
-                        isMatch = false;
-                        break;
-                    }
-                }
-
-                if (isMatch)
-                {
-                    outputRecipe = recipe;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }
-
     public abstract class BaseMachine : ModTileEntity
     {
         #region Variables
         public abstract int ValidTileType { get; }
-        public bool isOn;
+        public bool isOn { get; set; }
         public bool isWorking { get; protected set; }
         protected int WorkProgress;
         protected virtual int WorkDuration => 120; // 60 ticks = 1 second, override per machine
-
-        protected virtual int InputSlotCount => 0;
         protected virtual int OutputSlotCount => 0;
 
         public CustomRecipe SelectedRecipe;    // the recipe the machine is actually running (matched from the slots each tick)
@@ -162,7 +37,7 @@ namespace Factorraria.Common.Machines
         // Used to save and restore the player's manual selection. null = machine has no recipe list.
         protected virtual List<RecipeOutputGroup> RecipeGroups => null;
 
-        public int OutputMaxStack = 10;
+        public int OutputMaxStack = Item.CommonMaxStack;
         public Point16 cornerPosition;
         public Vector2 MachineCenter;
         public int MachineWidth;
@@ -203,127 +78,347 @@ namespace Factorraria.Common.Machines
 
         #endregion
 
-        public override bool IsTileValidForEntity(int x, int y)
+        #region Capabilities (override to opt in)
+
+        protected virtual FuelTable AcceptedFuels => null;          // null = no fuel slot
+        public virtual RecipeBook Recipes => null;                  // null = no recipe processing
+        protected virtual int FuelPerCraft => 1;                    // fuel units one finished craft burns
+        protected virtual int RecipeDuration(CustomRecipe r) => r.DurationTicks ?? WorkDuration;
+        protected virtual bool CanStartCraft(CustomRecipe recipe) => true;
+
+        // Slot layout convention: [fuel slot (if any)] [ingredient slots...]
+        public const int FuelSlotIndex = 0;
+        public const int FirstIngredientSlot = FuelSlotIndex + 1;
+        public int FuelSlotCount => AcceptedFuels == null ? 0 : 1;
+        protected virtual int InputSlotCount => FuelSlotCount + (Recipes?.MaxIngredientCount ?? 0);
+        protected int IngredientStart => FuelSlotCount;
+        public int IngredientSlotCount => Math.Max(0, InputSlotCount - FuelSlotCount);
+
+        // How many ingredient slots are shown/used right now
+        public int ActiveIngredientCount
         {
-            Tile tile = Framing.GetTileSafely(x, y);
-            return tile.HasTile && tile.TileType == ValidTileType;
-        }
-
-        public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
-        {
-            // Multiplayer stuff I don't know
-            //if (Main.netMode == NetmodeID.MultiplayerClient)
-            //{
-            //    // Synchronize the 3x2 tile area across the network // should somehow make it per tileArea
-            //    NetMessage.SendTileSquare(Main.myPlayer, i, j, 3, 2);
-            //    NetMessage.SendData(MessageID.TileEntityPlacement, number: -1, number2: i, number3: j, number4: Type);
-            //    return -1;
-            //}
-
-            Tile tile = Framing.GetTileSafely(i, j);
-            if (!tile.HasTile || tile.TileType != ValidTileType)
-                return -1;
-
-            int id = Place(i, j);
-            if (id != -1 && ByID.TryGetValue(id, out TileEntity entity))
+            get
             {
-                PowerGridSystem.RegisterMachineToMasterList(entity);
-                LiquidNetworkSystem.networkNeedsRebuilding = true;
+                if (IngredientSlotCount == 0) return 0;
+                if (Recipes == null) return IngredientSlotCount;    // hand-written machine: every slot is live
+                return ManualGroup == null ? 1 : Math.Clamp(ManualGroup.MaxInputCount, 1, IngredientSlotCount);
             }
-            return id;
         }
-        public override void OnKill()
-        {
-            LiquidNetworkSystem.networkNeedsRebuilding = true;
-            ModContent.GetInstance<MachineUISystem>().NotifyMachineKilled(this);
-        }
+
+        FuelModule fuel;
+        public FuelModule Fuel => fuel ??= AcceptedFuels == null ? null : new FuelModule(AcceptedFuels);
+
+        bool IsElectric => this is IElectricConsumer || this is IElectricProducer;
+
+        #endregion
+
+        #region Tick
 
         public override void Update()
         {
             ScanVItems();
+            if (!IsElectric) isOn = true;       // only power-network machines are switched by the grid
+            ReleaseHiddenIngredientSlots();
+            ProcessRecipes();                   // does nothing unless Recipes is overridden
         }
 
-        // Recipes whose ingredients this machine accepts from conveyors right now.
-        protected virtual IEnumerable<CustomRecipe> GetPickupRecipes() =>
-            SelectedRecipe != null ? new[] { SelectedRecipe } : Array.Empty<CustomRecipe>();
+        void ProcessRecipes()
+        {
+            if (Recipes == null) return;
+
+            bool ready = TryMatchRecipe() && CanStoreOutputs(SelectedRecipe) && CanStartCraft(SelectedRecipe);
+            if (!ready) { WorkProgress = 0; isWorking = false; return; }
+
+            if (Fuel != null && !Fuel.HasFuelAvailable(InputSlots)) { isWorking = false; return; }
+
+            isWorking = true;     // counts toward the grid's demand even during a brownout
+            if (!isOn) return;    // browned out: freeze progress, burn nothing
+
+            Fuel?.TryEnsureFuel(InputSlots);
+            WorkProgress++;
+            if (WorkProgress >= RecipeDuration(SelectedRecipe)) FinishRecipe();
+        }
+
+        void FinishRecipe()
+        {
+            CustomRecipe recipe = SelectedRecipe;
+            ConsumeInputs(recipe);
+            ProduceOutputs(recipe);
+            Fuel?.Consume(FuelPerCraft);
+            WorkProgress = 0;
+            OnRecipeFinished(recipe);
+        }
+
+        protected virtual void OnRecipeFinished(CustomRecipe recipe) { }   // sounds, dust, extra effects
+
+        public float WorkFraction => SelectedRecipe == null ? 0f : Math.Clamp(WorkProgress / (float)RecipeDuration(SelectedRecipe), 0f, 1f);
+        public float GetFuelBurnFraction() => (Fuel == null || SelectedRecipe == null) ? -1f : Fuel.GetBurnFraction(WorkFraction * FuelPerCraft);
+
+        public override void OnKill()
+        {
+            LiquidNetworkSystem.networkNeedsRebuilding = true;
+            if (IsElectric)
+            {
+                PowerGridSystem.AllMachines.Remove(this);
+                PowerGridSystem.gridNeedsRebuilding = true;
+            }
+            ModContent.GetInstance<MachineUISystem>().NotifyMachineKilled(this);
+        }
+
+        #endregion
+
+        #region Recipe matching, consuming, producing
+
+        List<Item> ingredientBuffer;
+        List<Item> GetIngredientItems()
+        {
+            ingredientBuffer ??= new List<Item>();
+            ingredientBuffer.Clear();
+            for (int s = IngredientStart; s < IngredientStart + ActiveIngredientCount; s++)
+                ingredientBuffer.Add(InputSlots[s]);
+            return ingredientBuffer;
+        }
+
+        bool TryMatchRecipe()
+        {
+            List<CustomRecipe> candidates = ManualGroup != null ? ManualGroup.Recipes : Recipes.All;
+            return CustomRecipe.TryGetRecipeFromList(candidates, GetIngredientItems(), out SelectedRecipe, InputLiquids);
+        }
+
+        void ConsumeInputs(CustomRecipe recipe)
+        {
+            foreach (RecipeIngredient req in recipe.Inputs)
+            {
+                int remaining = req.Stack;
+                for (int s = IngredientStart; s < IngredientStart + ActiveIngredientCount && remaining > 0; s++)
+                {
+                    Item slot = InputSlots[s];
+                    if (slot.IsAir || slot.type != req.Type) continue;
+
+                    int take = Math.Min(remaining, slot.stack);
+                    slot.stack -= take;
+                    remaining -= take;
+                    if (slot.stack <= 0) InputSlots[s] = new Item();
+                }
+            }
+
+            foreach (LiquidIngredient need in recipe.LiquidInputs)
+            {
+                foreach (LiquidStack tank in InputLiquids)
+                {
+                    if (tank.IsEmpty || tank.LiquidType != need.LiquidType || tank.Amount < need.Amount) continue;
+                    tank.Amount -= need.Amount;
+                    if (tank.Amount <= 0f) tank.LiquidType = -1;
+                    break;
+                }
+            }
+        }
+
+        // "claimed" is a bitmask of output slots an earlier output of the same recipe already reserved,
+        // so two outputs can't both count on the same empty slot.
+        int FindOutputSlot(RecipeIngredient output, int claimed)
+        {
+            if (output.Stack > OutputMaxStack) return -1;
+            int firstEmpty = -1;
+            for (int i = 0; i < OutputSlots.Length; i++)
+            {
+                if ((claimed & (1 << i)) != 0) continue;
+                Item slot = OutputSlots[i];
+                if (slot.IsAir) { if (firstEmpty == -1) firstEmpty = i; }
+                else if (slot.type == output.Type && slot.stack + output.Stack <= OutputMaxStack) return i;
+            }
+            return firstEmpty;
+        }
+
+        int FindLiquidOutputSlot(LiquidIngredient output, int claimed)
+        {
+            for (int i = 0; i < OutputLiquids.Length; i++)
+            {
+                if ((claimed & (1 << i)) != 0) continue;
+                LiquidStack tank = OutputLiquids[i];
+                if (tank.IsEmpty || (tank.LiquidType == output.LiquidType && tank.Amount + output.Amount <= tank.Capacity))
+                    return i;
+            }
+            return -1;
+        }
+
+        bool CanStoreOutputs(CustomRecipe recipe)
+        {
+            int claimed = 0;
+            if (!IsOnConveyorFloor())        // a conveyor floor swallows item outputs, so slots don't matter
+            {
+                foreach (RecipeIngredient o in recipe.Outputs)
+                {
+                    int slot = FindOutputSlot(o, claimed);
+                    if (slot == -1) return false;
+                    claimed |= 1 << slot;
+                }
+            }
+
+            claimed = 0;
+            foreach (LiquidIngredient o in recipe.LiquidOutputs)
+            {
+                int slot = FindLiquidOutputSlot(o, claimed);
+                if (slot == -1) return false;
+                claimed |= 1 << slot;
+            }
+            return true;
+        }
+
+        void ProduceOutputs(CustomRecipe recipe)
+        {
+            foreach (RecipeIngredient o in recipe.Outputs)
+            {
+                if (IsOnConveyorFloor())
+                {
+                    Vector2 tile = MachineCenter / 16f;
+                    VirtualItemSystem.SpawnVirtualItem(o.Type, o.Stack, (int)tile.X, (int)tile.Y);
+                    continue;
+                }
+
+                int slot = FindOutputSlot(o, 0);
+                if (slot == -1) continue;
+                int existing = OutputSlots[slot].IsAir ? 0 : OutputSlots[slot].stack;
+                OutputSlots[slot] = new Item(o.Type, o.Stack + existing);
+            }
+
+            foreach (LiquidIngredient o in recipe.LiquidOutputs)
+            {
+                int slot = FindLiquidOutputSlot(o, 0);
+                if (slot == -1) continue;
+                LiquidStack tank = OutputLiquids[slot];
+                if (tank.IsEmpty) tank.Amount = 0f;
+                tank.LiquidType = o.LiquidType;
+                tank.Amount += o.Amount;
+            }
+        }
+
+        void ReleaseHiddenIngredientSlots()
+        {
+            for (int s = IngredientStart + ActiveIngredientCount; s < InputSlots.Length; s++)
+            {
+                Item item = InputSlots[s];
+                if (item.IsAir) continue;
+                Item.NewItem(new EntitySource_TileEntity(this), Position.X * 16 + 16, Position.Y * 16 + 8, 16, 16, item.type, item.stack);
+                InputSlots[s] = new Item();
+            }
+        }
+
+        #endregion
+
+        #region Conveyor intake
 
         void ScanVItems()
         {
             if (InputSlotCount == 0) return;
 
-            var pickupRecipes = GetPickupRecipes();
-            if (pickupRecipes == null || !pickupRecipes.Any()) return;   // same effect as the old SelectedRecipe == null check
-
             VirtualItem vItem = null;
-
-            // scan hitbox for vItems (stops at the first one found)
             for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth && vItem == null; i++)
                 for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight && vItem == null; j++)
                     vItem = VirtualItemSystem.GetVirtualItemAtTile(i, j);
 
             if (vItem == null) return;
-
-            bool isItemInRecipe = false;
-            int maxStack = 0;
-
-            foreach (CustomRecipe recipe in pickupRecipes)
-            {
-                if (ManualGroup == null && recipe.Inputs.Count != 1)
-                    continue;
-
-                foreach (RecipeIngredient ingredient in recipe.Inputs)
-                {
-                    if (vItem.itemType != ingredient.Type) continue;
-
-                    isItemInRecipe = true;
-                    maxStack = Math.Max(maxStack, ingredient.Stack * 2);   // an item can now be in several recipes of the group; take the largest need
-                    break;
-                }
-            }
-
-            int ValidSlotIndex = -1;
-            int EmptySlotIndex = -1;
-            bool foundMatching = false;
-
-            for (int i = 0; i < InputSlotCount; i++)
-            {
-                if (InputSlots[i].IsAir)
-                    EmptySlotIndex = i;
-
-                if (InputSlots[i].type == vItem.itemType)
-                {
-                    ValidSlotIndex = i;
-                    foundMatching = true;
-                    break;
-                }
-            }
-
-            if (!foundMatching)
-                ValidSlotIndex = EmptySlotIndex;
-
-            PickUpVItems(vItem, ValidSlotIndex, isItemInRecipe, maxStack);
+            if (!TryGetIntakeSlot(vItem.itemType, out int slot, out int limit)) return;
+            MoveVItemIntoSlot(vItem, slot, limit);
         }
 
-        public virtual void PickUpVItems(VirtualItem vItem, int ValidSlotIndex, bool isItemInRecipe, int maxStack)
+        // Override for special intake rules (e.g. a machine that only takes items when a tank is full).
+        protected virtual bool TryGetIntakeSlot(int itemType, out int slot, out int limit)
         {
-            if (!isItemInRecipe)
+            if (TryGetIngredientIntake(itemType, out slot, out limit)) return true;   // ingredients first (same priority the furnace had)
+
+            if (Fuel != null && Fuel.CanAccept(itemType))
             {
-                return;
+                slot = FuelSlotIndex;
+                limit = Fuel.StackLimit(itemType);
+                return true;
             }
 
-            if (InputSlots[ValidSlotIndex].stack < maxStack)
-            {
-                int spaceLeft = maxStack - InputSlots[ValidSlotIndex].stack;
-                int amountToAdd = Math.Min(spaceLeft, vItem.stackSize);
-
-                InputSlots[ValidSlotIndex] = new Item(vItem.itemType, amountToAdd + InputSlots[ValidSlotIndex].stack);
-                vItem.stackSize -= amountToAdd;
-
-                // play pickup animation for vItem to machineCenter
-
-                return;
-            }
+            slot = -1; limit = 0;
+            return false;
         }
+
+        bool TryGetIngredientIntake(int itemType, out int slot, out int limit)
+        {
+            slot = -1; limit = 0;
+            if (ActiveIngredientCount == 0) return false;
+
+            foreach (CustomRecipe recipe in GetPickupRecipes())
+            {
+                if (ManualGroup == null && recipe.Inputs.Count != 1) continue;   // auto mode only accepts single-ingredient recipes
+                foreach (RecipeIngredient ing in recipe.Inputs)
+                {
+                    if (ing.Type != itemType) continue;
+                    limit = Math.Max(limit, ing.Stack * 2);
+                    break;
+                }
+            }
+            if (limit == 0) return false;
+
+            slot = FindIngredientSlotFor(itemType);
+            return slot != -1;
+        }
+
+        protected virtual IEnumerable<CustomRecipe> GetPickupRecipes()
+        {
+            if (Recipes != null) return ManualGroup != null ? ManualGroup.Recipes : Recipes.All;
+            return SelectedRecipe != null ? new[] { SelectedRecipe } : Array.Empty<CustomRecipe>();
+        }
+
+        void MoveVItemIntoSlot(VirtualItem vItem, int slot, int limit)
+        {
+            Item target = InputSlots[slot];
+            if (!target.IsAir && target.type != vItem.itemType) return;
+
+            int space = limit - target.stack;
+            if (space <= 0) return;
+
+            int amount = Math.Min(space, vItem.stackSize);
+            InputSlots[slot] = new Item(vItem.itemType, target.stack + amount);
+            vItem.stackSize -= amount;
+        }
+
+        int FindIngredientSlotFor(int itemType)
+        {
+            if (!FitsWithHeldIngredients(itemType)) return -1;
+
+            int firstEmpty = -1;
+            for (int s = IngredientStart; s < IngredientStart + ActiveIngredientCount; s++)
+            {
+                Item slot = InputSlots[s];
+                if (slot.IsAir) { if (firstEmpty == -1) firstEmpty = s; }
+                else if (slot.type == itemType) return s;
+            }
+            return firstEmpty;
+        }
+
+        bool FitsWithHeldIngredients(int itemType)
+        {
+            if (ManualGroup == null) return true;
+
+            foreach (CustomRecipe recipe in ManualGroup.Recipes)
+            {
+                if (!RecipeUsesItem(recipe, itemType)) continue;
+
+                bool fitsHeld = true;
+                for (int s = IngredientStart; s < IngredientStart + ActiveIngredientCount && fitsHeld; s++)
+                {
+                    Item held = InputSlots[s];
+                    if (!held.IsAir && !RecipeUsesItem(recipe, held.type)) fitsHeld = false;
+                }
+                if (fitsHeld) return true;
+            }
+            return false;
+        }
+
+        static bool RecipeUsesItem(CustomRecipe recipe, int itemType)
+        {
+            foreach (RecipeIngredient input in recipe.Inputs)
+                if (input.Type == itemType) return true;
+            return false;
+        }
+
+        #endregion
 
         public bool IsOnConveyorFloor()
         {
@@ -384,8 +479,14 @@ namespace Factorraria.Common.Machines
             {
                 tag["ManualGroupOutput"] = new Item(ManualGroup.OutputType, 1);
             }
-        }
 
+            tag["WorkProgress"] = WorkProgress;
+            if (Fuel != null) 
+            { 
+                tag["FuelRemaining"] = Fuel.Remaining; 
+                tag["FuelCapacity"] = Fuel.Capacity; 
+            }
+        }
         public override void LoadData(TagCompound tag)
         {
             for (int i = 0; i < InputSlots.Length; i++)
@@ -412,15 +513,49 @@ namespace Factorraria.Common.Machines
             MachineHeight = tag.GetInt("MachineHeight");
             MachineWidth = tag.GetInt("MachineWidth");
 
-            if (RecipeGroups != null && tag.ContainsKey("ManualGroupOutput"))
+            if (Recipes != null && tag.ContainsKey("ManualGroupOutput"))
             {
                 Item saved = tag.Get<Item>("ManualGroupOutput");
-                RecipeOutputGroup group = saved.IsAir ? null : RecipeGroups.FirstOrDefault(g => g.OutputType == saved.type);
+                RecipeOutputGroup group = saved.IsAir ? null : Recipes.Groups.FirstOrDefault(g => g.OutputType == saved.type);
+
                 if (group != null)
                 {
                     SetManualGroup(group);
                 }
             }
+
+            WorkProgress = tag.GetInt("WorkProgress");
+            Fuel?.Restore(tag.GetInt("FuelRemaining"), tag.GetInt("FuelCapacity"));
         }
+        
+        public override bool IsTileValidForEntity(int x, int y)
+        {
+            Tile tile = Framing.GetTileSafely(x, y);
+            return tile.HasTile && tile.TileType == ValidTileType;
+        }
+        public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
+        {
+            // Multiplayer stuff I don't know
+            //if (Main.netMode == NetmodeID.MultiplayerClient)
+            //{
+            //    // Synchronize the 3x2 tile area across the network // should somehow make it per tileArea
+            //    NetMessage.SendTileSquare(Main.myPlayer, i, j, 3, 2);
+            //    NetMessage.SendData(MessageID.TileEntityPlacement, number: -1, number2: i, number3: j, number4: Type);
+            //    return -1;
+            //}
+
+            Tile tile = Framing.GetTileSafely(i, j);
+            if (!tile.HasTile || tile.TileType != ValidTileType)
+                return -1;
+
+            int id = Place(i, j);
+            if (id != -1 && ByID.TryGetValue(id, out TileEntity entity))
+            {
+                PowerGridSystem.RegisterMachineToMasterList(entity);
+                LiquidNetworkSystem.networkNeedsRebuilding = true;
+            }
+            return id;
+        }
+
     }
 }

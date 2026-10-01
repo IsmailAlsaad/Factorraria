@@ -1,6 +1,8 @@
 ﻿using Factorraria.Common.Machines;
 using Factorraria.Content.Configs;
+using Factorraria.Content.UI;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
@@ -81,6 +83,38 @@ namespace Factorraria.Common.UI
             }
 
             Panel.Recalculate();
+        }
+
+        protected const float SlotSize = 54f;
+
+        protected MachineUIElementEntry InputSlotEntry(int slotIndex, Vector2 pos, Func<bool> isVisible = null) =>
+            new MachineUIElementEntry(
+                new UIItemSlotWrapper(ItemSlot.Context.ChestItem,
+                    () => CurrentEntity.InputSlots[slotIndex],
+                    v => CurrentEntity.InputSlots[slotIndex] = v,
+                    isVisible),
+                pos, new Vector2(SlotSize, SlotSize));
+
+        protected MachineUIElementEntry OutputSlotEntry(int slotIndex, Vector2 pos) =>
+            new MachineUIElementEntry(
+                new UIItemSlotWrapper(ItemSlot.Context.ChestItem,
+                    () => CurrentEntity.OutputSlots[slotIndex],
+                    v => CurrentEntity.OutputSlots[slotIndex] = v),
+                pos, new Vector2(SlotSize, SlotSize));
+
+        protected MachineUIElementEntry FuelSlotEntry(Vector2 pos) => InputSlotEntry(BaseMachine.FuelSlotIndex, pos);
+
+        protected MachineUIElementEntry InputTankEntry(int tankIndex, Vector2 pos) =>
+            new MachineUIElementEntry(new LiquidTankUIElement(() => CurrentEntity.InputLiquids[tankIndex]), pos, new Vector2(16, 84));
+
+        protected MachineUIElementEntry OutputTankEntry(int tankIndex, Vector2 pos) =>
+            new MachineUIElementEntry(new LiquidTankUIElement(() => CurrentEntity.OutputLiquids[tankIndex]), pos, new Vector2(16, 84));
+
+        protected void AddRecipePicker(List<MachineUIElementEntry> list, RecipeBook book, Vector2 buttonPos, Vector2 browserPos)
+        {
+            var browser = new RecipeBrowserPanel(book.Groups, () => CurrentEntity.ManualGroup, g => CurrentEntity.SetManualGroup(g));
+            list.Add(new MachineUIElementEntry(browser, browserPos, new Vector2(155, 200)));
+            list.Add(new MachineUIElementEntry(new RecipeSelectHammerIcon(browser), buttonPos, new Vector2(24, 24)));
         }
     }
 }
