@@ -83,6 +83,7 @@ namespace Factorraria.Common.UI
         const float SearchHeight = 24f;
         RecipeSearchBar searchBar;
         string searchFilter = "";
+        bool listDirty;
 
         readonly List<RecipeOutputGroup> machineGroups;
         readonly Func<RecipeOutputGroup> getSelectedGroup;
@@ -107,6 +108,7 @@ namespace Factorraria.Common.UI
                 var cell = new RecipeElement(machineGroups[i], i);
                 cell.Selected = ReferenceEquals(machineGroups[i], current);  // restores the highlight when the UI reopens
                 cell.OnSelected = SelectRecipe;
+                cell.SetZoomScale(zoom);
                 recipeList.Add(cell);
             }
 
@@ -150,9 +152,9 @@ namespace Factorraria.Common.UI
             searchBar = new RecipeSearchBar(text =>
             {
                 searchFilter = text;
-                PopulateRecipeList();
-                scrollbar.ViewPosition = 0f;
+                listDirty = true;
             });
+
             Append(searchBar);
             Append(scrollbar);
             Append(recipeList);
@@ -164,6 +166,13 @@ namespace Factorraria.Common.UI
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
+
+            if (listDirty)
+            {
+                listDirty = false;
+                PopulateRecipeList();
+                scrollbar.ViewPosition = 0f;
+            }
 
             if (!showPanel)
             {
