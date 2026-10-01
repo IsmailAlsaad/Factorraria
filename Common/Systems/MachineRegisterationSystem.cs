@@ -1,4 +1,4 @@
-﻿using Factorraria.Common.UI;
+using Factorraria.Common.UI;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Motors;
 using Factorraria.Content.Tiles.Machines.Autohammer;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace;
@@ -7,6 +7,8 @@ using Factorraria.Content.Tiles.Machines.Solidifier;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier;
+
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine;
 
 namespace Factorraria.Common.Machines
 {
@@ -19,6 +21,7 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.Solidifier, new SolidifierUIState());
             MachineUIRegistry.Register(TileID.SteampunkBoiler, new GelBurnerUIState());
             MachineUIRegistry.Register(TileID.Autohammer, new AutohammerUIState());
+            MachineUIRegistry.Register(TileID.IceMachine, new IceMachineUIState());
             // etc...
         }
 
@@ -46,6 +49,14 @@ namespace Factorraria.Common.Machines
                 entity => entity.InputLiquids[1]);
 
 
+            MachineVisualRegistry.Register<IceMachineTileEntity>(TileID.IceMachine,
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/IceMachine/IceMachine_On",
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/IceMachine/IceMachine_Off");
+            MachineVisualRegistry.RegisterLiquidOverlay(TileID.IceMachine,
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/IceMachine/IceMachine_On_FirstLiquid",
+                entity => entity.InputLiquids[0]);
+
+
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_On",
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_Off");
@@ -61,6 +72,7 @@ namespace Factorraria.Common.Machines
             // Register every machine's Recipes here
             FurnaceRecipeRegistry.BuildRecipes();
             SolidifierRecipeRegistry.BuildRecipes();
+            IceMachineRecipeRegistry.BuildRecipes();
             // AutohammerRecipeRegistry.BuildRecipes();
             // GelBurnerRecipeRegistry.BuildRecipes();
             // etc...
