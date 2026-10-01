@@ -14,15 +14,16 @@ namespace Factorraria.Content.Tiles.Machines.Autohammer
         public override void Update()
         {
             base.Update();
+
             // isWorking == true is determined when the generator has valid & enough fuel to burn & product slot is not full, so count its power output
             // isOn is set to false by the PowerNetwork not the machine when the grid is overloaded, so stop consuming fuel and turn off, but you could still be working!
             // i.e. have enough fuel to work once the grid is not overloaded
-            isWorking = true;
+            //isWorking = true;
             
-            if (!isOn)
-            {
-                return;
-            }
+            //if (!isOn)
+            //{
+            //    return;
+            //}
         }
 
         protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)

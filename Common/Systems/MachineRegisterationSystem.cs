@@ -17,6 +17,8 @@ namespace Factorraria.Common.Machines
             // Register every machine's UI here
             MachineUIRegistry.Register(TileID.Furnaces, new FurnaceUIState());
             MachineUIRegistry.Register(TileID.Solidifier, new SolidifierUIState());
+            MachineUIRegistry.Register(TileID.SteampunkBoiler, new GelBurnerUIState());
+            MachineUIRegistry.Register(TileID.Autohammer, new AutohammerUIState());
             // etc...
         }
 
@@ -58,6 +60,7 @@ namespace Factorraria.Common.Machines
         {
             // Register every machine's Recipes here
             FurnaceRecipeRegistry.BuildFromExistingRecipes();
+            SolidifierRecipeRegistry.Build();
             // AutohammerRecipeRegistry.BuildFromExistingRecipes();
             // etc...
         }
