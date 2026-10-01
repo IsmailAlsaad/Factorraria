@@ -13,6 +13,7 @@ namespace Factorraria.Common.Liquids
         public string Name;
         public Color RenderColor; // why do i even need this
         public byte? VanillaTileLiquidId; // null = no world-tile representation (pure custom liquid)
+        public string IconPath;   // optional browser icon, e.g. "Factorraria/Content/Liquids/Oil/OilIcon"; null = flat RenderColor swatch
     }
 
     public static class LiquidTypeRegistry
@@ -68,11 +69,11 @@ namespace Factorraria.Common.Liquids
     {
         public override void PostSetupContent()
         {
-            LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Water", RenderColor = new Color(0, 81, 229), VanillaTileLiquidId = (byte?)LiquidID.Water });
-            LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Lava", RenderColor = new Color(200, 70, 20), VanillaTileLiquidId = (byte?)LiquidID.Lava });
-            LiquidTypeRegistry.Honey = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Honey", RenderColor = new Color(247, 167, 8), VanillaTileLiquidId = (byte?)LiquidID.Honey });
-            LiquidTypeRegistry.Shimmer = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Shimmer", RenderColor = new Color(155, 114, 234), VanillaTileLiquidId = (byte?)LiquidID.Shimmer });
-            LiquidTypeRegistry.Oil = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Oil", RenderColor = new Color(40, 40, 40), VanillaTileLiquidId = (byte?)ModContent.GetInstance<OilLiquid>().Type });
+            LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Water", RenderColor = new Color(0, 81, 229), VanillaTileLiquidId = (byte?)LiquidID.Water, IconPath = "Factorraria/Common/Liquids/LiquidIcons/WaterIcon" });
+            LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Lava", RenderColor = new Color(200, 70, 20), VanillaTileLiquidId = (byte?)LiquidID.Lava, IconPath = "Factorraria/Common/Liquids/LiquidIcons/LavaIcon" });
+            LiquidTypeRegistry.Honey = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Honey", RenderColor = new Color(247, 167, 8), VanillaTileLiquidId = (byte?)LiquidID.Honey, IconPath = "Factorraria/Common/Liquids/LiquidIcons/HoneyIcon" });
+            LiquidTypeRegistry.Shimmer = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Shimmer", RenderColor = new Color(155, 114, 234), VanillaTileLiquidId = (byte?)LiquidID.Shimmer, IconPath = "Factorraria/Common/Liquids/LiquidIcons/ShimmerIcon" });
+            LiquidTypeRegistry.Oil = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Oil", RenderColor = new Color(40, 40, 40), VanillaTileLiquidId = (byte?)ModContent.GetInstance<OilLiquid>().Type, IconPath = "Factorraria/Common/Liquids/LiquidIcons/OilIcon" });
         }
 
         public override void Unload()

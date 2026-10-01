@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Machines;
+﻿using Factorraria.Common.Liquids;
+using Factorraria.Common.Machines;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -118,7 +119,7 @@ namespace Factorraria.Common.UI
         bool MatchesFilter(RecipeOutputGroup group)
         {
             if (string.IsNullOrWhiteSpace(searchFilter)) return true;
-            string name = ContentSamples.ItemsByType[group.OutputType].Name;
+            string name = group.Key.DisplayName;
             return name.Contains(searchFilter.Trim(), StringComparison.OrdinalIgnoreCase);
         }
 
@@ -250,6 +251,7 @@ namespace Factorraria.Common.UI
 
         public string ProductName;
         Texture2D recipeTexture;
+        Color? swatchColor;   // set when a liquid has no icon PNG
         float zoom = 1f;
         bool selected;
 
@@ -274,10 +276,19 @@ namespace Factorraria.Common.UI
             BackgroundColor = NormalColor;
             SetZoomScale(1f);
 
-            ProductName = ContentSamples.ItemsByType[group.OutputType].Name;
+            ProductName = group.Key.DisplayName;
 
-            Main.instance.LoadItem(group.OutputType);
-            recipeTexture = TextureAssets.Item[group.OutputType].Value;
+            if (group.Key.IsLiquid)
+            {
+                LiquidTypeDefinition liquid = LiquidTypeRegistry.Get(group.Key.Id);
+                if (liquid.IconPath != null) recipeTexture = ModContent.Request<Texture2D>(liquid.IconPath).Value;
+                else swatchColor = liquid.RenderColor;
+            }
+            else
+            {
+                Main.instance.LoadItem(group.Key.Id);
+                recipeTexture = TextureAssets.Item[group.Key.Id].Value;
+            }
         }
 
         // UIGrid sorts its items with CompareTo. The default returns 0 for everything,
@@ -311,6 +322,13 @@ namespace Factorraria.Common.UI
                 Main.hoverItemName = ProductName;
             }
 
+            if (swatchColor.HasValue)
+            {
+                int s = (int)(IconBox * 0.6f * zoom);
+                Vector2 c = GetDimensions().Center();
+                sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle((int)c.X - s / 2, (int)c.Y - s / 2, s, s), swatchColor.Value);
+                return;
+            }
             if (recipeTexture == null) return;
 
             float fit = Math.Min(1f, IconBox / Math.Max(recipeTexture.Width, recipeTexture.Height));

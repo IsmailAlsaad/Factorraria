@@ -107,7 +107,7 @@ namespace Factorraria.Common.Machines
                 if (Recipes == null) return IngredientSlotCount;    // hand-written machine: every slot is live
                 return ManualGroup == null
                     ? Math.Min(AutoIngredientCount, IngredientSlotCount)
-                    : Math.Clamp(ManualGroup.MaxInputCount, 1, IngredientSlotCount);
+                    : Math.Min(ManualGroup.MaxInputCount, IngredientSlotCount);
             }
         }
 
@@ -483,7 +483,8 @@ namespace Factorraria.Common.Machines
 
             if (ManualGroup != null)
             {
-                tag["ManualGroupOutput"] = new Item(ManualGroup.OutputType, 1);
+                if (ManualGroup.Key.IsLiquid) tag["ManualGroupLiquid"] = LiquidTypeRegistry.Get(ManualGroup.Key.Id).Name;
+                else tag["ManualGroupOutput"] = new Item(ManualGroup.Key.Id, 1);   // old key, old worlds still load
             }
 
             tag["WorkProgress"] = WorkProgress;
@@ -519,15 +520,21 @@ namespace Factorraria.Common.Machines
             MachineHeight = tag.GetInt("MachineHeight");
             MachineWidth = tag.GetInt("MachineWidth");
 
-            if (Recipes != null && tag.ContainsKey("ManualGroupOutput"))
+            if (Recipes != null)
             {
-                Item saved = tag.Get<Item>("ManualGroupOutput");
-                RecipeOutputGroup group = saved.IsAir ? null : Recipes.Groups.FirstOrDefault(g => g.OutputType == saved.type);
-
-                if (group != null)
+                RecipeOutputGroup group = null;
+                if (tag.ContainsKey("ManualGroupOutput"))
                 {
-                    SetManualGroup(group);
+                    Item saved = tag.Get<Item>("ManualGroupOutput");
+                    if (!saved.IsAir)
+                        group = Recipes.Groups.FirstOrDefault(g => !g.Key.IsLiquid && g.Key.Id == saved.type);
                 }
+                else if (tag.ContainsKey("ManualGroupLiquid"))
+                {
+                    string name = tag.GetString("ManualGroupLiquid");
+                    group = Recipes.Groups.FirstOrDefault(g => g.Key.IsLiquid && LiquidTypeRegistry.Get(g.Key.Id).Name == name);
+                }
+                if (group != null) SetManualGroup(group);
             }
 
             WorkProgress = tag.GetInt("WorkProgress");

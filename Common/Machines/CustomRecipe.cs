@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.ID;
 
 namespace Factorraria.Common.Machines
 {
@@ -26,18 +27,37 @@ namespace Factorraria.Common.Machines
         public LiquidIngredient(int liquidType, float amount) { LiquidType = liquidType; Amount = amount; }
     }
 
+    // What a browser group is "about": one item type OR one liquid type.
+    public readonly struct RecipeOutputKey : IEquatable<RecipeOutputKey>
+    {
+        public readonly bool IsLiquid;
+        public readonly int Id;      // item type, or LiquidTypeRegistry id
+
+        RecipeOutputKey(bool isLiquid, int id) { IsLiquid = isLiquid; Id = id; }
+        public static RecipeOutputKey ForItem(int itemType) => new(false, itemType);
+        public static RecipeOutputKey ForLiquid(int liquidType) => new(true, liquidType);
+
+        public string DisplayName => IsLiquid
+            ? LiquidTypeRegistry.Get(Id).Name
+            : ContentSamples.ItemsByType[Id].Name;
+
+        public bool Equals(RecipeOutputKey o) => IsLiquid == o.IsLiquid && Id == o.Id;
+        public override bool Equals(object obj) => obj is RecipeOutputKey o && Equals(o);
+        public override int GetHashCode() => HashCode.Combine(IsLiquid, Id);
+    }
+
     /// <summary>All CustomRecipes of one machine that produce the same output item type.</summary>
     public class RecipeOutputGroup
     {
-        public int OutputType { get; }
+        public RecipeOutputKey Key { get; }
         public List<CustomRecipe> Recipes { get; } = new List<CustomRecipe>();
 
         /// <summary>Most ingredient slots any recipe in this group needs.</summary>
-        public int MaxInputCount { get; private set; } = 1;
+        public int MaxInputCount { get; private set; } = 0;
 
-        public RecipeOutputGroup(int outputType)
+        public RecipeOutputGroup(RecipeOutputKey key)
         {
-            OutputType = outputType;
+            Key = key;
         }
 
         public void Add(CustomRecipe recipe)
@@ -50,17 +70,16 @@ namespace Factorraria.Common.Machines
         public static List<RecipeOutputGroup> Build(IEnumerable<CustomRecipe> recipes)
         {
             var groups = new List<RecipeOutputGroup>();
-            var byOutput = new Dictionary<int, RecipeOutputGroup>();
+            var byOutput = new Dictionary<RecipeOutputKey, RecipeOutputGroup>();
 
             foreach (CustomRecipe recipe in recipes)
             {
-                if (recipe.Outputs.Count == 0) continue;   // no item output = nothing to show an icon for (LATER CHANGE TO SHOW LIQUID OUTPUT ICONS)
+                if (!recipe.TryGetPrimaryOutput(out RecipeOutputKey key)) continue;   // nothing to show at all
 
-                int type = recipe.Output.Type;
-                if (!byOutput.TryGetValue(type, out RecipeOutputGroup group))
+                if (!byOutput.TryGetValue(key, out RecipeOutputGroup group))
                 {
-                    group = new RecipeOutputGroup(type);
-                    byOutput[type] = group;
+                    group = new RecipeOutputGroup(key);
+                    byOutput[key] = group;
                     groups.Add(group);
                 }
                 group.Add(recipe);
@@ -136,6 +155,15 @@ namespace Factorraria.Common.Machines
                 if (!found) return false;
             }
             return true;
+        }
+
+        // What the browser files this recipe under: first item output, else first liquid output.
+        public bool TryGetPrimaryOutput(out RecipeOutputKey key)
+        {
+            if (Outputs.Count > 0) { key = RecipeOutputKey.ForItem(Outputs[0].Type); return true; }
+            if (LiquidOutputs.Count > 0) { key = RecipeOutputKey.ForLiquid(LiquidOutputs[0].LiquidType); return true; }
+            key = default;
+            return false;
         }
     }
 
