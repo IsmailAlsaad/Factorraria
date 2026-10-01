@@ -18,7 +18,7 @@ namespace Factorraria.Common.UI
         public UIElement Panel;
         List<MachineUIElementEntry> elements;
 
-        protected abstract Vector2 BasePanelSize { get; }
+        protected virtual Vector2 BasePanelSize => Vector2.Zero; // obsolete: size is computed from BuildElements()
         public virtual Vector2 BasePanelOffset => Vector2.Zero;
 
         protected abstract List<MachineUIElementEntry> BuildElements();
@@ -26,8 +26,8 @@ namespace Factorraria.Common.UI
         public override void OnInitialize()
         {
             Panel = new UIElement();
-            Panel.Width.Set(BasePanelSize.X, 0);
-            Panel.Height.Set(BasePanelSize.Y, 0);
+            Panel.Width.Set(0, 0);
+            Panel.Height.Set(0, 0);
             Append(Panel);
 
             InitializeUIState();
@@ -56,25 +56,55 @@ namespace Factorraria.Common.UI
         }
 
         protected virtual void UpdateLayout() { }
+        
+        // Top-left / size of the box that covers every element, at zoom = 1.
+        public Vector2 ContentOrigin { get; private set; }
+        Vector2 contentSize = Vector2.One;
+
+        void RecalculateBounds()
+        {
+            float minX = float.MaxValue, minY = float.MaxValue;
+            float maxX = float.MinValue, maxY = float.MinValue;
+            bool any = false;
+
+            foreach (var entry in elements)
+            {
+                if (entry.Element == null || !entry.AffectsPanelBounds) continue;
+                any = true;
+                minX = Math.Min(minX, entry.BasePosition.X);
+                minY = Math.Min(minY, entry.BasePosition.Y);
+                maxX = Math.Max(maxX, entry.BasePosition.X + entry.BaseSize.X);
+                maxY = Math.Max(maxY, entry.BasePosition.Y + entry.BaseSize.Y);
+            }
+
+            if (!any)
+            {
+                ContentOrigin = Vector2.Zero;
+                contentSize = Vector2.One;
+                return;
+            }
+
+            ContentOrigin = new Vector2(minX, minY);
+            contentSize = new Vector2(Math.Max(1f, maxX - minX), Math.Max(1f, maxY - minY));
+        }
 
         public void SetZoomScale(float zoomScale)
         {
             if (elements == null) return;
 
             UpdateLayout();
+            RecalculateBounds(); // after UpdateLayout so dynamic layouts (furnace) are included
 
-            Panel.Width.Set(BasePanelSize.X * zoomScale, 0);
-            Panel.Height.Set(BasePanelSize.Y * zoomScale, 0);
+            Panel.Width.Set(contentSize.X * zoomScale, 0);
+            Panel.Height.Set(contentSize.Y * zoomScale, 0);
 
             foreach (var entry in elements)
             {
-                if(entry.Element == null)
-                {
-                    continue;
-                }
+                if (entry.Element == null) continue;
 
-                entry.Element.Top.Set(entry.BasePosition.Y * zoomScale, 0);
-                entry.Element.Left.Set(entry.BasePosition.X * zoomScale, 0);
+                // positions are now relative to the panel's top-left (= ContentOrigin)
+                entry.Element.Top.Set((entry.BasePosition.Y - ContentOrigin.Y) * zoomScale, 0);
+                entry.Element.Left.Set((entry.BasePosition.X - ContentOrigin.X) * zoomScale, 0);
                 entry.Element.Width.Set(entry.BaseSize.X * zoomScale, 0);
                 entry.Element.Height.Set(entry.BaseSize.Y * zoomScale, 0);
 

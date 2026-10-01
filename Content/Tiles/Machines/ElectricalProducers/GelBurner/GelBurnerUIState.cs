@@ -15,12 +15,15 @@ namespace Factorraria.Content.Tiles.Machines.GelBurner
         {
             var list = new List<MachineUIElementEntry>();
 
-            // Flame gauge: 0..1 of the current gel left, -1 when nothing is burning
-            list.Add(new MachineUIElementEntry(
-                new FireUIElement(() => Entity.Fuel.GetBurnFraction(0f)),
-                new Vector2(-60, 0), new Vector2(54, 54)));
+            // LATER MAKE THE FUEL SLOT ITSELF HAVE A
+            // MASK THAT GOES FROM TOP OF THE SLOT TO THE BOTTOM
 
-            list.Add(FuelSlotEntry(new Vector2(-60, 60)));
+            // Flame gauge: 0..1 of the current gel left, -1 when nothing is burning
+            //list.Add(new MachineUIElementEntry(
+            //    new FireUIElement(() => Entity.Fuel.GetBurnFraction(0f)),
+            //    new Vector2(0, -60), new Vector2(54, 54)));
+
+            list.Add(FuelSlotEntry(new Vector2(-70, 0)));
 
             return list;
         }

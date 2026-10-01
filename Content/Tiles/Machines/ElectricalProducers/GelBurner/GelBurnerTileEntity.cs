@@ -14,7 +14,7 @@ namespace Factorraria.Content.Tiles.Machines.GelBurner
 
         static FuelTable CreateFuels()
         {
-            FuelTable table = new FuelTable().Add(ItemID.Gel, 20 * 60);
+            FuelTable table = new FuelTable().Add(ItemID.Gel, 3 * 60);
             table.StackLimitRule = _ => 10;   // conveyors may buffer up to 10 gel
             return table;
         }

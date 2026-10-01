@@ -10,8 +10,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         FurnaceTileEntity Entity => (FurnaceTileEntity)CurrentEntity;
 
         protected override Vector2 BasePanelSize => new Vector2(600, 300);
-        Vector2 ChildrenOffset = new Vector2(200f, 0f);
-        public override Vector2 BasePanelOffset => new Vector2(-55, -60) - ChildrenOffset;
+
+        public override Vector2 BasePanelOffset => new Vector2(-55, -60);
 
         MachineUIElementEntry[] ingredientEntries;
         MachineUIElementEntry fireEntry, fuelEntry, productEntry;
@@ -39,12 +39,12 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             list.Add(fuelEntry);
 
             Vector2 productSlotPosition = new Vector2(115, 50);
-            productEntry = OutputSlotEntry(0, productSlotPosition + ChildrenOffset);
+            productEntry = OutputSlotEntry(0, productSlotPosition);
             list.Add(productEntry);
 
             AddRecipePicker(list, FurnaceRecipeRegistry.Book,
-                buttonPos: productSlotPosition + new Vector2(50, 40) + ChildrenOffset,
-                browserPos: productSlotPosition + new Vector2(80, 40) + ChildrenOffset);
+                buttonPos: productSlotPosition + new Vector2(50, 40),
+                browserPos: productSlotPosition + new Vector2(80, 40));
 
             return list;
         }
@@ -59,12 +59,12 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
             // Slot 0 stays put; each extra slot goes one step further left.
             for (int i = 0; i < ingredientEntries.Length; i++)
-                ingredientEntries[i].BasePosition = new Vector2(-i * step, 0) + ChildrenOffset;
+                ingredientEntries[i].BasePosition = new Vector2(-i * step, 0);
 
             // The row spans from -(n-1)*step to slotSize, so its center is half of the leftward extent.
             float centerX = -(n - 1) * step / 2f;
-            fireEntry.BasePosition = new Vector2(centerX, 50) + ChildrenOffset;
-            fuelEntry.BasePosition = new Vector2(centerX, 100) + ChildrenOffset;
+            fireEntry.BasePosition = new Vector2(centerX, 50);
+            fuelEntry.BasePosition = new Vector2(centerX, 100);
 
             // productEntry, buttonEntry and browserEntry are not touched, so they keep the
             // positions set in BuildElements.

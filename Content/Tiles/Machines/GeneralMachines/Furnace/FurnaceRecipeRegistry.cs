@@ -11,7 +11,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         public static readonly RecipeBook Book = new();
         public static readonly FuelTable Fuels = new();
 
-        public static void BuildFromExistingRecipes()
+        public static void BuildRecipes()
         {
             Book.Clear();
             Book.ImportVanillaRecipes(TileID.Furnaces);

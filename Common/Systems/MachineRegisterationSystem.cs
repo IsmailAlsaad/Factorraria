@@ -59,9 +59,10 @@ namespace Factorraria.Common.Machines
         public override void PostAddRecipes()
         {
             // Register every machine's Recipes here
-            FurnaceRecipeRegistry.BuildFromExistingRecipes();
-            SolidifierRecipeRegistry.Build();
-            // AutohammerRecipeRegistry.BuildFromExistingRecipes();
+            FurnaceRecipeRegistry.BuildRecipes();
+            SolidifierRecipeRegistry.BuildRecipes();
+            // AutohammerRecipeRegistry.BuildRecipes();
+            // GelBurnerRecipeRegistry.BuildRecipes();
             // etc...
         }
 

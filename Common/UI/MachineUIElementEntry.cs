@@ -12,6 +12,7 @@ namespace Factorraria.Common.UI
         public UIElement Element;
         public Vector2 BasePosition; // Left/Top at zoom = 1
         public Vector2 BaseSize;     // Width/Height at zoom = 1
+        public bool AffectsPanelBounds = true; // false = popup-style element that shouldn't grow the panel
 
         public MachineUIElementEntry(UIElement element, Vector2 basePosition, Vector2 baseSize)
         {

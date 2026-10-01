@@ -112,22 +112,20 @@ namespace Factorraria.Common.Systems
         {
             if (openState == null) return;
 
-            //
-            //openState.InitializeUIState();
-            //
+            float zoomScale = Main.GameViewMatrix.ZoomMatrix.M11 / Main.UIScale;
+
+            // Must run first: it recomputes the bounds that the offset below depends on.
+            openState.SetZoomScale(zoomScale);
 
             Vector2 worldPosition = openPosition.ToVector2() * 16;
             Vector2 screenPosition = worldPosition - Main.screenPosition;
-            screenPosition += openState.BasePanelOffset;
+            screenPosition += openState.BasePanelOffset + openState.ContentOrigin;
             screenPosition = Vector2.Transform(screenPosition, Main.GameViewMatrix.ZoomMatrix);
             screenPosition /= Main.UIScale;
-
-            float zoomScale = Main.GameViewMatrix.ZoomMatrix.M11 / Main.UIScale;
 
             openState.Panel.Left.Set(screenPosition.X, 0);
             openState.Panel.Top.Set(screenPosition.Y, 0);
 
-            openState.SetZoomScale(zoomScale);
             openState.Recalculate();
         }
     }

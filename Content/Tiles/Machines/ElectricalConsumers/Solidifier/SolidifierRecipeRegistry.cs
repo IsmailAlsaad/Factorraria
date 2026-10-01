@@ -8,7 +8,7 @@ namespace Factorraria.Content.Tiles.Machines.Solidifier
     {
         public static readonly RecipeBook Book = new();
 
-        public static void Build()
+        public static void BuildRecipes()
         {
             Book.Clear();
 

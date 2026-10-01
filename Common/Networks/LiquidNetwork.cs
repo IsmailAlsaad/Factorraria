@@ -411,6 +411,7 @@ namespace Factorraria.Common.Networks
     struct LiquidEndpoint
     {
         public bool IsWorld;
+        public BaseMachine Machine;
         public LiquidStack[] MachineSlots;
         public Point WorldPos;
         public float RateThisTick;
