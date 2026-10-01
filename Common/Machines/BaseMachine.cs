@@ -636,13 +636,14 @@ namespace Factorraria.Common.Machines
             return id;
         }
 
-        // Reads the placing player's active Zone flags — these are already computed from nearby
-        // tile counts each frame, so they correctly describe the biome at the placement point.
-        // Priority order matters: special biomes (Shimmer, Dungeon) are checked before generic
-        // height zones so that e.g. a Dungeon underground returns Dungeon, not Cavern.
-        // On a dedicated server (no LocalPlayer) we leave InsideBiome as Unknown.
         public static MachineBiome DetermineBiomeAt(int i, int j)
         {
+            // Reads the placing player's active Zone flags — these are already computed from nearby
+            // tile counts each frame, so they correctly describe the biome at the placement point.
+            // Priority order matters: special biomes (Shimmer, Dungeon) are checked before generic
+            // height zones so that e.g. a Dungeon underground returns Dungeon, not Cavern.
+            // On a dedicated server (no LocalPlayer) we leave InsideBiome as Unknown.
+            
             if (Main.netMode == Terraria.ID.NetmodeID.Server || Main.LocalPlayer == null || !Main.LocalPlayer.active)
                 return MachineBiome.Unknown;
 
