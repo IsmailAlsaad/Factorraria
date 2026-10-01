@@ -1,4 +1,4 @@
-﻿using Factorraria.Common.Liquids;
+using Factorraria.Common.Liquids;
 using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
 using Factorraria.Content.VirtualItems;
@@ -38,6 +38,7 @@ namespace Factorraria.Common.Machines
         protected virtual List<RecipeOutputGroup> RecipeGroups => null;
 
         public int OutputMaxStack = Item.CommonMaxStack;
+        public MachineBiome InsideBiome { get; set; } = MachineBiome.Unknown;
         public Point16 cornerPosition;
         public Vector2 MachineCenter;
         public int MachineWidth;
@@ -541,6 +542,8 @@ namespace Factorraria.Common.Machines
                 tag["FuelCapacity"] = Fuel.Capacity; 
             }
 
+            tag["InsideBiome"] = (int)InsideBiome;
+
             for (int i = 0; i < Fuels.Length; i++)
             {
                 tag[FuelKey("FuelRemaining", i)] = Fuels[i].Remaining;
@@ -549,6 +552,9 @@ namespace Factorraria.Common.Machines
         }
         public override void LoadData(TagCompound tag)
         {
+            if (tag.ContainsKey("InsideBiome"))
+                InsideBiome = (MachineBiome)tag.GetInt("InsideBiome");
+
             for (int i = 0; i < InputSlots.Length; i++)
             {
                 InputSlots[i] = tag.Get<Item>($"Input{i}");
@@ -620,10 +626,48 @@ namespace Factorraria.Common.Machines
             int id = Place(i, j);
             if (id != -1 && ByID.TryGetValue(id, out TileEntity entity))
             {
+                if (entity is BaseMachine machine)
+                {
+                    machine.InsideBiome = DetermineBiomeAt(i, j);
+                }
                 PowerGridSystem.RegisterMachineToMasterList(entity);
                 LiquidNetworkSystem.networkNeedsRebuilding = true;
             }
             return id;
+        }
+
+        // Reads the placing player's active Zone flags — these are already computed from nearby
+        // tile counts each frame, so they correctly describe the biome at the placement point.
+        // Priority order matters: special biomes (Shimmer, Dungeon) are checked before generic
+        // height zones so that e.g. a Dungeon underground returns Dungeon, not Cavern.
+        // On a dedicated server (no LocalPlayer) we leave InsideBiome as Unknown.
+        public static MachineBiome DetermineBiomeAt(int i, int j)
+        {
+            if (Main.netMode == Terraria.ID.NetmodeID.Server || Main.LocalPlayer == null || !Main.LocalPlayer.active)
+                return MachineBiome.Unknown;
+
+            Player player = Main.LocalPlayer;
+
+            if (player.ZoneShimmer)          return MachineBiome.Aether;
+            if (player.ZoneMeteor)           return MachineBiome.Meteor;
+            if (player.ZoneDungeon)          return MachineBiome.Dungeon;
+            if (player.ZoneLihzhardTemple)   return MachineBiome.Temple;
+            if (player.ZoneGlowshroom)       return MachineBiome.GlowingMushroom;
+            if (player.ZoneCorrupt)          return MachineBiome.Corruption;
+            if (player.ZoneCrimson)          return MachineBiome.Crimson;
+            if (player.ZoneHallow)           return MachineBiome.Hallow;
+            if (player.ZoneJungle)           return MachineBiome.Jungle;
+            if (player.ZoneSnow)             return MachineBiome.Snow;
+            if (player.ZoneDesert)           return MachineBiome.Desert;
+            if (player.ZoneGraveyard)        return MachineBiome.Graveyard;
+            if (player.ZoneBeach)            return MachineBiome.Ocean;
+            if (player.ZoneUnderworldHeight) return MachineBiome.Underworld;
+            if (player.ZoneRockLayerHeight)  return MachineBiome.Cavern;
+            if (player.ZoneDirtLayerHeight)  return MachineBiome.Underground;
+            if (player.ZoneSkyHeight)        return MachineBiome.Sky;
+            if (player.ZoneOverworldHeight)  return MachineBiome.Forest;
+
+            return MachineBiome.Unknown;
         }
 
     }
