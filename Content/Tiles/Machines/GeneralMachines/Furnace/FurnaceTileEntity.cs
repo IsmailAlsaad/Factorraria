@@ -18,10 +18,11 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         public const int FuelSlot = 0;
         public const int FirstIngredientSlot = 1;
         protected override int InputSlotCount => FirstIngredientSlot + FurnaceRecipeRegistry.MaxIngredientCount;
-        public int ActiveIngredientCount => ManualRecipe == null ? 1 : Math.Clamp(ManualRecipe.Inputs.Count, 1, FurnaceRecipeRegistry.MaxIngredientCount);
+        public int ActiveIngredientCount => ManualGroup == null ? 1 : Math.Clamp(ManualGroup.MaxInputCount, 1, FurnaceRecipeRegistry.MaxIngredientCount);
+        protected override List<RecipeOutputGroup> RecipeGroups => FurnaceRecipeRegistry.SmeltingGroups;
+
         protected override int OutputSlotCount => 1;
 
-        protected override List<CustomRecipe> RecipeList => FurnaceRecipeRegistry.SmeltingRecipes;
 
         public int FuelRemaining = 0;
         int fuelSmeltCount = 3;
@@ -126,6 +127,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         }
         int FindIngredientSlotFor(int itemType)
         {
+            if (!FitsWithHeldIngredients(itemType)) return -1;
+
             int firstEmpty = -1;
             for (int s = FirstIngredientSlot; s < FirstIngredientSlot + ActiveIngredientCount; s++)
             {
@@ -134,6 +137,35 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
                 else if (slot.type == itemType) return s;   // matching slot wins, even if full
             }
             return firstEmpty;
+        }
+
+        // Manual group: only take an item if some recipe in the group uses it together with
+        // everything already sitting in the ingredient slots. Auto mode has one slot, so it always fits.
+        bool FitsWithHeldIngredients(int itemType)
+        {
+            if (ManualGroup == null) return true;
+
+            foreach (CustomRecipe recipe in ManualGroup.Recipes)
+            {
+                if (!RecipeUsesItem(recipe, itemType)) continue;
+
+                bool fitsHeld = true;
+                for (int s = FirstIngredientSlot; s < FirstIngredientSlot + ActiveIngredientCount && fitsHeld; s++)
+                {
+                    Item held = InputSlots[s];
+                    if (!held.IsAir && !RecipeUsesItem(recipe, held.type))
+                        fitsHeld = false;
+                }
+                if (fitsHeld) return true;
+            }
+            return false;
+        }
+
+        static bool RecipeUsesItem(CustomRecipe recipe, int itemType)
+        {
+            foreach (RecipeIngredient input in recipe.Inputs)
+                if (input.Type == itemType) return true;
+            return false;
         }
 
         List<Item> ingredientBuffer;
@@ -151,10 +183,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             List<Item> items = GetIngredientItems();
             if (items.TrueForAll(i => i.IsAir)) return false;
 
-            if (ManualRecipe != null)
-                return CustomRecipe.TryGetRecipeFromList(new List<CustomRecipe> { ManualRecipe }, items, out _);
-
-            return CustomRecipe.TryGetRecipeFromList(FurnaceRecipeRegistry.SmeltingRecipes, items, out SelectedRecipe);
+            // Manual group: only that group's recipes are candidates. Auto: every recipe.
+            // SelectedRecipe is always set from the actual match, since a group holds several recipes.
+            List<CustomRecipe> candidates = ManualGroup != null ? ManualGroup.Recipes : FurnaceRecipeRegistry.SmeltingRecipes;
+            return CustomRecipe.TryGetRecipeFromList(candidates, items, out SelectedRecipe);
         }
 
         bool isValidOutput()
@@ -169,10 +201,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
         protected override IEnumerable<CustomRecipe> GetPickupRecipes()
         {
-            if (ManualRecipe != null)
-                return new[] { ManualRecipe };
-
-            return FurnaceRecipeRegistry.SmeltingRecipes;   // auto mode: accept any recipe's ingredient
+            return ManualGroup != null ? ManualGroup.Recipes : FurnaceRecipeRegistry.SmeltingRecipes;
         }
 
         void FinishSmelting()

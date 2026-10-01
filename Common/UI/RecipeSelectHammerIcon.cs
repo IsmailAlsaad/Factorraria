@@ -78,44 +78,45 @@ namespace Factorraria.Common.UI
         public bool showPanel;
         public UIGrid recipeList; 
         public ZoomScrollbar scrollbar;
-        readonly List<CustomRecipe> machineRecipes;
         float zoom = 1f;
 
         const float SearchHeight = 24f;
         RecipeSearchBar searchBar;
         string searchFilter = "";
 
-        readonly Func<CustomRecipe> getSelectedRecipe;
-        readonly Action<CustomRecipe> setSelectedRecipe;
+        readonly List<RecipeOutputGroup> machineGroups;
+        readonly Func<RecipeOutputGroup> getSelectedGroup;
+        readonly Action<RecipeOutputGroup> setSelectedGroup;
 
-        public RecipeBrowserPanel(List<CustomRecipe> recipes,Func<CustomRecipe> getSelected,Action<CustomRecipe> setSelected)
+        public RecipeBrowserPanel(List<RecipeOutputGroup> groups, Func<RecipeOutputGroup> getSelected, Action<RecipeOutputGroup> setSelected)
         {
-            machineRecipes = recipes;
-            getSelectedRecipe = getSelected;
-            setSelectedRecipe = setSelected;
+            machineGroups = groups;
+            getSelectedGroup = getSelected;
+            setSelectedGroup = setSelected;
         }
 
         public void PopulateRecipeList()
         {
             recipeList.Clear();
-            CustomRecipe current = getSelectedRecipe?.Invoke();
+            RecipeOutputGroup current = getSelectedGroup?.Invoke();
 
-            for (int i = 0; i < machineRecipes.Count; i++)
+            for (int i = 0; i < machineGroups.Count; i++)
             {
-                if (!MatchesFilter(machineRecipes[i])) continue;
+                if (!MatchesFilter(machineGroups[i])) continue;
 
-                var cell = new RecipeElement(machineRecipes[i], i);
-                cell.Selected = ReferenceEquals(machineRecipes[i], current);  // restores the highlight when the UI reopens
+                var cell = new RecipeElement(machineGroups[i], i);
+                cell.Selected = ReferenceEquals(machineGroups[i], current);  // restores the highlight when the UI reopens
                 cell.OnSelected = SelectRecipe;
                 recipeList.Add(cell);
             }
 
             recipeList.Recalculate();
         }
-        bool MatchesFilter(CustomRecipe recipe)
+
+        bool MatchesFilter(RecipeOutputGroup group)
         {
             if (string.IsNullOrWhiteSpace(searchFilter)) return true;
-            string name = ContentSamples.ItemsByType[recipe.Output.Type].Name;
+            string name = ContentSamples.ItemsByType[group.OutputType].Name;
             return name.Contains(searchFilter.Trim(), StringComparison.OrdinalIgnoreCase);
         }
 
@@ -126,7 +127,7 @@ namespace Factorraria.Common.UI
             foreach (var cell in recipeList.OfType<RecipeElement>())
                 cell.Selected = !wasSelected && cell == chosen;
 
-            setSelectedRecipe?.Invoke(wasSelected ? null : chosen.CurrentRecipe);
+            setSelectedGroup?.Invoke(wasSelected ? null : chosen.CurrentGroup);
 
             recipeList.UpdateOrder();      // selected goes first, or everything returns to registry order
             recipeList.Recalculate();
@@ -236,8 +237,6 @@ namespace Factorraria.Common.UI
         static readonly Color NormalColor = new Color(63, 82, 151) * 0.7f;   // vanilla UIPanel default
         static readonly Color SelectedColor = new Color(214, 178, 48) * 0.9f;
 
-        public readonly CustomRecipe CurrentRecipe;
-        public readonly int Index;                 // original position in the registry
         public Action<RecipeElement> OnSelected;
 
         public string ProductName;
@@ -255,18 +254,21 @@ namespace Factorraria.Common.UI
             }
         }
 
-        public RecipeElement(CustomRecipe recipe, int index)
+        public readonly RecipeOutputGroup CurrentGroup;
+        public readonly int Index;                 // original position in the registry's group list
+
+        public RecipeElement(RecipeOutputGroup group, int index)
         {
-            CurrentRecipe = recipe;
+            CurrentGroup = group;
             Index = index;
             SetPadding(0f);
             BackgroundColor = NormalColor;
             SetZoomScale(1f);
 
-            ProductName = ContentSamples.ItemsByType[CurrentRecipe.Output.Type].Name;
+            ProductName = ContentSamples.ItemsByType[group.OutputType].Name;
 
-            Main.instance.LoadItem(CurrentRecipe.Output.Type);
-            recipeTexture = TextureAssets.Item[CurrentRecipe.Output.Type].Value;
+            Main.instance.LoadItem(group.OutputType);
+            recipeTexture = TextureAssets.Item[group.OutputType].Value;
         }
 
         // UIGrid sorts its items with CompareTo. The default returns 0 for everything,
@@ -275,12 +277,6 @@ namespace Factorraria.Common.UI
             obj is RecipeElement other ? SortKey.CompareTo(other.SortKey) : 0;
 
         int SortKey => Selected ? -1 : Index;
-
-        public override void OnInitialize()
-        {
-            //Main.instance.LoadItem(CurrentRecipe.Output.Type);
-            //recipeTexture = TextureAssets.Item[CurrentRecipe.Output.Type].Value;
-        }
 
         public void SetZoomScale(float z)
         {

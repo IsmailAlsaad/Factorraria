@@ -11,6 +11,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         // List<Item> InputItems, Item OutputItem
         public static List<CustomRecipe> SmeltingRecipes = new List<CustomRecipe>();
 
+        public static List<RecipeOutputGroup> SmeltingGroups = new List<RecipeOutputGroup>();
+
         // int FuelItemID, int number of smelts
         public static Dictionary<int, int> ValidFuels = new Dictionary<int, int>();
 
@@ -42,6 +44,9 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
             RegisterManualRecipes();
             RegisterValidFuels();
+
+            SmeltingGroups.Clear();
+            SmeltingGroups.AddRange(RecipeOutputGroup.Build(SmeltingRecipes));
 
             MaxIngredientCount = 1;
             foreach (CustomRecipe r in SmeltingRecipes) 

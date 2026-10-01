@@ -69,9 +69,9 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             list.Add(productEntry);
 
             var recipeBrowserList = new RecipeBrowserPanel(
-                FurnaceRecipeRegistry.SmeltingRecipes,
-                () => Entity.ManualRecipe,
-                r => Entity.SetManualRecipe(r));
+                FurnaceRecipeRegistry.SmeltingGroups,
+                () => Entity.ManualGroup,
+                g => Entity.SetManualGroup(g));
             browserEntry = new MachineUIElementEntry(recipeBrowserList, productSlotPosition + new Vector2(80, 40) + ChildrenOffset, new Vector2(155, 200));
             list.Add(browserEntry);
 

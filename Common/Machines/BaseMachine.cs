@@ -26,6 +26,48 @@ namespace Factorraria.Common.Machines
         }
     }
 
+    /// <summary>All CustomRecipes of one machine that produce the same output item type.</summary>
+    public class RecipeOutputGroup
+    {
+        public int OutputType { get; }
+        public List<CustomRecipe> Recipes { get; } = new List<CustomRecipe>();
+
+        /// <summary>Most ingredient slots any recipe in this group needs.</summary>
+        public int MaxInputCount { get; private set; } = 1;
+
+        public RecipeOutputGroup(int outputType)
+        {
+            OutputType = outputType;
+        }
+
+        public void Add(CustomRecipe recipe)
+        {
+            Recipes.Add(recipe);
+            MaxInputCount = Math.Max(MaxInputCount, recipe.Inputs.Count);
+        }
+
+        /// <summary>Groups recipes by output type, keeping first-appearance order.</summary>
+        public static List<RecipeOutputGroup> Build(IEnumerable<CustomRecipe> recipes)
+        {
+            var groups = new List<RecipeOutputGroup>();
+            var byOutput = new Dictionary<int, RecipeOutputGroup>();
+
+            foreach (CustomRecipe recipe in recipes)
+            {
+                int type = recipe.Output.Type;
+                if (!byOutput.TryGetValue(type, out RecipeOutputGroup group))
+                {
+                    group = new RecipeOutputGroup(type);
+                    byOutput[type] = group;
+                    groups.Add(group);
+                }
+                group.Add(recipe);
+            }
+
+            return groups;
+        }
+    }
+
     public class CustomRecipe
     {
         public List<RecipeIngredient> Inputs { get; set; }
@@ -107,14 +149,18 @@ namespace Factorraria.Common.Machines
         protected virtual int InputSlotCount => 0;
         protected virtual int OutputSlotCount => 0;
 
-        public CustomRecipe SelectedRecipe;   // what the machine is actually running (manual OR auto-detected)
-        public CustomRecipe ManualRecipe;     // only what the player picked; null = auto-detect
+        public CustomRecipe SelectedRecipe;    // the recipe the machine is actually running (matched from the slots each tick)
+        public RecipeOutputGroup ManualGroup;  // what the player picked in the browser; null = auto-detect
 
-        public void SetManualRecipe(CustomRecipe recipe)
+        public void SetManualGroup(RecipeOutputGroup group)
         {
-            ManualRecipe = recipe;
-            SelectedRecipe = recipe;   // null on un-toggle, so auto-detect starts fresh
+            ManualGroup = group;
+            SelectedRecipe = null;   // the concrete recipe is re-detected from the slots on the next update
         }
+
+        // The recipe groups this machine's browser shows (e.g. FurnaceRecipeRegistry.SmeltingGroups).
+        // Used to save and restore the player's manual selection. null = machine has no recipe list.
+        protected virtual List<RecipeOutputGroup> RecipeGroups => null;
 
         public int OutputMaxStack = 10;
         public Point16 cornerPosition;
@@ -154,7 +200,6 @@ namespace Factorraria.Common.Machines
 
         // The list this machine's recipes come from (e.g. FurnaceRecipeRegistry.SmeltingRecipes).
         // Used to save and restore the player's manual recipe. null = machine has no recipe list.
-        protected virtual List<CustomRecipe> RecipeList => null;
 
         #endregion
 
@@ -223,21 +268,17 @@ namespace Factorraria.Common.Machines
 
             foreach (CustomRecipe recipe in pickupRecipes)
             {
+                if (ManualGroup == null && recipe.Inputs.Count != 1)
+                    continue;
+
                 foreach (RecipeIngredient ingredient in recipe.Inputs)
                 {
-                    if(ManualRecipe == null && recipe.Inputs.Count != 1)
-                    {
-                        continue;
-                    }
+                    if (vItem.itemType != ingredient.Type) continue;
 
-                    if (vItem.itemType == ingredient.Type)
-                    {
-                        isItemInRecipe = true;
-                        maxStack = ingredient.Stack * 2;
-                        break;
-                    }
+                    isItemInRecipe = true;
+                    maxStack = Math.Max(maxStack, ingredient.Stack * 2);   // an item can now be in several recipes of the group; take the largest need
+                    break;
                 }
-                if (isItemInRecipe) break;
             }
 
             int ValidSlotIndex = -1;
@@ -339,11 +380,9 @@ namespace Factorraria.Common.Machines
             tag["MachineWidth"] = MachineWidth;
             tag["MachineHeight"] = MachineHeight;
 
-            if (ManualRecipe != null && RecipeList != null)
+            if (ManualGroup != null)
             {
-                int recipeIndex = RecipeList.IndexOf(ManualRecipe);
-                if (recipeIndex >= 0)
-                    tag["ManualRecipe"] = recipeIndex;
+                tag["ManualGroupOutput"] = new Item(ManualGroup.OutputType, 1);
             }
         }
 
@@ -373,11 +412,14 @@ namespace Factorraria.Common.Machines
             MachineHeight = tag.GetInt("MachineHeight");
             MachineWidth = tag.GetInt("MachineWidth");
 
-            if (RecipeList != null && tag.ContainsKey("ManualRecipe"))
+            if (RecipeGroups != null && tag.ContainsKey("ManualGroupOutput"))
             {
-                int recipeIndex = tag.GetInt("ManualRecipe");
-                if (recipeIndex >= 0 && recipeIndex < RecipeList.Count)
-                    SetManualRecipe(RecipeList[recipeIndex]);
+                Item saved = tag.Get<Item>("ManualGroupOutput");
+                RecipeOutputGroup group = saved.IsAir ? null : RecipeGroups.FirstOrDefault(g => g.OutputType == saved.type);
+                if (group != null)
+                {
+                    SetManualGroup(group);
+                }
             }
         }
     }
