@@ -89,9 +89,9 @@ namespace Factorraria.Common.Machines
         // Slot layout convention: [fuel slot (if any)] [ingredient slots...]
         public const int FuelSlotIndex = 0;
         public const int FirstIngredientSlot = FuelSlotIndex + 1;
-        public int FuelSlotCount => AcceptedFuels == null ? 0 : 1;
+        public virtual int FuelSlotCount => AcceptedFuels == null ? 0 : 1;
         protected virtual int InputSlotCount => FuelSlotCount + (Recipes?.MaxIngredientCount ?? 0);
-        protected int IngredientStart => FuelSlotCount;
+        public int IngredientStart => FuelSlotCount;
         public int IngredientSlotCount => Math.Max(0, InputSlotCount - FuelSlotCount);
 
         // Item-ingredient slots auto mode (nothing picked in the browser) reads.
@@ -112,7 +112,7 @@ namespace Factorraria.Common.Machines
         }
 
         FuelModule fuel;
-        public FuelModule Fuel => fuel ??= AcceptedFuels == null ? null : new FuelModule(AcceptedFuels);
+        public FuelModule Fuel => fuel ??= AcceptedFuels == null ? null : new FuelModule(AcceptedFuels, FuelSlotCount);
 
         bool IsElectric => this is IElectricConsumer || this is IElectricProducer;
 
@@ -335,9 +335,9 @@ namespace Factorraria.Common.Machines
 
             if (Fuel != null && Fuel.CanAccept(itemType))
             {
-                slot = FuelSlotIndex;
                 limit = Fuel.StackLimit(itemType);
-                return true;
+                slot = Fuel.FindIntakeSlot(InputSlots, itemType);
+                return slot != -1;
             }
 
             slot = -1; limit = 0;

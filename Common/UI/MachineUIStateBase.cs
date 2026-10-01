@@ -102,7 +102,8 @@ namespace Factorraria.Common.UI
                     v => CurrentEntity.OutputSlots[slotIndex] = v),
                 pos, new Vector2(SlotSize, SlotSize));
 
-        protected MachineUIElementEntry FuelSlotEntry(Vector2 pos) => InputSlotEntry(BaseMachine.FuelSlotIndex, pos);
+        protected MachineUIElementEntry FuelSlotEntry(int fuelIndex, Vector2 pos) => InputSlotEntry(BaseMachine.FuelSlotIndex + fuelIndex, pos);
+        protected MachineUIElementEntry FuelSlotEntry(Vector2 pos) => FuelSlotEntry(0, pos);
 
         protected MachineUIElementEntry InputTankEntry(int tankIndex, Vector2 pos) =>
             new MachineUIElementEntry(new LiquidTankUIElement(() => CurrentEntity.InputLiquids[tankIndex]), pos, new Vector2(16, 84));

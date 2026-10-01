@@ -186,34 +186,59 @@ namespace Factorraria.Common.Machines
         public int Remaining { get; private set; }   // fuel units left in the "burner"
         public int Capacity { get; private set; } = 1; // units the current fuel item gave (for the flame bar)
 
-        public FuelModule(FuelTable table) { this.table = table; }
+        readonly int slotCount;
+        public FuelModule(FuelTable table, int slotCount = 1) { this.table = table; this.slotCount = slotCount; }
+
+        static int FirstSlot => BaseMachine.FuelSlotIndex;
+
+        // Lowest-index fuel slot holding something burnable, or -1.
+        int FindBurnableSlot(Item[] slots)
+        {
+            for (int i = 0; i < slotCount; i++)
+            {
+                Item s = slots[FirstSlot + i];
+                if (!s.IsAir && table.Contains(s.type)) return FirstSlot + i;
+            }
+            return -1;
+        }
 
         public bool CanAccept(int itemType) => table.Contains(itemType);
         public int StackLimit(int itemType) => table.StackLimit(itemType);
 
         // Non-consuming check: is there anything to burn, now or in the slot?
-        public bool HasFuelAvailable(Item[] inputSlots)
-        {
-            if (Remaining > 0) return true;
-            Item slot = inputSlots[BaseMachine.FuelSlotIndex];
-            return !slot.IsAir && table.Contains(slot.type);
-        }
+        public bool HasFuelAvailable(Item[] slots) => Remaining > 0 || FindBurnableSlot(slots) != -1;
 
         // Burner empty -> eat one item from the fuel slot. Returns false if there is nothing valid to burn.
-        public bool TryEnsureFuel(Item[] inputSlots)
+        public bool TryEnsureFuel(Item[] slots)
         {
             if (Remaining > 0) return true;
 
-            Item slot = inputSlots[BaseMachine.FuelSlotIndex];
-            if (slot.IsAir || !table.Contains(slot.type)) return false;
+            int idx = FindBurnableSlot(slots);
+            if (idx == -1) return false;
 
+            Item slot = slots[idx];
             int units = table.UnitsOf(slot.type);
             Remaining += units;
             Capacity = Math.Max(1, units);
 
             slot.stack--;
-            if (slot.stack <= 0) inputSlots[BaseMachine.FuelSlotIndex] = new Item();
+            if (slot.stack <= 0) slots[idx] = new Item();
             return true;
+        }
+
+        // Conveyor intake: a slot already holding this fuel with room, else the first empty one, else -1.
+        public int FindIntakeSlot(Item[] slots, int itemType)
+        {
+            int limit = StackLimit(itemType);
+            int firstEmpty = -1;
+            for (int i = 0; i < slotCount; i++)
+            {
+                int idx = FirstSlot + i;
+                Item s = slots[idx];
+                if (s.IsAir) { if (firstEmpty == -1) firstEmpty = idx; }
+                else if (s.type == itemType && s.stack < limit) return idx;
+            }
+            return firstEmpty;
         }
 
         public void Consume(int units = 1) => Remaining = Math.Max(0, Remaining - units);
