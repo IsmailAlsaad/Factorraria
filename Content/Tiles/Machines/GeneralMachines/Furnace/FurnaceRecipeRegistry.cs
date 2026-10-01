@@ -20,7 +20,6 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
             Fuels.Clear();
             RegisterManualFuels();
-            Fuels.StackLimitRule = units => Math.Max(10 - units, 1);
         }
 
         static void RegisterManualRecipes()

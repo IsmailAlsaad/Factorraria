@@ -144,7 +144,7 @@ namespace Factorraria.Common.Machines
         readonly Dictionary<int, int> unitsByItem = new();
 
         // How many of this fuel the intake will buffer, given its unit value. Default 10.
-        public Func<int, int> StackLimitRule = units => 10;
+        public Func<int, int> StackLimitRule = units => Math.Max(10 - units, 1);
 
         public FuelTable Add(int itemType, int fuelUnits) { unitsByItem[itemType] = fuelUnits; return this; }
         public bool Contains(int itemType) => unitsByItem.ContainsKey(itemType);
