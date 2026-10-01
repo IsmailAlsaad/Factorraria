@@ -180,70 +180,64 @@ namespace Factorraria.Common.Machines
         public int StackLimit(int itemType) => StackLimitRule(UnitsOf(itemType));
         public void Clear() => unitsByItem.Clear();
     }
+
+    // One fuel the machine needs: its own slot, its own item->units table, its own burn rate.
+    public class FuelChannel
+    {
+        public readonly FuelTable Table;
+        public readonly int UnitsPerCraft;   // fuel units this channel burns per finished craft
+
+        public FuelChannel(FuelTable table, int unitsPerCraft = 1)
+        {
+            Table = table;
+            UnitsPerCraft = unitsPerCraft;
+        }
+    }
+
     public class FuelModule
     {
         readonly FuelTable table;
-        public int Remaining { get; private set; }   // fuel units left in the "burner"
-        public int Capacity { get; private set; } = 1; // units the current fuel item gave (for the flame bar)
+        public int SlotIndex { get; }        // the input slot that feeds this burner
+        public int UnitsPerCraft { get; }    // units one finished craft burns
+        public int Remaining { get; private set; }
+        public int Capacity { get; private set; } = 1;
 
-        readonly int slotCount;
-        public FuelModule(FuelTable table, int slotCount = 1) { this.table = table; this.slotCount = slotCount; }
-
-        static int FirstSlot => BaseMachine.FuelSlotIndex;
-
-        // Lowest-index fuel slot holding something burnable, or -1.
-        int FindBurnableSlot(Item[] slots)
+        public FuelModule(FuelTable table, int slotIndex = BaseMachine.FuelSlotIndex, int unitsPerCraft = 1)
         {
-            for (int i = 0; i < slotCount; i++)
-            {
-                Item s = slots[FirstSlot + i];
-                if (!s.IsAir && table.Contains(s.type)) return FirstSlot + i;
-            }
-            return -1;
+            this.table = table;
+            SlotIndex = slotIndex;
+            UnitsPerCraft = unitsPerCraft;
         }
 
         public bool CanAccept(int itemType) => table.Contains(itemType);
         public int StackLimit(int itemType) => table.StackLimit(itemType);
 
-        // Non-consuming check: is there anything to burn, now or in the slot?
-        public bool HasFuelAvailable(Item[] slots) => Remaining > 0 || FindBurnableSlot(slots) != -1;
+        public bool HasFuelAvailable(Item[] inputSlots)
+        {
+            if (Remaining > 0) return true;
+            Item slot = inputSlots[SlotIndex];
+            return !slot.IsAir && table.Contains(slot.type);
+        }
 
-        // Burner empty -> eat one item from the fuel slot. Returns false if there is nothing valid to burn.
-        public bool TryEnsureFuel(Item[] slots)
+        public bool TryEnsureFuel(Item[] inputSlots)
         {
             if (Remaining > 0) return true;
 
-            int idx = FindBurnableSlot(slots);
-            if (idx == -1) return false;
+            Item slot = inputSlots[SlotIndex];
+            if (slot.IsAir || !table.Contains(slot.type)) return false;
 
-            Item slot = slots[idx];
             int units = table.UnitsOf(slot.type);
             Remaining += units;
             Capacity = Math.Max(1, units);
 
             slot.stack--;
-            if (slot.stack <= 0) slots[idx] = new Item();
+            if (slot.stack <= 0) inputSlots[SlotIndex] = new Item();
             return true;
         }
 
-        // Conveyor intake: a slot already holding this fuel with room, else the first empty one, else -1.
-        public int FindIntakeSlot(Item[] slots, int itemType)
-        {
-            int limit = StackLimit(itemType);
-            int firstEmpty = -1;
-            for (int i = 0; i < slotCount; i++)
-            {
-                int idx = FirstSlot + i;
-                Item s = slots[idx];
-                if (s.IsAir) { if (firstEmpty == -1) firstEmpty = idx; }
-                else if (s.type == itemType && s.stack < limit) return idx;
-            }
-            return firstEmpty;
-        }
-
+        public void ConsumeCraft() => Consume(UnitsPerCraft);
         public void Consume(int units = 1) => Remaining = Math.Max(0, Remaining - units);
 
-        // 0..1 for a flame bar, or -1 when not burning. consumedFraction = part of the current craft already "paid for".
         public float GetBurnFraction(float consumedFraction)
         {
             if (Remaining <= 0) return -1f;

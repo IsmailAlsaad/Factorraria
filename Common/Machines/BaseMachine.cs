@@ -83,13 +83,33 @@ namespace Factorraria.Common.Machines
         protected virtual FuelTable AcceptedFuels => null;          // null = no fuel slot
         public virtual RecipeBook Recipes => null;                  // null = no recipe processing
         protected virtual int FuelPerCraft => 1;                    // fuel units one finished craft burns
+
+        // Multi-fuel machines override THIS instead: one channel per fuel needed at the same time.
+        protected virtual FuelChannel[] FuelChannels => AcceptedFuels == null
+            ? Array.Empty<FuelChannel>()
+            : new[] { new FuelChannel(AcceptedFuels, FuelPerCraft) };
+
         protected virtual int RecipeDuration(CustomRecipe r) => r.DurationTicks ?? WorkDuration;
         protected virtual bool CanStartCraft(CustomRecipe recipe) => true;
 
         // Slot layout convention: [fuel slot (if any)] [ingredient slots...]
         public const int FuelSlotIndex = 0;
         public const int FirstIngredientSlot = FuelSlotIndex + 1;
-        public virtual int FuelSlotCount => AcceptedFuels == null ? 0 : 1;
+
+        FuelModule[] fuels;
+        public FuelModule[] Fuels => fuels ??= BuildFuelModules();
+        public FuelModule Fuel => Fuels.Length > 0 ? Fuels[0] : null;   // first/only fuel: the furnace keeps using this
+        public int FuelSlotCount => Fuels.Length;                        // one slot per channel
+
+        FuelModule[] BuildFuelModules()
+        {
+            FuelChannel[] channels = FuelChannels;
+            var arr = new FuelModule[channels.Length];
+            for (int i = 0; i < arr.Length; i++)
+                arr[i] = new FuelModule(channels[i].Table, FuelSlotIndex + i, channels[i].UnitsPerCraft);
+            return arr;
+        }
+
         protected virtual int InputSlotCount => FuelSlotCount + (Recipes?.MaxIngredientCount ?? 0);
         public int IngredientStart => FuelSlotCount;
         public int IngredientSlotCount => Math.Max(0, InputSlotCount - FuelSlotCount);
@@ -110,9 +130,6 @@ namespace Factorraria.Common.Machines
                     : Math.Min(ManualGroup.MaxInputCount, IngredientSlotCount);
             }
         }
-
-        FuelModule fuel;
-        public FuelModule Fuel => fuel ??= AcceptedFuels == null ? null : new FuelModule(AcceptedFuels, FuelSlotCount);
 
         bool IsElectric => this is IElectricConsumer || this is IElectricProducer;
 
@@ -135,14 +152,22 @@ namespace Factorraria.Common.Machines
             bool ready = TryMatchRecipe() && CanStoreOutputs(SelectedRecipe) && CanStartCraft(SelectedRecipe);
             if (!ready) { WorkProgress = 0; isWorking = false; return; }
 
-            if (Fuel != null && !Fuel.HasFuelAvailable(InputSlots)) { isWorking = false; return; }
+            if (!AllFuelsAvailable()) { isWorking = false; return; }
 
             isWorking = true;     // counts toward the grid's demand even during a brownout
             if (!isOn) return;    // browned out: freeze progress, burn nothing
 
-            Fuel?.TryEnsureFuel(InputSlots);
+            foreach (FuelModule f in Fuels) f.TryEnsureFuel(InputSlots);
+
             WorkProgress++;
             if (WorkProgress >= RecipeDuration(SelectedRecipe)) FinishRecipe();
+        }
+
+        bool AllFuelsAvailable()
+        {
+            foreach (FuelModule f in Fuels)
+                if (!f.HasFuelAvailable(InputSlots)) return false;
+            return true;
         }
 
         void FinishRecipe()
@@ -150,7 +175,7 @@ namespace Factorraria.Common.Machines
             CustomRecipe recipe = SelectedRecipe;
             ConsumeInputs(recipe);
             ProduceOutputs(recipe);
-            Fuel?.Consume(FuelPerCraft);
+            foreach (FuelModule f in Fuels) f.ConsumeCraft();
             WorkProgress = 0;
             OnRecipeFinished(recipe);
         }
@@ -158,7 +183,12 @@ namespace Factorraria.Common.Machines
         protected virtual void OnRecipeFinished(CustomRecipe recipe) { }   // sounds, dust, extra effects
 
         public float WorkFraction => SelectedRecipe == null ? 0f : Math.Clamp(WorkProgress / (float)RecipeDuration(SelectedRecipe), 0f, 1f);
-        public float GetFuelBurnFraction() => (Fuel == null || SelectedRecipe == null) ? -1f : Fuel.GetBurnFraction(WorkFraction * FuelPerCraft);
+        public float GetFuelBurnFraction(int channel = 0)
+        {
+            if (channel >= Fuels.Length || SelectedRecipe == null) return -1f;
+            FuelModule f = Fuels[channel];
+            return f.GetBurnFraction(WorkFraction * f.UnitsPerCraft);
+        }
 
         public override void OnKill()
         {
@@ -333,11 +363,12 @@ namespace Factorraria.Common.Machines
         {
             if (TryGetIngredientIntake(itemType, out slot, out limit)) return true;   // ingredients first (same priority the furnace had)
 
-            if (Fuel != null && Fuel.CanAccept(itemType))
+            foreach (FuelModule f in Fuels)
             {
-                limit = Fuel.StackLimit(itemType);
-                slot = Fuel.FindIntakeSlot(InputSlots, itemType);
-                return slot != -1;
+                if (!f.CanAccept(itemType)) continue;
+                slot = f.SlotIndex;
+                limit = f.StackLimit(itemType);
+                return true;
             }
 
             slot = -1; limit = 0;
@@ -454,7 +485,8 @@ namespace Factorraria.Common.Machines
         }
 
         protected virtual void OnAnimationFrameChanged(int newFrame, int previousFrame) { }
-
+        
+        static string FuelKey(string name, int i) => i == 0 ? name : name + i;
         public override void SaveData(TagCompound tag)
         {
             for (int i = 0; i < InputSlots.Length; i++)
@@ -492,6 +524,12 @@ namespace Factorraria.Common.Machines
             { 
                 tag["FuelRemaining"] = Fuel.Remaining; 
                 tag["FuelCapacity"] = Fuel.Capacity; 
+            }
+
+            for (int i = 0; i < Fuels.Length; i++)
+            {
+                tag[FuelKey("FuelRemaining", i)] = Fuels[i].Remaining;
+                tag[FuelKey("FuelCapacity", i)] = Fuels[i].Capacity;
             }
         }
         public override void LoadData(TagCompound tag)
@@ -539,6 +577,9 @@ namespace Factorraria.Common.Machines
 
             WorkProgress = tag.GetInt("WorkProgress");
             Fuel?.Restore(tag.GetInt("FuelRemaining"), tag.GetInt("FuelCapacity"));
+
+            for (int i = 0; i < Fuels.Length; i++)
+                Fuels[i].Restore(tag.GetInt(FuelKey("FuelRemaining", i)), tag.GetInt(FuelKey("FuelCapacity", i)));
         }
         
         public override bool IsTileValidForEntity(int x, int y)
