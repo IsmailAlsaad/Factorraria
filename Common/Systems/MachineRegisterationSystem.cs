@@ -9,6 +9,7 @@ using Terraria.ModLoader;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier;
 
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine;
+using Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator;
 
 namespace Factorraria.Common.Machines
 {
@@ -22,6 +23,7 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.SteampunkBoiler, new GelBurnerUIState());
             MachineUIRegistry.Register(TileID.Autohammer, new AutohammerUIState());
             MachineUIRegistry.Register(TileID.IceMachine, new IceMachineUIState());
+            MachineUIRegistry.Register(TileID.ImbuingStation, new LiquidDistillatorUIState());
             // etc...
         }
 
@@ -50,11 +52,22 @@ namespace Factorraria.Common.Machines
 
 
             MachineVisualRegistry.Register<IceMachineTileEntity>(TileID.IceMachine,
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/IceMachine/IceMachine_On",
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/IceMachine/IceMachine_Off");
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/IceMachine/IceMachine_On",
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/IceMachine/IceMachine_Off");
             MachineVisualRegistry.RegisterLiquidOverlay(TileID.IceMachine,
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/IceMachine/IceMachine_On_FirstLiquid",
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/IceMachine/IceMachine_On_FirstLiquid",
                 entity => entity.InputLiquids[0]);
+
+
+            MachineVisualRegistry.Register<LiquidDistillatorTileEntity>(TileID.ImbuingStation,
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/LiquidDistillator/LiquidDistillator_On",
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/LiquidDistillator/LiquidDistillator_Off");
+            MachineVisualRegistry.RegisterLiquidOverlay(TileID.ImbuingStation,
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/LiquidDistillator/LiquidDistillator_On_FirstLiquid",
+                entity => entity.InputLiquids[0]);
+            MachineVisualRegistry.RegisterLiquidOverlay(TileID.ImbuingStation,
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/LiquidDistillator/LiquidDistillator_On_SecondLiquid",
+                entity => entity.OutputLiquids[0]);
 
 
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
@@ -73,8 +86,8 @@ namespace Factorraria.Common.Machines
             FurnaceRecipeRegistry.BuildRecipes();
             SolidifierRecipeRegistry.BuildRecipes();
             IceMachineRecipeRegistry.BuildRecipes();
+            LiquidDistillatorRecipeRegistry.BuildRecipes();
             // AutohammerRecipeRegistry.BuildRecipes();
-            // GelBurnerRecipeRegistry.BuildRecipes();
             // etc...
         }
 

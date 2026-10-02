@@ -91,6 +91,11 @@ Items: {
 		DisplayName: TModLoader
 		Tooltip: ""
 	}
+
+	CokeItem: {
+		DisplayName: Coke Item
+		Tooltip: ""
+	}
 }
 
 Configs: {
