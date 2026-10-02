@@ -30,6 +30,7 @@ namespace Factorraria.Common.PowerGrid
             }
 
             bool isGridStable = true;
+            float UseFraction = 1f - totalDemand / totalSupply;
             if (totalSupply < totalDemand) 
             {
                 isGridStable = false;
@@ -38,11 +39,13 @@ namespace Factorraria.Common.PowerGrid
             foreach (var producer in electricProducers)
             {
                 producer.isOn = isGridStable;
+                producer.useFraction = UseFraction;
             }
 
             foreach (var consumer in electricConsumers)
             {
                 consumer.isOn = isGridStable;
+                consumer.useFraction = 0f;
             }
         }
 

@@ -16,7 +16,7 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.UI.Elements;
 using Terraria.UI;
 
-namespace Factorraria.Common.UI
+namespace Factorraria.Common.UI.CustomUIElements
 {
     public class RecipeSelectHammerIcon : UIElement
     {
@@ -34,8 +34,8 @@ namespace Factorraria.Common.UI
 
         public override void OnInitialize()
         {
-            HammerIcon = ModContent.Request<Texture2D>("Factorraria/Common/UI/RecipeSelectHammerIcon");
-            HammerIconHover = ModContent.Request<Texture2D>("Factorraria/Common/UI/RecipeSelectHammerIcon_Hover");
+            HammerIcon = ModContent.Request<Texture2D>("Factorraria/Common/UI/CustomUIElements/RecipeSelectHammerIcon");
+            HammerIconHover = ModContent.Request<Texture2D>("Factorraria/Common/UI/CustomUIElements/RecipeSelectHammerIcon_Hover");
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)

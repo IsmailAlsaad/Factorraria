@@ -1,5 +1,5 @@
 ﻿using Factorraria.Common.UI;
-using Factorraria.Content.Tiles.Machines.Furnace;
+using Factorraria.Common.UI.CustomUIElements;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace;
 using Factorraria.Content.Tiles.Machines.Solidifier;
 using Factorraria.Content.UI;

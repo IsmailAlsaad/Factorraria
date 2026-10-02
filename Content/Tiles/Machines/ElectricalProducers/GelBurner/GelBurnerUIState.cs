@@ -1,5 +1,5 @@
 ﻿using Factorraria.Common.UI;
-using Factorraria.Content.Tiles.Machines.Furnace;
+using Factorraria.Common.UI.CustomUIElements;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
@@ -24,6 +24,10 @@ namespace Factorraria.Content.Tiles.Machines.GelBurner
                 new Vector2(-70, 30), new Vector2(54, 54)));
 
             list.Add(FuelSlotEntry(new Vector2(-70, -30)));
+
+            list.Add(new MachineUIElementEntry(
+                new ElectricityUIIcon(Entity.GetUseFraction),
+                new Vector2(8, -50), new Vector2(40, 40)));
 
             return list;
         }

@@ -1,6 +1,5 @@
 ﻿using Factorraria.Common.Machines;
 using Factorraria.Common.UI;
-using Factorraria.Content.Tiles.Machines.Furnace;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;

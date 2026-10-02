@@ -7,7 +7,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
 
-namespace Factorraria.Content.Tiles.Machines.Furnace
+namespace Factorraria.Common.UI.CustomUIElements
 {
     public class FireUIElement : UIElement
     {
@@ -17,8 +17,8 @@ namespace Factorraria.Content.Tiles.Machines.Furnace
 
         public FireUIElement(Func<float> _GetProgress)
         {
-            fireFullTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Machines/GeneralMachines/Furnace/Fire_Full");
-            fireEmptyTexture = ModContent.Request<Texture2D>("Factorraria/Content/Tiles/Machines/GeneralMachines/Furnace/Fire_Empty");
+            fireFullTexture = ModContent.Request<Texture2D>("Factorraria/Common/UI/CustomUIElements/Fire_Full");
+            fireEmptyTexture = ModContent.Request<Texture2D>("Factorraria/Common/UI/CustomUIElements/Fire_Empty");
 
             GetProgress = _GetProgress;
         }

@@ -1,5 +1,5 @@
 ﻿using Factorraria.Common.UI;
-using Factorraria.Content.Tiles.Machines.Furnace;
+using Factorraria.Common.UI.CustomUIElements;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 

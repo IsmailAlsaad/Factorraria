@@ -7,7 +7,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
 
-namespace Factorraria.Content.UI
+namespace Factorraria.Common.UI.CustomUIElements
 {
     // Draw order (back to front): background -> liquid (clipped, bobbing) -> border (always on top).
     // All three are drawn directly here in DrawSelf rather than as separate UIElement
@@ -17,9 +17,9 @@ namespace Factorraria.Content.UI
     // per-layer clipping via child elements couldn't work correctly either way.
     public class LiquidTankUIElement : UIElement
     {
-        const string BorderPath = "Factorraria/Common/UI/Fluid_tank_UI_Border";
-        const string BackgroundPath = "Factorraria/Common/UI/Fluid_tank_UI_Background";
-        const string LiquidPath = "Factorraria/Common/UI/Fluid_tank_UI_Liquid";
+        const string BorderPath = "Factorraria/Common/UI/CustomUIElements/Fluid_tank_UI_Border";
+        const string BackgroundPath = "Factorraria/Common/UI/CustomUIElements/Fluid_tank_UI_Background";
+        const string LiquidPath = "Factorraria/Common/UI/CustomUIElements/Fluid_tank_UI_Liquid";
 
         const float BobAmplitude = 1.2f;
         const float BobSpeed = 0.05f;
