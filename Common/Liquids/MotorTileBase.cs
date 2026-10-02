@@ -73,5 +73,11 @@ namespace Factorraria.Common.Liquids
             LiquidNetworkSystem.networkNeedsRebuilding = true;
             PowerGridSystem.gridNeedsRebuilding = true;
         }
+
+        public override bool CreateDust(int i, int j, ref int type)
+        {
+            // make a custom dust later
+            return false;
+        }
     }
 }

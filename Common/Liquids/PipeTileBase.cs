@@ -112,5 +112,11 @@ namespace Factorraria.Common.Liquids
             Main.tile[i, j].TileFrameX = (short)(connectionMask * 18);
             Main.tile[i, j].TileFrameY = 0;
         }
+
+        public override bool CreateDust(int i, int j, ref int type)
+        {
+            type = DustID.Lead;
+            return true;
+        }
     }
 }
