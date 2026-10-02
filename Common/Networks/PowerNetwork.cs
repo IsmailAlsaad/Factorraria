@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Machines;
 using System;
 using System.Collections.Generic;
+using Terraria;
 
 namespace Factorraria.Common.PowerGrid
 {
@@ -32,7 +33,7 @@ namespace Factorraria.Common.PowerGrid
 
             bool isGridStable = true;
             float UseFraction = totalSupply > 0f ? Math.Clamp(1f - totalDemand / totalSupply, 0f, 1f) : 0f;
-            if (totalSupply < totalDemand) 
+            if (totalSupply < totalDemand || totalSupply == 0) 
             {
                 isGridStable = false;
             }
@@ -46,7 +47,7 @@ namespace Factorraria.Common.PowerGrid
             foreach (var consumer in electricConsumers)
             {
                 consumer.isOn = isGridStable;
-                consumer.useFraction = 0f;
+                consumer.useFraction = isGridStable ? 1f : 0f;
             }
         }
 

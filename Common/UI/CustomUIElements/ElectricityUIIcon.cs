@@ -67,7 +67,7 @@ namespace Factorraria.Common.UI.CustomUIElements
                 }
             }
 
-            drawPercent = drawPercent == -1 ? 0f : Remap(drawPercent, 0f, 1f, 0.15f, 0.95f);
+            drawPercent = drawPercent == -1 ? 0f : Remap(drawPercent, 0f, 1f, 0.12f, 0.95f);
 
             int drawWidth = ElectricityFullIcon.Width();
             int drawHeight = (int)(ElectricityFullIcon.Height() * drawPercent);
