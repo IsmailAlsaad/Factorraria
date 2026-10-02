@@ -644,6 +644,19 @@ namespace Factorraria.Common.Machines
             return id;
         }
 
+        public static bool IsOnScreen(Vector2 worldPos, float margin = 100f)
+        {
+            if (Main.dedServ) return false;
+
+            Rectangle screen = new Rectangle(
+                (int)(Main.screenPosition.X - margin),
+                (int)(Main.screenPosition.Y - margin),
+                (int)(Main.screenWidth + margin * 2f),
+                (int)(Main.screenHeight + margin * 2f));
+
+            return screen.Contains(worldPos.ToPoint());
+        }
+
         public static MachineBiome DetermineBiomeAt(int i, int j)
         {
             // Reads the placing player's active Zone flags — these are already computed from nearby

@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using System;
 using System.Collections.Generic;
 
 namespace Factorraria.Common.PowerGrid
@@ -30,7 +31,7 @@ namespace Factorraria.Common.PowerGrid
             }
 
             bool isGridStable = true;
-            float UseFraction = 1f - totalDemand / totalSupply;
+            float UseFraction = totalSupply > 0f ? Math.Clamp(1f - totalDemand / totalSupply, 0f, 1f) : 0f;
             if (totalSupply < totalDemand) 
             {
                 isGridStable = false;
