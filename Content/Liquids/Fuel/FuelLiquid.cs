@@ -7,38 +7,38 @@ using Terraria.GameContent.Liquid;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace Factorraria.Content.Liquids.Oil
+namespace Factorraria.Content.Liquids.Fuel
 {
-    public class OilLiquid : ModLiquid
+    public class FuelLiquid : ModLiquid
     {
         public override void SetStaticDefaults()
         {
-            LiquidRenderer.VISCOSITY_MASK[Type] = 240;
+            LiquidRenderer.VISCOSITY_MASK[Type] = 200;
 
             LiquidRenderer.WATERFALL_LENGTH[Type] = 20;
 
-            LiquidRenderer.DEFAULT_OPACITY[Type] = 1f;
-            SlopeOpacity = 1f;
+            LiquidRenderer.DEFAULT_OPACITY[Type] = 0.7f;
+            SlopeOpacity = 0.7f;
             LiquidfallOpacityMultiplier = 0.5f;
 
             WaterRippleMultiplier = 0.3f;
 
-            SplashDustType = DustID.Ash;
+            SplashDustType = DustID.SandstormInABottle;
 
-            SplashSound = SoundID.SplashWeak;
+            SplashSound = SoundID.Splash;
 
-            FallDelay = 10;
+            FallDelay = 4;
             ChecksForDrowning = true;
             AllowEmitBreathBubbles = false;
 
-            PlayerMovementMultiplier = 0.2f;
+            PlayerMovementMultiplier = 0.6f;
             StopWatchMPHMultiplier = PlayerMovementMultiplier;
             NPCMovementMultiplierDefault = PlayerMovementMultiplier;
             ProjectileMovementMultiplier = PlayerMovementMultiplier;
 
             LiquidID_TLmod.Sets.CanBeAbsorbedBy[Type].Remove(ItemID.UltraAbsorbantSponge);
 
-            AddMapEntry(new Color(40, 40, 40));
+            AddMapEntry(new Color(134, 104, 78));
 
             VanillaFallbackOnModDeletion = (ushort)LiquidID.Water;
         }
@@ -71,7 +71,7 @@ namespace Factorraria.Content.Liquids.Oil
         }
         public override int ChooseWaterfallStyle(int i, int j)
         {
-            return ModContent.GetInstance<OilLiquidFall>().Slot;
+            return ModContent.GetInstance<FuelLiquidFall>().Slot;
         }
 
         public override bool OnPlayerSplash(Player player, bool isEnter)
@@ -99,7 +99,7 @@ namespace Factorraria.Content.Liquids.Oil
         }
     }
 
-    public class OilLiquidFall : ModLiquidFall
+    public class FuelLiquidFall : ModLiquidFall
     {
 
     }

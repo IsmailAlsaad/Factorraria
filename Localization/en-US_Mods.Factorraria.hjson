@@ -96,6 +96,11 @@ Items: {
 		DisplayName: Coke Item
 		Tooltip: ""
 	}
+
+	FuelBucket: {
+		DisplayName: Fuel Bucket
+		Tooltip: ""
+	}
 }
 
 Configs: {

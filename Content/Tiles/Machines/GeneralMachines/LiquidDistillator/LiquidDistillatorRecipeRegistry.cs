@@ -21,7 +21,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator
 
             Book.Add(new CustomRecipe()
                 .WithLiquidInput(LiquidTypeRegistry.Oil, 100f)
-                .WithLiquidOutput(LiquidTypeRegistry.Lava, 100f) // Change to fuel later
+                .WithLiquidOutput(LiquidTypeRegistry.Fuel, 75f)
                 .TakesTicks(60));
 
             Book.Rebuild();

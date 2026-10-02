@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.Liquids.Oil;
+﻿using Factorraria.Content.Liquids.Fuel;
+using Factorraria.Content.Liquids.Oil;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria.ID;
@@ -44,9 +45,10 @@ namespace Factorraria.Common.Liquids
         public static int Lava;
         public static int Honey;
         public static int Shimmer;
-        
+
         // Custom Liquids
         public static int Oil;
+        public static int Fuel;
     }
 
     // Maps a pipe TILE TYPE to its max flow-rate capacity. MK1 registers one rate,
@@ -74,6 +76,7 @@ namespace Factorraria.Common.Liquids
             LiquidTypeRegistry.Honey = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Honey", RenderColor = new Color(247, 167, 8), VanillaTileLiquidId = (byte?)LiquidID.Honey, IconPath = "Factorraria/Common/Liquids/LiquidIcons/HoneyIcon" });
             LiquidTypeRegistry.Shimmer = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Shimmer", RenderColor = new Color(155, 114, 234), VanillaTileLiquidId = (byte?)LiquidID.Shimmer, IconPath = "Factorraria/Common/Liquids/LiquidIcons/ShimmerIcon" });
             LiquidTypeRegistry.Oil = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Oil", RenderColor = new Color(40, 40, 40), VanillaTileLiquidId = (byte?)ModContent.GetInstance<OilLiquid>().Type, IconPath = "Factorraria/Common/Liquids/LiquidIcons/OilIcon" });
+            LiquidTypeRegistry.Fuel = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Fuel", RenderColor = new Color(134, 104, 78), VanillaTileLiquidId = (byte?)ModContent.GetInstance<FuelLiquid>().Type, IconPath = "Factorraria/Common/Liquids/LiquidIcons/FuelIcon" });
         }
 
         public override void Unload()
