@@ -113,6 +113,7 @@ namespace Factorraria.Content.VirtualItems
 
             AnimateItem();
             MoveVirtualItem();
+            TryUpgradeCoinTier();
 
             if (pickupCooldown > 0)
             {
@@ -457,6 +458,31 @@ namespace Factorraria.Content.VirtualItems
             }
 
             return false;
+        }
+
+        void TryUpgradeCoinTier()
+        {
+            if(stackSize == 100)
+            {
+                stackSize = 1;
+            }
+            else
+            {
+                return;
+            }
+
+            if (itemType == ItemID.CopperCoin)
+            {
+                itemType = ItemID.SilverCoin;
+            }
+            else if (itemType == ItemID.SilverCoin)
+            {
+                itemType = ItemID.GoldCoin;
+            }
+            else if (itemType == ItemID.GoldCoin)
+            {
+                itemType = ItemID.PlatinumCoin;
+            }
         }
 
         #region Debugging

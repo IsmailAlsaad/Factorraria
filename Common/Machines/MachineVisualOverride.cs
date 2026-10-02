@@ -168,5 +168,26 @@ namespace Factorraria.Common.Machines
 
             machine.Kill(position.X, position.Y);
         }
+
+        public override void ModifyLight(int i, int j, int type, ref float r, ref float g, ref float b)
+        {
+            if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var def))
+                return;
+
+            TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity entity, out Point16 position);
+            BaseMachine machine = def.GetEntity(position.X, position.Y);
+
+            if(machine == null)
+            { 
+                return; 
+            }
+
+            if (!machine.isOn || !machine.isWorking)
+            {
+                r = 0f;
+                g = 0f;
+                b = 0f;
+            }
+        }
     }
 }
