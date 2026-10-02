@@ -4,11 +4,9 @@ using Terraria.ID;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine
 {
-    public class IceMachineTileEntity : ElectricConsumerMachine
+    public class IceMachineTileEntity : BaseMachine
     {
         public override int ValidTileType => TileID.IceMachine;
-        public override float PowerDemand => 100f;
-
         public override RecipeBook Recipes => IceMachineRecipeRegistry.Book;
 
         protected override int InputLiquidCount => 1;

@@ -18,6 +18,12 @@ namespace Factorraria.Content.Tiles.Machines.Solidifier
                 .WithOutput(ItemID.Obsidian, 1)
                 .TakesTicks(60));
 
+            Book.Add(new CustomRecipe()
+                .WithLiquidInput(LiquidTypeRegistry.Water, 100f)
+                .WithLiquidInput(LiquidTypeRegistry.Oil, 25f)
+                .WithOutput(ItemID.AsphaltBlock, 1)
+                .TakesTicks(60));
+
             Book.Rebuild();
         }
     }

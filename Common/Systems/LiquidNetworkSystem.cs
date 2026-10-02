@@ -15,15 +15,12 @@ namespace Factorraria.Common.Systems
 {
     public class LiquidNetworkSystem : ModSystem
     {
-        // Every placed pipe tile's position, world-wide — the liquid equivalent of
-        // PowerGridSystem.AllMachines, just tracking pipe tiles instead of machines,
-        // since pipes (not machines) are what actually forms the connected graph here.
         public static HashSet<Point> AllPipeTiles = new();
         public static List<LiquidNetwork> ActiveNetworks = new();
         public static bool networkNeedsRebuilding = true;
         public static bool flowNeedsRecalculating = false;
 
-        const float DecayPerClimbTile = 0.5f * 3600f; // tunable, not a locked design value
+        const float DecayPerClimbTile = 0.5f * 3600f;
 
 
         public override void PostUpdateWorld()
@@ -33,7 +30,7 @@ namespace Factorraria.Common.Systems
 
             if (networkNeedsRebuilding)
             {
-                RebuildNetworks(); // already calls ResolveFlow per network internally
+                RebuildNetworks();
                 RestoreSavedNetworkTypes();
                 networkNeedsRebuilding = false;
                 flowNeedsRecalculating = false;
@@ -43,7 +40,7 @@ namespace Factorraria.Common.Systems
                 foreach (var network in ActiveNetworks)
                 {
                     ResolveFlow(network);
-                    network.LiquidType = -1;   // flow changed: the network re-decides its liquid
+                    network.LiquidType = -1;
                 }
 
                 flowNeedsRecalculating = false;

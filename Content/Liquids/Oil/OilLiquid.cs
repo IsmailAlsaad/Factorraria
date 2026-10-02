@@ -23,7 +23,7 @@ namespace Factorraria.Content.Liquids.Oil
 
             WaterRippleMultiplier = 0.3f;
 
-            SplashDustType = 36; //This is the dust ID for the oil splash dust, which is a black smoke effect.
+            SplashDustType = DustID.Ash;
 
             SplashSound = SoundID.SplashWeak;
 
@@ -32,9 +32,9 @@ namespace Factorraria.Content.Liquids.Oil
             AllowEmitBreathBubbles = false;
 
             PlayerMovementMultiplier = 0.2f;
-            StopWatchMPHMultiplier = PlayerMovementMultiplier; //We set stopwatch to the same multiplier as we don't want a different between whats felt and what the player can read their movement as.
-            NPCMovementMultiplierDefault = PlayerMovementMultiplier; //NPCs have a similar modifier but as a field, here we set the default value as some other NPCs set this multiplier to 0. We set this to PlayerMovementMultiplier as we need them to all be the same.
-            ProjectileMovementMultiplier = PlayerMovementMultiplier; //Simiarly to Players, Projectiles have this property for easy editing of a projectile velocity multiplier without needing to reimplement all of the projectile liquid movement code.
+            StopWatchMPHMultiplier = PlayerMovementMultiplier;
+            NPCMovementMultiplierDefault = PlayerMovementMultiplier;
+            ProjectileMovementMultiplier = PlayerMovementMultiplier;
 
             LiquidID_TLmod.Sets.CanBeAbsorbedBy[Type].Remove(ItemID.UltraAbsorbantSponge);
 
@@ -61,6 +61,7 @@ namespace Factorraria.Content.Liquids.Oil
             {
                 return TileID.TeamBlockPink; //When the liquid collides with shimmer. Pink team block is created
             }
+
             //The base return is what the liquid generates by default. This is useful for when this liquid collides with another modded liquids that this liquid has no support for.
             //usually by default, this method return TIleID.Stone, and generates a stone tile if it cannot recognise any predetermined tile type to generate with
             return TileID.TeamBlockWhite;
