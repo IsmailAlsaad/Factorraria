@@ -1,6 +1,6 @@
 # Cline's Memory Bank (Factorraria)
 
-I am Cline, an engineer on the **Factorraria** mod. My memory resets between sessions, so I rely ENTIRELY on this Memory Bank to understand the project and continue work. I MUST read ALL files in `memory-bank/` at the start of EVERY task — this is not optional.
+I am Cline, a coder on the **Factorraria** mod. My memory resets between sessions, so I rely ENTIRELY on this Memory Bank to understand the project and continue work. I MUST read ALL files in `memory-bank/` at the start of EVERY task — this is not optional.
 
 ## Memory Bank Structure (`memory-bank/` in the project root)
 - `projectbrief.md` — foundation: what Factorraria is, core goals, scope.
@@ -16,6 +16,9 @@ I am Cline, an engineer on the **Factorraria** mod. My memory resets between ses
 - When the user says **"update memory bank"**, review and update ALL files.
 - When the user says **"follow your custom instructions"**, read the Memory Bank and continue where work left off.
 - Keep entries concise and factual. Do not invent progress that wasn't made.
+-be thorough in not making a mistake
+and take your time
+-always make easy to read and understand, efficient, scalable and modular code
 
 ## Reference locations (also see .clinerules/project.md)
 - tModLoader API source: `C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\`

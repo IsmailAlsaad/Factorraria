@@ -3,7 +3,7 @@
 ## Why it exists
 Terraria has rich crafting but no real *automation* layer — you gather and craft by hand. Factorraria fills that
 gap by giving players machines, power, fluids, and logistics so they can build factories and automate processing,
-the same joy Factorio players get from designing production lines.
+the same joy Factorio , Satisfactory, and Create mod from minecraft players get from designing production lines.
 
 ## Problems it solves
 - Manual, repetitive crafting and resource processing.

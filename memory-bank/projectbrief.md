@@ -11,6 +11,7 @@
 - Ship a **custom liquid system** (currently Oil) integrated with pipes, tanks, and fluid motors.
 - Ship a **power grid** with producers (e.g. Gel Burner) and consumers (e.g. Autohammer, Ice Machine, Solidifier).
 - Add **logistics**: conveyors with priority routing, custom wiring, and a Mechanical Arm item.
+- You are basically writing mini-libraries to make ismail use them to add future stuff quickly and easily
 
 ## Scope (current, v0.1)
 - In scope: machines (Furnace, Motors, Pipes, Autohammer, IceMachine, Solidifier, GelBurner), Oil liquid,

@@ -24,9 +24,6 @@ build in this session.
 - Any not-yet-created content (tech tree, additional liquids, etc.) — TBD with Ismail.
 
 ## Known issues
-- `description.txt` is the default placeholder.
-- `description_workshop.txt` present but likely placeholder.
-- No build verification performed yet in these sessions.
 
 ## Decision log
 - 2026: Adopted Cline Rules + Memory Bank to persist project context across chats.
