@@ -153,8 +153,9 @@ namespace Factorraria.Common.Systems
                 {
                     int frameIndex = GetFrameIndexFromNeighbors(pose.X, pose.Y, CustomWireType.Copper);
                     Rectangle spriteSlice = new Rectangle(frameIndex * 18, 0, 16, 16);
+                    Color lighting = Lighting.GetColor(pose.X, pose.Y);
 
-                    Main.spriteBatch.Draw(CopperWireTileTexture.Value, drawPosition, spriteSlice, Color.White);
+                    Main.spriteBatch.Draw(CopperWireTileTexture.Value, drawPosition, spriteSlice, lighting);
 
                     //
                     //Main.NewText("Placed Copper Wire");

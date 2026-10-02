@@ -19,11 +19,11 @@ namespace Factorraria.Content.Tiles.Machines.GelBurner
             // MASK THAT GOES FROM TOP OF THE SLOT TO THE BOTTOM
 
             // Flame gauge: 0..1 of the current gel left, -1 when nothing is burning
-            //list.Add(new MachineUIElementEntry(
-            //    new FireUIElement(() => Entity.Fuel.GetBurnFraction(0f)),
-            //    new Vector2(0, -60), new Vector2(54, 54)));
+            list.Add(new MachineUIElementEntry(
+                new FireUIElement(() => Entity.Fuel.GetBurnFraction(0f)),
+                new Vector2(-70, 30), new Vector2(54, 54)));
 
-            list.Add(FuelSlotEntry(new Vector2(-70, 0)));
+            list.Add(FuelSlotEntry(new Vector2(-70, -30)));
 
             return list;
         }
