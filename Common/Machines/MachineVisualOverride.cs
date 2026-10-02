@@ -140,7 +140,18 @@ namespace Factorraria.Common.Machines
 
             machine.OnRightClick(topLeft.X, topLeft.Y); // machine decides what happens
         }
+        public override void PlaceInWorld(int i, int j, int type, Item item)
+        {
+            if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var def))
+                return;
 
+            // i,j is the cursor tile; resolve the multi-tile's top-left corner.
+            TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 corner);
+
+            // Creates + registers the entity (power grid / liquid network) if it doesn't exist yet.
+            BaseMachine machine = def.GetEntity(corner.X, corner.Y);
+            machine?.OnPlaced(corner.X, corner.Y);
+        }
         public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var def))

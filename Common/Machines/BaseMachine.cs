@@ -492,6 +492,14 @@ namespace Factorraria.Common.Machines
             lastAnimationFrame = frame;
         }
 
+        // Single "player just placed this machine" entry point. Called for BOTH ModTile machines
+        // (via Hook_AfterPlacement) and vanilla-tile machines (via MachineVisualOverride.PlaceInWorld).
+        // i, j is always the entity's top-left corner.
+        public virtual void OnPlaced(int i, int j)
+        {
+            InsideBiome = DetermineBiomeAt(i, j);
+        }
+
         public virtual void OnRightClick(int i, int j)
         {
             if (MachineUIRegistry.Definitions.ContainsKey(ValidTileType))
@@ -628,7 +636,7 @@ namespace Factorraria.Common.Machines
             {
                 if (entity is BaseMachine machine)
                 {
-                    machine.InsideBiome = DetermineBiomeAt(i, j);
+                    machine.OnPlaced(i, j);
                 }
                 PowerGridSystem.RegisterMachineToMasterList(entity);
                 LiquidNetworkSystem.networkNeedsRebuilding = true;
