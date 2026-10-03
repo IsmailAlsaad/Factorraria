@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Factorraria.Common.Liquids;
 
 namespace Factorraria.Common.Machines
 {
@@ -16,7 +17,10 @@ namespace Factorraria.Common.Machines
         public int MinIngredientCount { get; private set; } = 0;
 
         readonly HashSet<int> inputLiquidTypes = new();
-        public bool ConsumesLiquid(int liquidType) => inputLiquidTypes.Contains(liquidType);
+        // True if any recipe consumes this exact liquid, or consumes "any water" and this is some kind of water.
+        public bool ConsumesLiquid(int liquidType) =>
+            inputLiquidTypes.Contains(liquidType) ||
+            (inputLiquidTypes.Contains(LiquidTypeRegistry.AnyWater) && LiquidTypeRegistry.IsWater(liquidType));
 
         public virtual RecipeBook Add(CustomRecipe recipe) { All.Add(recipe); return this; }
 

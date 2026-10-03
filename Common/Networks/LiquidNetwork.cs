@@ -184,7 +184,7 @@ namespace Factorraria.Common.Networks
                     float bank = worldDepositBank.GetValueOrDefault(sink.WorldPos) + sink.RateThisTick;
                     worldDepositBank[sink.WorldPos] = bank;
 
-                    if (tile.LiquidAmount > 0 && LiquidTypeRegistry.FromTileLiquidId((byte)tile.LiquidType) != type) continue; // mismatch — item #6
+                    if (tile.LiquidAmount > 0 && LiquidTypeRegistry.ToTileLiquidId(type) != (byte)tile.LiquidType) continue; // mismatch — item #6
 
                     if (bank < FullTileAmount) continue; // still banking toward a full tile
 
@@ -194,7 +194,7 @@ namespace Factorraria.Common.Networks
                 }
                 else
                 {
-                    slot = FindSinkSlot(sink.MachineSlots, type);
+                    slot = FindSinkSlot(sink.MachineSlots, sink.Machine.ResolveIncomingLiquid(type));
                     if (slot == null) continue;
 
                     float space = slot.Capacity - slot.Amount;
@@ -330,7 +330,7 @@ namespace Factorraria.Common.Networks
                 float give = Math.Min(amount - deposited, cap);
                 if (give <= 0f) continue;
 
-                give = endpoint.IsWorld ? DepositToWorldTile(endpoint.WorldPos, type, give) : DepositToSlot(slot, type, give);
+                give = endpoint.IsWorld ? DepositToWorldTile(endpoint.WorldPos, type, give) : DepositToSlot(slot, endpoint.Machine.ResolveIncomingLiquid(type), give);
                 deposited += give;
             }
         }

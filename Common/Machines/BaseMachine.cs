@@ -298,7 +298,7 @@ namespace Factorraria.Common.Machines
             {
                 foreach (LiquidStack tank in RecipeInputLiquids)
                 {
-                    if (tank.IsEmpty || tank.LiquidType != need.LiquidType || tank.Amount < need.Amount) continue;
+                    if (tank.IsEmpty || !need.Matches(tank.LiquidType) || tank.Amount < need.Amount) continue;
                     tank.Amount -= need.Amount;
                     if (tank.Amount <= 0f) tank.LiquidType = -1;
                     break;
@@ -538,6 +538,19 @@ namespace Factorraria.Common.Machines
         public virtual void OnPlaced(int i, int j)
         {
             InsideBiome = DetermineBiomeAt(i, j);
+        }
+
+        /// <summary>
+        /// Plain Water arriving from a pipe becomes this machine's BIOME water (Snow Water in a snow biome, ...)
+        /// when one of its recipes actually uses that variant (directly, or through AnyWater).
+        /// Everything else (lava, oil, already-specific waters, machines without recipes) passes through unchanged.
+        /// </summary>
+        public int ResolveIncomingLiquid(int liquidType)
+        {
+            if (liquidType != LiquidTypeRegistry.Water || Recipes == null) return liquidType;
+
+            int biomeWater = LiquidTypeRegistry.WaterFor(InsideBiome);
+            return biomeWater != liquidType && Recipes.ConsumesLiquid(biomeWater) ? biomeWater : liquidType;
         }
 
         public virtual void OnRightClick(int i, int j)

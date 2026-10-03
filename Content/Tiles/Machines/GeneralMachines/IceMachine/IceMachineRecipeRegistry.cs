@@ -20,7 +20,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine
                 .TakesTicks(60));
 
             Book.Add(new CustomRecipe()
-                .WithLiquidInput(LiquidTypeRegistry.Water, 100f)
+                .WithAnyWaterInput(100f)
                 .WithOutput(ItemID.SlushBlock, 1)
                 .TakesTicks(60));
 

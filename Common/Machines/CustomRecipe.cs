@@ -25,6 +25,13 @@ namespace Factorraria.Common.Machines
         public readonly int LiquidType;   // id from LiquidTypeRegistry
         public readonly float Amount;
         public LiquidIngredient(int liquidType, float amount) { LiquidType = liquidType; Amount = amount; }
+
+        public bool IsAnyWater => LiquidType == LiquidTypeRegistry.AnyWater;
+
+        // Does a tank holding `tankLiquidType` satisfy this ingredient?
+        // Exact type match, or - for AnyWater - plain Water or any biome water.
+        public bool Matches(int tankLiquidType) =>
+            IsAnyWater ? LiquidTypeRegistry.IsWater(tankLiquidType) : LiquidType == tankLiquidType;
     }
 
     // What a browser group is "about": one item type OR one liquid type.
@@ -110,8 +117,27 @@ namespace Factorraria.Common.Machines
         // Readable builder API for new recipes
         public CustomRecipe WithInput(int type, int stack = 1) { Inputs.Add(new RecipeIngredient(type, stack)); return this; }
         public CustomRecipe WithOutput(int type, int stack = 1) { Outputs.Add(new RecipeIngredient(type, stack)); return this; }
-        public CustomRecipe WithLiquidInput(int liquidType, float amt) { LiquidInputs.Add(new LiquidIngredient(liquidType, amt)); return this; }
-        public CustomRecipe WithLiquidOutput(int liquidType, float amt) { LiquidOutputs.Add(new LiquidIngredient(liquidType, amt)); return this; }
+        // True when an input is AnyWater. Such recipes are tried AFTER the ones naming an exact liquid, so
+        // "Snow Water + X" always wins over "Any Water + X" no matter which was registered first.
+        public bool UsesAnyWater { get; private set; }
+
+        public CustomRecipe WithLiquidInput(int liquidType, float amt)
+        {
+            if (liquidType == LiquidTypeRegistry.AnyWater) UsesAnyWater = true;
+            LiquidInputs.Add(new LiquidIngredient(liquidType, amt));
+            return this;
+        }
+
+        // Plain Water or any biome water.
+        public CustomRecipe WithAnyWaterInput(float amt) => WithLiquidInput(LiquidTypeRegistry.AnyWater, amt);
+        public CustomRecipe WithLiquidOutput(int liquidType, float amt)
+        {
+            if (liquidType == LiquidTypeRegistry.AnyWater)
+                throw new System.ArgumentException("AnyWater can only be a recipe INPUT; pick a concrete water for an output.", nameof(liquidType));
+
+            LiquidOutputs.Add(new LiquidIngredient(liquidType, amt));
+            return this;
+        }
         public CustomRecipe TakesTicks(int ticks) { DurationTicks = ticks; return this; }
 
         public static bool TryGetRecipeFromList(List<CustomRecipe> recipeList, List<Item> itemSlots,out CustomRecipe outputRecipe, LiquidStack[] liquidSlots = null)
@@ -122,9 +148,11 @@ namespace Factorraria.Common.Machines
             foreach (Item s in itemSlots)
                 if (s != null && !s.IsAir && s.stack > 0) activeItemCount++;
 
-            foreach (CustomRecipe recipe in recipeList)
+            // pass 0 = recipes naming an exact liquid, pass 1 = "any water" recipes
+            for (int pass = 0; pass < 2; pass++)
+                foreach (CustomRecipe recipe in recipeList)
             {
-                if (recipe.IsSatisfiedBy(itemSlots, activeItemCount, liquidSlots))
+                if (recipe.UsesAnyWater == (pass == 1) && recipe.IsSatisfiedBy(itemSlots, activeItemCount, liquidSlots))
                 {
                     outputRecipe = recipe;
                     return true;
@@ -151,7 +179,7 @@ namespace Factorraria.Common.Machines
                 bool found = false;
                 if (liquidSlots != null)
                     foreach (LiquidStack tank in liquidSlots)
-                        if (!tank.IsEmpty && tank.LiquidType == need.LiquidType && tank.Amount >= need.Amount) { found = true; break; }
+                        if (!tank.IsEmpty && need.Matches(tank.LiquidType) && tank.Amount >= need.Amount) { found = true; break; }
                 if (!found) return false;
             }
             return true;
