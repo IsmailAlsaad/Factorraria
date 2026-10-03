@@ -125,16 +125,16 @@ namespace Factorraria.Common.Liquids
             // Biome waters. Keep these AFTER the built-ins and only ever APPEND new ones: machine tanks save the
             // liquid as its registry index, so inserting in the middle would change what old saves contain.
             // Add an icon path as a 4th argument if you draw one; without it the recipe browser shows a colour swatch.
-            LiquidTypeRegistry.SnowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Snow, "Snow Water", new Color(0, 0, 0));
-            LiquidTypeRegistry.DesertWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.UndergroundDesert, "Desert Water", new Color(0, 0, 0));
-            LiquidTypeRegistry.JungleWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Jungle, "Jungle Water", new Color(0, 0, 0));
-            LiquidTypeRegistry.OceanWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Ocean, "Ocean Water", new Color(0, 0, 0));
-            LiquidTypeRegistry.UndergroundWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Underground, "Underground Water", new Color(0, 0, 0));
-            LiquidTypeRegistry.CavernWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Cavern, "Cavern Water", new Color(0, 0, 0));
-            LiquidTypeRegistry.CorruptionWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Corruption, "Corrupted Water", new Color(0, 0, 0));
-            LiquidTypeRegistry.CrimsonWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Crimson, "Crimson Water", new Color(0, 0, 0));
-            LiquidTypeRegistry.HallowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Hallow, "Hallowed Water", new Color(0, 0, 0));
-            LiquidTypeRegistry.OasisWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Desert, "Oasis Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.SnowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Snow, "Snow Water", new Color(9, 137, 191));
+            LiquidTypeRegistry.DesertWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.UndergroundDesert, "Desert Water", new Color(168, 106, 32));
+            LiquidTypeRegistry.JungleWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Jungle, "Jungle Water", new Color(7, 145, 142));
+            LiquidTypeRegistry.OceanWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Ocean, "Ocean Water", new Color(9, 76, 191));
+            LiquidTypeRegistry.UndergroundWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Underground, "Underground Water", new Color(36, 60, 148));
+            LiquidTypeRegistry.CavernWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Cavern, "Cavern Water", new Color(65, 59, 101));
+            LiquidTypeRegistry.CorruptionWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Corruption, "Corrupted Water", new Color(59, 29, 131));
+            LiquidTypeRegistry.CrimsonWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Crimson, "Crimson Water", new Color(177, 54, 79));
+            LiquidTypeRegistry.HallowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Hallow, "Hallowed Water", new Color(171, 11, 209));
+            LiquidTypeRegistry.OasisWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Desert, "Oasis Water", new Color(32, 168, 117));
             // Glowing Mushroom uses the same water as Underground (one liquid type, two biomes)
             LiquidTypeRegistry.WaterByBiome[MachineBiome.GlowingMushroom] = LiquidTypeRegistry.UndergroundWater;
         }
