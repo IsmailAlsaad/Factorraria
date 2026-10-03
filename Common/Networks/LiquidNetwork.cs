@@ -101,8 +101,33 @@ namespace Factorraria.Common.Networks
                     sourceBuffer.Add(LiquidEndpoint.ForWorld(att.Position, rateThisTick));
             }
 
+            if (LiquidType == -1)
+                TryLockTypeFromSources(sourceBuffer);
+
             if (sourceBuffer.Count > 0 && sinkBuffer.Count > 0)
                 TransferBetween(sourceBuffer, sinkBuffer);
+        }
+
+        // Types the network from the first source that actually holds liquid, without waiting for a transfer.
+        void TryLockTypeFromSources(List<LiquidEndpoint> sources)
+        {
+            foreach (var source in sources)
+            {
+                if (source.IsWorld)
+                {
+                    Tile tile = Main.tile[source.WorldPos.X, source.WorldPos.Y];
+                    if (tile.LiquidAmount <= 0) continue;
+                    int? worldType = LiquidTypeRegistry.FromTileLiquidId((byte)tile.LiquidType);
+                    if (worldType == null) continue;
+                    LiquidType = worldType.Value;
+                    return;
+                }
+
+                LiquidStack slot = FindMachineSourceSlot(source);
+                if (slot == null) continue;
+                LiquidType = slot.LiquidType;
+                return;
+            }
         }
 
         void TransferBetween(List<LiquidEndpoint> sources, List<LiquidEndpoint> sinks)

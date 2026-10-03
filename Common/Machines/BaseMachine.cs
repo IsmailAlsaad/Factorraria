@@ -538,6 +538,7 @@ namespace Factorraria.Common.Machines
         public virtual void OnPlaced(int i, int j)
         {
             InsideBiome = DetermineBiomeAt(i, j);
+            //Main.NewText(InsideBiome);
         }
 
         /// <summary>

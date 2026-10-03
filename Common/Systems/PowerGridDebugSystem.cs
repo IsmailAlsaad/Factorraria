@@ -151,16 +151,16 @@ public class PowerGridDebugSystem : ModSystem
         for (int i = 0; i < machine.InputLiquids.Length; i++)
         {
             LiquidStack liquid = machine.InputLiquids[i];
-            text.AppendLine(liquid.IsEmpty ? $"InLiquid{i}: -" : $"InLiquid{i}: type {liquid.LiquidType} amt {liquid.Amount:F1}");
+            text.AppendLine(liquid.IsEmpty ? $"InLiquid{i}: -" : $"InLiquid{i}: {LiquidTypeRegistry.Get(liquid.LiquidType).Name} amt {liquid.Amount:F1}");
         }
 
         for (int i = 0; i < machine.OutputLiquids.Length; i++)
         {
             LiquidStack liquid = machine.OutputLiquids[i];
-            text.AppendLine(liquid.IsEmpty ? $"OutLiquid{i}: -" : $"OutLiquid{i}: type {liquid.LiquidType} amt {liquid.Amount:F1}");
+            text.AppendLine(liquid.IsEmpty ? $"OutLiquid{i}: -" : $"OutLiquid{i}: {LiquidTypeRegistry.Get(liquid.LiquidType).Name} amt {liquid.Amount:F1}");
         }
 
-        Vector2 screenPos = machine.Position.ToVector2() * 16f - Main.screenPosition;
+        text.AppendLine($"Biome: {machine.InsideBiome}"); Vector2 screenPos = machine.Position.ToVector2() * 16f - Main.screenPosition;
         Vector2 labelPos = screenPos + new Vector2(20f, -10f); // offset right of the tile so it doesn't collide with the grid text on the left
 
         Utils.DrawBorderString(sb, text.ToString(), labelPos, Color.White, 0.7f);
