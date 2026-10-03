@@ -136,8 +136,13 @@ namespace Factorraria.Common.UI
         protected MachineUIElementEntry FuelSlotEntry(int fuelIndex, Vector2 pos) => InputSlotEntry(BaseMachine.FuelSlotIndex + fuelIndex, pos);
         protected MachineUIElementEntry FuelSlotEntry(Vector2 pos) => FuelSlotEntry(0, pos);
 
+        // Liquid-fuel tank (fuelIndex = the channel). Fuel tanks are the first entries of InputLiquids.
+        protected MachineUIElementEntry FuelTankEntry(int fuelIndex, Vector2 pos) =>
+            new MachineUIElementEntry(new LiquidTankUIElement(() => CurrentEntity.InputLiquids[fuelIndex]), pos, new Vector2(16, 84));
+
+        // Recipe input tank (tankIndex counts recipe tanks only, so it stays correct on machines that also burn liquid fuel).
         protected MachineUIElementEntry InputTankEntry(int tankIndex, Vector2 pos) =>
-            new MachineUIElementEntry(new LiquidTankUIElement(() => CurrentEntity.InputLiquids[tankIndex]), pos, new Vector2(16, 84));
+            new MachineUIElementEntry(new LiquidTankUIElement(() => CurrentEntity.RecipeInputLiquids[tankIndex]), pos, new Vector2(16, 84));
 
         protected MachineUIElementEntry OutputTankEntry(int tankIndex, Vector2 pos) =>
             new MachineUIElementEntry(new LiquidTankUIElement(() => CurrentEntity.OutputLiquids[tankIndex]), pos, new Vector2(16, 84));

@@ -10,6 +10,7 @@ using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier;
 
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator;
+using Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge;
 
 namespace Factorraria.Common.Machines
 {
@@ -24,6 +25,7 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.Autohammer, new AutohammerUIState());
             MachineUIRegistry.Register(TileID.IceMachine, new IceMachineUIState());
             MachineUIRegistry.Register(TileID.ImbuingStation, new LiquidDistillatorUIState());
+            MachineUIRegistry.Register(TileID.Hellforge, new HellforgeUIState());
             // etc...
         }
 
@@ -70,6 +72,11 @@ namespace Factorraria.Common.Machines
                 entity => entity.OutputLiquids[0]);
 
 
+            MachineVisualRegistry.Register<HellforgeTileEntity>(TileID.Hellforge,
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/Hellforge/Hellforge_On",
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/Hellforge/Hellforge_Off");
+
+
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_On",
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_Off");
@@ -84,6 +91,7 @@ namespace Factorraria.Common.Machines
         {
             // Register every machine's Recipes here
             FurnaceRecipeRegistry.BuildRecipes();
+            HellforgeRecipeRegistry.BuildRecipes();
             SolidifierRecipeRegistry.BuildRecipes();
             IceMachineRecipeRegistry.BuildRecipes();
             LiquidDistillatorRecipeRegistry.BuildRecipes();

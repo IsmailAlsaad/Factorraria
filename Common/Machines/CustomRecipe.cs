@@ -250,4 +250,82 @@ namespace Factorraria.Common.Machines
             Capacity = Math.Max(1, capacity > 0 ? capacity : remaining);
         }
     }
+
+    // Liquid counterpart of FuelTable: which liquids can be burned, and how much of each makes ONE fuel unit.
+    // Lower amountPerFuelUnit = better fuel (same idea as coal being worth more units than gel).
+    public class LiquidFuelTable
+    {
+        readonly Dictionary<int, float> amountPerUnitByLiquid = new();
+
+        public LiquidFuelTable Add(int liquidType, float amountPerFuelUnit)
+        {
+            if (amountPerFuelUnit <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(amountPerFuelUnit), "One fuel unit must cost a positive amount of liquid.");
+
+            amountPerUnitByLiquid[liquidType] = amountPerFuelUnit;
+            return this;
+        }
+
+        public bool Contains(int liquidType) => amountPerUnitByLiquid.ContainsKey(liquidType);
+        public float AmountPerUnit(int liquidType) => amountPerUnitByLiquid[liquidType];
+        public void Clear() => amountPerUnitByLiquid.Clear();
+    }
+
+    // One liquid fuel the machine needs: its own input tank, its own liquid->units table, its own burn rate.
+    public class LiquidFuelChannel
+    {
+        public readonly LiquidFuelTable Table;
+        public readonly int UnitsPerCraft;   // fuel units this channel burns per finished craft
+
+        public LiquidFuelChannel(LiquidFuelTable table, int unitsPerCraft = 1)
+        {
+            Table = table;
+            UnitsPerCraft = unitsPerCraft;
+        }
+    }
+
+    // Burns one channel's fuel. Unlike items, liquid is continuous, so there is no "burn buffer":
+    // the input tank IS the buffer, and a craft takes (units * amountPerUnit) straight out of it.
+    // Keep AmountPerCraft <= tank Capacity (1000 by default) or the machine can never start a craft.
+    public class LiquidFuelModule
+    {
+        readonly LiquidFuelTable table;
+
+        public int TankIndex { get; }        // index into BaseMachine.InputLiquids (fuel tanks come first)
+        public int UnitsPerCraft { get; }    // units one finished craft burns
+
+        public LiquidFuelModule(LiquidFuelTable table, int tankIndex, int unitsPerCraft = 1)
+        {
+            this.table = table;
+            TankIndex = tankIndex;
+            UnitsPerCraft = unitsPerCraft;
+        }
+
+        // Also used as the tank's pipe filter, so pipes can only put burnable liquids in.
+        public bool CanAccept(int liquidType) => table.Contains(liquidType);
+
+        // How much of this liquid one craft burns.
+        public float AmountPerCraft(int liquidType) => table.AmountPerUnit(liquidType) * UnitsPerCraft;
+
+        public bool HasFuelAvailable(LiquidStack[] inputTanks)
+        {
+            LiquidStack tank = inputTanks[TankIndex];
+            if (tank.IsEmpty || !table.Contains(tank.LiquidType)) return false;
+            return tank.Amount >= AmountPerCraft(tank.LiquidType);
+        }
+
+        public void ConsumeCraft(LiquidStack[] inputTanks)
+        {
+            LiquidStack tank = inputTanks[TankIndex];
+            if (tank.IsEmpty || !table.Contains(tank.LiquidType)) return;
+
+            tank.Amount -= Math.Min(tank.Amount, AmountPerCraft(tank.LiquidType));
+            if (tank.Amount <= 0f)
+            {
+                tank.Amount = 0f;
+                tank.LiquidType = -1;   // drained: the tank may take any burnable liquid again
+            }
+        }
+    }
+
 }

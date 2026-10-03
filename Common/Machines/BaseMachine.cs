@@ -65,6 +65,10 @@ namespace Factorraria.Common.Machines
         LiquidStack[] inputLiquids;
         LiquidStack[] outputLiquids;
         public LiquidStack[] InputLiquids => inputLiquids ??= CreateInputLiquids();
+
+        // The tanks recipes read and consume: every input tank EXCEPT the liquid-fuel tanks (those sit first in InputLiquids).
+        LiquidStack[] recipeInputLiquids;
+        public LiquidStack[] RecipeInputLiquids => recipeInputLiquids ??= InputLiquids[LiquidFuelCount..];
         public LiquidStack[] OutputLiquids => outputLiquids ??= CreateLiquidArray(OutputLiquidCount);
 
         static LiquidStack[] CreateLiquidArray(int count)
@@ -90,21 +94,40 @@ namespace Factorraria.Common.Machines
             ? Array.Empty<FuelChannel>()
             : new[] { new FuelChannel(AcceptedFuels, FuelPerCraft) };
 
+        // Liquid fuels: same idea as the item fuels above, but burned straight out of a dedicated input tank.
+        // Single-fuel machines override AcceptedLiquidFuels (+ LiquidFuelPerCraft); multi-fuel machines override LiquidFuelChannels.
+        protected virtual LiquidFuelTable AcceptedLiquidFuels => null;   // null = no liquid fuel tank
+        protected virtual int LiquidFuelPerCraft => 1;                   // liquid fuel units one finished craft burns
+
+        protected virtual LiquidFuelChannel[] LiquidFuelChannels => AcceptedLiquidFuels == null
+            ? Array.Empty<LiquidFuelChannel>()
+            : new[] { new LiquidFuelChannel(AcceptedLiquidFuels, LiquidFuelPerCraft) };
+
         protected virtual int RecipeDuration(CustomRecipe r) => r.DurationTicks ?? WorkDuration;
         protected virtual bool CanStartCraft(CustomRecipe recipe) => true;
 
         LiquidStack[] CreateInputLiquids()
         {
-            LiquidStack[] arr = CreateLiquidArray(InputLiquidCount);
+            int fuelTanks = LiquidFuelCount;   // liquid-fuel tanks first, recipe tanks after
+            LiquidStack[] arr = CreateLiquidArray(fuelTanks + InputLiquidCount);
             for (int i = 0; i < arr.Length; i++)
             {
                 int tank = i;   // capture a copy per tank
-                arr[i].Filter = type => AcceptsInputLiquid(tank, type);
+                if (tank < fuelTanks)
+                {
+                    // A fuel tank only takes liquids its own fuel table can burn.
+                    arr[i].Filter = LiquidFuels[tank].CanAccept;
+                }
+                else
+                {
+                    arr[i].Filter = type => AcceptsInputLiquid(tank - fuelTanks, type);
+                }
             }
             return arr;
         }
 
         // What may the pipes put into input tank `tankIndex`? Default: anything a recipe consumes.
+        // tankIndex counts RECIPE tanks only; liquid-fuel tanks are filtered by their own LiquidFuelTable.
         protected virtual bool AcceptsInputLiquid(int tankIndex, int liquidType) =>
             Recipes == null || Recipes.ConsumesLiquid(liquidType);
 
@@ -116,6 +139,20 @@ namespace Factorraria.Common.Machines
         public FuelModule[] Fuels => fuels ??= BuildFuelModules();
         public FuelModule Fuel => Fuels.Length > 0 ? Fuels[0] : null;   // first/only fuel: the furnace keeps using this
         public int FuelSlotCount => Fuels.Length;                        // one slot per channel
+
+        // Liquid fuels live in the FIRST input tanks (one per channel); recipe tanks come after them.
+        LiquidFuelModule[] liquidFuels;
+        public LiquidFuelModule[] LiquidFuels => liquidFuels ??= BuildLiquidFuelModules();
+        public int LiquidFuelCount => LiquidFuels.Length;
+
+        LiquidFuelModule[] BuildLiquidFuelModules()
+        {
+            LiquidFuelChannel[] channels = LiquidFuelChannels;
+            var arr = new LiquidFuelModule[channels.Length];
+            for (int i = 0; i < arr.Length; i++)
+                arr[i] = new LiquidFuelModule(channels[i].Table, i, channels[i].UnitsPerCraft);
+            return arr;
+        }
 
         FuelModule[] BuildFuelModules()
         {
@@ -183,6 +220,8 @@ namespace Factorraria.Common.Machines
         {
             foreach (FuelModule f in Fuels)
                 if (!f.HasFuelAvailable(InputSlots)) return false;
+            foreach (LiquidFuelModule lf in LiquidFuels)
+                if (!lf.HasFuelAvailable(InputLiquids)) return false;
             return true;
         }
 
@@ -192,6 +231,7 @@ namespace Factorraria.Common.Machines
             ConsumeInputs(recipe);
             ProduceOutputs(recipe);
             foreach (FuelModule f in Fuels) f.ConsumeCraft();
+            foreach (LiquidFuelModule lf in LiquidFuels) lf.ConsumeCraft(InputLiquids);
             WorkProgress = 0;
             OnRecipeFinished(recipe);
         }
@@ -234,7 +274,7 @@ namespace Factorraria.Common.Machines
         bool TryMatchRecipe()
         {
             List<CustomRecipe> candidates = ManualGroup != null ? ManualGroup.Recipes : Recipes.All;
-            return CustomRecipe.TryGetRecipeFromList(candidates, GetIngredientItems(), out SelectedRecipe, InputLiquids);
+            return CustomRecipe.TryGetRecipeFromList(candidates, GetIngredientItems(), out SelectedRecipe, RecipeInputLiquids);
         }
 
         void ConsumeInputs(CustomRecipe recipe)
@@ -256,7 +296,7 @@ namespace Factorraria.Common.Machines
 
             foreach (LiquidIngredient need in recipe.LiquidInputs)
             {
-                foreach (LiquidStack tank in InputLiquids)
+                foreach (LiquidStack tank in RecipeInputLiquids)
                 {
                     if (tank.IsEmpty || tank.LiquidType != need.LiquidType || tank.Amount < need.Amount) continue;
                     tank.Amount -= need.Amount;
