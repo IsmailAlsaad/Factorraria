@@ -69,7 +69,7 @@ namespace Factorraria.Common.Systems
                     // 3. Draw a box around every world-liquid tile this network is attached to —
                     //    a slightly different border color so it's visually distinct from machines.
                     foreach (var attachment in network.WorldLiquidAttachments)
-                        DrawAttachmentOverlay(spriteBatch, attachment.Position, Color.SkyBlue * 0.35f, Color.SkyBlue);
+                        { DrawAttachmentOverlay(spriteBatch, attachment.Position, Color.SkyBlue * 0.35f, Color.SkyBlue); Tile wt = Main.tile[attachment.Position.X, attachment.Position.Y]; bool hasFlow = network.ResolvedFlow.TryGetValue(attachment.PipePosition, out var wf); Utils.DrawBorderString(spriteBatch, $"amt {wt.LiquidAmount} type {wt.LiquidType} flow {(hasFlow ? wf.Direction.ToString() : "none")} mouth {attachment.MouthDirection}", new Vector2(attachment.Position.X, attachment.Position.Y) * 16f - Main.screenPosition + new Vector2(0, 16), Color.White, 0.6f); }
 
                     // 4. One text readout per network, anchored at its first pipe tile —
                     //    "first" is arbitrary (HashSet has no order), just needs SOME anchor point.
