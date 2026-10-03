@@ -11,6 +11,7 @@ using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer;
 
 namespace Factorraria.Common.Machines
 {
@@ -95,7 +96,7 @@ namespace Factorraria.Common.Machines
             SolidifierRecipeRegistry.BuildRecipes();
             IceMachineRecipeRegistry.BuildRecipes();
             LiquidDistillatorRecipeRegistry.BuildRecipes();
-            // AutohammerRecipeRegistry.BuildRecipes();
+            AutohammerRecipeRegistry.BuildRecipes();
             // etc...
         }
 

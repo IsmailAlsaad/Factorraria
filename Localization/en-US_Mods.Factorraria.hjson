@@ -68,22 +68,22 @@ Items: {
 	}
 
 	MechSuitItem: {
-		DisplayName: Mech Suit Item
+		DisplayName: Mech Suit
 		Tooltip: ""
 	}
 
 	CsharpLogoItem: {
-		DisplayName: Csharp Logo Item
+		DisplayName: Csharp
 		Tooltip: ""
 	}
 
 	IsmailsCaneItem: {
-		DisplayName: Ismails Cane Item
+		DisplayName: Ismails Cane
 		Tooltip: ""
 	}
 
 	TerrariaLogoItem: {
-		DisplayName: Terraria Logo Item
+		DisplayName: Terraria
 		Tooltip: ""
 	}
 
@@ -93,7 +93,7 @@ Items: {
 	}
 
 	CokeItem: {
-		DisplayName: Coke Item
+		DisplayName: Coke
 		Tooltip: ""
 	}
 
@@ -103,37 +103,37 @@ Items: {
 	}
 
 	SteelBarItem: {
-		DisplayName: Steel Bar Item
+		DisplayName: Steel Bar
 		Tooltip: ""
 	}
 
 	ByriteAlloyItem: {
-		DisplayName: Byrite Alloy Item
+		DisplayName: Byrite Alloy
 		Tooltip: ""
 	}
 
 	ByriteAlloySlabItem: {
-		DisplayName: Byrite Alloy Slab Item
+		DisplayName: Byrite Alloy Slab
 		Tooltip: ""
 	}
 
 	CrimtaneSheetItem: {
-		DisplayName: Crimtane Sheet Item
+		DisplayName: Crimtane Sheet
 		Tooltip: ""
 	}
 
 	DemoniteSheetItem: {
-		DisplayName: Demonite Sheet Item
+		DisplayName: Demonite Sheet
 		Tooltip: ""
 	}
 
 	GoldPlateItem: {
-		DisplayName: Gold Plate Item
+		DisplayName: Gold Plate
 		Tooltip: ""
 	}
 
 	MeteoritePanelItem: {
-		DisplayName: Meteorite Panel Item
+		DisplayName: Meteorite Panel
 		Tooltip: ""
 	}
 }

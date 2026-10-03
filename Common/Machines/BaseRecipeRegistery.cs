@@ -115,6 +115,10 @@ namespace Factorraria.Common.Machines
             Groups.Clear();
             Groups.AddRange(RecipeOutputGroup.Build(All));
 
+            // Alphabetical by output name (items and liquids both use Key.DisplayName)
+            Groups.Sort((a, b) => string.Compare(
+                a.Key.DisplayName, b.Key.DisplayName, StringComparison.OrdinalIgnoreCase));
+
             MaxIngredientCount = 0;
             MinIngredientCount = int.MaxValue;
             foreach (CustomRecipe r in All)
