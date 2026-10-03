@@ -723,24 +723,25 @@ namespace Factorraria.Common.Machines
 
             Player player = Main.LocalPlayer;
 
-            if (player.ZoneShimmer)          return MachineBiome.Aether;
-            if (player.ZoneMeteor)           return MachineBiome.Meteor;
-            if (player.ZoneDungeon)          return MachineBiome.Dungeon;
-            if (player.ZoneLihzhardTemple)   return MachineBiome.Temple;
-            if (player.ZoneGlowshroom)       return MachineBiome.GlowingMushroom;
-            if (player.ZoneCorrupt)          return MachineBiome.Corruption;
-            if (player.ZoneCrimson)          return MachineBiome.Crimson;
-            if (player.ZoneHallow)           return MachineBiome.Hallow;
-            if (player.ZoneJungle)           return MachineBiome.Jungle;
-            if (player.ZoneSnow)             return MachineBiome.Snow;
-            if (player.ZoneDesert)           return MachineBiome.Desert;
-            if (player.ZoneGraveyard)        return MachineBiome.Graveyard;
-            if (player.ZoneBeach)            return MachineBiome.Ocean;
-            if (player.ZoneUnderworldHeight) return MachineBiome.Underworld;
-            if (player.ZoneRockLayerHeight)  return MachineBiome.Cavern;
-            if (player.ZoneDirtLayerHeight)  return MachineBiome.Underground;
-            if (player.ZoneSkyHeight)        return MachineBiome.Sky;
-            if (player.ZoneOverworldHeight)  return MachineBiome.Forest;
+            if (player.ZoneShimmer)           return MachineBiome.Aether;
+            if (player.ZoneMeteor)            return MachineBiome.Meteor;
+            if (player.ZoneDungeon)           return MachineBiome.Dungeon;
+            if (player.ZoneLihzhardTemple)    return MachineBiome.Temple;
+            if (player.ZoneGlowshroom)        return MachineBiome.GlowingMushroom;
+            if (player.ZoneCorrupt)           return MachineBiome.Corruption;
+            if (player.ZoneCrimson)           return MachineBiome.Crimson;
+            if (player.ZoneHallow)            return MachineBiome.Hallow;
+            if (player.ZoneJungle)            return MachineBiome.Jungle;
+            if (player.ZoneSnow)              return MachineBiome.Snow;
+            if (player.ZoneUndergroundDesert) return MachineBiome.UndergroundDesert;
+            if (player.ZoneDesert)            return MachineBiome.Desert;
+            if (player.ZoneGraveyard)         return MachineBiome.Graveyard;
+            if (player.ZoneBeach)             return MachineBiome.Ocean;
+            if (player.ZoneUnderworldHeight)  return MachineBiome.Underworld;
+            if (player.ZoneRockLayerHeight)   return MachineBiome.Cavern;
+            if (player.ZoneDirtLayerHeight)   return MachineBiome.Underground;
+            if (player.ZoneSkyHeight)         return MachineBiome.Sky;
+            if (player.ZoneOverworldHeight)   return MachineBiome.Forest;
 
             return MachineBiome.Unknown;
         }

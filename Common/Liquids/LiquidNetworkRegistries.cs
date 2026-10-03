@@ -66,7 +66,7 @@ namespace Factorraria.Common.Liquids
         public static int CorruptionWater;
         public static int CrimsonWater;
         public static int HallowWater;
-        public static int MushroomWater;
+        public static int OasisWater;
 
         public static readonly Dictionary<MachineBiome, int> WaterByBiome = new();
 
@@ -118,43 +118,38 @@ namespace Factorraria.Common.Liquids
             LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Lava", RenderColor = new Color(200, 70, 20), VanillaTileLiquidId = (byte?)LiquidID.Lava, IconPath = "Factorraria/Common/Liquids/LiquidIcons/LavaIcon" });
             LiquidTypeRegistry.Honey = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Honey", RenderColor = new Color(247, 167, 8), VanillaTileLiquidId = (byte?)LiquidID.Honey, IconPath = "Factorraria/Common/Liquids/LiquidIcons/HoneyIcon" });
             LiquidTypeRegistry.Shimmer = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Shimmer", RenderColor = new Color(155, 114, 234), VanillaTileLiquidId = (byte?)LiquidID.Shimmer, IconPath = "Factorraria/Common/Liquids/LiquidIcons/ShimmerIcon" });
+            
             LiquidTypeRegistry.Oil = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Oil", RenderColor = new Color(40, 40, 40), VanillaTileLiquidId = (byte?)ModContent.GetInstance<OilLiquid>().Type, IconPath = "Factorraria/Common/Liquids/LiquidIcons/OilIcon" });
             LiquidTypeRegistry.Fuel = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Fuel", RenderColor = new Color(134, 104, 78), VanillaTileLiquidId = (byte?)ModContent.GetInstance<FuelLiquid>().Type, IconPath = "Factorraria/Common/Liquids/LiquidIcons/FuelIcon" });
 
             // Biome waters. Keep these AFTER the built-ins and only ever APPEND new ones: machine tanks save the
             // liquid as its registry index, so inserting in the middle would change what old saves contain.
             // Add an icon path as a 4th argument if you draw one; without it the recipe browser shows a colour swatch.
-            LiquidTypeRegistry.SnowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Snow, "Snow Water", new Color(150, 215, 235));
-            LiquidTypeRegistry.DesertWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Desert, "Desert Water", new Color(200, 185, 110));
-            LiquidTypeRegistry.JungleWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Jungle, "Jungle Water", new Color(50, 160, 70));
-            LiquidTypeRegistry.OceanWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Ocean, "Ocean Water", new Color(0, 70, 170));
-            LiquidTypeRegistry.UndergroundWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Underground, "Underground Water", new Color(110, 115, 125));
-            LiquidTypeRegistry.CavernWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Cavern, "Cavern Water", new Color(80, 88, 105));
-            LiquidTypeRegistry.CorruptionWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Corruption, "Corrupted Water", new Color(115, 65, 155));
-            LiquidTypeRegistry.CrimsonWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Crimson, "Crimson Water", new Color(175, 45, 55));
-            LiquidTypeRegistry.HallowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Hallow, "Hallowed Water", new Color(205, 150, 230));
-            LiquidTypeRegistry.MushroomWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.GlowingMushroom, "Mushroom Water", new Color(90, 105, 215));
+            LiquidTypeRegistry.SnowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Snow, "Snow Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.DesertWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.UndergroundDesert, "Desert Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.JungleWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Jungle, "Jungle Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.OceanWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Ocean, "Ocean Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.UndergroundWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Underground, "Underground Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.CavernWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Cavern, "Cavern Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.CorruptionWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Corruption, "Corrupted Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.CrimsonWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Crimson, "Crimson Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.HallowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Hallow, "Hallowed Water", new Color(0, 0, 0));
+            LiquidTypeRegistry.OasisWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Desert, "Oasis Water", new Color(0, 0, 0));
+            // Glowing Mushroom uses the same water as Underground (one liquid type, two biomes)
+            LiquidTypeRegistry.WaterByBiome[MachineBiome.GlowingMushroom] = LiquidTypeRegistry.UndergroundWater;
         }
 
-        
-            //if (player.ZoneShimmer)          return MachineBiome.Aether;
-            //if (player.ZoneMeteor)           return MachineBiome.Meteor;
-            //if (player.ZoneDungeon)          return MachineBiome.Dungeon;
-            //if (player.ZoneLihzhardTemple)   return MachineBiome.Temple;
-            //if (player.ZoneGlowshroom)       return MachineBiome.GlowingMushroom;
-            //if (player.ZoneCorrupt)          return MachineBiome.Corruption;
-            //if (player.ZoneCrimson)          return MachineBiome.Crimson;
-            //if (player.ZoneHallow)           return MachineBiome.Hallow;
-            //if (player.ZoneJungle)           return MachineBiome.Jungle;
-            //if (player.ZoneSnow)             return MachineBiome.Snow;
-            //if (player.ZoneDesert)           return MachineBiome.Desert;
-            //if (player.ZoneGraveyard)        return MachineBiome.Graveyard;
-            //if (player.ZoneBeach)            return MachineBiome.Ocean;
-            //if (player.ZoneUnderworldHeight) return MachineBiome.Underworld;
-            //if (player.ZoneRockLayerHeight)  return MachineBiome.Cavern;
-            //if (player.ZoneDirtLayerHeight)  return MachineBiome.Underground;
-            //if (player.ZoneSkyHeight)        return MachineBiome.Sky;
-            //if (player.ZoneOverworldHeight)  return MachineBiome.Forest;
+        //.WithLiquidInput(LiquidTypeRegistry.Water, 100f)            // Forest (blue)
+        //.WithLiquidInput(LiquidTypeRegistry.UndergroundWater, 100f) // Underground + Glowing Mushroom (dark blue)
+        //.WithLiquidInput(LiquidTypeRegistry.DesertWater, 100f)      // Underground Desert (yellow)
+        //.WithLiquidInput(LiquidTypeRegistry.OasisWater, 100f)       // Surface Desert / Oasis (turquoise)
+        //.WithLiquidInput(LiquidTypeRegistry.JungleWater, 100f)      // Jungle (teal)
+        //.WithLiquidInput(LiquidTypeRegistry.SnowWater, 100f)        // Snow (light blue)
+        //.WithLiquidInput(LiquidTypeRegistry.CorruptionWater, 100f)  // Corruption (purple)
+        //.WithLiquidInput(LiquidTypeRegistry.CrimsonWater, 100f)     // Crimson (pinkish)
+        //.WithLiquidInput(LiquidTypeRegistry.HallowWater, 100f)      // Hallow (magenta)
+        //.WithLiquidInput(LiquidTypeRegistry.CavernWater, 100f)      // Cavern (murky purple)
+        //.WithLiquidInput(LiquidTypeRegistry.OceanWater, 100f)       // Ocean (sky blue)
 
         public override void Unload()
         {

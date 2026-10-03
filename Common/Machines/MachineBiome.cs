@@ -20,6 +20,7 @@ namespace Factorraria.Common.Machines
         Temple,
         Aether,
         Graveyard,
-        Meteor
+        Meteor,
+        UndergroundDesert
     }
 }
