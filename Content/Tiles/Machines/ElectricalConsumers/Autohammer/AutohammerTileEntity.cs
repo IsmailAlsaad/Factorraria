@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer;
 using Terraria;
 using Terraria.ID;
 
@@ -7,6 +8,7 @@ namespace Factorraria.Content.Tiles.Machines.Autohammer
     public class AutohammerTileEntity : ElectricConsumerMachine
     {
         public override int ValidTileType => TileID.Autohammer;
+        public override RecipeBook Recipes => AutohammerRecipeRegistry.Book;
         public override float PowerDemand => 100f;
         protected override int InputSlotCount => 1;
         protected override int OutputSlotCount => 1;
@@ -28,17 +30,16 @@ namespace Factorraria.Content.Tiles.Machines.Autohammer
 
         protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
         {
-            if (!isWorking) 
-            { 
-                return; 
-            }
+            //if (!isWorking) 
+            //{ 
+            //    return; 
+            //}
 
-            // TEST
-            if (newFrame == 3)
-            {
-                // spawn sparks/dust at Position
-                //Main.NewText("HammerHit");
-            }
+            //if (newFrame == 3)
+            //{
+            //    // spawn sparks/dust at Position
+            //    // play a hammer clink sound
+            //}
         }
     }
 }

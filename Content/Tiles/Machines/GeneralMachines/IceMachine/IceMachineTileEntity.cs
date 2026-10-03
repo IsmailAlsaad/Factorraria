@@ -16,5 +16,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine
         {
             return InsideBiome == MachineBiome.Snow;
         }
+
+        protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
+        {
+
+        }
     }
 }

@@ -15,5 +15,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator
 
         protected override int InputLiquidCount => 1;
         protected override int OutputLiquidCount => 1;
+
+        protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
+        {
+
+        }
     }
 }

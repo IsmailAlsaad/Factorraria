@@ -101,6 +101,41 @@ Items: {
 		DisplayName: Fuel Bucket
 		Tooltip: ""
 	}
+
+	SteelBarItem: {
+		DisplayName: Steel Bar Item
+		Tooltip: ""
+	}
+
+	ByriteAlloyItem: {
+		DisplayName: Byrite Alloy Item
+		Tooltip: ""
+	}
+
+	ByriteAlloySlabItem: {
+		DisplayName: Byrite Alloy Slab Item
+		Tooltip: ""
+	}
+
+	CrimtaneSheetItem: {
+		DisplayName: Crimtane Sheet Item
+		Tooltip: ""
+	}
+
+	DemoniteSheetItem: {
+		DisplayName: Demonite Sheet Item
+		Tooltip: ""
+	}
+
+	GoldPlateItem: {
+		DisplayName: Gold Plate Item
+		Tooltip: ""
+	}
+
+	MeteoritePanelItem: {
+		DisplayName: Meteorite Panel Item
+		Tooltip: ""
+	}
 }
 
 Configs: {

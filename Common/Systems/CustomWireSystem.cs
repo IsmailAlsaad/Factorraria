@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Content.Items.Wires;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
@@ -135,6 +136,11 @@ namespace Factorraria.Common.Systems
                 return;
             }
 
+            if (!PlayerCanSeeWires())
+            {
+                return;
+            }
+
             Main.spriteBatch.Begin(
                 SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
@@ -149,11 +155,11 @@ namespace Factorraria.Common.Systems
             {
                 Vector2 drawPosition = pose.ToVector2() * 16f - Main.screenPosition;
 
+                Color lighting = Lighting.GetColor(pose.X, pose.Y);
                 if (wireType.HasFlag(CustomWireType.Copper))
                 {
                     int frameIndex = GetFrameIndexFromNeighbors(pose.X, pose.Y, CustomWireType.Copper);
                     Rectangle spriteSlice = new Rectangle(frameIndex * 18, 0, 16, 16);
-                    Color lighting = Lighting.GetColor(pose.X, pose.Y);
 
                     Main.spriteBatch.Draw(CopperWireTileTexture.Value, drawPosition, spriteSlice, lighting);
 
@@ -167,7 +173,7 @@ namespace Factorraria.Common.Systems
                     int frameIndex = GetFrameIndexFromNeighbors(pose.X, pose.Y, CustomWireType.Tin);
                     Rectangle spriteSlice = new Rectangle(frameIndex * 18, 0, 16, 16);
 
-                    Main.spriteBatch.Draw(TinWireTileTexture.Value, drawPosition, spriteSlice, Color.White);
+                    Main.spriteBatch.Draw(TinWireTileTexture.Value, drawPosition, spriteSlice, lighting);
 
                     //
                     //Main.NewText("Placed Tin Wire");
@@ -176,6 +182,30 @@ namespace Factorraria.Common.Systems
             }
 
             Main.spriteBatch.End();
+        }
+
+        bool PlayerCanSeeWires()
+        {
+            int heldItemType = Main.LocalPlayer.HeldItem.type;
+
+            if (heldItemType == ModContent.ItemType<LeadCutter>())
+            {
+                return true;
+            }
+            if (heldItemType == ModContent.ItemType<IronCutter>())
+            {
+                return true;
+            }
+            if (heldItemType == ModContent.ItemType<TinWire>())
+            {
+                return true;
+            }
+            if (heldItemType == ModContent.ItemType<CopperWire>())
+            {
+                return true;
+            }
+
+            return false;
         }
 
         int GetFrameIndexFromNeighbors(int x,int y,CustomWireType wireType)

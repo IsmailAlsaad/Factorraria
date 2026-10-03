@@ -28,7 +28,9 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             {
                 foreach (int itemID in woodGroup.ValidItems)
                 {
-                    Book.Add(new CustomRecipe(new List<Item> { new Item(itemID, 3) }, new Item(ItemID.Coal, 1)));
+                    Book.Add(new CustomRecipe(
+                        new List<Item> { new Item(itemID, 3) },
+                        new Item(ItemID.Coal, 1)));
                 }
             }
         }

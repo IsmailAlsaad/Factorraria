@@ -1,6 +1,10 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
+using Factorraria.Content.Items.Materials;
+using System.Collections.Generic;
+using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
 {
@@ -14,10 +18,21 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
             Book.Clear();
             Book.ImportVanillaRecipes(TileID.Hellforge);
             Book.ImportVanillaRecipes(TileID.Furnaces);
+            RegisterManualRecipes();
             Book.Rebuild();
 
             LiquidFuels.Clear();
             RegisterLiquidFuels();
+        }
+
+        static void RegisterManualRecipes()
+        {
+            Book.Add(new CustomRecipe(
+                new List<Item> { 
+                    new Item(ItemID.IronBar, 2),
+                    new Item(ModContent.ItemType<CokeItem>(), 5)},
+                new Item(ModContent.ItemType<SteelBarItem>(), 1)
+                ));
         }
 
         static void RegisterLiquidFuels()

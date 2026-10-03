@@ -23,5 +23,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
                 InputLiquids[0] =  new LiquidStack(LiquidTypeRegistry.Lava,1f);
             }
         }
+
+        protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
+        {
+
+        }
     }
 }

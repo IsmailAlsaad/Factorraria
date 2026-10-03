@@ -13,5 +13,10 @@ namespace Factorraria.Content.Tiles.Machines.Solidifier
 
         protected override int InputLiquidCount => 2;
         protected override int OutputSlotCount => 1;
+
+        protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
+        {
+        
+        }
     }
 }

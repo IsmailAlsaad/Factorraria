@@ -22,5 +22,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Motors
                 return;
             }
         }
+
+        protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
+        {
+
+        }
     }
 }

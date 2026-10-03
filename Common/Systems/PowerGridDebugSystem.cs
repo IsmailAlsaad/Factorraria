@@ -52,21 +52,21 @@ public class PowerGridDebugSystem : ModSystem
         );
 
         // 1. Draw wire squares for every position in CustomWireSystem.WireGrid
-        if (CustomWireSystem.WireGrid != null)
-        {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Color wireFill = Color.Gold * 0.35f;
-            Color wireBorder = Color.Gold;
+        //if (CustomWireSystem.WireGrid != null)
+        //{
+        //    Texture2D pixel = TextureAssets.MagicPixel.Value;
+        //    Color wireFill = Color.Gold * 0.35f;
+        //    Color wireBorder = Color.Gold;
 
-            foreach (var pos in CustomWireSystem.WireGrid.Keys)
-            {
-                Vector2 screenPos = new Vector2(pos.X, pos.Y) * 16f - Main.screenPosition;
-                Rectangle wireRect = new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16);
+        //    foreach (var pos in CustomWireSystem.WireGrid.Keys)
+        //    {
+        //        Vector2 screenPos = new Vector2(pos.X, pos.Y) * 16f - Main.screenPosition;
+        //        Rectangle wireRect = new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16);
 
-                spriteBatch.Draw(pixel, wireRect, wireFill);
-                Utils.DrawRect(spriteBatch, wireRect, wireBorder);
-            }
-        }
+        //        spriteBatch.Draw(pixel, wireRect, wireFill);
+        //        Utils.DrawRect(spriteBatch, wireRect, wireBorder);
+        //    }
+        //}
 
         // 2. Draw active power networks and machines
         if (PowerGridSystem.ActivePowerNetworks != null)
