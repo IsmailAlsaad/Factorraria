@@ -87,6 +87,8 @@ namespace Factorraria.Common.Networks
                     sinkBuffer.Add(LiquidEndpoint.ForMachine(att.Machine, att.Machine.InputLiquids, rateThisTick));
                 else if (flow.Direction == att.MouthDirection.Opposite())
                     sourceBuffer.Add(LiquidEndpoint.ForMachine(att.Machine, att.Machine.OutputLiquids, rateThisTick));
+                else
+                    sinkBuffer.Add(LiquidEndpoint.ForMachine(att.Machine, att.Machine.InputLiquids, rateThisTick));
             }
 
             foreach (var att in WorldLiquidAttachments)
