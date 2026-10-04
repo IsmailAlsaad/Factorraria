@@ -136,6 +136,16 @@ Items: {
 		DisplayName: Meteorite Panel
 		Tooltip: ""
 	}
+
+	CartItem: {
+		DisplayName: Track Cart
+		Tooltip:
+			'''
+			Use on a minecart track to place a cart
+			Right click a cart to shove it
+			Crouch + right click a cart to pick it up
+			'''
+	}
 }
 
 Configs: {
