@@ -278,7 +278,7 @@ namespace Factorraria.Common.Carts
                 Color light = Lighting.GetColor((int)(cart.Position.X / 16f), (int)((cart.Position.Y - 8f) / 16f));
                 Vector2 screen = cart.Position - Main.screenPosition;
 
-                Main.spriteBatch.Draw(texture, screen, null, light, cart.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(texture, screen, null, light, cart.Rotation, origin, 3f, SpriteEffects.None, 0f);
 
                 if (debug)
                 {

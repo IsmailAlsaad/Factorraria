@@ -14,9 +14,9 @@ namespace Factorraria.Common.Carts
     /// <summary>All tuning numbers in one place. Distances are pixels, speeds are pixels per tick.</summary>
     public static class CartPhysics
     {
-        public const float WheelHalfBase = 12f;   // each wheel sits this far from the cart's centre
-        public const int HitboxWidth = 32;
-        public const int HitboxHeight = 22;
+        public const float WheelHalfBase = 19f;   // each wheel sits this far from the cart's centre
+        public const int HitboxWidth = (int)(32 * 1.6f);
+        public const int HitboxHeight = (int)(22 * 1.6f);
 
         public const float MaxSpeed = 12f;
         public const float Drag = 0.02f;          // slowdown per tick while on plain track
@@ -24,7 +24,7 @@ namespace Factorraria.Common.Carts
         public const float ShoveSpeed = 5f;       // debug "push" from right click
         public const float MaxStep = 2f;          // largest move per sub-step; matches the 2 px rail slices
 
-        public const float Gravity = 0.4f;
+        public const float Gravity = 0.2f;
         public const float MaxFallSpeed = 10f;
         public const float GroundFriction = 0.92f; // X velocity multiplier per tick while sliding on the ground
         public const int RerailDelay = 15;         // ticks after derailing before the track can catch the cart again
