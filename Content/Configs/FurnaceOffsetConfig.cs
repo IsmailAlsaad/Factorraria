@@ -29,6 +29,9 @@ namespace Factorraria.Content.Configs
 
         public bool EnableDebugs;
 
+        [Tooltip("Recipe Discovery debug: show EVERY recipe in machine browsers instead of only learned ones.")]
+        public bool RevealAllRecipes;
+
         [Slider]
         [Range(0f,32f)]
         public float VItemOffset;

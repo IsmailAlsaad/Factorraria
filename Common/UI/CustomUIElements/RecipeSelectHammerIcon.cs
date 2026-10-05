@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Liquids;
+﻿using Factorraria.Common.Knowledge;
+using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -104,6 +105,7 @@ namespace Factorraria.Common.UI.CustomUIElements
 
             for (int i = 0; i < machineGroups.Count; i++)
             {
+                if (!RecipeVisibility.IsVisible(machineGroups[i])) continue;   // hide undiscovered recipes
                 if (!MatchesFilter(machineGroups[i])) continue;
 
                 var cell = new RecipeElement(machineGroups[i], i);

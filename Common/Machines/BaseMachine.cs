@@ -1,3 +1,4 @@
+using Factorraria.Common.Knowledge;
 using Factorraria.Common.Liquids;
 using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
@@ -233,6 +234,11 @@ namespace Factorraria.Common.Machines
             foreach (FuelModule f in Fuels) f.ConsumeCraft();
             foreach (LiquidFuelModule lf in LiquidFuels) lf.ConsumeCraft(InputLiquids);
             WorkProgress = 0;
+
+            // Discovery: finishing a recipe teaches the world that it exists.
+            if (recipe.TryGetPrimaryOutput(out RecipeOutputKey discoveredKey))
+                RecipeKnowledgeSystem.Learn(discoveredKey);
+
             OnRecipeFinished(recipe);
         }
 
