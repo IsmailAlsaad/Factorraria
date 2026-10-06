@@ -187,7 +187,7 @@ namespace Factorraria.Common.UI
 
             if (book.SelectedGroup == null)
             {
-                string msg = book.IsEmpty ? RecipeBookLayout.Text("Empty") : RecipeBookLayout.Text("NothingSelected");
+                string msg = book.IsEmpty ? RecipeBookLayout.Text("Empty") : book.NoResults ? RecipeBookLayout.Text("NoResults") : RecipeBookLayout.Text("NothingSelected");
                 DrawWrapped(sb, msg, new Vector2(r.X + 8, r.Center.Y - 30), r.Width - 16, RecipeBookLayout.TextFadedColor, 1f);
                 return;
             }

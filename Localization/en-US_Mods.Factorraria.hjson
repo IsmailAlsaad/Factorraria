@@ -230,6 +230,7 @@ RecipeBook: {
 	Title: Recipe Book
 	Empty: The pages are blank. Read recipe parchments or craft in machines to fill them.
 	NothingSelected: Select a recipe on the left page.
+	NoResults: No recipes match your search.
 	StatusCrafted: Crafted
 	StatusParchment: Learned from a parchment. Not crafted yet.
 	DetailsComing: Recipe details are coming soon.

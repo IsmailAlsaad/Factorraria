@@ -16,8 +16,8 @@ namespace Factorraria.Common.UI
     public static class RecipeBookLayout
     {
         // Inventory button (absolute UI position). Sits to the right of the coin/ammo slots, above them.
-        public const int ButtonX = 590;
-        public const int ButtonY = 20;
+        public const int ButtonX = 1516; // Later make it dynamic based on Main.screenWidth and Main.playerInventory AND the current number of accessories so we place it some position X relative to the defense icon. For now, hardcode to 1920x1080.
+        public const int ButtonY = 726;
         public const int ButtonSize = 36;
 
         // Book panel
@@ -46,6 +46,16 @@ namespace Factorraria.Common.UI
         }
 
         public static Rectangle ScrollbarArea => new Rectangle(ListArea.Right + 4, ListArea.Y, ScrollbarWidth, ListArea.Height);
+
+        /// <summary>Search bar: sits in the title strip (top TitleHeight px) of the left page, above ListArea.</summary>
+        public static Rectangle SearchArea
+        {
+            get
+            {
+                Rectangle p = LeftPage;
+                return new Rectangle(p.X + 10, p.Y + 8, p.Width - 20, 24);
+            }
+        }
 
         public static Rectangle DetailArea
         {

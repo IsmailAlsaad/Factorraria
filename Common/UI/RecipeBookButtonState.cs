@@ -13,13 +13,5 @@ namespace Factorraria.Common.UI
             Button = new RecipeBookButton();
             Append(Button);
         }
-
-        public override void Update(GameTime gameTime)
-        {
-            base.Update(gameTime);
-
-            //Button.Top.Set(0, 0);
-            //Button.Left.Set(0, 0);
-        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Knowledge;
 using Factorraria.Common.Machines;
+using Factorraria.Common.UI.CustomUIElements;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -21,6 +22,9 @@ namespace Factorraria.Common.UI
         RecipeBookPanel panel;
         UIElement listArea;
         UIScrollbar scrollbar;
+        RecipeSearchBar searchBar;
+        string searchFilter = "";
+        bool filterDirty;
 
         readonly List<UIElement> rows = new();
         readonly List<float> rowBase = new();
@@ -35,6 +39,8 @@ namespace Factorraria.Common.UI
         public RecipeOutputGroup SelectedGroup { get; private set; }
         public RecipeState SelectedState { get; private set; }
         public bool IsEmpty { get; private set; } = true;
+        /// <summary>The book has entries but the search filter hides all of them.</summary>
+        public bool NoResults { get; private set; }
 
         /// <summary>True while the mouse is over the book panel (read by RecipeBookSystem for outside-click closing).</summary>
         public bool MouseInsidePanel => panel != null && panel.MouseInside;
@@ -64,6 +70,8 @@ namespace Factorraria.Common.UI
             scrollbar.Height.Set(s.Height, 0f);
             panel.Append(scrollbar);
 
+            BuildSearchBar();
+
             panel.Append(new RecipeBookDetail(this));
         }
 
@@ -75,7 +83,8 @@ namespace Factorraria.Common.UI
 
         public override void Update(GameTime gameTime)
         {
-            if (RecipeKnowledgeSystem.Version != builtVersion) Rebuild();
+            if (filterDirty && scrollbar != null) scrollbar.ViewPosition = 0f;   // new search starts at the top
+            if (RecipeKnowledgeSystem.Version != builtVersion || filterDirty) Rebuild();
             ApplyScroll(false);
             base.Update(gameTime);
         }
@@ -86,6 +95,7 @@ namespace Factorraria.Common.UI
         void Rebuild()
         {
             builtVersion = RecipeKnowledgeSystem.Version;
+            filterDirty = false;
             if (listArea == null) return;
 
             listArea.RemoveAllChildren();
@@ -97,12 +107,28 @@ namespace Factorraria.Common.UI
             float y = 0f;
             bool foundSelected = false;
             bool any = false;
+            int shown = 0;
+            string filter = searchFilter?.Trim();
+            bool filtering = !string.IsNullOrEmpty(filter);
 
             foreach (RecipeCatalog.Entry e in RecipeCatalog.Entries())
             {
                 RecipeState state = RecipeVisibility.GetState(e.Key);
                 if (!RecipeVisibility.InBook(state)) continue;
                 any = true;
+
+                // Selection is tracked against the whole book, not the filtered list, so a search never drops it.
+                bool isSelected = e.Key == SelectedKey;
+                if (isSelected)
+                {
+                    foundSelected = true;
+                    SelectedMachine = e.Machine;
+                    SelectedGroup = e.Group;
+                    SelectedState = state;
+                }
+
+                if (filtering && e.Group.Key.DisplayName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                shown++;
 
                 if (e.Machine != lastMachine)
                 {
@@ -113,26 +139,52 @@ namespace Factorraria.Common.UI
 
                 var entry = new RecipeBookEntry(e.Key, e.Machine, e.Group, state);
                 entry.OnChosen = key => Select(key, false);
-                entry.Selected = e.Key == SelectedKey;
-                if (entry.Selected)
-                {
-                    foundSelected = true;
-                    SelectedMachine = e.Machine;
-                    SelectedGroup = e.Group;
-                    SelectedState = state;
-                }
+                entry.Selected = isSelected;
                 entryTop[e.Key] = y;
                 AddRow(entry, y);
                 y += RecipeBookLayout.EntryRowHeight;
             }
 
             IsEmpty = !any;
+            NoResults = any && shown == 0;
             if (!foundSelected) ClearSelection();
 
             totalHeight = y;
             float viewH = RecipeBookLayout.ListArea.Height;
             scrollbar.SetView(viewH, Math.Max(totalHeight, viewH));
             ApplyScroll(true);
+        }
+
+        // ------------------------------------------------------------------------------------------
+        // Search
+        // ------------------------------------------------------------------------------------------
+        void BuildSearchBar()
+        {
+            if (panel == null) return;
+            if (searchBar != null) panel.RemoveChild(searchBar);
+
+            Rectangle s = RecipeBookLayout.SearchArea;
+            searchBar = new RecipeSearchBar(text =>
+            {
+                searchFilter = text ?? "";
+                filterDirty = true;
+            });
+            searchBar.Left.Set(s.X, 0f);
+            searchBar.Top.Set(s.Y, 0f);
+            searchBar.Width.Set(s.Width, 0f);
+            searchBar.Height.Set(s.Height, 0f);
+            panel.Append(searchBar);
+        }
+
+        /// <summary>
+        /// Clears the search text and focus. Called by RecipeBookSystem every time the book is opened, so a stale
+        /// filter can never hide the entry a parchment just unlocked. The bar is recreated (RecipeSearchBar has no SetText).
+        /// </summary>
+        public void ResetSearch()
+        {
+            searchFilter = "";
+            filterDirty = true;
+            BuildSearchBar();   // no-op before OnInitialize; the first OnInitialize builds a fresh bar
         }
 
         void AddRow(UIElement row, float y)
@@ -243,8 +295,6 @@ namespace Factorraria.Common.UI
                 DrawPage(sb, RecipeBookLayout.RightPage, r);
             }
 
-            Rectangle left = RecipeBookLayout.LeftPage;
-            BookDraw.Text(sb, RecipeBookLayout.Text("Title"), new Vector2(r.X + left.X + 12, r.Y + left.Y + 8), RecipeBookLayout.TextColor, 1.2f);
         }
 
         static void DrawPage(SpriteBatch sb, Rectangle page, Rectangle origin)

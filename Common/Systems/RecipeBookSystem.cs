@@ -82,6 +82,7 @@ namespace Factorraria.Common.Systems
             openedAt = Main.GameUpdateCount;
 
             bookState ??= new RecipeBookState();
+            bookState.ResetSearch();             // opening (incl. from a parchment) always starts unfiltered
             bookInterface.SetState(null);        // clear first, then set: forces a fresh Rebuild via OnActivate
             bookInterface.SetState(bookState);
 
