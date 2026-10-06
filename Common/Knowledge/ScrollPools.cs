@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Machines;
 using System;
 using System.Collections.Generic;
+using Terraria;
 using Terraria.Utilities;
 
 namespace Factorraria.Common.Knowledge

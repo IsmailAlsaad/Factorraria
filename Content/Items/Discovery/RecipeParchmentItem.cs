@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Knowledge;
 using Factorraria.Common.Machines;
+using Factorraria.Common.Systems;
 using System.Collections.Generic;
 using System.IO;
 using Terraria;
@@ -57,7 +58,9 @@ namespace Factorraria.Content.Items.Discovery
             RecipeKnowledgeSystem.Unlock(key);
             Main.NewText($"Recipe unlocked: {group.Key.DisplayName} ({machine})", 110, 220, 110);
 
-            // TODO (Phase 4): open the recipe book UI on `key`.
+            // Open the recipe book on the page that was just unlocked (client only).
+            if (!Main.dedServ) RecipeBookSystem.OpenAt(key);
+
             // TODO (Phase 6): in multiplayer the roll and the unlock must run on the server.
         }
 

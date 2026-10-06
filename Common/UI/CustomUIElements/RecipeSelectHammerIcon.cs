@@ -252,8 +252,6 @@ namespace Factorraria.Common.UI.CustomUIElements
         public Action<RecipeElement> OnSelected;
 
         public string ProductName;
-        Texture2D recipeTexture;
-        Color? swatchColor;   // set when a liquid has no icon PNG
         float zoom = 1f;
         bool selected;
 
@@ -279,18 +277,6 @@ namespace Factorraria.Common.UI.CustomUIElements
             SetZoomScale(1f);
 
             ProductName = group.Key.DisplayName;
-
-            if (group.Key.IsLiquid)
-            {
-                LiquidTypeDefinition liquid = LiquidTypeRegistry.Get(group.Key.Id);
-                if (liquid.IconPath != null) recipeTexture = ModContent.Request<Texture2D>(liquid.IconPath).Value;
-                else swatchColor = liquid.RenderColor;
-            }
-            else
-            {
-                Main.instance.LoadItem(group.Key.Id);
-                recipeTexture = TextureAssets.Item[group.Key.Id].Value;
-            }
         }
 
         // UIGrid sorts its items with CompareTo. The default returns 0 for everything,
@@ -324,18 +310,7 @@ namespace Factorraria.Common.UI.CustomUIElements
                 Main.hoverItemName = ProductName;
             }
 
-            if (swatchColor.HasValue)
-            {
-                int s = (int)(IconBox * 0.6f * zoom);
-                Vector2 c = GetDimensions().Center();
-                sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle((int)c.X - s / 2, (int)c.Y - s / 2, s, s), swatchColor.Value);
-                return;
-            }
-            if (recipeTexture == null) return;
-
-            float fit = Math.Min(1f, IconBox / Math.Max(recipeTexture.Width, recipeTexture.Height));
-            sb.Draw(recipeTexture, GetDimensions().Center(), null, Color.White, 0f,
-                recipeTexture.Size() / 2f, fit * zoom, SpriteEffects.None, 0f);
+            RecipeIcon.Draw(sb, CurrentGroup.Key, GetDimensions().Center(), IconBox, zoom);
         }
     }
 
