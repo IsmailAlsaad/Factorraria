@@ -108,10 +108,20 @@ namespace Factorraria.Common.Machines
             RecipeKnowledgeSystem.LearnBook(LiquidDistillatorRecipeRegistry.Book);
             RecipeKnowledgeSystem.LearnBook(AutohammerRecipeRegistry.Book);
             // etc...
+
+            // Recipe discovery: lets scrolls roll a recipe and resolve a saved key back to (machine, group).
+            RecipeCatalog.Clear();
+            RecipeCatalog.Register("Furnace", FurnaceRecipeRegistry.Book);
+            RecipeCatalog.Register("Hellforge", HellforgeRecipeRegistry.Book);
+            RecipeCatalog.Register("Solidifier", SolidifierRecipeRegistry.Book);
+            RecipeCatalog.Register("IceMachine", IceMachineRecipeRegistry.Book);
+            RecipeCatalog.Register("LiquidDistillator", LiquidDistillatorRecipeRegistry.Book);
+            RecipeCatalog.Register("Autohammer", AutohammerRecipeRegistry.Book);
         }
 
         public override void Unload()
         {
+            RecipeCatalog.Clear();
             MachineVisualRegistry.Definitions.Clear();
         }
     }

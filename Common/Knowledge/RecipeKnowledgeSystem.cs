@@ -18,6 +18,19 @@ namespace Factorraria.Common.Knowledge
     {
         static readonly HashSet<string> known = new HashSet<string>();
 
+        // Parchment unlocks. Entries are catalog keys: "<Machine>|<recipe key>" (see RecipeCatalog.KeyFor).
+        // Separate from `known` so a parchment can unlock a recipe the world has not crafted.
+        static readonly HashSet<string> unlocked = new HashSet<string>();
+
+        public static bool IsUnlocked(string catalogKey) => catalogKey != null && unlocked.Contains(catalogKey);
+
+        /// <summary>Unlocks one recipe by catalog key. Returns true if it was newly unlocked.</summary>
+        public static bool Unlock(string catalogKey) => !string.IsNullOrEmpty(catalogKey) && unlocked.Add(catalogKey);
+
+        public static IReadOnlyCollection<string> UnlockedKeys => unlocked;
+
+        public static void ResetUnlocked() => unlocked.Clear();
+
         /// <summary>True if the world has learned this output group. UI uses this to filter the browser.</summary>
         public static bool IsKnown(RecipeOutputGroup group) => group != null && known.Contains(RecipeKey.For(group));
 
@@ -47,11 +60,15 @@ namespace Factorraria.Common.Knowledge
         public override void SaveWorldData(TagCompound tag)
         {
             tag["KnownRecipeKeys"] = new List<string>(known);
+            tag["UnlockedRecipeKeys"] = new List<string>(unlocked);
         }
 
         public override void LoadWorldData(TagCompound tag)
         {
             known.Clear();
+            unlocked.Clear();
+            if (tag.ContainsKey("UnlockedRecipeKeys"))
+                foreach (string key in tag.Get<List<string>>("UnlockedRecipeKeys")) unlocked.Add(key);
             if (!tag.ContainsKey("KnownRecipeKeys")) return;
             foreach (string key in tag.Get<List<string>>("KnownRecipeKeys")) known.Add(key);
         }
@@ -59,11 +76,13 @@ namespace Factorraria.Common.Knowledge
         public override void OnWorldUnload()
         {
             known.Clear();
+            unlocked.Clear();
         }
 
         public override void Unload()
         {
             known.Clear();
+            unlocked.Clear();
         }
     }
 }

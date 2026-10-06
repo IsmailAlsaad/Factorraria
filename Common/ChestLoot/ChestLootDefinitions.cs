@@ -2,6 +2,7 @@
 using Terraria.ID;
 using Terraria.ModLoader;
 using Factorraria.Content.Items.Materials;
+using Factorraria.Content.Items.Discovery;
 
 namespace Factorraria.Common.ChestLoot
 {
@@ -69,6 +70,14 @@ namespace Factorraria.Common.ChestLoot
             // Example6_RuleOrder();
 
             // ---- your own rules go here ----
+
+            // RECIPE DISCOVERY: sealed scrolls. Chances are first-pass numbers, tune them in the polish phase.
+            // Only NEW worlds get these (loot rules run after worldgen). Existing worlds: use "/recipes scroll".
+            //int scroll = ModContent.ItemType<ClosedScrollItem>();
+            //ChestLootRegistry.For(VanillaChest.Wood).Chance(0.06f, scroll);
+            //ChestLootRegistry.For(VanillaChest.LivingWood, VanillaChest.Ivy, VanillaChest.Skyware, VanillaChest.Water).Chance(0.12f, scroll);
+            //ChestLootRegistry.For(VanillaChest.Gold, VanillaChest.GoldLocked, VanillaChest.Frozen).Chance(0.20f, scroll);
+            //ChestLootRegistry.For(VanillaChest.Shadow, VanillaChest.ShadowLocked, VanillaChest.Lihzahrd).Chance(0.30f, scroll);
         }
 
         // ==========================================================================================

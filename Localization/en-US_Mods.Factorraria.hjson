@@ -1,4 +1,14 @@
 Items: {
+	ClosedScrollItem: {
+		DisplayName: Sealed Scroll
+		Tooltip: Right click to break the seal and reveal a machine recipe
+	}
+
+	RecipeParchmentItem: {
+		DisplayName: Recipe Parchment
+		Tooltip: Right click to learn the recipe written on it
+	}
+
 	CopperWire: {
 		DisplayName: Copper Wire
 		Tooltip:
@@ -200,6 +210,11 @@ Configs: {
 		AngleOffset2: {
 			Label: Angle Offset2
 			Tooltip: ""
+		}
+
+		RevealAllRecipes: {
+			Label: Reveal All Recipes
+			Tooltip: Recipe Discovery debug: show EVERY recipe in machine browsers instead of only learned ones.
 		}
 	}
 }
