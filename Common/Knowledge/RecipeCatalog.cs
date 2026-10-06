@@ -31,6 +31,18 @@ namespace Factorraria.Common.Knowledge
 
         public static string KeyFor(string machineName, RecipeOutputGroup group) => machineName + "|" + RecipeKey.For(group);
 
+        /// <summary>Same key without needing a group object (config files, crafted marking).</summary>
+        public static string KeyFor(string machineName, RecipeOutputKey key) => machineName + "|" + RecipeKey.For(key);
+
+        /// <summary>Reverse lookup: the catalog machine name a RecipeBook was registered under, or null if it is not in the catalog.</summary>
+        public static string NameOf(RecipeBook book)
+        {
+            if (book == null) return null;
+            foreach (KeyValuePair<string, RecipeBook> m in machines)
+                if (ReferenceEquals(m.Value, book)) return m.Key;
+            return null;
+        }
+
         public static IEnumerable<Entry> Entries()
         {
             foreach (KeyValuePair<string, RecipeBook> m in machines)
@@ -63,14 +75,13 @@ namespace Factorraria.Common.Knowledge
         }
 
         /// <summary>
-        /// Picks a random recipe the world has not unlocked by parchment yet.
-        /// NOTE: it does not look at crafted recipes yet; that split arrives when the Phase 1 knowledge layer is completed.
+        /// Picks a random recipe (uniform) the world has neither unlocked by parchment nor crafted.
         /// </summary>
         public static bool TryRollLocked(UnifiedRandom rand, out string catalogKey)
         {
             var pool = new List<Entry>();
             foreach (Entry e in Entries())
-                if (!RecipeKnowledgeSystem.IsUnlocked(e.Key)) pool.Add(e);
+                if (!RecipeKnowledgeSystem.IsUnlocked(e.Key) && !RecipeKnowledgeSystem.IsCrafted(e.Key)) pool.Add(e);
 
             if (pool.Count == 0) { catalogKey = null; return false; }
             catalogKey = pool[rand.Next(pool.Count)].Key;

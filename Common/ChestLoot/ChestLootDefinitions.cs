@@ -1,5 +1,6 @@
 ﻿using Terraria;
 using Terraria.ID;
+using Terraria.Utilities;
 using Terraria.ModLoader;
 using Factorraria.Content.Items.Materials;
 using Factorraria.Content.Items.Discovery;
@@ -73,11 +74,29 @@ namespace Factorraria.Common.ChestLoot
 
             // RECIPE DISCOVERY: sealed scrolls. Chances are first-pass numbers, tune them in the polish phase.
             // Only NEW worlds get these (loot rules run after worldgen). Existing worlds: use "/recipes scroll".
-            //int scroll = ModContent.ItemType<ClosedScrollItem>();
-            //ChestLootRegistry.For(VanillaChest.Wood).Chance(0.06f, scroll);
-            //ChestLootRegistry.For(VanillaChest.LivingWood, VanillaChest.Ivy, VanillaChest.Skyware, VanillaChest.Water).Chance(0.12f, scroll);
-            //ChestLootRegistry.For(VanillaChest.Gold, VanillaChest.GoldLocked, VanillaChest.Frozen).Chance(0.20f, scroll);
-            //ChestLootRegistry.For(VanillaChest.Shadow, VanillaChest.ShadowLocked, VanillaChest.Lihzahrd).Chance(0.30f, scroll);
+            // A scroll carries a pool name (see ScrollPoolDefinitions); no pool = rolls from the whole book.
+            //ChestLootRegistry.For(VanillaChest.Wood).Custom((chest, rand) => AddScroll(chest, rand, 0.06f));
+            //ChestLootRegistry.For(VanillaChest.LivingWood, VanillaChest.Ivy, VanillaChest.Skyware, VanillaChest.Water).Custom((chest, rand) => AddScroll(chest, rand, 0.12f));
+            //ChestLootRegistry.For(VanillaChest.Gold, VanillaChest.Frozen).Custom((chest, rand) => AddScroll(chest, rand, 0.20f));
+            //ChestLootRegistry.For(VanillaChest.Shadow, VanillaChest.ShadowLocked, VanillaChest.Lihzahrd).Custom((chest, rand) => AddScroll(chest, rand, 0.30f));
+            // Themed: locked gold chests (the dungeon ones) give a "Dungeon" scroll. Define that pool in ScrollPoolDefinitions first.
+            //ChestLootRegistry.For(VanillaChest.GoldLocked).Custom((chest, rand) => AddScroll(chest, rand, 0.35f, "Dungeon"));
+        }
+
+        /// <summary>
+        /// Adds one Sealed Scroll of the given pool (null = whole book) to the chest's first empty slot with the given chance.
+        /// Use inside .Custom((chest, rand) => ...). Uses the seeded worldgen random passed in.
+        /// </summary>
+        private static void AddScroll(Chest chest, UnifiedRandom rand, float chance, string pool = null)
+        {
+            if (rand.NextFloat() >= chance) return;
+            for (int i = 0; i < Chest.maxItems; i++)
+            {
+                if (!chest.item[i].IsAir) continue;
+                chest.item[i].SetDefaults(ModContent.ItemType<ClosedScrollItem>());
+                if (chest.item[i].ModItem is ClosedScrollItem scroll) scroll.PoolName = pool;
+                return;
+            }
         }
 
         // ==========================================================================================

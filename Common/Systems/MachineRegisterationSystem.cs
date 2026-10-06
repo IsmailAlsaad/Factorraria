@@ -117,11 +117,21 @@ namespace Factorraria.Common.Machines
             RecipeCatalog.Register("IceMachine", IceMachineRecipeRegistry.Book);
             RecipeCatalog.Register("LiquidDistillator", LiquidDistillatorRecipeRegistry.Book);
             RecipeCatalog.Register("Autohammer", AutohammerRecipeRegistry.Book);
+
+            // Reverse index itemType -> recipes, for the "holding an ingredient" state. Needs the catalog above.
+            RecipeVisibility.BuildIngredientIndex();
+
+            // Scroll pools (configured in ScrollPoolDefinitions). Needs the catalog above to validate entries.
+            ScrollPools.Clear();
+            ScrollPoolDefinitions.Register();
+            ScrollPools.Validate(msg => Mod.Logger.Warn(msg));
         }
 
         public override void Unload()
         {
             RecipeCatalog.Clear();
+            RecipeVisibility.ClearIndex();
+            ScrollPools.Clear();
             MachineVisualRegistry.Definitions.Clear();
         }
     }

@@ -1,12 +1,12 @@
 Items: {
 	ClosedScrollItem: {
 		DisplayName: Sealed Scroll
-		Tooltip: Right click to break the seal and reveal a machine recipe
+		Tooltip: Right click to break the seal and receive a recipe parchment
 	}
 
 	RecipeParchmentItem: {
 		DisplayName: Recipe Parchment
-		Tooltip: Right click to learn the recipe written on it
+		Tooltip: Right click to read it and learn a machine recipe
 	}
 
 	CopperWire: {

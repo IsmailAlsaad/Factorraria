@@ -24,12 +24,48 @@ namespace Factorraria.Common.Knowledge
 
         public static bool IsUnlocked(string catalogKey) => catalogKey != null && unlocked.Contains(catalogKey);
 
+        // Crafted recipes: a machine finished this recipe at least once in this world. Catalog keys, like `unlocked`.
+        static readonly HashSet<string> crafted = new HashSet<string>();
+
+        /// <summary>
+        /// Bumped on every change to the unlocked/crafted sets and on world load/unload.
+        /// UI polls it (one int compare per frame) to know when to rebuild, so no event plumbing is needed.
+        /// </summary>
+        public static int Version { get; private set; }
+
+        public static bool IsCrafted(string catalogKey) => catalogKey != null && crafted.Contains(catalogKey);
+
+        /// <summary>Marks one recipe as crafted by catalog key. Returns true if it was newly marked.</summary>
+        public static bool MarkCrafted(string catalogKey)
+        {
+            if (string.IsNullOrEmpty(catalogKey) || !crafted.Add(catalogKey)) return false;
+            Version++;
+            return true;
+        }
+
+        public static IReadOnlyCollection<string> CraftedKeys => crafted;
+
+        public static void ResetCrafted()
+        {
+            crafted.Clear();
+            Version++;
+        }
+
         /// <summary>Unlocks one recipe by catalog key. Returns true if it was newly unlocked.</summary>
-        public static bool Unlock(string catalogKey) => !string.IsNullOrEmpty(catalogKey) && unlocked.Add(catalogKey);
+        public static bool Unlock(string catalogKey)
+        {
+            if (string.IsNullOrEmpty(catalogKey) || !unlocked.Add(catalogKey)) return false;
+            Version++;
+            return true;
+        }
 
         public static IReadOnlyCollection<string> UnlockedKeys => unlocked;
 
-        public static void ResetUnlocked() => unlocked.Clear();
+        public static void ResetUnlocked()
+        {
+            unlocked.Clear();
+            Version++;
+        }
 
         /// <summary>True if the world has learned this output group. UI uses this to filter the browser.</summary>
         public static bool IsKnown(RecipeOutputGroup group) => group != null && known.Contains(RecipeKey.For(group));
@@ -61,12 +97,17 @@ namespace Factorraria.Common.Knowledge
         {
             tag["KnownRecipeKeys"] = new List<string>(known);
             tag["UnlockedRecipeKeys"] = new List<string>(unlocked);
+            tag["CraftedRecipeKeys"] = new List<string>(crafted);
         }
 
         public override void LoadWorldData(TagCompound tag)
         {
             known.Clear();
             unlocked.Clear();
+            crafted.Clear();
+            Version++;
+            if (tag.ContainsKey("CraftedRecipeKeys"))
+                foreach (string key in tag.Get<List<string>>("CraftedRecipeKeys")) crafted.Add(key);
             if (tag.ContainsKey("UnlockedRecipeKeys"))
                 foreach (string key in tag.Get<List<string>>("UnlockedRecipeKeys")) unlocked.Add(key);
             if (!tag.ContainsKey("KnownRecipeKeys")) return;
@@ -77,12 +118,15 @@ namespace Factorraria.Common.Knowledge
         {
             known.Clear();
             unlocked.Clear();
+            crafted.Clear();
+            Version++;
         }
 
         public override void Unload()
         {
             known.Clear();
             unlocked.Clear();
+            crafted.Clear();
         }
     }
 }

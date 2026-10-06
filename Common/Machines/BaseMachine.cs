@@ -237,7 +237,14 @@ namespace Factorraria.Common.Machines
 
             // Discovery: finishing a recipe teaches the world that it exists.
             if (recipe.TryGetPrimaryOutput(out RecipeOutputKey discoveredKey))
+            {
                 RecipeKnowledgeSystem.Learn(discoveredKey);
+
+                // Recipe book: credit the craft to this machine's recipe. Singleplayer only; netcode is Phase 6.
+                string machineName = RecipeCatalog.NameOf(Recipes);
+                if (machineName != null)
+                    RecipeKnowledgeSystem.MarkCrafted(RecipeCatalog.KeyFor(machineName, discoveredKey));
+            }
 
             OnRecipeFinished(recipe);
         }
