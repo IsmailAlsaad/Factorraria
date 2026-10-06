@@ -234,6 +234,11 @@ RecipeBook: {
 	StatusCrafted: Crafted
 	StatusParchment: Learned from a parchment. Not crafted yet.
 	DetailsComing: Recipe details are coming soon.
+	Inputs: Inputs
+	Outputs: Outputs
+	AnyWater: Any Water
+	Time: Time: {0} s
+	Units: "{0} units"
 
 	Machines: {
 		Furnace: Furnace

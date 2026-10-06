@@ -66,6 +66,22 @@ namespace Factorraria.Common.UI
             }
         }
 
+        // Detail page geometry (all relative to DetailArea's top-left unless noted)
+        public const int DetailHeaderHeight = 106;     // product icon, name, machine, divider, status line
+        public const int DetailCell = 42;              // one ingredient cell (square)
+        public const int DetailCellGap = 4;
+        public const int DetailPagerHeight = 26;       // prev / next row at the bottom of DetailArea
+
+        /// <summary>Where the recipe body (inputs, arrow, outputs, time) is drawn. Absolute inside the panel.</summary>
+        public static Rectangle DetailRecipeArea
+        {
+            get
+            {
+                Rectangle a = DetailArea;
+                return new Rectangle(a.X, a.Y + DetailHeaderHeight, a.Width, a.Height - DetailHeaderHeight - DetailPagerHeight);
+            }
+        }
+
         // ---- text ----
         const string Prefix = "Mods.Factorraria.RecipeBook.";
 

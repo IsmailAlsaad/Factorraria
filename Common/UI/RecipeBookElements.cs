@@ -165,54 +165,5 @@ namespace Factorraria.Common.UI
         }
     }
 
-    /// <summary>Right page. Phase 3 shows only a placeholder; Phase 4 replaces the body with the real recipe layout.</summary>
-    public class RecipeBookDetail : UIElement
-    {
-        readonly RecipeBookState book;
 
-        public RecipeBookDetail(RecipeBookState book)
-        {
-            this.book = book;
-            Rectangle a = RecipeBookLayout.DetailArea;
-            Left.Set(a.X, 0f);
-            Top.Set(a.Y, 0f);
-            Width.Set(a.Width, 0f);
-            Height.Set(a.Height, 0f);
-        }
-
-        protected override void DrawSelf(SpriteBatch sb)
-        {
-            Rectangle r = GetDimensions().ToRectangle();
-            var font = FontAssets.MouseText.Value;
-
-            if (book.SelectedGroup == null)
-            {
-                string msg = book.IsEmpty ? RecipeBookLayout.Text("Empty") : book.NoResults ? RecipeBookLayout.Text("NoResults") : RecipeBookLayout.Text("NothingSelected");
-                DrawWrapped(sb, msg, new Vector2(r.X + 8, r.Center.Y - 30), r.Width - 16, RecipeBookLayout.TextFadedColor, 1f);
-                return;
-            }
-
-            bool faded = book.SelectedState != RecipeState.Crafted;
-            RecipeIcon.Draw(sb, book.SelectedGroup.Key, new Vector2(r.X + 30, r.Y + 30), 44f, 1f, faded);
-
-            string name = BookDraw.Fit(book.SelectedGroup.Key.DisplayName, r.Width - 70, 1.15f, out _);
-            BookDraw.Text(sb, name, new Vector2(r.X + 64, r.Y + 6), RecipeBookLayout.TextColor, 1.15f);
-            BookDraw.Text(sb, RecipeBookLayout.MachineName(book.SelectedMachine), new Vector2(r.X + 64, r.Y + 34), RecipeBookLayout.PageBorder, 0.9f);
-
-            BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
-
-            string status = RecipeBookLayout.Text(faded ? "StatusParchment" : "StatusCrafted");
-            DrawWrapped(sb, status, new Vector2(r.X + 4, r.Y + 78), r.Width - 8, RecipeBookLayout.TextColor, 0.95f);
-            // TODO (Phase 4): replace with inputs -> outputs for every recipe in the group.
-            DrawWrapped(sb, RecipeBookLayout.Text("DetailsComing"), new Vector2(r.X + 4, r.Y + 128), r.Width - 8, RecipeBookLayout.TextFadedColor, 0.95f);
-        }
-
-        static void DrawWrapped(SpriteBatch sb, string text, Vector2 pos, float width, Color color, float scale)
-        {
-            var font = FontAssets.MouseText.Value;
-            string[] lines = Utils.WordwrapString(text, font, (int)(width / scale), 8, out int count);
-            for (int i = 0; i < count; i++)
-                if (lines[i] != null) BookDraw.Text(sb, lines[i], pos + new Vector2(0, i * 24f * scale), color, scale);
-        }
-    }
 }
