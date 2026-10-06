@@ -149,7 +149,7 @@ namespace Factorraria.Common.UI
 
         protected void AddRecipePicker(List<MachineUIElementEntry> list, RecipeBook book, Vector2 buttonPos, Vector2 browserPos)
         {
-            var browser = new RecipeBrowserPanel(book.Groups, () => CurrentEntity.ManualGroup, g => CurrentEntity.SetManualGroup(g));
+            var browser = new RecipeBrowserPanel(book, () => CurrentEntity.ManualGroup, g => CurrentEntity.SetManualGroup(g));
             list.Add(new MachineUIElementEntry(browser, browserPos, new Vector2(155, 200)));
             list.Add(new MachineUIElementEntry(new RecipeSelectHammerIcon(browser), buttonPos, new Vector2(24, 24)));
         }

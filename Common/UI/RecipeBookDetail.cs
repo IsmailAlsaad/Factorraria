@@ -85,21 +85,19 @@ namespace Factorraria.Common.UI
             bool faded = book.SelectedState != RecipeState.Crafted;
             RecipeIcon.Draw(sb, group.Key, new Vector2(r.X + 30, r.Y + 30), 44f, 1f, faded);
 
-            string name = BookDraw.Fit(group.Key.DisplayName, r.Width - 70, 1.15f, out _);
+            string name = BookDraw.Fit(faded ? RecipeBookLayout.UnknownName : group.Key.DisplayName, r.Width - 70, 1.15f, out _);
             BookDraw.Text(sb, name, new Vector2(r.X + 64, r.Y + 6), RecipeBookLayout.TextColor, 1.15f);
             BookDraw.Text(sb, RecipeBookLayout.MachineName(book.SelectedMachine), new Vector2(r.X + 64, r.Y + 34), RecipeBookLayout.PageBorder, 0.9f);
 
             BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
 
-            string status = RecipeBookLayout.Text(faded ? "StatusParchment" : "StatusCrafted");
-            DrawWrapped(sb, status, new Vector2(r.X + 4, r.Y + 76), r.Width - 8, faded ? RecipeBookLayout.TextFadedColor : RecipeBookLayout.TextColor, 0.95f);
 
             if (group.Recipes.Count == 0) return;
-            DrawRecipe(sb, group.Recipes[recipeIndex]);
+            DrawRecipe(sb, group.Recipes[recipeIndex], faded);
             if (group.Recipes.Count > 1) DrawPager(sb, r, group.Recipes.Count);
         }
 
-        void DrawRecipe(SpriteBatch sb, CustomRecipe recipe)
+        void DrawRecipe(SpriteBatch sb, CustomRecipe recipe, bool outputsHidden)
         {
             Rectangle area = RecipeBookLayout.DetailRecipeArea;
             // DetailRecipeArea is panel-relative; the element's own origin gives the panel offset.
@@ -109,28 +107,32 @@ namespace Factorraria.Common.UI
 
             float y = area.Y;
 
-            y = DrawLabel(sb, RecipeBookLayout.Text("Inputs"), area.X, y);
-            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs), area, y);
+            // Ingredients are always shown (the parchment taught them). Products stay "???" until crafted.
+            y = DrawLabel(sb, RecipeBookLayout.Text("Inputs"), area, y);
+            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false), area, y);
 
             y += 4f;
-            DrawArrow(sb, new Vector2(area.X + area.Width / 2f, y));
+            DrawArrow(sb, new Vector2(area.Center.X, y));
             y += 20f;
 
-            y = DrawLabel(sb, RecipeBookLayout.Text("Outputs"), area.X, y);
-            y = DrawCells(sb, BuildCells(recipe.Outputs, recipe.LiquidOutputs), area, y);
+            y = DrawLabel(sb, RecipeBookLayout.Text("Outputs"), area, y);
+            y = DrawCells(sb, BuildCells(recipe.Outputs, recipe.LiquidOutputs, outputsHidden), area, y);
 
             // Duration: only when the recipe states one. Otherwise the machine's default applies and is not shown (not guessed).
             if (recipe.DurationTicks.HasValue)
             {
                 y += 4f;
                 string secs = (recipe.DurationTicks.Value / 60f).ToString("0.##");
-                BookDraw.Text(sb, string.Format(RecipeBookLayout.Text("Time"), secs), new Vector2(area.X + 2, y), RecipeBookLayout.TextColor, 0.95f);
+                string text = string.Format(RecipeBookLayout.Text("Time"), secs);
+                Vector2 size = FontAssets.MouseText.Value.MeasureString(text) * 0.95f;
+                BookDraw.Text(sb, text, new Vector2(area.Center.X - size.X / 2f, y), RecipeBookLayout.TextColor, 0.95f);
             }
         }
 
-        static float DrawLabel(SpriteBatch sb, string text, float x, float y)
+        static float DrawLabel(SpriteBatch sb, string text, Rectangle area, float y)
         {
-            BookDraw.Text(sb, text, new Vector2(x + 2, y), RecipeBookLayout.PageBorder, 0.9f);
+            Vector2 size = FontAssets.MouseText.Value.MeasureString(text) * 0.9f;
+            BookDraw.Text(sb, text, new Vector2(area.Center.X - size.X / 2f, y), RecipeBookLayout.PageBorder, 0.9f);
             return y + 22f;
         }
 
@@ -142,9 +144,10 @@ namespace Factorraria.Common.UI
             public string Name;       // hover text (liquids / any-water)
             public int ItemType;      // >0 -> real item tooltip
             public int Stack;
+            public bool Hidden;       // product not crafted yet: black silhouette, "???" on hover
         }
 
-        static List<Cell> BuildCells(List<RecipeIngredient> items, List<LiquidIngredient> liquids)
+        static List<Cell> BuildCells(List<RecipeIngredient> items, List<LiquidIngredient> liquids, bool hidden)
         {
             var cells = new List<Cell>();
             foreach (RecipeIngredient i in items)
@@ -155,6 +158,7 @@ namespace Factorraria.Common.UI
                     Count = i.Stack > 1 ? i.Stack.ToString() : null,
                     ItemType = i.Type,
                     Stack = i.Stack,
+                    Hidden = hidden,
                 });
             }
             foreach (LiquidIngredient l in liquids)
@@ -168,12 +172,13 @@ namespace Factorraria.Common.UI
                     Icon = RecipeOutputKey.ForLiquid(iconId),
                     Count = amount,
                     Name = name + " - " + string.Format(RecipeBookLayout.Text("Units"), amount),
+                    Hidden = hidden,
                 });
             }
             return cells;
         }
 
-        /// <summary>Draws cells left to right, wrapping at the area's width. Returns the y below the last row.</summary>
+        /// <summary>Draws cells in rows wrapped at the area's width, each row centered on the page. Returns the y below the last row.</summary>
         static float DrawCells(SpriteBatch sb, List<Cell> cells, Rectangle area, float y)
         {
             int size = RecipeBookLayout.DetailCell;
@@ -181,32 +186,39 @@ namespace Factorraria.Common.UI
             int perRow = Math.Max(1, (area.Width + gap) / (size + gap));
             Point mouse = Main.MouseScreen.ToPoint();
 
-            for (int i = 0; i < cells.Count; i++)
+            for (int rowStart = 0; rowStart < cells.Count; rowStart += perRow)
             {
-                int col = i % perRow;
-                int row = i / perRow;
-                var box = new Rectangle(area.X + col * (size + gap), (int)y + row * (size + gap), size, size);
+                int n = Math.Min(perRow, cells.Count - rowStart);
+                int rowWidth = n * size + (n - 1) * gap;
+                int x0 = area.X + (area.Width - rowWidth) / 2;
+                int rowY = (int)y + (rowStart / perRow) * (size + gap);
 
-                BookDraw.Frame(sb, box, RecipeBookLayout.PageColor * 0.6f, RecipeBookLayout.PageBorder * 0.7f, 2);
-                RecipeIcon.Draw(sb, cells[i].Icon, box.Center.ToVector2(), size - 12f);
-
-                if (cells[i].Count != null)
+                for (int c = 0; c < n; c++)
                 {
-                    float scale = 0.75f;
-                    Vector2 s = FontAssets.ItemStack.Value.MeasureString(cells[i].Count) * scale;
-                    Utils.DrawBorderString(sb, cells[i].Count, new Vector2(box.Right - 4 - s.X, box.Bottom - 4 - s.Y), Color.White, scale);
-                }
+                    Cell cell = cells[rowStart + c];
+                    var box = new Rectangle(x0 + c * (size + gap), rowY, size, size);
 
-                if (box.Contains(mouse))
-                {
-                    if (cells[i].ItemType > 0)
+                    BookDraw.Frame(sb, box, RecipeBookLayout.PageColor * 0.6f, RecipeBookLayout.PageBorder * 0.7f, 2);
+                    RecipeIcon.Draw(sb, cell.Icon, box.Center.ToVector2(), size - 12f, 1f, cell.Hidden);
+
+                    if (cell.Count != null)
                     {
-                        Item tip = ContentSamples.ItemsByType[cells[i].ItemType].Clone();
-                        tip.stack = Math.Max(1, cells[i].Stack);
+                        float scale = 0.75f;
+                        Vector2 s = FontAssets.ItemStack.Value.MeasureString(cell.Count) * scale;
+                        Utils.DrawBorderString(sb, cell.Count, new Vector2(box.Right - 4 - s.X, box.Bottom - 4 - s.Y), Color.White, scale);
+                    }
+
+                    if (!box.Contains(mouse)) continue;
+
+                    if (cell.Hidden) Main.hoverItemName = RecipeBookLayout.UnknownName;
+                    else if (cell.ItemType > 0)
+                    {
+                        Item tip = ContentSamples.ItemsByType[cell.ItemType].Clone();
+                        tip.stack = Math.Max(1, cell.Stack);
                         Main.HoverItem = tip;
                         Main.hoverItemName = tip.Name;
                     }
-                    else Main.hoverItemName = cells[i].Name;
+                    else Main.hoverItemName = cell.Name;
                 }
             }
 

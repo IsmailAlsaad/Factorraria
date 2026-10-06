@@ -235,11 +235,9 @@ namespace Factorraria.Common.Machines
             foreach (LiquidFuelModule lf in LiquidFuels) lf.ConsumeCraft(InputLiquids);
             WorkProgress = 0;
 
-            // Discovery: finishing a recipe teaches the world that it exists.
+            // Discovery: finishing a recipe marks it crafted for the whole world.
             if (recipe.TryGetPrimaryOutput(out RecipeOutputKey discoveredKey))
             {
-                RecipeKnowledgeSystem.Learn(discoveredKey);
-
                 // Recipe book: credit the craft to this machine's recipe. Singleplayer only; netcode is Phase 6.
                 string machineName = RecipeCatalog.NameOf(Recipes);
                 if (machineName != null)

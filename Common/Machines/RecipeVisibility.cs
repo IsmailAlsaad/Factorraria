@@ -16,15 +16,12 @@ namespace Factorraria.Common.Machines
     }
 
     /// <summary>
-    /// One place that answers "should the player see this recipe in a machine browser?".
-    /// Today: only recipes the world has learned, plus a debug reveal-all. Kept as its own class so a
-    /// later phase can add more rules (creative mode, knowledge items, ...) without touching the UI.
+    /// One place that answers "how much of this recipe may the local player see?" (see RecipeState).
+    /// Used by the recipe book and the machine browsers. Kept as its own class so later rules
+    /// (creative mode, knowledge items, ...) never touch the UI.
     /// </summary>
     public static class RecipeVisibility
     {
-        public static bool IsVisible(RecipeOutputGroup group) =>
-            RecipeKnowledgeSystem.IsKnown(group) ||
-            ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes;   // debug: show everything
 
         // ------------------------------------------------------------------------------------------
         // Four-state resolver (roadmap section 3). The recipe book uses it now; the browser panel in Phase 5.
@@ -110,6 +107,31 @@ namespace Factorraria.Common.Machines
             // Debug reveal: at least faded in the browser. It never touches the saved sets and never reaches the book (see InBook).
             if (ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes) return RecipeState.FadedIngredient;
             return RecipeState.Hidden;
+        }
+
+        /// <summary>
+        /// Runs the (throttled) inventory scan so HeldVersion stays current. A panel that reacts to held-item
+        /// changes must call this every frame while it is visible, because the scan is otherwise lazy.
+        /// </summary>
+        public static void Poll() => EnsureHeldScan();
+
+        /// <summary>True if the local player holds an input of this recipe right now.</summary>
+        public static bool IsHeld(string catalogKey)
+        {
+            EnsureHeldScan();
+            return catalogKey != null && heldKeys.Contains(catalogKey);
+        }
+
+        /// <summary>
+        /// Machine browser only: may the product's NAME be shown? Crafted: yes. Holding an input (manual discovery): yes.
+        /// Debug reveal-all: yes. A recipe known ONLY from a parchment keeps its product as "???" until it is crafted.
+        /// A Hidden state only reaches the browser for the machine's currently selected recipe, which was already seen.
+        /// </summary>
+        public static bool IsNameRevealedInBrowser(string machineName, RecipeOutputGroup group, RecipeState state)
+        {
+            if (state != RecipeState.FadedParchment) return true;    // Crafted, held (FadedIngredient), or the selected Hidden one
+            if (ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes) return true;
+            return IsHeld(RecipeCatalog.KeyFor(machineName, group));
         }
 
         /// <summary>The recipe book lists only parchment-unlocked and crafted recipes.</summary>

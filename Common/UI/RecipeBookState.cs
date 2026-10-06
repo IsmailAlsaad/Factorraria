@@ -127,7 +127,7 @@ namespace Factorraria.Common.UI
                     SelectedState = state;
                 }
 
-                if (filtering && e.Group.Key.DisplayName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                if (filtering && (state == RecipeState.Crafted ? e.Group.Key.DisplayName : RecipeBookLayout.UnknownName).IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0) continue;
                 shown++;
 
                 if (e.Machine != lastMachine)

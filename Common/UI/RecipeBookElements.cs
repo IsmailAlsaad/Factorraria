@@ -123,7 +123,7 @@ namespace Factorraria.Common.UI
             Machine = machine;
             Group = group;
             State = state;
-            ProductName = group.Key.DisplayName;
+            ProductName = state == RecipeState.Crafted ? group.Key.DisplayName : RecipeBookLayout.UnknownName;
             Width.Set(0f, 1f);
             Height.Set(RecipeBookLayout.EntryRowHeight, 0f);
         }

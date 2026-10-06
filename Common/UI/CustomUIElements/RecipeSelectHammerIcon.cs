@@ -87,42 +87,64 @@ namespace Factorraria.Common.UI.CustomUIElements
         string searchFilter = "";
         bool listDirty;
 
-        readonly List<RecipeOutputGroup> machineGroups;
+        readonly RecipeBook book;
         readonly Func<RecipeOutputGroup> getSelectedGroup;
         readonly Action<RecipeOutputGroup> setSelectedGroup;
 
-        public RecipeBrowserPanel(List<RecipeOutputGroup> groups, Func<RecipeOutputGroup> getSelected, Action<RecipeOutputGroup> setSelected)
+        string machineName;                      // catalog name of this machine's book; null = not in the catalog (everything stays visible)
+        int builtKnowledgeVersion = int.MinValue;
+        int builtHeldVersion = int.MinValue;
+        bool wasShown;
+
+        public RecipeBrowserPanel(RecipeBook book, Func<RecipeOutputGroup> getSelected, Action<RecipeOutputGroup> setSelected)
         {
-            machineGroups = groups;
+            this.book = book;
             getSelectedGroup = getSelected;
             setSelectedGroup = setSelected;
         }
 
         public void PopulateRecipeList()
         {
+            float view = scrollbar != null ? scrollbar.ViewPosition : 0f;   // keep the scroll position across rebuilds
+
             recipeList.Clear();
+            machineName ??= RecipeCatalog.NameOf(book);
             RecipeOutputGroup current = getSelectedGroup?.Invoke();
+            List<RecipeOutputGroup> groups = book.Groups;
 
-            for (int i = 0; i < machineGroups.Count; i++)
+            for (int i = 0; i < groups.Count; i++)
             {
-                if (!RecipeVisibility.IsVisible(machineGroups[i])) continue;   // hide undiscovered recipes
-                if (!MatchesFilter(machineGroups[i])) continue;
+                RecipeOutputGroup group = groups[i];
+                bool isCurrent = ReferenceEquals(group, current);
 
-                var cell = new RecipeElement(machineGroups[i], i);
-                cell.Selected = ReferenceEquals(machineGroups[i], current);  // restores the highlight when the UI reopens
+                // A machine that is not in the catalog can never be gated: treat everything as crafted.
+                RecipeState state = machineName == null ? RecipeState.Crafted : RecipeVisibility.GetState(machineName, group);
+                if (state == RecipeState.Hidden && !isCurrent) continue;      // the selected recipe never disappears mid-craft
+
+                bool nameKnown = machineName == null || RecipeVisibility.IsNameRevealedInBrowser(machineName, group, state);
+                string shownName = nameKnown ? group.Key.DisplayName : RecipeBookLayout.UnknownName;
+                if (!MatchesFilter(shownName)) continue;
+
+                var cell = new RecipeElement(group, i, state, shownName);
+                cell.Selected = isCurrent;      // restores the highlight when the UI reopens
                 cell.OnSelected = SelectRecipe;
                 cell.SetZoomScale(zoom);
                 recipeList.Add(cell);
             }
 
             recipeList.Recalculate();
+            if (scrollbar != null) scrollbar.ViewPosition = view;
+
+            // Stamped AFTER the loop: GetState can run the first inventory scan, which bumps HeldVersion.
+            builtKnowledgeVersion = RecipeKnowledgeSystem.Version;
+            builtHeldVersion = RecipeVisibility.HeldVersion;
         }
 
-        bool MatchesFilter(RecipeOutputGroup group)
+        // Filters on the name the player can actually see, so "???" products cannot be found by typing their real name.
+        bool MatchesFilter(string shownName)
         {
             if (string.IsNullOrWhiteSpace(searchFilter)) return true;
-            string name = group.Key.DisplayName;
-            return name.Contains(searchFilter.Trim(), StringComparison.OrdinalIgnoreCase);
+            return shownName.Contains(searchFilter.Trim(), StringComparison.OrdinalIgnoreCase);
         }
 
         void SelectRecipe(RecipeElement chosen)
@@ -181,6 +203,15 @@ namespace Factorraria.Common.UI.CustomUIElements
             {
                 searchBar?.Unfocus();
             }
+            else
+            {
+                if (!wasShown) RecipeVisibility.InvalidateHeld();   // opening: rescan the inventory right away
+                RecipeVisibility.Poll();                            // HeldVersion only moves if someone scans
+
+                if (RecipeKnowledgeSystem.Version != builtKnowledgeVersion || RecipeVisibility.HeldVersion != builtHeldVersion)
+                    PopulateRecipeList();
+            }
+            wasShown = showPanel;
 
             if (showPanel && IsMouseHovering)
             {
@@ -267,16 +298,18 @@ namespace Factorraria.Common.UI.CustomUIElements
 
         public readonly RecipeOutputGroup CurrentGroup;
         public readonly int Index;                 // original position in the registry's group list
+        public readonly RecipeState State;         // anything but Crafted draws the icon as a black silhouette
 
-        public RecipeElement(RecipeOutputGroup group, int index)
+        public RecipeElement(RecipeOutputGroup group, int index, RecipeState state, string shownName)
         {
             CurrentGroup = group;
             Index = index;
+            State = state;
             SetPadding(0f);
             BackgroundColor = NormalColor;
             SetZoomScale(1f);
 
-            ProductName = group.Key.DisplayName;
+            ProductName = shownName;               // "???" until the product is crafted or an input is held
         }
 
         // UIGrid sorts its items with CompareTo. The default returns 0 for everything,
@@ -310,7 +343,7 @@ namespace Factorraria.Common.UI.CustomUIElements
                 Main.hoverItemName = ProductName;
             }
 
-            RecipeIcon.Draw(sb, CurrentGroup.Key, GetDimensions().Center(), IconBox, zoom);
+            RecipeIcon.Draw(sb, CurrentGroup.Key, GetDimensions().Center(), IconBox, zoom, State != RecipeState.Crafted);
         }
     }
 

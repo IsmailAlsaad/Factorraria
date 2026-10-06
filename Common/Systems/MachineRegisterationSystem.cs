@@ -99,15 +99,6 @@ namespace Factorraria.Common.Machines
             LiquidDistillatorRecipeRegistry.BuildRecipes();
             AutohammerRecipeRegistry.BuildRecipes();
 
-            // Recipe discovery: the world starts out knowing every recipe that already existed
-            // before this system was added, so nothing the player could already make disappears.
-            RecipeKnowledgeSystem.LearnBook(FurnaceRecipeRegistry.Book);
-            RecipeKnowledgeSystem.LearnBook(HellforgeRecipeRegistry.Book);
-            RecipeKnowledgeSystem.LearnBook(SolidifierRecipeRegistry.Book);
-            RecipeKnowledgeSystem.LearnBook(IceMachineRecipeRegistry.Book);
-            RecipeKnowledgeSystem.LearnBook(LiquidDistillatorRecipeRegistry.Book);
-            RecipeKnowledgeSystem.LearnBook(AutohammerRecipeRegistry.Book);
-            // etc...
 
             // Recipe discovery: lets scrolls roll a recipe and resolve a saved key back to (machine, group).
             RecipeCatalog.Clear();

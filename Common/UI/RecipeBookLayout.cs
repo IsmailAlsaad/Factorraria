@@ -26,6 +26,9 @@ namespace Factorraria.Common.UI
         public const int Margin = 22;
         public const int Gutter = 14;          // half the gap between the two pages (the spine)
         public const int TitleHeight = 40;
+
+        /// <summary>Shown instead of a product's name until the product has been crafted (or its ingredient is held, in the machine browser).</summary>
+        public const string UnknownName = "???";
         public const int ScrollbarWidth = 20;
 
         // List rows
@@ -67,7 +70,7 @@ namespace Factorraria.Common.UI
         }
 
         // Detail page geometry (all relative to DetailArea's top-left unless noted)
-        public const int DetailHeaderHeight = 106;     // product icon, name, machine, divider, status line
+        public const int DetailHeaderHeight = 78;      // product icon, name, machine, divider
         public const int DetailCell = 42;              // one ingredient cell (square)
         public const int DetailCellGap = 4;
         public const int DetailPagerHeight = 26;       // prev / next row at the bottom of DetailArea
