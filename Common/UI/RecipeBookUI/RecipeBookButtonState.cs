@@ -17,15 +17,15 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Append(Button);
         }
 
-        // Button top-left minus the accessory column anchor (see AnchorPoint). Saved per character (RecipeBookPlayer) once the player drags the button.
+        // Button top-left minus the defense icon position (see AnchorPoint). Saved per character (RecipeBookPlayer) once the player drags the button.
         static Vector2? UserOffset
         {
             get => Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().ButtonOffset;
             set => Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().ButtonOffset = value;
         }
 
-        // Used until the player drags the button: anchored the first time the inventory draws, so the button starts at the fixed
-        // reference spot (ButtonX/ButtonY) and follows the accessory column anchor from then on. RecipeBookLayout.ReferenceDefenseY is no longer used.
+        // Used until the player drags the button: captured the first time the inventory draws (per game session), so the button starts at
+        // the fixed reference spot (ButtonX/ButtonY) and follows the defense icon from then on. RecipeBookLayout.ReferenceDefenseY is not used.
         static Vector2? sessionAnchor;
 
         bool dragging;
@@ -36,12 +36,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
         static uint lastPollTick;
 
         /// <summary>
-        /// Stable reference point for the button: the accessory column's X and its TOP (AccessorySlotLoader.DrawVerticalAlignment).
-        /// The defense icon sits below the LAST DRAWN slot, so its Y changes with the number of accessory slots shown (an extra
-        /// slot appears in Expert/Master worlds), which used to move the button between worlds. The column top does not change
-        /// with the world; it still follows window size, UI scale and the minimap.
+        /// Reference point for the button: tModLoader's defense icon. It sits below the LAST DRAWN accessory slot, so it moves down
+        /// when an extra slot appears (Expert/Master worlds, mod slots) and the button moves with it. It also follows window size,
+        /// UI scale and the minimap.
         /// </summary>
-        static Vector2 AnchorPoint(Vector2 defense) => new Vector2(defense.X, AccessorySlotLoader.DrawVerticalAlignment);
+        static Vector2 AnchorPoint(Vector2 defense) => defense;
 
         /// <summary>Forget the dragged position and the session anchor (back to the default placement).</summary>
         public static void ResetPosition()

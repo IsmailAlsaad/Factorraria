@@ -31,6 +31,9 @@ namespace Factorraria.Common.Machines
         // itemType -> catalog keys of every recipe group that takes it as an INPUT (fuel is not an input).
         static readonly Dictionary<int, List<string>> ingredientIndex = new Dictionary<int, List<string>>();
 
+        // product -> catalog keys of every recipe group that MAKES it (item or liquid), in catalog order.
+        static readonly Dictionary<RecipeOutputKey, List<string>> producerIndex = new Dictionary<RecipeOutputKey, List<string>>();
+
         // Catalog keys whose inputs the local player holds, rescanned about once per second.
         static HashSet<string> heldKeys = new HashSet<string>();
         static HashSet<string> scratchKeys = new HashSet<string>();
@@ -49,6 +52,13 @@ namespace Factorraria.Common.Machines
         {
             ClearIndex();
             foreach (RecipeCatalog.Entry e in RecipeCatalog.Entries())
+            {
+                if (!producerIndex.TryGetValue(e.Group.Key, out List<string> makers))
+                    producerIndex[e.Group.Key] = makers = new List<string>();
+                makers.Add(e.Key);
+            }
+
+            foreach (RecipeCatalog.Entry e in RecipeCatalog.Entries())
                 foreach (CustomRecipe recipe in e.Group.Recipes)
                     foreach (RecipeIngredient input in recipe.Inputs)
                     {
@@ -61,6 +71,7 @@ namespace Factorraria.Common.Machines
         public static void ClearIndex()
         {
             ingredientIndex.Clear();
+            producerIndex.Clear();
             heldKeys.Clear();
             heldItems.Clear();
             heldScanned = false;
@@ -147,6 +158,51 @@ namespace Factorraria.Common.Machines
         {
             if (state == RecipeState.Crafted) return true;
             return ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes;
+        }
+
+        // ------------------------------------------------------------------------------------------
+        // Recipe book detail page: which ingredients may be shown, and where an ingredient's own recipe lives
+        // ------------------------------------------------------------------------------------------
+
+        /// <summary>True if some recipe that makes this product (item or liquid) has been crafted in this world.</summary>
+        public static bool IsProductCrafted(RecipeOutputKey product)
+        {
+            if (!producerIndex.TryGetValue(product, out List<string> makers)) return false;
+            foreach (string key in makers)
+                if (RecipeKnowledgeSystem.IsCrafted(key)) return true;
+            return false;
+        }
+
+        /// <summary>An item ingredient may be shown once the player holds it right now OR has crafted it before.</summary>
+        public static bool IsIngredientRevealed(int itemType) =>
+            IsItemHeld(itemType) || IsProductCrafted(RecipeOutputKey.ForItem(itemType));
+
+        /// <summary>
+        /// Liquids cannot be held. A liquid some recipe makes stays hidden until it has been crafted; a liquid no recipe
+        /// makes (world water, lava, ...) is raw and always shown.
+        /// </summary>
+        public static bool IsLiquidRevealed(int liquidType)
+        {
+            RecipeOutputKey k = RecipeOutputKey.ForLiquid(liquidType);
+            return !producerIndex.ContainsKey(k) || IsProductCrafted(k);
+        }
+
+        /// <summary>
+        /// Catalog key of a recipe that makes this product AND is listed in the recipe book (crafted, parchment or held).
+        /// A crafted one wins over a faded one. Null if there is none. excludeKey (the recipe already on screen) is skipped.
+        /// </summary>
+        public static string FindBookRecipeFor(RecipeOutputKey product, string excludeKey)
+        {
+            if (!producerIndex.TryGetValue(product, out List<string> makers)) return null;
+            string fallback = null;
+            foreach (string key in makers)
+            {
+                if (key == excludeKey) continue;
+                RecipeState s = GetState(key);
+                if (s == RecipeState.Crafted) return key;
+                if (fallback == null && InBook(s)) fallback = key;
+            }
+            return fallback;
         }
 
         /// <summary>The recipe book lists crafted, parchment-unlocked and held-ingredient recipes. DebugRevealed never appears.</summary>

@@ -311,6 +311,21 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (scrollTo) ScrollToSelected();
         }
 
+        /// <summary>
+        /// Jumps to a recipe from inside the book (ingredient click). If a search filter hides the target, the filter is cleared first.
+        /// Ignored if the recipe is not in the book list.
+        /// </summary>
+        public void GoTo(string key)
+        {
+            if (key == null) return;
+            if (!entryTop.ContainsKey(key) && !string.IsNullOrEmpty(searchFilter?.Trim()))
+            {
+                ResetSearch();
+                Rebuild();
+            }
+            Select(key, true);
+        }
+
         void ScrollToSelected()
         {
             if (SelectedKey == null || !entryTop.TryGetValue(SelectedKey, out float top)) return;

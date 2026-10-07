@@ -227,6 +227,7 @@ Projectiles: {
 
 RecipeBook: {
 	ButtonTooltip: Recipe Book
+	InfoTooltip: Show in recipe book
 	Title: Recipe Book
 	Empty: The pages are blank. Read recipe parchments or craft in machines to fill them.
 	NothingSelected: Select a recipe on the left page.

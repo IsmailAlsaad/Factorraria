@@ -99,11 +99,11 @@ namespace Factorraria.Content.Tiles.Machines.Solidifier
                 .TakesTicks(60));
 
 
-            Book.Add(new CustomRecipe()
-                .WithAnyWaterInput(50f)
-                .WithLiquidInput(LiquidTypeRegistry.Lava, 25f)
-                .WithOutput(ItemID.StoneBlock, 1)
-                .TakesTicks(60));
+            //Book.Add(new CustomRecipe()
+            //    .WithAnyWaterInput(50f)
+            //    .WithLiquidInput(LiquidTypeRegistry.Lava, 25f)
+            //    .WithOutput(ItemID.StoneBlock, 1)
+            //    .TakesTicks(60));
 
             Book.Rebuild();
         }

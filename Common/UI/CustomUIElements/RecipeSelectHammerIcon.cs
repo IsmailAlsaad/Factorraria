@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Knowledge;
 using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
+using Factorraria.Common.Systems;
 using Factorraria.Common.UI.RecipeBookUI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -126,7 +127,7 @@ namespace Factorraria.Common.UI.CustomUIElements
                 string shownName = nameKnown ? group.Key.DisplayName : RecipeBookLayout.UnknownName;
                 if (!MatchesFilter(shownName)) continue;
 
-                var cell = new RecipeElement(group, i, state, shownName);
+                var cell = new RecipeElement(group, i, state, shownName, machineName == null ? null : RecipeCatalog.KeyFor(machineName, group));
                 cell.Selected = isCurrent;      // restores the highlight when the UI reopens
                 cell.OnSelected = SelectRecipe;
                 cell.SetZoomScale(zoom);
@@ -301,9 +302,11 @@ namespace Factorraria.Common.UI.CustomUIElements
         public readonly RecipeOutputGroup CurrentGroup;
         public readonly int Index;                 // original position in the registry's group list
         public readonly RecipeState State;         // anything but Crafted draws the icon as a black silhouette
+        public readonly string CatalogKey;         // this recipe's key in RecipeCatalog (null = machine not in the catalog); the "?" icon opens it in the book
 
-        public RecipeElement(RecipeOutputGroup group, int index, RecipeState state, string shownName)
+        public RecipeElement(RecipeOutputGroup group, int index, RecipeState state, string shownName, string catalogKey = null)
         {
+            CatalogKey = catalogKey;
             CurrentGroup = group;
             Index = index;
             State = state;
@@ -340,6 +343,15 @@ namespace Factorraria.Common.UI.CustomUIElements
         public override void LeftClick(UIMouseEvent evt)
         {
             base.LeftClick(evt);
+
+            // The "?" icon opens this recipe's page in the recipe book instead of selecting the recipe.
+            if (HasInfoIcon && InfoRect().Contains(Main.MouseScreen.ToPoint()))
+            {
+                SoundEngine.PlaySound(SoundID.MenuTick);
+                RecipeBookSystem.OpenAt(CatalogKey);
+                return;
+            }
+
             OnSelected?.Invoke(this);
         }
 
@@ -349,12 +361,49 @@ namespace Factorraria.Common.UI.CustomUIElements
             Color border = IsMouseHovering ? HoverBorderColor : BorderColor;
             ScaledPanel.Draw(sb, GetDimensions().ToRectangle(), BackgroundColor, border, zoom);
 
+            bool overInfo = HasInfoIcon && IsMouseHovering && InfoRect().Contains(Main.MouseScreen.ToPoint());
             if (IsMouseHovering)
             {
-                Main.hoverItemName = ProductName;
+                Main.hoverItemName = overInfo ? RecipeBookLayout.Text("InfoTooltip") : ProductName;
             }
 
             RecipeIcon.Draw(sb, CurrentGroup.Key, GetDimensions().Center(), IconBox, zoom, State != RecipeState.Crafted);
+
+            if (HasInfoIcon) DrawInfoIcon(sb, overInfo);
+        }
+
+        // ---- "?" info icon (top-left corner): opens this recipe in the recipe book ----
+        // Only recipes the book actually lists (crafted / parchment / held) get one; otherwise there would be no page to open.
+        bool HasInfoIcon => CatalogKey != null && RecipeVisibility.InBook(State);
+
+        Rectangle InfoRect()
+        {
+            Rectangle r = GetDimensions().ToRectangle();
+            int size = Math.Max(10, (int)Math.Round(14f * zoom));
+            int pad = Math.Max(2, (int)Math.Round(3f * zoom));
+            return new Rectangle(r.X + pad, r.Y + pad, size, size);
+        }
+
+        void DrawInfoIcon(SpriteBatch sb, bool hover)
+        {
+            Rectangle b = InfoRect();
+            float radius = b.Width / 2f;
+            float cx = b.X + radius;
+            Color fill = hover ? new Color(255, 232, 120) : Color.White;
+
+            // Filled circle, one pixel row at a time (no texture needed).
+            for (int row = 0; row < b.Height; row++)
+            {
+                float dy = row + 0.5f - radius;
+                float half = MathF.Sqrt(MathF.Max(0f, radius * radius - dy * dy));
+                int x0 = (int)MathF.Round(cx - half);
+                int w = Math.Max(1, (int)MathF.Round(half * 2f));
+                BookDraw.Rect(sb, new Rectangle(x0, b.Y + row, w, 1), fill);
+            }
+
+            float scale = 0.7f * (b.Width / 14f);
+            Vector2 size = FontAssets.MouseText.Value.MeasureString("?") * scale;
+            BookDraw.Text(sb, "?", new Vector2(cx - size.X / 2f, b.Y + radius - size.Y / 2f + 2f * scale), Color.Black, scale);
         }
     }
 

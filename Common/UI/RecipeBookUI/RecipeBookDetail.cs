@@ -23,6 +23,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
         RecipeOutputGroup shownGroup;
         int recipeIndex;
 
+        // Clickable ingredient boxes of the recipe drawn this frame (box, catalog key to jump to). Refilled every draw.
+        readonly List<(Rectangle box, string key)> navHits = new List<(Rectangle box, string key)>();
+
         public RecipeBookDetail(RecipeBookState book)
         {
             this.book = book;
@@ -48,6 +51,17 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public override void LeftClick(UIMouseEvent evt)
         {
             base.LeftClick(evt);
+
+            // Clicking an ingredient that has a recipe in the book jumps to that recipe (boxes were recorded while drawing).
+            Point click = Main.MouseScreen.ToPoint();
+            foreach (var hit in navHits)
+            {
+                if (!hit.box.Contains(click)) continue;
+                SoundEngine.PlaySound(SoundID.MenuTick);
+                book.GoTo(hit.key);
+                return;
+            }
+
             RecipeOutputGroup g = book.SelectedGroup;
             if (g == null || g.Recipes.Count < 2) return;
 
@@ -66,6 +80,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         protected override void DrawSelf(SpriteBatch sb)
         {
             Rectangle r = GetDimensions().ToRectangle();
+            navHits.Clear();
 
             if (book.SelectedGroup == null)
             {
@@ -107,12 +122,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             float y = area.Y;
 
-            // Ingredients are always shown (the parchment taught them). Products stay "???" until crafted.
+            // Products stay "???" until crafted. Ingredients follow the reveal rule below.
             y = DrawLabel(sb, RecipeBookLayout.Text("Inputs"), area, y);
-            // Exception: a recipe known only because the player holds something (FadedIngredient) shows just the held
-            // ingredients; the rest (and any liquid) stay silhouettes with "???" until the recipe is unlocked or crafted.
-            bool fadeUnheld = book.SelectedState == RecipeState.FadedIngredient;
-            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, fadeUnheld), area, y);
+            // An ingredient the player neither holds right now nor has crafted before stays a silhouette with "???", even
+            // when a parchment taught the recipe (keeps recipe trees honest). A Crafted recipe shows everything.
+            // Recipes known only from holding an input (FadedIngredient) also hide every liquid.
+            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, book.SelectedState, book.SelectedKey), area, y, navHits);
 
             y += 4f;
             DrawArrow(sb, new Vector2(area.Center.X, y));
@@ -148,20 +163,27 @@ namespace Factorraria.Common.UI.RecipeBookUI
             public int ItemType;      // >0 -> real item tooltip
             public int Stack;
             public bool Hidden;       // product not crafted yet: black silhouette, "???" on hover
+            public string NavKey;     // catalog key of the recipe that makes this ingredient (null = none in the book: not clickable)
         }
 
-        static List<Cell> BuildCells(List<RecipeIngredient> items, List<LiquidIngredient> liquids, bool hidden, bool fadeUnheld = false)
+        // inputState != null means "these are the recipe's inputs": the reveal rule and click-to-jump apply. selfKey = the recipe on screen.
+        static List<Cell> BuildCells(List<RecipeIngredient> items, List<LiquidIngredient> liquids, bool hidden, RecipeState? inputState = null, string selfKey = null)
         {
             var cells = new List<Cell>();
+            bool isInput = inputState.HasValue;
+            bool reveal = isInput && inputState.Value != RecipeState.Crafted;       // Crafted recipes show all ingredients
+            bool fadeLiquids = inputState == RecipeState.FadedIngredient;
             foreach (RecipeIngredient i in items)
             {
+                bool itemHidden = hidden || (reveal && !RecipeVisibility.IsIngredientRevealed(i.Type));
                 cells.Add(new Cell
                 {
                     Icon = RecipeOutputKey.ForItem(i.Type),
                     Count = i.Stack > 1 ? i.Stack.ToString() : null,
                     ItemType = i.Type,
                     Stack = i.Stack,
-                    Hidden = hidden || (fadeUnheld && !RecipeVisibility.IsItemHeld(i.Type)),
+                    Hidden = itemHidden,
+                    NavKey = isInput && !itemHidden ? RecipeVisibility.FindBookRecipeFor(RecipeOutputKey.ForItem(i.Type), selfKey) : null,
                 });
             }
             foreach (LiquidIngredient l in liquids)
@@ -170,19 +192,21 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 int iconId = l.IsAnyWater ? LiquidTypeRegistry.Water : l.LiquidType;
                 string name = l.IsAnyWater ? RecipeBookLayout.Text("AnyWater") : LiquidTypeRegistry.Get(l.LiquidType).Name;
                 string amount = l.Amount.ToString("0.##");
+                bool liquidHidden = hidden || (isInput && (fadeLiquids || (reveal && !l.IsAnyWater && !RecipeVisibility.IsLiquidRevealed(l.LiquidType))));
                 cells.Add(new Cell
                 {
                     Icon = RecipeOutputKey.ForLiquid(iconId),
                     Count = amount,
                     Name = name + " - " + string.Format(RecipeBookLayout.Text("Units"), amount),
-                    Hidden = hidden || fadeUnheld,    // liquids cannot be held, so they stay hidden until the recipe is known
+                    Hidden = liquidHidden,
+                    NavKey = isInput && !liquidHidden && !l.IsAnyWater ? RecipeVisibility.FindBookRecipeFor(RecipeOutputKey.ForLiquid(l.LiquidType), selfKey) : null,
                 });
             }
             return cells;
         }
 
         /// <summary>Draws cells in rows wrapped at the area's width, each row centered on the page. Returns the y below the last row.</summary>
-        static float DrawCells(SpriteBatch sb, List<Cell> cells, Rectangle area, float y)
+        static float DrawCells(SpriteBatch sb, List<Cell> cells, Rectangle area, float y, List<(Rectangle box, string key)> navHits = null)
         {
             int size = RecipeBookLayout.DetailCell;
             int gap = RecipeBookLayout.DetailCellGap;
@@ -201,7 +225,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
                     Cell cell = cells[rowStart + c];
                     var box = new Rectangle(x0 + c * (size + gap), rowY, size, size);
 
-                    BookDraw.Frame(sb, box, RecipeBookLayout.PageColor * 0.6f, RecipeBookLayout.PageBorder * 0.7f, 2);
+                    // Only ingredients that have a recipe in the book light up on hover; the rest stay inert.
+                    bool navHover = cell.NavKey != null && box.Contains(mouse);
+                    BookDraw.Frame(sb, box,
+                        navHover ? new Color(214, 178, 48) * 0.55f : RecipeBookLayout.PageColor * 0.6f,
+                        navHover ? new Color(150, 110, 30) : RecipeBookLayout.PageBorder * 0.7f, 2);
                     RecipeIcon.Draw(sb, cell.Icon, box.Center.ToVector2(), size - 12f, 1f, cell.Hidden);
 
                     if (cell.Count != null)
@@ -210,6 +238,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
                         Vector2 s = FontAssets.ItemStack.Value.MeasureString(cell.Count) * scale;
                         Utils.DrawBorderString(sb, cell.Count, new Vector2(box.Right - 4 - s.X, box.Bottom - 4 - s.Y), Color.White, scale);
                     }
+
+                    if (cell.NavKey != null) navHits?.Add((box, cell.NavKey));
 
                     if (!box.Contains(mouse)) continue;
 

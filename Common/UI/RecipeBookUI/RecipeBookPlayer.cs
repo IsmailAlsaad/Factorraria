@@ -4,7 +4,7 @@ using Terraria.ModLoader.IO;
 
 namespace Factorraria.Common.UI.RecipeBookUI
 {
-    /// <summary>Remembers where this character dragged the recipe book button (offset from the accessory column anchor). Null = default placement.</summary>
+    /// <summary>Remembers where this character dragged the recipe book button (offset from the defense icon). Null = default placement.</summary>
     public class RecipeBookPlayer : ModPlayer
     {
         public Vector2? ButtonOffset;
@@ -12,14 +12,15 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public override void SaveData(TagCompound tag)
         {
             if (!ButtonOffset.HasValue) return;
-            tag["buttonColOffsetX"] = ButtonOffset.Value.X;
-            tag["buttonColOffsetY"] = ButtonOffset.Value.Y;
+            // New key names: the old "buttonColOffset*" values were relative to the accessory column top and would be wrong now.
+            tag["buttonDefOffsetX"] = ButtonOffset.Value.X;
+            tag["buttonDefOffsetY"] = ButtonOffset.Value.Y;
         }
 
         public override void LoadData(TagCompound tag)
         {
-            ButtonOffset = tag.ContainsKey("buttonColOffsetX")
-                ? new Vector2(tag.GetFloat("buttonColOffsetX"), tag.GetFloat("buttonColOffsetY"))
+            ButtonOffset = tag.ContainsKey("buttonDefOffsetX")
+                ? new Vector2(tag.GetFloat("buttonDefOffsetX"), tag.GetFloat("buttonDefOffsetY"))
                 : null;
         }
     }
