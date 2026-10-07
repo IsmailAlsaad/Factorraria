@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Content.Configs;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
@@ -16,19 +17,31 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Append(Button);
         }
 
-        // Button top-left minus the defense icon position. Saved per character (RecipeBookPlayer) once the player drags the button.
+        // Button top-left minus the accessory column anchor (see AnchorPoint). Saved per character (RecipeBookPlayer) once the player drags the button.
         static Vector2? UserOffset
         {
             get => Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().ButtonOffset;
             set => Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().ButtonOffset = value;
         }
 
-        // Used until the player drags the button (or RecipeBookLayout.ReferenceDefenseY is calibrated): anchored the first time
-        // the inventory draws, so the button starts at the fixed reference spot and follows the defense icon from then on.
+        // Used until the player drags the button: anchored the first time the inventory draws, so the button starts at the fixed
+        // reference spot (ButtonX/ButtonY) and follows the accessory column anchor from then on. RecipeBookLayout.ReferenceDefenseY is no longer used.
         static Vector2? sessionAnchor;
 
         bool dragging;
         Vector2 grab;     // mouse position minus the button's top-left when the drag started
+
+        // Own right-click press detection. Main.mouseRightRelease can already be cleared by other code before UpdateUI runs.
+        static bool rightWasDown;
+        static uint lastPollTick;
+
+        /// <summary>
+        /// Stable reference point for the button: the accessory column's X and its TOP (AccessorySlotLoader.DrawVerticalAlignment).
+        /// The defense icon sits below the LAST DRAWN slot, so its Y changes with the number of accessory slots shown (an extra
+        /// slot appears in Expert/Master worlds), which used to move the button between worlds. The column top does not change
+        /// with the world; it still follows window size, UI scale and the minimap.
+        /// </summary>
+        static Vector2 AnchorPoint(Vector2 defense) => new Vector2(defense.X, AccessorySlotLoader.DrawVerticalAlignment);
 
         /// <summary>Forget the dragged position and the session anchor (back to the default placement).</summary>
         public static void ResetPosition()
@@ -55,29 +68,36 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Vector2 defense = AccessorySlotLoader.DefenseIconPosition;
             if (defense == Vector2.Zero) return;                      // inventory has not drawn its accessory column yet
 
-            if (sessionAnchor == null)
-            {
-                sessionAnchor = RecipeBookLayout.ReferenceDefenseY > 0
-                    ? new Vector2(RecipeBookLayout.ButtonOffsetX, RecipeBookLayout.ButtonOffsetY)
-                    : new Vector2(RecipeBookLayout.ButtonX, RecipeBookLayout.ButtonY) - defense;
-            }
+            Vector2 anchor = AnchorPoint(defense);
 
-            UpdateDrag(defense);
+            if (sessionAnchor == null)
+                sessionAnchor = new Vector2(RecipeBookLayout.ButtonX, RecipeBookLayout.ButtonY) - anchor;
+
+            UpdateDrag(anchor);
 
             Vector2 offset = UserOffset ?? sessionAnchor.Value;
-            Button.Left.Set(defense.X + offset.X, 0f);
-            Button.Top.Set(defense.Y + offset.Y, 0f);
+            Button.Left.Set(anchor.X + offset.X, 0f);
+            Button.Top.Set(anchor.Y + offset.Y, 0f);
             Button.Recalculate();
         }
 
-        void UpdateDrag(Vector2 defense)
+        void UpdateDrag(Vector2 anchor)
         {
+            // A right press = mouseRight is down now and was not down on the previous poll. If the button was hidden for a while
+            // (inventory closed) the old state is stale, so a held button is never treated as a new press.
+            bool stale = Main.GameUpdateCount - lastPollTick > 1;
+            lastPollTick = Main.GameUpdateCount;
+            if (stale) { rightWasDown = Main.mouseRight; dragging = false; }
+            bool pressed = Main.mouseRight && !rightWasDown;
+            rightWasDown = Main.mouseRight;
+
             if (!dragging)
             {
-                if (Main.mouseRight && Main.mouseRightRelease && Button.MouseInside)
+                if (pressed && Button.MouseInside)
                 {
                     dragging = true;
                     grab = UserInterface.ActiveInstance.MousePosition - new Vector2(Button.Left.Pixels, Button.Top.Pixels);
+                    if (ModContent.GetInstance<FurnaceOffsetConfig>().EnableDebugs) Main.NewText("[RecipeBook] button drag started");
                 }
                 return;
             }
@@ -92,7 +112,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Vector2 topLeft = UserInterface.ActiveInstance.MousePosition - grab;
             topLeft = new Vector2(MathHelper.Clamp(topLeft.X, 0f, maxX), MathHelper.Clamp(topLeft.Y, 0f, maxY));
 
-            UserOffset = topLeft - defense;
+            UserOffset = topLeft - anchor;
         }
     }
 }

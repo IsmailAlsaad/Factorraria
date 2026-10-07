@@ -81,6 +81,7 @@ namespace Factorraria.Common.ChestLoot
             //ChestLootRegistry.For(VanillaChest.Shadow, VanillaChest.ShadowLocked, VanillaChest.Lihzahrd).Custom((chest, rand) => AddScroll(chest, rand, 0.30f));
             // Themed: locked gold chests (the dungeon ones) give a "Dungeon" scroll. Define that pool in ScrollPoolDefinitions first.
             //ChestLootRegistry.For(VanillaChest.GoldLocked).Custom((chest, rand) => AddScroll(chest, rand, 0.35f, "Dungeon"));
+            // Register pools in ScrollPoolDefinitions.cs
         }
 
         /// <summary>
