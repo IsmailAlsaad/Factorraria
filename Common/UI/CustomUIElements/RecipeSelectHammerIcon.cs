@@ -449,6 +449,12 @@ namespace Factorraria.Common.UI.CustomUIElements
         }
     }
 
+    /// <summary>Optional colours for RecipeSearchBar. null theme = the original blue look (machine browser).</summary>
+    public class SearchBarTheme
+    {
+        public Color Background, IdleBorder, FocusBorder, Text, Hint, Caret;
+    }
+
     public class RecipeSearchBar : UIElement
     {
         const int MaxLength = 24;
@@ -459,13 +465,15 @@ namespace Factorraria.Common.UI.CustomUIElements
         static readonly Color IdleBorder = Color.Black;
 
         readonly Action<string> onTextChanged;
+        readonly SearchBarTheme theme;
         string text = "";
         bool focused;
         float zoom = 1f;
 
-        public RecipeSearchBar(Action<string> onTextChanged)
+        public RecipeSearchBar(Action<string> onTextChanged, SearchBarTheme theme = null)
         {
             this.onTextChanged = onTextChanged;
+            this.theme = theme;
         }
 
         public void SetZoomScale(float z) => zoom = z;
@@ -562,7 +570,10 @@ namespace Factorraria.Common.UI.CustomUIElements
             }
 
             CalculatedStyle dims = GetDimensions();
-            ScaledPanel.Draw(sb, dims.ToRectangle(), BgColor, focused ? FocusBorder : IdleBorder, zoom);
+            if (theme != null)
+                BookDraw.Frame(sb, dims.ToRectangle(), theme.Background, focused ? theme.FocusBorder : theme.IdleBorder, 2);
+            else
+                ScaledPanel.Draw(sb, dims.ToRectangle(), BgColor, focused ? FocusBorder : IdleBorder, zoom);
 
             var font = FontAssets.MouseText.Value;
             float scale = 0.9f * zoom;
@@ -571,8 +582,11 @@ namespace Factorraria.Common.UI.CustomUIElements
 
             bool showHint = text.Length == 0 && !focused;
             string display = showHint ? Hint : text;
-            if (focused && (int)(Main.GlobalTimeWrappedHourly * 2f) % 2 == 0)
+            bool caretOn = focused && (int)(Main.GlobalTimeWrappedHourly * 2f) % 2 == 0;
+            if (theme == null && caretOn)
                 display += "|";
+            else if (theme != null)
+                available -= 4f * zoom;   // room for the drawn caret
 
             // Long text: keep the tail visible, like a normal text field
             while (display.Length > 1 && font.MeasureString(display).X * scale > available)
@@ -580,7 +594,19 @@ namespace Factorraria.Common.UI.CustomUIElements
 
             float lineHeight = font.MeasureString("Ag").Y * scale;
             Vector2 pos = new Vector2(dims.X + pad, dims.Y + 4f * scale + (dims.Height - lineHeight) / 2f);
-            Utils.DrawBorderString(sb, display, pos, showHint ? Color.Gray : Color.White, scale);
+            if (theme == null)
+            {
+                Utils.DrawBorderString(sb, display, pos, showHint ? Color.Gray : Color.White, scale);
+            }
+            else
+            {
+                BookDraw.Text(sb, display, pos, showHint ? theme.Hint : theme.Text, scale);
+                if (caretOn)
+                {
+                    int cx = (int)(pos.X + font.MeasureString(display).X * scale) + 1;
+                    BookDraw.Rect(sb, new Rectangle(cx, (int)pos.Y + 3, 2, (int)lineHeight - 6), theme.Caret);
+                }
+            }
         }
     }
 }

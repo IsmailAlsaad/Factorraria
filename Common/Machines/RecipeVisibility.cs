@@ -123,15 +123,14 @@ namespace Factorraria.Common.Machines
         }
 
         /// <summary>
-        /// Machine browser only: may the product's NAME be shown? Crafted: yes. Holding an input (manual discovery): yes.
-        /// Debug reveal-all: yes. A recipe known ONLY from a parchment keeps its product as "???" until it is crafted.
-        /// A Hidden state only reaches the browser for the machine's currently selected recipe, which was already seen.
+        /// Machine browser only: may the product's NAME be shown? Only when the recipe is Crafted. Every faded row
+        /// (held ingredient, parchment, or the selected Hidden one) shows "???" until it has been crafted.
+        /// The debug RevealAllRecipes flag still shows real names.
         /// </summary>
         public static bool IsNameRevealedInBrowser(string machineName, RecipeOutputGroup group, RecipeState state)
         {
-            if (state != RecipeState.FadedParchment) return true;    // Crafted, held (FadedIngredient), or the selected Hidden one
-            if (ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes) return true;
-            return IsHeld(RecipeCatalog.KeyFor(machineName, group));
+            if (state == RecipeState.Crafted) return true;
+            return ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes;
         }
 
         /// <summary>The recipe book lists only parchment-unlocked and crafted recipes.</summary>

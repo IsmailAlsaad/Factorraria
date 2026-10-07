@@ -114,7 +114,7 @@ namespace Factorraria.Common.Liquids
     {
         public override void PostSetupContent()
         {
-            LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Water", RenderColor = new Color(0, 81, 229), VanillaTileLiquidId = (byte?)LiquidID.Water, IconPath = "Factorraria/Common/Liquids/LiquidIcons/WaterIcon" });
+            LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Forest Water", RenderColor = new Color(0, 81, 229), VanillaTileLiquidId = (byte?)LiquidID.Water, IconPath = "Factorraria/Common/Liquids/LiquidIcons/WaterIcon" });
             LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Lava", RenderColor = new Color(200, 70, 20), VanillaTileLiquidId = (byte?)LiquidID.Lava, IconPath = "Factorraria/Common/Liquids/LiquidIcons/LavaIcon" });
             LiquidTypeRegistry.Honey = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Honey", RenderColor = new Color(247, 167, 8), VanillaTileLiquidId = (byte?)LiquidID.Honey, IconPath = "Factorraria/Common/Liquids/LiquidIcons/HoneyIcon" });
             LiquidTypeRegistry.Shimmer = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Shimmer", RenderColor = new Color(155, 114, 234), VanillaTileLiquidId = (byte?)LiquidID.Shimmer, IconPath = "Factorraria/Common/Liquids/LiquidIcons/ShimmerIcon" });

@@ -120,6 +120,27 @@ namespace Factorraria.Common.UI
         public static readonly Color CoverColor = new Color(104, 70, 40);
         public static readonly Color TextColor = new Color(60, 38, 18);
         public static readonly Color TextFadedColor = new Color(120, 98, 70);
+
+        // ---- search bar + scrollbar palette (tweak the numbers here) ----
+        public static readonly Color SearchBackground = new Color(200, 176, 128);
+        public static readonly Color SearchIdleBorder = PageBorder;
+        public static readonly Color SearchFocusBorder = new Color(214, 178, 48);
+        public static readonly Color ScrollTrack = Color.Lerp(PageColor, PageBorder, 0.35f);
+        public static readonly Color ScrollTrackOutline = Color.Lerp(PageColor, PageBorder, 0.7f);
+        public static readonly Color ScrollThumb = CoverColor;
+        public static readonly Color ScrollThumbHover = new Color(140, 96, 56);
+        public static readonly Color ScrollThumbDrag = new Color(170, 120, 70);
+
+        /// <summary>Parchment look for the book's RecipeSearchBar (the machine browser passes no theme and stays blue).</summary>
+        public static readonly CustomUIElements.SearchBarTheme SearchTheme = new CustomUIElements.SearchBarTheme
+        {
+            Background = SearchBackground,
+            IdleBorder = SearchIdleBorder,
+            FocusBorder = SearchFocusBorder,
+            Text = TextColor,
+            Hint = TextFadedColor,
+            Caret = TextColor,
+        };
     }
 
     /// <summary>

@@ -21,7 +21,7 @@ namespace Factorraria.Common.UI
     {
         RecipeBookPanel panel;
         UIElement listArea;
-        UIScrollbar scrollbar;
+        BookScrollbar scrollbar;
         RecipeSearchBar searchBar;
         string searchFilter = "";
         bool filterDirty;
@@ -71,7 +71,7 @@ namespace Factorraria.Common.UI
             panel.Append(listArea);
 
             Rectangle s = RecipeBookLayout.ScrollbarArea;
-            scrollbar = new UIScrollbar();
+            scrollbar = new BookScrollbar();
             scrollbar.Left.Set(s.X, 0f);
             scrollbar.Top.Set(s.Y, 0f);
             scrollbar.Height.Set(s.Height, 0f);
@@ -166,7 +166,7 @@ namespace Factorraria.Common.UI
 
             totalHeight = y;
             float viewH = RecipeBookLayout.ListArea.Height;
-            scrollbar.SetView(viewH, Math.Max(totalHeight, viewH));
+            scrollbar.SetBookView(viewH, Math.Max(totalHeight, viewH));
             ApplyScroll(true);
         }
 
@@ -183,7 +183,7 @@ namespace Factorraria.Common.UI
             {
                 searchFilter = text ?? "";
                 filterDirty = true;
-            });
+            }, RecipeBookLayout.SearchTheme);
             searchBar.Left.Set(s.X, 0f);
             searchBar.Top.Set(s.Y, 0f);
             searchBar.Width.Set(s.Width, 0f);
