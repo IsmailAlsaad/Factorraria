@@ -172,6 +172,10 @@ namespace Factorraria.Common.Machines
         // Recipes with a different item-input count are manual-only.
         protected virtual int AutoIngredientCount => Recipes?.MinIngredientCount ?? 0;
 
+        // Auto mode shows one extra empty slot after the last filled one, so the player can experiment
+        // with multi-ingredient recipes without picking a recipe first. Override to false for the old fixed behaviour.
+        protected virtual bool ProgressiveIngredientSlots => true;
+
         // How many ingredient slots are shown/used right now
         public int ActiveIngredientCount
         {
@@ -179,10 +183,41 @@ namespace Factorraria.Common.Machines
             {
                 if (IngredientSlotCount == 0) return 0;
                 if (Recipes == null) return IngredientSlotCount;    // hand-written machine: every slot is live
+                if (ManualGroup != null) return Math.Min(ManualGroup.MaxInputCount, IngredientSlotCount);
+
+                int auto = Math.Min(AutoIngredientCount, IngredientSlotCount);
+                if (!ProgressiveIngredientSlots) return auto;
+
+                // "next available slot": always one past the last filled slot, never fewer than the auto count.
+                // Because the count is always above the last filled slot, auto mode can never eject items.
+                return Math.Min(IngredientSlotCount, Math.Max(auto, LastFilledIngredientIndex() + 2));
+            }
+        }
+
+        // Slots conveyors may fill. Conveyors keep the old fixed behaviour in auto mode; the extra
+        // progressive slots are for hand experimentation only.
+        protected virtual int IntakeIngredientCount
+        {
+            get
+            {
+                if (IngredientSlotCount == 0) return 0;
+                if (Recipes == null) return IngredientSlotCount;
                 return ManualGroup == null
                     ? Math.Min(AutoIngredientCount, IngredientSlotCount)
-                    : Math.Min(ManualGroup.MaxInputCount, IngredientSlotCount);
+                    : ActiveIngredientCount;
             }
+        }
+
+        // 0-based index (relative to IngredientStart) of the highest non-empty ingredient slot, or -1.
+        int LastFilledIngredientIndex()
+        {
+            Item[] slots = InputSlots;
+            for (int i = IngredientSlotCount - 1; i >= 0; i--)
+            {
+                int s = IngredientStart + i;
+                if (s < slots.Length && slots[s] != null && !slots[s].IsAir && slots[s].stack > 0) return i;
+            }
+            return -1;
         }
 
         bool IsElectric => this is IElectricConsumer || this is IElectricProducer;
@@ -199,12 +234,19 @@ namespace Factorraria.Common.Machines
             ProcessRecipes();                   // does nothing unless Recipes is overridden
         }
 
+        CustomRecipe runningRecipe;   // recipe matched on the previous tick (runtime only)
+
         void ProcessRecipes()
         {
             if (Recipes == null) return;
 
             bool ready = TryMatchRecipe() && CanStoreOutputs(SelectedRecipe) && CanStartCraft(SelectedRecipe);
-            if (!ready) { WorkProgress = 0; isWorking = false; return; }
+            if (!ready) { WorkProgress = 0; isWorking = false; runningRecipe = null; return; }
+
+            // The matched recipe can change mid-craft (a second ingredient was added, or another recipe was picked):
+            // progress must not carry over from the old recipe. runningRecipe is not saved, so a world load never resets.
+            if (runningRecipe != null && !ReferenceEquals(runningRecipe, SelectedRecipe)) WorkProgress = 0;
+            runningRecipe = SelectedRecipe;
 
             if (!AllFuelsAvailable()) { isWorking = false; return; }
 
@@ -445,11 +487,11 @@ namespace Factorraria.Common.Machines
         bool TryGetIngredientIntake(int itemType, out int slot, out int limit)
         {
             slot = -1; limit = 0;
-            if (ActiveIngredientCount == 0) return false;
+            if (IntakeIngredientCount == 0) return false;
 
             foreach (CustomRecipe recipe in GetPickupRecipes())
             {
-                if (ManualGroup == null && recipe.Inputs.Count != ActiveIngredientCount) continue;
+                if (ManualGroup == null && recipe.Inputs.Count != IntakeIngredientCount) continue;
                 foreach (RecipeIngredient ing in recipe.Inputs)
                 {
                     if (ing.Type != itemType) continue;
@@ -487,7 +529,7 @@ namespace Factorraria.Common.Machines
             if (!FitsWithHeldIngredients(itemType)) return -1;
 
             int firstEmpty = -1;
-            for (int s = IngredientStart; s < IngredientStart + ActiveIngredientCount; s++)
+            for (int s = IngredientStart; s < IngredientStart + IntakeIngredientCount; s++)
             {
                 Item slot = InputSlots[s];
                 if (slot.IsAir) { if (firstEmpty == -1) firstEmpty = s; }

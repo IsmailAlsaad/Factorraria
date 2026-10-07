@@ -132,6 +132,7 @@ namespace Factorraria.Common.UI.CustomUIElements
                 recipeList.Add(cell);
             }
 
+            recipeList.UpdateOrder();      // selected first, then crafted (A-Z), then the rest (A-Z); must run before Recalculate lays rows out
             recipeList.Recalculate();
             if (scrollbar != null) scrollbar.ViewPosition = view;
 
@@ -313,11 +314,20 @@ namespace Factorraria.Common.UI.CustomUIElements
         }
 
         // UIGrid sorts its items with CompareTo. The default returns 0 for everything,
-        // which gives no guaranteed order, so we define one: selected first, then registry order.
-        public override int CompareTo(object obj) =>
-            obj is RecipeElement other ? SortKey.CompareTo(other.SortKey) : 0;
+        // which gives no guaranteed order, so we define one: selected first, then crafted
+        // recipes, then everything faded/uncrafted. Index is already alphabetical, so each tier stays A-Z.
+        public override int CompareTo(object obj)
+        {
+            if (obj is not RecipeElement other) return 0;
 
-        int SortKey => Selected ? -1 : Index;
+            int byTier = Tier.CompareTo(other.Tier);
+            if (byTier != 0) return byTier;
+
+            return Index.CompareTo(other.Index);
+        }
+
+        // 0 = selected, 1 = crafted, 2 = everything else
+        int Tier => Selected ? 0 : (State == RecipeState.Crafted ? 1 : 2);
 
         public void SetZoomScale(float z)
         {
