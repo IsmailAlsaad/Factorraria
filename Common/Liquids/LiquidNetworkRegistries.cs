@@ -114,7 +114,6 @@ namespace Factorraria.Common.Liquids
     {
         public override void PostSetupContent()
         {
-            LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Forest Water", RenderColor = new Color(0, 81, 229), VanillaTileLiquidId = (byte?)LiquidID.Water, IconPath = "Factorraria/Common/Liquids/LiquidIcons/WaterIcon" });
             LiquidTypeRegistry.Lava = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Lava", RenderColor = new Color(200, 70, 20), VanillaTileLiquidId = (byte?)LiquidID.Lava, IconPath = "Factorraria/Common/Liquids/LiquidIcons/LavaIcon" });
             LiquidTypeRegistry.Honey = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Honey", RenderColor = new Color(247, 167, 8), VanillaTileLiquidId = (byte?)LiquidID.Honey, IconPath = "Factorraria/Common/Liquids/LiquidIcons/HoneyIcon" });
             LiquidTypeRegistry.Shimmer = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Shimmer", RenderColor = new Color(155, 114, 234), VanillaTileLiquidId = (byte?)LiquidID.Shimmer, IconPath = "Factorraria/Common/Liquids/LiquidIcons/ShimmerIcon" });
@@ -125,16 +124,17 @@ namespace Factorraria.Common.Liquids
             // Biome waters. Keep these AFTER the built-ins and only ever APPEND new ones: machine tanks save the
             // liquid as its registry index, so inserting in the middle would change what old saves contain.
             // Add an icon path as a 4th argument if you draw one; without it the recipe browser shows a colour swatch.
-            LiquidTypeRegistry.SnowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Snow, "Snow Water", new Color(9, 137, 191));
-            LiquidTypeRegistry.DesertWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.UndergroundDesert, "Desert Water", new Color(168, 106, 32));
-            LiquidTypeRegistry.JungleWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Jungle, "Jungle Water", new Color(7, 145, 142));
-            LiquidTypeRegistry.OceanWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Ocean, "Ocean Water", new Color(9, 76, 191));
-            LiquidTypeRegistry.UndergroundWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Underground, "Underground Water", new Color(36, 60, 148));
-            LiquidTypeRegistry.CavernWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Cavern, "Cavern Water", new Color(65, 59, 101));
-            LiquidTypeRegistry.CorruptionWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Corruption, "Corrupted Water", new Color(59, 29, 131));
-            LiquidTypeRegistry.CrimsonWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Crimson, "Crimson Water", new Color(177, 54, 79));
-            LiquidTypeRegistry.HallowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Hallow, "Hallowed Water", new Color(171, 11, 209));
-            LiquidTypeRegistry.OasisWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Desert, "Oasis Water", new Color(32, 168, 117));
+            LiquidTypeRegistry.Water = LiquidTypeRegistry.Register(new LiquidTypeDefinition { Name = "Forest Water", RenderColor = new Color(0, 81, 229), VanillaTileLiquidId = (byte?)LiquidID.Water, IconPath = "Factorraria/Common/Liquids/LiquidIcons/ForestWaterIcon" });
+            LiquidTypeRegistry.SnowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Snow, "Snow Water", new Color(9, 137, 191), "Factorraria/Common/Liquids/LiquidIcons/SnowWaterIcon");
+            LiquidTypeRegistry.DesertWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.UndergroundDesert, "Desert Water", new Color(168, 106, 32), "Factorraria/Common/Liquids/LiquidIcons/DesertWaterIcon");
+            LiquidTypeRegistry.JungleWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Jungle, "Jungle Water", new Color(7, 145, 142), "Factorraria/Common/Liquids/LiquidIcons/JungleWaterIcon");
+            LiquidTypeRegistry.OceanWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Ocean, "Ocean Water", new Color(9, 76, 191), "Factorraria/Common/Liquids/LiquidIcons/OceanWaterIcon");
+            LiquidTypeRegistry.UndergroundWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Underground, "Underground Water", new Color(36, 60, 148), "Factorraria/Common/Liquids/LiquidIcons/UndergroundWaterIcon");
+            LiquidTypeRegistry.CavernWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Cavern, "Cavern Water", new Color(65, 59, 101), "Factorraria/Common/Liquids/LiquidIcons/CavernWaterIcon");
+            LiquidTypeRegistry.CorruptionWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Corruption, "Corrupted Water", new Color(59, 29, 131), "Factorraria/Common/Liquids/LiquidIcons/CorruptionWaterIcon");
+            LiquidTypeRegistry.CrimsonWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Crimson, "Crimson Water", new Color(177, 54, 79), "Factorraria/Common/Liquids/LiquidIcons/CrimsonWaterIcon");
+            LiquidTypeRegistry.HallowWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Hallow, "Hallowed Water", new Color(171, 11, 209), "Factorraria/Common/Liquids/LiquidIcons/HallowWaterIcon");
+            LiquidTypeRegistry.OasisWater = LiquidTypeRegistry.RegisterBiomeWater(MachineBiome.Desert, "Oasis Water", new Color(32, 168, 117), "Factorraria/Common/Liquids/LiquidIcons/OasisWaterIcon");
             // Glowing Mushroom uses the same water as Underground (one liquid type, two biomes)
             LiquidTypeRegistry.WaterByBiome[MachineBiome.GlowingMushroom] = LiquidTypeRegistry.UndergroundWater;
         }
