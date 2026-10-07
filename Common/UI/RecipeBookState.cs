@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
@@ -129,10 +130,20 @@ namespace Factorraria.Common.UI
             string filter = searchFilter?.Trim();
             bool filtering = !string.IsNullOrEmpty(filter);
 
-            foreach (RecipeCatalog.Entry e in RecipeCatalog.Entries())
+            // Per machine: crafted recipes first, then the faded ones. OrderBy is stable, so each tier keeps the catalog's
+            // A-Z order, and machines keep the order they first appear in.
+            var machineOrder = new Dictionary<string, int>();
+            var listed = new List<(RecipeCatalog.Entry e, RecipeState state)>();
+            foreach (RecipeCatalog.Entry cat in RecipeCatalog.Entries())
             {
-                RecipeState state = RecipeVisibility.GetState(e.Key);
-                if (!RecipeVisibility.InBook(state)) continue;
+                RecipeState catState = RecipeVisibility.GetState(cat.Key);
+                if (!RecipeVisibility.InBook(catState)) continue;
+                if (!machineOrder.ContainsKey(cat.Machine)) machineOrder[cat.Machine] = machineOrder.Count;
+                listed.Add((cat, catState));
+            }
+
+            foreach (var (e, state) in listed.OrderBy(x => machineOrder[x.e.Machine]).ThenBy(x => x.state == RecipeState.Crafted ? 0 : 1))
+            {
                 any = true;
 
                 // Selection is tracked against the whole book, not the filtered list, so a search never drops it.
@@ -346,7 +357,20 @@ namespace Factorraria.Common.UI
             Rectangle r = GetDimensions().ToRectangle();
 
             if (RecipeBookArt.Background != null)
-                sb.Draw(RecipeBookArt.Background.Value, r, Color.White);
+            {
+                float k = RecipeBookLayout.BackgroundScale;
+                int w = (int)System.MathF.Round(r.Width * k);
+                int h = (int)System.MathF.Round(r.Height * k);
+                var bg = new Rectangle(r.Center.X - w / 2, r.Center.Y - h / 2, w, h);
+
+                // Point sampling: the default bilinear filter smears the texture whenever its size differs from the panel's
+                // (or the UI scale is not 100%). Restart the batch with the same UI transform, then restore it.
+                sb.End();
+                sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+                sb.Draw(RecipeBookArt.Background.Value, bg, Color.White);
+                sb.End();
+                sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+            }
             else
             {
                 BookDraw.Frame(sb, r, RecipeBookLayout.CoverColor, new Color(52, 32, 14), 3);

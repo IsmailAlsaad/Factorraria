@@ -33,6 +33,9 @@ namespace Factorraria.Common.UI
         // Book panel
         public const int PanelWidth = 780;
         public const int PanelHeight = 470;
+
+        /// <summary>Tweak: size of the background texture relative to the panel (1 = exactly the panel size). Scaled around the panel's center.</summary>
+        public static float BackgroundScale = 1f;
         public const int Margin = 22;
         public const int Gutter = 14;          // half the gap between the two pages (the spine)
         public const int TitleHeight = 40;

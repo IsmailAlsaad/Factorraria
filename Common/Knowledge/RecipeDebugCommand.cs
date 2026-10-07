@@ -3,6 +3,7 @@ using Factorraria.Common.Machines;
 using Factorraria.Content.Items.Discovery;
 using Terraria;
 using Terraria.ModLoader;
+using Factorraria.Common.UI;
 
 namespace Factorraria.Common.Knowledge
 {
@@ -16,12 +17,13 @@ namespace Factorraria.Common.Knowledge
     ///   /recipes state        list every recipe that is not Hidden for you right now, with its state
     ///   /recipes reset        forget every parchment unlock and every crafted mark in this world
     ///   /recipes defpos       print the defense icon position (use at 1920x1080, UI scale 100%, to calibrate the book button)
+    ///   /recipes btnreset     put the recipe book button back to its default spot (forgets where you dragged it)
     /// </summary>
     public class RecipeDebugCommand : ModCommand
     {
         public override string Command => "recipes";
         public override CommandType Type => CommandType.Chat;
-        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | reset | defpos";
+        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | reset | defpos | btnreset";
         public override string Description => "Recipe discovery debug tools";
 
         static void Give(CommandCaller caller, int type, string pool, int n, string what)
@@ -96,6 +98,10 @@ namespace Factorraria.Common.Knowledge
                     caller.Reply($"{shown} recipe(s) not hidden.", Color.LightGreen);
                     break;
                 }
+                case "btnreset":
+                    RecipeBookButtonState.ResetPosition();
+                    caller.Reply("Recipe book button position reset.", Color.LightGreen);
+                    break;
                 case "defpos":
                 {
                     Vector2 def = AccessorySlotLoader.DefenseIconPosition;
