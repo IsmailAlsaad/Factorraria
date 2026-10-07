@@ -14,6 +14,8 @@
 Thumbs.db
 .vscode/
 .clinerules
+.cursor
 
 CODEBASE_INDEX.md
 index_codebase.py
+PROJECT_CONTEXT.md
