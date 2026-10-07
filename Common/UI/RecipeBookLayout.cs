@@ -20,6 +20,16 @@ namespace Factorraria.Common.UI
         public const int ButtonY = 726;
         public const int ButtonSize = 36;
 
+        // ButtonX/ButtonY above are the REFERENCE position (1920x1080, UI scale 100%, default accessory slots).
+        // At runtime RecipeBookButtonState places the button at tModLoader's AccessorySlotLoader.DefenseIconPosition + (ButtonOffsetX, ButtonOffsetY),
+        // which equals (ButtonX, ButtonY) at the reference setup by construction.
+        public const int ReferenceDefenseX = 1920 - 64 - 28;   // 1828: AccessorySlotLoader uses Main.screenWidth - 64 - 28
+        // Defense icon Y at the reference setup. 0 = not calibrated yet, and the button then keeps the fixed ButtonX/ButtonY.
+        // To calibrate: reference setup, inventory open, run "/recipes defpos" and paste the Y it prints here.
+        public static readonly int ReferenceDefenseY = 0;
+        public const int ButtonOffsetX = ButtonX - ReferenceDefenseX;
+        public static int ButtonOffsetY => ButtonY - ReferenceDefenseY;
+
         // Book panel
         public const int PanelWidth = 780;
         public const int PanelHeight = 470;

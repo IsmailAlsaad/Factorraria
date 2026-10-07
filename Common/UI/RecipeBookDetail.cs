@@ -109,7 +109,10 @@ namespace Factorraria.Common.UI
 
             // Ingredients are always shown (the parchment taught them). Products stay "???" until crafted.
             y = DrawLabel(sb, RecipeBookLayout.Text("Inputs"), area, y);
-            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false), area, y);
+            // Exception: a recipe known only because the player holds something (FadedIngredient) shows just the held
+            // ingredients; the rest (and any liquid) stay silhouettes with "???" until the recipe is unlocked or crafted.
+            bool fadeUnheld = book.SelectedState == RecipeState.FadedIngredient;
+            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, fadeUnheld), area, y);
 
             y += 4f;
             DrawArrow(sb, new Vector2(area.Center.X, y));
@@ -147,7 +150,7 @@ namespace Factorraria.Common.UI
             public bool Hidden;       // product not crafted yet: black silhouette, "???" on hover
         }
 
-        static List<Cell> BuildCells(List<RecipeIngredient> items, List<LiquidIngredient> liquids, bool hidden)
+        static List<Cell> BuildCells(List<RecipeIngredient> items, List<LiquidIngredient> liquids, bool hidden, bool fadeUnheld = false)
         {
             var cells = new List<Cell>();
             foreach (RecipeIngredient i in items)
@@ -158,7 +161,7 @@ namespace Factorraria.Common.UI
                     Count = i.Stack > 1 ? i.Stack.ToString() : null,
                     ItemType = i.Type,
                     Stack = i.Stack,
-                    Hidden = hidden,
+                    Hidden = hidden || (fadeUnheld && !RecipeVisibility.IsItemHeld(i.Type)),
                 });
             }
             foreach (LiquidIngredient l in liquids)
@@ -172,7 +175,7 @@ namespace Factorraria.Common.UI
                     Icon = RecipeOutputKey.ForLiquid(iconId),
                     Count = amount,
                     Name = name + " - " + string.Format(RecipeBookLayout.Text("Units"), amount),
-                    Hidden = hidden,
+                    Hidden = hidden || fadeUnheld,    // liquids cannot be held, so they stay hidden until the recipe is known
                 });
             }
             return cells;

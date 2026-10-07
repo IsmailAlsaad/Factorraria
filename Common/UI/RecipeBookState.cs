@@ -37,6 +37,7 @@ namespace Factorraria.Common.UI
         float totalHeight;
         float lastView = -1f;
         int builtVersion = int.MinValue;
+        int builtHeldVersion = int.MinValue;
 
         // Selection is a catalog key so it survives rebuilds.
         public string SelectedKey { get; private set; }
@@ -85,6 +86,7 @@ namespace Factorraria.Common.UI
         public override void OnActivate()
         {
             // Opening always starts from fresh data. Selection (if any) is kept.
+            RecipeVisibility.InvalidateHeld();
             Rebuild();
         }
 
@@ -99,7 +101,8 @@ namespace Factorraria.Common.UI
             }
 
             if (filterDirty && scrollbar != null) scrollbar.ViewPosition = 0f;   // new search starts at the top
-            if (RecipeKnowledgeSystem.Version != builtVersion || filterDirty) Rebuild();
+            RecipeVisibility.Poll();    // HeldVersion only moves if someone scans; the book is visible, so keep it current
+            if (RecipeKnowledgeSystem.Version != builtVersion || RecipeVisibility.HeldVersion != builtHeldVersion || filterDirty) Rebuild();
             ApplyScroll(false);
             base.Update(gameTime);
         }
@@ -159,6 +162,9 @@ namespace Factorraria.Common.UI
                 AddRow(entry, y);
                 y += RecipeBookLayout.EntryRowHeight;
             }
+
+            // Stamped AFTER the loop: GetState can run the first inventory scan, which bumps HeldVersion.
+            builtHeldVersion = RecipeVisibility.HeldVersion;
 
             IsEmpty = !any;
             NoResults = any && shown == 0;

@@ -105,6 +105,9 @@ namespace Factorraria.Common.Machines
             : new[] { new LiquidFuelChannel(AcceptedLiquidFuels, LiquidFuelPerCraft) };
 
         protected virtual int RecipeDuration(CustomRecipe r) => r.DurationTicks ?? WorkDuration;
+
+        /// <summary>Public read of the time a recipe takes in this machine (used to auto-fill CustomRecipe.DurationTicks at load).</summary>
+        public int ResolveRecipeDuration(CustomRecipe r) => RecipeDuration(r);
         protected virtual bool CanStartCraft(CustomRecipe recipe) => true;
 
         LiquidStack[] CreateInputLiquids()

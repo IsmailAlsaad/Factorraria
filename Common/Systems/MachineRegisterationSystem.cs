@@ -109,6 +109,21 @@ namespace Factorraria.Common.Machines
             RecipeCatalog.Register("LiquidDistillator", LiquidDistillatorRecipeRegistry.Book);
             RecipeCatalog.Register("Autohammer", AutohammerRecipeRegistry.Book);
 
+            // Auto-fill recipe times: any recipe without its own TakesTicks gets the time of the machine that owns its book,
+            // so the recipe book always has a time to show. Runs on every load, nothing is saved. If two machines ever
+            // share one book, the first machine found wins (none do today).
+            int machinesWithRecipes = 0;
+            foreach (BaseMachine machine in ModContent.GetContent<BaseMachine>())
+            {
+                RecipeBook machineBook = machine.Recipes;
+                if (machineBook == null) continue;      // motors, burners, ... have no recipe book
+                machinesWithRecipes++;
+                foreach (CustomRecipe recipe in machineBook.All)
+                    recipe.DurationTicks ??= machine.ResolveRecipeDuration(recipe);
+            }
+            if (machinesWithRecipes == 0)
+                Mod.Logger.Warn("Recipe time auto-fill found no machine templates; recipe times will be missing in the book.");
+
             // Reverse index itemType -> recipes, for the "holding an ingredient" state. Needs the catalog above.
             RecipeVisibility.BuildIngredientIndex();
 

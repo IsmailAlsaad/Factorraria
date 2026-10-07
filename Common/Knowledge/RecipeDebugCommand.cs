@@ -15,12 +15,13 @@ namespace Factorraria.Common.Knowledge
     ///   /recipes crafted      list recipes crafted by a machine in this world
     ///   /recipes state        list every recipe that is not Hidden for you right now, with its state
     ///   /recipes reset        forget every parchment unlock and every crafted mark in this world
+    ///   /recipes defpos       print the defense icon position (use at 1920x1080, UI scale 100%, to calibrate the book button)
     /// </summary>
     public class RecipeDebugCommand : ModCommand
     {
         public override string Command => "recipes";
         public override CommandType Type => CommandType.Chat;
-        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | reset";
+        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | reset | defpos";
         public override string Description => "Recipe discovery debug tools";
 
         static void Give(CommandCaller caller, int type, string pool, int n, string what)
@@ -93,6 +94,16 @@ namespace Factorraria.Common.Knowledge
                         caller.Reply($"  {state,-16} {entry.Key}", Color.White);
                     }
                     caller.Reply($"{shown} recipe(s) not hidden.", Color.LightGreen);
+                    break;
+                }
+                case "defpos":
+                {
+                    Vector2 def = AccessorySlotLoader.DefenseIconPosition;
+                    caller.Reply($"Screen {Main.screenWidth}x{Main.screenHeight}, UI scale {Main.UIScale:0.##}, inventory open: {Main.playerInventory}", Color.White);
+                    if (def == Vector2.Zero)
+                        caller.Reply("Defense icon position not known yet: open the inventory once, then run this again.", Color.Yellow);
+                    else
+                        caller.Reply($"Defense icon at ({def.X:0.##}, {def.Y:0.##}). At 1920x1080 / UI scale 100% set RecipeBookLayout.ReferenceDefenseY = {(int)System.MathF.Round(def.Y)}.", Color.LightGreen);
                     break;
                 }
                 case "reset":

@@ -56,7 +56,6 @@ namespace Factorraria.Content.Items.Discovery
             }
 
             RecipeKnowledgeSystem.Unlock(key);
-            Main.NewText($"Recipe unlocked: {group.Key.DisplayName} ({machine})", 110, 220, 110);
 
             // Open the recipe book on the page that was just unlocked (client only).
             if (!Main.dedServ) RecipeBookSystem.OpenAt(key);

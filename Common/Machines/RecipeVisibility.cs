@@ -10,6 +10,7 @@ namespace Factorraria.Common.Machines
     public enum RecipeState
     {
         Hidden,
+        DebugRevealed,     // RevealAllRecipes debug flag: faded in the machine browser only, never listed in the book
         FadedIngredient,   // holding an input right now (live, per player, never saved)
         FadedParchment,    // unlocked by a parchment (saved, world-wide)
         Crafted            // a machine finished it (saved, world-wide)
@@ -33,6 +34,10 @@ namespace Factorraria.Common.Machines
         // Catalog keys whose inputs the local player holds, rescanned about once per second.
         static HashSet<string> heldKeys = new HashSet<string>();
         static HashSet<string> scratchKeys = new HashSet<string>();
+
+        // Item types the local player holds that are an input of some recipe (same scan, swapped the same way).
+        static HashSet<int> heldItems = new HashSet<int>();
+        static HashSet<int> scratchItems = new HashSet<int>();
         static uint lastHeldScan;
         static bool heldScanned;
 
@@ -57,6 +62,7 @@ namespace Factorraria.Common.Machines
         {
             ingredientIndex.Clear();
             heldKeys.Clear();
+            heldItems.Clear();
             heldScanned = false;
             HeldVersion++;
         }
@@ -72,6 +78,7 @@ namespace Factorraria.Common.Machines
             lastHeldScan = Main.GameUpdateCount;
 
             scratchKeys.Clear();
+            scratchItems.Clear();
             Player player = Main.LocalPlayer;
             if (player != null)
             {
@@ -83,12 +90,14 @@ namespace Factorraria.Common.Machines
 
             if (!scratchKeys.SetEquals(heldKeys)) HeldVersion++;
             (heldKeys, scratchKeys) = (scratchKeys, heldKeys);
+            (heldItems, scratchItems) = (scratchItems, heldItems);
         }
 
         static void AddHeld(Item item)
         {
             if (item == null || item.IsAir) return;
             if (!ingredientIndex.TryGetValue(item.type, out List<string> keys)) return;
+            scratchItems.Add(item.type);
             foreach (string key in keys) scratchKeys.Add(key);
         }
 
@@ -105,7 +114,7 @@ namespace Factorraria.Common.Machines
             if (heldKeys.Contains(catalogKey)) return RecipeState.FadedIngredient;
 
             // Debug reveal: at least faded in the browser. It never touches the saved sets and never reaches the book (see InBook).
-            if (ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes) return RecipeState.FadedIngredient;
+            if (ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes) return RecipeState.DebugRevealed;
             return RecipeState.Hidden;
         }
 
@@ -114,6 +123,13 @@ namespace Factorraria.Common.Machines
         /// changes must call this every frame while it is visible, because the scan is otherwise lazy.
         /// </summary>
         public static void Poll() => EnsureHeldScan();
+
+        /// <summary>True if the local player holds this item type right now AND it is an input of some recipe (same throttled scan).</summary>
+        public static bool IsItemHeld(int itemType)
+        {
+            EnsureHeldScan();
+            return heldItems.Contains(itemType);
+        }
 
         /// <summary>True if the local player holds an input of this recipe right now.</summary>
         public static bool IsHeld(string catalogKey)
@@ -133,7 +149,8 @@ namespace Factorraria.Common.Machines
             return ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes;
         }
 
-        /// <summary>The recipe book lists only parchment-unlocked and crafted recipes.</summary>
-        public static bool InBook(RecipeState state) => state == RecipeState.Crafted || state == RecipeState.FadedParchment;
+        /// <summary>The recipe book lists crafted, parchment-unlocked and held-ingredient recipes. DebugRevealed never appears.</summary>
+        public static bool InBook(RecipeState state) =>
+            state == RecipeState.Crafted || state == RecipeState.FadedParchment || state == RecipeState.FadedIngredient;
     }
 }
