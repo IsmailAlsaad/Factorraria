@@ -26,6 +26,11 @@ namespace Factorraria.Common.UI
         string searchFilter = "";
         bool filterDirty;
 
+        // Window position: pixels away from the centered spot. Static so the book reopens where the player left it
+        // (for the game session). Zero = centered.
+        static Vector2 dragOffset;
+        int lastScreenW = -1, lastScreenH = -1;
+
         readonly List<UIElement> rows = new();
         readonly List<float> rowBase = new();
         readonly Dictionary<string, float> entryTop = new();
@@ -53,6 +58,8 @@ namespace Factorraria.Common.UI
             panel.Width.Set(RecipeBookLayout.PanelWidth, 0f);
             panel.Height.Set(RecipeBookLayout.PanelHeight, 0f);
             Append(panel);
+            panel.Append(new RecipeBookDragHandle(this));
+            ApplyPosition();
 
             Rectangle l = RecipeBookLayout.ListArea;
             listArea = new UIElement();
@@ -83,6 +90,14 @@ namespace Factorraria.Common.UI
 
         public override void Update(GameTime gameTime)
         {
+            // A saved offset must stay valid after a resolution / UI scale change (and once layout dimensions exist).
+            if (Main.screenWidth != lastScreenW || Main.screenHeight != lastScreenH)
+            {
+                lastScreenW = Main.screenWidth;
+                lastScreenH = Main.screenHeight;
+                ApplyPosition();
+            }
+
             if (filterDirty && scrollbar != null) scrollbar.ViewPosition = 0f;   // new search starts at the top
             if (RecipeKnowledgeSystem.Version != builtVersion || filterDirty) Rebuild();
             ApplyScroll(false);
@@ -185,6 +200,44 @@ namespace Factorraria.Common.UI
             searchFilter = "";
             filterDirty = true;
             BuildSearchBar();   // no-op before OnInitialize; the first OnInitialize builds a fresh bar
+        }
+
+        // ------------------------------------------------------------------------------------------
+        // Window dragging (the handle lives in RecipeBookDragHandle)
+        // ------------------------------------------------------------------------------------------
+        public Vector2 PanelOffset => dragOffset;
+
+        public void SetPanelOffset(Vector2 offset)
+        {
+            dragOffset = offset;
+            ApplyPosition();
+        }
+
+        /// <summary>Back to the centered default.</summary>
+        public void ResetPanelOffset() => SetPanelOffset(Vector2.Zero);
+
+        /// <summary>
+        /// Clamps the offset so the drag bar can never leave the screen, then moves the panel. The panel keeps
+        /// HAlign/VAlign = 0.5 and the offset is added as Left/Top pixels, so the centered default stays the origin.
+        /// </summary>
+        void ApplyPosition()
+        {
+            if (panel == null) return;
+
+            CalculatedStyle dims = GetDimensions();
+            if (dims.Width > 0f && dims.Height > 0f)
+            {
+                float keep = RecipeBookLayout.DragKeepVisible;
+                float centerX = (dims.Width - RecipeBookLayout.PanelWidth) / 2f;
+                float centerY = (dims.Height - RecipeBookLayout.PanelHeight) / 2f;
+
+                dragOffset.X = MathHelper.Clamp(dragOffset.X, -(RecipeBookLayout.PanelWidth - keep) - centerX, dims.Width - keep - centerX);
+                dragOffset.Y = MathHelper.Clamp(dragOffset.Y, -centerY, dims.Height - RecipeBookLayout.Margin - centerY);
+            }
+
+            panel.Left.Set(dragOffset.X, 0f);
+            panel.Top.Set(dragOffset.Y, 0f);
+            panel.Recalculate();
         }
 
         void AddRow(UIElement row, float y)
