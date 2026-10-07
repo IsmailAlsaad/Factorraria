@@ -10,7 +10,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.UI;
 
-namespace Factorraria.Common.UI
+namespace Factorraria.Common.UI.RecipeBookUI
 {
     /// <summary>
     /// Right page of the recipe book. Header (product icon, name, machine, status) plus, for the selected group,

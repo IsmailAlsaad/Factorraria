@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.UI;
 
-namespace Factorraria.Common.UI
+namespace Factorraria.Common.UI.RecipeBookUI
 {
     /// <summary>
     /// The recipe book's title bar. Hold the left mouse button on it to move the whole book; right-click to put it back

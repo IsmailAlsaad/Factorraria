@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Knowledge;
 using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
+using Factorraria.Common.UI.RecipeBookUI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;

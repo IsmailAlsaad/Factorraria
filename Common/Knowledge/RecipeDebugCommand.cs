@@ -3,7 +3,7 @@ using Factorraria.Common.Machines;
 using Factorraria.Content.Items.Discovery;
 using Terraria;
 using Terraria.ModLoader;
-using Factorraria.Common.UI;
+using Factorraria.Common.UI.RecipeBookUI;
 
 namespace Factorraria.Common.Knowledge
 {

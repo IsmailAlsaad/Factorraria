@@ -4,7 +4,7 @@ using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
 
-namespace Factorraria.Common.UI
+namespace Factorraria.Common.UI.RecipeBookUI
 {
     /// <summary>
     /// Flat parchment-coloured scrollbar for the recipe book. Draws and drags itself (vanilla's drag depends on the

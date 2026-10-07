@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.UI;
+using Factorraria.Common.UI.RecipeBookUI;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;

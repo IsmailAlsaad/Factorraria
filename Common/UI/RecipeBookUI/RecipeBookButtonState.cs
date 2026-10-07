@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
 
-namespace Factorraria.Common.UI
+namespace Factorraria.Common.UI.RecipeBookUI
 {
     /// <summary>Tiny UIState that only holds the inventory button. Shown by RecipeBookSystem while the inventory is open.</summary>
     public class RecipeBookButtonState : UIState

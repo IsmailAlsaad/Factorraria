@@ -2,7 +2,7 @@
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace Factorraria.Common.UI
+namespace Factorraria.Common.UI.RecipeBookUI
 {
     /// <summary>Remembers where this character dragged the recipe book button (offset from the defense icon). Null = default placement.</summary>
     public class RecipeBookPlayer : ModPlayer

@@ -11,7 +11,7 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
 using Terraria.UI;
 
-namespace Factorraria.Common.UI
+namespace Factorraria.Common.UI.RecipeBookUI
 {
     /// <summary>
     /// The recipe book (UI only, owned by RecipeBookSystem). Lists parchment-unlocked and crafted recipes

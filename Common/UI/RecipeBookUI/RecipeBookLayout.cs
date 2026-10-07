@@ -6,7 +6,7 @@ using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
 
-namespace Factorraria.Common.UI
+namespace Factorraria.Common.UI.RecipeBookUI
 {
     /// <summary>
     /// Single source of truth for the recipe book's geometry. All rectangles are relative to the book panel's top-left.
