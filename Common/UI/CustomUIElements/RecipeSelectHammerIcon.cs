@@ -369,7 +369,7 @@ namespace Factorraria.Common.UI.CustomUIElements
 
             RecipeIcon.Draw(sb, CurrentGroup.Key, GetDimensions().Center(), IconBox, zoom, State != RecipeState.Crafted);
 
-            if (HasInfoIcon) DrawInfoIcon(sb, overInfo);
+            if (HasInfoIcon && IsMouseHovering) DrawInfoIcon(sb, overInfo);   // only the element under the mouse shows it
         }
 
         // ---- "?" info icon (top-left corner): opens this recipe in the recipe book ----
@@ -381,29 +381,17 @@ namespace Factorraria.Common.UI.CustomUIElements
             Rectangle r = GetDimensions().ToRectangle();
             int size = Math.Max(10, (int)Math.Round(14f * zoom));
             int pad = Math.Max(2, (int)Math.Round(3f * zoom));
-            return new Rectangle(r.X + pad, r.Y + pad, size, size);
+            return new Rectangle(r.Right - pad - size, r.Bottom - pad - size, size, size);
         }
 
         void DrawInfoIcon(SpriteBatch sb, bool hover)
         {
+            // Just a "?" (white, yellow on hover) with the usual dark outline so it reads on any panel color.
             Rectangle b = InfoRect();
-            float radius = b.Width / 2f;
-            float cx = b.X + radius;
-            Color fill = hover ? new Color(255, 232, 120) : Color.White;
-
-            // Filled circle, one pixel row at a time (no texture needed).
-            for (int row = 0; row < b.Height; row++)
-            {
-                float dy = row + 0.5f - radius;
-                float half = MathF.Sqrt(MathF.Max(0f, radius * radius - dy * dy));
-                int x0 = (int)MathF.Round(cx - half);
-                int w = Math.Max(1, (int)MathF.Round(half * 2f));
-                BookDraw.Rect(sb, new Rectangle(x0, b.Y + row, w, 1), fill);
-            }
-
-            float scale = 0.7f * (b.Width / 14f);
+            Color color = hover ? new Color(255, 220, 60) : Color.White;
+            float scale = 0.9f * (b.Width / 14f);
             Vector2 size = FontAssets.MouseText.Value.MeasureString("?") * scale;
-            BookDraw.Text(sb, "?", new Vector2(cx - size.X / 2f, b.Y + radius - size.Y / 2f + 2f * scale), Color.Black, scale);
+            Utils.DrawBorderString(sb, "?", new Vector2(b.Center.X - size.X / 2f, b.Center.Y - size.Y / 2f + 2f * scale), color, scale);
         }
     }
 
