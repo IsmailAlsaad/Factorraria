@@ -7,6 +7,10 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Items.Carts
 {
+    /// <summary>
+    /// LEGACY. Carts are now placed by using any vanilla minecart item. This item stays loadable so existing inventories
+    /// and chests do not lose it, and it still places a plain Terraria/Minecart cart, but it is no longer craftable.
+    /// </summary>
     public class CartItem : ModItem
     {
         // Placeholder art: borrow the vanilla Minecart icon until we have our own sprite.
@@ -49,12 +53,6 @@ namespace Factorraria.Content.Items.Carts
             return true;
         }
 
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddRecipeGroup(RecipeGroupID.IronBar, 10)
-                .AddTile(TileID.Anvils)
-                .Register();
-        }
+        // No recipe: legacy item (see class comment).
     }
 }
