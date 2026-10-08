@@ -16,7 +16,7 @@ namespace Factorraria.Common.Carts
     /// </summary>
     public static class CartSkinTable
     {
-        public const float PlaceholderScale = 3f;
+        public const float PlaceholderScale = 1.05f;
 
         /// <summary>The item the player is "holding" for cart interactions: the item on the cursor if there is one, else the selected hotbar item.</summary>
         public static Item GetHeldItem(Player player)
