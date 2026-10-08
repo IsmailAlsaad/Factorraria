@@ -34,45 +34,88 @@ namespace Factorraria.Common.Carts
         private const float ChestPanelWidth = GridWidth + Pad * 2f;
         private const float ChestPanelHeight = GridHeight + Gap + ButtonHeight + Gap + ButtonHeight + Pad * 2f;
 
-        // Terrarium panel: the tank art is 16 x 84, drawn at 1.5x, with the liquid name and amount beside it.
+        // Terrarium cart: no panel and no text, just the tank element above the cart. The tank art is 16 x 84, drawn at 1.5x.
         private const float TankWidth = 24f;
         private const float TankHeight = 126f;
-        private const float TerrariumPanelWidth = 190f;
-        private const float TerrariumPanelHeight = TankHeight + Pad * 2f;
+
+        private const float ButtonTextScale = 0.8f;
+        private const float ButtonPadding = 12f; // UIPanel's default inner padding; scaled with the zoom so buttons keep their proportions
+
+        // UI pixels (at zoom 1) between the top of the cart and the bottom of the UI.
+        private const float ChestGapAboveCart = 14f;
+        private const float TerrariumGapAboveCart = 6f;
+
+        /// <summary>One element of the layout, stored at zoom = 1 (same idea as MachineUIElementEntry).</summary>
+        private sealed class Entry
+        {
+            public UIElement Element;
+            public Vector2 BasePosition;
+            public Vector2 BaseSize;
+            public UITextPanel<string> Button; // set for text buttons so their text and padding scale too
+            public string Text;
+        }
 
         public readonly Cart Cart;
-        public UIPanel Panel;
 
-        /// <summary>Panel size in UI pixels (depends on which module the cart has).</summary>
-        public readonly float PanelW;
-        public readonly float PanelH;
+        /// <summary>Root element everything is parented to. A bordered UIPanel for chest carts, a plain invisible element for terrarium carts.</summary>
+        public UIElement Panel;
 
-        private UIText nameLabel;
-        private UIText amountLabel;
+        private readonly bool terrarium;
+        private readonly float basePanelW;
+        private readonly float basePanelH;
+        private readonly List<Entry> entries = new List<Entry>();
+        private float appliedZoom = -1f;
+
+        /// <summary>UI pixels per world pixel (camera zoom divided by UI scale), as last given to SetZoomScale.</summary>
+        public float Zoom { get; private set; } = 1f;
+
+        /// <summary>Current size of the whole UI in UI pixels (follows the zoom).</summary>
+        public float PanelW => basePanelW * Zoom;
+        public float PanelH => basePanelH * Zoom;
+
+        /// <summary>Gap between the top of the cart and the bottom of the UI, in UI pixels (follows the zoom).</summary>
+        public float GapAboveCart => (terrarium ? TerrariumGapAboveCart : ChestGapAboveCart) * Zoom;
 
         public CartChestUIState(Cart cart)
         {
             Cart = cart;
 
-            bool terrarium = cart.Module == CartModule.Terrarium;
-            PanelW = terrarium ? TerrariumPanelWidth : ChestPanelWidth;
-            PanelH = terrarium ? TerrariumPanelHeight : ChestPanelHeight;
+            terrarium = cart.Module == CartModule.Terrarium;
+            basePanelW = terrarium ? TankWidth : ChestPanelWidth;
+            basePanelH = terrarium ? TankHeight : ChestPanelHeight;
         }
 
         public override void OnInitialize()
         {
-            Panel = new UIPanel();
-            Panel.Width.Set(PanelW, 0f);
-            Panel.Height.Set(PanelH, 0f);
+            entries.Clear();
+
+            if (terrarium)
+            {
+                Panel = new UIElement();
+            }
+            else
+            {
+                Panel = new UIPanel();
+            }
+
             Panel.SetPadding(0f);
             Append(Panel);
 
-            if (Cart.Module == CartModule.Terrarium)
+            if (terrarium)
             {
                 BuildTerrarium();
-                return;
+            }
+            else
+            {
+                BuildChest();
             }
 
+            appliedZoom = -1f;
+            SetZoomScale(Zoom);
+        }
+
+        private void BuildChest()
+        {
             for (int i = 0; i < Cart.ChestSlots; i++)
             {
                 int index = i;
@@ -88,66 +131,76 @@ namespace Factorraria.Common.Carts
                         }
                     });
 
-                slot.Width.Set(SlotSize, 0f);
-                slot.Height.Set(SlotSize, 0f);
-                slot.Left.Set(Pad + (i % Columns) * (SlotSize + Gap), 0f);
-                slot.Top.Set(Pad + (i / Columns) * (SlotSize + Gap), 0f);
-                Panel.Append(slot);
+                AddEntry(
+                    slot,
+                    new Vector2(Pad + (i % Columns) * (SlotSize + Gap), Pad + (i / Columns) * (SlotSize + Gap)),
+                    new Vector2(SlotSize, SlotSize));
             }
 
             float buttonTop = Pad + GridHeight + Gap;
 
-            Panel.Append(MakeButton("Loot All", Pad, buttonTop, GridWidth, LootAll));
-            Panel.Append(MakeButton("Quick Stack", Pad, buttonTop + ButtonHeight + Gap, GridWidth, QuickStack));
+            AddButton("Loot All", new Vector2(Pad, buttonTop), LootAll);
+            AddButton("Quick Stack", new Vector2(Pad, buttonTop + ButtonHeight + Gap), QuickStack);
         }
 
-        /// <summary>Liquid tank view of a terrarium cart: the same tank element machines use, plus the liquid name and amount.</summary>
+        /// <summary>Terrarium cart: only the tank element machines use, nothing else.</summary>
         private void BuildTerrarium()
         {
-            LiquidTankUIElement tank = new LiquidTankUIElement(() => Cart.Tank);
-            tank.Width.Set(TankWidth, 0f);
-            tank.Height.Set(TankHeight, 0f);
-            tank.Left.Set(Pad, 0f);
-            tank.Top.Set(Pad, 0f);
-            Panel.Append(tank);
-
-            float textLeft = Pad + TankWidth + Gap + 4f;
-
-            nameLabel = new UIText("Empty", 0.9f);
-            nameLabel.Left.Set(textLeft, 0f);
-            nameLabel.Top.Set(Pad, 0f);
-            Panel.Append(nameLabel);
-
-            amountLabel = new UIText("", 0.8f);
-            amountLabel.Left.Set(textLeft, 0f);
-            amountLabel.Top.Set(Pad + 26f, 0f);
-            Panel.Append(amountLabel);
+            AddEntry(new LiquidTankUIElement(() => Cart.Tank), Vector2.Zero, new Vector2(TankWidth, TankHeight) * 0.8f);
         }
 
-        private static UITextPanel<string> MakeButton(string text, float left, float top, float width, Action onClick)
+        private void AddEntry(UIElement element, Vector2 basePosition, Vector2 baseSize, UITextPanel<string> button = null, string text = null)
         {
-            UITextPanel<string> button = new UITextPanel<string>(text, 0.8f, false);
-            button.Width.Set(width, 0f);
-            button.Height.Set(ButtonHeight, 0f);
-            button.Left.Set(left, 0f);
-            button.Top.Set(top, 0f);
+            entries.Add(new Entry { Element = element, BasePosition = basePosition, BaseSize = baseSize, Button = button, Text = text });
+            Panel.Append(element);
+        }
+
+        private void AddButton(string text, Vector2 basePosition, Action onClick)
+        {
+            UITextPanel<string> button = new UITextPanel<string>(text, ButtonTextScale, false);
             button.OnLeftClick += (evt, element) => onClick();
             button.OnMouseOver += (evt, element) => SoundEngine.PlaySound(SoundID.MenuTick);
-            return button;
+
+            AddEntry(button, basePosition, new Vector2(GridWidth, ButtonHeight), button, text);
+        }
+
+        /// <summary>
+        /// Resizes and repositions every element for the current zoom, so the UI stays a fixed size relative to the world
+        /// instead of the screen. Same job as MachineUIStateBase.SetZoomScale. zoom = ZoomMatrix.M11 / UIScale.
+        /// </summary>
+        public void SetZoomScale(float zoom)
+        {
+            if (Panel == null || Math.Abs(zoom - appliedZoom) < 0.0001f)
+            {
+                return;
+            }
+
+            appliedZoom = zoom;
+            Zoom = zoom;
+
+            Panel.Width.Set(basePanelW * zoom, 0f);
+            Panel.Height.Set(basePanelH * zoom, 0f);
+
+            foreach (Entry entry in entries)
+            {
+                entry.Element.Left.Set(entry.BasePosition.X * zoom, 0f);
+                entry.Element.Top.Set(entry.BasePosition.Y * zoom, 0f);
+                entry.Element.Width.Set(entry.BaseSize.X * zoom, 0f);
+                entry.Element.Height.Set(entry.BaseSize.Y * zoom, 0f);
+
+                if (entry.Button != null)
+                {
+                    entry.Button.SetPadding(ButtonPadding * zoom);
+                    entry.Button.SetText(entry.Text, ButtonTextScale * zoom, false);
+                }
+            }
+
+            Panel.Recalculate();
         }
 
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-
-            if (nameLabel != null && Cart.Tank != null)
-            {
-                LiquidStack tank = Cart.Tank;
-                bool empty = tank.IsEmpty;
-
-                nameLabel.SetText(empty ? "Empty" : LiquidTypeRegistry.Get(tank.LiquidType).Name);
-                amountLabel.SetText((int)tank.Amount + " / " + (int)tank.Capacity);
-            }
 
             // Keep clicks on the panel from reaching the world (placing, shoving, using items).
             if (Panel != null && Panel.ContainsPoint(Main.MouseScreen))
@@ -216,7 +269,6 @@ namespace Factorraria.Common.Carts
     public class CartChestUISystem : ModSystem
     {
         private const float CloseRange = 10f * 16f; // the panel closes when the player walks this far from the cart
-        private const float AboveCart = 14f;        // UI pixels between the top of the cart and the bottom of the panel
 
         private UserInterface chestInterface;
         private CartChestUIState state;
@@ -394,8 +446,11 @@ namespace Factorraria.Common.Carts
                 return;
             }
 
+            // Same zoom factor the machine UIs use: the whole UI is resized so it stays a fixed size relative to the world.
+            state.SetZoomScale(Main.GameViewMatrix.ZoomMatrix.M11 / Main.UIScale);
+
             // Anchor on the top-centre of the cart's box, converted to UI coordinates. Only that one point goes through the
-            // zoom, and the gap above it is in UI pixels, so the panel keeps hugging the cart at any zoom or UI scale.
+            // zoom; the UI's size and its gap above the cart both scale with it, so it keeps hugging the cart at any zoom or UI scale.
             Cart cart = state.Cart;
             Vector2 anchor = new Vector2(cart.Position.X, cart.Position.Y - CartPhysics.HitboxHeight);
             Vector2 screen = Vector2.Transform(anchor - Main.screenPosition, Main.GameViewMatrix.ZoomMatrix) / Main.UIScale;
@@ -405,7 +460,7 @@ namespace Factorraria.Common.Carts
 
             // Whole pixels only, so the panel does not shimmer while the cart rolls.
             float left = (float)Math.Round(MathHelper.Clamp(screen.X - state.PanelW / 2f, 0f, maxX));
-            float top = (float)Math.Round(MathHelper.Clamp(screen.Y - state.PanelH - AboveCart, 0f, maxY));
+            float top = (float)Math.Round(MathHelper.Clamp(screen.Y - state.PanelH - state.GapAboveCart, 0f, maxY));
 
             state.Panel.Left.Set(left, 0f);
             state.Panel.Top.Set(top, 0f);
