@@ -197,7 +197,8 @@ namespace Factorraria.Common.Carts
 
         /// <summary>
         /// Click rules. Left click: with a cart item = place; on a cart while holding a chest = install it; on a cart = shove.
-        /// Right click on a cart = pick it up (whatever is held). Fuel and chest-open will take over right click on those modules later.
+        /// Right click on a chest cart = open its inventory (shift + right click picks it up); on any other cart = pick it up.
+        /// Fuel will take over right click on motor carts later.
         /// A cart under the cursor beats other uses of the click unless a cart item is held.
         /// </summary>
         public override void PostUpdatePlayers()
@@ -271,6 +272,13 @@ namespace Factorraria.Common.Carts
                 }
 
                 Main.mouseRightRelease = false;
+
+                if (target.Module == CartModule.Chest && !Terraria.UI.ItemSlot.ShiftInUse)
+                {
+                    CartChestUISystem.Toggle(target);
+                    return;
+                }
+
                 PickUp(player, target);
             }
         }
@@ -328,7 +336,7 @@ namespace Factorraria.Common.Carts
             return true;
         }
 
-        /// <summary>Installs the held item as a module if it is one. Only the Chest exists so far (Terrarium and Motor come later).</summary>
+        /// <summary>Installs the held item as a module if it is one. Chest and Terrarium exist so far (Motor comes later).</summary>
         private static bool TryInstallModule(Item held, Cart cart)
         {
             if (held == null || held.IsAir || cart.Module != CartModule.Empty)
@@ -336,12 +344,21 @@ namespace Factorraria.Common.Carts
                 return false;
             }
 
-            if (!Cart.IsChestItem(held))
+            CartModule module;
+            if (Cart.IsChestItem(held))
+            {
+                module = CartModule.Chest;
+            }
+            else if (Cart.IsTerrariumItem(held))
+            {
+                module = CartModule.Terrarium;
+            }
+            else
             {
                 return false;
             }
 
-            cart.SetModule(CartModule.Chest, held.type);
+            cart.SetModule(module, held.type);
 
             held.stack--;
             if (held.stack <= 0)
@@ -355,6 +372,7 @@ namespace Factorraria.Common.Carts
         /// <summary>Removes the cart and gives the player its skin item, module item and contents.</summary>
         public static void PickUp(Player player, Cart cart)
         {
+            CartChestUISystem.NotifyCartRemoved(cart);
             cart.Active = false;
 
             List<Item> items = cart.CollectPickupItems();
@@ -415,15 +433,10 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
-                Vector2 origin;
-                float scale;
-                Texture2D texture = CartSkinTable.GetPlacedTexture(cart.SkinType, out origin, out scale);
-
                 Color light = Lighting.GetColor((int)(cart.Position.X / 16f), (int)((cart.Position.Y - 8f) / 16f));
                 Vector2 screen = cart.Position - Main.screenPosition;
 
-                SpriteEffects effects = cart.Facing < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                Main.spriteBatch.Draw(texture, screen, null, light, cart.Rotation, origin, scale, effects, 0f);
+                DrawCart(cart, screen, light);
 
                 if (debug)
                 {
@@ -433,13 +446,10 @@ namespace Factorraria.Common.Carts
 
             if (hologram)
             {
-                Vector2 origin;
-                float scale;
-                Texture2D texture = CartSkinTable.GetPlacedTexture(holoSkin, out origin, out scale);
                 Color tint = holoValid ? Color.White * 0.55f : new Color(255, 70, 70) * 0.6f;
                 SpriteEffects effects = Main.LocalPlayer.direction < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
-                Main.spriteBatch.Draw(texture, holoPoint - Main.screenPosition, null, tint, 0f, origin, scale, effects, 0f);
+                DrawCartSprite(holoSkin, CartSkinTable.GetAnimation(holoSkin).StandFrame, holoPoint - Main.screenPosition, tint, 0f, effects);
             }
 
             Main.spriteBatch.End();
@@ -476,10 +486,59 @@ namespace Factorraria.Common.Carts
             return true;
         }
 
+        /// <summary>Draws one cart at its current animation frame, rotated about its feet and flipped by its facing.</summary>
+        private static void DrawCart(Cart cart, Vector2 screen, Color light)
+        {
+            SpriteEffects effects = cart.Facing < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+
+            // The module goes first so the cart's front wall is drawn over it and it looks like it sits inside.
+            DrawModule(cart, screen, light, effects);
+            DrawCartSprite(cart.SkinType, cart.AnimFrame, screen, light, cart.Rotation, effects);
+        }
+
+        private const float ModuleScale = 0.75f;        // module icon size relative to its item sprite
+        private const float ModuleLiftFraction = 0.4f;  // height of the module's base above the rail, as a fraction of the cart frame
+
+        /// <summary>Draws the installed chest / terrarium (its item icon) inside the cart, rotated and flipped with it.</summary>
+        private static void DrawModule(Cart cart, Vector2 screen, Color light, SpriteEffects effects)
+        {
+            if (cart.Module == CartModule.Empty)
+            {
+                return;
+            }
+
+            int itemType = cart.ModuleItem > 0 ? cart.ModuleItem : Cart.ModuleItemType(cart.Module);
+            if (itemType <= 0)
+            {
+                return;
+            }
+
+            Main.instance.LoadItem(itemType);
+            Texture2D icon = TextureAssets.Item[itemType].Value;
+
+            CartSkinTable.PlacedSprite body = CartSkinTable.GetPlacedSprite(cart.SkinType, cart.AnimFrame);
+            Vector2 position = screen + CartGeometry.Up(cart) * (body.Source.Height * ModuleLiftFraction * 1.2f);
+
+            Main.spriteBatch.Draw(icon, position, null, light, cart.Rotation, new Vector2(icon.Width / 2f, icon.Height), ModuleScale * 1.2f, effects, 0f);
+        }
+
+        /// <summary>Draws a skin's mount frame (plus its optional extra layer) with the rail point at screen.</summary>
+        private static void DrawCartSprite(int skinType, int frame, Vector2 screen, Color color, float rotation, SpriteEffects effects)
+        {
+            CartSkinTable.PlacedSprite sprite = CartSkinTable.GetPlacedSprite(skinType, frame);
+
+            Main.spriteBatch.Draw(sprite.Texture, screen, sprite.Source, color, rotation, sprite.Origin, sprite.Scale, effects, 0f);
+
+            if (sprite.Extra != null)
+            {
+                Main.spriteBatch.Draw(sprite.Extra, screen, sprite.Source, color, rotation, sprite.Origin, sprite.Scale, effects, 0f);
+            }
+        }
+
         private static void DrawDebug(Cart cart, Vector2 screen)
         {
             Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Vector2 axis = new Vector2((float)Math.Cos(cart.Rotation), (float)Math.Sin(cart.Rotation)) * CartPhysics.WheelHalfBase;
+            Vector2 axis = new Vector2((float)Math.Cos(cart.Rotation), (float)Math.Sin(cart.Rotation)) * CartPhysics.WheelHalfBase * 0.6f;
 
             DrawDot(pixel, screen - axis, Color.Cyan);   // left wheel probe
             DrawDot(pixel, screen + axis, Color.Orange); // right wheel probe

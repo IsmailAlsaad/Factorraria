@@ -52,6 +52,7 @@ namespace Factorraria.Common.Systems
             SoundEngine.PlaySound(SoundID.MenuOpen);
 
             RecipeBookSystem.Close(false); // the recipe book and a machine UI must never overlap
+            global::Factorraria.Common.Carts.CartChestUISystem.Close(false); // nor a cart inventory
 
             openPosition = clickedPosition;
             state.CurrentEntity = entity; // tell the UI which specific machine to display

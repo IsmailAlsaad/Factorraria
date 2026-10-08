@@ -75,6 +75,7 @@ namespace Factorraria.Common.Systems
 
             // The book and a machine UI must never overlap.
             ModContent.GetInstance<MachineUISystem>().CloseUI();
+            global::Factorraria.Common.Carts.CartChestUISystem.Close(false);
 
             Main.playerInventory = true;
             if (!open) SoundEngine.PlaySound(SoundID.MenuOpen);

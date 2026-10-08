@@ -1,6 +1,7 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.UI;
 
 namespace Factorraria.Common.Carts
 {
@@ -24,6 +25,28 @@ namespace Factorraria.Common.Carts
             }
 
             return CartSystem.FindCartAtCursor(Player) == null;
+        }
+
+        /// <summary>While a cart inventory is open, shift-clicking an inventory item sends it into the cart.</summary>
+        public override bool ShiftClickSlot(Item[] inventory, int context, int slot)
+        {
+            if (Player.whoAmI != Main.myPlayer || !CartChestUISystem.IsOpen || context != ItemSlot.Context.InventoryItem)
+            {
+                return false;
+            }
+
+            if (inventory == null || slot < 0 || slot >= inventory.Length)
+            {
+                return false;
+            }
+
+            Item item = inventory[slot];
+            if (item == null || item.IsAir || item.favorited)
+            {
+                return false;
+            }
+
+            return CartChestUISystem.TryShiftInsert(item);
         }
     }
 }

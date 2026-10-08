@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
 namespace Factorraria.Common.Carts
@@ -35,6 +36,10 @@ namespace Factorraria.Common.Carts
         public const float GroundFriction = 0.92f; // X velocity multiplier per tick while sliding on the ground
         public const int RerailDelay = 15;         // ticks after derailing before the track can catch the cart again
         public const int BumpCooldown = 10;        // ticks during which a second bounce does not re-fire the Bumped event
+
+        public const float AnimStopSpeed = 0.05f;        // below this |Speed| the wheels stop turning (frame is frozen)
+        public const float AnimPixelsPerFrame = 16f;     // distance travelled per wheel animation frame (wheel circumference / frames)
+        public const float AnimMaxFramesPerTick = 0.5f;  // cap so the wheels do not strobe at top speed (0.5 = a frame every 2 ticks)
     }
 
     /// <summary>
@@ -83,7 +88,87 @@ namespace Factorraria.Common.Carts
             return item != null && !item.IsAir && (item.createTile == TileID.Containers || item.createTile == TileID.Containers2);
         }
 
+        private static int terrariumItemType = -1;
+
+        /// <summary>The vanilla Terrarium item, looked up by name (ids shift between loads). 0 if the game has no item with that name.</summary>
+        public static int TerrariumItemType
+        {
+            get
+            {
+                if (terrariumItemType < 0)
+                {
+                    int id;
+                    terrariumItemType = ItemID.Search.TryGetId("Terrarium", out id) ? id : 0;
+                }
+
+                return terrariumItemType;
+            }
+        }
+
+        public static bool IsTerrariumItem(Item item)
+        {
+            return item != null && !item.IsAir && TerrariumItemType > 0 && item.type == TerrariumItemType;
+        }
+
         public const int ChestSlots = 20;
+
+        /// <summary>
+        /// Moves as much of item as fits into the chest module: tops up matching stacks first, then (unless onlyIfAlreadyStored)
+        /// uses an empty slot. Reduces item.stack by what moved. Returns true if anything moved.
+        /// Shared by quick stack, shift-click and (Phase 6) conveyor pickup.
+        /// </summary>
+        public bool TryAddToChest(Item item, bool onlyIfAlreadyStored = false)
+        {
+            if (ChestItems == null || item == null || item.IsAir)
+            {
+                return false;
+            }
+
+            int before = item.stack;
+            bool alreadyStored = false;
+
+            for (int i = 0; i < ChestItems.Length; i++)
+            {
+                Item slot = ChestItems[i];
+                if (slot == null || slot.IsAir || slot.type != item.type || slot.prefix != item.prefix || !ItemLoader.CanStack(slot, item))
+                {
+                    continue;
+                }
+
+                alreadyStored = true;
+
+                int room = slot.maxStack - slot.stack;
+                if (room <= 0)
+                {
+                    continue;
+                }
+
+                int move = Math.Min(room, item.stack);
+                slot.stack += move;
+                item.stack -= move;
+
+                if (item.stack <= 0)
+                {
+                    item.TurnToAir();
+                    return true;
+                }
+            }
+
+            if (!onlyIfAlreadyStored || alreadyStored)
+            {
+                for (int i = 0; i < ChestItems.Length; i++)
+                {
+                    if (ChestItems[i] == null || ChestItems[i].IsAir)
+                    {
+                        ChestItems[i] = item.Clone();
+                        item.TurnToAir();
+                        return true;
+                    }
+                }
+            }
+
+            return item.stack != before;
+        }
 
         /// <summary>Chest module contents. Null unless Module == Chest.</summary>
         public Item[] ChestItems;
@@ -130,8 +215,10 @@ namespace Factorraria.Common.Carts
             {
                 case CartModule.Chest:
                     return ItemID.Chest;
+                case CartModule.Terrarium:
+                    return TerrariumItemType > 0 ? TerrariumItemType : -1;
                 default:
-                    return -1; // Terrarium / Motor items arrive with their phases
+                    return -1; // the Motor item arrives with its phase
             }
         }
 
@@ -182,6 +269,11 @@ namespace Factorraria.Common.Carts
         /// <summary>+1 = facing right, -1 = facing left. Follows the sign of Speed and is kept while stopped.</summary>
         public int Facing = 1;
 
+        /// <summary>Current frame of the skin's mount sheet. Driven by speed, see UpdateAnimation. Not saved.</summary>
+        public int AnimFrame;
+
+        private float animCounter;
+
         /// <summary>
         /// Fired once per bounce off a bumper (not once per movement sub-step). Static so listeners need no per-cart wiring.
         /// Later phases hang the motor-cart flip, cargo spill and chain trail on this.
@@ -225,10 +317,61 @@ namespace Factorraria.Common.Carts
                 UpdateDerailed();
             }
 
+            UpdateAnimation();
+
             // Fell out of the world
             if (Position.X < 32f || Position.X > (Main.maxTilesX - 2) * 16f || Position.Y > (Main.maxTilesY - 3) * 16f)
             {
                 Active = false;
+            }
+        }
+
+        /// <summary>
+        /// Wheel animation: the frame advances with the distance travelled (so faster = quicker wheels), at most
+        /// AnimMaxFramesPerTick, and is frozen while stopped. Derailed carts show the skin's in-air frame.
+        /// Frame ranges come from the skin's mount (CartSkinTable.GetAnimation).
+        /// </summary>
+        private void UpdateAnimation()
+        {
+            CartSkinTable.SkinAnimation anim = CartSkinTable.GetAnimation(SkinType);
+
+            if (!OnTrack)
+            {
+                AnimFrame = anim.AirFrame;
+                animCounter = 0f;
+                return;
+            }
+
+            bool inRunRange = AnimFrame >= anim.RunStart && AnimFrame < anim.RunStart + anim.RunCount;
+            float speed = Math.Abs(Speed);
+
+            if (speed < CartPhysics.AnimStopSpeed)
+            {
+                if (!inRunRange)
+                {
+                    AnimFrame = anim.StandFrame;
+                }
+
+                return;
+            }
+
+            if (!inRunRange)
+            {
+                AnimFrame = anim.RunStart;
+            }
+
+            if (anim.RunCount <= 1)
+            {
+                return;
+            }
+
+            animCounter += Math.Min(speed / CartPhysics.AnimPixelsPerFrame, CartPhysics.AnimMaxFramesPerTick);
+
+            if (animCounter >= 1f)
+            {
+                int steps = (int)animCounter;
+                animCounter -= steps;
+                AnimFrame = anim.RunStart + (AnimFrame - anim.RunStart + steps) % anim.RunCount;
             }
         }
 
@@ -249,7 +392,7 @@ namespace Factorraria.Common.Carts
 
         private void UpdateOnTrack()
         {
-            float half = CartPhysics.WheelHalfBase;
+            float half = CartPhysics.WheelHalfBase * 0.6f;
             float slope = (float)Math.Tan(Rotation);
             int boost = 0;
 
