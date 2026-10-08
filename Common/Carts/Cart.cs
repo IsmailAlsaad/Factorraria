@@ -37,6 +37,9 @@ namespace Factorraria.Common.Carts
         public const int RerailDelay = 15;         // ticks after derailing before the track can catch the cart again
         public const int BumpCooldown = 10;        // ticks during which a second bounce does not re-fire the Bumped event
 
+        public const float CollisionRestitution = 1f;   // 1 = perfectly elastic (equal masses swap speeds), 0 = carts stick together
+        public const float CollisionMinSpeed = 0.1f;    // closing speed below this is ignored (no jitter or sound spam from resting contact)
+
         public const float AnimStopSpeed = 0.05f;        // below this |Speed| the wheels stop turning (frame is frozen)
         public const float AnimPixelsPerFrame = 16f;     // distance travelled per wheel animation frame (wheel circumference / frames)
         public const float AnimMaxFramesPerTick = 0.5f;  // cap so the wheels do not strobe at top speed (0.5 = a frame every 2 ticks)
@@ -295,6 +298,73 @@ namespace Factorraria.Common.Carts
         public static event Action<Cart> Bumped;
 
         private int bumpCooldown;
+
+        /// <summary>
+        /// Fired once per cart-vs-cart collision, AFTER the elastic exchange has been applied.
+        /// Arguments are (left cart, right cart) by X position. Static like Bumped; CartSystem.OnCartCollide is the default listener.
+        /// </summary>
+        public static event Action<Cart, Cart> Collided;
+
+        /// <summary>Signed X speed whether on the track (Speed) or derailed (Velocity.X). Setting it also updates Facing.</summary>
+        public float AlongSpeed
+        {
+            get { return OnTrack ? Speed : Velocity.X; }
+            set
+            {
+                if (OnTrack)
+                {
+                    Speed = MathHelper.Clamp(value, -CartPhysics.MaxSpeed, CartPhysics.MaxSpeed);
+                }
+                else
+                {
+                    Velocity.X = value;
+                }
+
+                if (value > 0.01f)
+                {
+                    Facing = 1;
+                }
+                else if (value < -0.01f)
+                {
+                    Facing = -1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// If the two carts overlap and are closing on each other, exchanges their X speeds (equal masses, restitution from
+        /// CartPhysics.CollisionRestitution; 1 = perfectly elastic) and fires Collided. Resting or separating overlaps are left alone.
+        /// </summary>
+        /// <returns>true if a collision happened.</returns>
+        public static bool TryCollide(Cart a, Cart b)
+        {
+            if (a == b || !a.Active || !b.Active || !a.Hitbox.Intersects(b.Hitbox))
+            {
+                return false;
+            }
+
+            Cart left = a.Position.X <= b.Position.X ? a : b;
+            Cart right = left == a ? b : a;
+
+            float vLeft = left.AlongSpeed;
+            float vRight = right.AlongSpeed;
+
+            if (vLeft - vRight < CartPhysics.CollisionMinSpeed)
+            {
+                return false; // not closing in on each other
+            }
+
+            float e = CartPhysics.CollisionRestitution;
+            left.AlongSpeed = ((1f + e) * vRight + (1f - e) * vLeft) * 0.5f;
+            right.AlongSpeed = ((1f + e) * vLeft + (1f - e) * vRight) * 0.5f;
+
+            if (Collided != null)
+            {
+                Collided(left, right);
+            }
+
+            return true;
+        }
 
         private int rerailCooldown;
 

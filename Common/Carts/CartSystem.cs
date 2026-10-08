@@ -31,17 +31,29 @@ namespace Factorraria.Common.Carts
         public override void Load()
         {
             Cart.Bumped += OnCartBumped;
+            Cart.Collided += OnCartCollide;
         }
 
         public override void Unload()
         {
             Cart.Bumped -= OnCartBumped;
+            Cart.Collided -= OnCartCollide;
         }
 
         /// <summary>Placeholder bumper "boing". Swap the sound here once there is a real one.</summary>
         private static void OnCartBumped(Cart cart)
         {
             SoundEngine.PlaySound(SoundID.Item56, cart.Position);
+        }
+
+        /// <summary>
+        /// Customisable cart-vs-cart collision hook. Runs after the elastic exchange; left/right are ordered by X.
+        /// Currently just plays a sound. Put sparks, damage, cargo spill etc. here later.
+        /// </summary>
+        private static void OnCartCollide(Cart left, Cart right)
+        {
+            Vector2 midPoint = (left.Position + right.Position) * 0.5f;
+            SoundEngine.PlaySound(SoundID.Item53, midPoint);
         }
 
         public override void OnWorldLoad()
@@ -110,6 +122,15 @@ namespace Factorraria.Common.Carts
                 if (!cart.Active)
                 {
                     Carts.RemoveAt(i);
+                }
+            }
+
+            // Cart-vs-cart collisions (after everyone has moved this tick)
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                for (int j = i + 1; j < Carts.Count; j++)
+                {
+                    Cart.TryCollide(Carts[i], Carts[j]);
                 }
             }
         }
