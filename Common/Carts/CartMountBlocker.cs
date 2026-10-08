@@ -1,22 +1,53 @@
-﻿using Terraria.ID;
+﻿using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Common.Carts
 {
     /// <summary>
-    /// Carts are simulated by CartSystem now, so the vanilla "ride the minecart" mount is switched off.
-    /// Vanilla puts the player on a cart when they interact with a minecart track while a cart is equipped in the
-    /// minecart slot (or when a cart item is used). We do not touch that code; instead any cart mount
-    /// (MountID.Sets.Cart) that becomes active is dismounted again at the end of the same player update.
+    /// Right clicking a minecart track makes vanilla mount the player on a vanilla cart. Carts are simulated by
+    /// CartSystem now, so that one trigger is cancelled: a cart mount is refused only while the right mouse button is
+    /// held, no item is being used, and the cursor is on a minecart track. Every other way of mounting is untouched.
     /// </summary>
-    public class CartMountBlocker : ModPlayer
+    public class CartMountBlocker : ModSystem
     {
-        public override void PostUpdate()
+        public override void Load()
         {
-            if (Player.mount.Active && MountID.Sets.Cart[Player.mount.Type])
+            On_Mount.SetMount += BlockTrackMount;
+        }
+
+        public override void Unload()
+        {
+            On_Mount.SetMount -= BlockTrackMount;
+        }
+
+        private static void BlockTrackMount(On_Mount.orig_SetMount orig, Mount self, int m, Player mountedPlayer, bool faceLeft)
+        {
+            if (m >= 0 && m < MountID.Sets.Cart.Length && MountID.Sets.Cart[m] && IsTrackRightClick(mountedPlayer))
             {
-                Player.mount.Dismount(Player);
+                return;
             }
+
+            orig(self, m, mountedPlayer, faceLeft);
+        }
+
+        private static bool IsTrackRightClick(Player player)
+        {
+            if (player.whoAmI != Main.myPlayer || !Main.mouseRight || player.itemAnimation > 0)
+            {
+                return false;
+            }
+
+            int x = Player.tileTargetX;
+            int y = Player.tileTargetY;
+
+            if (!WorldGen.InWorld(x, y, 2))
+            {
+                return false;
+            }
+
+            Tile tile = Main.tile[x, y];
+            return tile.HasTile && tile.TileType == TileID.MinecartTrack;
         }
     }
 }

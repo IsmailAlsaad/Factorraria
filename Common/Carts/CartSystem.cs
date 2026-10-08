@@ -197,7 +197,7 @@ namespace Factorraria.Common.Carts
 
         /// <summary>
         /// Click rules. Left click: with a cart item = place; on a cart while holding a chest = install it; on a cart = shove.
-        /// Right click on a cart with an empty hand = pick it up. (Fuel and chest-open come with their phases.)
+        /// Right click on a cart = pick it up (whatever is held). Fuel and chest-open will take over right click on those modules later.
         /// A cart under the cursor beats other uses of the click unless a cart item is held.
         /// </summary>
         public override void PostUpdatePlayers()
@@ -209,7 +209,9 @@ namespace Factorraria.Common.Carts
 
             Player player = Main.LocalPlayer;
 
-            if (player.dead || player.mouseInterface || player.lastMouseInterface || Main.playerInventory)
+            bool cursorHolds = Main.mouseItem != null && !Main.mouseItem.IsAir;
+
+            if (player.dead || player.mouseInterface || player.lastMouseInterface || (Main.playerInventory && !cursorHolds))
             {
                 return;
             }
@@ -222,7 +224,7 @@ namespace Factorraria.Common.Carts
                 return;
             }
 
-            Item held = player.HeldItem;
+            Item held = CartSkinTable.GetHeldItem(player);
 
             if (left)
             {
@@ -261,7 +263,7 @@ namespace Factorraria.Common.Carts
                 return;
             }
 
-            if (right && (held == null || held.IsAir))
+            if (right)
             {
                 Cart target = FindCartAtCursor(player);
                 if (target == null)
@@ -335,12 +337,12 @@ namespace Factorraria.Common.Carts
                 return false;
             }
 
-            if (held.type != Cart.ModuleItemType(CartModule.Chest))
+            if (!Cart.IsChestItem(held))
             {
                 return false;
             }
 
-            cart.SetModule(CartModule.Chest);
+            cart.SetModule(CartModule.Chest, held.type);
 
             held.stack--;
             if (held.stack <= 0)
@@ -460,9 +462,10 @@ namespace Factorraria.Common.Carts
             }
 
             Player player = Main.LocalPlayer;
-            Item held = player.HeldItem;
+            Item held = CartSkinTable.GetHeldItem(player);
+            bool cursorHolds = Main.mouseItem != null && !Main.mouseItem.IsAir;
 
-            if (player.dead || Main.playerInventory || player.mouseInterface || !CartSkinTable.IsPlaceable(held))
+            if (player.dead || (Main.playerInventory && !cursorHolds) || player.mouseInterface || !CartSkinTable.IsPlaceable(held))
             {
                 return false;
             }
@@ -510,7 +513,8 @@ namespace Factorraria.Common.Carts
         {
             Vector2 edge = to - from;
             float rotation = (float)Math.Atan2(edge.Y, edge.X);
-            Main.spriteBatch.Draw(pixel, from, null, color, rotation, Vector2.Zero, new Vector2(edge.Length(), 1.5f), SpriteEffects.None, 0f);
+            // MagicPixel is bigger than 1x1, so draw a 1x1 slice of it; otherwise the scale below is multiplied by its size.
+            Main.spriteBatch.Draw(pixel, from, new Rectangle(0, 0, 1, 1), color, rotation, Vector2.Zero, new Vector2(edge.Length(), 1.5f), SpriteEffects.None, 0f);
         }
 
         #endregion

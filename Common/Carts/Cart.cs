@@ -74,6 +74,15 @@ namespace Factorraria.Common.Carts
 
         public CartModule Module = CartModule.Empty;
 
+        /// <summary>The exact item that installed the module (e.g. a Gold Chest), so pickup returns that item. 0 or less = use the default.</summary>
+        public int ModuleItem;
+
+        /// <summary>True for any placeable chest item (all vanilla chest varieties, and modded ones that use the chest tiles).</summary>
+        public static bool IsChestItem(Item item)
+        {
+            return item != null && !item.IsAir && (item.createTile == TileID.Containers || item.createTile == TileID.Containers2);
+        }
+
         public const int ChestSlots = 20;
 
         /// <summary>Chest module contents. Null unless Module == Chest.</summary>
@@ -86,9 +95,10 @@ namespace Factorraria.Common.Carts
         public Item Fuel;
 
         /// <summary>Installs a module and creates its (empty) payload. Throws away any previous payload.</summary>
-        public void SetModule(CartModule module)
+        public void SetModule(CartModule module, int itemType = -1)
         {
             Module = module;
+            ModuleItem = itemType;
             ChestItems = null;
             Tank = null;
             Fuel = null;
@@ -131,7 +141,7 @@ namespace Factorraria.Common.Carts
             List<Item> result = new List<Item>();
             result.Add(new Item(SkinType));
 
-            int moduleItem = ModuleItemType(Module);
+            int moduleItem = ModuleItem > 0 ? ModuleItem : ModuleItemType(Module);
             if (moduleItem > 0)
             {
                 result.Add(new Item(moduleItem));
@@ -457,6 +467,11 @@ namespace Factorraria.Common.Carts
             tag["version"] = SaveVersion;
             tag["skin"] = Skin;
             tag["module"] = (int)Module;
+
+            if (ModuleItem > 0)
+            {
+                tag["moduleItem"] = CartSkins.KeyOf(ModuleItem);
+            }
             tag["facing"] = Facing;
             tag["x"] = Position.X;
             tag["y"] = Position.Y;
@@ -502,6 +517,12 @@ namespace Factorraria.Common.Carts
             {
                 cart.Skin = tag.GetString("skin");
                 cart.SetModule((CartModule)tag.GetInt("module"));
+
+                int moduleItem;
+                if (tag.ContainsKey("moduleItem") && CartSkins.TryTypeOf(tag.GetString("moduleItem"), out moduleItem))
+                {
+                    cart.ModuleItem = moduleItem;
+                }
                 cart.Facing = tag.GetInt("facing") < 0 ? -1 : 1;
             }
 

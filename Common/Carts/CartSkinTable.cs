@@ -18,6 +18,17 @@ namespace Factorraria.Common.Carts
     {
         public const float PlaceholderScale = 3f;
 
+        /// <summary>The item the player is "holding" for cart interactions: the item on the cursor if there is one, else the selected hotbar item.</summary>
+        public static Item GetHeldItem(Player player)
+        {
+            if (Main.mouseItem != null && !Main.mouseItem.IsAir)
+            {
+                return Main.mouseItem;
+            }
+
+            return player.HeldItem;
+        }
+
         /// <summary>True for vanilla/modded minecart items. Using one places a cart instead of mounting.</summary>
         public static bool IsSkinItem(Item item)
         {
