@@ -209,9 +209,8 @@ namespace Factorraria.Common.Carts
 
             Player player = Main.LocalPlayer;
 
-            bool cursorHolds = Main.mouseItem != null && !Main.mouseItem.IsAir;
-
-            if (player.dead || player.mouseInterface || player.lastMouseInterface || (Main.playerInventory && !cursorHolds))
+            // Inventory open is fine: mouseInterface is already true while the cursor is over any inventory panel.
+            if (player.dead || player.mouseInterface || player.lastMouseInterface)
             {
                 return;
             }
@@ -463,9 +462,7 @@ namespace Factorraria.Common.Carts
 
             Player player = Main.LocalPlayer;
             Item held = CartSkinTable.GetHeldItem(player);
-            bool cursorHolds = Main.mouseItem != null && !Main.mouseItem.IsAir;
-
-            if (player.dead || (Main.playerInventory && !cursorHolds) || player.mouseInterface || !CartSkinTable.IsPlaceable(held))
+            if (player.dead || player.mouseInterface || !CartSkinTable.IsPlaceable(held))
             {
                 return false;
             }

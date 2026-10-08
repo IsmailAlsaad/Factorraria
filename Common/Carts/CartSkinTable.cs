@@ -32,7 +32,7 @@ namespace Factorraria.Common.Carts
         /// <summary>True for vanilla/modded minecart items. Using one places a cart instead of mounting.</summary>
         public static bool IsSkinItem(Item item)
         {
-            return item != null && !item.IsAir && item.mountType > 0 && MountID.Sets.Cart[item.mountType];
+            return item != null && !item.IsAir && item.mountType > MountID.Rudolph && MountID.Sets.Cart[item.mountType];
         }
 
         /// <summary>True for anything that places a cart: skin items and the legacy Track Cart item.</summary>
