@@ -110,7 +110,7 @@ namespace Factorraria.Common.Carts
             return item != null && !item.IsAir && TerrariumItemType > 0 && item.type == TerrariumItemType;
         }
 
-        public const int ChestSlots = 20;
+        public const int ChestSlots = 6; // 3 columns x 2 rows
 
         /// <summary>
         /// Moves as much of item as fits into the chest module: tops up matching stacks first, then (unless onlyIfAlreadyStored)
@@ -172,6 +172,9 @@ namespace Factorraria.Common.Carts
 
         /// <summary>Chest module contents. Null unless Module == Chest.</summary>
         public Item[] ChestItems;
+
+        /// <summary>Items from older saves that do not fit the smaller chest. Handed back when the cart is picked up. Null if none.</summary>
+        public List<Item> OverflowItems;
 
         /// <summary>Terrarium module tank. Null unless Module == Terrarium. LiquidType is a LiquidTypeRegistry id.</summary>
         public LiquidStack Tank;
@@ -241,6 +244,17 @@ namespace Factorraria.Common.Carts
                     if (ChestItems[i] != null && !ChestItems[i].IsAir)
                     {
                         result.Add(ChestItems[i].Clone());
+                    }
+                }
+            }
+
+            if (OverflowItems != null)
+            {
+                for (int i = 0; i < OverflowItems.Count; i++)
+                {
+                    if (OverflowItems[i] != null && !OverflowItems[i].IsAir)
+                    {
+                        result.Add(OverflowItems[i].Clone());
                     }
                 }
             }
@@ -407,8 +421,8 @@ namespace Factorraria.Common.Carts
 
                 TrackSample left;
                 TrackSample right;
-                bool leftOk = TrackData.TrySample(newX - half, Position.Y - half * slope, out left);
-                bool rightOk = TrackData.TrySample(newX + half, Position.Y + half * slope, out right);
+                bool leftOk = TrySampleSmooth(newX - half, Position.Y - half * slope, out left);
+                bool rightOk = TrySampleSmooth(newX + half, Position.Y + half * slope, out right);
 
                 // The leading wheel decides what the end of the track does to us.
                 if (moving)
@@ -466,6 +480,38 @@ namespace Factorraria.Common.Carts
             {
                 Facing = -1;
             }
+        }
+
+        private static readonly float[] SmoothOffsets = { -0.75f, -0.25f, 0.25f, 0.75f };
+
+        /// <summary>
+        /// Vanilla rail height is a staircase of 2 px slices, so a wheel's height jumps every 2 px of travel and the cart
+        /// shakes on slopes. Averaging the surface over one slice width (+-1 px) turns the staircase into a smooth ramp.
+        /// Samples that differ by more than 4 px (a cliff, the end of a rail) are ignored so edges stay sharp.
+        /// </summary>
+        private static bool TrySampleSmooth(float x, float referenceY, out TrackSample sample)
+        {
+            bool ok = TrackData.TrySample(x, referenceY, out sample);
+            if (!ok || !sample.HasSurface)
+            {
+                return ok;
+            }
+
+            float sum = sample.SurfaceY;
+            int count = 1;
+
+            for (int i = 0; i < SmoothOffsets.Length; i++)
+            {
+                TrackSample extra;
+                if (TrackData.TrySample(x + SmoothOffsets[i], referenceY, out extra) && extra.HasSurface && Math.Abs(extra.SurfaceY - sample.SurfaceY) <= 4f)
+                {
+                    sum += extra.SurfaceY;
+                    count++;
+                }
+            }
+
+            sample.SurfaceY = sum / count;
+            return true;
         }
 
         /// <returns>true if the cart came off the track.</returns>
@@ -634,6 +680,17 @@ namespace Factorraria.Common.Carts
                 tag["chest"] = items;
             }
 
+            if (OverflowItems != null && OverflowItems.Count > 0)
+            {
+                List<TagCompound> overflow = new List<TagCompound>();
+                for (int i = 0; i < OverflowItems.Count; i++)
+                {
+                    overflow.Add(ItemIO.Save(OverflowItems[i]));
+                }
+
+                tag["overflow"] = overflow;
+            }
+
             if (Tank != null)
             {
                 tag["tankType"] = Tank.LiquidType; // LiquidTypeRegistry id (append-only), same as machine tanks
@@ -677,9 +734,42 @@ namespace Factorraria.Common.Carts
             if (cart.ChestItems != null && tag.ContainsKey("chest"))
             {
                 IList<TagCompound> items = tag.GetList<TagCompound>("chest");
-                for (int i = 0; i < cart.ChestItems.Length && i < items.Count; i++)
+                for (int i = 0; i < items.Count; i++)
                 {
-                    cart.ChestItems[i] = ItemIO.Load(items[i]);
+                    Item loaded = ItemIO.Load(items[i]);
+
+                    if (i < cart.ChestItems.Length)
+                    {
+                        cart.ChestItems[i] = loaded;
+                    }
+                    else if (!loaded.IsAir)
+                    {
+                        // saved when the chest was bigger: keep the extra items so nothing is lost
+                        if (cart.OverflowItems == null)
+                        {
+                            cart.OverflowItems = new List<Item>();
+                        }
+
+                        cart.OverflowItems.Add(loaded);
+                    }
+                }
+            }
+
+            if (tag.ContainsKey("overflow"))
+            {
+                IList<TagCompound> extra = tag.GetList<TagCompound>("overflow");
+                if (cart.OverflowItems == null)
+                {
+                    cart.OverflowItems = new List<Item>();
+                }
+
+                for (int i = 0; i < extra.Count; i++)
+                {
+                    Item loaded = ItemIO.Load(extra[i]);
+                    if (!loaded.IsAir)
+                    {
+                        cart.OverflowItems.Add(loaded);
+                    }
                 }
             }
 

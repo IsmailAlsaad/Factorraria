@@ -180,9 +180,14 @@ namespace Factorraria.Common.Carts
             return texture;
         }
 
+        private const int SolidRowPixels = 6;  // a row counts as "real sprite" only with this many opaque pixels (ignores thin protrusions)
+        private const int BaseBand = 12;       // how many rows up from the bottom define the cart's base (wheels) for centring
+
         /// <summary>
-        /// Rail point inside a frame: horizontally centred, vertically the lowest opaque pixel of the first frame (the bottom of
-        /// the wheels), so the cart sits on the rail whatever empty margin the mount sheet has. Cached per skin.
+        /// Rail point inside a frame. Vertically: the lowest row that holds a real chunk of sprite (not a stray antenna or
+        /// stinger). Horizontally: the centre of the bottom band of the sprite (the wheels), not the centre of the sheet, so
+        /// carts with wings or tails sticking out one side still sit on the rail. Cached per skin and written to the log
+        /// ("Factorraria cart skin ...") so odd sheets can be diagnosed.
         /// </summary>
         private static Vector2 GetOrigin(int skinItemType, Texture2D texture, int frameHeight)
         {
@@ -193,31 +198,66 @@ namespace Factorraria.Common.Carts
             }
 
             origin = new Vector2(texture.Width / 2f, frameHeight);
+            string report = "no readable pixels, using frame bottom-centre";
 
             try
             {
-                Color[] pixels = new Color[texture.Width * frameHeight];
-                texture.GetData(0, new Rectangle(0, 0, texture.Width, frameHeight), pixels, 0, pixels.Length);
+                int width = texture.Width;
+                Color[] pixels = new Color[width * frameHeight];
+                texture.GetData(0, new Rectangle(0, 0, width, frameHeight), pixels, 0, pixels.Length);
 
-                for (int y = frameHeight - 1; y >= 0; y--)
+                int bottom = -1;
+                for (int y = frameHeight - 1; y >= 0 && bottom < 0; y--)
                 {
-                    bool found = false;
-                    for (int x = 0; x < texture.Width && !found; x++)
+                    int count = 0;
+                    for (int x = 0; x < width; x++)
                     {
-                        found = pixels[y * texture.Width + x].A > 16;
+                        if (pixels[y * width + x].A > 16)
+                        {
+                            count++;
+                        }
                     }
 
-                    if (found)
+                    if (count >= SolidRowPixels)
                     {
-                        origin.Y = y + 1 - RailSink;
-                        break;
+                        bottom = y;
                     }
+                }
+
+                if (bottom >= 0)
+                {
+                    int minX = width;
+                    int maxX = -1;
+
+                    for (int y = Math.Max(0, bottom - BaseBand + 1); y <= bottom; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            if (pixels[y * width + x].A > 16)
+                            {
+                                minX = Math.Min(minX, x);
+                                maxX = Math.Max(maxX, x);
+                            }
+                        }
+                    }
+
+                    origin = new Vector2((minX + maxX + 1) / 2f, bottom + 1 - RailSink);
+                    report = "base band x " + minX + ".." + maxX + ", bottom row " + bottom;
                 }
             }
             catch (Exception)
             {
                 // Texture not readable: keep the bottom edge of the frame.
             }
+
+            Mount.MountData data = GetMountData(skinItemType);
+            ModContent.GetInstance<Factorraria>()?.Logger.Info(
+                "Factorraria cart skin " + CartSkins.KeyOf(skinItemType)
+                + ": sheet " + texture.Width + "x" + texture.Height
+                + ", totalFrames " + (data != null ? data.totalFrames : -1)
+                + ", frame " + texture.Width + "x" + frameHeight
+                + ", " + report
+                + ", origin " + origin.X + "," + origin.Y);
 
             origins[skinItemType] = origin;
             return origin;

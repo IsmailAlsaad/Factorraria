@@ -197,7 +197,7 @@ namespace Factorraria.Common.Carts
 
         /// <summary>
         /// Click rules. Left click: with a cart item = place; on a cart while holding a chest = install it; on a cart = shove.
-        /// Right click on a chest cart = open its inventory (shift + right click picks it up); on any other cart = pick it up.
+        /// Right click on a chest or terrarium cart = open its panel (shift + right click picks it up); on any other cart = pick it up.
         /// Fuel will take over right click on motor carts later.
         /// A cart under the cursor beats other uses of the click unless a cart item is held.
         /// </summary>
@@ -273,7 +273,7 @@ namespace Factorraria.Common.Carts
 
                 Main.mouseRightRelease = false;
 
-                if (target.Module == CartModule.Chest && !Terraria.UI.ItemSlot.ShiftInUse)
+                if ((target.Module == CartModule.Chest || target.Module == CartModule.Terrarium) && !Terraria.UI.ItemSlot.ShiftInUse)
                 {
                     CartChestUISystem.Toggle(target);
                     return;
