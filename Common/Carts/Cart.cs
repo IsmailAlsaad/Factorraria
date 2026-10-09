@@ -43,6 +43,10 @@ namespace Factorraria.Common.Carts
         public const float AnimStopSpeed = 0.05f;        // below this |Speed| the wheels stop turning (frame is frozen)
         public const float AnimPixelsPerFrame = 16f;     // distance travelled per wheel animation frame (wheel circumference / frames)
         public const float AnimMaxFramesPerTick = 0.5f;  // cap so the wheels do not strobe at top speed (0.5 = a frame every 2 ticks)
+
+        public const float PickupPadding = 8f;           // chest carts also grab conveyor items this many px outside the hitbox
+        public const int SpillGrabCooldown = 120;        // ticks a spilled item cannot be grabbed by a cart again
+        public const int TerrariumDrainPerTick = 16;      // world liquid units pulled into the tank per tick (a full tile is 255)
     }
 
     /// <summary>

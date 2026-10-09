@@ -44,6 +44,8 @@ namespace Factorraria.Common.Carts
         private static void OnCartBumped(Cart cart)
         {
             SoundEngine.PlaySound(SoundID.Item56, cart.Position);
+
+            CartCargo.OnBump(cart); // chest: spill items as vItems, terrarium: pour the tank out
         }
 
         /// <summary>
@@ -118,6 +120,11 @@ namespace Factorraria.Common.Carts
             {
                 Cart cart = Carts[i];
                 cart.Update();
+
+                if (cart.Active)
+                {
+                    CartCargo.Update(cart);
+                }
 
                 if (!cart.Active)
                 {
@@ -565,6 +572,35 @@ namespace Factorraria.Common.Carts
             DrawDot(pixel, screen + axis, Color.Orange); // right wheel probe
             DrawDot(pixel, screen, Color.Lime);          // cart centre on the rail
             DrawHitbox(cart, pixel);                      // rotated hitbox (white)
+            DrawCargoWindow(cart, pixel);                 // 3x2 spill / pour tiles (yellow)
+        }
+
+        private static void DrawCargoWindow(Cart cart, Texture2D pixel)
+        {
+            if (cart.Module != CartModule.Chest && cart.Module != CartModule.Terrarium)
+            {
+                return;
+            }
+
+            int left;
+            int top;
+            CartCargo.GetWindow(cart, out left, out top);
+
+            for (int column = 0; column < CartCargo.WindowColumns; column++)
+            {
+                for (int row = 0; row < CartCargo.WindowRows; row++)
+                {
+                    Vector2 a = new Vector2((left + column) * 16f, (top + row) * 16f) - Main.screenPosition;
+                    Vector2 b = a + new Vector2(16f, 0f);
+                    Vector2 c = a + new Vector2(16f, 16f);
+                    Vector2 d = a + new Vector2(0f, 16f);
+
+                    DrawLine(pixel, a, b, Color.Yellow);
+                    DrawLine(pixel, b, c, Color.Yellow);
+                    DrawLine(pixel, c, d, Color.Yellow);
+                    DrawLine(pixel, d, a, Color.Yellow);
+                }
+            }
         }
 
         private static void DrawDot(Texture2D pixel, Vector2 position, Color color)

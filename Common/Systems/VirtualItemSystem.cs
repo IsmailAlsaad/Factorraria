@@ -455,6 +455,32 @@ namespace Factorraria.Content.VirtualItems
             return false;
         }
 
+        /// <summary>
+        /// Adds every active vItem standing on (or heading to) a tile under worldRect to results, without duplicates.
+        /// Building block for "take items in a rectangle": the caller decides which of them it actually takes.
+        /// Does not clear results.
+        /// </summary>
+        public static void GetVItemsInRect(Rectangle worldRect, List<VirtualItem> results)
+        {
+            int minX = (int)Math.Floor(worldRect.Left / 16f);
+            int maxX = (int)Math.Floor((worldRect.Right - 1) / 16f);
+            int minY = (int)Math.Floor(worldRect.Top / 16f);
+            int maxY = (int)Math.Floor((worldRect.Bottom - 1) / 16f);
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    VirtualItem vItem = GetVirtualItemAtTile(x, y);
+
+                    if (vItem != null && !results.Contains(vItem))
+                    {
+                        results.Add(vItem);
+                    }
+                }
+            }
+        }
+
         static Vector2[] Neighbors4 = new Vector2[4]
         {
             new Vector2(0,1),

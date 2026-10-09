@@ -22,6 +22,7 @@ namespace Factorraria.Content.VirtualItems
 
         // --- TIMERS ---
         public int pickupCooldown;  // Ticks before player/machine can collect
+        public int cartGrabCooldown; // Ticks before a cart can grab it. Set when a cart spills it. Unlike pickupCooldown, falling does not reset it.
         public int frame;          // Current animation frame index
         public int frameCounter;   // Ticks spent on current frame
 
@@ -118,6 +119,11 @@ namespace Factorraria.Content.VirtualItems
             if (pickupCooldown > 0)
             {
                 pickupCooldown = pickupCooldown - 1;
+            }
+
+            if (cartGrabCooldown > 0)
+            {
+                cartGrabCooldown--;
             }
         }
 
@@ -462,7 +468,10 @@ namespace Factorraria.Content.VirtualItems
 
         void TryUpgradeCoinTier()
         {
-            if(stackSize == 100)
+            // Only coins merge up a tier. (This used to reset ANY stack of exactly 100 to 1, which destroyed items.)
+            bool isUpgradableCoin = itemType == ItemID.CopperCoin || itemType == ItemID.SilverCoin || itemType == ItemID.GoldCoin;
+
+            if (stackSize == 100 && isUpgradableCoin)
             {
                 stackSize = 1;
             }
