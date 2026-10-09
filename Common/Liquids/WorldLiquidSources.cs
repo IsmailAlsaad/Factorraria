@@ -36,12 +36,16 @@ namespace Factorraria.Common.Liquids
                 cache.Clear();
             }
 
-            bool result = Compute(start);
+            bool result = ComputeIsInfinite(start);
             cache[start] = (result, tick);
             return result;
         }
 
-        private static bool Compute(Point start)
+        /// <summary>
+        /// The flood-fill itself, with no caching. Callers that keep their own cache (the pipe network does, per network)
+        /// use this; everything else should call IsInfiniteSource.
+        /// </summary>
+        public static bool ComputeIsInfinite(Point start)
         {
             visited.Clear();
             queue.Clear();

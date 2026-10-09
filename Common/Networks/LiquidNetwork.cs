@@ -46,7 +46,6 @@ namespace Factorraria.Common.Networks
         const float MinTankKeep = 1f;
 
         const float TicksPerMinute = 3600f;
-        const int InfiniteSourceThreshold = 100;
 
         // A world tile only ever moves in whole-tile chunks — matches vanilla liquid
         // amounts (byte, 0-255) and avoids the flicker/visual weirdness of draining a
@@ -58,9 +57,6 @@ namespace Factorraria.Common.Networks
         List<LiquidEndpoint> sinkBuffer = new();
         List<(LiquidEndpoint Endpoint, LiquidStack Slot, float Cap)> resolvedSources = new();
         List<(LiquidEndpoint Endpoint, LiquidStack Slot, float Cap)> resolvedSinks = new();
-        HashSet<Point> floodVisited = new();
-        Queue<Point> floodQueue = new();
-        static readonly Point[] FloodOffsets = { new(0, -1), new(0, 1), new(-1, 0), new(1, 0) };
 
         // Per-world-tile "how close to a full tile have we banked" trackers. A world
         // source/sink doesn't act every tick — it silently accumulates its tiny per-tick
@@ -404,34 +400,11 @@ namespace Factorraria.Common.Networks
             return result;
         }
 
+        // The flood-fill lives in WorldLiquidSources so terrarium carts use the very same rule. This class keeps its own
+        // per-network cache (infiniteSourceCache above) and only delegates the computation.
         bool ComputeIsInfiniteSource(Point start)
         {
-            floodVisited.Clear();
-            floodQueue.Clear();
-
-            byte liquidType = (byte)Main.tile[start.X, start.Y].LiquidType;
-            floodVisited.Add(start);
-            floodQueue.Enqueue(start);
-
-            while (floodQueue.Count > 0)
-            {
-                if (floodVisited.Count >= InfiniteSourceThreshold) return true;
-
-                Point current = floodQueue.Dequeue();
-                foreach (Point offset in FloodOffsets)
-                {
-                    Point neighbor = new Point(current.X + offset.X, current.Y + offset.Y);
-                    if (!WorldGen.InWorld(neighbor.X, neighbor.Y) || floodVisited.Contains(neighbor)) continue;
-
-                    Tile t = Main.tile[neighbor.X, neighbor.Y];
-                    if (t.LiquidAmount <= 0 || t.LiquidType != liquidType) continue;
-
-                    floodVisited.Add(neighbor);
-                    floodQueue.Enqueue(neighbor);
-                }
-            }
-
-            return false;
+            return WorldLiquidSources.ComputeIsInfinite(start);
         }
     }
 

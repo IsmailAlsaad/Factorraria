@@ -139,7 +139,7 @@ namespace Factorraria.Common.Carts
 
             foreach (var worldItem in Main.ActiveItems)
             {
-                if (worldItem.IsAir || worldItem.grabDelayTime > 0 || worldItem.beingGrabbed || worldItem.instanced || ItemID.Sets.IsAPickup[worldItem.type])
+                if (worldItem.IsAir || worldItem.noGrabDelay > 0 || worldItem.beingGrabbed || worldItem.instanced || ItemID.Sets.IsAPickup[worldItem.type])
                 {
                     continue;
                 }
@@ -149,9 +149,12 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
-                // inner is the Item inside the world entity: stack changes and TurnToAir apply to the real dropped item
-                // (once it is air the world item is gone).
-                cart.TryAddToChest(worldItem.inner);
+                // The dropped item is a plain Item here, so stack changes and TurnToAir apply to it directly.
+                // Once everything has moved into the chest, switch the world item off (same as VirtualItemSystem does).
+                if (cart.TryAddToChest(worldItem) && worldItem.IsAir)
+                {
+                    worldItem.active = false;
+                }
             }
         }
 
