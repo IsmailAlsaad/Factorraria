@@ -28,6 +28,7 @@ namespace Factorraria.Common.Carts
         private const float InteractRange = 7f * 16f;
 
         private static bool reportedFailure;
+        private static bool chainsNeedRebuild; // set by LoadWorldData, handled on the first tick the track tables are ready
 
         #region Lifecycle / saving
 
@@ -36,6 +37,7 @@ namespace Factorraria.Common.Carts
             Cart.Bumped += OnCartBumped;
             Cart.Collided += OnCartCollide;
             Cart.FrameChanged += OnCartFrameChanged;
+            CartChain.Coupled += OnCartCoupled;
         }
 
         public override void Unload()
@@ -43,7 +45,9 @@ namespace Factorraria.Common.Carts
             Cart.Bumped -= OnCartBumped;
             Cart.Collided -= OnCartCollide;
             Cart.FrameChanged -= OnCartFrameChanged;
+            CartChain.Coupled -= OnCartCoupled;
             terrariumLiquidAsset = null;
+            chainAsset = null;
         }
 
         /// <summary>Placeholder bumper "boing". Swap the sound here once there is a real one.</summary>
@@ -52,6 +56,15 @@ namespace Factorraria.Common.Carts
             SoundEngine.PlaySound(SoundID.Item56, cart.Position);
 
             CartCargo.OnBump(cart); // chest: spill items as vItems, terrarium: pour the tank out
+        }
+
+        /// <summary>
+        /// Customisable hook: a free cart just hooked onto a motor's chain and snapped into its slot.
+        /// Currently a placeholder sound. Put sparks, a UI message etc. here later.
+        /// </summary>
+        private static void OnCartCoupled(Cart motor, Cart carriage)
+        {
+            SoundEngine.PlaySound(SoundID.Item37, carriage.Position);
         }
 
         /// <summary>
@@ -154,6 +167,15 @@ namespace Factorraria.Common.Carts
 
         public override void SaveWorldData(TagCompound tag)
         {
+            int nextChainId = 1;
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                if (Carts[i].Active && Carts[i].Chain != null && Carts[i].Chain.Motor == Carts[i])
+                {
+                    Carts[i].Chain.SaveId = nextChainId++;
+                }
+            }
+
             List<TagCompound> saved = new List<TagCompound>();
 
             for (int i = 0; i < Carts.Count; i++)
@@ -178,6 +200,8 @@ namespace Factorraria.Common.Carts
             {
                 Carts.Add(Cart.Load(cartTag));
             }
+
+            chainsNeedRebuild = true;
         }
 
         #endregion
@@ -197,10 +221,43 @@ namespace Factorraria.Common.Carts
                 return;
             }
 
+            if (chainsNeedRebuild)
+            {
+                chainsNeedRebuild = false;
+                CartChain.RebuildFromSave(Carts);
+            }
+
+            // Free carts and motors move on their own. Carriages are placed by their chain just below.
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                if (!Carts[i].IsCarriage)
+                {
+                    Carts[i].Update();
+                }
+            }
+
+            // Each chain places its carriages on the trail its motor just recorded. A motor that derailed or died drops the chain.
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                Cart motor = Carts[i];
+
+                if (motor.Chain == null || motor.Chain.Motor != motor)
+                {
+                    continue;
+                }
+
+                if (!motor.Active || !motor.OnTrack)
+                {
+                    motor.Chain.Dissolve();
+                    continue;
+                }
+
+                motor.Chain.UpdateCarriages();
+            }
+
             for (int i = Carts.Count - 1; i >= 0; i--)
             {
                 Cart cart = Carts[i];
-                cart.Update();
 
                 if (cart.Active)
                 {
@@ -209,9 +266,17 @@ namespace Factorraria.Common.Carts
 
                 if (!cart.Active)
                 {
+                    if (cart.Chain != null)
+                    {
+                        cart.Chain.Remove(cart);
+                    }
+
                     Carts.RemoveAt(i);
                 }
             }
+
+            // Gentle touches hook a free cart onto a chain; anything harder is a collision (linked carts never collide with each other).
+            CartChain.AutoAttach(Carts);
 
             // Cart-vs-cart collisions (after everyone has moved this tick)
             for (int i = 0; i < Carts.Count; i++)
@@ -487,6 +552,11 @@ namespace Factorraria.Common.Carts
         public static void PickUp(Player player, Cart cart)
         {
             CartChestUISystem.NotifyCartRemoved(cart);
+
+            if (cart.Chain != null)
+            {
+                cart.Chain.Remove(cart); // a middle carriage: the rest close the gap. The motor: the whole chain breaks up
+            }
             CartCargo.PourTank(cart); // a terrarium cart empties back into the world instead of voiding its liquid
             cart.Active = false;
 
@@ -538,6 +608,22 @@ namespace Factorraria.Common.Carts
             float maxX = Main.screenPosition.X + Main.screenWidth + padding;
             float minY = Main.screenPosition.Y - padding;
             float maxY = Main.screenPosition.Y + Main.screenHeight + padding;
+
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                Cart motor = Carts[i];
+
+                if (motor.Chain != null && motor.Chain.Motor == motor)
+                {
+                    Cart front = motor;
+
+                    for (int c = 0; c < motor.Chain.Carriages.Count; c++)
+                    {
+                        DrawChainLink(front, motor.Chain.Carriages[c]);
+                        front = motor.Chain.Carriages[c];
+                    }
+                }
+            }
 
             for (int i = 0; i < Carts.Count; i++)
             {
@@ -688,6 +774,80 @@ namespace Factorraria.Common.Carts
             if (sprite.Extra != null)
             {
                 Main.spriteBatch.Draw(sprite.Extra, screen, sprite.Source, color, rotation, sprite.Origin, sprite.Scale, effects, 0f);
+            }
+        }
+
+        // The link art is vanilla chain texture 1 ("Chain" in the wiki's Chain IDs list, the grappling hook chain). Change the path to use another.
+        private const string ChainTexturePath = "Images/Chain";
+        private const float ChainHitchHeight = 15f; // px above the rail where the chain is hooked to a cart
+        private static Asset<Texture2D> chainAsset;
+        private static bool chainTextureFailed;
+
+        private static Texture2D GetChainTexture()
+        {
+            if (chainAsset == null && !chainTextureFailed)
+            {
+                try
+                {
+                    chainAsset = Main.Assets.Request<Texture2D>(ChainTexturePath, AssetRequestMode.ImmediateLoad);
+                }
+                catch (Exception)
+                {
+                    chainTextureFailed = true; // fall back to a plain line
+                }
+            }
+
+            return chainAsset != null ? chainAsset.Value : null;
+        }
+
+        /// <summary>Draws the chain between two neighbouring carts, from the edge of one to the edge of the other (nothing if they overlap).</summary>
+        private static void DrawChainLink(Cart front, Cart back)
+        {
+            Vector2 a = front.Position + CartGeometry.Up(front) * ChainHitchHeight;
+            Vector2 b = back.Position + CartGeometry.Up(back) * ChainHitchHeight;
+            Vector2 between = b - a;
+            float length = between.Length();
+            float halfWidth = CartPhysics.HitboxWidth * 0.5f;
+
+            if (length <= halfWidth * 2f + 2f)
+            {
+                return; // the carts overlap or touch (for example after a bump): no room for a chain
+            }
+
+            Vector2 middle = (a + b) * 0.5f;
+            const float cullPadding = 128f;
+            if (middle.X < Main.screenPosition.X - cullPadding || middle.X > Main.screenPosition.X + Main.screenWidth + cullPadding
+                || middle.Y < Main.screenPosition.Y - cullPadding || middle.Y > Main.screenPosition.Y + Main.screenHeight + cullPadding)
+            {
+                return;
+            }
+
+            Vector2 direction = between / length;
+            //Vector2 from = a + direction * halfWidth;
+            //Vector2 to = b - direction * halfWidth;
+            Vector2 from = a;
+            Vector2 to = b;
+            float distance = Vector2.Distance(from, to);
+            Color light = Lighting.GetColor((int)(middle.X / 16f), (int)(middle.Y / 16f));
+
+            Texture2D texture = GetChainTexture();
+            if (texture == null)
+            {
+                DrawLine(TextureAssets.MagicPixel.Value, from - Main.screenPosition, to - Main.screenPosition, light);
+                return;
+            }
+
+            // Pieces are stretched a little so they fit the gap exactly (no overshoot at either end).
+            int pieces = Math.Max(1, (int)Math.Ceiling(distance / texture.Height));
+            float pieceLength = distance / pieces;
+            float rotation = (float)Math.Atan2(direction.Y, direction.X) - MathHelper.PiOver2;
+            Vector2 origin = new Vector2(texture.Width * 0.5f, texture.Height * 0.5f);
+            Vector2 scale = new Vector2(1f, pieceLength / texture.Height);
+
+            for (int i = 0; i < pieces; i++)
+            {
+                Vector2 position = from + direction * (pieceLength * (i + 0.5f)) - Main.screenPosition;
+                Main.spriteBatch.Draw(texture, position, null, light, rotation, origin, scale, SpriteEffects.None, 0f);
             }
         }
 

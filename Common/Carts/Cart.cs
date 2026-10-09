@@ -50,6 +50,12 @@ namespace Factorraria.Common.Carts
         public const int SpillGrabCooldown = 120;        // ticks a spilled item cannot be grabbed by a cart again
         public const int TerrariumDrainPerTick = 16;      // world liquid units pulled into the tank per tick (a full tile is 255)
 
+        public const int MaxCarriages = 5;                  // carriages a motor cart can pull
+        public const float ChainSpacing = HitboxWidth + 14f; // rail distance from one cart's centre to the next (the 14 px gap shows the chain)
+        public const float ChainSampleStep = 2f;            // the motor records its trail every this many px of rail driven (matches MaxStep)
+        public const float ChainCloseGapSpeed = 3f;         // px per tick a carriage glides forward to close the gap left by a picked-up carriage
+        public const float CouplingMaxRelativeSpeed = 24f;  // a free cart touching a motor / carriage hooks on if the two are closing slower than this. 24 = any touch couples (top speed is 12 each way); lower it to make hard hits collide instead
+
         public const float MotorSpeedCap = 6f;           // top speed a motor cart reaches under its own power (boosters and collisions can still exceed it)
         public const float MotorAccel = 0.08f;           // speed a burning motor cart gains per tick towards its facing (0.12 = about 80 ticks to MaxSpeed)
     }
@@ -454,6 +460,37 @@ namespace Factorraria.Common.Carts
         public float Rotation;
         public bool Active = true;
 
+        /// <summary>The chain this cart belongs to (as the motor or as a carriage). Null for a free cart.</summary>
+        public CartChain Chain;
+
+        /// <summary>True for a cart hooked behind a motor. Carriages are placed by their chain and run no physics of their own.</summary>
+        public bool IsCarriage
+        {
+            get { return Chain != null && Chain.Motor != this; }
+        }
+
+        /// <summary>The cart that really moves: the chain's motor for a chained cart, the cart itself otherwise.</summary>
+        public Cart Body
+        {
+            get { return Chain != null ? Chain.Motor : this; }
+        }
+
+        /// <summary>1 for a free cart, the number of linked carts for a chained one (used by collisions).</summary>
+        public int CollisionMass
+        {
+            get { return Chain != null ? Chain.Count : 1; }
+        }
+
+        /// <summary>Extra distance behind its slot a carriage is lagging, in px. Grows when a carriage in front is removed and shrinks to 0.</summary>
+        public float ChainSlack;
+
+        /// <summary>Highest trail sample whose bump this carriage has already replayed.</summary>
+        public int ReplayScanIndex;
+
+        // Filled by Load, consumed once by CartChain.RebuildFromSave.
+        public int LoadChainId;
+        public int LoadChainSlot;
+
         /// <summary>+1 = facing right, -1 = facing left. Follows the sign of Speed and is kept while stopped.</summary>
         public int Facing = 1;
 
@@ -525,11 +562,21 @@ namespace Factorraria.Common.Carts
                 return false;
             }
 
+            if (a.Chain != null && a.Chain == b.Chain)
+            {
+                return false; // linked carts never collide with each other
+            }
+
             Cart left = a.Position.X <= b.Position.X ? a : b;
             Cart right = left == a ? b : a;
 
-            float vLeft = left.AlongSpeed;
-            float vRight = right.AlongSpeed;
+            // A chain collides as ONE body: its mass is the number of linked carts and the speed change goes to its motor
+            // (the carriages just follow the motor along the trail).
+            Cart bodyLeft = left.Body;
+            Cart bodyRight = right.Body;
+
+            float vLeft = bodyLeft.AlongSpeed;
+            float vRight = bodyRight.AlongSpeed;
 
             if (vLeft - vRight < CartPhysics.CollisionMinSpeed)
             {
@@ -537,8 +584,12 @@ namespace Factorraria.Common.Carts
             }
 
             float e = CartPhysics.CollisionRestitution;
-            left.AlongSpeed = ((1f + e) * vRight + (1f - e) * vLeft) * 0.5f;
-            right.AlongSpeed = ((1f + e) * vLeft + (1f - e) * vRight) * 0.5f;
+            float massLeft = left.CollisionMass;
+            float massRight = right.CollisionMass;
+            float total = massLeft + massRight;
+
+            bodyLeft.AlongSpeed = ((massLeft - e * massRight) * vLeft + (1f + e) * massRight * vRight) / total;
+            bodyRight.AlongSpeed = ((massRight - e * massLeft) * vRight + (1f + e) * massLeft * vLeft) / total;
 
             if (Collided != null)
             {
@@ -564,9 +615,9 @@ namespace Factorraria.Common.Carts
 
         public void Update()
         {
-            if (!Active)
+            if (!Active || IsCarriage)
             {
-                return;
+                return; // carriages are placed by their chain (CartChain.UpdateCarriages)
             }
 
             if (bumpCooldown > 0)
@@ -590,6 +641,28 @@ namespace Factorraria.Common.Carts
             {
                 Active = false;
             }
+        }
+
+        /// <summary>Called by the chain after it placed this carriage: counts the bump cooldown down and runs the wheel animation.</summary>
+        public void TickCarriage()
+        {
+            if (!Active)
+            {
+                return;
+            }
+
+            if (bumpCooldown > 0)
+            {
+                bumpCooldown--;
+            }
+
+            UpdateAnimation();
+        }
+
+        /// <summary>The motor bounced off a bumper earlier and this carriage has now reached that spot on the trail: fire Bumped for it.</summary>
+        public void ReplayBump()
+        {
+            RaiseBumped();
         }
 
         /// <summary>
@@ -656,6 +729,12 @@ namespace Factorraria.Common.Carts
         /// <summary>Gives the cart a push along X. Works on and off the track.</summary>
         public void Shove(float deltaSpeed)
         {
+            if (IsCarriage)
+            {
+                Chain.Motor.Shove(deltaSpeed); // a carriage just follows: pushing it pushes the whole chain
+                return;
+            }
+
             if (OnTrack)
             {
                 Speed = MathHelper.Clamp(Speed + deltaSpeed, -CartPhysics.MaxSpeed, CartPhysics.MaxSpeed);
@@ -725,6 +804,11 @@ namespace Factorraria.Common.Carts
                 Rotation = (float)Math.Atan2(yRight - yLeft, 2f * half);
                 slope = (yRight - yLeft) / (2f * half);
 
+                if (Chain != null)
+                {
+                    Chain.Record(Position, Rotation); // carriages follow this trail
+                }
+
                 boost = (leftSurface && left.BoostDirection != 0) ? left.BoostDirection : (rightSurface ? right.BoostDirection : 0);
             }
 
@@ -761,6 +845,37 @@ namespace Factorraria.Common.Carts
             {
                 Facing = -1;
             }
+        }
+
+        /// <summary>
+        /// The pose a cart standing at x would have on the rail near referenceY (surface height under its feet and tilt), using the same
+        /// two wheel probes as UpdateOnTrack. Used to lay out the trail behind a motor when a chain is created. False if there is no rail.
+        /// </summary>
+        public static bool TryRailPose(float x, float referenceY, float slope, out float surfaceY, out float rotation)
+        {
+            surfaceY = referenceY;
+            rotation = 0f;
+
+            float half = CartPhysics.WheelHalfBase * 0.6f;
+            TrackSample left;
+            TrackSample right;
+            bool leftOk = TrySampleSmooth(x - half, referenceY - half * slope, out left);
+            bool rightOk = TrySampleSmooth(x + half, referenceY + half * slope, out right);
+
+            bool leftSurface = leftOk && left.HasSurface;
+            bool rightSurface = rightOk && right.HasSurface;
+
+            if (!leftSurface && !rightSurface)
+            {
+                return false;
+            }
+
+            float yLeft = leftSurface ? left.SurfaceY : right.SurfaceY;
+            float yRight = rightSurface ? right.SurfaceY : left.SurfaceY;
+
+            surfaceY = (yLeft + yRight) * 0.5f;
+            rotation = (float)Math.Atan2(yRight - yLeft, 2f * half);
+            return true;
         }
 
         private static readonly float[] SmoothOffsets = { -0.75f, -0.25f, 0.25f, 0.75f };
@@ -843,6 +958,11 @@ namespace Factorraria.Common.Carts
             }
 
             bumpCooldown = CartPhysics.BumpCooldown;
+
+            if (Chain != null && Chain.Motor == this)
+            {
+                Chain.MarkBump(); // stored in the trail: each carriage replays it when it reaches the bumper
+            }
 
             if (Bumped != null)
             {
@@ -959,6 +1079,12 @@ namespace Factorraria.Common.Carts
             tag["vy"] = Velocity.Y;
             tag["onTrack"] = OnTrack;
 
+            if (Chain != null)
+            {
+                tag["chainId"] = Chain.SaveId;
+                tag["chainSlot"] = Chain.Motor == this ? 0 : Chain.Carriages.IndexOf(this) + 1;
+            }
+
             if (ChestItems != null)
             {
                 List<TagCompound> items = new List<TagCompound>();
@@ -1032,6 +1158,8 @@ namespace Factorraria.Common.Carts
             cart.Speed = tag.GetFloat("speed");
             cart.Velocity = new Vector2(tag.GetFloat("vx"), tag.GetFloat("vy"));
             cart.OnTrack = tag.GetBool("onTrack");
+            cart.LoadChainId = tag.GetInt("chainId");   // 0 = not in a chain (also what saves from before chains read as)
+            cart.LoadChainSlot = tag.GetInt("chainSlot");
 
             if (cart.ChestItems != null && tag.ContainsKey("chest"))
             {
