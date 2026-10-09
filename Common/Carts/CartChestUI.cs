@@ -163,9 +163,10 @@ namespace Factorraria.Common.Carts
         /// <summary>Motor cart: the Gel Burner's flame gauge with one fuel slot underneath. The slot only takes burnable fuel, at most Cart.FuelSlotCap.</summary>
         private void BuildMotor()
         {
+            Vector2 position = new Vector2((MotorPanelWidth - SlotSize) / 2f, FireSize + Gap);
             AddEntry(
                 new FireUIElement(() => Cart.FuelBurnFraction),
-                Vector2.Zero,
+                position + new Vector2(-5,-54),
                 new Vector2(FireSize, FireSize));
 
             UIItemSlotWrapper slot = new UIItemSlotWrapper(
@@ -175,7 +176,7 @@ namespace Factorraria.Common.Carts
                 null,
                 Cart.AcceptsFuel);
 
-            AddEntry(slot, new Vector2((MotorPanelWidth - SlotSize) / 2f, FireSize + Gap), new Vector2(SlotSize, SlotSize));
+            AddEntry(slot, position, new Vector2(SlotSize, SlotSize));
         }
 
         /// <summary>Keeps the fuel slot at Cart.FuelSlotCap: anything over goes back onto the cursor (or is dropped to the player if the cursor is busy).</summary>

@@ -85,34 +85,42 @@ namespace Factorraria.Common.Carts
             {
                 return;
             }
+            
+            Vector2 spawn = cart.Position + CartGeometry.Up(cart) * SmokeLift * 1.2f + CartGeometry.Right(cart) * (cart.Facing * SmokeForward * -1f);
 
-            Vector2 spawn = cart.Position + CartGeometry.Up(cart) * SmokeLift + CartGeometry.Right(cart) * (cart.Facing * SmokeForward * -1f);
-            Vector2 velocity = new Vector2(Main.WindForVisuals * 1.5f + Main.rand.NextFloat(-0.2f, 0.2f), -Main.rand.NextFloat(0.6f, 1.2f));
-
-            // Primary smoke particle
-            Dust smoke1 = Dust.NewDustPerfect(
-                spawn,
-                DustID.Smoke,
-                velocity,
-                Alpha: Main.rand.Next(0, 50),
-                newColor: default,
-                Scale: Main.rand.NextFloat(0.6f, 0.9f)
-            );
-            smoke1.noGravity = true;
-
-            // Optional larger, puffier secondary smoke particle
-            if (Main.rand.NextBool(2))
+            for (int i = 0; i < 3; i++)
             {
-                Dust smoke2 = Dust.NewDustPerfect(
+                Vector2 velocity = new Vector2(Main.WindForVisuals * 1.5f + Main.rand.NextFloat(-0.2f, 0.2f), -Main.rand.NextFloat(0.6f, 1.2f));
+                velocity += new Vector2(Main.rand.NextFloat(-1f, 1f),0f);
+                // Primary smoke particle
+                Dust smoke1 = Dust.NewDustPerfect(
                     spawn,
                     DustID.Smoke,
                     velocity,
-                    Alpha: Main.rand.Next(150, 200),
+                    Alpha: Main.rand.Next(0, 50),
                     newColor: default,
-                    Scale: Main.rand.NextFloat(1.2f, 1.5f)
+                    Scale: Main.rand.NextFloat(1f, 2f)
                 );
-                smoke2.noGravity = true;
+                smoke1.noGravity = true;
+                smoke1.velocity.Y -= 1f;
+
+                // Optional larger, puffier secondary smoke particle
+                if (Main.rand.NextBool(2))
+                {
+                    Dust smoke2 = Dust.NewDustPerfect(
+                        spawn,
+                        DustID.Smoke,
+                        velocity,
+                        Alpha: Main.rand.Next(150, 200),
+                        newColor: default,
+                        Scale: Main.rand.NextFloat(2f, 3f)
+                    );
+                    smoke2.noGravity = true;
+
+                    smoke1.velocity.Y -= 1f;
+                }                
             }
+
         }
 
         /// <summary>Motor cart recipe: Steampunk Boiler + Minecart at an Anvil gives the vanilla Steampunk Minecart.</summary>
