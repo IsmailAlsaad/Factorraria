@@ -32,6 +32,81 @@ namespace Factorraria.Common.Systems
 
         public static Dictionary<Point16,CustomWireType> WireGrid = new Dictionary<Point16,CustomWireType>();
 
+        // Sprite frame (0-15, the 4 neighbour bits) of every wire tile, per wire type. Kept in step with WireGrid by
+        // AddWire / RemoveWire / LoadWorldData, so drawing never has to look at neighbours.
+        private static readonly Dictionary<Point16, (byte Copper, byte Tin)> frameCache = new Dictionary<Point16, (byte Copper, byte Tin)>();
+
+        private static void RefreshFrame(Point16 position)
+        {
+            if (!WireGrid.TryGetValue(position, out CustomWireType wireType))
+            {
+                frameCache.Remove(position);
+                return;
+            }
+
+            byte copper = wireType.HasFlag(CustomWireType.Copper) ? (byte)GetFrameIndexFromNeighbors(position.X, position.Y, CustomWireType.Copper) : (byte)0;
+            byte tin = wireType.HasFlag(CustomWireType.Tin) ? (byte)GetFrameIndexFromNeighbors(position.X, position.Y, CustomWireType.Tin) : (byte)0;
+            frameCache[position] = (copper, tin);
+        }
+
+        /// <summary>A wire changed at (x, y): its own frame and its 4 neighbours' frames may change.</summary>
+        private static void RefreshFramesAround(int x, int y)
+        {
+            RefreshFrame(new Point16(x, y));
+            RefreshFrame(new Point16(x, y - 1));
+            RefreshFrame(new Point16(x + 1, y));
+            RefreshFrame(new Point16(x, y + 1));
+            RefreshFrame(new Point16(x - 1, y));
+        }
+
+        private static void RebuildAllFrames()
+        {
+            frameCache.Clear();
+
+            foreach (Point16 position in WireGrid.Keys)
+            {
+                RefreshFrame(position);
+            }
+        }
+
+        /// <summary>The tile rectangle the camera can currently see (a little generous), zoom included.</summary>
+        private static void GetVisibleTileRect(out int minX, out int minY, out int maxX, out int maxY)
+        {
+            // The zoom matrix scales around the screen centre: zoomed in shows less than the screen, zoomed out more.
+            float zoom = Math.Max(0.1f, Math.Min(1f, Main.GameViewMatrix.ZoomMatrix.M11));
+            float halfWidth = Main.screenWidth / 2f / zoom;
+            float halfHeight = Main.screenHeight / 2f / zoom;
+            float centerX = Main.screenPosition.X + Main.screenWidth / 2f;
+            float centerY = Main.screenPosition.Y + Main.screenHeight / 2f;
+
+            minX = (int)((centerX - halfWidth) / 16f) - 2;
+            maxX = (int)((centerX + halfWidth) / 16f) + 2;
+            minY = (int)((centerY - halfHeight) / 16f) - 2;
+            maxY = (int)((centerY + halfHeight) / 16f) + 2;
+        }
+
+        private void DrawWireTile(Point16 position, CustomWireType wireType)
+        {
+            if (!frameCache.TryGetValue(position, out (byte Copper, byte Tin) frames))
+            {
+                RefreshFrame(position); // should not happen, but never draw a wrong frame
+                frameCache.TryGetValue(position, out frames);
+            }
+
+            Vector2 drawPosition = position.ToVector2() * 16f - Main.screenPosition;
+            Color lighting = Lighting.GetColor(position.X, position.Y);
+
+            if (wireType.HasFlag(CustomWireType.Copper))
+            {
+                Main.spriteBatch.Draw(CopperWireTileTexture.Value, drawPosition, new Rectangle(frames.Copper * 18, 0, 16, 16), lighting);
+            }
+
+            if (wireType.HasFlag(CustomWireType.Tin))
+            {
+                Main.spriteBatch.Draw(TinWireTileTexture.Value, drawPosition, new Rectangle(frames.Tin * 18, 0, 16, 16), lighting);
+            }
+        }
+
         public override void SaveWorldData(TagCompound tag)
         {
             List<Point16> positions = new List<Point16>();
@@ -50,6 +125,7 @@ namespace Factorraria.Common.Systems
         public override void LoadWorldData(TagCompound tag)
         {
             WireGrid.Clear();
+            frameCache.Clear();
 
             if(!tag.ContainsKey("WirePositions") || !tag.ContainsKey("WireTypes"))
             {
@@ -63,6 +139,8 @@ namespace Factorraria.Common.Systems
             {
                 WireGrid.Add(positions[i], (CustomWireType)types[i]);
             }
+
+            RebuildAllFrames();
         }
 
         public override void Load()
@@ -79,6 +157,14 @@ namespace Factorraria.Common.Systems
         public override void Unload()
         {
             WireGrid.Clear();
+            frameCache.Clear();
+        }
+
+        public override void OnWorldUnload()
+        {
+            // Wires of the world that was just left must not leak into the next one.
+            WireGrid.Clear();
+            frameCache.Clear();
         }
 
         public static bool HasWire(int x, int y, CustomWireType wireType)
@@ -101,6 +187,7 @@ namespace Factorraria.Common.Systems
             }
 
             WireGrid[position] |= wireType;
+            RefreshFramesAround(x, y);
 
             PowerGridSystem.gridNeedsRebuilding = true;
         }
@@ -121,6 +208,7 @@ namespace Factorraria.Common.Systems
                     WireGrid[position] = existingWire;
                 }
 
+                RefreshFramesAround(x, y);
                 PowerGridSystem.gridNeedsRebuilding = true;
 
                 return true;
@@ -151,33 +239,38 @@ namespace Factorraria.Common.Systems
                 Main.GameViewMatrix.ZoomMatrix
             );
 
-            foreach (var (pose, wireType) in WireGrid)
+            GetVisibleTileRect(out int minX, out int minY, out int maxX, out int maxY);
+            long visibleTiles = (long)(maxX - minX + 1) * (maxY - minY + 1);
+
+            if (WireGrid.Count <= visibleTiles)
             {
-                Vector2 drawPosition = pose.ToVector2() * 16f - Main.screenPosition;
-
-                Color lighting = Lighting.GetColor(pose.X, pose.Y);
-                if (wireType.HasFlag(CustomWireType.Copper))
+                // Fewer wires than screen tiles: walk the wires and skip the off-screen ones.
+                foreach (var pair in WireGrid)
                 {
-                    int frameIndex = GetFrameIndexFromNeighbors(pose.X, pose.Y, CustomWireType.Copper);
-                    Rectangle spriteSlice = new Rectangle(frameIndex * 18, 0, 16, 16);
+                    Point16 position = pair.Key;
 
-                    Main.spriteBatch.Draw(CopperWireTileTexture.Value, drawPosition, spriteSlice, lighting);
+                    if (position.X < minX || position.X > maxX || position.Y < minY || position.Y > maxY)
+                    {
+                        continue;
+                    }
 
-                    //
-                    //Main.NewText("Placed Copper Wire");
-                    //
+                    DrawWireTile(position, pair.Value);
                 }
-
-                if (wireType.HasFlag(CustomWireType.Tin))
+            }
+            else
+            {
+                // More wires than screen tiles: look up just the tiles on screen.
+                for (int x = minX; x <= maxX; x++)
                 {
-                    int frameIndex = GetFrameIndexFromNeighbors(pose.X, pose.Y, CustomWireType.Tin);
-                    Rectangle spriteSlice = new Rectangle(frameIndex * 18, 0, 16, 16);
+                    for (int y = minY; y <= maxY; y++)
+                    {
+                        Point16 position = new Point16(x, y);
 
-                    Main.spriteBatch.Draw(TinWireTileTexture.Value, drawPosition, spriteSlice, lighting);
-
-                    //
-                    //Main.NewText("Placed Tin Wire");
-                    //
+                        if (WireGrid.TryGetValue(position, out CustomWireType wireType))
+                        {
+                            DrawWireTile(position, wireType);
+                        }
+                    }
                 }
             }
 
@@ -208,7 +301,7 @@ namespace Factorraria.Common.Systems
             return false;
         }
 
-        int GetFrameIndexFromNeighbors(int x,int y,CustomWireType wireType)
+        static int GetFrameIndexFromNeighbors(int x,int y,CustomWireType wireType)
         {
             Point16 position = new Point16(x, y);
             int frameIndex = 0;

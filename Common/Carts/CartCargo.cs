@@ -20,6 +20,39 @@ namespace Factorraria.Common.Carts
         public const int WindowRows = CartChestUIState.Rows;
 
         private static readonly List<VirtualItem> nearby = new List<VirtualItem>();
+
+        // Dropped items a cart may take, filtered once per game tick and shared by every cart (chest and motor), so the cost is
+        // "one pass over the world's items" plus "carts x candidates" instead of "carts x every item in the world" each tick.
+        private static readonly List<Item> worldItemCandidates = new List<Item>();
+        private static uint worldItemCandidatesTick = uint.MaxValue;
+
+        /// <summary>
+        /// The dropped items carts may pick up this tick: not on their grab delay, not being pulled in by a player, not instanced,
+        /// and not hearts / mana stars (they act on whoever touches them). Built on the first call each tick. Callers must still skip
+        /// items another cart took earlier in the same tick (IsAir / !active).
+        /// </summary>
+        private static List<Item> GetWorldItemCandidates()
+        {
+            if (worldItemCandidatesTick == Main.GameUpdateCount)
+            {
+                return worldItemCandidates;
+            }
+
+            worldItemCandidatesTick = Main.GameUpdateCount;
+            worldItemCandidates.Clear();
+
+            foreach (var worldItem in Main.ActiveItems)
+            {
+                if (worldItem.IsAir || worldItem.noGrabDelay > 0 || worldItem.beingGrabbed || worldItem.instanced || ItemID.Sets.IsAPickup[worldItem.type])
+                {
+                    continue;
+                }
+
+                worldItemCandidates.Add(worldItem);
+            }
+
+            return worldItemCandidates;
+        }
         private static readonly Vector2[] corners = new Vector2[4];
 
         // Where the terrarium looks for liquid, as px offsets from the rail point (positive = down): the rail's own tile,
@@ -141,11 +174,15 @@ namespace Factorraria.Common.Carts
         {
             float pad = CartPhysics.PickupPadding;
 
-            foreach (var worldItem in Main.ActiveItems)
+            List<Item> candidates = GetWorldItemCandidates();
+
+            for (int c = 0; c < candidates.Count; c++)
             {
-                if (worldItem.IsAir || worldItem.noGrabDelay > 0 || worldItem.beingGrabbed || worldItem.instanced || ItemID.Sets.IsAPickup[worldItem.type])
+                Item worldItem = candidates[c];
+
+                if (worldItem.IsAir || !worldItem.active)
                 {
-                    continue;
+                    continue; // already taken by another cart this tick
                 }
 
                 if (!area.Contains(worldItem.Center.ToPoint()) || !CartGeometry.Contains(cart, worldItem.Center, pad))
@@ -312,9 +349,13 @@ namespace Factorraria.Common.Carts
 
             nearby.Clear();
 
-            foreach (var worldItem in Main.ActiveItems)
+            List<Item> candidates = GetWorldItemCandidates();
+
+            for (int c = 0; c < candidates.Count; c++)
             {
-                if (worldItem.IsAir || worldItem.noGrabDelay > 0 || worldItem.beingGrabbed || worldItem.instanced || !Cart.AcceptsFuel(worldItem.type))
+                Item worldItem = candidates[c];
+
+                if (worldItem.IsAir || !worldItem.active || !Cart.AcceptsFuel(worldItem.type))
                 {
                     continue;
                 }
