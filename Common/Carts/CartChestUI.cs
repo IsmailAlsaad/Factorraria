@@ -40,8 +40,8 @@ namespace Factorraria.Common.Carts
 
         // Motor cart: a flame gauge above the single fuel slot.
         private const float FireSize = 54f;
-        private const float MotorPanelWidth = SlotSize + Pad * 2f;
-        private const float MotorPanelHeight = Pad + FireSize + Gap + SlotSize + Pad;
+        private const float MotorPanelWidth = SlotSize * 2f;
+        private const float MotorPanelHeight = FireSize + Gap + SlotSize;
 
         private const float ButtonTextScale = 0.8f;
         private const float ButtonPadding = 12f; // UIPanel's default inner padding; scaled with the zoom so buttons keep their proportions
@@ -80,7 +80,7 @@ namespace Factorraria.Common.Carts
         public float PanelH => basePanelH * Zoom;
 
         /// <summary>Gap between the top of the cart and the bottom of the UI, in UI pixels (follows the zoom).</summary>
-        public float GapAboveCart => (terrarium ? TerrariumGapAboveCart : ChestGapAboveCart) * Zoom;
+        public float GapAboveCart => ((terrarium || motor) ? TerrariumGapAboveCart : ChestGapAboveCart) * Zoom;
 
         public CartChestUIState(Cart cart)
         {
@@ -96,7 +96,7 @@ namespace Factorraria.Common.Carts
         {
             entries.Clear();
 
-            if (terrarium)
+            if (terrarium || motor)
             {
                 Panel = new UIElement();
             }
@@ -165,7 +165,7 @@ namespace Factorraria.Common.Carts
         {
             AddEntry(
                 new FireUIElement(() => Cart.FuelBurnFraction),
-                new Vector2((MotorPanelWidth - FireSize) / 2f, Pad),
+                Vector2.Zero,
                 new Vector2(FireSize, FireSize));
 
             UIItemSlotWrapper slot = new UIItemSlotWrapper(
@@ -175,7 +175,7 @@ namespace Factorraria.Common.Carts
                 null,
                 Cart.AcceptsFuel);
 
-            AddEntry(slot, new Vector2(Pad, Pad + FireSize + Gap), new Vector2(SlotSize, SlotSize));
+            AddEntry(slot, new Vector2((MotorPanelWidth - SlotSize) / 2f, FireSize + Gap), new Vector2(SlotSize, SlotSize));
         }
 
         /// <summary>Keeps the fuel slot at Cart.FuelSlotCap: anything over goes back onto the cursor (or is dropped to the player if the cursor is busy).</summary>

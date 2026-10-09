@@ -50,6 +50,7 @@ namespace Factorraria.Common.Carts
         public const int SpillGrabCooldown = 120;        // ticks a spilled item cannot be grabbed by a cart again
         public const int TerrariumDrainPerTick = 16;      // world liquid units pulled into the tank per tick (a full tile is 255)
 
+        public const float MotorSpeedCap = 6f;           // top speed a motor cart reaches under its own power (boosters and collisions can still exceed it)
         public const float MotorAccel = 0.08f;           // speed a burning motor cart gains per tick towards its facing (0.12 = about 80 ticks to MaxSpeed)
     }
 
@@ -731,9 +732,14 @@ namespace Factorraria.Common.Carts
             {
                 Speed += boost * CartPhysics.BoostAccel;
             }
-            else if (driving)
+            else if (driving && Facing * Speed < CartPhysics.MotorSpeedCap)
             {
-                Speed += Facing * CartPhysics.MotorAccel; // fuel: accelerate towards MaxSpeed (clamped below). No fuel: coast on drag.
+                Speed += Facing * CartPhysics.MotorAccel;
+
+                if (Facing * Speed > CartPhysics.MotorSpeedCap)
+                {
+                    Speed = Facing * CartPhysics.MotorSpeedCap; // do not overshoot the cap
+                }
             }
             else if (Speed != 0f)
             {

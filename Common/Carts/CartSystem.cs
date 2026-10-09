@@ -88,25 +88,30 @@ namespace Factorraria.Common.Carts
 
             Vector2 spawn = cart.Position + CartGeometry.Up(cart) * SmokeLift + CartGeometry.Right(cart) * (cart.Facing * SmokeForward * -1f);
             Vector2 velocity = new Vector2(Main.WindForVisuals * 1.5f + Main.rand.NextFloat(-0.2f, 0.2f), -Main.rand.NextFloat(0.6f, 1.2f));
-            int type = GoreID.ChimneySmoke1 + Main.rand.Next(3);
 
-            int index1 = Gore.NewGore(new EntitySource_Misc("FactorrariaCartSmoke"), spawn, velocity, type, Main.rand.NextFloat(0.6f, 0.9f));
-            if (index1 >= 0 && index1 < Main.maxGore)
-            {
-                Gore gore = Main.gore[index1];
-                gore.timeLeft = 100;
-                gore.alpha = Main.rand.Next(0, 50);
-            }
+            // Primary smoke particle
+            Dust smoke1 = Dust.NewDustPerfect(
+                spawn,
+                DustID.Smoke,
+                velocity,
+                Alpha: Main.rand.Next(0, 50),
+                newColor: default,
+                Scale: Main.rand.NextFloat(0.6f, 0.9f)
+            );
+            smoke1.noGravity = true;
 
+            // Optional larger, puffier secondary smoke particle
             if (Main.rand.NextBool(2))
             {
-                int index2 = Gore.NewGore(new EntitySource_Misc("FactorrariaCartSmoke"), spawn, velocity, type, Main.rand.NextFloat(1.2f, 1.5f));
-                if (index2 >= 0 && index2 < Main.maxGore)
-                {
-                    Gore gore = Main.gore[index2];
-                    gore.timeLeft = 120;
-                    gore.alpha = Main.rand.Next(150, 200);
-                }
+                Dust smoke2 = Dust.NewDustPerfect(
+                    spawn,
+                    DustID.Smoke,
+                    velocity,
+                    Alpha: Main.rand.Next(150, 200),
+                    newColor: default,
+                    Scale: Main.rand.NextFloat(1.2f, 1.5f)
+                );
+                smoke2.noGravity = true;
             }
         }
 
