@@ -16,7 +16,7 @@ namespace Factorraria.Content.UI
         Func<bool> isVisible;
         Func<Item, bool> canAcceptItem;
         Func<bool> favoriteLook; // optional: draw the slot with the vanilla "favorited" look
-
+        private static readonly Item[] favoriteDrawArray = new Item[11];
 
         public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<bool> _isVisible = null, Func<Item, bool> _canAcceptItem = null, Func<bool> _favoriteLook = null)
         {
@@ -56,7 +56,18 @@ namespace Factorraria.Content.UI
                 item.favorited = true;
             }
 
-            ItemSlot.Draw(spriteBatch, ref item, useFavoriteLook ? ItemSlot.Context.InventoryItem : context, drawPosition);
+            if (useFavoriteLook)
+            {
+                // Slot index 10, not 0: vanilla draws the hotbar number (1-0) on inventory-context slots below 10.
+                favoriteDrawArray[10] = item;
+                ItemSlot.Draw(spriteBatch, favoriteDrawArray, ItemSlot.Context.InventoryItem, 10, drawPosition);
+                favoriteDrawArray[10] = null;
+            }
+            else
+            {
+                ItemSlot.Draw(spriteBatch, ref item, context, drawPosition);
+            }
+
             item.favorited = wasFavorited;
             Main.inventoryScale = oldScale;
 

@@ -267,7 +267,7 @@ namespace Factorraria.Common.Carts
         private void SetFilter()
         {
             Cart.SetFilterFromSlots();
-            SoundEngine.PlaySound(SoundID.Grab);
+            SoundEngine.PlaySound(SoundID.Unlock);
         }
 
         private Item ReadChestSlot(int index)
