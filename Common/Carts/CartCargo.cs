@@ -124,6 +124,35 @@ namespace Factorraria.Common.Carts
             }
 
             nearby.Clear();
+
+            PickUpWorldItems(cart, area);
+        }
+
+        /// <summary>
+        /// Moves ordinary dropped items (the ones lying in the world, not vItems) whose centre is inside, or within PickupPadding of,
+        /// the rotated hitbox into the chest. Skips items still on their grab delay (just thrown or dropped), items a player is
+        /// pulling in, instanced items, and hearts / mana stars (they act on whoever touches them, a chest would only swallow them).
+        /// </summary>
+        private static void PickUpWorldItems(Cart cart, Rectangle area)
+        {
+            float pad = CartPhysics.PickupPadding;
+
+            foreach (var worldItem in Main.ActiveItems)
+            {
+                if (worldItem.IsAir || worldItem.grabDelayTime > 0 || worldItem.beingGrabbed || worldItem.instanced || ItemID.Sets.IsAPickup[worldItem.type])
+                {
+                    continue;
+                }
+
+                if (!area.Contains(worldItem.Center.ToPoint()) || !CartGeometry.Contains(cart, worldItem.Center, pad))
+                {
+                    continue;
+                }
+
+                // inner is the Item inside the world entity: stack changes and TurnToAir apply to the real dropped item
+                // (once it is air the world item is gone).
+                cart.TryAddToChest(worldItem.inner);
+            }
         }
 
         /// <summary>
@@ -254,11 +283,17 @@ namespace Factorraria.Common.Carts
                 }
 
                 tank.Amount += take;
-                tile.LiquidAmount -= (byte)take;
 
-                // Not tile.ClearTile(): the cart stands in the track's own tile and ClearTile would delete the rail.
-                WorldGen.SquareTileFrame(x, y);
-                SendWater(x, y);
+                // A big body of liquid (100+ connected cells, see WorldLiquidSources) is bottomless: the tank fills, the world stays as it is.
+                if (!WorldLiquidSources.IsInfiniteSource(new Point(x, y)))
+                {
+                    tile.LiquidAmount -= (byte)take;
+
+                    // Not tile.ClearTile(): the cart stands in the track's own tile and ClearTile would delete the rail.
+                    WorldGen.SquareTileFrame(x, y);
+                    SendWater(x, y);
+                }
+
                 return; // one cell per tick
             }
         }
@@ -267,7 +302,7 @@ namespace Factorraria.Common.Carts
         /// Bump: pours the tank back out as world liquid into the 3x2 window, bottom row first, never into a solid tile or a
         /// tile holding a different liquid. What does not fit stays in the tank.
         /// </summary>
-        private static void PourTank(Cart cart)
+        public static void PourTank(Cart cart)
         {
             LiquidStack tank = cart.Tank;
             if (tank == null || tank.IsEmpty)

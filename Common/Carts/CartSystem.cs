@@ -1,10 +1,12 @@
-﻿using Factorraria.Content.Configs;
+﻿using Factorraria.Common.Liquids;
+using Factorraria.Content.Configs;
 using Factorraria.Content.Items.Carts;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using ReLogic.Content;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -38,6 +40,7 @@ namespace Factorraria.Common.Carts
         {
             Cart.Bumped -= OnCartBumped;
             Cart.Collided -= OnCartCollide;
+            terrariumLiquidAsset = null;
         }
 
         /// <summary>Placeholder bumper "boing". Swap the sound here once there is a real one.</summary>
@@ -401,6 +404,7 @@ namespace Factorraria.Common.Carts
         public static void PickUp(Player player, Cart cart)
         {
             CartChestUISystem.NotifyCartRemoved(cart);
+            CartCargo.PourTank(cart); // a terrarium cart empties back into the world instead of voiding its liquid
             cart.Active = false;
 
             List<Item> items = cart.CollectPickupItems();
@@ -547,7 +551,48 @@ namespace Factorraria.Common.Carts
             CartSkinTable.PlacedSprite body = CartSkinTable.GetPlacedSprite(cart.SkinType, cart.AnimFrame);
             Vector2 position = screen + CartGeometry.Up(cart) * (body.Source.Height * ModuleLiftFraction * 1.2f);
 
+            if (cart.Module == CartModule.Terrarium)
+            {
+                DrawTerrariumLiquid(cart, position, light, effects);
+            }
+
             Main.spriteBatch.Draw(icon, position, null, light, cart.Rotation, new Vector2(icon.Width / 2f, icon.Height), ModuleScale * 1.2f, effects, 0f);
+        }
+
+        // The liquid art for the terrarium: drawn behind the terrarium icon with the same anchor and scale, so make it the same size as the
+        // terrarium item sprite. Painted for water; LiquidTextureCache recolours it for whatever liquid is in the tank.
+        // Put the file at Common/Carts/TerrariumLiquid.png. While it does not exist nothing is drawn.
+        private const string TerrariumLiquidPath = "Factorraria/Common/Carts/TerrariumLiquid";
+        private static Asset<Texture2D> terrariumLiquidAsset;
+
+        /// <summary>Draws the (recoloured) liquid texture inside the terrarium. Only the bottom part matching the tank's fill is shown.</summary>
+        private static void DrawTerrariumLiquid(Cart cart, Vector2 position, Color light, SpriteEffects effects)
+        {
+            LiquidStack tank = cart.Tank;
+            if (tank == null || tank.IsEmpty || tank.Capacity <= 0f || tank.LiquidType >= LiquidTypeRegistry.definitions.Count)
+            {
+                return;
+            }
+
+            if (terrariumLiquidAsset == null)
+            {
+                if (!ModContent.HasAsset(TerrariumLiquidPath))
+                {
+                    return;
+                }
+
+                terrariumLiquidAsset = ModContent.Request<Texture2D>(TerrariumLiquidPath, AssetRequestMode.ImmediateLoad);
+            }
+
+            LiquidTypeDefinition liquid = LiquidTypeRegistry.Get(tank.LiquidType);
+            Texture2D texture = LiquidTextureCache.GetOrCreate(TerrariumLiquidPath, terrariumLiquidAsset.Value, liquid);
+
+            float fill = Math.Clamp(tank.Amount / tank.Capacity, 0f, 1f);
+            int shownRows = Math.Max(1, (int)Math.Ceiling(texture.Height * fill));
+            Rectangle source = new Rectangle(0, texture.Height - shownRows, texture.Width, shownRows);
+
+            // origin = bottom centre of the shown part, which is the bottom centre of the full texture too
+            Main.spriteBatch.Draw(texture, position, source, light, cart.Rotation, new Vector2(texture.Width / 2f, shownRows), ModuleScale * 1.2f, effects, 0f);
         }
 
         /// <summary>Draws a skin's mount frame (plus its optional extra layer) with the rail point at screen.</summary>
