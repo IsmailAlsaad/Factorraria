@@ -187,6 +187,13 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
+                // A filtered slot always keeps 1 of its item.
+                int spillCount = item.stack - cart.FilterKeepCount(slot, item);
+                if (spillCount <= 0)
+                {
+                    continue;
+                }
+
                 int x = left + slot % WindowColumns;
                 int y = top + slot / WindowColumns;
 
@@ -195,14 +202,19 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
-                VirtualItem spilled = VirtualItemSystem.SpawnVirtualItem(item.type, item.stack, x, y);
+                VirtualItem spilled = VirtualItemSystem.SpawnVirtualItem(item.type, spillCount, x, y);
                 if (spilled == null)
                 {
                     continue;
                 }
 
                 spilled.cartGrabCooldown = CartPhysics.SpillGrabCooldown;
-                item.TurnToAir();
+                item.stack -= spillCount;
+
+                if (item.stack <= 0)
+                {
+                    item.TurnToAir();
+                }
             }
         }
 
@@ -335,6 +347,8 @@ namespace Factorraria.Common.Carts
                 return;
             }
 
+            cart.NormalizeTank();
+
             float space = tank.Capacity - tank.Amount;
             if (space < 1f)
             {
@@ -407,7 +421,14 @@ namespace Factorraria.Common.Carts
         public static void PourTank(Cart cart)
         {
             LiquidStack tank = cart.Tank;
-            if (tank == null || tank.IsEmpty)
+            if (tank == null)
+            {
+                return;
+            }
+
+            cart.NormalizeTank();
+
+            if (tank.IsEmpty)
             {
                 return;
             }
@@ -468,11 +489,7 @@ namespace Factorraria.Common.Carts
                 }
             }
 
-            if (tank.Amount < 1f)
-            {
-                tank.Amount = 0f;
-                tank.LiquidType = -1;
-            }
+            cart.NormalizeTank(); // emptied: the tank forgets its liquid type so it can take a different one
 
             if (poured)
             {

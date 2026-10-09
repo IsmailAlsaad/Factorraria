@@ -32,7 +32,7 @@ namespace Factorraria.Common.Carts
         private const float GridHeight = Rows * SlotSize + (Rows - 1) * Gap;
 
         private const float ChestPanelWidth = GridWidth + Pad * 2f;
-        private const float ChestPanelHeight = GridHeight + Gap + ButtonHeight + Gap + ButtonHeight + Pad * 2f;
+        private const float ChestPanelHeight = GridHeight + Gap + ButtonHeight + Pad * 2f;
 
         // Terrarium cart: no panel and no text, just the tank element above the cart. The tank art is 16 x 84, drawn at 1.5x.
         private const float TankWidth = 24f;
@@ -71,6 +71,10 @@ namespace Factorraria.Common.Carts
         private readonly float basePanelH;
         private readonly List<Entry> entries = new List<Entry>();
         private float appliedZoom = -1f;
+
+        // What each chest slot held when the slot was last read for drawing, so a manual pickup can be told from a spill or a pickup by the cart.
+        private readonly int[] seenType = new int[Cart.ChestSlots];
+        private readonly int[] seenStack = new int[Cart.ChestSlots];
 
         /// <summary>UI pixels per world pixel (camera zoom divided by UI scale), as last given to SetZoomScale.</summary>
         public float Zoom { get; private set; } = 1f;
@@ -133,14 +137,11 @@ namespace Factorraria.Common.Carts
 
                 UIItemSlotWrapper slot = new UIItemSlotWrapper(
                     ItemSlot.Context.ChestItem,
-                    () => Cart.ChestItems != null ? Cart.ChestItems[index] : new Item(),
-                    item =>
-                    {
-                        if (Cart.ChestItems != null)
-                        {
-                            Cart.ChestItems[index] = item;
-                        }
-                    });
+                    () => ReadChestSlot(index),
+                    item => WriteChestSlot(index, item),
+                    null,
+                    null,
+                    () => Cart.IsSlotFiltered(index));
 
                 AddEntry(
                     slot,
@@ -150,8 +151,7 @@ namespace Factorraria.Common.Carts
 
             float buttonTop = Pad + GridHeight + Gap;
 
-            AddButton("Loot All", new Vector2(Pad, buttonTop), LootAll);
-            AddButton("Quick Stack", new Vector2(Pad, buttonTop + ButtonHeight + Gap), QuickStack);
+            AddButton("Set filter", new Vector2(Pad, buttonTop), SetFilter);
         }
 
         /// <summary>Terrarium cart: only the tank element machines use, nothing else.</summary>
@@ -263,59 +263,43 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        /// <summary>Moves every cart item into the player's inventory (what fits).</summary>
-        private void LootAll()
+        /// <summary>"Set filter": every slot holding an item is filtered for it, empty slots become unfiltered again.</summary>
+        private void SetFilter()
+        {
+            Cart.SetFilterFromSlots();
+            SoundEngine.PlaySound(SoundID.Grab);
+        }
+
+        private Item ReadChestSlot(int index)
+        {
+            if (Cart.ChestItems == null)
+            {
+                return new Item();
+            }
+
+            Item item = Cart.ChestItems[index];
+            seenType[index] = item == null || item.IsAir ? 0 : item.type;
+            seenStack[index] = item == null || item.IsAir ? 0 : item.stack;
+            return item;
+        }
+
+        /// <summary>
+        /// Stores what the slot holds after the player clicked it. If a filtered slot lost items (taken, swapped, split) that was a
+        /// manual pickup and the slot goes back to unfiltered. Adding items on top of the stack keeps the filter.
+        /// </summary>
+        private void WriteChestSlot(int index, Item item)
         {
             if (Cart.ChestItems == null)
             {
                 return;
             }
 
-            Player player = Main.LocalPlayer;
-            bool any = false;
-
-            for (int i = 0; i < Cart.ChestItems.Length; i++)
+            if (Cart.IsSlotFiltered(index) && (item == null || item.IsAir || item.type != seenType[index] || item.stack < seenStack[index]))
             {
-                Item item = Cart.ChestItems[i];
-                if (item == null || item.IsAir)
-                {
-                    continue;
-                }
-
-                any = true;
-                Cart.ChestItems[i] = player.GetItem(player.whoAmI, item, GetItemSettings.LootAllSettings) ?? new Item();
+                Cart.SlotFilter[index] = 0;
             }
 
-            if (any)
-            {
-                SoundEngine.PlaySound(SoundID.Grab);
-            }
-        }
-
-        /// <summary>Like vanilla quick stack: inventory items the cart already holds move into it. Hotbar and favorites stay.</summary>
-        private void QuickStack()
-        {
-            Player player = Main.LocalPlayer;
-            bool moved = false;
-
-            for (int i = 10; i < 50; i++)
-            {
-                Item item = player.inventory[i];
-                if (item == null || item.IsAir || item.favorited)
-                {
-                    continue;
-                }
-
-                if (Cart.TryAddToChest(item, true))
-                {
-                    moved = true;
-                }
-            }
-
-            if (moved)
-            {
-                SoundEngine.PlaySound(SoundID.Grab);
-            }
+            Cart.ChestItems[index] = item;
         }
     }
 

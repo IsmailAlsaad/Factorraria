@@ -143,12 +143,12 @@ namespace Factorraria.Common.Carts
             }
 
             int before = item.stack;
-            bool alreadyStored = false;
+            bool alreadyStored = HasFilterFor(item.type);
 
             for (int i = 0; i < ChestItems.Length; i++)
             {
                 Item slot = ChestItems[i];
-                if (slot == null || slot.IsAir || slot.type != item.type || slot.prefix != item.prefix || !ItemLoader.CanStack(slot, item))
+                if (slot == null || slot.IsAir || slot.type != item.type || slot.prefix != item.prefix || !ItemLoader.CanStack(slot, item) || !SlotAccepts(i, item))
                 {
                     continue;
                 }
@@ -176,7 +176,7 @@ namespace Factorraria.Common.Carts
             {
                 for (int i = 0; i < ChestItems.Length; i++)
                 {
-                    if (ChestItems[i] == null || ChestItems[i].IsAir)
+                    if ((ChestItems[i] == null || ChestItems[i].IsAir) && SlotAccepts(i, item))
                     {
                         ChestItems[i] = item.Clone();
                         item.TurnToAir();
@@ -190,6 +190,86 @@ namespace Factorraria.Common.Carts
 
         /// <summary>Chest module contents. Null unless Module == Chest.</summary>
         public Item[] ChestItems;
+
+        /// <summary>
+        /// Per-slot filter of a chest cart (same indices as ChestItems). 0 = unfiltered, otherwise the item type that slot is
+        /// reserved for. A filtered slot only takes its own item and a bump always leaves 1 of it behind. Null unless Module == Chest.
+        /// </summary>
+        public int[] SlotFilter;
+
+        public bool IsSlotFiltered(int slot)
+        {
+            return SlotFilter != null && slot >= 0 && slot < SlotFilter.Length && SlotFilter[slot] != 0;
+        }
+
+        /// <summary>True if any slot is filtered for this item type.</summary>
+        public bool HasFilterFor(int itemType)
+        {
+            if (SlotFilter == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < SlotFilter.Length; i++)
+            {
+                if (SlotFilter[i] == itemType && itemType != 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Can this slot take the item? A filtered slot takes only its own item type. An unfiltered slot takes anything
+        /// except item types that some other slot is filtered for.
+        /// </summary>
+        public bool SlotAccepts(int slot, Item item)
+        {
+            if (SlotFilter == null || slot < 0 || slot >= SlotFilter.Length)
+            {
+                return true;
+            }
+
+            if (SlotFilter[slot] != 0)
+            {
+                return SlotFilter[slot] == item.type;
+            }
+
+            return !HasFilterFor(item.type);
+        }
+
+        /// <summary>How many of this slot's items a bump must leave in the chest: 1 for a filtered slot holding its item, else 0.</summary>
+        public int FilterKeepCount(int slot, Item item)
+        {
+            return IsSlotFiltered(slot) && item != null && !item.IsAir && SlotFilter[slot] == item.type ? 1 : 0;
+        }
+
+        /// <summary>The "Set filter" button: every slot that holds an item is filtered for it, every empty slot becomes unfiltered.</summary>
+        public void SetFilterFromSlots()
+        {
+            if (ChestItems == null || SlotFilter == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < SlotFilter.Length; i++)
+            {
+                Item item = ChestItems[i];
+                SlotFilter[i] = item == null || item.IsAir ? 0 : item.type;
+            }
+        }
+
+        /// <summary>Empties the tank's liquid type once (almost) nothing is left, so the terrarium can take a different liquid next.</summary>
+        public void NormalizeTank()
+        {
+            if (Tank != null && Tank.Amount < 1f)
+            {
+                Tank.Amount = 0f;
+                Tank.LiquidType = -1;
+            }
+        }
 
         /// <summary>Items from older saves that do not fit the smaller chest. Handed back when the cart is picked up. Null if none.</summary>
         public List<Item> OverflowItems;
@@ -366,6 +446,7 @@ namespace Factorraria.Common.Carts
             Module = module;
             ModuleItem = itemType;
             ChestItems = null;
+            SlotFilter = null;
             Tank = null;
             Fuel = null;
             burner = null;
@@ -374,6 +455,7 @@ namespace Factorraria.Common.Carts
             {
                 case CartModule.Chest:
                     ChestItems = new Item[ChestSlots];
+                    SlotFilter = new int[ChestSlots];
                     for (int i = 0; i < ChestSlots; i++)
                     {
                         ChestItems[i] = new Item();
@@ -1094,6 +1176,21 @@ namespace Factorraria.Common.Carts
                 }
 
                 tag["chest"] = items;
+
+                // Which slots are filtered. The filter item is the item in the slot, so no item ids are saved.
+                int filterMask = 0;
+                for (int i = 0; i < ChestItems.Length; i++)
+                {
+                    if (IsSlotFiltered(i) && !ChestItems[i].IsAir)
+                    {
+                        filterMask |= 1 << i;
+                    }
+                }
+
+                if (filterMask != 0)
+                {
+                    tag["chestFilter"] = filterMask;
+                }
             }
 
             if (OverflowItems != null && OverflowItems.Count > 0)
@@ -1185,6 +1282,18 @@ namespace Factorraria.Common.Carts
                 }
             }
 
+            if (cart.ChestItems != null && cart.SlotFilter != null && tag.ContainsKey("chestFilter"))
+            {
+                int filterMask = tag.GetInt("chestFilter");
+                for (int i = 0; i < cart.ChestItems.Length; i++)
+                {
+                    if ((filterMask & (1 << i)) != 0 && !cart.ChestItems[i].IsAir)
+                    {
+                        cart.SlotFilter[i] = cart.ChestItems[i].type;
+                    }
+                }
+            }
+
             if (tag.ContainsKey("overflow"))
             {
                 IList<TagCompound> extra = tag.GetList<TagCompound>("overflow");
@@ -1207,6 +1316,7 @@ namespace Factorraria.Common.Carts
             {
                 cart.Tank.LiquidType = tag.GetInt("tankType");
                 cart.Tank.Amount = tag.GetFloat("tankAmount");
+                cart.NormalizeTank();
             }
 
             if (cart.Fuel != null && tag.ContainsKey("fuel"))
