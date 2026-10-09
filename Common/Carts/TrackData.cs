@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Reflection;
 using Terraria;
 using Terraria.ID;
@@ -124,6 +125,62 @@ namespace Factorraria.Common.Carts
             }
 
             return field.GetValue(null);
+        }
+
+        /// <summary>
+        /// True if the rail point (worldX, referenceY) is on a vanilla pressure plate track piece. tile is that piece's tile
+        /// coordinate. Same row search and snap distance as TrySample.
+        /// </summary>
+        public static bool TryGetPressurePlate(float worldX, float referenceY, out Point tile)
+        {
+            tile = new Point(-1, -1);
+
+            if (worldX < 0f || !EnsureLoaded())
+            {
+                return false;
+            }
+
+            int tileX = (int)(worldX / 16f);
+            int slice = ((int)worldX % 16) / SliceWidth;
+            int baseRow = (int)Math.Floor(referenceY / 16f);
+            float bestDistance = float.MaxValue;
+
+            for (int k = 0; k < 3; k++)
+            {
+                int row = baseRow + (k == 0 ? 0 : (k == 1 ? -1 : 1));
+
+                if (!WorldGen.InWorld(tileX, row, 1))
+                {
+                    continue;
+                }
+
+                Tile t = Framing.GetTileSafely(tileX, row);
+                if (!t.HasUnactuatedTile || t.TileType != TileID.MinecartTrack)
+                {
+                    continue;
+                }
+
+                int frame = t.TileFrameX;
+                if (frame < 0 || frame >= FrameCount || trackType[frame] != 1)
+                {
+                    continue;
+                }
+
+                int height = tileHeight[frame][slice];
+                if (height < 0)
+                {
+                    continue;
+                }
+
+                float distance = Math.Abs(row * 16 + height - referenceY);
+                if (distance <= MaxSnap && distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    tile = new Point(tileX, row);
+                }
+            }
+
+            return tile.X >= 0;
         }
 
         /// <summary>

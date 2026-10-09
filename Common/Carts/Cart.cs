@@ -589,6 +589,37 @@ namespace Factorraria.Common.Carts
 
         private int bumpCooldown;
 
+        // The pressure plate track tile this cart is standing on (-1 = none). A plate fires once when the cart rolls onto it.
+        private Point lastPlate = new Point(-1, -1);
+
+        /// <summary>Triggers vanilla pressure plate tracks (the wire kind) when this cart rolls onto one, like a vanilla minecart does.</summary>
+        private void CheckPressurePlate()
+        {
+            Point plate;
+            if (!TrackData.TryGetPressurePlate(Position.X, Position.Y, out plate))
+            {
+                lastPlate = new Point(-1, -1);
+                return;
+            }
+
+            if (plate == lastPlate)
+            {
+                return;
+            }
+
+            lastPlate = plate;
+
+            // Same as vanilla: a client asks the server to hit the switch, single player / server trips the wires directly.
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                NetMessage.SendData(MessageID.HitSwitch, -1, -1, null, plate.X, plate.Y);
+            }
+            else
+            {
+                Wiring.HitSwitch(plate.X, plate.Y);
+            }
+        }
+
         /// <summary>
         /// Fired once per cart-vs-cart collision, AFTER the elastic exchange has been applied.
         /// Arguments are (left cart, right cart) by X position. Static like Bumped; CartSystem.OnCartCollide is the default listener.
@@ -718,6 +749,11 @@ namespace Factorraria.Common.Carts
 
             UpdateAnimation();
 
+            if (OnTrack)
+            {
+                CheckPressurePlate();
+            }
+
             // Fell out of the world
             if (Position.X < 32f || Position.X > (Main.maxTilesX - 2) * 16f || Position.Y > (Main.maxTilesY - 3) * 16f)
             {
@@ -739,6 +775,7 @@ namespace Factorraria.Common.Carts
             }
 
             UpdateAnimation();
+            CheckPressurePlate();
         }
 
         /// <summary>The motor bounced off a bumper earlier and this carriage has now reached that spot on the trail: fire Bumped for it.</summary>
