@@ -24,7 +24,15 @@ namespace Factorraria.Content.Items.Carts
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
             tooltips.Add(new TooltipLine(Mod, "FactorrariaCartPlace", "Left click on a minecart track to place a cart"));
-            tooltips.Add(new TooltipLine(Mod, "FactorrariaCartPickup", "Right click to pick it up"));
+            if (item.type == Cart.SteampunkItemType)
+            {
+                tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotorNoModules", "Shift + Right click to pick it up"));
+                tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotor", "Burns fuel to drive itself"));
+            }
+            else
+            {
+                tooltips.Add(new TooltipLine(Mod, "FactorrariaCartPickup", "Right click to pick it up"));
+            }
         }
     }
 }

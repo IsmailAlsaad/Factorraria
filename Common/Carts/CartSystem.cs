@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Terraria;
 using ReLogic.Content;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -34,12 +35,14 @@ namespace Factorraria.Common.Carts
         {
             Cart.Bumped += OnCartBumped;
             Cart.Collided += OnCartCollide;
+            Cart.FrameChanged += OnCartFrameChanged;
         }
 
         public override void Unload()
         {
             Cart.Bumped -= OnCartBumped;
             Cart.Collided -= OnCartCollide;
+            Cart.FrameChanged -= OnCartFrameChanged;
             terrariumLiquidAsset = null;
         }
 
@@ -59,6 +62,68 @@ namespace Factorraria.Common.Carts
         {
             Vector2 midPoint = (left.Position + right.Position) * 0.5f;
             SoundEngine.PlaySound(SoundID.Item53, midPoint);
+        }
+
+        // Where the smoke leaves the motor cart, in px from the rail point: along the floor in the facing direction, and up.
+        private const float SmokeForward = 12f;
+        private const float SmokeLift = 30f;
+
+        /// <summary>
+        /// Customisable animation hook: runs whenever any cart's frame changes. Currently only gives a burning motor cart
+        /// train-style smoke. Put per-skin particles or sounds here (switch on cart.SkinType / cart.AnimFrame).
+        /// </summary>
+        private static void OnCartFrameChanged(Cart cart, int previousFrame, int currentFrame)
+        {
+            if (Main.dedServ || cart.Module != CartModule.Motor || !cart.IsBurning || !Main.rand.NextBool(3))
+            {
+                return;
+            }
+
+            const float onScreenPadding = 300f;
+            if (cart.Position.X < Main.screenPosition.X - onScreenPadding || cart.Position.X > Main.screenPosition.X + Main.screenWidth + onScreenPadding
+                || cart.Position.Y < Main.screenPosition.Y - onScreenPadding || cart.Position.Y > Main.screenPosition.Y + Main.screenHeight + onScreenPadding)
+            {
+                return;
+            }
+
+            Vector2 spawn = cart.Position + CartGeometry.Up(cart) * SmokeLift + CartGeometry.Right(cart) * (cart.Facing * SmokeForward * -1f);
+            Vector2 velocity = new Vector2(Main.WindForVisuals * 1.5f + Main.rand.NextFloat(-0.2f, 0.2f), -Main.rand.NextFloat(0.6f, 1.2f));
+            int type = GoreID.ChimneySmoke1 + Main.rand.Next(3);
+
+            int index1 = Gore.NewGore(new EntitySource_Misc("FactorrariaCartSmoke"), spawn, velocity, type, Main.rand.NextFloat(0.6f, 0.9f));
+            if (index1 >= 0 && index1 < Main.maxGore)
+            {
+                Gore gore = Main.gore[index1];
+                gore.timeLeft = 100;
+                gore.alpha = Main.rand.Next(0, 50);
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                int index2 = Gore.NewGore(new EntitySource_Misc("FactorrariaCartSmoke"), spawn, velocity, type, Main.rand.NextFloat(1.2f, 1.5f));
+                if (index2 >= 0 && index2 < Main.maxGore)
+                {
+                    Gore gore = Main.gore[index2];
+                    gore.timeLeft = 120;
+                    gore.alpha = Main.rand.Next(150, 200);
+                }
+            }
+        }
+
+        /// <summary>Motor cart recipe: Steampunk Boiler + Minecart at an Anvil gives the vanilla Steampunk Minecart.</summary>
+        public override void AddRecipes()
+        {
+            int motorCart = Cart.SteampunkItemType;
+            if (motorCart <= 0)
+            {
+                return; // the item lookup logged why
+            }
+
+            Recipe.Create(motorCart, 1)
+                .AddIngredient(ItemID.SteampunkBoiler, 1)
+                .AddIngredient(ItemID.Minecart, 1)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
 
         public override void OnWorldLoad()
@@ -215,6 +280,11 @@ namespace Factorraria.Common.Carts
         {
             Cart cart = new Cart();
             cart.Skin = CartSkins.KeyOf(skinItemType);
+            if (module == CartModule.Empty && Cart.IsMotorSkin(skinItemType))
+            {
+                module = CartModule.Motor; // the Steampunk Minecart is always a motor cart
+            }
+
             cart.SetModule(module);
             cart.Position = railPoint;
             cart.OnTrack = true;
@@ -304,7 +374,7 @@ namespace Factorraria.Common.Carts
 
                 Main.mouseRightRelease = false;
 
-                if ((target.Module == CartModule.Chest || target.Module == CartModule.Terrarium) && !Terraria.UI.ItemSlot.ShiftInUse)
+                if ((target.Module == CartModule.Chest || target.Module == CartModule.Terrarium || target.Module == CartModule.Motor) && !Terraria.UI.ItemSlot.ShiftInUse)
                 {
                     CartChestUISystem.Toggle(target);
                     return;
@@ -370,7 +440,7 @@ namespace Factorraria.Common.Carts
         /// <summary>Installs the held item as a module if it is one. Chest and Terrarium exist so far (Motor comes later).</summary>
         private static bool TryInstallModule(Item held, Cart cart)
         {
-            if (held == null || held.IsAir || cart.Module != CartModule.Empty)
+            if (held == null || held.IsAir || cart.Module != CartModule.Empty || Cart.IsMotorSkin(cart.SkinType))
             {
                 return false;
             }

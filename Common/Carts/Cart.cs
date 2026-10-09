@@ -1,4 +1,6 @@
 ﻿using Factorraria.Common.Liquids;
+using Factorraria.Common.Machines;
+using Factorraria.Content.Tiles.Machines.GelBurner;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -47,6 +49,8 @@ namespace Factorraria.Common.Carts
         public const float PickupPadding = 8f;           // chest carts also grab conveyor items this many px outside the hitbox
         public const int SpillGrabCooldown = 120;        // ticks a spilled item cannot be grabbed by a cart again
         public const int TerrariumDrainPerTick = 16;      // world liquid units pulled into the tank per tick (a full tile is 255)
+
+        public const float MotorAccel = 0.08f;           // speed a burning motor cart gains per tick towards its facing (0.12 = about 80 ticks to MaxSpeed)
     }
 
     /// <summary>
@@ -186,8 +190,168 @@ namespace Factorraria.Common.Carts
         /// <summary>Terrarium module tank. Null unless Module == Terrarium. LiquidType is a LiquidTypeRegistry id.</summary>
         public LiquidStack Tank;
 
-        /// <summary>Motor module fuel slot. Null unless Module == Motor.</summary>
-        public Item Fuel;
+        /// <summary>Most items the motor cart's fuel slot holds.</summary>
+        public const int FuelSlotCap = 100;
+
+        // The slot lives in a one-item array so FuelModule (the Gel Burner's burn logic) can take fuel straight out of it.
+        private Item[] fuelSlots;
+        private FuelModule burner;
+
+        /// <summary>Motor module fuel slot (at most FuelSlotCap items). Null unless Module == Motor.</summary>
+        public Item Fuel
+        {
+            get { return fuelSlots != null ? fuelSlots[0] : null; }
+            set { fuelSlots = value == null ? null : new Item[] { value }; }
+        }
+
+        /// <summary>True while a fuel item is being burned (the flame gauge is not empty).</summary>
+        public bool IsBurning
+        {
+            get { return burner != null && burner.Remaining > 0; }
+        }
+
+        /// <summary>0..1 of the current fuel item left, -1 when nothing is burning. Same meaning as the Gel Burner's flame gauge.</summary>
+        public float FuelBurnFraction
+        {
+            get { return burner != null ? burner.GetBurnFraction(0f) : -1f; }
+        }
+
+        /// <summary>Only what the Gel Burner can burn (GelBurnerRecipeRegistry.Fuels) is fuel.</summary>
+        public static bool AcceptsFuel(int itemType)
+        {
+            return GelBurnerRecipeRegistry.Fuels.Contains(itemType);
+        }
+
+        public static bool AcceptsFuel(Item item)
+        {
+            return item != null && !item.IsAir && AcceptsFuel(item.type);
+        }
+
+        /// <summary>
+        /// Moves as much of item as fits into the fuel slot (same item type as what is there, never past FuelSlotCap).
+        /// Reduces item.stack by what moved. Shared by shift-click and fuel pickup. Returns true if anything moved.
+        /// </summary>
+        public bool TryAddFuel(Item item)
+        {
+            if (fuelSlots == null || item == null || item.IsAir || !AcceptsFuel(item.type))
+            {
+                return false;
+            }
+
+            Item slot = fuelSlots[0];
+
+            if (slot == null || slot.IsAir)
+            {
+                int first = Math.Min(item.stack, FuelSlotCap);
+                Item placed = item.Clone();
+                placed.stack = first;
+                fuelSlots[0] = placed;
+
+                item.stack -= first;
+                if (item.stack <= 0)
+                {
+                    item.TurnToAir();
+                }
+
+                return true;
+            }
+
+            if (slot.type != item.type || slot.prefix != item.prefix || !ItemLoader.CanStack(slot, item))
+            {
+                return false;
+            }
+
+            int room = FuelSlotCap - slot.stack;
+            if (room <= 0)
+            {
+                return false;
+            }
+
+            int move = Math.Min(room, item.stack);
+            slot.stack += move;
+            item.stack -= move;
+
+            if (item.stack <= 0)
+            {
+                item.TurnToAir();
+            }
+
+            return true;
+        }
+
+        /// <summary>Burns one tick of fuel (taking a new item from the slot when the last one ran out). True if there was fuel to burn.</summary>
+        private bool BurnFuelForDrive()
+        {
+            if (burner == null || fuelSlots == null || !burner.TryEnsureFuel(fuelSlots))
+            {
+                return false;
+            }
+
+            burner.Consume();
+            return true;
+        }
+
+        /// <summary>Puts back a half-burnt fuel item after loading a save.</summary>
+        public void RestoreBurn(int remaining, int capacity)
+        {
+            if (burner != null)
+            {
+                burner.Restore(remaining, capacity);
+            }
+        }
+
+        private static int steampunkItemType = -1;
+
+        /// <summary>
+        /// The vanilla Steampunk Minecart item (wiki id 4472), found by name because ids shift. Tries the likely internal names
+        /// first, then any vanilla item with "Steampunk" in its name that is a minecart. 0 if the game has none.
+        /// </summary>
+        public static int SteampunkItemType
+        {
+            get
+            {
+                if (steampunkItemType >= 0)
+                {
+                    return steampunkItemType;
+                }
+
+                if (ContentSamples.ItemsByType == null || ContentSamples.ItemsByType.Count == 0)
+                {
+                    return 0; // content not ready yet: do not cache
+                }
+
+                int found = 0;
+                string[] names = { "SteampunkMinecart", "MinecartSteampunk" };
+
+                for (int i = 0; i < names.Length && found <= 0; i++)
+                {
+                    int id;
+                    if (ItemID.Search.TryGetId(names[i], out id) && CartSkinTable.IsSkinItem(ContentSamples.ItemsByType[id]))
+                    {
+                        found = id;
+                    }
+                }
+
+                for (int type = 1; type < ItemID.Count && found <= 0; type++)
+                {
+                    string name = ItemID.Search.GetName(type);
+                    if (name != null && name.IndexOf("Steampunk", StringComparison.OrdinalIgnoreCase) >= 0 && CartSkinTable.IsSkinItem(ContentSamples.ItemsByType[type]))
+                    {
+                        found = type;
+                    }
+                }
+
+                steampunkItemType = found;
+                ModContent.GetInstance<CartSystem>().Mod.Logger.Info("Factorraria motor cart skin: item type " + found + (found > 0 ? " (" + ItemID.Search.GetName(found) + ")" : " NOT FOUND, there will be no motor cart"));
+                return found;
+            }
+        }
+
+        /// <summary>True for the skin that is always a motor cart (the vanilla Steampunk Minecart).</summary>
+        public static bool IsMotorSkin(int skinItemType)
+        {
+            return skinItemType > 0 && skinItemType == SteampunkItemType;
+        }
 
         /// <summary>Installs a module and creates its (empty) payload. Throws away any previous payload.</summary>
         public void SetModule(CartModule module, int itemType = -1)
@@ -197,6 +361,7 @@ namespace Factorraria.Common.Carts
             ChestItems = null;
             Tank = null;
             Fuel = null;
+            burner = null;
 
             switch (module)
             {
@@ -214,6 +379,7 @@ namespace Factorraria.Common.Carts
 
                 case CartModule.Motor:
                     Fuel = new Item();
+                    burner = new FuelModule(GelBurnerRecipeRegistry.Fuels, 0, 1);
                     break;
             }
         }
@@ -309,6 +475,12 @@ namespace Factorraria.Common.Carts
         /// </summary>
         public static event Action<Cart, Cart> Collided;
 
+        /// <summary>
+        /// Fired whenever the cart's animation frame changes, with (cart, previous frame, new frame). Static like Bumped.
+        /// Hang smoke, sparks or sounds for any skin on this; CartSystem.OnCartFrameChanged is the default listener (motor cart smoke).
+        /// </summary>
+        public static event Action<Cart, int, int> FrameChanged;
+
         /// <summary>Signed X speed whether on the track (Speed) or derailed (Velocity.X). Setting it also updates Facing.</summary>
         public float AlongSpeed
         {
@@ -322,6 +494,11 @@ namespace Factorraria.Common.Carts
                 else
                 {
                     Velocity.X = value;
+                }
+
+                if (Module == CartModule.Motor)
+                {
+                    return; // a motor cart's facing is its drive direction: only a bump (or placement) changes it
                 }
 
                 if (value > 0.01f)
@@ -421,6 +598,18 @@ namespace Factorraria.Common.Carts
         /// </summary>
         private void UpdateAnimation()
         {
+            int previousFrame = AnimFrame;
+
+            StepAnimation();
+
+            if (AnimFrame != previousFrame && FrameChanged != null)
+            {
+                FrameChanged(this, previousFrame, AnimFrame);
+            }
+        }
+
+        private void StepAnimation()
+        {
             CartSkinTable.SkinAnimation anim = CartSkinTable.GetAnimation(SkinType);
 
             if (!OnTrack)
@@ -480,6 +669,9 @@ namespace Factorraria.Common.Carts
 
         private void UpdateOnTrack()
         {
+            // A motor cart burns one unit of fuel per tick while it has some (same rule as the Gel Burner).
+            bool driving = Module == CartModule.Motor && BurnFuelForDrive();
+
             float half = CartPhysics.WheelHalfBase * 0.6f;
             float slope = (float)Math.Tan(Rotation);
             int boost = 0;
@@ -539,12 +731,21 @@ namespace Factorraria.Common.Carts
             {
                 Speed += boost * CartPhysics.BoostAccel;
             }
+            else if (driving)
+            {
+                Speed += Facing * CartPhysics.MotorAccel; // fuel: accelerate towards MaxSpeed (clamped below). No fuel: coast on drag.
+            }
             else if (Speed != 0f)
             {
                 Speed = Math.Abs(Speed) <= CartPhysics.Drag ? 0f : Speed - Math.Sign(Speed) * CartPhysics.Drag;
             }
 
             Speed = MathHelper.Clamp(Speed, -CartPhysics.MaxSpeed, CartPhysics.MaxSpeed);
+
+            if (Module == CartModule.Motor)
+            {
+                return; // see AlongSpeed: the motor's facing is not derived from its speed
+            }
 
             if (Speed > 0.01f)
             {
@@ -595,11 +796,20 @@ namespace Factorraria.Common.Carts
             {
                 case TrackEnd.Stop:
                     Speed = 0f;
+                    if (Module == CartModule.Motor)
+                    {
+                        Facing = -Facing; // a motor cart must turn round at a dead end or it would sit there burning fuel
+                    }
+
                     return false;
 
                 case TrackEnd.Bounce:
                     Speed = -Speed;
-                    if (Speed != 0f)
+                    if (Module == CartModule.Motor)
+                    {
+                        Facing = -Facing; // bump: the motor flips its facing and drives back the other way
+                    }
+                    else if (Speed != 0f)
                     {
                         Facing = Speed > 0f ? 1 : -1;
                     }
@@ -776,6 +986,12 @@ namespace Factorraria.Common.Carts
                 tag["fuel"] = ItemIO.Save(Fuel);
             }
 
+            if (burner != null && burner.Remaining > 0)
+            {
+                tag["fuelRemaining"] = burner.Remaining;
+                tag["fuelCapacity"] = burner.Capacity;
+            }
+
             return tag;
         }
 
@@ -798,6 +1014,12 @@ namespace Factorraria.Common.Carts
                     cart.ModuleItem = moduleItem;
                 }
                 cart.Facing = tag.GetInt("facing") < 0 ? -1 : 1;
+            }
+
+            // Steampunk carts placed before the motor cart existed have no module: they become motor carts now.
+            if (cart.Module == CartModule.Empty && IsMotorSkin(cart.SkinType))
+            {
+                cart.SetModule(CartModule.Motor);
             }
 
             cart.Position = new Vector2(tag.GetFloat("x"), tag.GetFloat("y"));
@@ -856,6 +1078,11 @@ namespace Factorraria.Common.Carts
             if (cart.Fuel != null && tag.ContainsKey("fuel"))
             {
                 cart.Fuel = ItemIO.Load(tag.GetCompound("fuel"));
+            }
+
+            if (tag.ContainsKey("fuelRemaining"))
+            {
+                cart.RestoreBurn(tag.GetInt("fuelRemaining"), tag.GetInt("fuelCapacity"));
             }
 
             return cart;

@@ -12,17 +12,11 @@ namespace Factorraria.Content.Tiles.Machines.GelBurner
         public override int ValidTileType => TileID.SteampunkBoiler;
         public override float PowerSupply => 500f;
 
-        // 1 gel = 20 seconds of power (the burner uses 1 unit per tick)
-        public static readonly FuelTable GelFuels = CreateFuels();
+        // The fuel table lives in GelBurnerRecipeRegistry (shared with the Steampunk motor cart).
+        // The burner uses 1 unit per tick, so gel = 3 seconds, coal = 8 seconds.
+        public static FuelTable GelFuels => GelBurnerRecipeRegistry.Fuels;
         protected override FuelTable AcceptedFuels => GelFuels;
 
-        static FuelTable CreateFuels()
-        {
-            FuelTable table = new FuelTable().
-                Add(ItemID.Gel, 3 * 60);
-            table.StackLimitRule = _ => 10;   // conveyors may buffer up to 10 gel
-            return table;
-        }
         public override void Update()
         {
             base.Update();

@@ -14,14 +14,16 @@ namespace Factorraria.Content.UI
         Func<Item> getItem;
         Action<Item> setItem;
         Func<bool> isVisible;
+        Func<Item, bool> canAcceptItem;
 
 
-        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<bool> _isVisible = null)
+        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<bool> _isVisible = null, Func<Item, bool> _canAcceptItem = null)
         {
             context = _context;
             getItem = _getItem;
             setItem = _setItem;
             isVisible = _isVisible;
+            canAcceptItem = _canAcceptItem;
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
@@ -55,10 +57,10 @@ namespace Factorraria.Content.UI
             Main.LocalPlayer.mouseInterface = true;
 
             bool allowInteraction = true;
-            //if (!Main.mouseItem.IsAir && canAcceptItem != null)
-            //{
-            //    allowInteraction = canAcceptItem(Main.mouseItem);
-            //}
+            if (!Main.mouseItem.IsAir && canAcceptItem != null)
+            {
+                allowInteraction = canAcceptItem(Main.mouseItem);   // optional filter: a slot can refuse items placed by the cursor
+            }
 
             if (allowInteraction || (Main.mouseItem.IsAir && !item.IsAir))
             {

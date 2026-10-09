@@ -36,6 +36,10 @@ namespace Factorraria.Common.Carts
             {
                 DrainWorldLiquid(cart);
             }
+            else if (cart.Module == CartModule.Motor)
+            {
+                PickUpFuelItems(cart);
+            }
         }
 
         public static void OnBump(Cart cart)
@@ -218,6 +222,101 @@ namespace Factorraria.Common.Carts
             }
 
             return !VirtualItemSystem.IsTileOccupied(x, y);
+        }
+
+        #endregion
+
+        #region Motor: fuel pickup
+
+        /// <summary>The padded axis-aligned area around the cart's rotated hitbox that pickups scan.</summary>
+        private static Rectangle GetPickupArea(Cart cart)
+        {
+            CartGeometry.GetCorners(cart, corners);
+
+            float minX = corners[0].X;
+            float maxX = corners[0].X;
+            float minY = corners[0].Y;
+            float maxY = corners[0].Y;
+
+            for (int i = 1; i < 4; i++)
+            {
+                minX = Math.Min(minX, corners[i].X);
+                maxX = Math.Max(maxX, corners[i].X);
+                minY = Math.Min(minY, corners[i].Y);
+                maxY = Math.Max(maxY, corners[i].Y);
+            }
+
+            float pad = CartPhysics.PickupPadding;
+            return new Rectangle((int)(minX - pad), (int)(minY - pad), (int)(maxX - minX + 2f * pad) + 1, (int)(maxY - minY + 2f * pad) + 1);
+        }
+
+        /// <summary>
+        /// A motor cart collects fuel (anything in GelBurnerRecipeRegistry.Fuels) lying in or next to it, both conveyor vItems and
+        /// dropped world items, into its single fuel slot (cap Cart.FuelSlotCap). Everything else is ignored.
+        /// </summary>
+        private static void PickUpFuelItems(Cart cart)
+        {
+            Item slot = cart.Fuel;
+            if (slot == null || (!slot.IsAir && slot.stack >= Cart.FuelSlotCap))
+            {
+                return; // no slot, or already full
+            }
+
+            Rectangle area = GetPickupArea(cart);
+            float pad = CartPhysics.PickupPadding;
+
+            nearby.Clear();
+            VirtualItemSystem.GetVItemsInRect(area, nearby);
+
+            for (int i = 0; i < nearby.Count; i++)
+            {
+                VirtualItem vItem = nearby[i];
+
+                if (!vItem.active || vItem.pickupCooldown > 0 || vItem.cartGrabCooldown > 0 || vItem.stackSize <= 0 || !Cart.AcceptsFuel(vItem.itemType))
+                {
+                    continue;
+                }
+
+                if (!CartGeometry.Contains(cart, vItem.worldPosition, pad))
+                {
+                    continue;
+                }
+
+                Item offered = new Item(vItem.itemType, vItem.stackSize);
+                offered.stack = vItem.stackSize;
+
+                if (!cart.TryAddFuel(offered))
+                {
+                    continue; // slot full or holds a different fuel
+                }
+
+                vItem.stackSize = offered.IsAir ? 0 : offered.stack;
+
+                if (vItem.stackSize <= 0)
+                {
+                    vItem.Remove();
+                }
+            }
+
+            nearby.Clear();
+
+            foreach (var worldItem in Main.ActiveItems)
+            {
+                if (worldItem.IsAir || worldItem.noGrabDelay > 0 || worldItem.beingGrabbed || worldItem.instanced || !Cart.AcceptsFuel(worldItem.type))
+                {
+                    continue;
+                }
+
+                if (!area.Contains(worldItem.Center.ToPoint()) || !CartGeometry.Contains(cart, worldItem.Center, pad))
+                {
+                    continue;
+                }
+
+                if (cart.TryAddFuel(worldItem) && worldItem.IsAir)
+                {
+                    worldItem.active = false;
+                }
+            }
         }
 
         #endregion

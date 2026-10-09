@@ -38,6 +38,11 @@ namespace Factorraria.Common.Carts
         private const float TankWidth = 24f;
         private const float TankHeight = 126f;
 
+        // Motor cart: a flame gauge above the single fuel slot.
+        private const float FireSize = 54f;
+        private const float MotorPanelWidth = SlotSize + Pad * 2f;
+        private const float MotorPanelHeight = Pad + FireSize + Gap + SlotSize + Pad;
+
         private const float ButtonTextScale = 0.8f;
         private const float ButtonPadding = 12f; // UIPanel's default inner padding; scaled with the zoom so buttons keep their proportions
 
@@ -61,6 +66,7 @@ namespace Factorraria.Common.Carts
         public UIElement Panel;
 
         private readonly bool terrarium;
+        private readonly bool motor;
         private readonly float basePanelW;
         private readonly float basePanelH;
         private readonly List<Entry> entries = new List<Entry>();
@@ -81,8 +87,9 @@ namespace Factorraria.Common.Carts
             Cart = cart;
 
             terrarium = cart.Module == CartModule.Terrarium;
-            basePanelW = terrarium ? TankWidth : ChestPanelWidth;
-            basePanelH = terrarium ? TankHeight : ChestPanelHeight;
+            motor = cart.Module == CartModule.Motor;
+            basePanelW = terrarium ? TankWidth : motor ? MotorPanelWidth : ChestPanelWidth;
+            basePanelH = terrarium ? TankHeight : motor ? MotorPanelHeight : ChestPanelHeight;
         }
 
         public override void OnInitialize()
@@ -104,6 +111,10 @@ namespace Factorraria.Common.Carts
             if (terrarium)
             {
                 BuildTerrarium();
+            }
+            else if (motor)
+            {
+                BuildMotor();
             }
             else
             {
@@ -147,6 +158,48 @@ namespace Factorraria.Common.Carts
         private void BuildTerrarium()
         {
             AddEntry(new LiquidTankUIElement(() => Cart.Tank), Vector2.Zero, new Vector2(TankWidth, TankHeight) * 0.8f);
+        }
+
+        /// <summary>Motor cart: the Gel Burner's flame gauge with one fuel slot underneath. The slot only takes burnable fuel, at most Cart.FuelSlotCap.</summary>
+        private void BuildMotor()
+        {
+            AddEntry(
+                new FireUIElement(() => Cart.FuelBurnFraction),
+                new Vector2((MotorPanelWidth - FireSize) / 2f, Pad),
+                new Vector2(FireSize, FireSize));
+
+            UIItemSlotWrapper slot = new UIItemSlotWrapper(
+                ItemSlot.Context.ChestItem,
+                () => Cart.Fuel ?? new Item(),
+                item => Cart.Fuel = ClampFuelStack(item),
+                null,
+                Cart.AcceptsFuel);
+
+            AddEntry(slot, new Vector2(Pad, Pad + FireSize + Gap), new Vector2(SlotSize, SlotSize));
+        }
+
+        /// <summary>Keeps the fuel slot at Cart.FuelSlotCap: anything over goes back onto the cursor (or is dropped to the player if the cursor is busy).</summary>
+        private static Item ClampFuelStack(Item item)
+        {
+            if (item == null || item.IsAir || item.stack <= Cart.FuelSlotCap)
+            {
+                return item;
+            }
+
+            Item excess = item.Clone();
+            excess.stack = item.stack - Cart.FuelSlotCap;
+            item.stack = Cart.FuelSlotCap;
+
+            if (Main.mouseItem.IsAir)
+            {
+                Main.mouseItem = excess;
+            }
+            else
+            {
+                Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("FactorrariaCartFuel"), excess, excess.stack);
+            }
+
+            return item;
         }
 
         private void AddEntry(UIElement element, Vector2 basePosition, Vector2 baseSize, UITextPanel<string> button = null, string text = null)
@@ -337,7 +390,7 @@ namespace Factorraria.Common.Carts
         public static bool TryShiftInsert(Item item)
         {
             Cart cart = OpenCart;
-            if (cart == null || !cart.TryAddToChest(item))
+            if (cart == null || !(cart.Module == CartModule.Motor ? cart.TryAddFuel(item) : cart.TryAddToChest(item)))
             {
                 return false;
             }
@@ -402,7 +455,7 @@ namespace Factorraria.Common.Carts
             Cart cart = state.Cart;
             Player player = Main.LocalPlayer;
 
-            if (!Main.playerInventory || !cart.Active || (cart.Module != CartModule.Chest && cart.Module != CartModule.Terrarium) || player.dead
+            if (!Main.playerInventory || !cart.Active || (cart.Module != CartModule.Chest && cart.Module != CartModule.Terrarium && cart.Module != CartModule.Motor) || player.dead
                 || Vector2.Distance(player.Center, cart.Position) > CloseRange)
             {
                 CloseInternal(false);
