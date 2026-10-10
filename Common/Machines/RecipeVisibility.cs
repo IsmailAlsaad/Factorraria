@@ -11,7 +11,7 @@ namespace Factorraria.Common.Machines
     {
         Hidden,
         DebugRevealed,     // RevealAllRecipes debug flag: faded in the machine browser only, never listed in the book
-        FadedIngredient,   // holding an input right now (live, per player, never saved)
+        FadedIngredient,   // the player has held an input of it at least once (saved, world-wide)
         FadedParchment,    // unlocked by a parchment (saved, world-wide)
         Crafted            // a machine finished it (saved, world-wide)
     }
@@ -34,15 +34,15 @@ namespace Factorraria.Common.Machines
         // product -> catalog keys of every recipe group that MAKES it (item or liquid), in catalog order.
         static readonly Dictionary<RecipeOutputKey, List<string>> producerIndex = new Dictionary<RecipeOutputKey, List<string>>();
 
-        // Catalog keys whose inputs the local player holds, rescanned about once per second.
+        // Catalog keys with at least one input the player has SEEN (held once in this world). Derived from
+        // RecipeKnowledgeSystem.SeenItems and rebuilt when that set changes. The inventory is rescanned about once per second.
         static HashSet<string> heldKeys = new HashSet<string>();
-        static HashSet<string> scratchKeys = new HashSet<string>();
 
-        // Item types the local player holds that are an input of some recipe (same scan, swapped the same way).
+        // Item types the player has seen that are an input of some recipe (same derivation as heldKeys).
         static HashSet<int> heldItems = new HashSet<int>();
-        static HashSet<int> scratchItems = new HashSet<int>();
         static uint lastHeldScan;
         static bool heldScanned;
+        static int seenSyncVersion = int.MinValue;   // RecipeKnowledgeSystem.SeenVersion that heldKeys/heldItems were built from
 
         /// <summary>Bumped whenever the set of held-ingredient recipes changes. Pair with RecipeKnowledgeSystem.Version for UI rebuilds.</summary>
         public static int HeldVersion { get; private set; }
@@ -75,6 +75,7 @@ namespace Factorraria.Common.Machines
             heldKeys.Clear();
             heldItems.Clear();
             heldScanned = false;
+            seenSyncVersion = int.MinValue;
             HeldVersion++;
         }
 
@@ -84,32 +85,44 @@ namespace Factorraria.Common.Machines
         static void EnsureHeldScan()
         {
             if (Main.dedServ) return;
-            if (heldScanned && Main.GameUpdateCount - lastHeldScan < 60) return;
+            if (heldScanned && seenSyncVersion == RecipeKnowledgeSystem.SeenVersion && Main.GameUpdateCount - lastHeldScan < 60) return;
             heldScanned = true;
             lastHeldScan = Main.GameUpdateCount;
 
-            scratchKeys.Clear();
-            scratchItems.Clear();
+            // Record every recipe input the player holds right now. Once seen it stays seen for this world,
+            // even after the item leaves the inventory (the player may keep materials in a chest).
             Player player = Main.LocalPlayer;
             if (player != null)
             {
                 // 0-49 main inventory + hotbar, 50-53 coins, 54-57 ammo. Slot 58 is the mouse slot (Main.mouseItem below).
                 // Piggy bank, safe, void bag and equipment are deliberately not scanned.
-                for (int i = 0; i < 58; i++) AddHeld(player.inventory[i]);
-                AddHeld(Main.mouseItem);
+                for (int i = 0; i < 58; i++) MarkIfIngredient(player.inventory[i]);
+                MarkIfIngredient(Main.mouseItem);
             }
 
-            if (!scratchKeys.SetEquals(heldKeys)) HeldVersion++;
-            (heldKeys, scratchKeys) = (scratchKeys, heldKeys);
-            (heldItems, scratchItems) = (scratchItems, heldItems);
+            if (seenSyncVersion != RecipeKnowledgeSystem.SeenVersion) RebuildSeenCaches();
         }
 
-        static void AddHeld(Item item)
+        static void MarkIfIngredient(Item item)
         {
             if (item == null || item.IsAir) return;
-            if (!ingredientIndex.TryGetValue(item.type, out List<string> keys)) return;
-            scratchItems.Add(item.type);
-            foreach (string key in keys) scratchKeys.Add(key);
+            if (!ingredientIndex.ContainsKey(item.type)) return;
+            RecipeKnowledgeSystem.MarkSeen(item.type);
+        }
+
+        /// <summary>Rebuilds heldItems/heldKeys from the saved seen set (also covers world load and a debug reset).</summary>
+        static void RebuildSeenCaches()
+        {
+            heldKeys.Clear();
+            heldItems.Clear();
+            foreach (int type in RecipeKnowledgeSystem.SeenItems)
+            {
+                if (!ingredientIndex.TryGetValue(type, out List<string> keys)) continue;
+                heldItems.Add(type);
+                foreach (string key in keys) heldKeys.Add(key);
+            }
+            seenSyncVersion = RecipeKnowledgeSystem.SeenVersion;
+            HeldVersion++;
         }
 
         public static RecipeState GetState(string machineName, RecipeOutputGroup group) =>
@@ -135,14 +148,14 @@ namespace Factorraria.Common.Machines
         /// </summary>
         public static void Poll() => EnsureHeldScan();
 
-        /// <summary>True if the local player holds this item type right now AND it is an input of some recipe (same throttled scan).</summary>
+        /// <summary>True if the player has held this item type at least once in this world AND it is an input of some recipe. (Name kept from the old live-inventory rule.)</summary>
         public static bool IsItemHeld(int itemType)
         {
             EnsureHeldScan();
             return heldItems.Contains(itemType);
         }
 
-        /// <summary>True if the local player holds an input of this recipe right now.</summary>
+        /// <summary>True if the player has held an input of this recipe at least once in this world.</summary>
         public static bool IsHeld(string catalogKey)
         {
             EnsureHeldScan();
@@ -173,7 +186,7 @@ namespace Factorraria.Common.Machines
             return false;
         }
 
-        /// <summary>An item ingredient may be shown once the player holds it right now OR has crafted it before.</summary>
+        /// <summary>An item ingredient may be shown once the player has held it at least once in this world OR has crafted it before.</summary>
         public static bool IsIngredientRevealed(int itemType) =>
             IsItemHeld(itemType) || IsProductCrafted(RecipeOutputKey.ForItem(itemType));
 

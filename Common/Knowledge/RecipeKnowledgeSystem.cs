@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Machines;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -12,7 +13,7 @@ namespace Factorraria.Common.Knowledge
     ///
     /// Two saved sets of catalog keys (Machine|recipe key, see RecipeCatalog.KeyFor):
     /// unlocked (read from a parchment) and crafted (a machine finished it). Hidden-by-default.
-    /// The held-ingredient state lives in RecipeVisibility and is never saved.
+    /// A third saved set, seenItems, records recipe-input item types the player has held at least once (scanned by RecipeVisibility).
     /// </summary>
     public class RecipeKnowledgeSystem : ModSystem
     {
@@ -65,6 +66,31 @@ namespace Factorraria.Common.Knowledge
             Version++;
         }
 
+        // Seen items: recipe-input item types the player has held at least once in this world. Saved by item name.
+        // Once seen, an ingredient stays revealed even when it is no longer in the inventory (chest runs are fine).
+        static readonly HashSet<int> seenItems = new HashSet<int>();
+
+        /// <summary>Bumped when the seen set changes or is reloaded. RecipeVisibility uses it to know when to rebuild its caches.</summary>
+        public static int SeenVersion { get; private set; }
+
+        public static bool IsSeen(int itemType) => seenItems.Contains(itemType);
+
+        public static IReadOnlyCollection<int> SeenItems => seenItems;
+
+        /// <summary>Marks an item type as seen. Returns true if it was newly marked.</summary>
+        public static bool MarkSeen(int itemType)
+        {
+            if (itemType <= 0 || !seenItems.Add(itemType)) return false;
+            SeenVersion++;
+            return true;
+        }
+
+        public static void ResetSeen()
+        {
+            seenItems.Clear();
+            SeenVersion++;
+        }
+
 
         // Persistence: the unlocked and crafted sets. Absent = everything hidden.
         public override void SaveWorldData(TagCompound tag)
@@ -72,17 +98,30 @@ namespace Factorraria.Common.Knowledge
 
             tag["UnlockedRecipeKeys"] = new List<string>(unlocked);
             tag["CraftedRecipeKeys"] = new List<string>(crafted);
+
+            List<string> seenNames = new List<string>();
+            foreach (int type in seenItems)
+            {
+                string name = ItemID.Search.GetName(type);
+                if (!string.IsNullOrEmpty(name)) seenNames.Add(name);
+            }
+            tag["SeenItemKeys"] = seenNames;
         }
 
         public override void LoadWorldData(TagCompound tag)
         {
             unlocked.Clear();
             crafted.Clear();
+            seenItems.Clear();
+            SeenVersion++;
             Version++;
             if (tag.ContainsKey("CraftedRecipeKeys"))
                 foreach (string key in tag.Get<List<string>>("CraftedRecipeKeys")) crafted.Add(key);
             if (tag.ContainsKey("UnlockedRecipeKeys"))
                 foreach (string key in tag.Get<List<string>>("UnlockedRecipeKeys")) unlocked.Add(key);
+            if (tag.ContainsKey("SeenItemKeys"))
+                foreach (string name in tag.Get<List<string>>("SeenItemKeys"))
+                    if (ItemID.Search.TryGetId(name, out int seenType)) seenItems.Add(seenType);   // item from a removed mod: silently dropped
             // Legacy "KnownRecipeKeys" (the old show-everything system) is intentionally ignored.
         }
 
@@ -90,6 +129,8 @@ namespace Factorraria.Common.Knowledge
         {
             unlocked.Clear();
             crafted.Clear();
+            seenItems.Clear();
+            SeenVersion++;
             Version++;
         }
 
@@ -97,6 +138,7 @@ namespace Factorraria.Common.Knowledge
         {
             unlocked.Clear();
             crafted.Clear();
+            seenItems.Clear();
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Factorraria.Common.Knowledge
     ///   /recipes list         list recipes unlocked by parchment in this world
     ///   /recipes crafted      list recipes crafted by a machine in this world
     ///   /recipes state        list every recipe that is not Hidden for you right now, with its state
-    ///   /recipes reset        forget every parchment unlock and every crafted mark in this world
+    ///   /recipes reset        forget every parchment unlock, crafted mark and seen ingredient in this world
     ///   /recipes defpos       print the defense icon position (use at 1920x1080, UI scale 100%, to calibrate the book button)
     ///   /recipes btnreset     put the recipe book button back to its default spot (forgets where you dragged it)
     /// </summary>
@@ -115,7 +115,8 @@ namespace Factorraria.Common.Knowledge
                 case "reset":
                     RecipeKnowledgeSystem.ResetUnlocked();
                     RecipeKnowledgeSystem.ResetCrafted();
-                    caller.Reply("Cleared all parchment unlocks and crafted marks for this world.", Color.LightGreen);
+                    RecipeKnowledgeSystem.ResetSeen();
+                    caller.Reply("Cleared all parchment unlocks, crafted marks and seen ingredients for this world.", Color.LightGreen);
                     break;
                 default:
                     caller.Reply(Usage, Color.Yellow);
