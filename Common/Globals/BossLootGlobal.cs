@@ -19,13 +19,17 @@ namespace Factorraria.Common.Globals
             {
                 npcLoot.Add(ItemDropRule.Common(ItemID.LesionStation));
             }
-            else if (npc.type == NPCID.EaterofWorldsHead
-                  || npc.type == NPCID.EaterofWorldsBody
-                  || npc.type == NPCID.EaterofWorldsTail)
+            
+            if (npc.type == NPCID.EaterofWorldsHead || npc.type == NPCID.EaterofWorldsBody || npc.type == NPCID.EaterofWorldsTail)
             {
                 var lastSegment = new LeadingConditionRule(new Conditions.LegacyHack_IsABoss());
                 lastSegment.OnSuccess(ItemDropRule.Common(ItemID.LesionStation));
                 npcLoot.Add(lastSegment);
+            }
+
+            if(npc.type == NPCID.KingSlime)
+            {
+                npcLoot.Add(ItemDropRule.Common(ItemID.SlimeStatue,1,1,3));
             }
         }
     }

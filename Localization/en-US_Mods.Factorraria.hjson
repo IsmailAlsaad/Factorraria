@@ -156,6 +156,16 @@ Items: {
 			Crouch + right click a cart to pick it up
 			'''
 	}
+
+	PureSiliconItem: {
+		DisplayName: Pure Silicon
+		Tooltip: ""
+	}
+
+	SiliconOreItem: {
+		DisplayName: Silicon Ore
+		Tooltip: ""
+	}
 }
 
 Configs: {
@@ -250,4 +260,9 @@ RecipeBook: {
 		DecayChamber: Decay Chamber
 		Autohammer: Autohammer
 	}
+}
+
+Tiles: {
+	PureSiliconTile.MapEntry: Pure Silicon Tile
+	SiliconOreTile.MapEntry: Silicon Ore Tile
 }

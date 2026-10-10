@@ -1,9 +1,12 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Content.Items.Materials;
 using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 {
@@ -29,17 +32,21 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
             RegisterManualFuels();
         }
 
-        public static void RegisterManualRecipes(RecipeBook book)
+        public static void RegisterManualRecipes(RecipeBook Book)
         {
             if (RecipeGroup.recipeGroups.TryGetValue(RecipeGroupID.Wood, out RecipeGroup woodGroup))
             {
                 foreach (int itemID in woodGroup.ValidItems)
                 {
-                    book.Add(new CustomRecipe(
+                    Book.Add(new CustomRecipe(
                         new List<Item> { new Item(itemID, 1) },
                         new Item(ItemID.Coal, 1)));
                 }
             }
+
+            Book.Add(new CustomRecipe(
+                new List<Item> { new Item(ModContent.ItemType<SiliconOreItem>(), 3) },
+                new Item(ModContent.ItemType<PureSiliconItem>(), 1)));
         }
 
         static void RegisterManualFuels()

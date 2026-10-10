@@ -2,6 +2,7 @@
 using Factorraria.Common.Machines;
 using Factorraria.Content.Items.Materials;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace;
+using MonoMod.RuntimeDetour;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
@@ -41,6 +42,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
                     new Item(ModContent.ItemType<CokeItem>(), 5)},
                 new Item(ModContent.ItemType<SteelBarItem>(), 1)
                 ));
+
+            Book.Add(new CustomRecipe(
+                new List<Item> { new Item(ModContent.ItemType<SiliconOreItem>(), 3) },
+                new Item(ModContent.ItemType<PureSiliconItem>(), 1)));
         }
 
         static void RegisterLiquidFuels()

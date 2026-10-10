@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Factorraria.Content.Items.Materials;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator
 {
@@ -85,7 +87,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator
 
             // ---- Silt ----
             Define(ItemID.SiltBlock)
-                // .Drop(ModContent.ItemType<SiliconOreItem>(), 4, 1, 16)   // TODO: silicon ore placeholder, enable once the item exists
+                .Drop(ModContent.ItemType<SiliconOreItem>(), 4, 1, 16)
                 .Drop(ItemID.TinOre, 4, 1, 16)
                 .Drop(ItemID.IronOre, 4, 1, 16)
                 .Drop(ItemID.SilverOre, 4, 1, 16)
