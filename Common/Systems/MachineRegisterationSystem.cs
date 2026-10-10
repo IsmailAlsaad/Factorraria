@@ -14,6 +14,7 @@ using Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.DecayChamber;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator;
 
 namespace Factorraria.Common.Machines
 {
@@ -29,6 +30,7 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.IceMachine, new IceMachineUIState());
             MachineUIRegistry.Register(TileID.ImbuingStation, new LiquidDistillatorUIState());
             MachineUIRegistry.Register(TileID.Hellforge, new HellforgeUIState());
+            MachineUIRegistry.Register(TileID.Extractinator, new ExtractinatorUIState());
             MachineUIRegistry.Register(TileID.LesionStation, new DecayChamberUIState());
             // etc...
         }
@@ -85,9 +87,15 @@ namespace Factorraria.Common.Machines
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/DecayChamber/DecayChamber_On",
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/DecayChamber/DecayChamber_Off");
 
+
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_On",
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_Off");
+
+
+            MachineVisualRegistry.Register<ExtractinatorTileEntity>(TileID.Extractinator,
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Extractinator/Extractinator_On",
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Extractinator/Extractinator_Off");
 
 
             MachineVisualRegistry.Register<MotorMK1TileEntity>(ModContent.TileType<MotorMK1Tile>(),
@@ -105,6 +113,7 @@ namespace Factorraria.Common.Machines
             LiquidDistillatorRecipeRegistry.BuildRecipes();
             DecayChamberRecipeRegistry.BuildRecipes();
             AutohammerRecipeRegistry.BuildRecipes();
+            ExtractinatorRecipeRegistry.BuildRecipes();
 
 
             // Recipe discovery: lets scrolls roll a recipe and resolve a saved key back to (machine, group).
