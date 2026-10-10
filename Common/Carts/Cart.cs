@@ -711,7 +711,11 @@ namespace Factorraria.Common.Carts
             }
 
             UpdateAnimation();
-            CheckPressurePlate();
+
+            if (OnTrack)
+            {
+                CheckPressurePlate();
+            }
         }
 
         /// <summary>The motor bounced off a bumper earlier and this carriage has now reached that spot on the trail: fire Bumped for it.</summary>
@@ -1079,6 +1083,11 @@ namespace Factorraria.Common.Carts
             Rotation *= 0.92f;
 
             TryRerail();
+
+            if (Chain != null && Chain.Motor == this)
+            {
+                Chain.Record(Position, Rotation, !OnTrack); // carriages keep following, even through the air
+            }
         }
 
         /// <summary>If our feet just crossed a rail surface while falling, snap onto it.</summary>

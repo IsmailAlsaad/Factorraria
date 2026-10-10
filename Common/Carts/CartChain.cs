@@ -20,6 +20,7 @@ namespace Factorraria.Common.Carts
             public float Rotation;
             public int Direction; // sign of X travel while the motor passed this sample (+1 / -1), never 0
             public bool Bump;     // the motor bounced off a bumper right before this sample
+            public bool Air;      // the motor was derailed (in the air) at this sample
         }
 
         /// <summary>
@@ -52,6 +53,7 @@ namespace Factorraria.Common.Carts
         private float lastRotation;
         private int lastDirection;
         private bool pendingBump;
+        private bool lastAir;                   // the motor's latest recorded pose was airborne
 
         #region Building and tearing down
 
@@ -129,7 +131,9 @@ namespace Factorraria.Common.Carts
             float rotation;
             int direction;
             int index;
-            Read(odometer - Carriages.Count * CartPhysics.ChainSpacing, out position, out rotation, out direction, out index);
+            bool air;
+            Read(odometer - Carriages.Count * CartPhysics.ChainSpacing, out position, out rotation, out direction, out index, out air);
+            cart.OnTrack = !air;
 
             cart.Position = position;
             cart.Rotation = rotation;
@@ -214,12 +218,13 @@ namespace Factorraria.Common.Carts
         /// Called by the motor after every movement sub-step (at most 2 px, same as CartPhysics.MaxStep). Pushes a new sample
         /// each time the odometer passes a multiple of Step, placed by interpolating along the sub-step.
         /// </summary>
-        public void Record(Vector2 position, float rotation)
+        public void Record(Vector2 position, float rotation, bool air = false)
         {
             float segment = Vector2.Distance(lastPosition, position);
             if (segment < 0.0001f)
             {
                 lastRotation = rotation;
+                lastAir = air;
                 return;
             }
 
@@ -237,6 +242,7 @@ namespace Factorraria.Common.Carts
                 sample.Rotation = MathHelper.Lerp(lastRotation, rotation, t);
                 sample.Direction = direction;
                 sample.Bump = pendingBump;
+                sample.Air = air;
                 pendingBump = false;
                 samples[newestIndex % samples.Length] = sample;
             }
@@ -244,6 +250,7 @@ namespace Factorraria.Common.Carts
             lastPosition = position;
             lastRotation = rotation;
             lastDirection = direction;
+            lastAir = air;
         }
 
         /// <summary>The motor just bounced off a bumper: the next sample carries the flag, carriages replay it when they pass.</summary>
@@ -253,7 +260,7 @@ namespace Factorraria.Common.Carts
         }
 
         /// <summary>Pose on the trail at a distance along it (clamped to what is stored). index is the sample just behind that point.</summary>
-        private void Read(float distance, out Vector2 position, out float rotation, out int direction, out int index)
+        private void Read(float distance, out Vector2 position, out float rotation, out int direction, out int index, out bool air)
         {
             float oldest = OldestIndex * Step;
             if (distance < oldest)
@@ -279,6 +286,7 @@ namespace Factorraria.Common.Carts
                 rotation = MathHelper.Lerp(newest.Rotation, lastRotation, t);
                 direction = lastDirection;
                 index = newestIndex;
+                air = newest.Air || lastAir;
                 return;
             }
 
@@ -291,6 +299,7 @@ namespace Factorraria.Common.Carts
             rotation = MathHelper.Lerp(a.Rotation, b.Rotation, f);
             direction = b.Direction; // the way the motor was moving when it travelled from a to b
             index = k;
+            air = a.Air || b.Air;
         }
 
         /// <summary>
@@ -309,12 +318,13 @@ namespace Factorraria.Common.Carts
                 float rotation;
                 int direction;
                 int index;
-                Read(odometer - (i + 1) * CartPhysics.ChainSpacing - cart.ChainSlack, out position, out rotation, out direction, out index);
+                bool air;
+                Read(odometer - (i + 1) * CartPhysics.ChainSpacing - cart.ChainSlack, out position, out rotation, out direction, out index, out air);
 
                 float previousX = cart.Position.X;
                 cart.Position = position;
                 cart.Rotation = rotation;
-                cart.OnTrack = true;
+                cart.OnTrack = !air;
                 cart.Velocity = Vector2.Zero;
                 cart.Speed = MathHelper.Clamp(position.X - previousX, -CartPhysics.MaxSpeed, CartPhysics.MaxSpeed);
 
@@ -357,6 +367,12 @@ namespace Factorraria.Common.Carts
         private static bool CanJoin(Cart cart)
         {
             return cart.Active && cart.Chain == null && cart.OnTrack && cart.Module != CartModule.Motor && !Cart.IsMotorSkin(cart.SkinType);
+        }
+
+        /// <summary>Like CanJoin for a chain being rebuilt from a save: a carriage saved in the air is snapped back onto the rebuilt trail.</summary>
+        private static bool CanJoinLoaded(Cart cart)
+        {
+            return cart.Active && cart.Chain == null && cart.Module != CartModule.Motor && !Cart.IsMotorSkin(cart.SkinType);
         }
 
         private static bool TouchesChain(Cart motor, Cart candidate)
@@ -476,7 +492,7 @@ namespace Factorraria.Common.Carts
                 {
                     Cart member = members[i];
 
-                    if (member == motor || !CanJoin(member) || (chain != null && chain.Carriages.Count >= CartPhysics.MaxCarriages))
+                    if (member == motor || !CanJoinLoaded(member) || (chain != null && chain.Carriages.Count >= CartPhysics.MaxCarriages))
                     {
                         continue;
                     }

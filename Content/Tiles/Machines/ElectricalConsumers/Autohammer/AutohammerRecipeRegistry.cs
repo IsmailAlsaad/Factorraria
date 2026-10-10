@@ -19,6 +19,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
         {
             Book.Clear();
 
+            Book.ImportVanillaRecipes(TileID.Anvils);
+
             Book.Add(new CustomRecipe()
                 .WithInput(ItemID.GoldBar, 1)
                 .WithOutput(ModContent.ItemType<GoldPlateItem>(), 1)

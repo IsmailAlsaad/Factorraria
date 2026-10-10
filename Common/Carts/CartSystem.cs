@@ -220,7 +220,7 @@ namespace Factorraria.Common.Carts
                 }
             }
 
-            // Each chain places its carriages on the trail its motor just recorded. A motor that derailed or died drops the chain.
+            // Each chain places its carriages on the trail its motor just recorded. Only a dead motor drops the chain (a derailed one keeps it).
             for (int i = 0; i < Carts.Count; i++)
             {
                 Cart motor = Carts[i];
@@ -230,7 +230,7 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
-                if (!motor.Active || !motor.OnTrack)
+                if (!motor.Active)
                 {
                     motor.Chain.Dissolve();
                     continue;
