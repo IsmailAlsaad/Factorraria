@@ -263,6 +263,6 @@ RecipeBook: {
 }
 
 Tiles: {
-	PureSiliconTile.MapEntry: Pure Silicon Tile
-	SiliconOreTile.MapEntry: Silicon Ore Tile
+	PureSiliconTile.MapEntry: Pure Silicon
+	SiliconOreTile.MapEntry: Silicon Ore
 }
