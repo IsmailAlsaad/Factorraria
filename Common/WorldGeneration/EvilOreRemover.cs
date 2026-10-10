@@ -23,7 +23,7 @@ namespace Factorraria.Common.WorldGeneration
 
                     if (tile.TileType == TileID.Demonite || tile.TileType == TileID.Crimtane)
                     {
-                        tile.TileType = TileID.Glass;
+                        tile.TileType = TileID.Stone;
                         WorldGen.SquareTileFrame(x, y, true); // re-frame so merging with neighbours looks right
                     }
                 }
