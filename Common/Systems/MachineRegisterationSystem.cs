@@ -11,6 +11,7 @@ using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier;
 
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator;
+using Factorraria.Content.Tiles.Machines.GeneralMachines.DecayChamber;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer;
 
@@ -28,6 +29,7 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.IceMachine, new IceMachineUIState());
             MachineUIRegistry.Register(TileID.ImbuingStation, new LiquidDistillatorUIState());
             MachineUIRegistry.Register(TileID.Hellforge, new HellforgeUIState());
+            MachineUIRegistry.Register(TileID.LesionStation, new DecayChamberUIState());
             // etc...
         }
 
@@ -79,6 +81,10 @@ namespace Factorraria.Common.Machines
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/Hellforge/Hellforge_Off");
 
 
+            MachineVisualRegistry.Register<DecayChamberTileEntity>(TileID.LesionStation,
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/DecayChamber/DecayChamber_On",
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/DecayChamber/DecayChamber_Off");
+
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_On",
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_Off");
@@ -97,6 +103,7 @@ namespace Factorraria.Common.Machines
             SolidifierRecipeRegistry.BuildRecipes();
             IceMachineRecipeRegistry.BuildRecipes();
             LiquidDistillatorRecipeRegistry.BuildRecipes();
+            DecayChamberRecipeRegistry.BuildRecipes();
             AutohammerRecipeRegistry.BuildRecipes();
 
 
@@ -107,6 +114,7 @@ namespace Factorraria.Common.Machines
             RecipeCatalog.Register("Solidifier", SolidifierRecipeRegistry.Book);
             RecipeCatalog.Register("IceMachine", IceMachineRecipeRegistry.Book);
             RecipeCatalog.Register("LiquidDistillator", LiquidDistillatorRecipeRegistry.Book);
+            RecipeCatalog.Register("DecayChamber", DecayChamberRecipeRegistry.Book);
             RecipeCatalog.Register("Autohammer", AutohammerRecipeRegistry.Book);
 
             // Auto-fill recipe times: any recipe without its own TakesTicks gets the time of the machine that owns its book,

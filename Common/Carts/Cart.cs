@@ -106,26 +106,9 @@ namespace Factorraria.Common.Carts
             return item != null && !item.IsAir && (item.createTile == TileID.Containers || item.createTile == TileID.Containers2);
         }
 
-        private static int terrariumItemType = -1;
-
-        /// <summary>The vanilla Terrarium item, looked up by name (ids shift between loads). 0 if the game has no item with that name.</summary>
-        public static int TerrariumItemType
-        {
-            get
-            {
-                if (terrariumItemType < 0)
-                {
-                    int id;
-                    terrariumItemType = ItemID.Search.TryGetId("Terrarium", out id) ? id : 0;
-                }
-
-                return terrariumItemType;
-            }
-        }
-
         public static bool IsTerrariumItem(Item item)
         {
-            return item != null && !item.IsAir && TerrariumItemType > 0 && item.type == TerrariumItemType;
+            return item != null && !item.IsAir && item.type == ItemID.Terrarium;
         }
 
         public const int ChestSlots = 6; // 3 columns x 2 rows
@@ -387,57 +370,10 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        private static int steampunkItemType = -1;
-
-        /// <summary>
-        /// The vanilla Steampunk Minecart item (wiki id 4472), found by name because ids shift. Tries the likely internal names
-        /// first, then any vanilla item with "Steampunk" in its name that is a minecart. 0 if the game has none.
-        /// </summary>
-        public static int SteampunkItemType
-        {
-            get
-            {
-                if (steampunkItemType >= 0)
-                {
-                    return steampunkItemType;
-                }
-
-                if (ContentSamples.ItemsByType == null || ContentSamples.ItemsByType.Count == 0)
-                {
-                    return 0; // content not ready yet: do not cache
-                }
-
-                int found = 0;
-                string[] names = { "SteampunkMinecart", "MinecartSteampunk" };
-
-                for (int i = 0; i < names.Length && found <= 0; i++)
-                {
-                    int id;
-                    if (ItemID.Search.TryGetId(names[i], out id) && CartSkinTable.IsSkinItem(ContentSamples.ItemsByType[id]))
-                    {
-                        found = id;
-                    }
-                }
-
-                for (int type = 1; type < ItemID.Count && found <= 0; type++)
-                {
-                    string name = ItemID.Search.GetName(type);
-                    if (name != null && name.IndexOf("Steampunk", StringComparison.OrdinalIgnoreCase) >= 0 && CartSkinTable.IsSkinItem(ContentSamples.ItemsByType[type]))
-                    {
-                        found = type;
-                    }
-                }
-
-                steampunkItemType = found;
-                ModContent.GetInstance<CartSystem>().Mod.Logger.Info("Factorraria motor cart skin: item type " + found + (found > 0 ? " (" + ItemID.Search.GetName(found) + ")" : " NOT FOUND, there will be no motor cart"));
-                return found;
-            }
-        }
-
         /// <summary>True for the skin that is always a motor cart (the vanilla Steampunk Minecart).</summary>
         public static bool IsMotorSkin(int skinItemType)
         {
-            return skinItemType > 0 && skinItemType == SteampunkItemType;
+            return skinItemType > 0 && skinItemType == ItemID.SteampunkMinecart;
         }
 
         /// <summary>Installs a module and creates its (empty) payload. Throws away any previous payload.</summary>
@@ -481,7 +417,7 @@ namespace Factorraria.Common.Carts
                 case CartModule.Chest:
                     return ItemID.Chest;
                 case CartModule.Terrarium:
-                    return TerrariumItemType > 0 ? TerrariumItemType : -1;
+                    return ItemID.Terrarium > 0 ? ItemID.Terrarium : -1;
                 default:
                     return -1; // the Motor item arrives with its phase
             }

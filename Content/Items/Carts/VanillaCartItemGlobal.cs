@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Carts;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Content.Items.Carts
@@ -24,7 +25,7 @@ namespace Factorraria.Content.Items.Carts
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
             tooltips.Add(new TooltipLine(Mod, "FactorrariaCartPlace", "Left click on a minecart track to place a cart"));
-            if (item.type == Cart.SteampunkItemType)
+            if (item.type == ItemID.SteampunkMinecart)
             {
                 tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotorNoModules", "Shift + Right click to pick it up"));
                 tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotor", "Burns fuel to drive itself"));

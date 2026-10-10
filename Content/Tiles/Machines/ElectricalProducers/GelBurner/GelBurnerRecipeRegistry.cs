@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Terraria;
 using Terraria.ID;
 
 namespace Factorraria.Content.Tiles.Machines.GelBurner
@@ -15,10 +16,16 @@ namespace Factorraria.Content.Tiles.Machines.GelBurner
         {
             FuelTable table = new FuelTable()
                 .Add(ItemID.Gel, 3 * 60)     // gel: 3 seconds
-                .Add(ItemID.Coal, 8 * 60);   // coal: 8 seconds
-                // add more fuels here, e.g. .Add(ItemID.SomeItem, 5 * 60)
+                .Add(ItemID.Coal, 10 * 60);   // coal: 10 seconds
 
-            table.StackLimitRule = _ => 10;   // conveyors may buffer up to 10 of an item in the Gel Burner
+            if (RecipeGroup.recipeGroups.TryGetValue(RecipeGroupID.Wood, out RecipeGroup woodGroup))
+            {
+                foreach (int woodID in woodGroup.ValidItems)
+                {
+                    table.Add(woodID, 5 * 60); // wood: 5 seconds
+                }
+            }
+                    table.StackLimitRule = _ => 10;   // conveyors may buffer up to 10 of an item in the Gel Burner
             return table;
         }
     }

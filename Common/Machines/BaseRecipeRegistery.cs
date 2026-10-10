@@ -140,5 +140,140 @@ namespace Factorraria.Common.Machines
         }
 
         public void Clear() { All.Clear(); inputLiquidTypes.Clear(); Groups.Clear(); MaxIngredientCount = 0; MinIngredientCount = 0; imported.Clear(); }
+
+        #region Disable Recipes
+        public void DisableCustomRecipe(CustomRecipe recipe, bool addBack = false)
+        {
+            if (recipe != null && All.Contains(recipe))
+            {
+                All.Remove(recipe);
+            }
+
+            if (addBack)
+            {
+                // Find and re-enable any vanilla recipe matching this custom recipe's output and station/ingredients if tracked, 
+                // or you can pass a vanilla Recipe directly to the overload.
+                foreach (var vanillaRecipe in imported)
+                {
+                    if (vanillaRecipe.createItem.type == recipe.Output.Type)
+                    {
+                        DisableVanillaRecipe(vanillaRecipe); // Effectively re-enables/toggles depending on how tModLoader tracks it, or custom logic.
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void DisableCustomRecipe(Recipe vanillaRecipe, bool addBack = false)
+        {
+            if (vanillaRecipe != null)
+            {
+                // Remove any corresponding CustomRecipe from All that matches this vanilla recipe's output type
+                All.RemoveAll(r => r.Output.Type == vanillaRecipe.createItem.type);
+
+                if (addBack)
+                {
+                    // Re-enable the vanilla recipe
+                    DisableVanillaRecipe(vanillaRecipe);
+                }
+            }
+        }
+
+        public void DisableCustomRecipe(int outputItemType, bool addBack = false)
+        {
+            // Remove any corresponding CustomRecipe from All that matches this output type
+            All.RemoveAll(r => r.Output.Type == outputItemType);
+            if (addBack)
+            {
+                // Re-enable the vanilla recipe by looking it up in imported
+                foreach (var vanillaRecipe in imported)
+                {
+                    if (vanillaRecipe.createItem.type == outputItemType)
+                    {
+                        DisableVanillaRecipe(vanillaRecipe);
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void DisableVanillaRecipe(Recipe vanillaRecipe)
+        {
+            vanillaRecipe?.DisableRecipe();
+        }
+
+        public void DisableVanillaRecipe(CustomRecipe recipe, bool fromAll = false)
+        {
+            if (recipe == null) return;
+
+            if (fromAll)
+            {
+                foreach (var vanillaRecipe in Main.recipe)
+                {
+                    if (vanillaRecipe.createItem.type == recipe.Output.Type)
+                    {
+                        vanillaRecipe.DisableRecipe();
+                        break;
+                    }
+                }
+            }
+            else 
+            {
+                foreach (var vanillaRecipe in imported)
+                {
+                    if (vanillaRecipe.createItem.type == recipe.Output.Type)
+                    {
+                        vanillaRecipe.DisableRecipe();
+                        break;
+                    }
+                }
+            }
+
+        }
+
+        public void DisableVanillaRecipe(int outputItemType, bool fromAll = false)
+        {
+            if (fromAll)
+            {
+                foreach (var vanillaRecipe in Main.recipe)
+                {
+                    if (vanillaRecipe.createItem.type == outputItemType)
+                    {
+                        vanillaRecipe.DisableRecipe();
+                        break;
+                    }   
+                }
+            }
+            else
+            {
+                foreach (var vanillaRecipe in imported)
+                {
+                    if (vanillaRecipe.createItem.type == outputItemType)
+                    {
+                        vanillaRecipe.DisableRecipe();
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void DisableRecipe(int outputItemType, bool addBack = false)
+        {
+            DisableCustomRecipe(outputItemType, addBack);
+            DisableVanillaRecipe(outputItemType);
+        }
+
+        public void DisableRecipe(CustomRecipe recipe, bool addBack = false)
+        {
+            DisableCustomRecipe(recipe, addBack);
+            DisableVanillaRecipe(recipe);
+        }
+
+        public void DisableRecipe(Recipe vanillaRecipe, bool addBack = false)
+        {
+            DisableCustomRecipe(vanillaRecipe, addBack);
+            DisableVanillaRecipe(vanillaRecipe);
+        }
+        #endregion
     }
 }

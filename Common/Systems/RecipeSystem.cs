@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.Items.Wires;
+﻿using Factorraria.Common.Machines;
+using Factorraria.Content.Items.Wires;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,6 +61,28 @@ namespace Factorraria.Common.Systems
             Recipe.Create(ModContent.ItemType<LeadCutter>(), 1)
                 .AddIngredient(ItemID.LeadBar, 5)
                 .AddTile(TileID.Anvils)
+                .Register();
+
+            // Steampunk Minecart
+            Recipe.Create(ItemID.SteampunkMinecart, 1)
+                .AddIngredient(ItemID.SteampunkBoiler, 1)
+                .AddIngredient(ItemID.Minecart, 1)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            // Decay Chamber
+            new RecipeBook().DisableVanillaRecipe(ItemID.LesionStation, true);
+            Recipe.Create(ItemID.LesionStation, 1)
+                .AddIngredient(ItemID.Glass, 15)
+                .AddIngredient(ItemID.RottenChunk, 10)
+                .AddIngredient(ItemID.ShadowScale, 3)
+                .AddTile(TileID.DemonAltar)
+                .Register();
+            Recipe.Create(ItemID.LesionStation, 1)
+                .AddIngredient(ItemID.Glass, 15)
+                .AddIngredient(ItemID.Vertebrae, 10)
+                .AddIngredient(ItemID.TissueSample, 3)
+                .AddTile(TileID.DemonAltar)
                 .Register();
         }
 

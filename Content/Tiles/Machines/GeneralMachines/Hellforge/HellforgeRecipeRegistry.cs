@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
 using Factorraria.Content.Items.Materials;
+using Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
@@ -17,8 +18,15 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
         {
             Book.Clear();
             Book.ImportVanillaRecipes(TileID.Hellforge);
-            Book.ImportVanillaRecipes(TileID.Furnaces);
             RegisterManualRecipes();
+
+            Book.ImportVanillaRecipes(TileID.Furnaces);
+            FurnaceRecipeRegistry.RegisterManualRecipes(Book);
+
+            // Disable the vanilla recipe for Demonite and Crimtane bars
+            Book.DisableRecipe(ItemID.DemoniteBar);
+            Book.DisableRecipe(ItemID.CrimtaneBar);
+
             Book.Rebuild();
 
             LiquidFuels.Clear();

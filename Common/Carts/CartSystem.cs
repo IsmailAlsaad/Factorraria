@@ -136,22 +136,6 @@ namespace Factorraria.Common.Carts
 
         }
 
-        /// <summary>Motor cart recipe: Steampunk Boiler + Minecart at an Anvil gives the vanilla Steampunk Minecart.</summary>
-        public override void AddRecipes()
-        {
-            int motorCart = Cart.SteampunkItemType;
-            if (motorCart <= 0)
-            {
-                return; // the item lookup logged why
-            }
-
-            Recipe.Create(motorCart, 1)
-                .AddIngredient(ItemID.SteampunkBoiler, 1)
-                .AddIngredient(ItemID.Minecart, 1)
-                .AddTile(TileID.Anvils)
-                .Register();
-        }
-
         public override void OnWorldLoad()
         {
             // Do not clear Carts here: LoadWorldData may already have filled it.

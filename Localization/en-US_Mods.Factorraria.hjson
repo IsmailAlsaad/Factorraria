@@ -247,6 +247,7 @@ RecipeBook: {
 		Solidifier: Solidifier
 		IceMachine: Ice Machine
 		LiquidDistillator: Liquid Distillator
+		DecayChamber: Decay Chamber
 		Autohammer: Autohammer
 	}
 }
