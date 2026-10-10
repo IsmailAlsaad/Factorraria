@@ -4,7 +4,7 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Common.WorldGeneration
 {
-    public class EvilOreRemover : ModSystem
+    public class PostWorldGenEdits : ModSystem
     {
         public static bool Enabled = true;
 
@@ -21,10 +21,10 @@ namespace Factorraria.Common.WorldGeneration
                     if (!tile.HasTile)
                         continue;
 
-                    if (tile.TileType == TileID.Demonite || tile.TileType == TileID.Crimtane)
+                    if (tile.TileType == TileID.Demonite || tile.TileType == TileID.Crimtane || tile.TileType == TileID.Obsidian)
                     {
                         tile.TileType = TileID.Stone;
-                        WorldGen.SquareTileFrame(x, y, true); // re-frame so merging with neighbours looks right
+                        WorldGen.SquareTileFrame(x, y, true);
                     }
                 }
             }

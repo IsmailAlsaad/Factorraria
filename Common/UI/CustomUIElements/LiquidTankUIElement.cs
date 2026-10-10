@@ -118,6 +118,16 @@ namespace Factorraria.Common.UI.CustomUIElements
                 RasterizerState.CullCounterClockwise,
                 null,
                 Main.UIScaleMatrix);
+
+            // Hover text: "LiquidName: amount" (drawn by vanilla's tooltip pass via hoverItemName).
+            if (IsMouseHovering)
+            {
+                Main.LocalPlayer.mouseInterface = true;
+                bool empty = stack == null || stack.LiquidType == -1;
+                Main.hoverItemName = empty
+                    ? "Empty"
+                    : $"{liquidDef.Name}: {MathF.Round(stack.Amount)}";
+            }
         }
 
         // GetDimensions() returns coordinates in the UI's own local unit space —
