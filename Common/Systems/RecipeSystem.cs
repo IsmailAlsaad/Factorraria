@@ -84,6 +84,21 @@ namespace Factorraria.Common.Systems
                 .AddIngredient(ItemID.TissueSample, 3)
                 .AddTile(TileID.DemonAltar)
                 .Register();
+
+            // Deer Thing (replacement)
+            new RecipeBook().DisableVanillaRecipe(ItemID.DeerThing, true);
+            Recipe.Create(ItemID.DeerThing, 1)
+                .AddIngredient(ItemID.FlinxFur, 3)
+                .AddIngredient(ItemID.EbonstoneBlock, 5)
+                .AddIngredient(ItemID.Lens, 1)
+                .AddTile(TileID.DemonAltar)
+                .Register(); 
+            Recipe.Create(ItemID.DeerThing, 1)
+                .AddIngredient(ItemID.FlinxFur, 3)
+                .AddIngredient(ItemID.CrimstoneBlock, 5)
+                .AddIngredient(ItemID.Lens, 1)
+                .AddTile(TileID.DemonAltar)
+                .Register();
         }
 
         // Recipe Groups ID
