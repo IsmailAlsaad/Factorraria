@@ -87,6 +87,7 @@ namespace Factorraria.Common.Systems
 
             // Deer Thing (replacement)
             new RecipeBook().DisableVanillaRecipe(ItemID.DeerThing, true);
+            new RecipeBook().DisableVanillaRecipe(ItemID.DeerThing, true);
             Recipe.Create(ItemID.DeerThing, 1)
                 .AddIngredient(ItemID.FlinxFur, 3)
                 .AddIngredient(ItemID.EbonstoneBlock, 5)

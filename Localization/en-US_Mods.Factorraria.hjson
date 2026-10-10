@@ -49,7 +49,7 @@ Items: {
 
 	MotorMK1Item: {
 		DisplayName: Motor MK1
-		Tooltip: ""
+		Tooltip: "Right click to rotate the tile"
 	}
 
 	PipeMK1Item: {

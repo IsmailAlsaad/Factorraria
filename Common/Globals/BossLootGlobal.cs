@@ -11,14 +11,14 @@ namespace Factorraria.Common.NPCs
     {
         public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
         {
-            // 1. Eye of Cthulhu
+            // Eye of Cthulhu
             if (npc.type == NPCID.EyeofCthulhu)
             {
                 npcLoot.RemoveLoot(ItemID.DemoniteOre);
                 npcLoot.RemoveLoot(ItemID.CrimtaneOre);
             }
 
-            // 2. Brain of Cthulhu
+            // Brain of Cthulhu
             if (npc.type == NPCID.BrainofCthulhu)
             {
                 npcLoot.RemoveLoot(ItemID.DemoniteOre);
@@ -26,8 +26,13 @@ namespace Factorraria.Common.NPCs
 
                 npcLoot.Add(ItemDropRule.Common(ItemID.LesionStation));
             }
+            // Creepers
+            if (npc.type == NPCID.Creeper)
+            {
+                npcLoot.RemoveLoot(ItemID.CrimtaneOre);
+            }
 
-            // 3. Eater of Worlds (All Segments)
+            // Eater of Worlds (All Segments)
             if (npc.type == NPCID.EaterofWorldsHead ||
                 npc.type == NPCID.EaterofWorldsBody ||
                 npc.type == NPCID.EaterofWorldsTail)
@@ -40,7 +45,7 @@ namespace Factorraria.Common.NPCs
                 npcLoot.Add(lastSegment);
             }
 
-            // 4. King Slime
+            // King Slime
             if (npc.type == NPCID.KingSlime)
             {
                 npcLoot.Add(ItemDropRule.Common(ItemID.SlimeStatue, 1, 1, 3));
