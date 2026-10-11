@@ -118,4 +118,22 @@ function Run-Patch {
     Write-Host "PATCH APPLIED - $($temps.Count) file(s) written:" -ForegroundColor Green
     foreach ($full in $temps.Keys) { Write-Host "  $($full.Substring([IO.Path]::GetFullPath($Root).TrimEnd('\','/').Length + 1))" }
 }
+
+    # ---- AFTER APPLY: refresh the codebase index ----
+    $indexScript = Join-Path $Root 'index_codebase.py'
+    if (Test-Path -LiteralPath $indexScript) {
+        $py = Get-Command python -ErrorAction SilentlyContinue
+        if (-not $py) { $py = Get-Command py -ErrorAction SilentlyContinue }
+        if ($py) {
+            Write-Host ''
+            Write-Host 'Refreshing CODEBASE_INDEX.md ...' -ForegroundColor Cyan
+            Push-Location $Root
+            try { & $py.Source $indexScript }
+            catch { Write-Host "Index refresh failed: $($_.Exception.Message)" -ForegroundColor Yellow }
+            finally { Pop-Location }
+        } else {
+            Write-Host 'python not found - run index_codebase.py manually.' -ForegroundColor Yellow
+        }
+    }
+    
 # ------------------------------- END ENGINE -----------------------------------
