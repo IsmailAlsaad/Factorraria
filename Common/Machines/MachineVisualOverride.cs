@@ -19,12 +19,27 @@ namespace Factorraria.Common.Machines
         public string CacheKey;
     }
 
+    // An On texture drawn on a canvas bigger than the tile footprint (see MachineVisualRegistry.RegisterOverhang).
+    public class MachineOnCanvas
+    {
+        public int FootprintWidth;   // tiles
+        public int FootprintHeight;  // tiles
+        public int CanvasWidth;      // tiles, one frame
+        public int CanvasHeight;     // tiles, one frame
+        public float OriginX;        // tiles: where the footprint's top-left tile sits inside a frame (+x right, +y down)
+        public float OriginY;
+        public bool Warned;
+
+        public int FrameCount(Texture2D texture) => Math.Max(1, texture.Height / (CanvasHeight * 16));
+    }
+
     public class MachineVisualDefinition
     {
         public Func<int, int, BaseMachine> GetEntity;
         public Asset<Texture2D> OnTexture;
         public Asset<Texture2D> OffTexture;
         public List<LiquidOverlayLayer> LiquidOverlays = new();
+        public MachineOnCanvas OnCanvas;   // null = the On texture is a normal footprint-sized sheet
     }
 
     public static class MachineVisualRegistry
@@ -66,6 +81,42 @@ namespace Factorraria.Common.Machines
                 CacheKey = texturePath // already unique per overlay, no need to invent a separate key
             });
         }
+
+        // Use INSTEAD of Register<T> when the On art is bigger than the tile footprint. The Off texture stays a normal
+        // footprint-sized sheet. The On texture is ONE canvas per frame (frames stacked vertically), canvasWidth x
+        // canvasHeight tiles, containing the footprint tiles too. The footprint's top-left tile sits at (originX, originY)
+        // tiles inside the canvas (+x right, +y down); a plain 3x3 canvas is 0,0. Everything on the canvas outside the
+        // footprint is the overhang; it is worked out automatically.
+        public static void RegisterOverhang<T>(int tileType, string onPath, string offPath,
+            int footprintWidth, int footprintHeight, int canvasWidth, int canvasHeight, float originX, float originY) where T : BaseMachine, new()
+        {
+            if (footprintWidth <= 0 || footprintHeight <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(footprintWidth), "Footprint size must be at least 1x1 tiles.");
+            }
+
+            if (originX < 0f || originY < 0f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(originX), "The footprint origin can't be negative; it is the footprint's top-left position inside the canvas.");
+            }
+
+            if (originX + footprintWidth > canvasWidth || originY + footprintHeight > canvasHeight)
+            {
+                throw new ArgumentOutOfRangeException(nameof(canvasWidth), $"{typeof(T).Name}: the footprint ({footprintWidth}x{footprintHeight} at {originX},{originY}) doesn't fit inside the {canvasWidth}x{canvasHeight} canvas.");
+            }
+
+            Register<T>(tileType, onPath, offPath);
+
+            Definitions[tileType].OnCanvas = new MachineOnCanvas
+            {
+                FootprintWidth = footprintWidth,
+                FootprintHeight = footprintHeight,
+                CanvasWidth = canvasWidth,
+                CanvasHeight = canvasHeight,
+                OriginX = originX,
+                OriginY = originY
+            };
+        }
     }
 
     public class MachineVisualOverride : GlobalTile
@@ -78,6 +129,15 @@ namespace Factorraria.Common.Machines
             BaseMachine entity = def.GetEntity(i, j);
 
             InitializeMachine(entity);
+
+            if (def.OnCanvas != null && entity.isOn && entity.isWorking)
+            {
+                // The whole machine (footprint tiles + overhang) is drawn as one canvas by MachineOverhangSystem.PostDrawTiles,
+                // so nothing is drawn per tile here.
+                TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
+                entity.NotifyAnimationFrame(TileEntityHelper.GetAnimationFrame(topLeft, def.OnCanvas.FrameCount(def.OnTexture.Value)));
+                return false;
+            }
 
             var texture = entity.isOn && entity.isWorking ? def.OnTexture : def.OffTexture;
 

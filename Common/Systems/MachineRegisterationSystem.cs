@@ -15,6 +15,7 @@ using Factorraria.Content.Tiles.Machines.GeneralMachines.DecayChamber;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssembler;
 
 namespace Factorraria.Common.Machines
 {
@@ -32,6 +33,7 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.Hellforge, new HellforgeUIState());
             MachineUIRegistry.Register(TileID.Extractinator, new ExtractinatorUIState());
             MachineUIRegistry.Register(TileID.LesionStation, new DecayChamberUIState());
+            MachineUIRegistry.Register(ModContent.TileType<MechanicalAssemblerTile>(), new MechanicalAssemblerUIState());
             // etc...
         }
 
@@ -101,6 +103,14 @@ namespace Factorraria.Common.Machines
             MachineVisualRegistry.Register<MotorMK1TileEntity>(ModContent.TileType<MotorMK1Tile>(),
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/Motors/MotorMK1_On",
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/Motors/MotorMK1_Off");
+
+
+            MachineVisualRegistry.RegisterOverhang<MechanicalAssemblerTileEntity>(ModContent.TileType<MechanicalAssemblerTile>(),
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_On",
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_Off",
+                footprintWidth: 3, footprintHeight: 3,
+                canvasWidth: 9, canvasHeight: 5,
+                originX: 3, originY: 2);
         }
 
         public override void PostAddRecipes()
@@ -114,6 +124,7 @@ namespace Factorraria.Common.Machines
             DecayChamberRecipeRegistry.BuildRecipes();
             AutohammerRecipeRegistry.BuildRecipes();
             ExtractinatorRecipeRegistry.BuildRecipes();
+            MechanicalAssemblerRecipeRegistry.BuildRecipes();
 
 
             // Recipe discovery: lets scrolls roll a recipe and resolve a saved key back to (machine, group).
@@ -125,6 +136,7 @@ namespace Factorraria.Common.Machines
             RecipeCatalog.Register("LiquidDistillator", LiquidDistillatorRecipeRegistry.Book);
             RecipeCatalog.Register("DecayChamber", DecayChamberRecipeRegistry.Book);
             RecipeCatalog.Register("Autohammer", AutohammerRecipeRegistry.Book);
+            RecipeCatalog.Register("MechanicalAssembler", MechanicalAssemblerRecipeRegistry.Book);
 
             // Auto-fill recipe times: any recipe without its own TakesTicks gets the time of the machine that owns its book,
             // so the recipe book always has a time to show. Runs on every load, nothing is saved. If two machines ever

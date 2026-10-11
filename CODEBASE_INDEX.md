@@ -1,30 +1,30 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-11 | 165 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-11 | 171 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-RecipeBook(20) LiquidTypeRegistry(20) BaseMachine(16) CustomRecipe(13) MachineUIStateBase(11) RecipeOutputGroup(10) MachineUIElementEntry(10) LiquidStack(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) MotorTileEntityBase(6) LiquidTankUIElement(6) Direction(6) ScrollPools(5)
+RecipeBook(22) LiquidTypeRegistry(20) BaseMachine(17) CustomRecipe(13) MachineUIStateBase(12) MachineUIElementEntry(11) RecipeOutputGroup(10) LiquidStack(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) MotorTileEntityBase(6) LiquidTankUIElement(6) Direction(6) TileEntityHelper(5)
 
 ## Inheritance
 Project bases -> derived:
 - BaseMachine: DecayChamberTileEntity, ElectricConsumerMachine, ElectricProducerMachine, FurnaceTileEntity, HellforgeTileEntity, IceMachineTileEntity, LiquidDistillatorTileEntity
 - BucketBase: FuelBucket, OilBucket
-- ElectricConsumerMachine: AutohammerTileEntity, ExtractinatorTileEntity, MotorTileEntityBase, SolidifierTileEntity
+- ElectricConsumerMachine: AutohammerTileEntity, ExtractinatorTileEntity, MechanicalAssemblerTileEntity, MotorTileEntityBase, SolidifierTileEntity
 - ElectricProducerMachine: GelBurnerTileEntity
 - IElectricConsumer: ElectricConsumerMachine
 - IElectricProducer: ElectricProducerMachine
 - IZoomScalable: RecipeBrowserPanel
-- MachineUIStateBase: AutohammerUIState, DecayChamberUIState, ExtractinatorUIState, FurnaceUIState, GelBurnerUIState, HellforgeUIState, IceMachineUIState, LiquidDistillatorUIState, SolidifierUIState
+- MachineUIStateBase: AutohammerUIState, DecayChamberUIState, ExtractinatorUIState, FurnaceUIState, GelBurnerUIState, HellforgeUIState, IceMachineUIState, LiquidDistillatorUIState, MechanicalAssemblerUIState, SolidifierUIState
 - MotorTileBase: MotorMK1Tile
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModItem (31): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
-- ModSystem (23): CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineRegisterationSystem, MachineUISystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, SiliconOreWorldGen, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
+- ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
+- ModSystem (24): CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, SiliconOreWorldGen, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
+- ModTile (7): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, SiliconOreTile
 - ModPlayer (6): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
-- ModTile (6): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MotorTileBase, PipeTileBase, PureSiliconTile, SiliconOreTile
 - GlobalItem (5): CartModuleItemGlobal, IceBladeItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - GlobalTile (3): ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride
@@ -263,13 +263,18 @@ tModLoader/other bases -> project types:
 **MachineBiome.cs**
   enum MachineBiome
     {Unknown, Forest, Snow, Desert, Jungle, GlowingMushroom, Corruption, Crimson, Hallow, Underworld, Cavern, Underground, Sky, Ocean, ...}
+**MachineOverhangSystem.cs** uses: BaseMachine, MachineOnCanvas, MachineVisualRegistry, TileEntityHelper
+  class MachineOverhangSystem : ModSystem
+    +PostDrawTiles()[ov]
 **MachineVisualOverride.cs** uses: BaseMachine, Direction, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MotorTileEntityBase, TileEntityHelper
   class LiquidOverlayLayer
     +SourceTexture:Asset<Texture2D> +GetLiquidStack:Func<BaseMachine, LiquidStack> +CacheKey:string
+  class MachineOnCanvas
+    +FootprintWidth:int +FootprintHeight:int +CanvasWidth:int +CanvasHeight:int +OriginX:float +OriginY:float +Warned:bool +FrameCount(Texture2D)
   class MachineVisualDefinition
-    +GetEntity:Func<int, int, BaseMachine> +OnTexture:Asset<Texture2D> +OffTexture:Asset<Texture2D> +LiquidOverlays:List<LiquidOverlayLayer>
+    +GetEntity:Func<int, int, BaseMachine> +OnTexture:Asset<Texture2D> +OffTexture:Asset<Texture2D> +LiquidOverlays:List<LiquidOverlayLayer> +OnCanvas:MachineOnCanvas
   static class MachineVisualRegistry
-    +Definitions:Dictionary<int, MachineVisualDefinition>[s] +Register<T>(int,string,string)[s] +RegisterLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>)[s]
+    +Definitions:Dictionary<int, MachineVisualDefinition>[s] +Register<T>(int,string,string)[s] +RegisterLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>)[s] +RegisterOverhang<T>(int,string,string,int,int,int,int,float,float)[s]
   class MachineVisualOverride : GlobalTile
     +PreDraw(int,int,int,SpriteBatch)[ov] +RightClick(int,int,int)[ov] +PlaceInWorld(int,int,int,Item)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +ModifyLight(int,int,int,ref float,ref float,ref float)[ov]
 **RecipeVisibility.cs** uses: CustomRecipe, Entry, FurnaceOffsetConfig, RecipeCatalog, RecipeIngredient, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey
@@ -279,7 +284,7 @@ tModLoader/other bases -> project types:
     +HeldVersion:int[s] +BuildIngredientIndex()[s] +ClearIndex()[s] +InvalidateHeld()[s] +GetState(string,RecipeOutputGroup)[s] +GetState(string)[s] +Poll()[s] +IsItemHeld(int)[s] +IsHeld(string)[s] +IsNameRevealedInBrowser(string,RecipeOutputGroup,RecipeState)[s] +IsProductCrafted(RecipeOutputKey)[s] +IsIngredientRevealed(int)[s] +IsLiquidRevealed(int)[s] +FindBookRecipeFor(RecipeOutputKey,string)[s] +InBook(RecipeState)[s]
 **TileEntityHelper.cs** uses: FurnaceOffsetConfig, LiquidNetworkSystem, PowerGridSystem
   static class TileEntityHelper
-    +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float)[s]
+    +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float)[s] +GetAnimationFrame(Point16,int)[s]
 
 ### Common/Mounts/
 **MechanicalArmIK.cs**
@@ -331,7 +336,7 @@ tModLoader/other bases -> project types:
     +AllPipeTiles:HashSet<Point>[s] +ActiveNetworks:List<LiquidNetwork>[s] +networkNeedsRebuilding:bool[s] +flowNeedsRecalculating:bool[s] +PostUpdateWorld()[ov] +RegisterPipeTile(Point)[s] +UnregisterPipeTile(Point)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov]
   class PriorityQueueLite<T>
     +Enqueue(T,float) +TryDequeue(out T,out float)
-**MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MotorMK1Tile, MotorMK1TileEntity, RecipeBook, RecipeCatalog, RecipeVisibility, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState
+**MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MotorMK1Tile, MotorMK1TileEntity, RecipeBook, RecipeCatalog, RecipeVisibility, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState
   class MachineRegisterationSystem : ModSystem
     +Load()[ov] +PostSetupContent()[ov] +PostAddRecipes()[ov] +Unload()[ov]
 **MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem
@@ -534,6 +539,11 @@ tModLoader/other bases -> project types:
 **PipeMK1Item.cs** uses: PipeMK1Tile
   class PipeMK1Item : ModItem
 
+### Content/Items/Machines/
+**MechanicalAssemblerItem.cs** uses: MechanicalAssemblerTile
+  class MechanicalAssemblerItem : ModItem
+    +Texture:string[ov] +AddRecipes()[ov]
+
 ### Content/Items/Materials/
 **ByriteAlloyItem.cs**
   class ByriteAlloyItem : ModItem
@@ -659,6 +669,20 @@ tModLoader/other bases -> project types:
     +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #WorkDuration:int[ov] +Update()[ov] #TryGetIntakeSlot(int,out int,out int)[ov]
 **ExtractinatorUIState.cs** uses: ElectricityUIIcon, ExtractinatorTileEntity, MachineUIElementEntry, MachineUIStateBase
   class ExtractinatorUIState : MachineUIStateBase
+    #BuildElements()[ov]
+
+### Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/
+**MechanicalAssemblerRecipeRegistry.cs** uses: RecipeBook
+  class MechanicalAssemblerRecipeRegistry
+    +Book:RecipeBook[s] +BuildRecipes()[s]
+**MechanicalAssemblerTile.cs** uses: MechanicalAssemblerItem, MechanicalAssemblerTileEntity
+  class MechanicalAssemblerTile : ModTile
+    +Texture:string[ov]
+**MechanicalAssemblerTileEntity.cs** uses: ElectricConsumerMachine, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, RecipeBook
+  class MechanicalAssemblerTileEntity : ElectricConsumerMachine
+    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] +PowerDemand:float[ov] #OutputSlotCount:int[ov]
+**MechanicalAssemblerUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTileEntity
+  class MechanicalAssemblerUIState : MachineUIStateBase
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/Solidifier/

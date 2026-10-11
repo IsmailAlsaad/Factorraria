@@ -127,26 +127,25 @@ namespace Factorraria.Common.Machines
             Vector2 drawPosition = new Vector2(i, j) * 16 - Main.screenPosition + offset + new Vector2(0, data.DrawYOffset) + origin;
             int frameCount = targetTexture.Height / frameHeight;
 
-            //
-            FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
-            int animationSpeed = config.animationSpeedDivider;
-            //
 
             TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
-            int frameSpatialOffset = 0;
-            int frameYOffset = 0;
-
-            if (frameCount != 1)
-            { 
-                frameSpatialOffset = (topLeft.X * 3) + (topLeft.Y * 7);
-                frameYOffset = (int)((Main.GameUpdateCount / (long)animationSpeed + (long)frameSpatialOffset) % frameCount);
-            }
+            int frameYOffset = GetAnimationFrame(topLeft, frameCount);
 
             Rectangle textureSlice = new Rectangle(thisTile.TileFrameX, thisTile.TileFrameY + frameHeight * frameYOffset, 16, data.CoordinateHeights[subY]);
             Color lightingColor = Lighting.GetColor(i, j);
             spriteBatch.Draw(targetTexture, drawPosition, textureSlice, lightingColor, rotation, origin, 1f, SpriteEffects.None, 0f);
 
             return frameYOffset;
+        }
+
+        // Shared by the per-tile slices and the On canvas so every layer of one machine animates in step.
+        public static int GetAnimationFrame(Point16 topLeft, int frameCount)
+        {
+            if (frameCount <= 1) return 0;
+
+            int animationSpeed = Math.Max(1, ModContent.GetInstance<FurnaceOffsetConfig>().animationSpeedDivider);
+            long spatialOffset = (topLeft.X * 3) + (topLeft.Y * 7);
+            return (int)((Main.GameUpdateCount / animationSpeed + spatialOffset) % frameCount);
         }
     }
 }

@@ -854,6 +854,11 @@ namespace Factorraria.Common.Machines
             //    return -1;
             //}
 
+            // The hook is given the placement origin tile of a multitile, but the entity always lives at the top-left corner.
+            Point16 topLeft = TileObjectData.TopLeft(i, j);
+            i = topLeft.X;
+            j = topLeft.Y;
+
             Tile tile = Framing.GetTileSafely(i, j);
             if (!tile.HasTile || tile.TileType != ValidTileType)
                 return -1;

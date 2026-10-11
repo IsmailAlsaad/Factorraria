@@ -45,6 +45,11 @@ Items: {
 			'''
 	}
 
+	MechanicalAssemblerItem: {
+		DisplayName: Mechanical Assembler
+		Tooltip: ""
+	}
+
 	MotorMK1Item: {
 		DisplayName: Motor MK1
 		Tooltip: Right click to rotate the tile
@@ -282,10 +287,12 @@ RecipeBook: {
 		LiquidDistillator: Liquid Distillator
 		DecayChamber: Decay Chamber
 		Autohammer: Autohammer
+		MechanicalAssembler: Mechanical Assembler
 	}
 }
 
 Tiles: {
 	PureSiliconTile.MapEntry: Pure Silicon
 	SiliconOreTile.MapEntry: Silicon Ore
+	MechanicalAssemblerTile.MapEntry: Mechanical Assembler
 }
