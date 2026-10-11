@@ -233,6 +233,7 @@ namespace Factorraria.Common.Machines
         public override void Update()
         {
             ScanVItems();
+            ReleaseOutputSlotsToConveyor();
             if (!IsElectric) isOn = true;       // only power-network machines are switched by the grid
             ReleaseHiddenIngredientSlots();
             ProcessRecipes();                   // does nothing unless Recipes is overridden
@@ -484,6 +485,29 @@ namespace Factorraria.Common.Machines
         #endregion
 
         #region Conveyor intake
+
+        // On a conveyor, items that piled up in the output slots while the footprint was clogged are released
+        // back into the world, one at a time, as soon as a footprint tile is free again.
+        void ReleaseOutputSlotsToConveyor()
+        {
+            if (OutputSlotCount == 0) return;
+
+            Item[] slots = OutputSlots;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                Item slot = slots[i];
+                if (slot.IsAir) continue;
+                if (!IsOnConveyorFloor()) return;
+                if (!TryFindConveyorOutputTile(out Point tile)) return;   // still clogged
+
+                Item one = slot.Clone();
+                one.stack = 1;
+                if (VirtualItemSystem.SpawnVirtualItem(one, tile.X, tile.Y) == null) continue;
+
+                slot.stack--;
+                if (slot.stack <= 0) slots[i] = new Item();
+            }
+        }
 
         void ScanVItems()
         {
