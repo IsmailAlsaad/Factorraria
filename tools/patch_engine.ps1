@@ -117,9 +117,8 @@ function Run-Patch {
     Write-Host ''
     Write-Host "PATCH APPLIED - $($temps.Count) file(s) written:" -ForegroundColor Green
     foreach ($full in $temps.Keys) { Write-Host "  $($full.Substring([IO.Path]::GetFullPath($Root).TrimEnd('\','/').Length + 1))" }
-}
 
-    # LET THIS RUN AFTER THE PATCH HAS WRITTEN EVERY CHANGE TO THE FILES
+    # Runs only here: after PHASE 3 has written every file. Dry runs and halts return earlier and never reach it.
     $indexScript = Join-Path $Root 'index_codebase.py'
     if (Test-Path -LiteralPath $indexScript) {
         $py = Get-Command python -ErrorAction SilentlyContinue
@@ -135,5 +134,6 @@ function Run-Patch {
             Write-Host 'python not found - run index_codebase.py manually.' -ForegroundColor Yellow
         }
     }
+}
     
 # ------------------------------- END ENGINE -----------------------------------
