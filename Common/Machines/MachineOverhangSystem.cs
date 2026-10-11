@@ -8,7 +8,7 @@ using Terraria.ObjectData;
 
 namespace Factorraria.Common.Machines
 {
-    // Draws the On canvas of every machine registered with MachineVisualRegistry.RegisterOverhang once per machine,
+    // Draws the canvas (On or Off texture) of every machine registered with MachineVisualRegistry.RegisterOverhang once per machine,
     // after all tiles are drawn, so the art can spill past the footprint without neighbouring tiles painting over it.
     public class MachineOverhangSystem : ModSystem
     {
@@ -22,34 +22,40 @@ namespace Factorraria.Common.Machines
 
             foreach (TileEntity entity in TileEntity.ByPosition.Values)
             {
-                if (entity is not BaseMachine machine || !machine.isOn || !machine.isWorking)
+                if (entity is not BaseMachine machine)
                     continue;
 
                 Point16 corner = machine.Position;
                 Tile tile = Framing.GetTileSafely(corner.X, corner.Y);
-                if (!tile.HasTile || !MachineVisualRegistry.Definitions.TryGetValue(tile.TileType, out var def) || def.OnCanvas == null)
+                if (!tile.HasTile || !MachineVisualRegistry.Definitions.TryGetValue(tile.TileType, out var def) || def.Canvas == null)
                     continue;
 
                 TileObjectData data = TileObjectData.GetTileData(tile.TileType, 0);
                 if (data == null)
                     continue;
 
-                MachineOnCanvas canvas = def.OnCanvas;
-                Texture2D texture = def.OnTexture.Value;
-                int canvasWidth = canvas.CanvasWidth * 16;
-                int canvasHeight = canvas.CanvasHeight * 16;
-
-                if (texture.Width != canvasWidth || texture.Height < canvasHeight || texture.Height % canvasHeight != 0
-                    || canvas.FootprintWidth != data.Width || canvas.FootprintHeight != data.Height)
+                MachineCanvas canvas = def.Canvas;
+                bool wasResolved = canvas.Resolved;
+                if (!canvas.Resolve(def.OnTexture.Value, def.OffTexture.Value))
                 {
-                    if (!canvas.Warned)
+                    if (!wasResolved)
+                        Mod.Logger.Warn($"Overhang canvas for tile {tile.TileType} is invalid: {canvas.Error}");
+                    continue;
+                }
+
+                if (canvas.FootprintWidth != data.Width || canvas.FootprintHeight != data.Height)
+                {
+                    if (!canvas.Resolved || canvas.Error == null)
                     {
-                        canvas.Warned = true;
-                        Mod.Logger.Warn($"On texture {texture.Name} is {texture.Width}x{texture.Height}, expected {canvasWidth} wide and a multiple of {canvasHeight} tall " +
-                            $"({canvas.CanvasWidth}x{canvas.CanvasHeight} tile canvas, frames stacked), footprint {canvas.FootprintWidth}x{canvas.FootprintHeight} (tile is {data.Width}x{data.Height}).");
+                        canvas.Error = $"registered footprint {canvas.FootprintWidth}x{canvas.FootprintHeight} but the tile is {data.Width}x{data.Height}.";
+                        Mod.Logger.Warn($"Overhang canvas for tile {tile.TileType} is invalid: {canvas.Error}");
                     }
                     continue;
                 }
+
+                Texture2D texture = machine.isOn && machine.isWorking ? def.OnTexture.Value : def.OffTexture.Value;
+                int canvasWidth = canvas.CanvasWidth * 16;
+                int canvasHeight = canvas.CanvasHeight * 16;
 
                 Vector2 worldTopLeft = new Vector2(corner.X * 16 - canvas.OriginX * 16f, corner.Y * 16 - canvas.OriginY * 16f);
                 Vector2 canvasCenter = worldTopLeft + new Vector2(canvasWidth, canvasHeight) / 2f;

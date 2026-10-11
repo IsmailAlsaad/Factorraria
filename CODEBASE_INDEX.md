@@ -4,7 +4,7 @@ generated 2026-10-11 | 171 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-RecipeBook(22) LiquidTypeRegistry(20) BaseMachine(17) CustomRecipe(13) MachineUIStateBase(12) MachineUIElementEntry(11) RecipeOutputGroup(10) LiquidStack(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) MotorTileEntityBase(6) LiquidTankUIElement(6) Direction(6) TileEntityHelper(5)
+RecipeBook(22) LiquidTypeRegistry(20) BaseMachine(17) CustomRecipe(13) MachineUIStateBase(12) MachineUIElementEntry(11) RecipeOutputGroup(10) LiquidStack(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) MotorTileEntityBase(6) LiquidTankUIElement(6) Direction(6) TinWireItem(5)
 
 ## Inheritance
 Project bases -> derived:
@@ -263,18 +263,18 @@ tModLoader/other bases -> project types:
 **MachineBiome.cs**
   enum MachineBiome
     {Unknown, Forest, Snow, Desert, Jungle, GlowingMushroom, Corruption, Crimson, Hallow, Underworld, Cavern, Underground, Sky, Ocean, ...}
-**MachineOverhangSystem.cs** uses: BaseMachine, MachineOnCanvas, MachineVisualRegistry, TileEntityHelper
+**MachineOverhangSystem.cs** uses: BaseMachine, MachineCanvas, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
     +PostDrawTiles()[ov]
 **MachineVisualOverride.cs** uses: BaseMachine, Direction, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MotorTileEntityBase, TileEntityHelper
   class LiquidOverlayLayer
     +SourceTexture:Asset<Texture2D> +GetLiquidStack:Func<BaseMachine, LiquidStack> +CacheKey:string
-  class MachineOnCanvas
-    +FootprintWidth:int +FootprintHeight:int +CanvasWidth:int +CanvasHeight:int +OriginX:float +OriginY:float +Warned:bool +FrameCount(Texture2D)
+  class MachineCanvas
+    +FootprintWidth:int +FootprintHeight:int +Frames:int +CanvasWidth:int +CanvasHeight:int +OriginX:float +OriginY:float +Resolved:bool +Valid:bool +Error:string +FrameCount(Texture2D) +Resolve(Texture2D,Texture2D)
   class MachineVisualDefinition
-    +GetEntity:Func<int, int, BaseMachine> +OnTexture:Asset<Texture2D> +OffTexture:Asset<Texture2D> +LiquidOverlays:List<LiquidOverlayLayer> +OnCanvas:MachineOnCanvas
+    +GetEntity:Func<int, int, BaseMachine> +OnTexture:Asset<Texture2D> +OffTexture:Asset<Texture2D> +LiquidOverlays:List<LiquidOverlayLayer> +Canvas:MachineCanvas
   static class MachineVisualRegistry
-    +Definitions:Dictionary<int, MachineVisualDefinition>[s] +Register<T>(int,string,string)[s] +RegisterLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>)[s] +RegisterOverhang<T>(int,string,string,int,int,int,int,float,float)[s]
+    +Definitions:Dictionary<int, MachineVisualDefinition>[s] +Register<T>(int,string,string)[s] +RegisterLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>)[s] +RegisterOverhang<T>(int,string,string,int,int,float,float,int)[s]
   class MachineVisualOverride : GlobalTile
     +PreDraw(int,int,int,SpriteBatch)[ov] +RightClick(int,int,int)[ov] +PlaceInWorld(int,int,int,Item)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +ModifyLight(int,int,int,ref float,ref float,ref float)[ov]
 **RecipeVisibility.cs** uses: CustomRecipe, Entry, FurnaceOffsetConfig, RecipeCatalog, RecipeIngredient, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey
@@ -351,7 +351,7 @@ tModLoader/other bases -> project types:
 **RecipeBookSystem.cs** uses: CartChestUISystem, Factorraria, MachineUISystem, RecipeBookArt, RecipeBookButtonState, RecipeBookState, RecipeIcon
   class RecipeBookSystem : ModSystem
     +IsOpen:bool[s] +Open()[s] +OpenAt(string)[s] +Close(bool)[s] +Toggle()[s] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
-**RecipeSystem.cs** uses: ByriteAlloyItem, CopperWireItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
+**RecipeSystem.cs** uses: ByriteAlloyItem, CopperWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, RecipeBook, SimpleCircuitItem, TinWireItem
   class RecipeSystem : ModSystem
     +AddRecipes()[ov] +AddRecipeGroups()[ov]
 **VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FurnaceOffsetConfig, PriorityConveyorNetwork, VItemGlobalItem, VirtualItem
@@ -671,7 +671,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/
-**MechanicalAssemblerRecipeRegistry.cs** uses: RecipeBook
+**MechanicalAssemblerRecipeRegistry.cs** uses: CopperWireItem, GoldPlateItem, GoldWireItem, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
   class MechanicalAssemblerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **MechanicalAssemblerTile.cs** uses: MechanicalAssemblerItem, MechanicalAssemblerTileEntity

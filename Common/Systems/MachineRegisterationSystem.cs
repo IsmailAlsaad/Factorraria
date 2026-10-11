@@ -109,7 +109,6 @@ namespace Factorraria.Common.Machines
                 "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_On",
                 "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_Off",
                 footprintWidth: 3, footprintHeight: 3,
-                canvasWidth: 9, canvasHeight: 5,
                 originX: 3, originY: 2);
         }
 

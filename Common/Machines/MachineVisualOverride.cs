@@ -19,18 +19,56 @@ namespace Factorraria.Common.Machines
         public string CacheKey;
     }
 
-    // An On texture drawn on a canvas bigger than the tile footprint (see MachineVisualRegistry.RegisterOverhang).
-    public class MachineOnCanvas
+    // The canvas shared by BOTH the On and Off textures of an overhang machine (see MachineVisualRegistry.RegisterOverhang).
+    // Canvas size is read from the On texture the first time it is needed (width = pixels / 16, height = pixels / 16 / Frames).
+    public class MachineCanvas
     {
         public int FootprintWidth;   // tiles
         public int FootprintHeight;  // tiles
-        public int CanvasWidth;      // tiles, one frame
-        public int CanvasHeight;     // tiles, one frame
+        public int Frames = 1;       // number of stacked frames in the On texture (only used to detect the canvas height)
+        public int CanvasWidth;      // tiles, one frame (auto-detected)
+        public int CanvasHeight;     // tiles, one frame (auto-detected)
         public float OriginX;        // tiles: where the footprint's top-left tile sits inside a frame (+x right, +y down)
         public float OriginY;
-        public bool Warned;
+        public bool Resolved;
+        public bool Valid;
+        public string Error;
 
         public int FrameCount(Texture2D texture) => Math.Max(1, texture.Height / (CanvasHeight * 16));
+
+        // Works out the canvas size from the On texture and checks that the Off texture matches it. Runs once.
+        public bool Resolve(Texture2D on, Texture2D off)
+        {
+            if (Resolved)
+                return Valid;
+
+            Resolved = true;
+            Frames = Math.Max(1, Frames);
+
+            if (on.Width % 16 != 0 || on.Height % (16 * Frames) != 0)
+            {
+                Error = $"On texture is {on.Width}x{on.Height}; width must be a multiple of 16 and height a multiple of 16 x {Frames} frame(s).";
+                return false;
+            }
+
+            CanvasWidth = on.Width / 16;
+            CanvasHeight = on.Height / 16 / Frames;
+
+            if (off.Width != on.Width || off.Height % (CanvasHeight * 16) != 0)
+            {
+                Error = $"Off texture is {off.Width}x{off.Height}; it must be {on.Width} wide and a multiple of {CanvasHeight * 16} tall (same canvas as On).";
+                return false;
+            }
+
+            if (OriginX + FootprintWidth > CanvasWidth || OriginY + FootprintHeight > CanvasHeight)
+            {
+                Error = $"the footprint ({FootprintWidth}x{FootprintHeight} at {OriginX},{OriginY}) doesn't fit inside the detected {CanvasWidth}x{CanvasHeight} canvas.";
+                return false;
+            }
+
+            Valid = true;
+            return true;
+        }
     }
 
     public class MachineVisualDefinition
@@ -39,7 +77,7 @@ namespace Factorraria.Common.Machines
         public Asset<Texture2D> OnTexture;
         public Asset<Texture2D> OffTexture;
         public List<LiquidOverlayLayer> LiquidOverlays = new();
-        public MachineOnCanvas OnCanvas;   // null = the On texture is a normal footprint-sized sheet
+        public MachineCanvas Canvas;   // null = On and Off are normal footprint-sized sheets
     }
 
     public static class MachineVisualRegistry
@@ -82,13 +120,14 @@ namespace Factorraria.Common.Machines
             });
         }
 
-        // Use INSTEAD of Register<T> when the On art is bigger than the tile footprint. The Off texture stays a normal
-        // footprint-sized sheet. The On texture is ONE canvas per frame (frames stacked vertically), canvasWidth x
-        // canvasHeight tiles, containing the footprint tiles too. The footprint's top-left tile sits at (originX, originY)
-        // tiles inside the canvas (+x right, +y down); a plain 3x3 canvas is 0,0. Everything on the canvas outside the
-        // footprint is the overhang; it is worked out automatically.
+        // Use INSTEAD of Register<T> when the art is bigger than the tile footprint. BOTH the On and Off textures are
+        // canvases of the SAME size (frames stacked vertically, each texture may have its own frame count), containing the
+        // footprint tiles too. The footprint's top-left tile sits at (originX, originY) tiles inside the canvas
+        // (+x right, +y down). Canvas width/height are detected from the On texture (pixels / 16); pass frames only if the
+        // On texture has more than one frame stacked. Anything outside the footprint that you don't want drawn in a given
+        // state (e.g. Off has no overhang) is just left transparent in that texture.
         public static void RegisterOverhang<T>(int tileType, string onPath, string offPath,
-            int footprintWidth, int footprintHeight, int canvasWidth, int canvasHeight, float originX, float originY) where T : BaseMachine, new()
+            int footprintWidth, int footprintHeight, float originX, float originY, int frames = 1) where T : BaseMachine, new()
         {
             if (footprintWidth <= 0 || footprintHeight <= 0)
             {
@@ -100,19 +139,13 @@ namespace Factorraria.Common.Machines
                 throw new ArgumentOutOfRangeException(nameof(originX), "The footprint origin can't be negative; it is the footprint's top-left position inside the canvas.");
             }
 
-            if (originX + footprintWidth > canvasWidth || originY + footprintHeight > canvasHeight)
-            {
-                throw new ArgumentOutOfRangeException(nameof(canvasWidth), $"{typeof(T).Name}: the footprint ({footprintWidth}x{footprintHeight} at {originX},{originY}) doesn't fit inside the {canvasWidth}x{canvasHeight} canvas.");
-            }
-
             Register<T>(tileType, onPath, offPath);
 
-            Definitions[tileType].OnCanvas = new MachineOnCanvas
+            Definitions[tileType].Canvas = new MachineCanvas
             {
                 FootprintWidth = footprintWidth,
                 FootprintHeight = footprintHeight,
-                CanvasWidth = canvasWidth,
-                CanvasHeight = canvasHeight,
+                Frames = frames,
                 OriginX = originX,
                 OriginY = originY
             };
@@ -130,12 +163,16 @@ namespace Factorraria.Common.Machines
 
             InitializeMachine(entity);
 
-            if (def.OnCanvas != null && entity.isOn && entity.isWorking)
+            if (def.Canvas != null)
             {
-                // The whole machine (footprint tiles + overhang) is drawn as one canvas by MachineOverhangSystem.PostDrawTiles,
-                // so nothing is drawn per tile here.
-                TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
-                entity.NotifyAnimationFrame(TileEntityHelper.GetAnimationFrame(topLeft, def.OnCanvas.FrameCount(def.OnTexture.Value)));
+                // The whole machine (footprint tiles + overhang), On or Off, is drawn as one canvas by
+                // MachineOverhangSystem.PostDrawTiles, so nothing is drawn per tile here.
+                if (def.Canvas.Resolve(def.OnTexture.Value, def.OffTexture.Value))
+                {
+                    var canvasTexture = entity.isOn && entity.isWorking ? def.OnTexture : def.OffTexture;
+                    TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
+                    entity.NotifyAnimationFrame(TileEntityHelper.GetAnimationFrame(topLeft, def.Canvas.FrameCount(canvasTexture.Value)));
+                }
                 return false;
             }
 
