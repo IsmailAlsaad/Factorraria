@@ -53,7 +53,8 @@ namespace Factorraria.Common.Machines
                     continue;
                 }
 
-                Texture2D texture = machine.isOn && machine.isWorking ? def.OnTexture.Value : def.OffTexture.Value;
+                bool working = machine.isOn && machine.isWorking;
+                Texture2D texture = working ? def.OnTexture.Value : def.OffTexture.Value;
                 int canvasWidth = canvas.CanvasWidth * 16;
                 int canvasHeight = canvas.CanvasHeight * 16;
 
@@ -62,8 +63,8 @@ namespace Factorraria.Common.Machines
                 if (!BaseMachine.IsOnScreen(canvasCenter, Math.Max(canvasWidth, canvasHeight) / 2f))
                     continue;
 
-                int frame = TileEntityHelper.GetAnimationFrame(corner, canvas.FrameCount(texture));
-                Rectangle source = new Rectangle(0, frame * canvasHeight, canvasWidth, canvasHeight);
+                int frame = TileEntityHelper.GetAnimationFrame(corner, canvas.FrameCount(working));
+                int frameY = frame * canvas.FrameStride;
                 Color color = Lighting.GetColor(corner.X + data.Width / 2, corner.Y + data.Height / 2);
 
                 if (!batchBegun)
@@ -72,7 +73,14 @@ namespace Factorraria.Common.Machines
                     batchBegun = true;
                 }
 
-                spriteBatch.Draw(texture, worldTopLeft - Main.screenPosition, source, color, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                for (int cx = 0; cx < canvas.CanvasWidth; cx++)
+                {
+                    for (int cy = 0; cy < canvas.CanvasHeight; cy++)
+                    {
+                        Rectangle source = new Rectangle(cx * canvas.CellSize, frameY + cy * canvas.CellSize, 16, 16);
+                        spriteBatch.Draw(texture, worldTopLeft + new Vector2(cx * 16, cy * 16) - Main.screenPosition, source, color, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                    }
+                }
             }
 
             if (batchBegun)

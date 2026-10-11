@@ -20,12 +20,15 @@ namespace Factorraria.Common.Machines
     }
 
     // The canvas shared by BOTH the On and Off textures of an overhang machine (see MachineVisualRegistry.RegisterOverhang).
-    // Canvas size is read from the On texture the first time it is needed (width = pixels / 16, height = pixels / 16 / Frames).
+    // Textures use the usual Terraria sheet layout: every 16px tile cell is followed by Padding px (so a cell is 18px).
+    // Canvas size is read from the On texture the first time it is needed.
     public class MachineCanvas
     {
         public int FootprintWidth;   // tiles
         public int FootprintHeight;  // tiles
-        public int Frames = 1;       // number of stacked frames in the On texture (only used to detect the canvas height)
+        public int OnFrames = 1;     // number of stacked frames in the On texture
+        public int OffFrames = 1;    // number of stacked frames in the Off texture
+        public int Padding = 2;      // px between tile cells in the texture
         public int CanvasWidth;      // tiles, one frame (auto-detected)
         public int CanvasHeight;     // tiles, one frame (auto-detected)
         public float OriginX;        // tiles: where the footprint's top-left tile sits inside a frame (+x right, +y down)
@@ -34,29 +37,37 @@ namespace Factorraria.Common.Machines
         public bool Valid;
         public string Error;
 
-        public int FrameCount(Texture2D texture) => Math.Max(1, texture.Height / (CanvasHeight * 16));
+        public int CellSize => 16 + Padding;
+        public int FrameStride => CanvasHeight * CellSize;   // px from one frame to the next
+        public int FrameCount(bool on) => on ? OnFrames : OffFrames;
 
-        // Works out the canvas size from the On texture and checks that the Off texture matches it. Runs once.
+        // Works out the canvas size from the On texture (and its frame count) and checks that the Off texture matches. Runs once.
+        // A trailing padding strip at the right/bottom edge of a texture is accepted but not required.
         public bool Resolve(Texture2D on, Texture2D off)
         {
             if (Resolved)
                 return Valid;
 
             Resolved = true;
-            Frames = Math.Max(1, Frames);
+            OnFrames = Math.Max(1, OnFrames);
+            OffFrames = Math.Max(1, OffFrames);
+            int cell = CellSize;
 
-            if (on.Width % 16 != 0 || on.Height % (16 * Frames) != 0)
+            CanvasWidth = (on.Width + Padding) / cell;
+            CanvasHeight = (on.Height + Padding) / (cell * OnFrames);
+
+            if (CanvasWidth < 1 || CanvasHeight < 1
+                || (on.Width != CanvasWidth * cell && on.Width != CanvasWidth * cell - Padding)
+                || (on.Height != CanvasHeight * cell * OnFrames && on.Height != CanvasHeight * cell * OnFrames - Padding))
             {
-                Error = $"On texture is {on.Width}x{on.Height}; width must be a multiple of 16 and height a multiple of 16 x {Frames} frame(s).";
+                Error = $"On texture is {on.Width}x{on.Height}; with {cell}px tile cells and {OnFrames} frame(s) it doesn't divide into a whole canvas.";
                 return false;
             }
 
-            CanvasWidth = on.Width / 16;
-            CanvasHeight = on.Height / 16 / Frames;
-
-            if (off.Width != on.Width || off.Height % (CanvasHeight * 16) != 0)
+            int offHeight = CanvasHeight * cell * OffFrames;
+            if (off.Width != on.Width || (off.Height != offHeight && off.Height != offHeight - Padding))
             {
-                Error = $"Off texture is {off.Width}x{off.Height}; it must be {on.Width} wide and a multiple of {CanvasHeight * 16} tall (same canvas as On).";
+                Error = $"Off texture is {off.Width}x{off.Height}; with {OffFrames} frame(s) it must be {on.Width}x{offHeight} (same canvas as On).";
                 return false;
             }
 
@@ -123,11 +134,12 @@ namespace Factorraria.Common.Machines
         // Use INSTEAD of Register<T> when the art is bigger than the tile footprint. BOTH the On and Off textures are
         // canvases of the SAME size (frames stacked vertically, each texture may have its own frame count), containing the
         // footprint tiles too. The footprint's top-left tile sits at (originX, originY) tiles inside the canvas
-        // (+x right, +y down). Canvas width/height are detected from the On texture (pixels / 16); pass frames only if the
-        // On texture has more than one frame stacked. Anything outside the footprint that you don't want drawn in a given
-        // state (e.g. Off has no overhang) is just left transparent in that texture.
+        // (+x right, +y down). Textures use the normal 16px tile + 2px padding layout (18px cells). Canvas width/height are
+        // detected from the On texture (pixels / 18, height also divided by onFrames). Pass onFrames / offFrames for each
+        // texture that has more than one frame stacked. Anything outside the footprint that you don't want drawn in a given
+        // state (e.g. Off has no overhang) is just left transparent.
         public static void RegisterOverhang<T>(int tileType, string onPath, string offPath,
-            int footprintWidth, int footprintHeight, float originX, float originY, int frames = 1) where T : BaseMachine, new()
+            int footprintWidth, int footprintHeight, float originX, float originY, int onFrames = 1, int offFrames = 1) where T : BaseMachine, new()
         {
             if (footprintWidth <= 0 || footprintHeight <= 0)
             {
@@ -145,7 +157,8 @@ namespace Factorraria.Common.Machines
             {
                 FootprintWidth = footprintWidth,
                 FootprintHeight = footprintHeight,
-                Frames = frames,
+                OnFrames = onFrames,
+                OffFrames = offFrames,
                 OriginX = originX,
                 OriginY = originY
             };
@@ -169,9 +182,8 @@ namespace Factorraria.Common.Machines
                 // MachineOverhangSystem.PostDrawTiles, so nothing is drawn per tile here.
                 if (def.Canvas.Resolve(def.OnTexture.Value, def.OffTexture.Value))
                 {
-                    var canvasTexture = entity.isOn && entity.isWorking ? def.OnTexture : def.OffTexture;
                     TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
-                    entity.NotifyAnimationFrame(TileEntityHelper.GetAnimationFrame(topLeft, def.Canvas.FrameCount(canvasTexture.Value)));
+                    entity.NotifyAnimationFrame(TileEntityHelper.GetAnimationFrame(topLeft, def.Canvas.FrameCount(entity.isOn && entity.isWorking)));
                 }
                 return false;
             }
