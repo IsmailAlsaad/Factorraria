@@ -15,7 +15,14 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
         {
             Book.Clear();
 
+            // Steel Screw
+            Recipe.Create(ModContent.ItemType<SteelScrewItem>(), 3)
+                .AddIngredient(ModContent.ItemType<SteelBarItem>(), 1)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+            
             RegisterManualRecipes();
+
             Book.ImportVanillaRecipes(TileID.HeavyWorkBench);
             RegisterManualRecipes();
 
@@ -39,12 +46,6 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
             // Gold Wire
             Recipe.Create(ModContent.ItemType<GoldWireItem>(), 2)
                 .AddIngredient(ModContent.ItemType<GoldPlateItem>(), 1)
-                .AddTile(TileID.HeavyWorkBench)
-                .Register();
-
-            // Steel Screw
-            Recipe.Create(ModContent.ItemType<SteelScrewItem>(), 3)
-                .AddIngredient(ModContent.ItemType<SteelBarItem>(), 1)
                 .AddTile(TileID.HeavyWorkBench)
                 .Register();
         }
