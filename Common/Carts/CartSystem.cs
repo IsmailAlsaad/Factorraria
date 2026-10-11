@@ -47,7 +47,8 @@ namespace Factorraria.Common.Carts
             Cart.FrameChanged -= OnCartFrameChanged;
             CartChain.Coupled -= OnCartCoupled;
             terrariumLiquidAsset = null;
-            chainAsset = null;
+            chainAssets.Clear();
+            chainTexturesFailed.Clear();
         }
 
         /// <summary>Placeholder bumper "boing". Swap the sound here once there is a real one.</summary>
@@ -761,27 +762,34 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        // The link art is vanilla chain texture 1 ("Chain" in the wiki's Chain IDs list, the grappling hook chain). Change the path to use another.
-        private const string ChainTexturePath = "Images/Chain";
+        // Each skin picks its own link art (CartSkinTable.GetChainName: a file in vanilla Images/). A missing file falls back to "Chain".
         private const float ChainHitchHeight = 15f; // px above the rail where the chain is hooked to a cart
-        private static Asset<Texture2D> chainAsset;
-        private static bool chainTextureFailed;
+        private static readonly Dictionary<string, Asset<Texture2D>> chainAssets = new Dictionary<string, Asset<Texture2D>>();
+        private static readonly HashSet<string> chainTexturesFailed = new HashSet<string>();
 
-        private static Texture2D GetChainTexture()
+        private static Texture2D GetChainTexture(string name)
         {
-            if (chainAsset == null && !chainTextureFailed)
+            Asset<Texture2D> asset;
+
+            if (!chainAssets.TryGetValue(name, out asset) && !chainTexturesFailed.Contains(name))
             {
                 try
                 {
-                    chainAsset = Main.Assets.Request<Texture2D>(ChainTexturePath, AssetRequestMode.ImmediateLoad);
+                    asset = Main.Assets.Request<Texture2D>("Images/" + name, AssetRequestMode.ImmediateLoad);
+                    chainAssets[name] = asset;
                 }
                 catch (Exception)
                 {
-                    chainTextureFailed = true; // fall back to a plain line
+                    chainTexturesFailed.Add(name); // this art does not exist: use the default chain instead
                 }
             }
 
-            return chainAsset != null ? chainAsset.Value : null;
+            if (asset != null)
+            {
+                return asset.Value;
+            }
+
+            return name != "Chain" ? GetChainTexture("Chain") : null; // null = plain line fallback
         }
 
         /// <summary>Draws the chain between two neighbouring carts, from the edge of one to the edge of the other (nothing if they overlap).</summary>
@@ -814,7 +822,7 @@ namespace Factorraria.Common.Carts
             float distance = Vector2.Distance(from, to);
             Color light = Lighting.GetColor((int)(middle.X / 16f), (int)(middle.Y / 16f));
 
-            Texture2D texture = GetChainTexture();
+            Texture2D texture = GetChainTexture(CartSkinTable.GetChainName(front.SkinType));
             if (texture == null)
             {
                 DrawLine(TextureAssets.MagicPixel.Value, from - Main.screenPosition, to - Main.screenPosition, light);

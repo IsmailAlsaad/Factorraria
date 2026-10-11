@@ -119,7 +119,7 @@ function Run-Patch {
     foreach ($full in $temps.Keys) { Write-Host "  $($full.Substring([IO.Path]::GetFullPath($Root).TrimEnd('\','/').Length + 1))" }
 }
 
-    # ---- AFTER APPLY: refresh the codebase index ----
+    # LET THIS RUN AFTER THE PATCH HAS WRITTEN EVERY CHANGE TO THE FILES
     $indexScript = Join-Path $Root 'index_codebase.py'
     if (Test-Path -LiteralPath $indexScript) {
         $py = Get-Command python -ErrorAction SilentlyContinue

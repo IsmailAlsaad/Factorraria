@@ -88,7 +88,7 @@ tModLoader/other bases -> project types:
     +InstancePerEntity:bool[ov] +AppliesToEntity(Projectile,bool)[ov] +OnSpawn(Projectile,IEntitySource)[ov] +GrappleCanLatchOnTo(Projectile,Player,int,int)[ov]
 **CartSkinTable.cs** uses: Cart, CartItem, CartSkins, Factorraria
   static class CartSkinTable
-    +FallbackIconScale:float[c] +RailSink:float[c] +GetHeldItem(Player)[s] +IsSkinItem(Item)[s] +IsPlaceable(Item)[s] +SkinTypeFor(Item)[s] +GetMountData(int)[s] +GetAnimation(int)[s] +GetPlacedSprite(int,int)[s]
+    +FallbackIconScale:float[c] +RailSink:float[c] +GetHeldItem(Player)[s] +IsSkinItem(Item)[s] +IsPlaceable(Item)[s] +SkinTypeFor(Item)[s] +GetMountData(int)[s] +GetChainName(int)[s] +GetAnimation(int)[s] +GetPlacedSprite(int,int)[s]
     struct PlacedSprite
       +Texture:Texture2D +Source:Rectangle +Origin:Vector2 +Scale:float +Extra:Texture2D
     struct SkinAnimation
@@ -129,7 +129,7 @@ tModLoader/other bases -> project types:
 ### Common/Crafting/
 **TimedCraftingPlayer.cs** uses: TimedCraftingSystem
   class TimedCraftingPlayer : ModPlayer
-    +Active:Recipe +Progress:int +Duration:int +Fraction:float +Toggle(Recipe) +NotifyFocusClick(Recipe) +Cancel() +PostUpdate()[ov]
+    +Active:Recipe +Progress:int +Duration:int +Fraction:float +Repeat:bool +Toggle(Recipe,bool) +NotifyFocusClick(Recipe,bool) +Cancel() +PostUpdate()[ov]
 **TimedCraftingSystem.cs** uses: OutputSlotAnimation, TimedCraftingPlayer
   class TimedCraftingSystem : ModSystem
     +baseTicks:float +ticksPerUnit:float +countBonus:float +minTicks:int +maxTicks:int +grayMultiplier:float +rarityMultipliers:float +craftingListContext:int +deliveringCraft:bool +DrawSlotOrig(SpriteBatch,ref Item,int,Vector2,Color) +DrawSlotHook(DrawSlotOrig,SpriteBatch,ref Item,int,Vector2,Color) +Load()[ov] +RarityMultiplier(int) +GetDurationTicks(Recipe)

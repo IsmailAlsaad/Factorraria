@@ -95,6 +95,87 @@ namespace Factorraria.Common.Carts
             return Mount.mounts[mountType];
         }
 
+        /// <summary>
+        /// Name of the vanilla chain art (a file in Images/) drawn on the link BEHIND a cart of this skin. Keyed by the skin's mount type.
+        /// Between two carts the front one (the one nearer the motor, which hooked on first) decides. Anything not listed uses "Chain".
+        /// Add a skin by adding a case; this is a method so hot reload can change it.
+        /// </summary>
+        public static string GetChainName(int skinItemType)
+        {
+            if (skinItemType <= 0 || skinItemType >= ItemLoader.ItemCount)
+            {
+                return "Chain";
+            }
+
+            switch (ContentSamples.ItemsByType[skinItemType].mountType)
+            {
+                case 11:
+                    return "Chains_16";
+
+                case 15:
+                case 31:
+                    return "Extra_95";
+
+                case 16:
+                    return "Chain37";
+
+                case 18:
+                    return "Chains_1";
+
+                case 19:
+                    return "Chain16";
+
+                case 20:
+                    return "Chains_2";
+
+                case 21:
+                    return "Chain38";
+
+                case 22:
+                    return "Chain6";
+
+                case 24:
+                    return "Chain25";
+
+                case 25:
+                    return "GemChain_1";
+
+                case 26:
+                    return "GemChain_2";
+
+                case 27:
+                    return "GemChain_3";
+
+                case 28:
+                case 53:
+                    return "GemChain_4";
+
+                case 29:
+                    return "GemChain_5";
+
+                case 30:
+                case 51:
+                    return "GemChain_6";
+
+                case 32:
+                    return "Chain2";
+
+                case 33:
+                case 34:
+                    return "Chain31";
+
+                case 35:
+                case 36:
+                case 38:
+                    return "Chain40";
+
+                case 39:
+                    return "Chain34";
+                default:
+                    return "Chain"; // 6 and 13 (Minecart, Wood Minecart) use this too
+            }
+        }
+
         /// <summary>Frame ranges for a skin, read from the mount's own standing / running / in-air frame settings.</summary>
         public static SkinAnimation GetAnimation(int skinItemType)
         {
