@@ -109,7 +109,8 @@ namespace Factorraria.Common.Machines
                 "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_On",
                 "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_Off",
                 footprintWidth: 3, footprintHeight: 3,
-                originX: 3, originY: 2);
+                originX: 3, originY: 2,
+                onFrames: 5, offFrames: 1);
         }
 
         public override void PostAddRecipes()
