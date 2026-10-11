@@ -1,15 +1,14 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Common;
+using Factorraria.Common.Systems;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Factorraria.Common.Systems;
-using Factorraria.Common;
-using Terraria.DataStructures;
 
 namespace Factorraria.Content.Items.Wires
 {
-    public class CopperWire : ModItem
+    public class TinWireItem : ModItem
     {
         public override void SetDefaults()
         {
@@ -31,14 +30,14 @@ namespace Factorraria.Content.Items.Wires
             int tileX = Player.tileTargetX;
             int tileY = Player.tileTargetY;
 
-            if (CustomWireSystem.HasWire(tileX, tileY, CustomWireType.Copper)) 
+            if (CustomWireSystem.HasWire(tileX, tileY, CustomWireType.Tin))
             {
                 return false;
             }
 
-            CustomWireSystem.AddWire(tileX, tileY, CustomWireType.Copper);
+            CustomWireSystem.AddWire(tileX, tileY, CustomWireType.Tin);
 
-            SoundEngine.PlaySound(SoundID.Dig,new Vector2(tileX * 16, tileY * 16));
+            SoundEngine.PlaySound(SoundID.Dig, new Vector2(tileX * 16, tileY * 16));
 
             return true;
         }

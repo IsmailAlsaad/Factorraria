@@ -9,7 +9,7 @@ Items: {
 		Tooltip: Right click to read it and learn a machine recipe
 	}
 
-	CopperWire: {
+	CopperWireItem: {
 		DisplayName: Copper Wire
 		Tooltip:
 			'''
@@ -19,7 +19,7 @@ Items: {
 			'''
 	}
 
-	TinWire: {
+	TinWireItem: {
 		DisplayName: Tin Wire
 		Tooltip:
 			'''

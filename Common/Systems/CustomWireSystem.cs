@@ -281,19 +281,19 @@ namespace Factorraria.Common.Systems
         {
             int heldItemType = Main.LocalPlayer.HeldItem.type;
 
-            if (heldItemType == ModContent.ItemType<LeadCutter>())
+            if (heldItemType == ModContent.ItemType<LeadCutterItem>())
             {
                 return true;
             }
-            if (heldItemType == ModContent.ItemType<IronCutter>())
+            if (heldItemType == ModContent.ItemType<IronCutterItem>())
             {
                 return true;
             }
-            if (heldItemType == ModContent.ItemType<TinWire>())
+            if (heldItemType == ModContent.ItemType<TinWireItem>())
             {
                 return true;
             }
-            if (heldItemType == ModContent.ItemType<CopperWire>())
+            if (heldItemType == ModContent.ItemType<CopperWireItem>())
             {
                 return true;
             }

@@ -7,7 +7,7 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Items.Wires
 {
-    public class LeadCutter : ModItem
+    public class LeadCutterItem : ModItem
     {
         public override void SetDefaults()
         {
@@ -37,7 +37,7 @@ namespace Factorraria.Content.Items.Wires
                     tileY * 16,
                     16,
                     16,
-                    ModContent.ItemType<Items.Wires.TinWire>()
+                    ModContent.ItemType<Items.Wires.TinWireItem>()
                     );
 
                 SoundEngine.PlaySound(SoundID.Dig, new Vector2(tileX, tileY) * 16f);
@@ -52,7 +52,7 @@ namespace Factorraria.Content.Items.Wires
                     tileY * 16,
                     16,
                     16,
-                    ModContent.ItemType<Items.Wires.CopperWire>()
+                    ModContent.ItemType<Items.Wires.CopperWireItem>()
                     );
 
                 SoundEngine.PlaySound(SoundID.Dig, new Vector2(tileX, tileY) * 16f);

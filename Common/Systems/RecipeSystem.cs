@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Content.Items.Materials;
 using Factorraria.Content.Items.Wires;
 using System;
 using System.Collections.Generic;
@@ -40,25 +41,25 @@ namespace Factorraria.Common.Systems
                 .Register();
 
             // Copper Wire
-            Recipe.Create(ModContent.ItemType<CopperWire>(), 10)
+            Recipe.Create(ModContent.ItemType<CopperWireItem>(), 10)
                 .AddIngredient(ItemID.CopperBar, 1)
                 .AddTile(TileID.Anvils)
                 .Register();
 
             // Tin Wire
-            Recipe.Create(ModContent.ItemType<TinWire>(), 10)
+            Recipe.Create(ModContent.ItemType<TinWireItem>(), 10)
                 .AddIngredient(ItemID.TinBar, 1)
                 .AddTile(TileID.Anvils)
                 .Register();
 
             // Iron Cutter
-            Recipe.Create(ModContent.ItemType<IronCutter>(), 1)
+            Recipe.Create(ModContent.ItemType<IronCutterItem>(), 1)
                 .AddIngredient(ItemID.IronBar, 5)
                 .AddTile(TileID.Anvils)
                 .Register();
 
             // Lead Cutter
-            Recipe.Create(ModContent.ItemType<LeadCutter>(), 1)
+            Recipe.Create(ModContent.ItemType<LeadCutterItem>(), 1)
                 .AddIngredient(ItemID.LeadBar, 5)
                 .AddTile(TileID.Anvils)
                 .Register();
@@ -99,6 +100,30 @@ namespace Factorraria.Common.Systems
                 .AddIngredient(ItemID.CrimstoneBlock, 5)
                 .AddIngredient(ItemID.Lens, 1)
                 .AddTile(TileID.DemonAltar)
+                .Register();
+
+            // Simple Circuit
+            Recipe.Create(ModContent.ItemType<SimpleCircuitItem>(), 1)
+                .AddIngredient(ModContent.ItemType<PureSiliconItem>(), 3)
+                .AddIngredient(ModContent.ItemType<TinWireItem>(), 5)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+            Recipe.Create(ModContent.ItemType<SimpleCircuitItem>(), 1)
+                .AddIngredient(ModContent.ItemType<PureSiliconItem>(), 3)
+                .AddIngredient(ModContent.ItemType<CopperWireItem>(), 5)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+
+            // Gold Wire
+            Recipe.Create(ModContent.ItemType<GoldWireItem>(), 2)
+                .AddIngredient(ModContent.ItemType<GoldPlateItem>(), 1)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+
+            // Steel Screw
+            Recipe.Create(ModContent.ItemType<SteelScrewItem>(), 3)
+                .AddIngredient(ModContent.ItemType<SteelBarItem>(), 1)
+                .AddTile(TileID.HeavyWorkBench)
                 .Register();
         }
 
