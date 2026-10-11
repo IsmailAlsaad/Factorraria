@@ -10,8 +10,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
 {
     public class MechanicalAssemblerTile : ModTile
     {
-        // The tile is only ever drawn through MachineVisualOverride, so the Off sheet doubles as its texture.
-        public override string Texture => "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_Off";
+        // The tile is drawn through MachineVisualOverride; this footprint-sized sheet is only what the placement hologram
+        // uses (the vanilla preview reads the top-left cells of the tile texture, which on the canvas are empty overhang).
+        public override string Texture => "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssemblerPlacement";
 
         public override void SetStaticDefaults()
         {

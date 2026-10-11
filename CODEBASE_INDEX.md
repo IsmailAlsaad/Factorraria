@@ -270,11 +270,11 @@ tModLoader/other bases -> project types:
   class LiquidOverlayLayer
     +SourceTexture:Asset<Texture2D> +GetLiquidStack:Func<BaseMachine, LiquidStack> +CacheKey:string
   class MachineCanvas
-    +FootprintWidth:int +FootprintHeight:int +OnFrames:int +OffFrames:int +Padding:int +CanvasWidth:int +CanvasHeight:int +OriginX:float +OriginY:float +Resolved:bool +Valid:bool +Error:string +CellSize:int +FrameStride:int +FrameCount(bool) +Resolve(Texture2D,Texture2D)
+    +FootprintWidth:int +FootprintHeight:int +OnFrames:int +OffFrames:int +Padding:int +CanvasWidth:int +CanvasHeight:int +OriginX:float +OriginY:float +YOffset:float +Resolved:bool +Valid:bool +Error:string +CellSize:int +FrameStride:int +FrameCount(bool) +Resolve(Texture2D,Texture2D)
   class MachineVisualDefinition
     +GetEntity:Func<int, int, BaseMachine> +OnTexture:Asset<Texture2D> +OffTexture:Asset<Texture2D> +LiquidOverlays:List<LiquidOverlayLayer> +Canvas:MachineCanvas
   static class MachineVisualRegistry
-    +Definitions:Dictionary<int, MachineVisualDefinition>[s] +Register<T>(int,string,string)[s] +RegisterLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>)[s] +RegisterOverhang<T>(int,string,string,int,int,float,float,int,int)[s]
+    +Definitions:Dictionary<int, MachineVisualDefinition>[s] +Register<T>(int,string,string)[s] +RegisterLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>)[s] +RegisterOverhang<T>(int,string,string,int,int,float,float,int,int,float)[s]
   class MachineVisualOverride : GlobalTile
     +PreDraw(int,int,int,SpriteBatch)[ov] +RightClick(int,int,int)[ov] +PlaceInWorld(int,int,int,Item)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +ModifyLight(int,int,int,ref float,ref float,ref float)[ov]
 **RecipeVisibility.cs** uses: CustomRecipe, Entry, FurnaceOffsetConfig, RecipeCatalog, RecipeIngredient, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey
@@ -351,7 +351,7 @@ tModLoader/other bases -> project types:
 **RecipeBookSystem.cs** uses: CartChestUISystem, Factorraria, MachineUISystem, RecipeBookArt, RecipeBookButtonState, RecipeBookState, RecipeIcon
   class RecipeBookSystem : ModSystem
     +IsOpen:bool[s] +Open()[s] +OpenAt(string)[s] +Close(bool)[s] +Toggle()[s] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
-**RecipeSystem.cs** uses: ByriteAlloyItem, CopperWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, RecipeBook, SimpleCircuitItem, TinWireItem
+**RecipeSystem.cs** uses: ByriteAlloyItem, CopperWireItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, RecipeBook, SimpleCircuitItem, TinWireItem
   class RecipeSystem : ModSystem
     +AddRecipes()[ov] +AddRecipeGroups()[ov]
 **VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FurnaceOffsetConfig, PriorityConveyorNetwork, VItemGlobalItem, VirtualItem

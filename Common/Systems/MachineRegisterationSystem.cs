@@ -33,7 +33,7 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.Hellforge, new HellforgeUIState());
             MachineUIRegistry.Register(TileID.Extractinator, new ExtractinatorUIState());
             MachineUIRegistry.Register(TileID.LesionStation, new DecayChamberUIState());
-            MachineUIRegistry.Register(ModContent.TileType<MechanicalAssemblerTile>(), new MechanicalAssemblerUIState());
+            // ModTile machines register their UI in PostSetupContent (their tile ids don't exist yet here)
             // etc...
         }
 
@@ -105,12 +105,14 @@ namespace Factorraria.Common.Machines
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/Motors/MotorMK1_Off");
 
 
+            MachineUIRegistry.Register(ModContent.TileType<MechanicalAssemblerTile>(), new MechanicalAssemblerUIState());
             MachineVisualRegistry.RegisterOverhang<MechanicalAssemblerTileEntity>(ModContent.TileType<MechanicalAssemblerTile>(),
                 "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_On",
                 "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_Off",
                 footprintWidth: 3, footprintHeight: 3,
                 originX: 3, originY: 2,
-                onFrames: 5, offFrames: 1);
+                onFrames: 5, offFrames: 1,
+                yOffset: 2f);
         }
 
         public override void PostAddRecipes()

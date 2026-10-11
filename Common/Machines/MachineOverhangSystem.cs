@@ -58,7 +58,7 @@ namespace Factorraria.Common.Machines
                 int canvasWidth = canvas.CanvasWidth * 16;
                 int canvasHeight = canvas.CanvasHeight * 16;
 
-                Vector2 worldTopLeft = new Vector2(corner.X * 16 - canvas.OriginX * 16f, corner.Y * 16 - canvas.OriginY * 16f);
+                Vector2 worldTopLeft = new Vector2(corner.X * 16 - canvas.OriginX * 16f, corner.Y * 16 - canvas.OriginY * 16f + canvas.YOffset);
                 Vector2 canvasCenter = worldTopLeft + new Vector2(canvasWidth, canvasHeight) / 2f;
                 if (!BaseMachine.IsOnScreen(canvasCenter, Math.Max(canvasWidth, canvasHeight) / 2f))
                     continue;

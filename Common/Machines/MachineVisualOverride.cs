@@ -33,6 +33,7 @@ namespace Factorraria.Common.Machines
         public int CanvasHeight;     // tiles, one frame (auto-detected)
         public float OriginX;        // tiles: where the footprint's top-left tile sits inside a frame (+x right, +y down)
         public float OriginY;
+        public float YOffset;        // px: extra vertical shift of the drawn sprite (+ is down)
         public bool Resolved;
         public bool Valid;
         public string Error;
@@ -137,9 +138,9 @@ namespace Factorraria.Common.Machines
         // (+x right, +y down). Textures use the normal 16px tile + 2px padding layout (18px cells). Canvas width/height are
         // detected from the On texture (pixels / 18, height also divided by onFrames). Pass onFrames / offFrames for each
         // texture that has more than one frame stacked. Anything outside the footprint that you don't want drawn in a given
-        // state (e.g. Off has no overhang) is just left transparent.
+        // state (e.g. Off has no overhang) is just left transparent. yOffset (pixels, + is down) nudges the drawn sprite.
         public static void RegisterOverhang<T>(int tileType, string onPath, string offPath,
-            int footprintWidth, int footprintHeight, float originX, float originY, int onFrames = 1, int offFrames = 1) where T : BaseMachine, new()
+            int footprintWidth, int footprintHeight, float originX, float originY, int onFrames = 1, int offFrames = 1, float yOffset = 0f) where T : BaseMachine, new()
         {
             if (footprintWidth <= 0 || footprintHeight <= 0)
             {
@@ -159,6 +160,7 @@ namespace Factorraria.Common.Machines
                 FootprintHeight = footprintHeight,
                 OnFrames = onFrames,
                 OffFrames = offFrames,
+                YOffset = yOffset,
                 OriginX = originX,
                 OriginY = originY
             };
