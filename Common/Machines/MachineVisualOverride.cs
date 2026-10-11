@@ -163,7 +163,7 @@ namespace Factorraria.Common.Machines
             foreach (var item in machine.InputSlots.Concat(machine.OutputSlots))
             {
                 if (!item.IsAir)
-                    Item.NewItem(new EntitySource_TileEntity(machine), position.X * 16 + 16, position.Y * 16 + 8, 16, 16, item.type, item.stack);
+                    Item.NewItem(new EntitySource_TileEntity(machine), position.X * 16 + 16, position.Y * 16 + 8, 16, 16, item);
             }
 
             machine.Kill(position.X, position.Y);

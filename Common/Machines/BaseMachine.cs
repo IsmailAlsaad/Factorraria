@@ -447,7 +447,7 @@ namespace Factorraria.Common.Machines
             {
                 Item item = InputSlots[s];
                 if (item.IsAir) continue;
-                Item.NewItem(new EntitySource_TileEntity(this), Position.X * 16 + 16, Position.Y * 16 + 8, 16, 16, item.type, item.stack);
+                Item.NewItem(new EntitySource_TileEntity(this), Position.X * 16 + 16, Position.Y * 16 + 8, 16, 16, item);
                 InputSlots[s] = new Item();
             }
         }
@@ -517,13 +517,28 @@ namespace Factorraria.Common.Machines
         void MoveVItemIntoSlot(VirtualItem vItem, int slot, int limit)
         {
             Item target = InputSlots[slot];
-            if (!target.IsAir && target.type != vItem.itemType) return;
+
+            // Same type AND same prefix/mod data, otherwise the vItem stays where it is (same as a full slot)
+            if (!target.IsAir && !VItemStacking.CanMerge(target, vItem.Payload)) return;
 
             int space = limit - target.stack;
             if (space <= 0) return;
 
             int amount = Math.Min(space, vItem.stackSize);
-            InputSlots[slot] = new Item(vItem.itemType, target.stack + amount);
+
+            if (target.IsAir)
+            {
+                Item placed = vItem.Payload.Clone();
+                placed.stack = amount;
+                InputSlots[slot] = placed;
+            }
+            else
+            {
+                Item merged = target.Clone();
+                merged.stack = target.stack + amount;
+                InputSlots[slot] = merged;
+            }
+
             vItem.stackSize -= amount;
         }
 

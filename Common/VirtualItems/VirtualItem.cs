@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Systems;
+using Factorraria.Common.VirtualItems;
 using Factorraria.Content.Tiles.Conveyors;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -16,8 +17,20 @@ namespace Factorraria.Content.VirtualItems
         #region Variables
 
         // --- ITEM PAYLOAD ---
-        public int itemType;        // Terraria Item ID
-        public int stackSize;       // Stack count
+        // The real item this vItem carries (type, stack, prefix, ModItem/GlobalItem data). Single source of truth.
+        // Null only when the vItem was rejected in its constructor (active == false).
+        // Never share this instance with an inventory/chest/machine slot: clone on the way in and out.
+        public Item Payload;
+
+        // Compatibility surface: existing call sites keep using these.
+        public int itemType => Payload?.type ?? 0;   // Terraria Item ID
+        public int stackSize                          // Stack count
+        {
+            get => Payload?.stack ?? 0;
+            set { if (Payload != null) Payload.stack = value; }
+        }
+        public int prefix => Payload?.prefix ?? 0;
+
         public bool active;         // Is this item active in the world?
 
         // --- TIMERS ---
@@ -73,6 +86,7 @@ namespace Factorraria.Content.VirtualItems
 
         #endregion 
 
+        // Plain item of the given type (fresh item, no prefix or data).
         public VirtualItem(int type, int stack, int startTileX, int startTileY)
         {
             // Guard check: Reject invalid item IDs
@@ -82,8 +96,27 @@ namespace Factorraria.Content.VirtualItems
                 return;
             }
 
-            itemType = type;
-            stackSize = stack;
+            Payload = new Item(type, stack);
+            Init(startTileX, startTileY);
+        }
+
+        // Takes OWNERSHIP of payload (pass item.Clone() or a detached item, never a slot's own instance).
+        public VirtualItem(Item payload, int startTileX, int startTileY)
+        {
+            if (payload == null || payload.IsAir || VirtualItemSystem.IsValidItemID(payload.type) == false)
+            {
+                active = false;
+                return;
+            }
+
+            Payload = payload;
+            Payload.favorited = false;
+            Payload.GetGlobalItem<VItemGlobalItem>().ConveyorImmunityTimer = 0;
+            Init(startTileX, startTileY);
+        }
+
+        void Init(int startTileX, int startTileY)
+        {
             active = true;
 
             pickupCooldown = 80;
@@ -429,10 +462,8 @@ namespace Factorraria.Content.VirtualItems
                 return false;
             }
 
-            Item sampleTarget = ContentSamples.ItemsByType[targetItem.itemType];
-
-            // Verify matching types
-            if (targetItem.itemType != itemType)
+            // Same type, same prefix and compatible mod data (ItemLoader.CanStack)
+            if (!VItemStacking.CanMerge(targetItem.Payload, Payload))
             {
                 return false;
             }
@@ -445,7 +476,7 @@ namespace Factorraria.Content.VirtualItems
             }
 
             // Calculate how much space remains in the target item's stack
-            int spaceRemaining = sampleTarget.maxStack - targetItem.stackSize;
+            int spaceRemaining = targetItem.Payload.maxStack - targetItem.stackSize;
             if (spaceRemaining <= 0)
             {
                 return false;
@@ -471,27 +502,24 @@ namespace Factorraria.Content.VirtualItems
             // Only coins merge up a tier. (This used to reset ANY stack of exactly 100 to 1, which destroyed items.)
             bool isUpgradableCoin = itemType == ItemID.CopperCoin || itemType == ItemID.SilverCoin || itemType == ItemID.GoldCoin;
 
-            if (stackSize == 100 && isUpgradableCoin)
-            {
-                stackSize = 1;
-            }
-            else
+            if (stackSize != 100 || !isUpgradableCoin)
             {
                 return;
             }
 
+            int nextTier = ItemID.PlatinumCoin;
             if (itemType == ItemID.CopperCoin)
             {
-                itemType = ItemID.SilverCoin;
+                nextTier = ItemID.SilverCoin;
             }
             else if (itemType == ItemID.SilverCoin)
             {
-                itemType = ItemID.GoldCoin;
+                nextTier = ItemID.GoldCoin;
             }
-            else if (itemType == ItemID.GoldCoin)
-            {
-                itemType = ItemID.PlatinumCoin;
-            }
+
+            // Coins carry no prefix or data, so resetting the payload to the next coin type is safe
+            Payload.SetDefaults(nextTier);
+            Payload.stack = 1;
         }
 
         #region Debugging

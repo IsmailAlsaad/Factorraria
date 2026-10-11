@@ -111,8 +111,8 @@ namespace Factorraria.Content.VirtualItems
                 {
                     TagCompound itemData = new TagCompound();
 
-                    itemData["itemType"] = item.itemType;
-                    itemData["stackSize"] = item.stackSize;
+                    // Save format v2: the whole payload (type, stack, prefix, mod data). Old saves used itemType + stackSize.
+                    itemData["item"] = ItemIO.Save(item.Payload);
                     itemData["currentTileX"] = item.currentTileX;
                     itemData["currentTileY"] = item.currentTileY;
                     itemData["targetTileX"] = item.targetTileX;
@@ -125,6 +125,7 @@ namespace Factorraria.Content.VirtualItems
             }
 
             tag["virtualItemsData"] = savedItemList;
+            tag["vitemVersion"] = 2;
 
             List<Point> filterPoints = new List<Point>();
             List<int> filterIds = new List<int>();
@@ -157,18 +158,30 @@ namespace Factorraria.Content.VirtualItems
                 {
                     TagCompound itemData = savedItemList[i];
 
-                    int type = itemData.GetInt("itemType");
-
-                    if (IsValidItemID(type) == false)
-                    {
-                        continue;
-                    }
-
-                    int stack = itemData.GetInt("stackSize");
                     int currentX = itemData.GetInt("currentTileX");
                     int currentY = itemData.GetInt("currentTileY");
 
-                    VirtualItem item = SpawnVirtualItem(type, stack, currentX, currentY);
+                    VirtualItem item;
+
+                    if (itemData.ContainsKey("item"))
+                    {
+                        // v2: full item (also keeps unloaded-mod items alive as UnloadedItem payloads)
+                        Item payload = ItemIO.Load(itemData.GetCompound("item"));
+                        item = SpawnVirtualItem(payload, currentX, currentY);
+                    }
+                    else
+                    {
+                        // Legacy save: plain type + stack
+                        int type = itemData.GetInt("itemType");
+
+                        if (IsValidItemID(type) == false)
+                        {
+                            continue;
+                        }
+
+                        int stack = itemData.GetInt("stackSize");
+                        item = SpawnVirtualItem(type, stack, currentX, currentY);
+                    }
 
                     if (item != null)
                     {
@@ -383,9 +396,9 @@ namespace Factorraria.Content.VirtualItems
 
             if (tileHitbox.Contains(cachedMouseWorld.ToPoint()))
             {
-                string itemName = Lang.GetItemNameValue(item.itemType);
+                string itemName = item.Payload.AffixName();
                 hoveredVItemText = item.stackSize > 1 ? $"{itemName} ({item.stackSize})" : itemName;
-                hoveredVItemRarity = ContentSamples.ItemsByType[item.itemType].rare;
+                hoveredVItemRarity = item.Payload.rare;
             }
         }
 
@@ -418,6 +431,29 @@ namespace Factorraria.Content.VirtualItems
             }
 
             VirtualItem newItem = new VirtualItem(type, stack, tileX, tileY);
+
+            if (!newItem.active)
+            {
+                return null;
+            }
+
+            virtualItems.Add(newItem);
+            return newItem;
+        }
+
+        /// <summary>
+        /// Spawns a vItem that carries this exact item (prefix, ModItem/GlobalItem data). The vItem takes OWNERSHIP of the Item:
+        /// pass source.Clone() (then TurnToAir the source) or a detached item, never an instance still sitting in a slot.
+        /// Returns null (and does not touch the item) when it is air or an invalid type.
+        /// </summary>
+        public static VirtualItem SpawnVirtualItem(Item item, int tileX, int tileY)
+        {
+            if (item == null || item.IsAir || !IsValidItemID(item.type))
+            {
+                return null;
+            }
+
+            VirtualItem newItem = new VirtualItem(item, tileX, tileY);
 
             if (!newItem.active)
             {
@@ -518,7 +554,13 @@ namespace Factorraria.Content.VirtualItems
                     {
                         if (!IsTileOccupied(centerTileX, centerTileY))
                         {
-                            SpawnVirtualItem(worldItem.type, worldItem.stack, centerTileX, centerTileY);
+                            // Clone so the vItem owns its own copy (prefix + mod data travel with it)
+                            VirtualItem spawned = SpawnVirtualItem(worldItem.Clone(), centerTileX, centerTileY);
+
+                            if (spawned == null)
+                            {
+                                continue;
+                            }
 
                             worldItem.active = false;
                             worldItem.TurnToAir();
@@ -548,14 +590,14 @@ namespace Factorraria.Content.VirtualItems
             }
 
             // Spawn real vanilla dropped item at the virtual item's exact world position
+            // Overload that clones the payload, so prefix and ModItem/GlobalItem data survive
             int newItemIndex = Item.NewItem(
                 new EntitySource_Misc("Factorraria_VirtualItem"),
                 (int)vItem.worldPosition.X,
                 (int)vItem.worldPosition.Y,
                 0,
                 0,
-                vItem.itemType,
-                vItem.stackSize
+                vItem.Payload
             );
 
             // Mark virtual item for removal from conveyor system
@@ -606,17 +648,13 @@ namespace Factorraria.Content.VirtualItems
                             continue;
                         }
 
-                        Item testItem = new Item();
-                        testItem.SetDefaults(vItem.itemType);
-                        testItem.stack = vItem.stackSize;
-
-                        if (player.ItemSpace(testItem).CanTakeItem)
+                        if (player.ItemSpace(vItem.Payload).CanTakeItem)
                         {
                             Item spawnedItem = ConvertVItemsToItems(vItem);
-                            spawnedItem.GetGlobalItem<VItemGlobalItem>().ConveyorImmunityTimer = 60;
 
                             if (spawnedItem != null)
                             {
+                                spawnedItem.GetGlobalItem<VItemGlobalItem>().ConveyorImmunityTimer = 60;
                                 spawnedItem.noGrabDelay = 0;
                             }
                         }
@@ -821,6 +859,7 @@ namespace Factorraria.Content.VirtualItems
 
         /// <summary>
         /// Helper to query if a tile has an active network filter.
+        /// Filters match by item TYPE only; they cannot tell prefixes or mod data apart (intentional).
         /// </summary>
         public static bool TryGetConveyorFilter(int tileX, int tileY, out int filterItemId)
         {

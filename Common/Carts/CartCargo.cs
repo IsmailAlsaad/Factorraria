@@ -144,7 +144,7 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
-                Item offered = new Item(vItem.itemType, vItem.stackSize);
+                Item offered = vItem.Payload.Clone();
                 offered.stack = vItem.stackSize;
 
                 if (!cart.TryAddToChest(offered))
@@ -202,7 +202,7 @@ namespace Factorraria.Common.Carts
         /// <summary>
         /// Bump: every chest slot becomes one vItem on its own tile of the 3x2 window. A slot is only emptied when its tile is
         /// free (inside the world, not solid, no vItem there already, see VirtualItemSystem.IsTileOccupied); otherwise its
-        /// items stay in the chest. Items with a prefix also stay: a vItem cannot carry a prefix, so spilling would lose it.
+        /// items stay in the chest. Prefixes and mod data travel with the spilled vItem.
         /// </summary>
         private static void SpillChest(Cart cart)
         {
@@ -219,7 +219,7 @@ namespace Factorraria.Common.Carts
             {
                 Item item = cart.ChestItems[slot];
 
-                if (item == null || item.IsAir || item.prefix != 0)
+                if (item == null || item.IsAir)
                 {
                     continue;
                 }
@@ -239,7 +239,11 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
-                VirtualItem spilled = VirtualItemSystem.SpawnVirtualItem(item.type, spillCount, x, y);
+                // The vItem owns this clone; the chest slot keeps (and below reduces) its own item
+                Item spillItem = item.Clone();
+                spillItem.stack = spillCount;
+
+                VirtualItem spilled = VirtualItemSystem.SpawnVirtualItem(spillItem, x, y);
                 if (spilled == null)
                 {
                     continue;
@@ -331,7 +335,7 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
-                Item offered = new Item(vItem.itemType, vItem.stackSize);
+                Item offered = vItem.Payload.Clone();
                 offered.stack = vItem.stackSize;
 
                 if (!cart.TryAddFuel(offered))

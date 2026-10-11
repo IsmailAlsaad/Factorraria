@@ -52,7 +52,6 @@ namespace Factorraria.Common.Systems
     {
         // Tweakable (static fields, NOT const, so hot reload can change them).
         public static bool Enabled = true;
-        public static bool ProtectPrefixedItems = true; // vItems can't carry a prefix, so prefixed items stay in the chest instead of losing it.
 
         private struct Probe
         {
@@ -338,17 +337,13 @@ namespace Factorraria.Common.Systems
                     continue;
                 }
 
-                if (ProtectPrefixedItems && item.prefix != 0)
-                {
-                    continue;
-                }
-
                 if (!VirtualItemSystem.IsValidItemID(item.type))
                 {
                     continue;
                 }
 
-                VirtualItem spawned = VirtualItemSystem.SpawnVirtualItem(item.type, item.stack, tileX, bottomY);
+                // The vItem owns the clone (prefix, scroll pool and other mod data travel with it); the slot is emptied below
+                VirtualItem spawned = VirtualItemSystem.SpawnVirtualItem(item.Clone(), tileX, bottomY);
                 if (spawned == null)
                 {
                     return;
@@ -380,48 +375,9 @@ namespace Factorraria.Common.Systems
                 return;
             }
 
-            int maxStack = ContentSamples.ItemsByType[vItem.itemType].maxStack;
-
-            // 1. Top up slots that already hold this item
-            for (int slot = 0; slot < Chest.maxItems && vItem.stackSize > 0; slot++)
-            {
-                Item item = chest.item[slot];
-
-                if (item == null || item.IsAir || item.type != vItem.itemType || item.prefix != 0)
-                {
-                    continue;
-                }
-
-                int space = maxStack - item.stack;
-                if (space <= 0)
-                {
-                    continue;
-                }
-
-                int amount = Math.Min(space, vItem.stackSize);
-                item.stack += amount;
-                vItem.stackSize -= amount;
-                SyncSlot(chestIndex, slot);
-            }
-
-            // 2. Then use empty slots
-            for (int slot = 0; slot < Chest.maxItems && vItem.stackSize > 0; slot++)
-            {
-                Item item = chest.item[slot];
-
-                if (item != null && !item.IsAir)
-                {
-                    continue;
-                }
-
-                int amount = Math.Min(maxStack, vItem.stackSize);
-                Item newItem = new Item();
-                newItem.SetDefaults(vItem.itemType);
-                newItem.stack = amount;
-                chest.item[slot] = newItem;
-                vItem.stackSize -= amount;
-                SyncSlot(chestIndex, slot);
-            }
+            // Tops up compatible stacks first (same type, prefix and mod data), then fills empty slots.
+            // Whatever does not fit stays on the vItem (and on the belt).
+            VItemStacking.Insert(chest.item, 0, Chest.maxItems, vItem.Payload, null, slot => SyncSlot(chestIndex, slot));
 
             if (vItem.stackSize <= 0)
             {
