@@ -542,7 +542,6 @@ tModLoader/other bases -> project types:
 ### Content/Items/Machines/
 **MechanicalAssemblerItem.cs** uses: MechanicalAssemblerTile
   class MechanicalAssemblerItem : ModItem
-    +Texture:string[ov] +AddRecipes()[ov]
 
 ### Content/Items/Materials/
 **ByriteAlloyItem.cs**
