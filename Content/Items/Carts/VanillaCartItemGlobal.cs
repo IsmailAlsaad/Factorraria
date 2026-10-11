@@ -17,6 +17,11 @@ namespace Factorraria.Content.Items.Carts
             return lateInstantiation && CartSkinTable.IsSkinItem(entity);
         }
 
+        public override void SetDefaults(Item entity)
+        {
+            entity.maxStack = 99; // carts are placed, not ridden, so they stack (CartEquipPlayer keeps the equip slot at 1)
+        }
+
         public override bool CanUseItem(Item item, Player player)
         {
             return false;
