@@ -71,7 +71,14 @@ namespace Factorraria.Common.Carts
             }
             else if (cart.Module == CartModule.Motor)
             {
-                PickUpFuelItems(cart);
+                if (cart.UsesLava)
+                {
+                    DrainWorldLiquid(cart); // fills up while standing in lava (the tank only accepts lava)
+                }
+                else
+                {
+                    PickUpFuelItems(cart);
+                }
             }
         }
 
@@ -421,9 +428,9 @@ namespace Factorraria.Common.Carts
                 }
 
                 int? worldType = LiquidTypeRegistry.FromTileLiquidId((byte)tile.LiquidType);
-                if (worldType == null)
+                if (worldType == null || !tank.Accepts(worldType.Value))
                 {
-                    continue; // a liquid the registry does not know
+                    continue; // a liquid the registry does not know, or one this tank refuses (the lava cart only takes lava)
                 }
 
                 if (!tank.IsEmpty && LiquidTypeRegistry.ToTileLiquidId(tank.LiquidType) != (byte)tile.LiquidType)

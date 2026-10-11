@@ -30,6 +30,16 @@ namespace Factorraria.Content.Items.Carts
                 tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotorNoModules", "Shift + Right click to pick it up"));
                 tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotor", "Burns fuel to drive itself"));
             }
+            else if (item.type == ItemID.HellMinecart)
+            {
+                tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotorNoModules", "Shift + Right click to pick it up"));
+                tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotor", "Drenches itself in lava to drive"));
+            }
+            else if (item.type == ItemID.MinecartMech)
+            {
+                tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotorNoModules", "Shift + Right click to pick it up"));
+                tooltips.Add(new TooltipLine(Mod, "FactorrariaCartMotor", "POWAHHHHHH"));
+            }
             else
             {
                 tooltips.Add(new TooltipLine(Mod, "FactorrariaCartPickup", "Right click to pick it up"));

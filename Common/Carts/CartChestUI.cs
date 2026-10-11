@@ -90,8 +90,8 @@ namespace Factorraria.Common.Carts
         {
             Cart = cart;
 
-            terrarium = cart.Module == CartModule.Terrarium;
-            motor = cart.Module == CartModule.Motor;
+            terrarium = cart.Module == CartModule.Terrarium || cart.Tank != null; // the lava cart is a motor with a tank: it shows the tank
+            motor = cart.Module == CartModule.Motor && cart.Tank == null;
             basePanelW = terrarium ? TankWidth : motor ? MotorPanelWidth : ChestPanelWidth;
             basePanelH = terrarium ? TankHeight : motor ? MotorPanelHeight : ChestPanelHeight;
         }
@@ -440,7 +440,7 @@ namespace Factorraria.Common.Carts
             Cart cart = state.Cart;
             Player player = Main.LocalPlayer;
 
-            if (!Main.playerInventory || !cart.Active || (cart.Module != CartModule.Chest && cart.Module != CartModule.Terrarium && cart.Module != CartModule.Motor) || player.dead
+            if (!Main.playerInventory || !cart.Active || !cart.HasPanel || player.dead
                 || Vector2.Distance(player.Center, cart.Position) > CloseRange)
             {
                 CloseInternal(false);

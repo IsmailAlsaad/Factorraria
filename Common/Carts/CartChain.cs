@@ -326,7 +326,7 @@ namespace Factorraria.Common.Carts
                 cart.Rotation = rotation;
                 cart.OnTrack = !air;
                 cart.Velocity = Vector2.Zero;
-                cart.Speed = MathHelper.Clamp(position.X - previousX, -CartPhysics.MaxSpeed, CartPhysics.MaxSpeed);
+                cart.Speed = MathHelper.Clamp(position.X - previousX, -Motor.SpeedLimit, Motor.SpeedLimit);
 
                 if (direction != 0)
                 {

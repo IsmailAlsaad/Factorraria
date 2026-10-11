@@ -370,10 +370,117 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        /// <summary>True for the skin that is always a motor cart (the vanilla Steampunk Minecart).</summary>
+        /// <summary>Mount type of a skin item (-1 if it has none). Skins are told apart by mount type, same as the chain art table.</summary>
+        private static int MountTypeOf(int skinItemType)
+        {
+            if (skinItemType <= 0 || skinItemType >= ItemLoader.ItemCount)
+            {
+                return -1;
+            }
+
+            return ContentSamples.ItemsByType[skinItemType].mountType;
+        }
+
+        /// <summary>The Lava Minecart (mount 22): a motor cart that runs on lava from its tank instead of fuel items.</summary>
+        public static bool IsLavaSkin(int skinItemType)
+        {
+            return MountTypeOf(skinItemType) == 22;
+        }
+
+        /// <summary>The Mechanical Cart (mount 11): a motor cart that needs no fuel and always runs, at double speed and acceleration.</summary>
+        public static bool IsMechSkin(int skinItemType)
+        {
+            return MountTypeOf(skinItemType) == 11;
+        }
+
+        /// <summary>True for the skins that are always a motor cart (Steampunk Minecart, Lava Minecart, Mechanical Cart).</summary>
         public static bool IsMotorSkin(int skinItemType)
         {
-            return skinItemType > 0 && skinItemType == ItemID.SteampunkMinecart;
+            return skinItemType > 0 && (skinItemType == ItemID.SteampunkMinecart || IsLavaSkin(skinItemType) || IsMechSkin(skinItemType));
+        }
+
+        public bool UsesLava
+        {
+            get { return IsLavaSkin(SkinType); }
+        }
+
+        public bool AlwaysRuns
+        {
+            get { return IsMechSkin(SkinType); }
+        }
+
+        /// <summary>Does right clicking this cart open a panel? (The mechanical cart has nothing to put in.)</summary>
+        public bool HasPanel
+        {
+            get { return Module == CartModule.Chest || Module == CartModule.Terrarium || (Module == CartModule.Motor && !AlwaysRuns); }
+        }
+
+        // Per-cart tuning. Properties (not constants) so hot reload can change them.
+        public float SpeedMultiplier
+        {
+            get { return AlwaysRuns ? 2f : 1f; }
+        }
+
+        public float AccelMultiplier
+        {
+            get { return AlwaysRuns ? 2f : 1f; }
+        }
+
+        /// <summary>Hard speed limit of this cart (CartPhysics.MaxSpeed for most carts).</summary>
+        public float SpeedLimit
+        {
+            get { return CartPhysics.MaxSpeed * SpeedMultiplier; }
+        }
+
+        /// <summary>Top speed this motor cart reaches under its own power.</summary>
+        public float DriveSpeedCap
+        {
+            get { return CartPhysics.MotorSpeedCap * SpeedMultiplier; }
+        }
+
+        /// <summary>Speed this motor cart gains per tick while driving.</summary>
+        public float DriveAccel
+        {
+            get { return CartPhysics.MotorAccel * AccelMultiplier; }
+        }
+
+        /// <summary>Lava the lava cart burns per tick while driving (the tank holds LavaCapacity: 1000 / 0.25 = 4000 ticks, about 67 s).</summary>
+        public float LavaPerTick
+        {
+            get { return 0.15f; }
+        }
+
+        public float LavaCapacity
+        {
+            get { return 1000f; }
+        }
+
+        /// <summary>Does this motor cart have power this tick? Mechanical: always. Lava cart: burns lava from its tank. Others: burn a fuel item.</summary>
+        private bool HasDrivePower()
+        {
+            if (AlwaysRuns)
+            {
+                return true;
+            }
+
+            if (UsesLava)
+            {
+                return BurnLavaForDrive();
+            }
+
+            return BurnFuelForDrive();
+        }
+
+        private bool BurnLavaForDrive()
+        {
+            if (Tank == null || Tank.LiquidType != LiquidTypeRegistry.Lava || Tank.Amount < LavaPerTick)
+            {
+                return false;
+            }
+
+            Tank.Amount -= LavaPerTick;
+            NormalizeTank();
+            return true;
         }
 
         /// <summary>Installs a module and creates its (empty) payload. Throws away any previous payload.</summary>
@@ -403,8 +510,17 @@ namespace Factorraria.Common.Carts
                     break;
 
                 case CartModule.Motor:
-                    Fuel = new Item();
-                    burner = new FuelModule(GelBurnerRecipeRegistry.Fuels, 0, 1);
+                    if (UsesLava)
+                    {
+                        Tank = new LiquidStack();
+                        Tank.Capacity = LavaCapacity;
+                        Tank.Filter = liquid => liquid == LiquidTypeRegistry.Lava; // the lava cart never takes another liquid
+                    }
+                    else if (!AlwaysRuns)
+                    {
+                        Fuel = new Item();
+                        burner = new FuelModule(GelBurnerRecipeRegistry.Fuels, 0, 1);
+                    }
                     break;
             }
         }
@@ -568,6 +684,12 @@ namespace Factorraria.Common.Carts
         /// </summary>
         public static event Action<Cart, int, int> FrameChanged;
 
+        /// <summary>
+        /// Fired every tick a motor cart has power (fuel burning, lava in the tank, or a mechanical cart), whether it is still speeding up or cruising at its cap.
+        /// Static like Bumped; CartSystem.OnCartDriving is the default listener (put particles and sounds there).
+        /// </summary>
+        public static event Action<Cart> Driving;
+
         /// <summary>Signed X speed whether on the track (Speed) or derailed (Velocity.X). Setting it also updates Facing.</summary>
         public float AlongSpeed
         {
@@ -576,7 +698,7 @@ namespace Factorraria.Common.Carts
             {
                 if (OnTrack)
                 {
-                    Speed = MathHelper.Clamp(value, -CartPhysics.MaxSpeed, CartPhysics.MaxSpeed);
+                    Speed = MathHelper.Clamp(value, -SpeedLimit, SpeedLimit);
                 }
                 else
                 {
@@ -796,7 +918,7 @@ namespace Factorraria.Common.Carts
 
             if (OnTrack)
             {
-                Speed = MathHelper.Clamp(Speed + deltaSpeed, -CartPhysics.MaxSpeed, CartPhysics.MaxSpeed);
+                Speed = MathHelper.Clamp(Speed + deltaSpeed, -SpeedLimit, SpeedLimit);
             }
             else
             {
@@ -808,8 +930,8 @@ namespace Factorraria.Common.Carts
 
         private void UpdateOnTrack()
         {
-            // A motor cart burns one unit of fuel per tick while it has some (same rule as the Gel Burner).
-            bool driving = Module == CartModule.Motor && BurnFuelForDrive();
+            // A motor cart is powered by burning one unit of fuel per tick (same rule as the Gel Burner), by lava from its tank (lava cart), or always (mechanical cart).
+            bool driving = Module == CartModule.Motor && HasDrivePower();
 
             float half = CartPhysics.WheelHalfBase * 0.6f;
             float slope = (float)Math.Tan(Rotation);
@@ -875,13 +997,13 @@ namespace Factorraria.Common.Carts
             {
                 Speed += boost * CartPhysics.BoostAccel;
             }
-            else if (driving && Facing * Speed < CartPhysics.MotorSpeedCap)
+            else if (driving && Facing * Speed < DriveSpeedCap)
             {
-                Speed += Facing * CartPhysics.MotorAccel;
+                Speed += Facing * DriveAccel;
 
-                if (Facing * Speed > CartPhysics.MotorSpeedCap)
+                if (Facing * Speed > DriveSpeedCap)
                 {
-                    Speed = Facing * CartPhysics.MotorSpeedCap; // do not overshoot the cap
+                    Speed = Facing * DriveSpeedCap; // do not overshoot the cap
                 }
             }
             else if (Speed != 0f)
@@ -889,7 +1011,12 @@ namespace Factorraria.Common.Carts
                 Speed = Math.Abs(Speed) <= CartPhysics.Drag ? 0f : Speed - Math.Sign(Speed) * CartPhysics.Drag;
             }
 
-            Speed = MathHelper.Clamp(Speed, -CartPhysics.MaxSpeed, CartPhysics.MaxSpeed);
+            if (driving && Driving != null)
+            {
+                Driving(this); // powered: fires every tick, whether still accelerating or cruising at the cap
+            }
+
+            Speed = MathHelper.Clamp(Speed, -SpeedLimit, SpeedLimit);
 
             if (Module == CartModule.Motor)
             {
@@ -1111,7 +1238,7 @@ namespace Factorraria.Common.Carts
             }
 
             OnTrack = true;
-            Speed = MathHelper.Clamp(Velocity.X, -CartPhysics.MaxSpeed, CartPhysics.MaxSpeed);
+            Speed = MathHelper.Clamp(Velocity.X, -SpeedLimit, SpeedLimit);
             Velocity = Vector2.Zero;
             Position = new Vector2(Position.X, sample.SurfaceY);
             Rotation = 0f;

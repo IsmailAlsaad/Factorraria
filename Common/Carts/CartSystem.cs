@@ -38,6 +38,7 @@ namespace Factorraria.Common.Carts
             Cart.Collided += OnCartCollide;
             Cart.FrameChanged += OnCartFrameChanged;
             CartChain.Coupled += OnCartCoupled;
+            Cart.Driving += OnCartDriving;
         }
 
         public override void Unload()
@@ -46,6 +47,7 @@ namespace Factorraria.Common.Carts
             Cart.Collided -= OnCartCollide;
             Cart.FrameChanged -= OnCartFrameChanged;
             CartChain.Coupled -= OnCartCoupled;
+            Cart.Driving -= OnCartDriving;
             terrariumLiquidAsset = null;
             chainAssets.Clear();
             chainTexturesFailed.Clear();
@@ -76,6 +78,19 @@ namespace Factorraria.Common.Carts
         {
             Vector2 midPoint = (left.Position + right.Position) * 0.5f;
             SoundEngine.PlaySound(SoundID.Item53, midPoint);
+        }
+
+        /// <summary>
+        /// Customisable hook: runs every tick a motor cart has power (accelerating or cruising at its top speed).
+        /// Fuel carts, the lava cart and the mechanical cart all call it: switch on cart.UsesLava, cart.AlwaysRuns or cart.SkinType.
+        /// Put particles and sounds here. Currently does nothing.
+        /// </summary>
+        private static void OnCartDriving(Cart cart)
+        {
+            if (Main.dedServ)
+            {
+                return;
+            }
         }
 
         // Where the smoke leaves the motor cart, in px from the rail point: along the floor in the facing direction, and up.
@@ -437,10 +452,15 @@ namespace Factorraria.Common.Carts
 
                 Main.mouseRightRelease = false;
 
-                if ((target.Module == CartModule.Chest || target.Module == CartModule.Terrarium || target.Module == CartModule.Motor) && !Terraria.UI.ItemSlot.ShiftInUse)
+                if (target.HasPanel && !Terraria.UI.ItemSlot.ShiftInUse)
                 {
                     CartChestUISystem.Toggle(target);
                     return;
+                }
+
+                if (target.AlwaysRuns && !Terraria.UI.ItemSlot.ShiftInUse)
+                {
+                    return; // the mechanical cart has no panel: only Shift + Right click picks it up
                 }
 
                 PickUp(player, target);
@@ -542,7 +562,10 @@ namespace Factorraria.Common.Carts
             {
                 cart.Chain.Remove(cart); // a middle carriage: the rest close the gap. The motor: the whole chain breaks up
             }
-            CartCargo.PourTank(cart); // a terrarium cart empties back into the world instead of voiding its liquid
+            if (cart.Module == CartModule.Terrarium)
+            {
+                CartCargo.PourTank(cart); // a terrarium cart empties back into the world instead of voiding its liquid
+            }
             cart.Active = false;
 
             List<Item> items = cart.CollectPickupItems();
