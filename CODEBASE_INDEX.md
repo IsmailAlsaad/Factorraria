@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-11 | 162 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-11 | 164 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -21,11 +21,11 @@ Project bases -> derived:
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
 - ModItem (31): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
-- ModSystem (22): CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineRegisterationSystem, MachineUISystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, SiliconOreWorldGen, VirtualItemSystem, WorldLiquidSources
+- ModSystem (23): CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineRegisterationSystem, MachineUISystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, SiliconOreWorldGen, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (6): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MotorTileBase, PipeTileBase, PureSiliconTile, SiliconOreTile
 - GlobalItem (5): CartModuleItemGlobal, IceBladeItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
-- ModPlayer (4): CartInteractionPlayer, ExtractinatorBlockPlayer, MechSuitPlayer, RecipeBookPlayer
+- ModPlayer (5): CartInteractionPlayer, ExtractinatorBlockPlayer, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - GlobalTile (3): ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride
 - ModProjectile (3): IceBladeSwingProjectile, MechSuitArmProjectile, MechanicalArmProjectile
@@ -125,6 +125,14 @@ tModLoader/other bases -> project types:
 **ChestLootSystem.cs** uses: ChestLootDefinitions, ChestLootRegistry
   class ChestLootSystem : ModSystem
     +PostSetupContent()[ov] +PostWorldGen()[ov] +Unload()[ov]
+
+### Common/Crafting/
+**TimedCraftingPlayer.cs** uses: TimedCraftingSystem
+  class TimedCraftingPlayer : ModPlayer
+    +Active:Recipe +Progress:int +Duration:int +Fraction:float +Toggle(Recipe) +NotifyFocusClick(Recipe) +Cancel() +PostUpdate()[ov]
+**TimedCraftingSystem.cs** uses: OutputSlotAnimation, TimedCraftingPlayer
+  class TimedCraftingSystem : ModSystem
+    +baseTicks:float +ticksPerUnit:float +countBonus:float +minTicks:int +maxTicks:int +grayMultiplier:float +rarityMultipliers:float +craftingListContext:int +deliveringCraft:bool +DrawSlotOrig(SpriteBatch,ref Item,int,Vector2,Color) +DrawSlotHook(DrawSlotOrig,SpriteBatch,ref Item,int,Vector2,Color) +Load()[ov] +RarityMultiplier(int) +GetDurationTicks(Recipe)
 
 ### Common/Globals/
 **BossLootGlobal.cs** ns!=Factorraria.Common.NPCs
@@ -378,7 +386,7 @@ tModLoader/other bases -> project types:
     #DrawSelf(SpriteBatch)[ov]
 **OutputSlotAnimation.cs** uses: BaseMachine, RecipeIcon
   class OutputSlotAnimation
-    +Draw(SpriteBatch,CalculatedStyle,Item)
+    +Draw(SpriteBatch,CalculatedStyle,Item) +DrawProgress(SpriteBatch,Vector2,float,int,int,float)
 **RecipeSelectHammerIcon.cs** uses: BookDraw, IZoomScalable, RecipeBook, RecipeBookLayout, RecipeBookSystem, RecipeCatalog, RecipeIcon, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeState, RecipeVisibility
   class RecipeSelectHammerIcon : UIElement
     +OnInitialize()[ov] #DrawSelf(SpriteBatch)[ov] +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov]

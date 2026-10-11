@@ -68,6 +68,27 @@ namespace Factorraria.Common.UI.CustomUIElements
             }
         }
 
+        /// <summary>
+        /// Same look as Draw, for a slot with no machine behind it (the inventory crafting list): red slot ->
+        /// blue slot revealed bottom-to-top by fraction -> ghost + colored sprite of itemType swept by the same line.
+        /// </summary>
+        public void DrawProgress(SpriteBatch sb, Vector2 pos, float scale, int itemType, int stack, float fraction)
+        {
+            Texture2D blueBack = TextureAssets.InventoryBack.Value;
+            Texture2D redBack = TextureAssets.InventoryBack5.Value;
+            fraction = MathHelper.Clamp(fraction, 0f, 1f);
+
+            sb.Draw(redBack, pos, null, Main.inventoryBack, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            DrawBottomUp(sb, blueBack, blueBack.Bounds, pos, scale, Main.inventoryBack, fraction);
+            if (itemType > 0) DrawGhost(sb, itemType, pos, scale, fraction);
+
+            if (stack > 1)
+            {
+                Utils.DrawBorderStringFourWay(sb, FontAssets.ItemStack.Value, stack.ToString(),
+                    pos.X + 10f * scale, pos.Y + 26f * scale, Color.White, Color.Black, Vector2.Zero, scale);
+            }
+        }
+
         void DrawGhost(SpriteBatch sb, int type, Vector2 slotPos, float scale, float fraction)
         {
             Main.instance.LoadItem(type);
