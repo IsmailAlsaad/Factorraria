@@ -79,7 +79,16 @@ namespace Factorraria.Common.UI.CustomUIElements
             Vector2 topLeft = slotCenter - new Vector2(frame.Width, frame.Height) * fit * 0.5f;
 
             DrawBottomUp(sb, tex, frame, topLeft, fit, ghostTint, 1f);        // faded ghost (always whole)
-            DrawBottomUp(sb, tex, frame, topLeft, fit, Color.White, fraction); // colored sprite revealed with progress
+            
+            // One sweep line shared with the blue slot fill: slot bottom -> slot top as fraction goes 0 -> 1.
+            // The sprite shows only the part of itself that is below that line.
+            float slotHeight = TextureAssets.InventoryBack.Value.Height * scale;
+            float lineY = slotPos.Y + slotHeight * (1f - fraction);
+            float spriteHeight = frame.Height * fit;
+            float spriteBottom = topLeft.Y + spriteHeight;
+            float spriteFraction = MathHelper.Clamp((spriteBottom - lineY) / spriteHeight, 0f, 1f);
+
+            DrawBottomUp(sb, tex, frame, topLeft, fit, Color.White, spriteFraction); // colored sprite, cut at the shared line
         }
 
         // Same slicing idea as FireUIElement: keep the bottom `fraction` of the frame, anchored to the bottom edge.
