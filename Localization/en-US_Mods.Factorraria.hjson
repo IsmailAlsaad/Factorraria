@@ -15,7 +15,6 @@ Items: {
 			'''
 			Can be placed
 			Used to connect machines together
-			Broken with a pickaxe
 			'''
 	}
 
@@ -25,7 +24,6 @@ Items: {
 			'''
 			Can be placed
 			Used to connect machines together
-			Broken with a pickaxe
 			'''
 	}
 
@@ -164,6 +162,31 @@ Items: {
 
 	SiliconOreItem: {
 		DisplayName: Silicon Ore
+		Tooltip: ""
+	}
+
+	GoldWireItem: {
+		DisplayName: Gold Wire
+		Tooltip: ""
+	}
+
+	SimpleCircuitItem: {
+		DisplayName: Simple Circuit
+		Tooltip: ""
+	}
+
+	SteelScrewItem: {
+		DisplayName: Steel Screw
+		Tooltip: ""
+	}
+
+	IronCutterItem: {
+		DisplayName: Iron Cutter
+		Tooltip: ""
+	}
+
+	LeadCutterItem: {
+		DisplayName: Lead Cutter
 		Tooltip: ""
 	}
 }

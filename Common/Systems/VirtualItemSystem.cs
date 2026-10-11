@@ -517,13 +517,35 @@ namespace Factorraria.Content.VirtualItems
             }
         }
 
-        static Vector2[] Neighbors4 = new Vector2[4]
+
+        // 16 px = +1 tile in each cardinal direction, scaled by the item's hitbox on that axis.
+        // A fractional reach checks the integers just below and above it (1.7 -> +1 and +2, 2.0 -> +2).
+        static bool HasConveyorNearItem(int centerTileX, int centerTileY, int itemWidth, int itemHeight)
         {
-            new Vector2(0,1),
-            new Vector2(1,0),
-            new Vector2(0,-1),
-            new Vector2(-1,0)
-        };
+            GetReachRange(itemWidth, out int minX, out int maxX);
+            GetReachRange(itemHeight, out int minY, out int maxY);
+
+            for (int d = minX; d <= maxX; d++)
+            {
+                if (IsConveyorTile(centerTileX + d, centerTileY, out _, out _)) return true;
+                if (IsConveyorTile(centerTileX - d, centerTileY, out _, out _)) return true;
+            }
+
+            for (int d = minY; d <= maxY; d++)
+            {
+                if (IsConveyorTile(centerTileX, centerTileY + d, out _, out _)) return true;
+                if (IsConveyorTile(centerTileX, centerTileY - d, out _, out _)) return true;
+            }
+
+            return false;
+        }
+
+        static void GetReachRange(int pixels, out int minReach, out int maxReach)
+        {
+            float tiles = pixels / 16f;
+            minReach = Math.Max(1, (int)Math.Floor(tiles));   // never below +1, so small items behave as before
+            maxReach = Math.Max(1, (int)Math.Ceiling(tiles));
+        }
 
         public static void ConvertItemsToVItems()
         {
@@ -542,32 +564,27 @@ namespace Factorraria.Content.VirtualItems
                 int centerTileX = (int)(worldItem.Center.X / 16f);
                 int centerTileY = (int)(worldItem.Center.Y / 16f);
 
-                int tileX;
-                int tileY;
-
-                for (int k = 0; k < Neighbors4.Length; k++)
+                if (!HasConveyorNearItem(centerTileX, centerTileY, worldItem.width, worldItem.height))
                 {
-                    tileX = centerTileX + (int)Neighbors4[k].X;
-                    tileY = centerTileY + (int)Neighbors4[k].Y;
-
-                    if (IsConveyorTile(tileX, tileY, out _,out _))
-                    {
-                        if (!IsTileOccupied(centerTileX, centerTileY))
-                        {
-                            // Clone so the vItem owns its own copy (prefix + mod data travel with it)
-                            VirtualItem spawned = SpawnVirtualItem(worldItem.Clone(), centerTileX, centerTileY);
-
-                            if (spawned == null)
-                            {
-                                continue;
-                            }
-
-                            worldItem.active = false;
-                            worldItem.TurnToAir();
-                            return;
-                        }
-                    }
+                    continue;
                 }
+
+                if (IsTileOccupied(centerTileX, centerTileY))
+                {
+                    continue;
+                }
+
+                // Clone so the vItem owns its own copy (prefix + mod data travel with it)
+                VirtualItem spawned = SpawnVirtualItem(worldItem.Clone(), centerTileX, centerTileY);
+
+                if (spawned == null)
+                {
+                    continue;
+                }
+
+                worldItem.active = false;
+                worldItem.TurnToAir();
+                return;
             }
         }
 

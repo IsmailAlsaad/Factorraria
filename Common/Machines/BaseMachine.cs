@@ -368,7 +368,10 @@ namespace Factorraria.Common.Machines
         // Uses the same placement rules as CanStoreOutputs/ProduceOutputs (claimed bitmask).
         public int GetPendingOutputType(int slotIndex)
         {
-            if (IsOnConveyorFloor()) return -1;   // outputs go onto the conveyor, not into slots
+            // On a conveyor the output can ride the belt or fall back to a slot depending on traffic,
+            // so just show recipe output i in slot i.
+            if (IsOnConveyorFloor() && SelectedRecipe != null)
+                return slotIndex < SelectedRecipe.Outputs.Count ? SelectedRecipe.Outputs[slotIndex].Type : -1;
 
             CustomRecipe recipe = SelectedRecipe;
             if (recipe == null)
@@ -420,14 +423,14 @@ namespace Factorraria.Common.Machines
         bool CanStoreOutputs(CustomRecipe recipe)
         {
             int claimed = 0;
-            if (!IsOnConveyorFloor())        // a conveyor floor swallows item outputs, so slots don't matter
+            int freeTiles = IsOnConveyorFloor() ? CountFreeFootprintTiles() : 0;   // on a conveyor, each output can take one free footprint tile
+            foreach (RecipeIngredient o in recipe.Outputs)
             {
-                foreach (RecipeIngredient o in recipe.Outputs)
-                {
-                    int slot = FindOutputSlot(o, claimed);
-                    if (slot == -1) return false;
-                    claimed |= 1 << slot;
-                }
+                if (freeTiles > 0) { freeTiles--; continue; }
+
+                int slot = FindOutputSlot(o, claimed);
+                if (slot == -1) return false;                                       // footprint clogged AND slot full -> stop
+                claimed |= 1 << slot;
             }
 
             claimed = 0;
@@ -442,14 +445,13 @@ namespace Factorraria.Common.Machines
 
         void ProduceOutputs(CustomRecipe recipe)
         {
+            bool onConveyor = IsOnConveyorFloor();
             foreach (RecipeIngredient o in recipe.Outputs)
             {
-                if (IsOnConveyorFloor())
-                {
-                    Vector2 tile = MachineCenter / 16f;
-                    VirtualItemSystem.SpawnVirtualItem(o.Type, o.Stack, (int)tile.X, (int)tile.Y);
+                // Spawning registers the tile, so the next output automatically sees it as taken.
+                if (onConveyor && TryFindConveyorOutputTile(out Point outTile)
+                    && VirtualItemSystem.SpawnVirtualItem(o.Type, o.Stack, outTile.X, outTile.Y) != null)
                     continue;
-                }
 
                 int slot = FindOutputSlot(o, 0);
                 if (slot == -1) continue;
@@ -487,14 +489,21 @@ namespace Factorraria.Common.Machines
         {
             if (InputSlotCount == 0) return;
 
-            VirtualItem vItem = null;
-            for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth && vItem == null; i++)
-                for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight && vItem == null; j++)
-                    vItem = VirtualItemSystem.GetVirtualItemAtTile(i, j);
+            // Look at every footprint tile and take from the first vItem this machine can actually use,
+            // so an unusable vItem (e.g. a fresh product) never blocks the ones behind it.
+            for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth; i++)
+            {
+                for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight; j++)
+                {
+                    VirtualItem vItem = VirtualItemSystem.GetVirtualItemAtTile(i, j);
+                    if (vItem == null || vItem.stackSize <= 0) continue;
+                    if (!TryGetIntakeSlot(vItem.itemType, out int slot, out int limit)) continue;
 
-            if (vItem == null) return;
-            if (!TryGetIntakeSlot(vItem.itemType, out int slot, out int limit)) return;
-            MoveVItemIntoSlot(vItem, slot, limit);
+                    int before = vItem.stackSize;
+                    MoveVItemIntoSlot(vItem, slot, limit);
+                    if (vItem.stackSize != before) return;   // took something; one vItem per tick
+                }
+            }
         }
 
         // Override for special intake rules (e.g. a machine that only takes items when a tank is full).
@@ -610,6 +619,48 @@ namespace Factorraria.Common.Machines
         }
 
         #endregion
+
+        // Output tile for vItems this machine produces. Bottom row first; inside a row the columns go outward
+        // from the bottom-center (odd width: the single center tile, even width: the two middle tiles, left then right);
+        // then the rows above. A tile qualifies when no vItem is on or heading to it.
+        // Returns false when the whole footprint is full, which means "clogged" (outputs fall back to the slots).
+        protected bool TryFindConveyorOutputTile(out Point result)
+        {
+            result = default;
+            if (!MachineInitialized || MachineWidth <= 0 || MachineHeight <= 0) return false;
+
+            int left = (MachineWidth - 1) / 2;
+            int right = MachineWidth / 2;
+
+            for (int row = MachineHeight - 1; row >= 0; row--)
+            {
+                for (int k = 0; k < MachineWidth; k++)
+                {
+                    if (TryGetFreeFootprintTile(left - k, row, out result)) return true;
+                    if (right + k != left - k && TryGetFreeFootprintTile(right + k, row, out result)) return true;
+                }
+            }
+            return false;
+        }
+
+        bool TryGetFreeFootprintTile(int col, int row, out Point tile)
+        {
+            tile = default;
+            if (col < 0 || col >= MachineWidth) return false;
+            tile = new Point(cornerPosition.X + col, cornerPosition.Y + row);
+            return !VirtualItemSystem.IsTileOccupied(tile.X, tile.Y);
+        }
+
+        int CountFreeFootprintTiles()
+        {
+            if (!MachineInitialized) return 0;
+
+            int free = 0;
+            for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth; i++)
+                for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight; j++)
+                    if (!VirtualItemSystem.IsTileOccupied(i, j)) free++;
+            return free;
+        }
 
         public bool IsOnConveyorFloor()
         {

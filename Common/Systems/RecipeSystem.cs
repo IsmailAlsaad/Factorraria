@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Content.Items.Hooks;
 using Factorraria.Content.Items.Materials;
 using Factorraria.Content.Items.Wires;
 using System;
@@ -124,6 +125,22 @@ namespace Factorraria.Common.Systems
             Recipe.Create(ModContent.ItemType<SteelScrewItem>(), 3)
                 .AddIngredient(ModContent.ItemType<SteelBarItem>(), 1)
                 .AddTile(TileID.HeavyWorkBench)
+                .Register();
+
+            // Skeletron Hand
+            Recipe.Create(ItemID.SkeletronHand, 1)
+                .AddIngredient(ItemID.Bone, 15)
+                .AddIngredient(ItemID.ZombieArm, 1)
+                .AddTile(TileID.BoneWelder)
+                .Register();
+
+            // Mechanical Arm
+            Recipe.Create(ModContent.ItemType<MechanicalArmItem>(), 1)
+                .AddIngredient(ModContent.ItemType<ByriteAlloyItem>(), 5)
+                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 3)
+                .AddIngredient(ItemID.SkeletronHand, 1)
+                .AddIngredient(ItemID.Cog, 8)
+                .AddTile(TileID.BoneWelder)
                 .Register();
         }
 
