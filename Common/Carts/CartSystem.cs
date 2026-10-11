@@ -82,7 +82,7 @@ namespace Factorraria.Common.Carts
 
         /// <summary>
         /// Customisable hook: runs every tick a motor cart has power (accelerating or cruising at its top speed).
-        /// Fuel carts, the lava cart and the mechanical cart all call it: switch on cart.UsesLava, cart.AlwaysRuns or cart.SkinType.
+        /// Fuel carts, the liquid carts and the mechanical cart all call it: switch on cart.FuelLiquid (LiquidTypeRegistry.Lava / Honey / Water), cart.AlwaysRuns or cart.SkinType.
         /// Put particles and sounds here. Currently does nothing.
         /// </summary>
         private static void OnCartDriving(Cart cart)

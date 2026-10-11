@@ -71,9 +71,9 @@ namespace Factorraria.Common.Carts
             }
             else if (cart.Module == CartModule.Motor)
             {
-                if (cart.UsesLava)
+                if (cart.UsesLiquid)
                 {
-                    DrainWorldLiquid(cart); // fills up while standing in lava (the tank only accepts lava)
+                    DrainWorldLiquid(cart); // fills up while standing in its liquid (the tank refuses every other liquid)
                 }
                 else
                 {

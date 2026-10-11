@@ -393,15 +393,70 @@ namespace Factorraria.Common.Carts
             return MountTypeOf(skinItemType) == 11;
         }
 
-        /// <summary>True for the skins that are always a motor cart (Steampunk Minecart, Lava Minecart, Mechanical Cart).</summary>
+        /// <summary>The Lava Minecart (mount 22), Bee Minecart (mount 18) and Minecarp (mount 16): motor carts that run on a liquid in their tank.</summary>
+        private static bool IsLiquidSkin(int skinItemType)
+        {
+            int mount = MountTypeOf(skinItemType);
+            return mount == 22 || mount == 18 || mount == 16;
+        }
+
+        /// <summary>Registry id of the liquid a skin runs on (lava / honey / water), or -1 if it does not run on a liquid. To add one, add a case here and in IsLiquidSkin.</summary>
+        public static int FuelLiquidOf(int skinItemType)
+        {
+            switch (MountTypeOf(skinItemType))
+            {
+                case 22:
+                    return LiquidTypeRegistry.Lava;
+
+                case 18:
+                    return LiquidTypeRegistry.Honey;
+
+                case 16:
+                    return LiquidTypeRegistry.Water;
+
+                default:
+                    return -1;
+            }
+        }
+
+        /// <summary>True for the skins that are always a motor cart (Steampunk Minecart, the liquid carts, Mechanical Cart).</summary>
         public static bool IsMotorSkin(int skinItemType)
         {
-            return skinItemType > 0 && (skinItemType == ItemID.SteampunkMinecart || IsLavaSkin(skinItemType) || IsMechSkin(skinItemType));
+            return skinItemType > 0 && (skinItemType == ItemID.SteampunkMinecart || IsLiquidSkin(skinItemType) || IsMechSkin(skinItemType));
         }
 
         public bool UsesLava
         {
             get { return IsLavaSkin(SkinType); }
+        }
+
+        /// <summary>Registry id of the liquid this cart runs on, -1 if it runs on fuel items (or nothing).</summary>
+        public int FuelLiquid
+        {
+            get { return FuelLiquidOf(SkinType); }
+        }
+
+        /// <summary>True for the lava, bee and minecarp carts: a motor with a liquid tank instead of a fuel slot.</summary>
+        public bool UsesLiquid
+        {
+            get { return IsLiquidSkin(SkinType); }
+        }
+
+        /// <summary>Can this cart's tank hold / burn this liquid? Water carts take any biome water too.</summary>
+        public bool IsFuelLiquid(int liquidType)
+        {
+            int fuel = FuelLiquid;
+            if (fuel < 0 || liquidType < 0)
+            {
+                return false;
+            }
+
+            if (liquidType == fuel)
+            {
+                return true;
+            }
+
+            return fuel == LiquidTypeRegistry.Water && LiquidTypeRegistry.Get(liquidType).IsWaterVariant;
         }
 
         public bool AlwaysRuns
@@ -444,13 +499,13 @@ namespace Factorraria.Common.Carts
             get { return CartPhysics.MotorAccel * AccelMultiplier; }
         }
 
-        /// <summary>Lava the lava cart burns per tick while driving (the tank holds LavaCapacity: 1000 / 0.25 = 4000 ticks, about 67 s).</summary>
-        public float LavaPerTick
+        /// <summary>Liquid a liquid cart burns per tick while driving (the tank holds LiquidCapacity). Switch on FuelLiquid to give each cart its own rate.</summary>
+        public float LiquidPerTick
         {
             get { return 0.15f; }
         }
 
-        public float LavaCapacity
+        public float LiquidCapacity
         {
             get { return 1000f; }
         }
@@ -463,22 +518,22 @@ namespace Factorraria.Common.Carts
                 return true;
             }
 
-            if (UsesLava)
+            if (UsesLiquid)
             {
-                return BurnLavaForDrive();
+                return BurnLiquidForDrive();
             }
 
             return BurnFuelForDrive();
         }
 
-        private bool BurnLavaForDrive()
+        private bool BurnLiquidForDrive()
         {
-            if (Tank == null || Tank.LiquidType != LiquidTypeRegistry.Lava || Tank.Amount < LavaPerTick)
+            if (Tank == null || !IsFuelLiquid(Tank.LiquidType) || Tank.Amount < LiquidPerTick)
             {
                 return false;
             }
 
-            Tank.Amount -= LavaPerTick;
+            Tank.Amount -= LiquidPerTick;
             NormalizeTank();
             return true;
         }
@@ -510,11 +565,11 @@ namespace Factorraria.Common.Carts
                     break;
 
                 case CartModule.Motor:
-                    if (UsesLava)
+                    if (UsesLiquid)
                     {
                         Tank = new LiquidStack();
-                        Tank.Capacity = LavaCapacity;
-                        Tank.Filter = liquid => liquid == LiquidTypeRegistry.Lava; // the lava cart never takes another liquid
+                        Tank.Capacity = LiquidCapacity;
+                        Tank.Filter = IsFuelLiquid; // a liquid cart never takes another liquid
                     }
                     else if (!AlwaysRuns)
                     {
