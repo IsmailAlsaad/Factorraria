@@ -16,9 +16,10 @@ namespace Factorraria.Content.UI
         Func<bool> isVisible;
         Func<Item, bool> canAcceptItem;
         Func<bool> favoriteLook; // optional: draw the slot with the vanilla "favorited" look
+        Action<SpriteBatch, CalculatedStyle, Item> customDraw; // optional: replaces the default ItemSlot.Draw (animated output slots)
         private static readonly Item[] favoriteDrawArray = new Item[11];
 
-        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<bool> _isVisible = null, Func<Item, bool> _canAcceptItem = null, Func<bool> _favoriteLook = null)
+        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<bool> _isVisible = null, Func<Item, bool> _canAcceptItem = null, Func<bool> _favoriteLook = null, Action<SpriteBatch, CalculatedStyle, Item> _customDraw = null)
         {
             context = _context;
             getItem = _getItem;
@@ -26,6 +27,7 @@ namespace Factorraria.Content.UI
             isVisible = _isVisible;
             canAcceptItem = _canAcceptItem;
             favoriteLook = _favoriteLook;
+            customDraw = _customDraw;
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
@@ -65,7 +67,8 @@ namespace Factorraria.Content.UI
             }
             else
             {
-                ItemSlot.Draw(spriteBatch, ref item, context, drawPosition);
+                if (customDraw != null) customDraw(spriteBatch, dimesions, item);
+                else ItemSlot.Draw(spriteBatch, ref item, context, drawPosition);
             }
 
             item.favorited = wasFavorited;

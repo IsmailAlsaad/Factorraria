@@ -22,6 +22,7 @@ namespace Factorraria.Common.Machines
         public bool isOn { get; set; }
         public bool isWorking { get; protected set; }
         protected int WorkProgress;
+        public int CraftsFinished;   // +1 per finished craft (runtime only); the output slot UI watches it for the finish sound
         protected virtual int WorkDuration => 120; // 60 ticks = 1 second, override per machine
         protected virtual int OutputSlotCount => 0;
 
@@ -289,6 +290,7 @@ namespace Factorraria.Common.Machines
                     RecipeKnowledgeSystem.MarkCrafted(RecipeCatalog.KeyFor(machineName, discoveredKey));
             }
 
+            CraftsFinished++;
             OnRecipeFinished(recipe);
         }
 
@@ -360,6 +362,31 @@ namespace Factorraria.Common.Machines
                     break;
                 }
             }
+        }
+
+        // Item type the current recipe will put into output slot `slotIndex`, or -1 if none.
+        // Uses the same placement rules as CanStoreOutputs/ProduceOutputs (claimed bitmask).
+        public int GetPendingOutputType(int slotIndex)
+        {
+            if (IsOnConveyorFloor()) return -1;   // outputs go onto the conveyor, not into slots
+
+            CustomRecipe recipe = SelectedRecipe;
+            if (recipe == null)
+            {
+                // Manual pick with no matching ingredients yet: show it in the first slot
+                if (slotIndex == 0 && ManualGroup != null && !ManualGroup.Key.IsLiquid) return ManualGroup.Key.Id;
+                return -1;
+            }
+
+            int claimed = 0;
+            foreach (RecipeIngredient o in recipe.Outputs)
+            {
+                int slot = FindOutputSlot(o, claimed);
+                if (slot == -1) return -1;
+                if (slot == slotIndex) return o.Type;
+                claimed |= 1 << slot;
+            }
+            return -1;
         }
 
         // "claimed" is a bitmask of output slots an earlier output of the same recipe already reserved,

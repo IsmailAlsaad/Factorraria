@@ -130,7 +130,9 @@ namespace Factorraria.Common.UI
             new MachineUIElementEntry(
                 new UIItemSlotWrapper(ItemSlot.Context.ChestItem,
                     () => CurrentEntity.OutputSlots[slotIndex],
-                    v => CurrentEntity.OutputSlots[slotIndex] = v),
+                    v => CurrentEntity.OutputSlots[slotIndex] = v,
+                    null, null, null,
+                    new OutputSlotAnimation(() => CurrentEntity, slotIndex).Draw),
                 pos, new Vector2(SlotSize, SlotSize));
 
         protected MachineUIElementEntry FuelSlotEntry(int fuelIndex, Vector2 pos) => InputSlotEntry(BaseMachine.FuelSlotIndex + fuelIndex, pos);
