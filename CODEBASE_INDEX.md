@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-11 | 171 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-12 | 171 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -263,9 +263,9 @@ tModLoader/other bases -> project types:
 **MachineBiome.cs**
   enum MachineBiome
     {Unknown, Forest, Snow, Desert, Jungle, GlowingMushroom, Corruption, Crimson, Hallow, Underworld, Cavern, Underground, Sky, Ocean, ...}
-**MachineOverhangSystem.cs** uses: BaseMachine, MachineCanvas, MachineVisualRegistry, TileEntityHelper
+**MachineOverhangSystem.cs** uses: BaseMachine, MachineCanvas, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
-    +PostDrawTiles()[ov]
+    +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
 **MachineVisualOverride.cs** uses: BaseMachine, Direction, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MotorTileEntityBase, TileEntityHelper
   class LiquidOverlayLayer
     +SourceTexture:Asset<Texture2D> +GetLiquidStack:Func<BaseMachine, LiquidStack> +CacheKey:string
@@ -679,7 +679,7 @@ tModLoader/other bases -> project types:
     +Texture:string[ov]
 **MechanicalAssemblerTileEntity.cs** uses: ElectricConsumerMachine, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, RecipeBook
   class MechanicalAssemblerTileEntity : ElectricConsumerMachine
-    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] +PowerDemand:float[ov] #OutputSlotCount:int[ov]
+    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] +PowerDemand:float[ov] #OutputSlotCount:int[ov] #OnAnimationFrameChanged(int,int)[ov]
 **MechanicalAssemblerUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTileEntity
   class MechanicalAssemblerUIState : MachineUIStateBase
     #BuildElements()[ov]

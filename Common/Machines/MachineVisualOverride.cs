@@ -28,7 +28,7 @@ namespace Factorraria.Common.Machines
         public int FootprintHeight;  // tiles
         public int OnFrames = 1;     // number of stacked frames in the On texture
         public int OffFrames = 1;    // number of stacked frames in the Off texture
-        public int Padding = 2;      // px between tile cells in the texture
+        public int Padding = 0;      // px between tile cells in the texture
         public int CanvasWidth;      // tiles, one frame (auto-detected)
         public int CanvasHeight;     // tiles, one frame (auto-detected)
         public float OriginX;        // tiles: where the footprint's top-left tile sits inside a frame (+x right, +y down)

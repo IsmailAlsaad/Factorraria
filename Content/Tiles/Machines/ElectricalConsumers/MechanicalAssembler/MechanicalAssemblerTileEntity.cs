@@ -16,6 +16,11 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
 
         protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
         {
+            if(!isWorking || !isOn)
+            {
+                return;
+            }
+
             if(newFrame == 0)
             {
                 SoundEngine.PlaySound(SoundID.Tink with { PitchVariance = 0.35f, Volume = 0.15f },MachineCenter);
