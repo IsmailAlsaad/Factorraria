@@ -24,6 +24,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
             RegisterManualRecipes();
 
             Book.ImportVanillaRecipes(TileID.HeavyWorkBench);
+            Book.ImportVanillaRecipes(TileID.WorkBenches, null, false);
             RegisterManualRecipes();
 
             Book.Rebuild();
