@@ -18,6 +18,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
             //     .AddLoot(ItemID.GoldCoin, 0.1f, 1, 2)
             //     .AddLoot(ItemID.Gel, 0.5f, 3, 8);
 
+            // Slime statue
             int[] SlimeStatueNPCIDs = new int[] {
                 NPCID.GreenSlime,
                 NPCID.BlueSlime,

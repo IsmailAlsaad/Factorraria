@@ -16,6 +16,7 @@ namespace Factorraria.Common.Statues
         public int SpawnPassTicks = 60;       // how often statues are checked (also the pace of the initial fill)
         public int RefillDelayTicks = 180;    // wait after an enemy dies before its replacement
         public int NpcSlotMargin = 10;        // stop spawning when this close to the NPC cap
+        public Vector2 SpawnOffset = new Vector2(0f, 32f);   // pixels added to every spawn position (+x right, +y down)
 
         int passTimer;
         readonly Dictionary<Point16, int> liveCounts = new();
@@ -89,7 +90,7 @@ namespace Factorraria.Common.Statues
 
             foreach (Point offset in spawnOffsets)
             {
-                Vector2 feet = new Vector2(statue.Origin.X * 16 + statue.Width * 8 + offset.X * 16, statue.Origin.Y * 16 + offset.Y * 16);
+                Vector2 feet = new Vector2(statue.Origin.X * 16 + statue.Width * 8 + offset.X * 16, statue.Origin.Y * 16 + offset.Y * 16) + SpawnOffset;
                 Vector2 topLeft = new Vector2(feet.X - sample.width / 2f, feet.Y - sample.height);
                 if (Collision.SolidCollision(topLeft, sample.width, sample.height)) continue;
 

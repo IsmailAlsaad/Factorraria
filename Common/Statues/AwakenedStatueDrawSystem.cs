@@ -23,7 +23,26 @@ namespace Factorraria.Common.Statues
         public int PadTop = 16;
         public int PadBottom = 0;
 
-        public override void PostDrawTiles()
+        public override void Load()
+        {
+            On_Main.DrawNPCs += DrawBeforeNpcs;
+        }
+
+        public override void Unload()
+        {
+            On_Main.DrawNPCs -= DrawBeforeNpcs;
+        }
+
+        // The front NPC pass is hooked so the awakened sprites land after the tiles but behind the enemies.
+        void DrawBeforeNpcs(On_Main.orig_DrawNPCs orig, Main self, bool behindTiles)
+        {
+            if (!behindTiles)
+                DrawAwakenedStatues();
+
+            orig(self, behindTiles);
+        }
+
+        void DrawAwakenedStatues()
         {
             if (Main.dedServ) return;
 
