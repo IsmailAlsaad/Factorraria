@@ -59,7 +59,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
 
             if (!hasShimmer) return;
 
-            tank.Amount -= ShimmerDrainPerSecond / 60f;
+            tank.Amount -= ShimmerDrainPerSecond * AwakenedStatueCount / 60f;
             if (tank.Amount <= 0f)
             {
                 tank.Amount = 0f;

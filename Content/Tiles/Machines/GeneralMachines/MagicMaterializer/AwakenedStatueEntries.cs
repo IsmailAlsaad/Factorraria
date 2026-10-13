@@ -38,6 +38,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.Pinky,
                 NPCID.UmbrellaSlime
             };
+
             registry.Add(TileID.Statues, style: 4, SlimeStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueLeft",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueLeft_Outline");
