@@ -131,7 +131,7 @@ namespace Factorraria.Common.Machines
             TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
             int frameYOffset = GetAnimationFrame(topLeft, frameCount);
 
-            Rectangle textureSlice = new Rectangle(thisTile.TileFrameX, thisTile.TileFrameY + frameHeight * frameYOffset, 16, data.CoordinateHeights[subY]);
+            Rectangle textureSlice = new Rectangle(thisTile.TileFrameX, frameY + frameHeight * frameYOffset, 16, data.CoordinateHeights[subY]);
             Color lightingColor = Lighting.GetColor(i, j);
             spriteBatch.Draw(targetTexture, drawPosition, textureSlice, lightingColor, rotation, origin, 1f, SpriteEffects.None, 0f);
 
