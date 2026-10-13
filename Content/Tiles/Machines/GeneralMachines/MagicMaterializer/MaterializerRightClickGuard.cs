@@ -40,10 +40,18 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 return;
             }
 
-            short[] frames = new short[data.Width * data.Height];
+            // The vanilla on/off state lives in TileFrameY (SceneMetrics reads frameY / 54), so both axes are saved and restored.
+            short[] framesX = new short[data.Width * data.Height];
+            short[] framesY = new short[data.Width * data.Height];
             for (int x = 0; x < data.Width; x++)
+            {
                 for (int y = 0; y < data.Height; y++)
-                    frames[x * data.Height + y] = Framing.GetTileSafely(corner.X + x, corner.Y + y).TileFrameX;
+                {
+                    Tile saved = Framing.GetTileSafely(corner.X + x, corner.Y + y);
+                    framesX[x * data.Height + y] = saved.TileFrameX;
+                    framesY[x * data.Height + y] = saved.TileFrameY;
+                }
+            }
 
             orig(self, myX, myY);
 
@@ -53,7 +61,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 {
                     Tile tile = Framing.GetTileSafely(corner.X + x, corner.Y + y);
                     if (tile.HasTile && tile.TileType == TileID.ShimmerMonolith)
-                        tile.TileFrameX = frames[x * data.Height + y];
+                    {
+                        tile.TileFrameX = framesX[x * data.Height + y];
+                        tile.TileFrameY = framesY[x * data.Height + y];
+                    }
                 }
             }
         }

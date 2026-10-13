@@ -68,20 +68,20 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
         }
 
         // The tile is a vanilla monolith, so wires and vanilla right-click can flip it into its vanilla "on" frame.
-        // This machine ignores that state, so the toggled half of the frame sheet is folded back every tick.
+        // This machine ignores that state (vanilla keeps it in TileFrameY, one tile-height block per state), so it is folded back every tick.
         void KeepVanillaMonolithOff()
         {
             TileObjectData data = TileObjectData.GetTileData(ValidTileType, 0);
             if (data == null) return;
 
-            int toggleOffset = data.Width * 18;
+            int stateHeight = data.Height * 18;
             for (int x = 0; x < data.Width; x++)
             {
                 for (int y = 0; y < data.Height; y++)
                 {
                     Tile tile = Framing.GetTileSafely(Position.X + x, Position.Y + y);
-                    if (tile.HasTile && tile.TileType == ValidTileType && tile.TileFrameX >= toggleOffset)
-                        tile.TileFrameX -= (short)toggleOffset;
+                    if (tile.HasTile && tile.TileType == ValidTileType && tile.TileFrameY >= stateHeight)
+                        tile.TileFrameY = (short)(tile.TileFrameY % stateHeight);
                 }
             }
         }
