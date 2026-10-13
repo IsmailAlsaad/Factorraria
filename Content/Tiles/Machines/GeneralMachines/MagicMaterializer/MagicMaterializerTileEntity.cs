@@ -16,7 +16,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
         // One shimmer tank, no recipes. The tank is filter-locked to the liquids in this table.
         protected override LiquidFuelTable AcceptedLiquidFuels => MagicMaterializerRegistry.LiquidFuels;
 
-        public float ShimmerDrainPerSecond = 15f;   // a full 1000 tank lasts about ~1 minute
+        public float ShimmerDrainPerSecond = 5f;
 
         public int AwakenRadiusTiles { get; } = 30;
 

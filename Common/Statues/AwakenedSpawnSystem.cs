@@ -45,7 +45,7 @@ namespace Factorraria.Common.Statues
 
                 AwakenedSpawnGlobalNPC tag = npc.GetGlobalNPC<AwakenedSpawnGlobalNPC>();
                 if (!tag.Tagged) continue;
-                if (!statues.Awakened.TryGetValue(tag.Origin, out AwakenedStatue owner) || owner.Entry.NpcType != npc.type) continue;
+                if (!statues.Awakened.TryGetValue(tag.Origin, out AwakenedStatue owner) || !owner.Entry.Spawns(npc.type)) continue;
 
                 liveCounts[tag.Origin] = liveCounts.GetValueOrDefault(tag.Origin) + 1;
             }
@@ -84,7 +84,7 @@ namespace Factorraria.Common.Statues
 
         bool TrySpawn(AwakenedStatue statue)
         {
-            int npcType = statue.Entry.NpcType;
+            int npcType = statue.Entry.PickNpcType();
             if (!ContentSamples.NpcsByNetId.TryGetValue(npcType, out NPC sample)) return false;
 
             foreach (Point offset in spawnOffsets)
@@ -103,6 +103,7 @@ namespace Factorraria.Common.Statues
                 AwakenedSpawnGlobalNPC tag = npc.GetGlobalNPC<AwakenedSpawnGlobalNPC>();
                 tag.Tagged = true;
                 tag.Origin = statue.Origin;
+                tag.Entry = statue.Entry;
                 return true;
             }
 

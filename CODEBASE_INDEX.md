@@ -310,9 +310,9 @@ tModLoader/other bases -> project types:
     +Tiles:HashSet<Point> +FilteredItemId:int
 
 ### Common/Statues/
-**AwakenedSpawnGlobalNPC.cs** uses: AwakenedStatue, AwakenedStatueSystem, Entry
+**AwakenedSpawnGlobalNPC.cs** uses: AwakenedLootDrop, AwakenedStatue, AwakenedStatueEntry, AwakenedStatueSystem, Entry
   class AwakenedSpawnGlobalNPC : GlobalNPC
-    +InstancePerEntity:bool[ov] +Tagged:bool +Origin:Point16 +CheckActive(NPC)[ov]
+    +InstancePerEntity:bool[ov] +Tagged:bool +Origin:Point16 +Entry:AwakenedStatueEntry +CheckActive(NPC)[ov] +OnKill(NPC)[ov]
 **AwakenedSpawnSystem.cs** uses: AwakenedSpawnGlobalNPC, AwakenedStatue, AwakenedStatueSystem, Entry, IStatueAwakener
   class AwakenedSpawnSystem : ModSystem
     +MaxEnemiesPerStatue:int +SpawnPassTicks:int +RefillDelayTicks:int +NpcSlotMargin:int +PostUpdateNPCs()[ov]
@@ -323,10 +323,12 @@ tModLoader/other bases -> project types:
   class AwakenedStatueGlobalTile : GlobalTile
     +PreHitWire(int,int,int)[ov] +PlaceInWorld(int,int,int,Item)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov]
 **AwakenedStatueRegistry.cs** uses: AwakenedStatueEntries
+  class AwakenedLootDrop
+    +ItemType:int +Chance:float +Min:int +Max:int
   class AwakenedStatueEntry
-    +TileType:int +Style:int +NpcType:int +Sprite:Asset<Texture2D> +Outline:Asset<Texture2D> +DrawOffset:Vector2
+    +TileType:int +Style:int +NpcTypes:int +Spawns(int) +PickNpcType() +Sprite:Asset<Texture2D> +Outline:Asset<Texture2D> +DrawOffset:Vector2 +Loot:List<AwakenedLootDrop> +AddLoot(int,float,int,int)
   class AwakenedStatueRegistry : ModSystem
-    +IsStatueTile(int) +TryGet(int,int,out AwakenedStatueEntry) +Add(int,int,int,string,string,Vector2) +PostSetupContent()[ov] +Unload()[ov]
+    +IsStatueTile(int) +TryGet(int,int,out AwakenedStatueEntry) +Add(int,int,int,string,string,Vector2) +Add(int,int,int,string,string,Vector2) +PostSetupContent()[ov] +Unload()[ov]
 **AwakenedStatueSystem.cs** uses: AwakenedStatueEntry, AwakenedStatueRegistry, Entry, IStatueAwakener
   class AwakenedStatue
     +Origin:Point16 +Entry:AwakenedStatueEntry +OwnerOrigin:Point16 +Width:int +Height:int +LiveEnemies:int +LastLiveEnemies:int +SpawnCooldownTicks:int +Center:Vector2

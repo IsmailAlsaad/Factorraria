@@ -10,7 +10,6 @@ using Terraria.ObjectData;
 namespace Factorraria.Common.Statues
 {
     // Draws every awakened statue's saturated sprite over the vanilla statue, with a pulsing outline behind it.
-    // Hold LEFT ALT and hover any tile to read its "tile N style M" for AwakenedStatueEntries.
     public class AwakenedStatueDrawSystem : ModSystem
     {
         public float OutlinePulseSpeed = 3f;          // radians per second
@@ -30,8 +29,6 @@ namespace Factorraria.Common.Statues
 
             foreach (AwakenedStatue statue in system.Awakened.Values)
                 DrawStatue(spriteBatch, system, statue);
-
-            if (altHeld) DrawStyleReadout(spriteBatch);
 
             spriteBatch.End();
         }
@@ -61,18 +58,6 @@ namespace Factorraria.Common.Statues
             Color light = Lighting.GetColor(statue.Origin.X + statue.Width / 2, statue.Origin.Y + statue.Height / 2);
             Vector2 spriteScale = new Vector2(size.X / sprite.Width, size.Y / sprite.Height);
             spriteBatch.Draw(sprite, screenCenter, null, light, 0f, new Vector2(sprite.Width / 2f, sprite.Height / 2f), spriteScale, SpriteEffects.None, 0f);
-        }
-
-        void DrawStyleReadout(SpriteBatch spriteBatch)
-        {
-            Point tilePos = Main.MouseWorld.ToTileCoordinates();
-            Tile tile = Framing.GetTileSafely(tilePos.X, tilePos.Y);
-            if (!tile.HasTile) return;
-
-            string text = TileObjectData.GetTileData(tile) == null
-                ? "tile " + tile.TileType
-                : "tile " + tile.TileType + "  style " + TileObjectData.GetTileStyle(tile);
-            Utils.DrawBorderString(spriteBatch, text, Main.MouseWorld - Main.screenPosition + new Vector2(16f, 16f), Color.White, 0.9f);
         }
     }
 }

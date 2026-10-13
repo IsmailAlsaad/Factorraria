@@ -4,17 +4,6 @@ using Terraria.ID;
 
 namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
 {
-    // YOUR LIST of awakenable statues. One registry.Add line per statue.
-    //
-    // How to find the numbers: in-game, hold LEFT ALT and hover the statue; it prints "tile N style M".
-    //   tileType   : the statue's TileID (for example TileID.Statues)
-    //   style      : the style number from the readout
-    //   npcType    : the enemy it spawns (NPCID.X)
-    //   spritePath : your saturated statue PNG, same pixel size as the statue (extension left off)
-    //   outlinePath: your outline PNG, same canvas size as the sprite
-    //   drawOffset : optional pixel nudge, defaults to none
-    //
-    // A missing PNG only logs a warning: that statue still spawns, it just keeps its vanilla look.
     public static class AwakenedStatueEntries
     {
         public static void Register(AwakenedStatueRegistry registry)
@@ -22,6 +11,37 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
             // registry.Add(TileID.Statues, style: 0, npcType: NPCID.Zombie,
             //     spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/Zombie",
             //     outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/Zombie_Outline");
+
+            // registry.Add(TileID.Statues, style: 1, npcTypes: new[] { NPCID.Zombie, NPCID.DemonEye, NPCID.BlueSlime },
+            //     spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/Mixed",
+            //     outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/Mixed_Outline")
+            //     .AddLoot(ItemID.GoldCoin, 0.1f, 1, 2)
+            //     .AddLoot(ItemID.Gel, 0.5f, 3, 8);
+
+            int[] SlimeStatueNPCIDs = new int[] {
+                NPCID.GreenSlime,
+                NPCID.BlueSlime,
+                NPCID.RedSlime,
+                NPCID.PurpleSlime,
+                NPCID.YellowSlime,
+                NPCID.BlackSlime,
+                NPCID.IceSlime,
+                NPCID.SandSlime,
+                NPCID.JungleSlime,
+                NPCID.SpikedJungleSlime,
+                NPCID.SpikedIceSlime,
+                NPCID.MotherSlime,
+                NPCID.BabySlime,
+                NPCID.LavaSlime,
+                NPCID.Pinky,
+                NPCID.UmbrellaSlime
+            };
+            registry.Add(TileID.Statues, style: 4, SlimeStatueNPCIDs,
+                spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueLeft",
+                outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueLeft_Outline");
+            registry.Add(TileID.Statues, style: 4 + 165, SlimeStatueNPCIDs,
+                spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueRight",
+                outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueRight_Outline");
         }
     }
 }
