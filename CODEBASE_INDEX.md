@@ -4,7 +4,7 @@ generated 2026-10-13 | 184 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(19) MachineUIStateBase(13) CustomRecipe(13) MachineUIElementEntry(12) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) Entry(7) MotorTileEntityBase(6) LiquidTankUIElement(6) Direction(6)
+RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(19) MachineUIStateBase(13) CustomRecipe(13) MachineUIElementEntry(12) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) Entry(7) TileEntityHelper(6) MotorTileEntityBase(6) LiquidTankUIElement(6)
 
 ## Inheritance
 Project bases -> derived:
@@ -804,7 +804,7 @@ tModLoader/other bases -> project types:
 **MagicMaterializerUIState.cs** uses: MachineUIElementEntry, MachineUIStateBase
   class MagicMaterializerUIState : MachineUIStateBase
     +BasePanelOffset:Vector2[ov] #BuildElements()[ov]
-**MaterializerRightClickGuard.cs** uses: MachineVisualRegistry
+**MaterializerRightClickGuard.cs** uses: MachineVisualRegistry, TileEntityHelper
   class MaterializerRightClickGuard : ModSystem
     +Load()[ov] +Unload()[ov]
 **MaterializerWireGuard.cs** uses: MachineVisualRegistry
