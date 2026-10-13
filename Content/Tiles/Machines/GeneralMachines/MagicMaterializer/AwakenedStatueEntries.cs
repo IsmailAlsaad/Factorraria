@@ -18,6 +18,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
             //     .AddLoot(ItemID.GoldCoin, 0.1f, 1, 2)
             //     .AddLoot(ItemID.Gel, 0.5f, 3, 8);
 
+            int DirectionSwapStyleOffset = 165;
+
             int[] SlimeStatueNPCIDs = new int[] {
                 NPCID.GreenSlime,
                 NPCID.BlueSlime,
@@ -39,7 +41,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
             registry.Add(TileID.Statues, style: 4, SlimeStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueLeft",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueLeft_Outline");
-            registry.Add(TileID.Statues, style: 4 + 165, SlimeStatueNPCIDs,
+            registry.Add(TileID.Statues, style: 4 + DirectionSwapStyleOffset, SlimeStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueRight",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueRight_Outline");
         }
