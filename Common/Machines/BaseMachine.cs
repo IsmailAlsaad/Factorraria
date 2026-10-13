@@ -111,6 +111,9 @@ namespace Factorraria.Common.Machines
         public int ResolveRecipeDuration(CustomRecipe r) => RecipeDuration(r);
         protected virtual bool CanStartCraft(CustomRecipe recipe) => true;
 
+        // Pipes treat a world liquid pool as bottomless when a sink machine returns true for that liquid (Magic Materializer + shimmer).
+        public virtual bool TreatsWorldLiquidAsInfinite(int liquidType) => false;
+
         LiquidStack[] CreateInputLiquids()
         {
             int fuelTanks = LiquidFuelCount;   // liquid-fuel tanks first, recipe tanks after

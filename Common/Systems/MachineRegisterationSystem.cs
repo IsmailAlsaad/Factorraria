@@ -13,6 +13,7 @@ using Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.DecayChamber;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge;
+using Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssembler;
@@ -33,6 +34,7 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.Hellforge, new HellforgeUIState());
             MachineUIRegistry.Register(TileID.Extractinator, new ExtractinatorUIState());
             MachineUIRegistry.Register(TileID.LesionStation, new DecayChamberUIState());
+            MachineUIRegistry.Register(TileID.ShimmerMonolith, new MagicMaterializerUIState());
             // ModTile machines register their UI in PostSetupContent (their tile ids don't exist yet here)
             // etc...
         }
@@ -90,6 +92,11 @@ namespace Factorraria.Common.Machines
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/DecayChamber/DecayChamber_Off");
 
 
+            MachineVisualRegistry.Register<MagicMaterializerTileEntity>(TileID.ShimmerMonolith,
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/MagicMaterializer_On",
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/MagicMaterializer_Off");
+
+
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_On",
                 "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_Off");
@@ -127,6 +134,7 @@ namespace Factorraria.Common.Machines
             AutohammerRecipeRegistry.BuildRecipes();
             ExtractinatorRecipeRegistry.BuildRecipes();
             MechanicalAssemblerRecipeRegistry.BuildRecipes();
+            MagicMaterializerRegistry.BuildRecipes();
 
 
             // Recipe discovery: lets scrolls roll a recipe and resolve a saved key back to (machine, group).

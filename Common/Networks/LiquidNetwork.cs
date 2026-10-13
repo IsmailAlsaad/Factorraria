@@ -55,6 +55,9 @@ namespace Factorraria.Common.Networks
 
         List<LiquidEndpoint> sourceBuffer = new();
         List<LiquidEndpoint> sinkBuffer = new();
+
+        // True for the current tick while any machine sink wants world liquid treated as bottomless. Set in Tick().
+        bool sinkTreatsWorldLiquidAsInfinite;
         List<(LiquidEndpoint Endpoint, LiquidStack Slot, float Cap)> resolvedSources = new();
         List<(LiquidEndpoint Endpoint, LiquidStack Slot, float Cap)> resolvedSinks = new();
 
@@ -101,6 +104,19 @@ namespace Factorraria.Common.Networks
 
             if (LiquidType == -1)
                 TryLockTypeFromSources(sourceBuffer);
+
+            sinkTreatsWorldLiquidAsInfinite = false;
+            if (LiquidType != -1)
+            {
+                foreach (var sink in sinkBuffer)
+                {
+                    if (!sink.IsWorld && sink.Machine != null && sink.Machine.TreatsWorldLiquidAsInfinite(LiquidType))
+                    {
+                        sinkTreatsWorldLiquidAsInfinite = true;
+                        break;
+                    }
+                }
+            }
 
             if (sourceBuffer.Count > 0 && sinkBuffer.Count > 0)
                 TransferBetween(sourceBuffer, sinkBuffer);
@@ -150,7 +166,7 @@ namespace Factorraria.Common.Networks
                     // Bank this tick's contribution unconditionally, whether or not this
                     // source ends up participating — otherwise banking would stall
                     // whenever it's rejected below (type lock, not ready yet, etc).
-                    bool infinite = IsInfiniteSource(source.WorldPos);
+                    bool infinite = sinkTreatsWorldLiquidAsInfinite || IsInfiniteSource(source.WorldPos);
                     float bank;
                     if (infinite)
                     {
@@ -323,7 +339,7 @@ namespace Factorraria.Common.Networks
                 return 0f;
             }
 
-            if (IsInfiniteSource(pos))
+            if (sinkTreatsWorldLiquidAsInfinite || IsInfiniteSource(pos))
                 return amount; // bottomless — tile untouched, no bank to spend
 
             int actualDrain = (int)Math.Min(amount, tile.LiquidAmount);
