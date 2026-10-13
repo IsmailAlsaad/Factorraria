@@ -13,7 +13,7 @@ namespace Factorraria.Common.Statues
     public class AwakenedStatueDrawSystem : ModSystem
     {
         public float OutlinePulseSpeed = 3f;          // radians per second
-        public float OutlineScaleAmplitude = 0.001f;   // +/- fraction of the statue size
+        public float OutlineScaleAmplitude = 0.01f;   // +/- fraction of the statue size
         public float OutlineMinOpacity = 0.3f;
 
         // The sprite and outline PNGs are the statue footprint plus this much transparent padding (pixels), so art can overhang.

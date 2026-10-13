@@ -38,7 +38,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
             };
             registry.Add(TileID.Statues, style: 4, SlimeStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatue",
-                outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatue_Outline");
+                outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatue_Outline",
+                new Vector2(0,2));
         }
     }
 }

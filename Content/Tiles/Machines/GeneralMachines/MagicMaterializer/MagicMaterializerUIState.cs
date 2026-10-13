@@ -18,7 +18,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
         {
             var list = new List<MachineUIElementEntry>();
 
-            list.Add(FuelTankEntry(0, new Vector2(0, 0)));
+            list.Add(FuelTankEntry(0, new Vector2(0, 40)));
 
             return list;
         }
