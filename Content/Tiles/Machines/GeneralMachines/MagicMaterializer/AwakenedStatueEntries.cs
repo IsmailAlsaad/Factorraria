@@ -36,11 +36,9 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.Pinky,
                 NPCID.UmbrellaSlime
             };
-
-            // Left-facing style only; the right-facing one (+165) is registered and drawn mirrored automatically.
             registry.Add(TileID.Statues, style: 4, SlimeStatueNPCIDs,
-                spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueLeft",
-                outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatueLeft_Outline");
+                spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatue",
+                outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatue_Outline");
         }
     }
 }
