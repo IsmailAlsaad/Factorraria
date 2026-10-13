@@ -34,6 +34,7 @@ namespace Factorraria.Common.Statues
         readonly Dictionary<Point16, AwakenedStatue> released = new();
         readonly List<Point16> pendingStatueChecks = new();
         readonly HashSet<Point16> handledThisTick = new();
+        readonly HashSet<Point16> droppedOrigins = new();
 
         public IReadOnlyDictionary<Point16, AwakenedStatue> Awakened => awakened;
 
@@ -131,6 +132,32 @@ namespace Factorraria.Common.Statues
 
             if (awakener.AwakenedStatueCount == 0)
                 awakener.AwakenedEnemyCount = 0;
+
+            // Statues this machine held that nobody holds now (or that are a different statue now) stopped being awakened,
+            // so their enemies turn back into normal ones. A statue a neighbouring machine took over keeps its enemies' tags.
+            droppedOrigins.Clear();
+            foreach (var pair in released)
+            {
+                if (!awakened.TryGetValue(pair.Key, out AwakenedStatue current) || current.Entry != pair.Value.Entry)
+                    droppedOrigins.Add(pair.Key);
+            }
+            ClearTagsFor(droppedOrigins);
+        }
+
+        // Removes the spawn tag from every enemy that belongs to one of these statue origins (one pass over the NPC array).
+        public void ClearTagsFor(HashSet<Point16> origins)
+        {
+            if (origins.Count == 0) return;
+
+            for (int n = 0; n < Main.maxNPCs; n++)
+            {
+                NPC npc = Main.npc[n];
+                if (!npc.active) continue;
+
+                AwakenedSpawnGlobalNPC tag = npc.GetGlobalNPC<AwakenedSpawnGlobalNPC>();
+                if (tag.Tagged && origins.Contains(tag.Origin))
+                    tag.Release();
+            }
         }
 
         // Adds every free registered statue within the machine's radius to that machine.

@@ -312,7 +312,7 @@ tModLoader/other bases -> project types:
 ### Common/Statues/
 **AwakenedSpawnGlobalNPC.cs** uses: AwakenedLootDrop, AwakenedStatue, AwakenedStatueEntry, AwakenedStatueSystem, Entry
   class AwakenedSpawnGlobalNPC : GlobalNPC
-    +InstancePerEntity:bool[ov] +Tagged:bool +Origin:Point16 +Entry:AwakenedStatueEntry +CheckActive(NPC)[ov] +OnKill(NPC)[ov]
+    +InstancePerEntity:bool[ov] +Tagged:bool +Origin:Point16 +Entry:AwakenedStatueEntry +Release() +CheckActive(NPC)[ov] +OnKill(NPC)[ov]
 **AwakenedSpawnSystem.cs** uses: AwakenedSpawnGlobalNPC, AwakenedStatue, AwakenedStatueSystem, Entry, IStatueAwakener
   class AwakenedSpawnSystem : ModSystem
     +MaxEnemiesPerStatue:int +SpawnPassTicks:int +RefillDelayTicks:int +NpcSlotMargin:int +PostUpdateNPCs()[ov]
@@ -326,14 +326,14 @@ tModLoader/other bases -> project types:
   class AwakenedLootDrop
     +ItemType:int +Chance:float +Min:int +Max:int
   class AwakenedStatueEntry
-    +TileType:int +Style:int +NpcTypes:int +Spawns(int) +PickNpcType() +Sprite:Asset<Texture2D> +Outline:Asset<Texture2D> +DrawOffset:Vector2 +Loot:List<AwakenedLootDrop> +AddLoot(int,float,int,int)
+    +TileType:int +Style:int +FlipHorizontal:bool +NpcTypes:int +Spawns(int) +PickNpcType() +Sprite:Asset<Texture2D> +Outline:Asset<Texture2D> +DrawOffset:Vector2 +Loot:List<AwakenedLootDrop> +AddLoot(int,float,int,int)
   class AwakenedStatueRegistry : ModSystem
-    +IsStatueTile(int) +TryGet(int,int,out AwakenedStatueEntry) +Add(int,int,int,string,string,Vector2) +Add(int,int,int,string,string,Vector2) +PostSetupContent()[ov] +Unload()[ov]
-**AwakenedStatueSystem.cs** uses: AwakenedStatueEntry, AwakenedStatueRegistry, Entry, IStatueAwakener
+    +RightFacingStyleOffset:int +IsStatueTile(int) +TryGet(int,int,out AwakenedStatueEntry) +Add(int,int,int,string,string,Vector2) +Add(int,int,int,string,string,Vector2) +PostSetupContent()[ov] +Unload()[ov]
+**AwakenedStatueSystem.cs** uses: AwakenedSpawnGlobalNPC, AwakenedStatueEntry, AwakenedStatueRegistry, Entry, IStatueAwakener
   class AwakenedStatue
     +Origin:Point16 +Entry:AwakenedStatueEntry +OwnerOrigin:Point16 +Width:int +Height:int +LiveEnemies:int +LastLiveEnemies:int +SpawnCooldownTicks:int +Center:Vector2
   class AwakenedStatueSystem : ModSystem
-    +Awakened:IReadOnlyDictionary<Point16, AwakenedStatue> +OnWorldLoad()[ov] +OnWorldUnload()[ov] +QueueStatueCheck(int,int) +PostUpdateWorld()[ov] +IsAwakenedTile(int,int) +IsStillAwakened(AwakenedStatue) +RescanFor(IStatueAwakener)
+    +Awakened:IReadOnlyDictionary<Point16, AwakenedStatue> +OnWorldLoad()[ov] +OnWorldUnload()[ov] +QueueStatueCheck(int,int) +PostUpdateWorld()[ov] +IsAwakenedTile(int,int) +IsStillAwakened(AwakenedStatue) +RescanFor(IStatueAwakener) +ClearTagsFor(HashSet<Point16>)
 **IStatueAwakener.cs**
   interface IStatueAwakener
     +IsAwakening:bool +AwakenerOrigin:Point16 +AwakenRadiusTiles:int +AwakenedStatueCount:int +AwakenedEnemyCount:int

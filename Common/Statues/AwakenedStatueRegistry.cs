@@ -21,13 +21,14 @@ namespace Factorraria.Common.Statues
     {
         public int TileType;
         public int Style;
+        public bool FlipHorizontal;        // true for the right-facing style: the sprite and outline are drawn mirrored
         public int[] NpcTypes;             // one or more enemies; a random one is picked on every spawn
         public bool Spawns(int npcType) => System.Array.IndexOf(NpcTypes, npcType) >= 0;
         public int PickNpcType() => NpcTypes.Length == 1 ? NpcTypes[0] : NpcTypes[Main.rand.Next(NpcTypes.Length)];
         public Asset<Texture2D> Sprite;    // saturated statue on a padded canvas (see AwakenedStatueDrawSystem.Pad*)
         public Asset<Texture2D> Outline;   // same canvas size as Sprite
         public Vector2 DrawOffset;         // pixels, added to the footprint center when drawing
-        public readonly List<AwakenedLootDrop> Loot = new();   // extra drops, rolled for every enemy this statue spawns
+        public List<AwakenedLootDrop> Loot = new();   // extra drops, rolled for every enemy this statue spawns (shared by the left and right entry)
 
         // Extra drop on top of the enemy's normal loot, for every enemy of this statue. chance is 0..1 (0.25 = 25%).
         // A drop gives a random stack from min to max (max defaults to min).
@@ -45,10 +46,14 @@ namespace Factorraria.Common.Statues
         readonly Dictionary<(int, int), AwakenedStatueEntry> entries = new();
         readonly HashSet<int> statueTileTypes = new();
 
+        public int RightFacingStyleOffset = 165;   // the right-facing style of a statue is its left-facing style plus this
+
         public bool IsStatueTile(int tileType) => statueTileTypes.Contains(tileType);
         public bool TryGet(int tileType, int style, out AwakenedStatueEntry entry) => entries.TryGetValue((tileType, style), out entry);
 
-        // Single enemy: always spawns this one. Returns the entry so you can chain .AddLoot(...).
+        // Pass only the left-facing style. The right-facing style (style + RightFacingStyleOffset) is registered automatically
+        // with the same enemies, loot, offset and art, drawn mirrored.
+        // Single enemy: always spawns this one. Returns the entry so you can chain .AddLoot(...) (it applies to both).
         public AwakenedStatueEntry Add(int tileType, int style, int npcType, string spritePath, string outlinePath, Vector2 drawOffset = default)
             => Add(tileType, style, new[] { npcType }, spritePath, outlinePath, drawOffset);
 
@@ -61,23 +66,50 @@ namespace Factorraria.Common.Statues
                 return new AwakenedStatueEntry();   // throwaway, so a chained .AddLoot does not crash
             }
 
+            int rightStyle = style + RightFacingStyleOffset;
+            bool addLeft = !entries.ContainsKey((tileType, style));
+            bool addRight = !entries.ContainsKey((tileType, rightStyle));
+
+            if (!addLeft)
+                Mod.Logger.Warn($"Awakened statue (tile {tileType}): style {style} is already registered, keeping the first entry.");
+            if (!addRight)
+                Mod.Logger.Warn($"Awakened statue (tile {tileType}): right-facing style {rightStyle} (of style {style}) is already registered, keeping the first entry.");
+            if (!addLeft && !addRight)
+                return new AwakenedStatueEntry();   // throwaway, so a chained .AddLoot does not touch the existing entry
+
+            Asset<Texture2D> sprite = null;
+            if (ModContent.HasAsset(spritePath))
+                sprite = ModContent.Request<Texture2D>(spritePath);
+            else
+                Mod.Logger.Warn($"Awakened statue (tile {tileType}, style {style}): sprite not found at {spritePath}. It will spawn enemies but keep its vanilla look.");
+
+            Asset<Texture2D> outline = null;
+            if (ModContent.HasAsset(outlinePath))
+                outline = ModContent.Request<Texture2D>(outlinePath);
+            else
+                Mod.Logger.Warn($"Awakened statue (tile {tileType}, style {style}): outline not found at {outlinePath}.");
+
+            int[] npcs = (int[])npcTypes.Clone();
+            var loot = new List<AwakenedLootDrop>();   // one list, referenced by both entries
+
+            AwakenedStatueEntry left = addLeft ? AddEntry(tileType, style, false, npcs, sprite, outline, drawOffset, loot) : null;
+            AwakenedStatueEntry right = addRight ? AddEntry(tileType, rightStyle, true, npcs, sprite, outline, drawOffset, loot) : null;
+            return left ?? right;
+        }
+
+        AwakenedStatueEntry AddEntry(int tileType, int style, bool flip, int[] npcs, Asset<Texture2D> sprite, Asset<Texture2D> outline, Vector2 drawOffset, List<AwakenedLootDrop> loot)
+        {
             var entry = new AwakenedStatueEntry
             {
                 TileType = tileType,
                 Style = style,
-                NpcTypes = (int[])npcTypes.Clone(),
-                DrawOffset = drawOffset
+                FlipHorizontal = flip,
+                NpcTypes = npcs,
+                Sprite = sprite,
+                Outline = outline,
+                DrawOffset = drawOffset,
+                Loot = loot
             };
-
-            if (ModContent.HasAsset(spritePath))
-                entry.Sprite = ModContent.Request<Texture2D>(spritePath);
-            else
-                Mod.Logger.Warn($"Awakened statue (tile {tileType}, style {style}): sprite not found at {spritePath}. It will spawn enemies but keep its vanilla look.");
-
-            if (ModContent.HasAsset(outlinePath))
-                entry.Outline = ModContent.Request<Texture2D>(outlinePath);
-            else
-                Mod.Logger.Warn($"Awakened statue (tile {tileType}, style {style}): outline not found at {outlinePath}.");
 
             entries[(tileType, style)] = entry;
             statueTileTypes.Add(tileType);

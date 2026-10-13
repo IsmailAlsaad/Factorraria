@@ -6,8 +6,9 @@ using Terraria.ModLoader;
 namespace Factorraria.Common.Statues
 {
     // Tags enemies spawned by an awakened statue. While the statue is still awakened, CheckActive keeps them from
-    // despawning (also when no player is near). Once the statue or its machine is gone the tag does nothing and the
-    // enemy despawns the normal way.
+    // despawning (also when no player is near). Once the statue stops being awakened (machine broken or switched off,
+    // statue broken or replaced) the tag is removed and the enemy is a normal enemy again, so it despawns normally and
+    // drops no statue loot.
     public class AwakenedSpawnGlobalNPC : GlobalNPC
     {
         public override bool InstancePerEntity => true;
@@ -15,6 +16,13 @@ namespace Factorraria.Common.Statues
         public bool Tagged;
         public Point16 Origin;
         public AwakenedStatueEntry Entry;   // the statue that spawned this enemy; its Loot list is rolled on death
+
+        // Turns the enemy back into a normal one.
+        public void Release()
+        {
+            Tagged = false;
+            Entry = null;
+        }
 
         public override bool CheckActive(NPC npc)
         {
@@ -25,10 +33,13 @@ namespace Factorraria.Common.Statues
                 && statue.Entry.Spawns(npc.type)
                 && statues.IsStillAwakened(statue);
 
+            // Safety net: if the explicit release in AwakenedStatueSystem.RescanFor missed this enemy, drop the tag here.
+            if (!held) Release();
+
             return !held;
         }
 
-        // Statue loot is rolled from the entry stored at spawn time, so it still drops if the statue is gone by then.
+        // Statue loot is rolled from the entry stored at spawn time. Releasing the tag clears the entry, so it stops with the tag.
         public override void OnKill(NPC npc)
         {
             if (!Tagged || Entry == null || Entry.Loot.Count == 0) return;
