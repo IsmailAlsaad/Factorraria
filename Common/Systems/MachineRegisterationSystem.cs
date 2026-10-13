@@ -34,7 +34,6 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.Hellforge, new HellforgeUIState());
             MachineUIRegistry.Register(TileID.Extractinator, new ExtractinatorUIState());
             MachineUIRegistry.Register(TileID.LesionStation, new DecayChamberUIState());
-            MachineUIRegistry.Register(TileID.ShimmerMonolith, new MagicMaterializerUIState());
             // ModTile machines register their UI in PostSetupContent (their tile ids don't exist yet here)
             // etc...
         }
@@ -93,8 +92,12 @@ namespace Factorraria.Common.Machines
 
 
             MachineVisualRegistry.Register<MagicMaterializerTileEntity>(TileID.ShimmerMonolith,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/MagicMaterializer_On",
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/MagicMaterializer_On_Active",
                 "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/MagicMaterializer_Off");
+            // MagicMaterializer_On_Active is the Active look (starry background on); _On_Inactive is shown when the player cycled it off.
+            MachineVisualRegistry.RegisterAlternateOn(TileID.ShimmerMonolith,
+                "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/MagicMaterializer_On_Inactive",
+                machine => machine is MagicMaterializerTileEntity materializer && !materializer.BackgroundActive);
 
 
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,

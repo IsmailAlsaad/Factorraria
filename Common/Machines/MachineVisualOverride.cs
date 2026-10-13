@@ -88,6 +88,8 @@ namespace Factorraria.Common.Machines
         public Func<int, int, BaseMachine> GetEntity;
         public Asset<Texture2D> OnTexture;
         public Asset<Texture2D> OffTexture;
+        public Asset<Texture2D> AltOnTexture;          // optional second On look, see MachineVisualRegistry.RegisterAlternateOn
+        public Func<BaseMachine, bool> UseAltOn;
         public List<LiquidOverlayLayer> LiquidOverlays = new();
         public MachineCanvas Canvas;   // null = On and Off are normal footprint-sized sheets
     }
@@ -113,6 +115,20 @@ namespace Factorraria.Common.Machines
                 OnTexture = ModContent.Request<Texture2D>(onPath),
                 OffTexture = ModContent.Request<Texture2D>(offPath)
             };
+        }
+        // A second On texture, drawn instead of the normal On one while useAlt(machine) is true. Call after Register<T>.
+        public static void RegisterAlternateOn(int tileType, string altOnPath, Func<BaseMachine, bool> useAlt)
+        {
+            if (!Definitions.TryGetValue(tileType, out var def))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(tileType),
+                    $"RegisterAlternateOn failed for tile type {tileType}: call MachineVisualRegistry.Register (base On/Off textures) first."
+                );
+            }
+
+            def.AltOnTexture = ModContent.Request<Texture2D>(altOnPath);
+            def.UseAltOn = useAlt;
         }
         public static void RegisterLiquidOverlay(int tileType, string texturePath, Func<BaseMachine, LiquidStack> getLiquidStack)
         {
@@ -190,7 +206,9 @@ namespace Factorraria.Common.Machines
                 return false;
             }
 
-            var texture = entity.isOn && entity.isWorking ? def.OnTexture : def.OffTexture;
+            var texture = entity.isOn && entity.isWorking
+                ? (def.UseAltOn != null && def.UseAltOn(entity) ? def.AltOnTexture : def.OnTexture)
+                : def.OffTexture;
 
             float rotation = entity is MotorTileEntityBase motor ? GetMotorRotation(motor.Facing) : 0f;
 
