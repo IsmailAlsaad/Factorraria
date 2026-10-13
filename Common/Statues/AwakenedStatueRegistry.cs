@@ -24,7 +24,7 @@ namespace Factorraria.Common.Statues
         public int[] NpcTypes;             // one or more enemies; a random one is picked on every spawn
         public bool Spawns(int npcType) => System.Array.IndexOf(NpcTypes, npcType) >= 0;
         public int PickNpcType() => NpcTypes.Length == 1 ? NpcTypes[0] : NpcTypes[Main.rand.Next(NpcTypes.Length)];
-        public Asset<Texture2D> Sprite;    // saturated statue, same pixel size as the statue footprint
+        public Asset<Texture2D> Sprite;    // saturated statue on a padded canvas (see AwakenedStatueDrawSystem.Pad*)
         public Asset<Texture2D> Outline;   // same canvas size as Sprite
         public Vector2 DrawOffset;         // pixels, added to the footprint center when drawing
         public readonly List<AwakenedLootDrop> Loot = new();   // extra drops, rolled for every enemy this statue spawns

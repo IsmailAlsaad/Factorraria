@@ -16,6 +16,13 @@ namespace Factorraria.Common.Statues
         public float OutlineScaleAmplitude = 0.06f;   // +/- fraction of the statue size
         public float OutlineMinOpacity = 0.55f;
 
+        // The sprite and outline PNGs are the statue footprint plus this much transparent padding (pixels), so art can overhang.
+        // A 2x3 statue with 16 left/right/top is a 64x64 PNG with the footprint in the bottom middle.
+        public int PadLeft = 16;
+        public int PadRight = 16;
+        public int PadTop = 16;
+        public int PadBottom = 0;
+
         public override void PostDrawTiles()
         {
             if (Main.dedServ) return;
@@ -40,7 +47,7 @@ namespace Factorraria.Common.Statues
 
             Vector2 size = new Vector2(statue.Width * 16, statue.Height * 16);
             Vector2 center = statue.Center + statue.Entry.DrawOffset;
-            if (!BaseMachine.IsOnScreen(center, Math.Max(size.X, size.Y))) return;
+            if (!BaseMachine.IsOnScreen(center, Math.Max(size.X, size.Y) + Math.Max(Math.Max(PadLeft, PadRight), Math.Max(PadTop, PadBottom)))) return;
             if (!system.IsStillAwakened(statue)) return;
 
             Vector2 screenCenter = center - Main.screenPosition;
@@ -50,14 +57,25 @@ namespace Factorraria.Common.Statues
             {
                 float wave = MathF.Sin(Main.GlobalTimeWrappedHourly * OutlinePulseSpeed + statue.Origin.X * 0.37f);
                 float pulse = 0.5f + 0.5f * wave;
-                Vector2 outlineScale = new Vector2(size.X / outline.Width, size.Y / outline.Height) * (1f + OutlineScaleAmplitude * wave);
+                Vector2 outlineScale = CanvasScale(outline, size) * (1f + OutlineScaleAmplitude * wave);
                 Color outlineColor = Color.White * MathHelper.Lerp(OutlineMinOpacity, 1f, pulse);
-                spriteBatch.Draw(outline, screenCenter, null, outlineColor, 0f, new Vector2(outline.Width / 2f, outline.Height / 2f), outlineScale, SpriteEffects.None, 0f);
+                spriteBatch.Draw(outline, screenCenter, null, outlineColor, 0f, CanvasOrigin(outline, size), outlineScale, SpriteEffects.None, 0f);
             }
 
             Color light = Lighting.GetColor(statue.Origin.X + statue.Width / 2, statue.Origin.Y + statue.Height / 2);
-            Vector2 spriteScale = new Vector2(size.X / sprite.Width, size.Y / sprite.Height);
-            spriteBatch.Draw(sprite, screenCenter, null, light, 0f, new Vector2(sprite.Width / 2f, sprite.Height / 2f), spriteScale, SpriteEffects.None, 0f);
+            Vector2 spriteScale = CanvasScale(sprite, size);
+            spriteBatch.Draw(sprite, screenCenter, null, light, 0f, CanvasOrigin(sprite, size), spriteScale, SpriteEffects.None, 0f);
+        }
+
+        // Scale from PNG pixels to world pixels: the PNG covers the footprint plus the padding.
+        Vector2 CanvasScale(Texture2D texture, Vector2 footprint)
+            => new Vector2((footprint.X + PadLeft + PadRight) / texture.Width, (footprint.Y + PadTop + PadBottom) / texture.Height);
+
+        // The point of the PNG (in PNG pixels) that sits on the footprint's center.
+        Vector2 CanvasOrigin(Texture2D texture, Vector2 footprint)
+        {
+            Vector2 scale = CanvasScale(texture, footprint);
+            return new Vector2((PadLeft + footprint.X / 2f) / scale.X, (PadTop + footprint.Y / 2f) / scale.Y);
         }
     }
 }
