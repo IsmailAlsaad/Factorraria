@@ -30,8 +30,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public float ClawPivotX = 9f;             // the claw's hub centre inside MechanicalArmProjectile.png, in sprite pixels
         public float ClawPivotY = 16f;
         public float BlockScale = 0.8f;           // a held block is drawn a bit smaller than its item sprite
-        public float BeamThickness = 0.56f;       // beam sprite scale across the arm (the shared hook arm uses 0.7)
-        public float JointScale = 0.8f;
+        public float BeamThickness = 0.45f;       // beam sprite scale across the arm (the shared hook arm uses 0.7)
+        public float JointScale = 1f;
         public float InPositionDistance = 3f;
 
         Asset<Texture2D> beamTexture;
