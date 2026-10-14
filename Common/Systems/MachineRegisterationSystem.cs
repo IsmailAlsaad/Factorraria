@@ -17,6 +17,7 @@ using Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssembler;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm;
 
 namespace Factorraria.Common.Machines
 {
@@ -123,6 +124,11 @@ namespace Factorraria.Common.Machines
                 originX: 3, originY: 2,
                 onFrames: 5, offFrames: 1,
                 yOffset: 2f);
+
+            MachineUIRegistry.Register(ModContent.TileType<RoboticArmTile>(), new RoboticArmUIState());
+            MachineVisualRegistry.Register<RoboticArmTileEntity>(ModContent.TileType<RoboticArmTile>(),
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/RoboticArm/RoboticArm_On",
+                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/RoboticArm/RoboticArm_Off");
         }
 
         public override void PostAddRecipes()
