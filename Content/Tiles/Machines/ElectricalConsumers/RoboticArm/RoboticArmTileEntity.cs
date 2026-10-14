@@ -1,4 +1,8 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Systems;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -6,12 +10,27 @@ using Terraria.ModLoader;
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 {
     // One input slot (a pickaxe, axe, hammer or a block) and one output slot. No recipes.
-    public class RoboticArmTileEntity : ElectricConsumerMachine
+    public class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
     {
         public override int ValidTileType => ModContent.TileType<RoboticArmTile>();
         public override float PowerDemand => 100f;
         protected override int InputSlotCount => 1;
         protected override int OutputSlotCount => 1;
+
+        // Arm geometry (pixels). Reach is what the work area is clamped to in Phase 3.
+        public float UpperArmLength = 56f;
+        public float ForearmLength = 56f;
+        public float Reach => UpperArmLength + ForearmLength;
+
+        // Centre of the base tile: the arm's shoulder.
+        public Vector2 Shoulder => new Vector2(Position.X * 16f + 8f, Position.Y * 16f + 8f);
+
+        // Client-only animation state. Never saved and never synced; created on the first client tick.
+        RoboticArmVisual visual;
+        public RoboticArmVisual Visual => visual;
+
+        // PHASE 2 DEBUG (removed in Phase 4): ticks to wait before the debug controller starts the next strike.
+        int debugStrikeCooldown;
 
         public override void Update()
         {
@@ -64,6 +83,71 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             limit = sample.maxStack;
             return true;
+        }
+
+        bool TilePresent()
+        {
+            Tile tile = Framing.GetTileSafely(Position.X, Position.Y);
+            return tile.HasTile && tile.TileType == ValidTileType;
+        }
+
+        public void DynamicUpdate()
+        {
+            if (!TilePresent())
+            {
+                visual = null;
+                return;
+            }
+
+            visual ??= new RoboticArmVisual();
+            DebugFollowCursor();
+
+            Item held = InputSlots[0];
+            visual.Update(Shoulder, UpperArmLength, ForearmLength, held, !held.IsAir && IsTool(held));
+        }
+
+        public bool TryGetDynamicBounds(out Vector2 center, out float radius)
+        {
+            center = Shoulder;
+            radius = Reach + 70f; // the hand can sit at full reach and a tool sprite sticks out past it
+            return visual != null;
+        }
+
+        public void DynamicDraw(SpriteBatch spriteBatch)
+        {
+            Item held = InputSlots[0];
+            visual?.Draw(spriteBatch, Shoulder, UpperArmLength, ForearmLength, held, !held.IsAir && IsTool(held));
+        }
+
+        // PHASE 2 DEBUG (removed in Phase 4, when the worker drives the visual): while this arm's UI is open, the arm follows the
+        // tile under the cursor and keeps striking at it with whatever is in the slot, so the animation can be judged without a worker.
+        void DebugFollowCursor()
+        {
+            if (ModContent.GetInstance<MachineUISystem>().OpenMachine != this)
+            {
+                visual.SetTarget(null);
+                debugStrikeCooldown = 0;
+                return;
+            }
+
+            if (!Main.LocalPlayer.mouseInterface)
+            {
+                Point mouseTile = Main.MouseWorld.ToTileCoordinates();
+                if (mouseTile.X == Position.X && mouseTile.Y == Position.Y)
+                    visual.SetTarget(null);
+                else
+                    visual.SetTarget(new Vector2(mouseTile.X * 16f + 8f, mouseTile.Y * 16f + 8f));
+            }
+
+            if (debugStrikeCooldown > 0)
+                debugStrikeCooldown--;
+
+            Item held = InputSlots[0];
+            if (!held.IsAir && visual.HasTarget && visual.InPosition && !visual.Striking && debugStrikeCooldown <= 0)
+            {
+                visual.StartStrike(Math.Max(held.useTime, 8));
+                debugStrikeCooldown = 4;
+            }
         }
     }
 }

@@ -33,7 +33,7 @@ namespace Factorraria.Common.Mounts
             return shoulder + elbowAngle.ToRotationVector2() * l1;
         }
 
-        public static void DrawSegment(SpriteBatch spriteBatch, Texture2D texture, Vector2 start, Vector2 end, Color color)
+        public static void DrawSegment(SpriteBatch spriteBatch, Texture2D texture, Vector2 start, Vector2 end, Color color, float thickness = 0.7f)
         {
             Vector2 diff = end - start;
             float length = diff.Length();
@@ -41,7 +41,7 @@ namespace Factorraria.Common.Mounts
 
             float rotation = diff.ToRotation();
             Vector2 origin = new Vector2(0f, texture.Height / 2f);
-            Vector2 scale = new Vector2(length / texture.Width, 0.7f);
+            Vector2 scale = new Vector2(length / texture.Width, thickness);
 
             spriteBatch.Draw(texture, start - Main.screenPosition, null, color, rotation, origin, scale, SpriteEffects.None, 0f);
         }

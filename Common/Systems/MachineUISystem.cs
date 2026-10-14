@@ -24,6 +24,9 @@ namespace Factorraria.Common.Systems
         // and to detect "clicked the same machine again" (close) vs "clicked a different one" (switch).
         Point16 openPosition;
 
+        // The machine whose UI is open right now (null when none). Read-only for other systems.
+        public BaseMachine OpenMachine => openState?.CurrentEntity;
+
         public override void Load()
         {
             if (Main.dedServ) return; // server has no screen, skip UI setup entirely

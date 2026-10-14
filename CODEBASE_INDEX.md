@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-15 | 186 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-15 | 189 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(19) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) Entry(7) TileEntityHelper(6) MotorTileEntityBase(6) LiquidTankUIElement(6)
+RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(20) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) Entry(7) TileEntityHelper(6) MotorTileEntityBase(6) LiquidTankUIElement(6)
 
 ## Inheritance
 Project bases -> derived:
@@ -14,6 +14,7 @@ Project bases -> derived:
 - ElectricProducerMachine: GelBurnerTileEntity
 - IElectricConsumer: ElectricConsumerMachine
 - IElectricProducer: ElectricProducerMachine
+- IMachineDynamicDraw: RoboticArmTileEntity
 - IStatueAwakener: MagicMaterializerTileEntity
 - IZoomScalable: RecipeBrowserPanel
 - MachineUIStateBase: AutohammerUIState, DecayChamberUIState, ExtractinatorUIState, FurnaceUIState, GelBurnerUIState, HellforgeUIState, IceMachineUIState, LiquidDistillatorUIState, MechanicalAssemblerUIState, RoboticArmUIState, SolidifierUIState
@@ -22,7 +23,7 @@ Project bases -> derived:
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
-- ModSystem (29): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, SiliconOreWorldGen, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (30): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineDynamicDrawSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, SiliconOreWorldGen, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (6): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
@@ -261,9 +262,15 @@ tModLoader/other bases -> project types:
     +PowerDemand:float +isWorking:bool +isOn:bool +useFraction:float +GetUseFraction()
   interface IElectricProducer
     +PowerSupply:float +isWorking:bool +isOn:bool +useFraction:float +GetUseFraction()
+**IMachineDynamicDraw.cs**
+  interface IMachineDynamicDraw
+    +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch)
 **MachineBiome.cs**
   enum MachineBiome
     {Unknown, Forest, Snow, Desert, Jungle, GlowingMushroom, Corruption, Crimson, Hallow, Underworld, Cavern, Underground, Sky, Ocean, ...}
+**MachineDynamicDrawSystem.cs** uses: BaseMachine, IMachineDynamicDraw
+  class MachineDynamicDrawSystem : ModSystem
+    +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
 **MachineOverhangSystem.cs** uses: BaseMachine, MachineCanvas, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
     +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
@@ -290,7 +297,7 @@ tModLoader/other bases -> project types:
 ### Common/Mounts/
 **MechanicalArmIK.cs**
   static class MechanicalArmIK
-    +SolveElbow(Vector2,Vector2,float,float,float,float)[s] +DrawSegment(SpriteBatch,Texture2D,Vector2,Vector2,Color)[s]
+    +SolveElbow(Vector2,Vector2,float,float,float,float)[s] +DrawSegment(SpriteBatch,Texture2D,Vector2,Vector2,Color,float)[s]
 
 ### Common/Networks/
 **LiquidNetwork.cs** uses: BaseMachine, Direction, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MotorTileEntityBase, WorldLiquidSources
@@ -371,7 +378,7 @@ tModLoader/other bases -> project types:
     +Load()[ov] +PostSetupContent()[ov] +PostAddRecipes()[ov] +Unload()[ov]
 **MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem
   class MachineUISystem : ModSystem
-    +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +NotifyMachineKilled(BaseMachine) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +NotifyMachineKilled(BaseMachine) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
@@ -718,12 +725,15 @@ tModLoader/other bases -> project types:
 **RoboticArmTile.cs** uses: MechanicalArmItem, RoboticArmTileEntity
   class RoboticArmTile : ModTile
     +Texture:string[ov] +Slope(int,int)[ov]
-**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, RoboticArmTile
-  class RoboticArmTileEntity : ElectricConsumerMachine
-    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +Update()[ov] +IsTool(Item) +IsBlock(Item) +IsAcceptedItem(Item) #TryGetIntakeSlot(int,out int,out int)[ov]
+**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, IMachineDynamicDraw, MachineUISystem, RoboticArmTile, RoboticArmVisual
+  class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
+    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +Update()[ov] +IsTool(Item) +IsBlock(Item) +IsAcceptedItem(Item) #TryGetIntakeSlot(int,out int,out int)[ov] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch)
 **RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, RoboticArmTileEntity, UIItemSlotWrapper
   class RoboticArmUIState : MachineUIStateBase
     #BuildElements()[ov]
+**RoboticArmVisual.cs** uses: MechanicalArmIK
+  class RoboticArmVisual
+    +HeadSmoothing:float +BendSmoothing:float +AimSmoothing:float +IdleOffsetX:float +IdleOffsetY:float +IdleAimTilt:float +SideDeadZone:float +SideFlipDistance:float +SwingArc:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +BlockCarryDistance:float +BeamThickness:float +JointScale:float +InPositionDistance:float +Side:int +Head:Vector2 +HasTarget:bool +Striking:bool +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool) +Draw(SpriteBatch,Vector2,float,float,Item,bool)
 
 ### Content/Tiles/Machines/ElectricalConsumers/Solidifier/
 **SolidifierRecipeRegistry.cs** ns!=Factorraria.Content.Tiles.Machines.Solidifier uses: CustomRecipe, LiquidTypeRegistry, RecipeBook
