@@ -16,15 +16,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
         public float TrackSmoothTime = 0.06f;     // seconds for the hand to settle onto a moving target (critically damped spring)
-        public float FlipSmoothTime = 0.28f;      // the same while the arm sweeps over to the other side (slower = gentler)
-        public float SmoothingEase = 0.05f;       // how fast the spring time eases from FlipSmoothTime back to TrackSmoothTime
-        public float BendSmoothTime = 0.15f;      // seconds for the elbow to swing from one side to the other
+        public float BendSmoothTime = 0.15f;      // seconds for the ELBOW to swing from one side to the other (only the elbow eases when the side flips)
         public float AimSmoothing = 0.25f;        // how fast the claw turns toward its aim
         public float IdleOffsetX = 8f;            // idle hand position relative to the shoulder (X is mirrored by side)
         public float IdleOffsetY = -14f;          // also the height of the point the hand sweeps over when switching side
         public float IdleAimTilt = 1.6f;          // idle claw angle away from straight up
         public float SideDeadZone = 6f;           // target must be this far to one side before the arm switches side
-        public float SideFlipDistance = 10f;      // the hand must be this close to the point above the shoulder before the side may flip
         public float SwingArc = 1.1f;             // radians the claw swings the tool back before it strikes
         public float ThrustDistance = 6f;         // extra reach of a block thrust
         public float ImpactPoint = 0.6f;          // fraction of the strike at which the tool/block touches the target (Phase 4 changes the world here)
@@ -52,7 +49,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         bool inPosition;
         Vector2 headVelocity;         // spring velocities (see DampStep)
         float bendVelocity;
-        float smoothTime;             // current hand spring time, eased between track and flip
+        float drawAngle;              // claw angle incl. the tool swing, set once per tick in Update so both draw passes agree
         Vector2 elbow;                // solved once per tick in Update, shared by both draw passes
 
         public int Side => side;
@@ -91,42 +88,24 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 head = shoulder + new Vector2(side * IdleOffsetX, IdleOffsetY);
                 bend = -side;
                 aimAngle = IdleAim();
-                smoothTime = TrackSmoothTime;
                 initialized = true;
             }
 
             if (strikeTimer > 0)
                 strikeTimer--;
 
-            // Side switching: the hand sweeps over a point straight above the shoulder, slowly, and the side only changes once it
-            // is there. The elbow then eases through the folded pose instead of snapping.
-            int desiredSide = side;
+            // Side switching: the side (and with it the elbow's bend direction) changes the moment the target crosses to the other
+            // side of the shoulder. Only the elbow eases to its new position (the bend value); the hand never leaves the target.
             if (target.HasValue)
             {
                 float dx = target.Value.X - shoulder.X;
                 if (MathF.Abs(dx) > SideDeadZone)
-                    desiredSide = dx > 0f ? 1 : -1;
+                    side = dx > 0f ? 1 : -1;
             }
 
-            Vector2 passPoint = shoulder + new Vector2(0f, IdleOffsetY);
-            bool flipping = desiredSide != side;
-            if (flipping && Vector2.DistanceSquared(head, passPoint) < SideFlipDistance * SideFlipDistance)
-            {
-                side = desiredSide;
-                flipping = false;
-            }
-
-            Vector2 idle = shoulder + new Vector2(side * IdleOffsetX, IdleOffsetY);
-            Vector2 goal = idle;
+            Vector2 goal = shoulder + new Vector2(side * IdleOffsetX, IdleOffsetY);
             float desiredAim = IdleAim();
-            bool aiming = target.HasValue && !flipping;
-
-            if (flipping)
-            {
-                strikeTimer = 0;
-                goal = passPoint;
-                desiredAim = -MathHelper.PiOver2;
-            }
+            bool aiming = target.HasValue;
 
             if (aiming)
             {
@@ -152,26 +131,26 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 if (fromShoulder.Length() > maxDistance)
                     goal = shoulder + Vector2.Normalize(fromShoulder) * maxDistance;
 
-                Vector2 toTargetFromHead = target.Value - head;
-                desiredAim = toTargetFromHead.LengthSquared() > 1f ? toTargetFromHead.ToRotation() : dir.ToRotation();
+                // The claw faces along the line from the SHOULDER to the target, not from wherever the lagging hand currently is.
+                desiredAim = dir.ToRotation();
             }
 
-            // The hand moves with a critically damped spring (smooth start and stop). It is slow while switching side and eases
-            // back to the quick tracking speed afterwards, so neither the retreat nor the return is a sudden jump.
-            float desiredTime = flipping ? FlipSmoothTime : TrackSmoothTime;
-            smoothTime = desiredTime > smoothTime ? desiredTime : smoothTime + (desiredTime - smoothTime) * SmoothingEase;
-
-            head.X = DampStep(head.X, goal.X, ref headVelocity.X, smoothTime);
-            head.Y = DampStep(head.Y, goal.Y, ref headVelocity.Y, smoothTime);
+            // The hand moves with a critically damped spring (smooth start and stop).
+            head.X = DampStep(head.X, goal.X, ref headVelocity.X, TrackSmoothTime);
+            head.Y = DampStep(head.Y, goal.Y, ref headVelocity.Y, TrackSmoothTime);
             bend = DampStep(bend, -side, ref bendVelocity, BendSmoothTime);
             aimAngle += MathHelper.WrapAngle(desiredAim - aimAngle) * AimSmoothing;
 
             elbow = MechanicalArmIK.SolveElbow(shoulder, head, upperArm, forearm, bend, -MathHelper.PiOver2 + side * 0.5f);
 
+            drawAngle = aimAngle;
+            if (!held.IsAir && heldIsTool)
+                drawAngle += side * SwingCurve(StrikeProgress) * SwingArc;
+
             inPosition = aiming && Vector2.Distance(head, goal) < InPositionDistance;
         }
 
-        // Drawn BEHIND the tiles (see MachineDynamicDrawSystem): the two beams and the elbow joint.
+        // Drawn BEHIND the tiles (see MachineDynamicDrawSystem): the two beams, the elbow joint and the claw.
         public void DrawBehind(SpriteBatch spriteBatch, Vector2 shoulder)
         {
             if (!initialized)
@@ -183,52 +162,44 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             Texture2D joint = jointTexture.Value;
             spriteBatch.Draw(joint, elbow - Main.screenPosition, null, LightAt(elbow), 0f, joint.Size() / 2f, JointScale, SpriteEffects.None, 0f);
-        }
-
-        // Drawn in front of the tiles: the held tool/block, then the claw over it so its jaws sit in front of what it holds.
-        // The claw rotates about its hub (the wrist, where the forearm ends); a held tool is attached between its jaws and turns
-        // with it, so a swing is the claw swinging the tool.
-        public void Draw(SpriteBatch spriteBatch, Item held, bool heldIsTool)
-        {
-            if (!initialized)
-                return;
-
-            bool hasItem = !held.IsAir;
-            float angle = aimAngle;
-            if (hasItem && heldIsTool)
-                angle += side * SwingCurve(StrikeProgress) * SwingArc;
-
-            Vector2 grip = head + angle.ToRotationVector2() * GripDistance;
-            Color color = LightAt(head);
-
-            if (hasItem)
-            {
-                Main.instance.LoadItem(held.type);
-                Texture2D texture = TextureAssets.Item[held.type].Value;
-                Rectangle frame = Main.itemAnimations[held.type]?.GetFrame(texture) ?? texture.Frame();
-
-                if (heldIsTool)
-                {
-                    // Tool sprites point up-right (up-left when mirrored) with the grip at the bottom corner: the grip goes between
-                    // the jaws and the rotation turns that diagonal onto the claw's direction.
-                    bool mirrored = side < 0;
-                    Vector2 origin = new Vector2(mirrored ? frame.Width : 0f, frame.Height);
-                    float rotation = angle + (mirrored ? 3f * MathHelper.PiOver4 : MathHelper.PiOver4);
-                    spriteBatch.Draw(texture, grip - Main.screenPosition, frame, color, rotation, origin, 1f, mirrored ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
-                }
-                else
-                {
-                    // A block is just held between the jaws: no rotation.
-                    spriteBatch.Draw(texture, grip - Main.screenPosition, frame, color, 0f, frame.Size() / 2f, BlockScale, SpriteEffects.None, 0f);
-                }
-            }
 
             // The claw art points right and is lit from above, so it is flipped vertically on the left side to keep it upright.
-            // SpriteBatch mirrors only the texture, not the origin, hence the mirrored pivot Y.
+            // SpriteBatch mirrors only the texture, not the origin, hence the mirrored pivot Y. It rotates about its hub (the wrist).
             Texture2D claw = clawTexture.Value;
             bool flipped = side < 0;
             Vector2 pivot = new Vector2(ClawPivotX, flipped ? claw.Height - ClawPivotY : ClawPivotY);
-            spriteBatch.Draw(claw, head - Main.screenPosition, null, color, angle, pivot, 1f, flipped ? SpriteEffects.FlipVertically : SpriteEffects.None, 0f);
+            spriteBatch.Draw(claw, head - Main.screenPosition, null, LightAt(head), drawAngle, pivot, 1f, flipped ? SpriteEffects.FlipVertically : SpriteEffects.None, 0f);
+        }
+
+        // Drawn in front of the tiles: only the held tool/block, so it sits over the claw's jaws (the claw is drawn in DrawBehind).
+        // A held tool is attached between the jaws and turns with the claw, so a swing is the claw swinging the tool.
+        public void Draw(SpriteBatch spriteBatch, Item held, bool heldIsTool)
+        {
+            if (!initialized || held.IsAir)
+                return;
+
+            float angle = drawAngle;
+            Vector2 grip = head + angle.ToRotationVector2() * GripDistance;
+            Color color = LightAt(head);
+
+            Main.instance.LoadItem(held.type);
+            Texture2D texture = TextureAssets.Item[held.type].Value;
+            Rectangle frame = Main.itemAnimations[held.type]?.GetFrame(texture) ?? texture.Frame();
+
+            if (heldIsTool)
+            {
+                // Tool sprites point up-right (up-left when mirrored) with the grip at the bottom corner: the grip goes between
+                // the jaws and the rotation turns that diagonal onto the claw's direction.
+                bool mirrored = side < 0;
+                Vector2 origin = new Vector2(mirrored ? frame.Width : 0f, frame.Height);
+                float rotation = angle + (mirrored ? 3f * MathHelper.PiOver4 : MathHelper.PiOver4);
+                spriteBatch.Draw(texture, grip - Main.screenPosition, frame, color, rotation, origin, 1f, mirrored ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
+            }
+            else
+            {
+                // A block is just held between the jaws: no rotation.
+                spriteBatch.Draw(texture, grip - Main.screenPosition, frame, color, 0f, frame.Size() / 2f, BlockScale, SpriteEffects.None, 0f);
+            }
         }
 
         // One step of a critically damped spring (same maths as a "smooth damp"): eases in and out and never overshoots.

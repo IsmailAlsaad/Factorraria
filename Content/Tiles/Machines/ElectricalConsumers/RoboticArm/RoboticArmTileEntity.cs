@@ -113,14 +113,14 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             return visual != null;
         }
 
-        // In front of the tiles: the claw and whatever it holds.
+        // In front of the tiles: whatever the claw holds.
         public void DynamicDraw(SpriteBatch spriteBatch)
         {
             Item held = InputSlots[0];
             visual?.Draw(spriteBatch, held, !held.IsAir && IsTool(held));
         }
 
-        // Behind the tiles: the beams and the elbow joint.
+        // Behind the tiles: the beams, the elbow joint and the claw.
         public void DynamicDrawBehindTiles(SpriteBatch spriteBatch)
         {
             visual?.DrawBehind(spriteBatch, Shoulder);
