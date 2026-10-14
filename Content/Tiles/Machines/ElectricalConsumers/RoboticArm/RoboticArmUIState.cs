@@ -22,14 +22,14 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                     v => Entity.InputSlots[0] = v,
                     null,
                     item => Entity.IsAcceptedItem(item)),
-                new Vector2(-60, 0), new Vector2(SlotSize, SlotSize)));
+                new Vector2(-70, -20), new Vector2(SlotSize, SlotSize)));
 
             // Everything the arm mines or collects ends up here.
-            list.Add(OutputSlotEntry(0, new Vector2(54, 0)));
+            list.Add(OutputSlotEntry(0, new Vector2(35, -20)));
 
             list.Add(new MachineUIElementEntry(
                 new ElectricityUIIcon(Entity.GetUseFraction),
-                new Vector2(8, -50), new Vector2(40, 40)));
+                new Vector2(-8, -70), new Vector2(40, 40)));
 
             return list;
         }
