@@ -18,8 +18,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public float TrackSmoothTime = 0.06f;     // seconds for the hand to settle onto a moving target (critically damped spring)
         public float BendSmoothTime = 0.15f;      // seconds for the ELBOW to swing from one side to the other (only the elbow eases when the side flips)
         public float AimSmoothing = 0.25f;        // how fast the claw turns toward its aim
-        public float IdleOffsetX = 8f;            // idle hand position relative to the shoulder (X is mirrored by side)
-        public float IdleOffsetY = -14f;          // also the height of the point the hand sweeps over when switching side
+        public float IdleOffsetX = 16f;            // idle hand position relative to the shoulder (X is mirrored by side)
+        public float IdleOffsetY = -20f;          // also the height of the point the hand sweeps over when switching side
         public float IdleAimTilt = 1.6f;          // idle claw angle away from straight up
         public float SideDeadZone = 6f;           // target must be this far to one side before the arm switches side
         public float SwingArc = 1.1f;             // radians the claw swings the tool back before it strikes
