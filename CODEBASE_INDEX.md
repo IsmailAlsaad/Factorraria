@@ -733,7 +733,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 **RoboticArmVisual.cs** uses: MechanicalArmIK
   class RoboticArmVisual
-    +TrackSmoothTime:float +BendSmoothTime:float +AimSmoothing:float +IdleOffsetX:float +IdleOffsetY:float +IdleAimTilt:float +SideDeadZone:float +SwingArc:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +GripDistance:float +ClawPivotX:float +ClawPivotY:float +BlockScale:float +BeamThickness:float +JointScale:float +InPositionDistance:float +Side:int +Head:Vector2 +HasTarget:bool +Striking:bool +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool) +DrawBehind(SpriteBatch,Vector2) +Draw(SpriteBatch,Item,bool)
+    +TrackSmoothTime:float +BendSmoothTime:float +AimSmoothing:float +IdleOffsetX:float +IdleOffsetY:float +IdleAimTilt:float +SideDeadZone:float +SwingArc:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +GripDistance:float +ClawPivotX:float +ClawPivotY:float +BlockScale:float +BeamThickness:float +JointScale:float +InPositionDistance:float +Side:int +Head:Vector2 +HasTarget:bool +Striking:bool +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool) +DrawBehind(SpriteBatch,Vector2,Item,bool)
 
 ### Content/Tiles/Machines/ElectricalConsumers/Solidifier/
 **SolidifierRecipeRegistry.cs** ns!=Factorraria.Content.Tiles.Machines.Solidifier uses: CustomRecipe, LiquidTypeRegistry, RecipeBook

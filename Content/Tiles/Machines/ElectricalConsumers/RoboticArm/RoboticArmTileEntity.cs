@@ -113,17 +113,14 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             return visual != null;
         }
 
-        // In front of the tiles: whatever the claw holds.
-        public void DynamicDraw(SpriteBatch spriteBatch)
-        {
-            Item held = InputSlots[0];
-            visual?.Draw(spriteBatch, held, !held.IsAir && IsTool(held));
-        }
+        // Nothing is drawn in front of the tiles: the whole arm is drawn in DynamicDrawBehindTiles.
+        public void DynamicDraw(SpriteBatch spriteBatch) { }
 
-        // Behind the tiles: the beams, the elbow joint and the claw.
+        // Behind the tiles: the beams, the elbow joint, the claw and the held item.
         public void DynamicDrawBehindTiles(SpriteBatch spriteBatch)
         {
-            visual?.DrawBehind(spriteBatch, Shoulder);
+            Item held = InputSlots[0];
+            visual?.DrawBehind(spriteBatch, Shoulder, held, !held.IsAir && IsTool(held));
         }
 
         // PHASE 2 DEBUG (removed in Phase 4, when the worker drives the visual): while this arm's UI is open, the arm follows the

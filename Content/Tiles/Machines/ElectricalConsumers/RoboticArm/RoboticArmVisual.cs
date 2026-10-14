@@ -62,7 +62,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public RoboticArmVisual()
         {
             beamTexture = ModContent.Request<Texture2D>("Factorraria/Content/Projectiles/Hooks/MechanicalArmBeam", AssetRequestMode.ImmediateLoad);
-            jointTexture = ModContent.Request<Texture2D>("Factorraria/Content/Projectiles/Hooks/MechanicalArmJoint", AssetRequestMode.ImmediateLoad);
+            jointTexture = ModContent.Request<Texture2D>("Factorraria/Content/Projectiles/Hooks/MechanicalArmSmallJoint", AssetRequestMode.ImmediateLoad);
             clawTexture = ModContent.Request<Texture2D>("Factorraria/Content/Projectiles/Hooks/MechanicalArmProjectile", AssetRequestMode.ImmediateLoad);
         }
 
@@ -130,18 +130,20 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 float maxDistance = reach * 0.98f;
                 if (fromShoulder.Length() > maxDistance)
                     goal = shoulder + Vector2.Normalize(fromShoulder) * maxDistance;
-
-                // The claw faces along the line from the SHOULDER to the target, not from wherever the lagging hand currently is.
-                desiredAim = dir.ToRotation();
             }
 
             // The hand moves with a critically damped spring (smooth start and stop).
             head.X = DampStep(head.X, goal.X, ref headVelocity.X, TrackSmoothTime);
             head.Y = DampStep(head.Y, goal.Y, ref headVelocity.Y, TrackSmoothTime);
             bend = DampStep(bend, -side, ref bendVelocity, BendSmoothTime);
-            aimAngle += MathHelper.WrapAngle(desiredAim - aimAngle) * AimSmoothing;
 
             elbow = MechanicalArmIK.SolveElbow(shoulder, head, upperArm, forearm, bend, -MathHelper.PiOver2 + side * 0.5f);
+
+            // The claw faces along the line from the ELBOW joint to the target tile.
+            if (aiming && (target.Value - elbow).LengthSquared() > 1f)
+                desiredAim = (target.Value - elbow).ToRotation();
+
+            aimAngle += MathHelper.WrapAngle(desiredAim - aimAngle) * AimSmoothing;
 
             drawAngle = aimAngle;
             if (!held.IsAir && heldIsTool)
@@ -150,8 +152,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             inPosition = aiming && Vector2.Distance(head, goal) < InPositionDistance;
         }
 
-        // Drawn BEHIND the tiles (see MachineDynamicDrawSystem): the two beams, the elbow joint and the claw.
-        public void DrawBehind(SpriteBatch spriteBatch, Vector2 shoulder)
+        // Drawn BEHIND the tiles (see MachineDynamicDrawSystem): the two beams, the elbow joint, the claw and the held item.
+        public void DrawBehind(SpriteBatch spriteBatch, Vector2 shoulder, Item held, bool heldIsTool)
         {
             if (!initialized)
                 return;
@@ -169,11 +171,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             bool flipped = side < 0;
             Vector2 pivot = new Vector2(ClawPivotX, flipped ? claw.Height - ClawPivotY : ClawPivotY);
             spriteBatch.Draw(claw, head - Main.screenPosition, null, LightAt(head), drawAngle, pivot, 1f, flipped ? SpriteEffects.FlipVertically : SpriteEffects.None, 0f);
+
+            DrawHeld(spriteBatch, held, heldIsTool);
         }
 
-        // Drawn in front of the tiles: only the held tool/block, so it sits over the claw's jaws (the claw is drawn in DrawBehind).
+        // The held tool/block, drawn right after the claw so it sits over the claw's jaws (everything is behind the tiles).
         // A held tool is attached between the jaws and turns with the claw, so a swing is the claw swinging the tool.
-        public void Draw(SpriteBatch spriteBatch, Item held, bool heldIsTool)
+        void DrawHeld(SpriteBatch spriteBatch, Item held, bool heldIsTool)
         {
             if (!initialized || held.IsAir)
                 return;
