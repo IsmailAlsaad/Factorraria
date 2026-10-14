@@ -18,9 +18,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
             //     .AddLoot(ItemID.GoldCoin, 0.1f, 1, 2)
             //     .AddLoot(ItemID.Gel, 0.5f, 3, 8);
 
-            // MAKE A WAY TO ADD A CONDITION FOR STATUES TO ONLY AWAKEN IN, LIKE HARDMODE OR OTHER CONDITIONS => then uncomment the rest of the statues
-            // + GO CHECK THE HARDMODE VARIENTS OF ALL ENEMIES TO INCLUDE IN THE LIST BASED ON THE CONDITION
-            // maybe just add another list that gets inputted into registry.Add(...HardmodeAdditions...)?
+            // Chain .AddHardmodeList(new[] { NPCID.X, ... }) after registry.Add to add enemies that only spawn while hardmode is on.
+            // (it applies to the left and right facing statue, like .AddLoot)
 
             // Slime statue
             int[] SlimeStatueNPCIDs = new int[] {
@@ -41,10 +40,18 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.Pinky,
                 NPCID.UmbrellaSlime
             };
+            int[] HardmodeSlimeStatueNPCIDs = new int[] {
+                NPCID.CorruptSlime,
+                NPCID.Crimslime,
+                NPCID.IlluminantSlime,
+                NPCID.Slimer,
+                NPCID.ToxicSludge
+            };
             registry.Add(TileID.Statues, style: 4, SlimeStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSlimeStatue_Outline",
-                new Vector2(0,2));
+                new Vector2(0,2))
+                .AddHardmodeList(HardmodeSlimeStatueNPCIDs);
 
             // Bat statue
             int[] BatStatueNPCIDs = new int[] {
@@ -54,10 +61,17 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.Hellbat,
                 NPCID.IceBat
             };
+            int[] HardmodeBatStatueNPCIDs = new int[] {
+                NPCID.GiantBat,
+                NPCID.GiantFlyingFox,
+                NPCID.IlluminantBat,
+                NPCID.Lavabat
+            };
             registry.Add(TileID.Statues, style: 7, BatStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedBatStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedBatStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(HardmodeBatStatueNPCIDs);
 
             // BloodZombie statue
             int[] BloodZombieStatueNPCIDs = new int[] {
@@ -79,12 +93,19 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
 
             // DemonEye statue
             int[] DemonEyeStatueNPCIDs = new int[] {
-                NPCID.DemonEye
+                NPCID.DemonEye,
+                NPCID.DemonEye,
+                NPCID.DemonEye,
+                NPCID.DemonEye 
+            }; 
+            int[] HardmodeDemonEyeStatueNPCIDs = new int[] {
+                NPCID.WanderingEye
             };
             registry.Add(TileID.Statues, style: 35, DemonEyeStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedDemonEyeStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedDemonEyeStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(HardmodeDemonEyeStatueNPCIDs);
 
             // Drippler statue
             int[] DripplerStatueNPCIDs = new int[] {
@@ -103,15 +124,19 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.EaterofSouls,
                 NPCID.EaterofSouls,
                 NPCID.EaterofSouls,
-                
                 NPCID.DevourerHead,
-
-                //NPCID.Corruptor // IN HARDMODE
+            };
+            int[] HardmodeEaterOfSoulsStatueNPCIDs = new int[] {
+                NPCID.SeekerHead,
+                NPCID.Corruptor,
+                NPCID.Corruptor,
+                NPCID.Corruptor
             };
             registry.Add(TileID.Statues, style: 30, EaterOfSoulsStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedEaterOfSoulsStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedEaterOfSoulsStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(HardmodeEaterOfSoulsStatueNPCIDs);
 
             // Goblin statue
             int[] GoblinStatueNPCIDs = new int[] {
@@ -119,14 +144,17 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.GoblinArcher,
                 NPCID.GoblinPeon,
                 NPCID.GoblinSorcerer,
-                //NPCID.GoblinSummoner, IN HARDMODE
                 NPCID.GoblinThief,
                 NPCID.GoblinWarrior
+            };
+            int[] HardmodeGoblinStatueNPCIDs = new int[] {
+                NPCID.GoblinSummoner
             };
             registry.Add(TileID.Statues, style: 5, GoblinStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedGoblinStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedGoblinStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(HardmodeGoblinStatueNPCIDs);
 
             // GraniteGolem statue
             int[] GraniteGolemStatueNPCIDs = new int[] {
@@ -163,12 +191,15 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.HornetLeafy,
                 NPCID.HornetSpikey,
                 NPCID.HornetStingy
-                //NPCID.MossHornet IN HARDMODE
+            };
+            int[] HardmodeHornetStatueNPCIDs = new int[] {
+                NPCID.MossHornet
             };
             registry.Add(TileID.Statues, style: 16, HornetStatueNPCIDs,
-                spritePath: "Factorraria/ContentTiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedHornetStatue",
+                spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedHornetStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedHornetStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(HardmodeHornetStatueNPCIDs);
 
             // Imp statue
             int[] ImpStatueNPCIDs = new int[] {
@@ -202,16 +233,17 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 new Vector2(0, 2));
 
             // Mimic statue
-            //int[] MimicStatueNPCIDs = new int[] {
-            //    NPCID.Mimic,
-            //    NPCID.Mimic,
-            //    NPCID.Mimic,
-            //    NPCID.IceMimic
-            //};
-            //registry.Add(TileID.Statues, style: 27, MimicStatueNPCIDs,
-            //    spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedMimicStatue",
-            //    outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedMimicStatue_Outline",
-            //    new Vector2(0, 2));
+            int[] MimicStatueNPCIDs = new int[] {
+                NPCID.Mimic,
+                NPCID.Mimic,
+                NPCID.Mimic,
+                NPCID.IceMimic
+            };
+            registry.Add(TileID.Statues, style: 27, System.Array.Empty<int>(),
+                spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedMimicStatue",
+                outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedMimicStatue_Outline",
+                new Vector2(0, 2))
+                .AddHardmodeList(MimicStatueNPCIDs);
 
             // Pigron statue
             int[] PigronStatueNPCIDs = new int[] {
@@ -219,10 +251,11 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.PigronCrimson,
                 NPCID.PigronHallow
             };
-            registry.Add(TileID.Statues, style: 71, PigronStatueNPCIDs,
+            registry.Add(TileID.Statues, style: 71, System.Array.Empty<int>(), 
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedPigronStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedPigronStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(PigronStatueNPCIDs);
 
             // Piranha statue
             int[] PiranhaStatueNPCIDs = new int[] {
@@ -249,18 +282,24 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.MisassembledSkeleton,
                 NPCID.PantlessSkeleton,
                 NPCID.SporeSkeleton,
+            }; 
+            int[] HardmodeSkeletonStatueNPCIDs = new int[] {
+                NPCID.ArmoredSkeleton,
+                NPCID.SkeletonArcher
             };
             registry.Add(TileID.Statues, style: 10, SkeletonStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSkeletonStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedSkeletonStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(HardmodeSkeletonStatueNPCIDs);
 
             // BoneSkeleton statue
             int[] BoneSkeletonStatueNPCIDs = SkeletonStatueNPCIDs;
             registry.Add(TileID.Statues, style: 67, BoneSkeletonStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedBoneSkeletonStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedBoneSkeletonStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(HardmodeSkeletonStatueNPCIDs);
 
 
             // UndeadViking statue
@@ -268,40 +307,49 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 NPCID.UndeadViking,
                 NPCID.UndeadMiner
             };
+            int[] HardmodeUndeadVikingStatueNPCIDs = new int[] {
+                NPCID.ArmoredViking
+            };
             registry.Add(TileID.Statues, style: 68, UndeadVikingStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedUndeadVikingStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedUndeadVikingStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(HardmodeUndeadVikingStatueNPCIDs);
 
             // Unicorn statue
             int[] UnicornStatueNPCIDs = new int[] {
                 NPCID.Unicorn
             };
-            registry.Add(TileID.Statues, style: 64, UnicornStatueNPCIDs,
+            registry.Add(TileID.Statues, style: 64, System.Array.Empty<int>(), 
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedUnicornStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedUnicornStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(UnicornStatueNPCIDs);
 
             // WallCreeper statue
             int[] WallCreeperStatueNPCIDs = new int[] {
                 NPCID.WallCreeper,
                 NPCID.JungleCreeper,
                 NPCID.BloodCrawler
-                //NPCID.BlackRecluse IN HARDMODE
+            };
+            int[] HardmodeWallCreeperStatueNPCIDs = new int[] {
+                NPCID.BlackRecluse
             };
             registry.Add(TileID.Statues, style: 63, WallCreeperStatueNPCIDs,
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedWallCreeperStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedWallCreeperStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(HardmodeWallCreeperStatueNPCIDs);
 
             // Wraith statue
             int[] WraithStatueNPCIDs = new int[] {
                 NPCID.Wraith
             };
-            registry.Add(TileID.Statues, style: 66, WraithStatueNPCIDs,
+            registry.Add(TileID.Statues, style: 66, System.Array.Empty<int>(), 
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedWraithStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedWraithStatue_Outline",
-                new Vector2(0, 2));
+                new Vector2(0, 2))
+                .AddHardmodeList(WraithStatueNPCIDs);
 
             // Zombie statue
             int[] ZombieStatueNPCIDs = new int[] {

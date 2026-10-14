@@ -23,8 +23,24 @@ namespace Factorraria.Common.Statues
         public int Style;
         public bool FlipHorizontal;        // true for the right-facing style: the sprite and outline are drawn mirrored
         public int[] NpcTypes;             // one or more enemies; a random one is picked on every spawn
-        public bool Spawns(int npcType) => System.Array.IndexOf(NpcTypes, npcType) >= 0;
-        public int PickNpcType() => NpcTypes.Length == 1 ? NpcTypes[0] : NpcTypes[Main.rand.Next(NpcTypes.Length)];
+        public List<int> HardmodeNpcs = new();   // extra enemies that join the pool once hardmode is on (shared by the left and right entry)
+
+        // Any enemy this statue can spawn (hardmode ones included, so enemies already alive stay valid if hardmode changes).
+        public bool Spawns(int npcType) => System.Array.IndexOf(NpcTypes, npcType) >= 0 || HardmodeNpcs.Contains(npcType);
+
+        public int PickNpcType()
+        {
+            int hardmodeCount = Main.hardMode ? HardmodeNpcs.Count : 0;
+            int index = Main.rand.Next(NpcTypes.Length + hardmodeCount);
+            return index < NpcTypes.Length ? NpcTypes[index] : HardmodeNpcs[index - NpcTypes.Length];
+        }
+
+        // Extra enemies that can spawn only while hardmode is on. Repeating an id makes it more likely, like in the normal list.
+        public AwakenedStatueEntry AddHardmodeList(int[] npcTypes)
+        {
+            if (npcTypes != null) HardmodeNpcs.AddRange(npcTypes);
+            return this;
+        }
         public Asset<Texture2D> Sprite;    // saturated statue on a padded canvas (see AwakenedStatueDrawSystem.Pad*)
         public Asset<Texture2D> Outline;   // same canvas size as Sprite
         public Vector2 DrawOffset;         // pixels, added to the footprint center when drawing
@@ -91,13 +107,14 @@ namespace Factorraria.Common.Statues
 
             int[] npcs = (int[])npcTypes.Clone();
             var loot = new List<AwakenedLootDrop>();   // one list, referenced by both entries
+            var hardmodeNpcs = new List<int>();        // same for the hardmode additions
 
-            AwakenedStatueEntry left = addLeft ? AddEntry(tileType, style, false, npcs, sprite, outline, drawOffset, loot) : null;
-            AwakenedStatueEntry right = addRight ? AddEntry(tileType, rightStyle, true, npcs, sprite, outline, drawOffset, loot) : null;
+            AwakenedStatueEntry left = addLeft ? AddEntry(tileType, style, false, npcs, sprite, outline, drawOffset, loot, hardmodeNpcs) : null;
+            AwakenedStatueEntry right = addRight ? AddEntry(tileType, rightStyle, true, npcs, sprite, outline, drawOffset, loot, hardmodeNpcs) : null;
             return left ?? right;
         }
 
-        AwakenedStatueEntry AddEntry(int tileType, int style, bool flip, int[] npcs, Asset<Texture2D> sprite, Asset<Texture2D> outline, Vector2 drawOffset, List<AwakenedLootDrop> loot)
+        AwakenedStatueEntry AddEntry(int tileType, int style, bool flip, int[] npcs, Asset<Texture2D> sprite, Asset<Texture2D> outline, Vector2 drawOffset, List<AwakenedLootDrop> loot, List<int> hardmodeNpcs)
         {
             var entry = new AwakenedStatueEntry
             {
@@ -108,7 +125,8 @@ namespace Factorraria.Common.Statues
                 Sprite = sprite,
                 Outline = outline,
                 DrawOffset = drawOffset,
-                Loot = loot
+                Loot = loot,
+                HardmodeNpcs = hardmodeNpcs
             };
 
             entries[(tileType, style)] = entry;

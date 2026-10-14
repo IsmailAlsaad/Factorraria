@@ -51,12 +51,9 @@ namespace Factorraria.Common.Statues
             if (system.Awakened.Count == 0 && !altHeld) return;
 
             SpriteBatch spriteBatch = Main.spriteBatch;
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             foreach (AwakenedStatue statue in system.Awakened.Values)
                 DrawStatue(spriteBatch, system, statue);
-
-            spriteBatch.End();
         }
 
         void DrawStatue(SpriteBatch spriteBatch, AwakenedStatueSystem system, AwakenedStatue statue)
