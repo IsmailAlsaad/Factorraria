@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-14 | 183 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-14 | 186 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(19) CustomRecipe(13) MachineUIStateBase(12) MachineUIElementEntry(11) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) Entry(7) TileEntityHelper(6) MotorTileEntityBase(6) LiquidTankUIElement(6)
+RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(19) CustomRecipe(14) MachineUIStateBase(12) MachineUIElementEntry(11) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) RecipeOutputKey(7) RecipeBookLayout(7) Entry(7) TileEntityHelper(6) MotorTileEntityBase(6) LiquidTankUIElement(6)
 
 ## Inheritance
 Project bases -> derived:
@@ -22,15 +22,16 @@ Project bases -> derived:
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
-- ModSystem (29): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, SiliconOreWorldGen, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (30): ArmSpikeSystem, AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, SiliconOreWorldGen, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (7): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, SiliconOreTile
+- GlobalItem (6): ArmSpikeDropLogger, CartModuleItemGlobal, IceBladeItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModPlayer (6): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
-- GlobalItem (5): CartModuleItemGlobal, IceBladeItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalTile (5): AwakenedStatueGlobalTile, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MaterializerWireGuard
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - ModProjectile (3): IceBladeSwingProjectile, MechSuitArmProjectile, MechanicalArmProjectile
 - GlobalNPC (2): AwakenedSpawnGlobalNPC, BossLootGlobal
+- ModCommand (2): ArmSpikeCommand, RecipeDebugCommand
 - ModLiquid (2): FuelLiquid, OilLiquid
 - ModLiquidFall (2): FuelLiquidFall, OilLiquidFall
 - UIPanel (2): RecipeBrowserPanel, RecipeElement
@@ -41,7 +42,6 @@ tModLoader/other bases -> project types:
 - IEquatable (1): RecipeOutputKey
 - IPixelatedPrimitiveRenderer (1): IceBladeSwingProjectile
 - Mod (1): Factorraria
-- ModCommand (1): RecipeDebugCommand
 - ModConfig (1): FurnaceOffsetConfig
 - ModTileEntity (1): BaseMachine
 - Particle (1): PuffExplosion
@@ -52,6 +52,19 @@ tModLoader/other bases -> project types:
 ### (root)/
 **Factorraria.cs**
   class Factorraria : Mod
+
+### Common/ArmSpike/
+**ArmSpikeCommand.cs** uses: ArmSpikeSystem
+  class ArmSpikeCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
+**ArmSpikeDropLogger.cs** uses: ArmSpikeSession, ArmSpikeSystem
+  class ArmSpikeDropLogger : GlobalItem
+    +OnSpawn(Item,IEntitySource)[ov]
+**ArmSpikeSystem.cs**
+  class ArmSpikeSession
+    +Mode:string +ViaItemCheck:bool +Capture:bool +Filters:bool +Tool:Item +Target:Point +TicksTotal:int +Tick:int +Interval:int +Strikes:int +ErrorCount:int +FirstError:Exception +InStep:bool +Before:string +AreaBefore:string +TreeBefore:int +DoneTick:int +DoneReason:string +Diag:Player +MaxAnimation:int +Drops:List<string> +Swallowed:List<string>
+  class ArmSpikeSystem : ModSystem
+    +Session:ArmSpikeSession +Ghost:Player +GhostStatus:string +OnWorldUnload()[ov] +Unload()[ov] +Stop() +EnsureGhost() +TryStart(Player,string,bool,bool,bool,int) +PostUpdateEverything()[ov] +DescribeApi()
 
 ### Common/Carts/
 **Cart.cs** uses: CartChain, CartSkinTable, CartSkins, FuelLiquid, FuelModule, GelBurnerRecipeRegistry, LiquidStack, LiquidTypeRegistry, SkinAnimation, TrackData, TrackEnd, TrackSample
@@ -381,9 +394,9 @@ tModLoader/other bases -> project types:
 **RecipeBookSystem.cs** uses: CartChestUISystem, Factorraria, MachineUISystem, RecipeBookArt, RecipeBookButtonState, RecipeBookState, RecipeIcon
   class RecipeBookSystem : ModSystem
     +IsOpen:bool[s] +Open()[s] +OpenAt(string)[s] +Close(bool)[s] +Toggle()[s] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
-**RecipeSystem.cs** uses: ByriteAlloyItem, CopperWireItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, RecipeBook, SimpleCircuitItem, TinWireItem
+**RecipeSystem.cs** uses: RecipeBook
   class RecipeSystem : ModSystem
-    +AddRecipes()[ov] +AddRecipeGroups()[ov]
+    +AddRecipes()[ov]
 **VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FurnaceOffsetConfig, PriorityConveyorNetwork, VItemGlobalItem, VirtualItem
   class VirtualItemSystem : ModSystem
     +tileItemMap:Dictionary<Point, VirtualItem>[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +TryGetConveyorFilter(int,int,out int)[s]
@@ -672,7 +685,7 @@ tModLoader/other bases -> project types:
     +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +PlaceInWorld(int,int,Item)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/
-**AutohammerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, MeteoritePanelItem, RecipeBook
+**AutohammerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, CopperWireItem, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, RecipeBook, SimpleCircuitItem, TinWireItem
   class AutohammerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **AutohammerTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.Autohammer uses: AutohammerRecipeRegistry, ElectricConsumerMachine, RecipeBook
@@ -701,7 +714,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/
-**MechanicalAssemblerRecipeRegistry.cs** uses: CopperWireItem, GoldPlateItem, GoldWireItem, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
+**MechanicalAssemblerRecipeRegistry.cs** uses: CopperWireItem, CustomRecipe, GoldPlateItem, GoldWireItem, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
   class MechanicalAssemblerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **MechanicalAssemblerTile.cs** uses: MechanicalAssemblerItem, MechanicalAssemblerTileEntity
