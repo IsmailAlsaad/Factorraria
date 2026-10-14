@@ -415,7 +415,7 @@ tModLoader/other bases -> project types:
 **RecipeIcon.cs** uses: LiquidTypeDefinition, LiquidTypeRegistry, RecipeOutputKey
   static class RecipeIcon
     +FadedTint:Color[s] +Clear()[s] +Draw(SpriteBatch,RecipeOutputKey,Vector2,float,float,bool)[s]
-**UIItemSlotWrapper.cs** ns!=Factorraria.Content.UI
+**UIItemSlotWrapper.cs** ns!=Factorraria.Content.UI uses: Handle
   class UIItemSlotWrapper : UIElement
     #DrawSelf(SpriteBatch)[ov]
 
@@ -724,9 +724,9 @@ tModLoader/other bases -> project types:
 ### Content/Tiles/Machines/ElectricalConsumers/RoboticArm/
 **RoboticArmAreaEditorSystem.cs** uses: MachineUISystem, RoboticArmTileEntity
   class RoboticArmAreaEditorSystem : ModSystem
-    +EdgeGrabPixels:float +BorderPixels:float +InReachColor:Color +OutOfReachColor:Color +BorderColor:Color +GrabColor:Color +MoveTint:Color +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
-    enum AreaGrab
-      {None, Left, Right, Top, Bottom, Move}
+    +OutOfReachColor:Color +MoveHandleOffset:Vector2 +ResizeHandleOffset:Vector2 +TexturePath:string +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    enum Handle
+      {None, Move, Resize}
 **RoboticArmTile.cs** uses: MechanicalArmItem, RoboticArmTileEntity
   class RoboticArmTile : ModTile
     +Texture:string[ov] +Slope(int,int)[ov]
