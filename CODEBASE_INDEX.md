@@ -264,13 +264,13 @@ tModLoader/other bases -> project types:
     +PowerSupply:float +isWorking:bool +isOn:bool +useFraction:float +GetUseFraction()
 **IMachineDynamicDraw.cs**
   interface IMachineDynamicDraw
-    +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch)
+    +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
 **MachineBiome.cs**
   enum MachineBiome
     {Unknown, Forest, Snow, Desert, Jungle, GlowingMushroom, Corruption, Crimson, Hallow, Underworld, Cavern, Underground, Sky, Ocean, ...}
 **MachineDynamicDrawSystem.cs** uses: BaseMachine, IMachineDynamicDraw
   class MachineDynamicDrawSystem : ModSystem
-    +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+    +Load()[ov] +Unload()[ov] +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
 **MachineOverhangSystem.cs** uses: BaseMachine, MachineCanvas, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
     +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
@@ -727,13 +727,13 @@ tModLoader/other bases -> project types:
     +Texture:string[ov] +Slope(int,int)[ov]
 **RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, IMachineDynamicDraw, MachineUISystem, RoboticArmTile, RoboticArmVisual
   class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +Update()[ov] +IsTool(Item) +IsBlock(Item) +IsAcceptedItem(Item) #TryGetIntakeSlot(int,out int,out int)[ov] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch)
+    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +Update()[ov] +IsTool(Item) +IsBlock(Item) +IsAcceptedItem(Item) #TryGetIntakeSlot(int,out int,out int)[ov] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
 **RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, RoboticArmTileEntity, UIItemSlotWrapper
   class RoboticArmUIState : MachineUIStateBase
     #BuildElements()[ov]
 **RoboticArmVisual.cs** uses: MechanicalArmIK
   class RoboticArmVisual
-    +HeadSmoothing:float +BendSmoothing:float +AimSmoothing:float +IdleOffsetX:float +IdleOffsetY:float +IdleAimTilt:float +SideDeadZone:float +SideFlipDistance:float +SwingArc:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +BlockCarryDistance:float +BeamThickness:float +JointScale:float +InPositionDistance:float +Side:int +Head:Vector2 +HasTarget:bool +Striking:bool +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool) +Draw(SpriteBatch,Vector2,float,float,Item,bool)
+    +TrackSmoothTime:float +FlipSmoothTime:float +SmoothingEase:float +BendSmoothTime:float +AimSmoothing:float +IdleOffsetX:float +IdleOffsetY:float +IdleAimTilt:float +SideDeadZone:float +SideFlipDistance:float +SwingArc:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +GripDistance:float +ClawPivotX:float +ClawPivotY:float +BlockScale:float +BeamThickness:float +JointScale:float +InPositionDistance:float +Side:int +Head:Vector2 +HasTarget:bool +Striking:bool +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool) +DrawBehind(SpriteBatch,Vector2) +Draw(SpriteBatch,Item,bool)
 
 ### Content/Tiles/Machines/ElectricalConsumers/Solidifier/
 **SolidifierRecipeRegistry.cs** ns!=Factorraria.Content.Tiles.Machines.Solidifier uses: CustomRecipe, LiquidTypeRegistry, RecipeBook

@@ -14,7 +14,11 @@ namespace Factorraria.Common.Machines
         // Return false when there is nothing to draw right now.
         bool TryGetDynamicBounds(out Vector2 center, out float radius);
 
-        // Called inside an already-begun SpriteBatch (world space, same transform the tiles use).
+        // Called inside an already-begun SpriteBatch (world space, same transform the tiles use), after the tiles.
         void DynamicDraw(SpriteBatch spriteBatch);
+
+        // Optional: drawn in the pass that runs BEFORE the tiles, so tiles cover it (beams, cables, anything that should
+        // look like it passes behind the world). Same SpriteBatch contract as DynamicDraw.
+        void DynamicDrawBehindTiles(SpriteBatch spriteBatch) { }
     }
 }
