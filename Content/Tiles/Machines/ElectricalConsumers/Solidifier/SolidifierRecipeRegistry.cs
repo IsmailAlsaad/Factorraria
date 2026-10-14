@@ -65,7 +65,7 @@ namespace Factorraria.Content.Tiles.Machines.Solidifier
             Book.Add(new CustomRecipe()
                 .WithLiquidInput(LiquidTypeRegistry.SnowWater, 50f)
                 .WithLiquidInput(LiquidTypeRegistry.Lava, 25f)
-                .WithOutput(ItemID.SlushBlock, 1)
+                .WithOutput(ItemID.Obsidian, 1)
                 .TakesTicks(60));
 
             Book.Add(new CustomRecipe()

@@ -18,61 +18,6 @@ namespace Factorraria.Common.Systems
     {
         public override void AddRecipes()
         {
-            // Mechanical Hammer (Autohammer)
-            Recipe.Create(ItemID.Autohammer, 1)
-                .AddRecipeGroup(AnyIronHammerID, 1)
-                .AddRecipeGroup(RecipeGroupID.IronBar, 10)
-                .AddRecipeGroup(AnyCopperBarID, 5)
-                .AddIngredient(ItemID.Cog, 3)
-                .AddTile(TileID.Anvils)
-                .Register();
-
-            // Gel Burner (Steampunk boiler)
-            Recipe.Create(ItemID.SteampunkBoiler, 1)
-                .AddRecipeGroup(RecipeGroupID.IronBar, 10)
-                .AddRecipeGroup(AnyCopperBarID, 5)
-                .AddIngredient(ItemID.Cog, 5)
-                .AddIngredient(ItemID.Torch, 3)
-                .AddTile(TileID.Anvils)
-                .Register();
-
-            // Cog
-            Recipe.Create(ItemID.Cog, 5)
-                .AddRecipeGroup(AnyTinPlatingID, 1)
-                .AddTile(TileID.Anvils)
-                .Register();
-
-            // Copper Wire
-            Recipe.Create(ModContent.ItemType<CopperWireItem>(), 10)
-                .AddIngredient(ItemID.CopperBar, 1)
-                .AddTile(TileID.Anvils)
-                .Register();
-
-            // Tin Wire
-            Recipe.Create(ModContent.ItemType<TinWireItem>(), 10)
-                .AddIngredient(ItemID.TinBar, 1)
-                .AddTile(TileID.Anvils)
-                .Register();
-
-            // Iron Cutter
-            Recipe.Create(ModContent.ItemType<IronCutterItem>(), 1)
-                .AddIngredient(ItemID.IronBar, 5)
-                .AddTile(TileID.Anvils)
-                .Register();
-
-            // Lead Cutter
-            Recipe.Create(ModContent.ItemType<LeadCutterItem>(), 1)
-                .AddIngredient(ItemID.LeadBar, 5)
-                .AddTile(TileID.Anvils)
-                .Register();
-
-            // Steampunk Minecart
-            Recipe.Create(ItemID.SteampunkMinecart, 1)
-                .AddIngredient(ItemID.SteampunkBoiler, 1)
-                .AddIngredient(ItemID.Minecart, 1)
-                .AddTile(TileID.Anvils)
-                .Register();
-
             // Decay Chamber
             new RecipeBook().DisableVanillaRecipe(ItemID.LesionStation, true);
             Recipe.Create(ItemID.LesionStation, 1)
@@ -103,63 +48,6 @@ namespace Factorraria.Common.Systems
                 .AddIngredient(ItemID.Lens, 1)
                 .AddTile(TileID.DemonAltar)
                 .Register();
-
-            // Skeletron Hand
-            Recipe.Create(ItemID.SkeletronHand, 1)
-                .AddIngredient(ItemID.Bone, 15)
-                .AddIngredient(ItemID.ZombieArm, 1)
-                .AddTile(TileID.BoneWelder)
-                .Register();
-
-            // Mechanical Arm
-            Recipe.Create(ModContent.ItemType<MechanicalArmItem>(), 1)
-                .AddIngredient(ModContent.ItemType<ByriteAlloyItem>(), 5)
-                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 3)
-                .AddIngredient(ItemID.SkeletronHand, 1)
-                .AddIngredient(ItemID.Cog, 8)
-                .AddTile(TileID.BoneWelder)
-                .Register();
-
-            // Mechanical Assembler
-            Recipe.Create(ModContent.ItemType<MechanicalAssemblerItem>(), 1)
-                .AddIngredient(ModContent.ItemType<MechanicalArmItem>(), 2)
-                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 10)
-                .AddIngredient(ModContent.ItemType<GoldWireItem>(), 15)
-                .AddIngredient(ItemID.HeavyWorkBench, 1)
-                .AddTile(TileID.BoneWelder)
-                .Register();
-        }
-
-        // Recipe Groups ID
-        static int AnyIronHammerID;
-        static int AnyCopperBarID;
-        static int AnyTinPlatingID;
-
-        public override void AddRecipeGroups()
-        {
-            RecipeGroup IronHammerGroup = new RecipeGroup(
-                () => "Any Iron Hammer",
-                ItemID.IronHammer,
-                ItemID.LeadHammer
-            );
-
-            AnyIronHammerID = RecipeGroup.RegisterGroup("Factorraria:AnyIronHammer", IronHammerGroup);
-
-            RecipeGroup CopperBarGroup = new RecipeGroup(
-                () => "Any Copper Bar",
-                ItemID.CopperBar,
-                ItemID.LeadBar
-            );
-
-            AnyCopperBarID = RecipeGroup.RegisterGroup("Factorraria:AnyCopperBar", CopperBarGroup);
-
-            RecipeGroup TinPlatingGroup = new RecipeGroup(
-                () => "Any Tin Plating",
-                ItemID.TinPlating,
-                ItemID.CopperPlating
-            );
-
-            AnyTinPlatingID = RecipeGroup.RegisterGroup("Factorraria:AnyTinPlating", TinPlatingGroup);
         }
     }
 }

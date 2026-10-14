@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Machines;
 using Factorraria.Content.Items.Materials;
 using Factorraria.Content.Items.Wires;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -15,17 +16,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
         {
             Book.Clear();
 
-            // Steel Screw
-            Recipe.Create(ModContent.ItemType<SteelScrewItem>(), 3)
-                .AddIngredient(ModContent.ItemType<SteelBarItem>(), 1)
-                .AddTile(TileID.HeavyWorkBench)
-                .Register();
-            
             RegisterManualRecipes();
 
-            Book.ImportVanillaRecipes(TileID.HeavyWorkBench);
+            Book.ImportVanillaRecipes(TileID.HeavyWorkBench, null ,false);
             Book.ImportVanillaRecipes(TileID.WorkBenches, null, false);
-            RegisterManualRecipes();
 
             Book.Rebuild();
         }
@@ -47,8 +41,19 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
             // Gold Wire
             Recipe.Create(ModContent.ItemType<GoldWireItem>(), 2)
                 .AddIngredient(ModContent.ItemType<GoldPlateItem>(), 1)
+                .AddIngredient(ModContent.ItemType<TinWireItem>(), 6)
                 .AddTile(TileID.HeavyWorkBench)
                 .Register();
+            Recipe.Create(ModContent.ItemType<GoldWireItem>(), 2)
+                .AddIngredient(ModContent.ItemType<GoldPlateItem>(), 1)
+                .AddIngredient(ModContent.ItemType<CopperWireItem>(), 6)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+
+            Book.Add(new CustomRecipe(
+                new List<Item> {
+                    new Item(ModContent.ItemType<SteelBarItem>(), 1)},
+                new Item(ModContent.ItemType<SteelScrewItem>(), 3)));
         }
     }
 }
