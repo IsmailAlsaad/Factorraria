@@ -6,6 +6,7 @@ using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 {
@@ -28,6 +29,51 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // Client-only animation state. Never saved and never synced; created on the first client tick.
         RoboticArmVisual visual;
         public RoboticArmVisual Visual => visual;
+
+        // Working area: the tile offset of its top-left corner from the base tile, and its size in tiles. Saved. Phase 3's overlay
+        // edits it (RoboticArmAreaEditorSystem) and Phase 4's scanner reads it. It always stays inside the square of tiles the arm
+        // can reach (ReachTiles each way from the base), which is also its size cap.
+        public int AreaX = -2;
+        public int AreaY = -2;
+        public int AreaW = 5;
+        public int AreaH = 5;
+
+        public int ReachTiles => (int)MathF.Ceiling(Reach / 16f);
+        public Rectangle AreaTiles => new Rectangle(Position.X + AreaX, Position.Y + AreaY, AreaW, AreaH);
+
+        public void SetArea(int x, int y, int w, int h)
+        {
+            int r = ReachTiles;
+            int left = Math.Clamp(x, -r, r);
+            int top = Math.Clamp(y, -r, r);
+            int right = Math.Clamp(x + Math.Max(w, 1) - 1, left, r);
+            int bottom = Math.Clamp(y + Math.Max(h, 1) - 1, top, r);
+
+            AreaX = left;
+            AreaY = top;
+            AreaW = right - left + 1;
+            AreaH = bottom - top + 1;
+        }
+
+        // Whether the middle of a tile is inside the reach circle (the overlay tints the rest red; the worker skips them).
+        public bool IsTileInReach(int tileX, int tileY) =>
+            Vector2.DistanceSquared(new Vector2(tileX * 16f + 8f, tileY * 16f + 8f), Shoulder) <= Reach * Reach;
+
+        public override void SaveData(TagCompound tag)
+        {
+            base.SaveData(tag);
+            tag["AreaX"] = AreaX;
+            tag["AreaY"] = AreaY;
+            tag["AreaW"] = AreaW;
+            tag["AreaH"] = AreaH;
+        }
+
+        public override void LoadData(TagCompound tag)
+        {
+            base.LoadData(tag);
+            if (tag.ContainsKey("AreaX"))
+                SetArea(tag.GetInt("AreaX"), tag.GetInt("AreaY"), tag.GetInt("AreaW"), tag.GetInt("AreaH"));
+        }
 
         // PHASE 2 DEBUG (removed in Phase 4): ticks to wait before the debug controller starts the next strike.
         int debugStrikeCooldown;
