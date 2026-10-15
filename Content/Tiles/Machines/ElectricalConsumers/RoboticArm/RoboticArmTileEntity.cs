@@ -75,16 +75,17 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 SetArea(tag.GetInt("AreaX"), tag.GetInt("AreaY"), tag.GetInt("AreaW"), tag.GetInt("AreaH"));
         }
 
-        // PHASE 2 DEBUG (removed in Phase 4): ticks to wait before the debug controller starts the next strike.
-        int debugStrikeCooldown;
+        // Work logic (scanner, reach / strike state machine, placing). Runtime only, never saved.
+        RoboticArmWorker worker;
 
         public override void Update()
         {
             base.Update();
 
-            // Phase 1 stand-in so power draw and brownout can be tested before the arm has any work to do:
-            // it counts as working whenever the slot is loaded. Phase 4 replaces this with a real "has a valid job" check.
-            isWorking = !InputSlots[0].IsAir;
+            worker ??= new RoboticArmWorker(this);
+
+            // Only draws power while the worker has a valid job (nothing to do = idle, no demand).
+            isWorking = worker.Tick();
         }
 
         public bool IsTool(Item item) => item.pick > 0 || item.axe > 0 || item.hammer > 0;
@@ -146,7 +147,6 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             }
 
             visual ??= new RoboticArmVisual();
-            DebugFollowCursor();
 
             Item held = InputSlots[0];
             visual.Update(Shoulder, UpperArmLength, ForearmLength, held, !held.IsAir && IsTool(held));
@@ -167,37 +167,6 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         {
             Item held = InputSlots[0];
             visual?.DrawBehind(spriteBatch, Shoulder, held, !held.IsAir && IsTool(held));
-        }
-
-        // PHASE 2 DEBUG (removed in Phase 4, when the worker drives the visual): while this arm's UI is open, the arm follows the
-        // tile under the cursor and keeps striking at it with whatever is in the slot, so the animation can be judged without a worker.
-        void DebugFollowCursor()
-        {
-            if (ModContent.GetInstance<MachineUISystem>().OpenMachine != this)
-            {
-                visual.SetTarget(null);
-                debugStrikeCooldown = 0;
-                return;
-            }
-
-            if (!Main.LocalPlayer.mouseInterface)
-            {
-                Point mouseTile = Main.MouseWorld.ToTileCoordinates();
-                if (mouseTile.X == Position.X && mouseTile.Y == Position.Y)
-                    visual.SetTarget(null);
-                else
-                    visual.SetTarget(new Vector2(mouseTile.X * 16f + 8f, mouseTile.Y * 16f + 8f));
-            }
-
-            if (debugStrikeCooldown > 0)
-                debugStrikeCooldown--;
-
-            Item held = InputSlots[0];
-            if (!held.IsAir && visual.HasTarget && visual.InPosition && !visual.Striking && debugStrikeCooldown <= 0)
-            {
-                visual.StartStrike(Math.Max(held.useTime, 8));
-                debugStrikeCooldown = 4;
-            }
         }
     }
 }
