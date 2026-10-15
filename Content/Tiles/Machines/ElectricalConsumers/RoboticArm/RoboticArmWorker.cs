@@ -236,7 +236,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             strikesOnTarget++;
             Job strikeJob = job;
-            ModContent.GetInstance<RoboticArmDropCapture>().Run(arm, () =>
+            ModContent.GetInstance<RoboticArmDropCaptureSystem>().Run(arm, () =>
             {
                 switch (strikeJob)
                 {
@@ -268,7 +268,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             Tile tile = Framing.GetTileSafely(x, y);
             int tileId = ghost.hitTile.HitObject(x, y, 1);
 
-            int damage = tile.TileType == 80 ? (int)(axePower * 3 * 1.2f) : (int)(axePower * 1.2f);
+            int damage = tile.TileType == TileID.Cactus ? (int)(axePower * 3 * 1.2f) : (int)(axePower * 1.2f);
             ModTile modTile = TileLoader.GetTile(tile.TileType);
             if (modTile != null)
                 damage = (int)(axePower / modTile.MineResist);
@@ -408,13 +408,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 return false;
 
             Tile tile = Framing.GetTileSafely(x, y);
-            if (tile.HasTile || tile.WallType <= 0)
+            if (tile.HasTile || tile.WallType <= WallID.None)
                 return false;
 
             if (Main.wallDungeon[tile.WallType] && !NPC.downedBoss3)
                 return false;
 
-            if (tile.WallType == 87 && !NPC.downedGolemBoss)
+            if (tile.WallType == WallID.LihzahrdBrickUnsafe && !NPC.downedGolemBoss)
                 return false;
 
             return Player.CanPlayerSmashWall(x, y);
@@ -452,7 +452,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // is an active solid / beam / rope / tile 314. Re-verify this against the decompile after tModLoader updates.
         bool HasSupport(int x, int y)
         {
-            if (Framing.GetTileSafely(x, y).WallType > 0)
+            if (Framing.GetTileSafely(x, y).WallType > WallID.None)
                 return true;
 
             for (int i = 0; i < 4; i++)
@@ -461,11 +461,17 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 int ny = y + (i == 2 ? -1 : i == 3 ? 1 : 0);
                 Tile neighbour = Framing.GetTileSafely(nx, ny);
 
-                if (neighbour.WallType > 0)
+                if (neighbour.WallType > WallID.None)
                     return true;
 
-                if (neighbour.HasTile && (Main.tileSolid[neighbour.TileType] || Main.tileBeam[neighbour.TileType] || Main.tileRope[neighbour.TileType] || neighbour.TileType == 314))
+                if (neighbour.HasTile &&
+                    (Main.tileSolid[neighbour.TileType]
+                    || TileID.Sets.IsBeam[neighbour.TileType]
+                    || Main.tileRope[neighbour.TileType]
+                    || neighbour.TileType == TileID.MinecartTrack))
+                {
                     return true;
+                }
             }
 
             return false;
