@@ -516,21 +516,27 @@ namespace Factorraria.Common.Machines
         {
             if (InputSlotCount == 0) return;
 
-            // Look at every footprint tile and take from the first vItem this machine can actually use,
+            // Look at every intake tile and take from the first vItem this machine can actually use,
             // so an unusable vItem (e.g. a fresh product) never blocks the ones behind it.
-            for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth; i++)
+            foreach (Point tile in IntakeTiles())
             {
-                for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight; j++)
-                {
-                    VirtualItem vItem = VirtualItemSystem.GetVirtualItemAtTile(i, j);
-                    if (vItem == null || vItem.stackSize <= 0) continue;
-                    if (!TryGetIntakeSlot(vItem.itemType, out int slot, out int limit)) continue;
+                VirtualItem vItem = VirtualItemSystem.GetVirtualItemAtTile(tile.X, tile.Y);
+                if (vItem == null || vItem.stackSize <= 0) continue;
+                if (!TryGetIntakeSlot(vItem.itemType, out int slot, out int limit)) continue;
 
-                    int before = vItem.stackSize;
-                    MoveVItemIntoSlot(vItem, slot, limit);
-                    if (vItem.stackSize != before) return;   // took something; one vItem per tick
-                }
+                int before = vItem.stackSize;
+                MoveVItemIntoSlot(vItem, slot, limit);
+                if (vItem.stackSize != before) return;   // took something; one vItem per tick
             }
+        }
+
+        // The tiles ScanVItems pulls vItems from. Default: the machine's own footprint. Override for machines
+        // that sit outside the conveyor (e.g. a 1x1 solid tile that reads its neighbours).
+        protected virtual IEnumerable<Point> IntakeTiles()
+        {
+            for (int i = cornerPosition.X; i < cornerPosition.X + MachineWidth; i++)
+                for (int j = cornerPosition.Y; j < cornerPosition.Y + MachineHeight; j++)
+                    yield return new Point(i, j);
         }
 
         // Override for special intake rules (e.g. a machine that only takes items when a tank is full).

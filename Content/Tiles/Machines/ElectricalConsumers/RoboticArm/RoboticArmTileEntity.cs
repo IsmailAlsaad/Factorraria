@@ -3,6 +3,7 @@ using Factorraria.Common.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -112,6 +113,15 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 return false;
 
             return IsTool(item) || IsBlock(item);
+        }
+
+        // The arm is a 1x1 solid tile, so vItems can never sit on its own footprint: it reads the 8 tiles around its anchor instead.
+        protected override IEnumerable<Point> IntakeTiles()
+        {
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                    if (dx != 0 || dy != 0)
+                        yield return new Point(Position.X + dx, Position.Y + dy);
         }
 
         // Conveyors only ever hand over blocks, and only while the slot is empty or already holds that block;
