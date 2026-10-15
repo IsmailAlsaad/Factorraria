@@ -27,8 +27,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
     // next target if there is one, otherwise back to Idle (the visual eases the hand to its idle pose when its target is cleared).
     // It drives RoboticArmVisual through SetTarget / StartStrike / InPosition and reads the area and reach from the entity.
     // A block in the slot is placed into empty tiles (Phase 4). A tool mines (Phase 5): the pickaxe breaks tiles, the axe chops
-    // trees, the hammer smashes walls. One target is struck repeatedly until it changes or stops responding. Drops are caught into the
-    // output slot by RoboticArmDropCapture for the duration of each strike.
+    // trees, the hammer smashes walls. One target is struck repeatedly until it changes or stops responding. Drops are caught by
+    // RoboticArmDropCapture for the duration of each strike and routed by the entity (conveyor vItems, off-screen vItems, or world items).
     public class RoboticArmWorker
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
@@ -123,8 +123,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             }
         }
 
-        // Mining fills the output slot, so a full one pauses the arm before it swings (placing never touches it).
-        bool OutputAllows(Job forJob) => forJob == Job.Place || arm.OutputHasRoom;
+        // Mining drops onto an adjacent conveyor, so a belt with no free tile pauses the arm before it swings (placing never drops anything).
+        bool OutputAllows(Job forJob) => forJob == Job.Place || arm.CanDeliverDrops;
 
         // A different item in the slot or a moved/resized area throws away everything the worker has learned.
         void WatchForChanges(Item held)
@@ -187,7 +187,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (arm.Visual != null && !arm.Visual.HasTarget)
                 arm.Visual.SetTarget(TileCenter(target));
 
-            // Output full: wait where we are, no power, and the reach timeout does not run.
+            // Conveyor clogged: wait where we are, no power, and the reach timeout does not run.
             if (!OutputAllows(job))
             {
                 phaseTimer = 0;

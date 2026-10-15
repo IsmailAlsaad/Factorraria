@@ -31,7 +31,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         }
     }
 
-    // Catches the items a tile, wall or tree break spawns and puts them into an arm's output slot.
+    // Catches the items a tile, wall or tree break spawns and hands them to the arm, which turns them into vItems where it should.
     // Scoped: it only listens while an arm's strike is running (RoboticArmDropCaptureSystem.Run), because the drops are all spawned
     // synchronously inside the strike call and the spike showed they are NOT keyed by the target's coordinates (a felled tree reports
     // one source per trunk tile).
@@ -46,7 +46,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (source is not (EntitySource_TileBreak or EntitySource_ShakeTree))
                 return;
 
-            active.AbsorbDrop(item);
+            active.RouteDrop(item);
         }
     }
 }

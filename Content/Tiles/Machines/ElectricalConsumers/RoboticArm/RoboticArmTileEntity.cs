@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Machines;
 using Factorraria.Common.Systems;
+using Factorraria.Content.VirtualItems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,13 +12,13 @@ using Terraria.ModLoader.IO;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 {
-    // One input slot (a pickaxe, axe, hammer or a block) and one output slot. No recipes.
+    // One input slot (a pickaxe, axe, hammer or a block) and no output slot: drops become vItems or world items. No recipes.
     public class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
     {
         public override int ValidTileType => ModContent.TileType<RoboticArmTile>();
         public override float PowerDemand => 100f;
         protected override int InputSlotCount => 1;
-        protected override int OutputSlotCount => 1;
+        protected override int OutputSlotCount => 0;
 
         // Arm geometry (pixels). Reach is what the work area is clamped to in Phase 3.
         public float UpperArmLength = 56f;
@@ -142,42 +143,81 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             return true;
         }
 
-        // Mining needs somewhere to put what it breaks: the slot must be empty or not yet full.
-        public bool OutputHasRoom => OutputSlots[0].IsAir || OutputSlots[0].stack < Math.Min(OutputMaxStack, OutputSlots[0].maxStack);
+        // Mining needs somewhere to put what it breaks. With a conveyor in the 3x3 around the arm, drops go onto it as vItems, so a
+        // belt with no free tile pauses the arm (back-pressure). Without a conveyor nothing can clog and the arm never waits.
+        public bool CanDeliverDrops => !HasAdjacentConveyor() || TryFindFreeAdjacentConveyorTile(out _);
 
-        // Called by RoboticArmDropCapture for every item a strike spawns. Takes as much as fits into the output slot and shrinks the
-        // item (turning it to air when it is all taken); whatever does not fit is left alone and drops into the world as usual.
-        public void AbsorbDrop(Item item)
+        bool HasAdjacentConveyor()
         {
-            Item slot = OutputSlots[0];
-            int moved;
+            foreach (Point t in IntakeTiles())
+                if (VirtualItemSystem.IsConveyorTile(t.X, t.Y, out _, out _))
+                    return true;
 
-            if (slot.IsAir)
-            {
-                moved = Math.Min(item.stack, Math.Min(OutputMaxStack, item.maxStack));
-                if (moved <= 0)
-                    return;
+            return false;
+        }
 
-                Item copy = item.Clone();
-                copy.stack = moved;
-                OutputSlots[0] = copy;
-            }
-            else if (slot.type == item.type && slot.prefix == item.prefix && slot.stack < Math.Min(OutputMaxStack, slot.maxStack))
+        bool TryFindFreeAdjacentConveyorTile(out Point tile)
+        {
+            foreach (Point t in IntakeTiles())
             {
-                moved = Math.Min(item.stack, Math.Min(OutputMaxStack, slot.maxStack) - slot.stack);
-                slot.stack += moved;
+                if (VirtualItemSystem.IsConveyorTile(t.X, t.Y, out _, out _) && !VirtualItemSystem.IsTileOccupied(t.X, t.Y))
+                {
+                    tile = t;
+                    return true;
+                }
             }
+
+            tile = default;
+            return false;
+        }
+
+        // A free, non-solid neighbour: a vItem put there falls to the floor and waits to be picked up.
+        bool TryFindFreeGroundTile(out Point tile)
+        {
+            foreach (Point t in IntakeTiles())
+            {
+                if (!WorldGen.InWorld(t.X, t.Y))
+                    continue;
+
+                Tile neighbour = Main.tile[t.X, t.Y];
+                if (neighbour.HasTile && Main.tileSolid[neighbour.TileType])
+                    continue;
+
+                if (VirtualItemSystem.IsTileOccupied(t.X, t.Y))
+                    continue;
+
+                tile = t;
+                return true;
+            }
+
+            tile = default;
+            return false;
+        }
+
+        // Called by RoboticArmDropCapture for every item a strike spawns. Turns the drop into a vItem:
+        //  - a conveyor in the 3x3: onto a free conveyor tile (a full belt leaves the drop as a world item; CanDeliverDrops already paused the arm);
+        //  - no conveyor and the arm is off-screen: onto a free neighbouring tile, so the world item cap is not eaten by unseen drops;
+        //  - no conveyor and on-screen: left alone, so it drops into the world like vanilla.
+        public void RouteDrop(Item item)
+        {
+            Point tile;
+            bool found;
+
+            if (HasAdjacentConveyor())
+                found = TryFindFreeAdjacentConveyorTile(out tile);
+            else if (!IsOnScreen(Shoulder))
+                found = TryFindFreeGroundTile(out tile);
             else
-            {
                 return;
-            }
 
-            item.stack -= moved;
-            if (item.stack <= 0)
-            {
-                item.TurnToAir();
-                item.active = false;
-            }
+            if (!found)
+                return;
+
+            if (VirtualItemSystem.SpawnVirtualItem(item.Clone(), tile.X, tile.Y) == null)
+                return;
+
+            item.TurnToAir();
+            item.active = false;
         }
 
         bool TilePresent()

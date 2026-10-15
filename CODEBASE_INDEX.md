@@ -4,7 +4,7 @@ generated 2026-10-15 | 192 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(21) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(8) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeBookLayout(7) Entry(7) RoboticArmTileEntity(6) MotorTileEntityBase(6)
+RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(21) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(9) RecipeKnowledgeSystem(8) RecipeCatalog(8) LiquidNetworkSystem(8) FurnaceOffsetConfig(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeBookLayout(7) Entry(7) RoboticArmTileEntity(6) MotorTileEntityBase(6)
 
 ## Inheritance
 Project bases -> derived:
@@ -735,9 +735,9 @@ tModLoader/other bases -> project types:
 **RoboticArmTile.cs** uses: MechanicalArmItem, RoboticArmTileEntity
   class RoboticArmTile : ModTile
     +Texture:string[ov] +Slope(int,int)[ov]
-**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, IMachineDynamicDraw, RoboticArmTile, RoboticArmVisual, RoboticArmWorker
+**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, IMachineDynamicDraw, RoboticArmTile, RoboticArmVisual, RoboticArmWorker, VirtualItemSystem
   class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsBlock(Item) +IsAcceptedItem(Item) #IntakeTiles()[ov] #TryGetIntakeSlot(int,out int,out int)[ov] +OutputHasRoom:bool +AbsorbDrop(Item) +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
+    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsBlock(Item) +IsAcceptedItem(Item) #IntakeTiles()[ov] #TryGetIntakeSlot(int,out int,out int)[ov] +CanDeliverDrops:bool +RouteDrop(Item) +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
 **RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, RoboticArmAreaEditorSystem, RoboticArmTileEntity, UIItemSlotWrapper
   class RoboticArmUIState : MachineUIStateBase
     #BuildElements()[ov]
