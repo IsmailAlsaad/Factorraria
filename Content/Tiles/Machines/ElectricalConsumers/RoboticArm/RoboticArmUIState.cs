@@ -28,7 +28,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                     v => Entity.InputSlots[0] = v,
                     ShowElements,
                     item => Entity.IsAcceptedItem(item)),
-                new Vector2(-70, -20), new Vector2(SlotSize, SlotSize)));
+                new Vector2(-20, 30), new Vector2(SlotSize, SlotSize)));
 
             list.Add(new MachineUIElementEntry(
                 new ElectricityUIIcon(Entity.GetUseFraction, ShowElements),
