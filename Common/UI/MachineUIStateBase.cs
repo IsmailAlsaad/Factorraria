@@ -126,12 +126,12 @@ namespace Factorraria.Common.UI
                     isVisible),
                 pos, new Vector2(SlotSize, SlotSize));
 
-        protected MachineUIElementEntry OutputSlotEntry(int slotIndex, Vector2 pos) =>
+        protected MachineUIElementEntry OutputSlotEntry(int slotIndex, Vector2 pos, Func<bool> isVisible = null) =>
             new MachineUIElementEntry(
                 new UIItemSlotWrapper(ItemSlot.Context.ChestItem,
                     () => CurrentEntity.OutputSlots[slotIndex],
                     v => CurrentEntity.OutputSlots[slotIndex] = v,
-                    null, null, null,
+                    isVisible, null, null,
                     new OutputSlotAnimation(() => CurrentEntity, slotIndex).Draw),
                 pos, new Vector2(SlotSize, SlotSize));
 

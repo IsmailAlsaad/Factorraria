@@ -13,7 +13,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 {
     // Draws the working area of the Robotic Arm whose UI is open as a 4x4 sprite sheet laid over the world tiles, with two
     // handles: one in the middle of the area (hold left click and drag to move it) and one on its top-right corner (drag to
-    // resize). Everything snaps to tiles. Tiles outside the arm's reach get a flat red overlay.
+    // resize). Everything snaps to tiles. Tiles outside the arm's reach are drawn from a second sheet (RoboticArmAreaInvalid).
     // Two Game-scale interface layers: the overlay is drawn before the inventory (so the UI covers it), and the input runs
     // after the inventory and machine UI so it only grabs the cursor when no UI has it (Player.mouseInterface is already set then).
     //
@@ -23,12 +23,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
     //                                         [L  ][M  ][R  ][M1W]     L1H/M1H/R1H = left/middle/right of a 1-high area
     //                                         [BL ][B  ][BR ][B1W]     1x1         = a single-tile area
     //                                         [L1H][M1H][R1H][1x1]
+    //   RoboticArmAreaInvalid.png             same 4x4 layout as RoboticArmArea.png; used for tiles the arm cannot reach
     //   RoboticArmArea_Move.png / _Move_Highlight.png       the move handle and its hovered version (drawn centred)
     //   RoboticArmArea_Resize.png / _Resize_Highlight.png   the resize handle and its hovered version (drawn centred)
     public class RoboticArmAreaEditorSystem : ModSystem
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
-        public Color OutOfReachColor = new Color(255, 60, 60) * 0.35f;   // flat red laid over the tiles the arm cannot reach
         public Vector2 MoveHandleOffset = Vector2.Zero;                  // pixels, from the middle of the area to the move handle's centre
         public Vector2 ResizeHandleOffset = Vector2.Zero;                // pixels, from the area's top-right corner to the resize handle's centre
         public string TexturePath = "Factorraria/Content/Tiles/Machines/ElectricalConsumers/RoboticArm/RoboticArmArea";
@@ -36,6 +36,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         enum Handle { None, Move, Resize }
 
         Asset<Texture2D> frameTexture;
+        Asset<Texture2D> invalidTexture;
         Asset<Texture2D> moveTexture;
         Asset<Texture2D> moveHighlightTexture;
         Asset<Texture2D> resizeTexture;
@@ -50,6 +51,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         Rectangle dragStartArea;
 
         RoboticArmTileEntity OpenArm => ModContent.GetInstance<MachineUISystem>().OpenMachine as RoboticArmTileEntity;
+
+        // True while the move or resize handle is held. The arm's UI hides its slots and power icon during that time.
+        public bool DraggingHandle => dragHandle != Handle.None;
 
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
@@ -83,6 +87,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             texturesRequested = true;
             bool found = ModContent.RequestIfExists<Texture2D>(TexturePath, out frameTexture, AssetRequestMode.ImmediateLoad);
+            found &= ModContent.RequestIfExists<Texture2D>(TexturePath + "Invalid", out invalidTexture, AssetRequestMode.ImmediateLoad);
             found &= ModContent.RequestIfExists<Texture2D>(TexturePath + "_Move", out moveTexture, AssetRequestMode.ImmediateLoad);
             found &= ModContent.RequestIfExists<Texture2D>(TexturePath + "_Move_Highlight", out moveHighlightTexture, AssetRequestMode.ImmediateLoad);
             found &= ModContent.RequestIfExists<Texture2D>(TexturePath + "_Resize", out resizeTexture, AssetRequestMode.ImmediateLoad);
@@ -90,7 +95,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             texturesFound = found;
             if (!found)
-                Mod.Logger.Warn("RoboticArmAreaEditorSystem: one or more area PNGs are missing (" + TexturePath + ", _Move, _Move_Highlight, _Resize, _Resize_Highlight); the area overlay is disabled.");
+                Mod.Logger.Warn("RoboticArmAreaEditorSystem: one or more area PNGs are missing (" + TexturePath + ", " + TexturePath + "Invalid, _Move, _Move_Highlight, _Resize, _Resize_Highlight); the area overlay is disabled.");
 
             return texturesFound;
         }
@@ -205,23 +210,22 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             Rectangle tiles = arm.AreaTiles;
             Texture2D frame = frameTexture.Value;
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            int cell = frame.Width / 4;
-            float scale = 16f / cell;
+            Texture2D invalid = invalidTexture.Value;
 
             for (int x = tiles.X; x < tiles.Right; x++)
             {
                 for (int y = tiles.Y; y < tiles.Bottom; y++)
                 {
+                    // Same cell of the same layout, taken from the invalid sheet when the arm cannot reach this tile.
+                    Texture2D sheet = arm.IsTileInReach(x, y) ? frame : invalid;
+                    int cell = sheet.Width / 4;
+                    float scale = 16f / cell;
+
                     Vector2 position = new Vector2(x * 16f, y * 16f) - Main.screenPosition;
                     int column = Slot(x - tiles.X, tiles.Width);
                     int row = Slot(y - tiles.Y, tiles.Height);
                     Rectangle source = new Rectangle(column * cell, row * cell, cell, cell);
-                    spriteBatch.Draw(frame, position, source, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-
-                    // MagicPixel is not a 1x1 texture, so only its first pixel is used (a null source would stretch the whole image).
-                    if (!arm.IsTileInReach(x, y))
-                        spriteBatch.Draw(pixel, position, new Rectangle(0, 0, 1, 1), OutOfReachColor, 0f, Vector2.Zero, 16f, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(sheet, position, source, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
                 }
             }
 

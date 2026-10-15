@@ -23,6 +23,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public float IdleAimTilt = 1.6f;          // idle claw angle away from straight up
         public float SideDeadZone = 6f;           // target must be this far to one side before the arm switches side
         public float SwingArc = 1.1f;             // radians the claw swings the tool back before it strikes
+        public float SwingEndAngle = 0.33f;       // radians the claw ends the swing PAST the target line (follow-through), before it returns to rest
         public float ThrustDistance = 6f;         // extra reach of a block thrust
         public float ImpactPoint = 0.6f;          // fraction of the strike at which the tool/block touches the target (Phase 4 changes the world here)
         public float HoldBackMax = 70f;           // longest distance the claw hub stops short of the target (grip + tool length)
@@ -233,7 +234,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             }
 
             float r = (p - ImpactPoint) / (1f - ImpactPoint);
-            return 0.3f * MathF.Sin(r * MathHelper.Pi);
+            return SwingEndAngle / MathF.Max(SwingArc, 0.0001f) * MathF.Sin(r * MathHelper.Pi); // the caller multiplies by SwingArc, so the peak is SwingEndAngle radians
         }
 
         // Forward to the target by ImpactPoint, then back.

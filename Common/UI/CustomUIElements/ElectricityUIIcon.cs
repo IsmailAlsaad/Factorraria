@@ -22,10 +22,12 @@ namespace Factorraria.Common.UI.CustomUIElements
         int Timer = 0;
 
         Func<float> FillAmount;
+        Func<bool> IsVisible; // optional: the icon is skipped while this returns false
 
-        public ElectricityUIIcon(Func<float> getAmount)
+        public ElectricityUIIcon(Func<float> getAmount, Func<bool> isVisible = null)
         {
             FillAmount = getAmount;
+            IsVisible = isVisible;
 
             ElectricityFullIcon = ModContent.Request<Texture2D>("Factorraria/Common/UI/CustomUIElements/Lightning_On");
             ElectricityEmptyIcon = ModContent.Request<Texture2D>("Factorraria/Common/UI/CustomUIElements/Lightning_Off");
@@ -34,6 +36,8 @@ namespace Factorraria.Common.UI.CustomUIElements
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
+            if (IsVisible != null && !IsVisible()) return;
+
             CalculatedStyle dimensions = GetDimensions();
             Vector2 drawPosition = dimensions.Position();
 

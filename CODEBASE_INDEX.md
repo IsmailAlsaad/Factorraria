@@ -411,7 +411,7 @@ tModLoader/other bases -> project types:
   interface IZoomScalable
     +SetZoomScale(float)
   abstract class MachineUIStateBase : UIState
-    +CurrentEntity:BaseMachine +Panel:UIElement #BasePanelSize:Vector2[v] +BasePanelOffset:Vector2[v] #BuildElements()[ab] +OnInitialize()[ov] +InitializeUIState() +OnActivate()[ov] #UpdateLayout()[v] +ContentOrigin:Vector2 +SetZoomScale(float) #SlotSize:float[c] #InputSlotEntry(int,Vector2,Func<bool>) #OutputSlotEntry(int,Vector2) #FuelSlotEntry(int,Vector2) #FuelSlotEntry(Vector2) #FuelTankEntry(int,Vector2) #InputTankEntry(int,Vector2) #OutputTankEntry(int,Vector2) #AddRecipePicker(List<MachineUIElementEntry>,RecipeBook,Vector2,Vector2)
+    +CurrentEntity:BaseMachine +Panel:UIElement #BasePanelSize:Vector2[v] +BasePanelOffset:Vector2[v] #BuildElements()[ab] +OnInitialize()[ov] +InitializeUIState() +OnActivate()[ov] #UpdateLayout()[v] +ContentOrigin:Vector2 +SetZoomScale(float) #SlotSize:float[c] #InputSlotEntry(int,Vector2,Func<bool>) #OutputSlotEntry(int,Vector2,Func<bool>) #FuelSlotEntry(int,Vector2) #FuelSlotEntry(Vector2) #FuelTankEntry(int,Vector2) #InputTankEntry(int,Vector2) #OutputTankEntry(int,Vector2) #AddRecipePicker(List<MachineUIElementEntry>,RecipeBook,Vector2,Vector2)
 **RecipeIcon.cs** uses: LiquidTypeDefinition, LiquidTypeRegistry, RecipeOutputKey
   static class RecipeIcon
     +FadedTint:Color[s] +Clear()[s] +Draw(SpriteBatch,RecipeOutputKey,Vector2,float,float,bool)[s]
@@ -724,7 +724,7 @@ tModLoader/other bases -> project types:
 ### Content/Tiles/Machines/ElectricalConsumers/RoboticArm/
 **RoboticArmAreaEditorSystem.cs** uses: MachineUISystem, RoboticArmTileEntity
   class RoboticArmAreaEditorSystem : ModSystem
-    +OutOfReachColor:Color +MoveHandleOffset:Vector2 +ResizeHandleOffset:Vector2 +TexturePath:string +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +MoveHandleOffset:Vector2 +ResizeHandleOffset:Vector2 +TexturePath:string +DraggingHandle:bool +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
     enum Handle
       {None, Move, Resize}
 **RoboticArmTile.cs** uses: MechanicalArmItem, RoboticArmTileEntity
@@ -733,12 +733,12 @@ tModLoader/other bases -> project types:
 **RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, IMachineDynamicDraw, MachineUISystem, RoboticArmTile, RoboticArmVisual
   class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
     +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsBlock(Item) +IsAcceptedItem(Item) #TryGetIntakeSlot(int,out int,out int)[ov] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
-**RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, RoboticArmTileEntity, UIItemSlotWrapper
+**RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, RoboticArmAreaEditorSystem, RoboticArmTileEntity, UIItemSlotWrapper
   class RoboticArmUIState : MachineUIStateBase
     #BuildElements()[ov]
 **RoboticArmVisual.cs** uses: MechanicalArmIK
   class RoboticArmVisual
-    +TrackSmoothTime:float +BendSmoothTime:float +AimSmoothing:float +IdleOffsetX:float +IdleOffsetY:float +IdleAimTilt:float +SideDeadZone:float +SwingArc:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +GripDistance:float +ClawPivotX:float +ClawPivotY:float +BlockScale:float +BeamThickness:float +JointScale:float +InPositionDistance:float +Side:int +Head:Vector2 +HasTarget:bool +Striking:bool +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool) +DrawBehind(SpriteBatch,Vector2,Item,bool)
+    +TrackSmoothTime:float +BendSmoothTime:float +AimSmoothing:float +IdleOffsetX:float +IdleOffsetY:float +IdleAimTilt:float +SideDeadZone:float +SwingArc:float +SwingEndAngle:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +GripDistance:float +ClawPivotX:float +ClawPivotY:float +BlockScale:float +BeamThickness:float +JointScale:float +InPositionDistance:float +Side:int +Head:Vector2 +HasTarget:bool +Striking:bool +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool) +DrawBehind(SpriteBatch,Vector2,Item,bool)
 
 ### Content/Tiles/Machines/ElectricalConsumers/Solidifier/
 **SolidifierRecipeRegistry.cs** ns!=Factorraria.Content.Tiles.Machines.Solidifier uses: CustomRecipe, LiquidTypeRegistry, RecipeBook
