@@ -132,6 +132,44 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             return true;
         }
 
+        // Mining needs somewhere to put what it breaks: the slot must be empty or not yet full.
+        public bool OutputHasRoom => OutputSlots[0].IsAir || OutputSlots[0].stack < Math.Min(OutputMaxStack, OutputSlots[0].maxStack);
+
+        // Called by RoboticArmDropCapture for every item a strike spawns. Takes as much as fits into the output slot and shrinks the
+        // item (turning it to air when it is all taken); whatever does not fit is left alone and drops into the world as usual.
+        public void AbsorbDrop(Item item)
+        {
+            Item slot = OutputSlots[0];
+            int moved;
+
+            if (slot.IsAir)
+            {
+                moved = Math.Min(item.stack, Math.Min(OutputMaxStack, item.maxStack));
+                if (moved <= 0)
+                    return;
+
+                Item copy = item.Clone();
+                copy.stack = moved;
+                OutputSlots[0] = copy;
+            }
+            else if (slot.type == item.type && slot.prefix == item.prefix && slot.stack < Math.Min(OutputMaxStack, slot.maxStack))
+            {
+                moved = Math.Min(item.stack, Math.Min(OutputMaxStack, slot.maxStack) - slot.stack);
+                slot.stack += moved;
+            }
+            else
+            {
+                return;
+            }
+
+            item.stack -= moved;
+            if (item.stack <= 0)
+            {
+                item.TurnToAir();
+                item.active = false;
+            }
+        }
+
         bool TilePresent()
         {
             Tile tile = Framing.GetTileSafely(Position.X, Position.Y);
