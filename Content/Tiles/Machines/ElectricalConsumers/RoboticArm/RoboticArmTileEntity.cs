@@ -33,10 +33,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // Working area: the tile offset of its top-left corner from the base tile, and its size in tiles. Saved. Phase 3's overlay
         // edits it (RoboticArmAreaEditorSystem) and Phase 4's scanner reads it. It always stays inside the square of tiles the arm
         // can reach (ReachTiles each way from the base), which is also its size cap.
-        public int AreaX = -2;
-        public int AreaY = -2;
-        public int AreaW = 5;
-        public int AreaH = 5;
+        public int AreaX = -4;
+        public int AreaY = -4;
+        public int AreaW = 7;
+        public int AreaH = 7;
 
         public int ReachTiles => (int)MathF.Ceiling(Reach / 16f);
         public Rectangle AreaTiles => new Rectangle(Position.X + AreaX, Position.Y + AreaY, AreaW, AreaH);

@@ -748,7 +748,7 @@ tModLoader/other bases -> project types:
   class RoboticArmGhostSystem : ModSystem
     +Unload()[ov]
   class RoboticArmWorker
-    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +MaxStrikesPerTile:int +Tick()
+    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +TreeStickyColumns:int +MaxStrikesPerTile:int +Tick()
     enum Phase
       {Idle, Reach, Strike}
     enum Job

@@ -36,6 +36,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public int MinStrikeTicks = 8;            // a block's strike lasts its useTime, but never less than this
         public int ReachTimeoutTicks = 120;       // give up on a target the hand cannot settle on
         public int BlockedCooldownTicks = 180;    // a tile PlaceTile refused (a player or NPC is probably standing on it) is skipped this long
+        public int TreeStickyColumns = 3;         // an axe candidate within this many columns of the last tree chopped counts as the same tree
         public int MaxStrikesPerTile = 40;        // strikes in a row that change nothing before the tile is given up on (PickTile silently ignores tiles above the pickaxe's power)
 
         enum Phase { Idle, Reach, Strike }
@@ -54,6 +55,11 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         bool impactDone;
         int lastItemType = -1;
         Rectangle lastArea;
+        bool hasPending;       // idle scan found a job; it starts as soon as the arm has power
+        Point pendingTarget;
+        Job pendingJob;
+        int lastTreeX;
+        bool hasLastTree;
 
         public RoboticArmWorker(RoboticArmTileEntity arm)
         {
@@ -75,20 +81,43 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             switch (phase)
             {
                 case Phase.Idle:
-                    if (--rescanTimer > 0)
+                    if (--rescanTimer <= 0)
+                    {
+                        rescanTimer = RescanInterval;
+                        hasPending = FindTarget(held, out pendingTarget, out pendingJob) && OutputAllows(pendingJob);
+                    }
+
+                    if (!hasPending)
                         return false;
 
-                    rescanTimer = RescanInterval;
-                    if (!FindTarget(held, out Point found, out Job foundJob) || !OutputAllows(foundJob))
-                        return false;
+                    // A job exists, so the arm keeps counting toward the grid's demand (isWorking), but it does not move without power.
+                    if (!arm.isOn)
+                        return true;
 
-                    BeginReach(found, foundJob);
+                    hasPending = false;
+                    if (!IsValidTarget(pendingTarget.X, pendingTarget.Y, held, pendingJob))
+                    {
+                        rescanTimer = 0; // the world changed while it waited; scan again next tick
+                        return false;
+                    }
+
+                    BeginReach(pendingTarget, pendingJob);
                     return true;
 
                 case Phase.Reach:
                     return TickReach(held);
 
                 default:
+                    // Power lost mid-strike: SetTarget(null) cancels the visual strike and sends the hand home. The target stays, and
+                    // the arm waits in Reach until power returns.
+                    if (!arm.isOn)
+                    {
+                        arm.Visual?.SetTarget(null);
+                        phase = Phase.Reach;
+                        phaseTimer = 0;
+                        return true;
+                    }
+
                     TickStrike(held);
                     return true;
             }
@@ -109,6 +138,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             lastItemType = itemType;
             lastArea = area;
             cooldowns.Clear();
+            hasLastTree = false;
             Abort();
         }
 
@@ -116,6 +146,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         {
             phase = Phase.Idle;
             rescanTimer = 0;
+            hasPending = false;
             arm.Visual?.SetTarget(null);
         }
 
@@ -123,6 +154,11 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         {
             target = tile;
             job = newJob;
+            if (newJob == Job.Axe)
+            {
+                lastTreeX = tile.X;
+                hasLastTree = true;
+            }
             strikesOnTarget = 0;
             phase = Phase.Reach;
             phaseTimer = 0;
@@ -136,6 +172,20 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 Abort();
                 return false;
             }
+
+            // No power: no reaching and no strikes. The hand goes back to its idle pose; the target and the reach timer stay frozen.
+            // The arm still reports a job (isWorking) so the grid keeps counting its demand and does not flicker.
+            if (!arm.isOn)
+            {
+                if (arm.Visual != null && arm.Visual.HasTarget)
+                    arm.Visual.SetTarget(null);
+
+                return OutputAllows(job);
+            }
+
+            // Power is (back): aim at the kept target.
+            if (arm.Visual != null && !arm.Visual.HasTarget)
+                arm.Visual.SetTarget(TileCenter(target));
 
             // Output full: wait where we are, no power, and the reach timeout does not run.
             if (!OutputAllows(job))
@@ -153,11 +203,6 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             RoboticArmVisual visual = arm.Visual;
             if (visual == null || !visual.InPosition || visual.Striking)
-                return true;
-
-            // Brownout: the arm keeps its target (it still counts toward the grid's demand) but starts no new strike.
-            // A strike that is already running always finishes.
-            if (!arm.isOn)
                 return true;
 
             strikeLength = System.Math.Max(held.useTime, MinStrikeTicks);
@@ -304,8 +349,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             TileLoader.PlaceInWorld(target.X, target.Y, held);
 
-            if (held.consumable && ItemLoader.ConsumeItem(held, ModContent.GetInstance<RoboticArmGhostSystem>().Ghost))
-                held.stack--;
+            // Always one item per placement. ItemLoader.ConsumeItem is skipped on purpose: its hooks are for player buffs / ammo saving
+            // (and VanillaConveyorGlobalItem returns false so players get infinite conveyors), none of which apply to a machine.
+            held.stack--;
 
             if (held.stack <= 0)
                 arm.InputSlots[0] = new Item();
@@ -316,7 +362,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         {
             best = default;
             bestJob = Job.Place;
-            float bestDistance = float.MaxValue;
+            int bestTier = 0;
+            int bestSticky = 0;
+            double bestKey = 0;
             bool found = false;
             Rectangle area = arm.AreaTiles;
             Vector2 shoulder = arm.Shoulder;
@@ -341,9 +389,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                         continue;
 
                     float distance = Vector2.DistanceSquared(TileCenter(tile), shoulder);
-                    if (distance < bestDistance)
+                    RankTarget(x, y, tileJob, distance, out int tier, out int sticky, out double key);
+                    if (!found || tier < bestTier || (tier == bestTier && (sticky < bestSticky || (sticky == bestSticky && key < bestKey))))
                     {
-                        bestDistance = distance;
+                        bestTier = tier;
+                        bestSticky = sticky;
+                        bestKey = key;
                         best = tile;
                         bestJob = tileJob;
                         found = true;
@@ -352,6 +403,28 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             }
 
             return found;
+        }
+
+        // Lower is better, compared as (tier, sticky, key). Everything except the axe is simply nearest first. The axe prefers the base
+        // of a tree (the tile below is not a tileAxe tile): striking it fells everything above, the cheapest cut. With no base in reach
+        // it takes the lowest tree tile in reach. Candidates near the last tree chopped win ties so the arm stays on one tree.
+        // Cactus (also tileAxe) follows the same rule, and nothing here depends on tree frame layouts.
+        void RankTarget(int x, int y, Job tileJob, float distance, out int tier, out int sticky, out double key)
+        {
+            tier = 0;
+            sticky = 0;
+            key = distance;
+
+            if (tileJob != Job.Axe)
+                return;
+
+            Tile below = Framing.GetTileSafely(x, y + 1);
+            bool isBase = !(below.HasTile && Main.tileAxe[below.TileType]);
+            tier = isBase ? 0 : 1;
+            sticky = hasLastTree && System.Math.Abs(x - lastTreeX) <= TreeStickyColumns ? 0 : 1;
+
+            if (!isBase)
+                key = -y * 1000000.0 + distance; // larger y (lower on screen) first, then nearest
         }
 
         // What the item in the slot would do to this tile, if anything. A block places into empty tiles; a tool follows vanilla's routing:
