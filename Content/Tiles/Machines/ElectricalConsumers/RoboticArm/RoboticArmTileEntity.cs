@@ -44,7 +44,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // How far from the base tile (in tiles, in x and in y: a square, not a circle) the arm works. It does not depend on the
         // visual arm length: past the arm's physical length the hand just stretches toward the target. The area can be dragged one
         // tile further (AreaLimit); that outer ring is drawn red and is never worked.
-        public int ReachTiles = 10;
+        public int ReachTiles = 7;
         public int AreaLimit => ReachTiles + 1;
         public Rectangle AreaTiles => new Rectangle(Position.X + AreaX, Position.Y + AreaY, AreaW, AreaH);
 
