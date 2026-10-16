@@ -12,7 +12,7 @@ using Terraria.UI;
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 {
     // Draws the working area of the Robotic Arm whose UI is open as a 4x4 sprite sheet laid over the world tiles, with two
-    // handles: one in the middle of the area (hold left click and drag to move it) and one on its top-right corner (drag to
+    // handles: one in the middle of the area (hold left click and drag to move it) and one on each of its four corners (drag to
     // resize). Everything snaps to tiles. Tiles outside the arm's reach are drawn from a second sheet (RoboticArmAreaInvalid).
     // Two Game-scale interface layers: the overlay is drawn before the inventory (so the UI covers it), and the input runs
     // after the inventory and machine UI so it only grabs the cursor when no UI has it (Player.mouseInterface is already set then).
@@ -25,12 +25,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
     //                                         [L1H][M1H][R1H][1x1]
     //   RoboticArmAreaInvalid.png             same 4x4 layout as RoboticArmArea.png; used for tiles the arm cannot reach
     //   RoboticArmArea_Move.png / _Move_Highlight.png       the move handle and its hovered version (drawn centred)
-    //   RoboticArmArea_Resize.png / _Resize_Highlight.png   the resize handle and its hovered version (drawn centred)
+    //   RoboticArmArea_Resize.png / _Resize_Highlight.png   the resize handle and its hovered version (drawn centred; this is the top-right one, flipped for the other corners)
     public class RoboticArmAreaEditorSystem : ModSystem
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
         public Vector2 MoveHandleOffset = Vector2.Zero;                  // pixels, from the middle of the area to the move handle's centre
-        public Vector2 ResizeHandleOffset = Vector2.Zero;                // pixels, from the area's top-right corner to the resize handle's centre
+        public Vector2 ResizeHandleOffset = Vector2.Zero;                // pixels, from the area's top-right corner to the resize handle's centre (mirrored for the other corners)
         public string TexturePath = "Factorraria/Content/Tiles/Machines/ElectricalConsumers/RoboticArm/RoboticArmArea";
 
         enum Handle { None, Move, Resize }
@@ -44,8 +44,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         bool texturesRequested;
         bool texturesFound;
 
+        // The four corners as (-1 left / +1 right, -1 top / +1 bottom).
+        readonly Point[] corners = { new Point(-1, -1), new Point(1, -1), new Point(-1, 1), new Point(1, 1) };
+
         Handle hoverHandle;
+        Point hoverCorner;
         Handle dragHandle;
+        Point dragCorner;
         RoboticArmTileEntity dragArm;
         Point dragStartTile;
         Rectangle dragStartArea;
@@ -103,8 +108,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         static Vector2 MoveHandleCenter(RoboticArmAreaEditorSystem system, Rectangle tiles) =>
             new Vector2(tiles.X * 16f + tiles.Width * 8f, tiles.Y * 16f + tiles.Height * 8f) + system.MoveHandleOffset;
 
-        static Vector2 ResizeHandleCenter(RoboticArmAreaEditorSystem system, Rectangle tiles) =>
-            new Vector2(tiles.Right * 16f, tiles.Y * 16f) + system.ResizeHandleOffset;
+        // The offset is written for the top-right corner and mirrored for the others.
+        static Vector2 ResizeHandleCenter(RoboticArmAreaEditorSystem system, Rectangle tiles, Point corner) =>
+            new Vector2(corner.X < 0 ? tiles.X * 16f : tiles.Right * 16f, corner.Y < 0 ? tiles.Y * 16f : tiles.Bottom * 16f)
+            + system.ResizeHandleOffset * new Vector2(corner.X, -corner.Y);
 
         static bool IsOver(Vector2 center, Texture2D texture, Vector2 mouse) =>
             MathF.Abs(mouse.X - center.X) <= texture.Width / 2f && MathF.Abs(mouse.Y - center.Y) <= texture.Height / 2f;
@@ -131,6 +138,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 {
                     ApplyDrag(arm);
                     hoverHandle = dragHandle;
+                    hoverCorner = dragCorner;
                     player.mouseInterface = true;
                     return;
                 }
@@ -142,16 +150,18 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (player.mouseInterface)
                 return; // the inventory, the machine panel or a slot already has the cursor
 
-            Handle handle = HitTest(arm, Main.MouseWorld);
+            Handle handle = HitTest(arm, Main.MouseWorld, out Point corner);
             if (handle == Handle.None)
                 return;
 
             hoverHandle = handle;
+            hoverCorner = corner;
             player.mouseInterface = true; // no swinging or placing while the cursor is on a handle
 
             if (Main.mouseLeft && Main.mouseLeftRelease)
             {
                 dragHandle = handle;
+                dragCorner = corner;
                 dragArm = arm;
                 dragStartTile = Main.MouseWorld.ToTileCoordinates();
                 dragStartArea = new Rectangle(arm.AreaX, arm.AreaY, arm.AreaW, arm.AreaH);
@@ -159,11 +169,27 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             }
         }
 
-        // The resize handle wins where the two overlap (a 1x1 area).
-        Handle HitTest(RoboticArmTileEntity arm, Vector2 mouse)
+        // A resize handle wins over the move handle; where several corners overlap (a tiny area) the one nearest the cursor wins.
+        Handle HitTest(RoboticArmTileEntity arm, Vector2 mouse, out Point corner)
         {
             Rectangle tiles = arm.AreaTiles;
-            if (IsOver(ResizeHandleCenter(this, tiles), resizeTexture.Value, mouse))
+            corner = default;
+            bool found = false;
+            float best = float.MaxValue;
+
+            foreach (Point candidate in corners)
+            {
+                Vector2 center = ResizeHandleCenter(this, tiles, candidate);
+                float distance = Vector2.DistanceSquared(center, mouse);
+                if (IsOver(center, resizeTexture.Value, mouse) && distance < best)
+                {
+                    best = distance;
+                    corner = candidate;
+                    found = true;
+                }
+            }
+
+            if (found)
                 return Handle.Resize;
 
             if (IsOver(MoveHandleCenter(this, tiles), moveTexture.Value, mouse))
@@ -189,12 +215,22 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 return;
             }
 
-            // The resize handle sits on the top-right corner: it moves the right and the top edge. Inclusive edges, so a side
-            // can never cross the opposite one (the area stays at least 1x1).
+            // Each corner moves its own two edges and keeps the opposite two where they were. Inclusive edges, so a side can
+            // never cross the opposite one (the area stays at least 1x1).
             int left = start.X;
+            int top = start.Y;
+            int right = start.X + start.Width - 1;
             int bottom = start.Y + start.Height - 1;
-            int right = Math.Clamp(start.X + start.Width - 1 + dx, left, reach);
-            int top = Math.Clamp(start.Y + dy, -reach, bottom);
+
+            if (dragCorner.X > 0)
+                right = Math.Clamp(right + dx, left, reach);
+            else
+                left = Math.Clamp(left + dx, -reach, right);
+
+            if (dragCorner.Y < 0)
+                top = Math.Clamp(top + dy, -reach, bottom);
+            else
+                bottom = Math.Clamp(bottom + dy, top, reach);
 
             arm.SetArea(left, top, right - left + 1, bottom - top + 1);
         }
@@ -230,13 +266,19 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             }
 
             DrawHandle(spriteBatch, MoveHandleCenter(this, tiles), moveTexture.Value, moveHighlightTexture.Value, hoverHandle == Handle.Move || dragHandle == Handle.Move);
-            DrawHandle(spriteBatch, ResizeHandleCenter(this, tiles), resizeTexture.Value, resizeHighlightTexture.Value, hoverHandle == Handle.Resize || dragHandle == Handle.Resize);
+            foreach (Point corner in corners)
+            {
+                bool active = (hoverHandle == Handle.Resize && hoverCorner == corner) || (dragHandle == Handle.Resize && dragCorner == corner);
+                SpriteEffects flip = (corner.X < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None)
+                    | (corner.Y > 0 ? SpriteEffects.FlipVertically : SpriteEffects.None);
+                DrawHandle(spriteBatch, ResizeHandleCenter(this, tiles, corner), resizeTexture.Value, resizeHighlightTexture.Value, active, flip);
+            }
         }
 
-        static void DrawHandle(SpriteBatch spriteBatch, Vector2 center, Texture2D normal, Texture2D highlighted, bool active)
+        static void DrawHandle(SpriteBatch spriteBatch, Vector2 center, Texture2D normal, Texture2D highlighted, bool active, SpriteEffects flip = SpriteEffects.None)
         {
             Texture2D texture = active ? highlighted : normal;
-            spriteBatch.Draw(texture, center - Main.screenPosition, null, Color.White, 0f, texture.Size() / 2f, 1f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(texture, center - Main.screenPosition, null, Color.White, 0f, texture.Size() / 2f, 1f, flip, 0f);
         }
     }
 }
