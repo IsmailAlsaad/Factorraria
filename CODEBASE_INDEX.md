@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-15 | 192 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-16 | 193 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -32,6 +32,7 @@ tModLoader/other bases -> project types:
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - ModProjectile (3): IceBladeSwingProjectile, MechSuitArmProjectile, MechanicalArmProjectile
 - GlobalNPC (2): AwakenedSpawnGlobalNPC, BossLootGlobal
+- ModCommand (2): ArmPlaceSpikeCommand, RecipeDebugCommand
 - ModLiquid (2): FuelLiquid, OilLiquid
 - ModLiquidFall (2): FuelLiquidFall, OilLiquidFall
 - UIPanel (2): RecipeBrowserPanel, RecipeElement
@@ -42,7 +43,6 @@ tModLoader/other bases -> project types:
 - IEquatable (1): RecipeOutputKey
 - IPixelatedPrimitiveRenderer (1): IceBladeSwingProjectile
 - Mod (1): Factorraria
-- ModCommand (1): RecipeDebugCommand
 - ModConfig (1): FurnaceOffsetConfig
 - ModTileEntity (1): BaseMachine
 - Particle (1): PuffExplosion
@@ -53,6 +53,13 @@ tModLoader/other bases -> project types:
 ### (root)/
 **Factorraria.cs**
   class Factorraria : Mod
+
+### Common/ArmSpike/
+**ArmPlaceSpikeCommand.cs** uses: Probe, RoboticArmGhostSystem
+  class ArmPlaceSpikeCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
+    enum Route
+      {None, Wall, Object, Plain}
 
 ### Common/Carts/
 **Cart.cs** uses: CartChain, CartSkinTable, CartSkins, FuelLiquid, FuelModule, GelBurnerRecipeRegistry, LiquidStack, LiquidTypeRegistry, SkinAnimation, TrackData, TrackEnd, TrackSample
