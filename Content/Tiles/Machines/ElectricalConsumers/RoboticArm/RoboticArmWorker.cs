@@ -6,6 +6,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ObjectData;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 {
@@ -26,7 +27,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
     // The work logic of one Robotic Arm (runs in the entity's Update, never saved). Idle -> Reach -> Strike, then straight on to the
     // next target if there is one, otherwise back to Idle (the visual eases the hand to its idle pose when its target is cleared).
     // It drives RoboticArmVisual through SetTarget / StartStrike / InPosition and reads the area and reach from the entity.
-    // A block in the slot is placed into empty tiles (Phase 4). A tool mines (Phase 5): the pickaxe breaks tiles, the axe chops
+    // A placeable item in the slot (block, furniture, torch, platform, wall, sapling...) is placed into empty tiles (Phase 4, item 4). A tool mines (Phase 5): the pickaxe breaks tiles, the axe chops
     // trees, the hammer smashes walls. One target is struck repeatedly until it changes or stops responding. Drops are caught by
     // RoboticArmDropCapture for the duration of each strike and routed by the entity (conveyor vItems, off-screen vItems, or world items).
     public class RoboticArmWorker
@@ -37,6 +38,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public int ReachTimeoutTicks = 120;       // give up on a target the hand cannot settle on
         public int BlockedCooldownTicks = 180;    // a tile PlaceTile refused (a player or NPC is probably standing on it) is skipped this long
         public int TreeStickyColumns = 3;         // an axe candidate within this many columns of the last tree chopped counts as the same tree
+        public bool FootprintMustFitArea = true;  // a multi-tile object is only placed when every tile it covers is inside the area and the reach
+        public bool PlatformsInOpenAir = false;   // false: a platform needs an active tile somewhere in the 3x3 around its target (vanilla's legacy rule), so the arm does not tile the whole area with platforms
         public int MaxStrikesPerTile = 40;        // strikes in a row that change nothing before the tile is given up on (PickTile silently ignores tiles above the pickaxe's power)
 
         enum Phase { Idle, Reach, Strike }
@@ -72,7 +75,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             Item held = arm.InputSlots[0];
             WatchForChanges(held);
 
-            if (held.IsAir || !(arm.IsBlock(held) || arm.IsTool(held)))
+            if (held.IsAir || !(arm.IsPlaceable(held) || arm.IsTool(held)))
             {
                 Abort();
                 return false;
@@ -230,7 +233,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             // Strike finished. Placing is one strike per tile; mining keeps hitting the same tile until it changes, stops responding
             // (blacklisted until the tool or area changes) or goes invalid.
             Item now = arm.InputSlots[0];
-            if (now.IsAir || !(arm.IsBlock(now) || arm.IsTool(now)))
+            if (now.IsAir || !(arm.IsPlaceable(now) || arm.IsTool(now)))
             {
                 Abort();
                 return;
@@ -335,27 +338,92 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             }
         }
 
-        // The vanilla placement path for a plain block (plan section 2 / spike 8.6): TileLoader.CanPlace and the support rule were
-        // checked in CanPlaceAt, then WorldGen.PlaceTile, TileLoader.PlaceInWorld and consuming one item ourselves.
+        // Places the held item on the target by the route a player's item takes (Player.PlaceThing_Walls / PlaceThing_Tiles):
+        //  wall    -> WallLoader.CanPlace, WorldGen.PlaceWall, WallLoader.PlaceInWorld
+        //  object  -> TileObject.CanPlace + Place, SquareTileFrame, the post-placement hook, TileLoader.PlaceInWorld (anything with TileObjectData)
+        //  plain   -> WorldGen.PlaceTile, TileLoader.PlaceInWorld
+        // Always exactly one item is used up. ItemLoader.ConsumeItem is skipped on purpose: its hooks are for player buffs / ammo saving
+        // (and VanillaConveyorGlobalItem returns false so players get infinite conveyors), none of which apply to a machine.
+        // Vanilla's extras after a placement (PlaceThing_Walls_FillEmptySpace, auto paint, UnslopeForSolids...) are private and left out.
         void TryPlace(Item held)
         {
-            // plr: -1 on purpose. The ghost's whoAmI is 0, which is the real local player in singleplayer.
-            // PlaceTile refuses a tile a player or town NPC stands on (forced stays false), so that is "blocked, retry later".
-            if (!WorldGen.PlaceTile(target.X, target.Y, held.createTile, mute: false, forced: false, plr: -1, style: held.placeStyle))
+            bool placed;
+            if (held.createWall >= 0)
+                placed = PlaceWall(held);
+            else if (TileObjectData.GetTileData(held.createTile, held.placeStyle) != null)
+                placed = PlaceObject(held);
+            else
+                placed = PlacePlain(held);
+
+            if (!placed)
             {
+                // Refused at the last moment (a player or NPC is probably standing there): skip the tile for a while.
                 cooldowns[target] = Main.GameUpdateCount + (uint)BlockedCooldownTicks;
                 return;
             }
 
-            TileLoader.PlaceInWorld(target.X, target.Y, held);
-
-            // Always one item per placement. ItemLoader.ConsumeItem is skipped on purpose: its hooks are for player buffs / ammo saving
-            // (and VanillaConveyorGlobalItem returns false so players get infinite conveyors), none of which apply to a machine.
             held.stack--;
 
             if (held.stack <= 0)
                 arm.InputSlots[0] = new Item();
         }
+
+        bool PlaceWall(Item held)
+        {
+            int x = target.X;
+            int y = target.Y;
+            if (!WallLoader.CanPlace(x, y, held.createWall))
+                return false;
+
+            WorldGen.PlaceWall(x, y, held.createWall);
+            if (Framing.GetTileSafely(x, y).WallType != held.createWall)
+                return false;
+
+            WallLoader.PlaceInWorld(x, y, held);
+            return true;
+        }
+
+        bool PlaceObject(Item held)
+        {
+            int x = target.X;
+            int y = target.Y;
+            if (!TryGetObjectPlacement(x, y, held, false, out TileObject data, out Rectangle footprint))
+                return false;
+
+            if (!TileObject.Place(data))
+                return false;
+
+            // Place can report success without changing anything; only a footprint that now holds the tile counts.
+            bool any = false;
+            for (int tx = footprint.Left; tx < footprint.Right && !any; tx++)
+                for (int ty = footprint.Top; ty < footprint.Bottom && !any; ty++)
+                {
+                    Tile tile = Framing.GetTileSafely(tx, ty);
+                    any = tile.HasTile && tile.TileType == held.createTile;
+                }
+
+            if (!any)
+                return false;
+
+            WorldGen.SquareTileFrame(x, y);
+            TileObjectData.CallPostPlacementPlayerHook(x, y, held.createTile, held.placeStyle, FacingFor(x), data.alternate, data);
+            TileLoader.PlaceInWorld(x, y, held);
+            return true;
+        }
+
+        bool PlacePlain(Item held)
+        {
+            // plr: -1 on purpose. The ghost's whoAmI is 0, which is the real local player in singleplayer.
+            // PlaceTile refuses a tile a player or town NPC stands on (forced stays false), so that is "blocked, retry later".
+            if (!WorldGen.PlaceTile(target.X, target.Y, held.createTile, mute: false, forced: false, plr: -1, style: held.placeStyle))
+                return false;
+
+            TileLoader.PlaceInWorld(target.X, target.Y, held);
+            return true;
+        }
+
+        // Which way a directional item (chair, bed...) faces: toward the side of the arm the target is on.
+        int FacingFor(int tileX) => tileX >= arm.Position.X ? 1 : -1;
 
         // Nearest to the shoulder first (ties resolved by scan order, so it is deterministic).
         bool FindTarget(Item held, out Point best, out Job bestJob)
@@ -432,7 +500,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         bool TryClassify(int x, int y, Item held, out Job tileJob)
         {
             tileJob = Job.Place;
-            if (arm.IsBlock(held))
+            if (arm.IsPlaceable(held))
                 return CanPlaceAt(x, y, held);
 
             Tile tile = Framing.GetTileSafely(x, y);
@@ -448,7 +516,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             switch (forJob)
             {
                 case Job.Place:
-                    return arm.IsBlock(held) && CanPlaceAt(x, y, held);
+                    return arm.IsPlaceable(held) && CanPlaceAt(x, y, held);
 
                 case Job.Pick:
                     return held.pick > 0 && IsMineable(x, y) && !Main.tileAxe[Main.tile[x, y].TileType] && !Main.tileHammer[Main.tile[x, y].TileType];
@@ -508,16 +576,98 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             return TileEntityHelper.TryGetEntityFromTile(x, y, out TileEntity entity, out _) && entity is BaseMachine;
         }
 
-        // Empty tile (so never the arm's own base or another machine), the block may go there, and vanilla's support rule holds.
+        // Whether the held item can be placed with this tile as the target (the tile a player's cursor would be on).
         bool CanPlaceAt(int x, int y, Item held)
         {
             if (!WorldGen.InWorld(x, y, 5))
                 return false;
 
+            if (held.createWall >= 0)
+                return CanPlaceWallAt(x, y, held);
+
+            // Tiles and objects only go into an empty tile, so never onto the arm's own base or another machine.
             if (Framing.GetTileSafely(x, y).HasTile)
                 return false;
 
-            return TileLoader.CanPlace(x, y, held.createTile) && HasSupport(x, y);
+            if (!TileLoader.CanPlace(x, y, held.createTile))
+                return false;
+
+            if (TileObjectData.GetTileData(held.createTile, held.placeStyle) == null)
+                return HasSupport(x, y);
+
+            return TryGetObjectPlacement(x, y, held, true, out _, out _);
+        }
+
+        // Copy of the rule in Player.PlaceThing_Walls: a wall goes where one of the four neighbours is a tile (any tile) or has a wall.
+        // Replacing a different wall is left out (the target must have no wall). Re-verify after tModLoader updates.
+        bool CanPlaceWallAt(int x, int y, Item held)
+        {
+            if (Framing.GetTileSafely(x, y).WallType != WallID.None)
+                return false;
+
+            if (!WallLoader.CanPlace(x, y, held.createWall))
+                return false;
+
+            for (int i = 0; i < 4; i++)
+            {
+                int nx = x + (i == 0 ? -1 : i == 1 ? 1 : 0);
+                int ny = y + (i == 2 ? -1 : i == 3 ? 1 : 0);
+                Tile neighbour = Framing.GetTileSafely(nx, ny);
+
+                if (neighbour.HasTile || neighbour.WallType > WallID.None)
+                    return true;
+            }
+
+            return false;
+        }
+
+        // The object route's whole check. TileObject.CanPlace is vanilla's support / anchor / overlap-with-tiles check for TileObjectData
+        // tiles and says where the object's top-left corner lands, so the footprint comes from it. On top of that the arm requires:
+        // every footprint tile empty (no replacing plants or machines) and free of players / NPCs, and (FootprintMustFitArea) inside
+        // the working area and the reach. onlyCheck true is for scanning; false fills in the data that TileObject.Place needs.
+        bool TryGetObjectPlacement(int x, int y, Item held, bool onlyCheck, out TileObject data, out Rectangle footprint)
+        {
+            footprint = default;
+            if (!TileObject.CanPlace(x, y, held.createTile, held.placeStyle, FacingFor(x), out data, onlyCheck))
+                return false;
+
+            TileObjectData objectData = TileObjectData.GetTileData(data.type, data.style, data.alternate)
+                ?? TileObjectData.GetTileData(held.createTile, held.placeStyle);
+            footprint = objectData == null
+                ? new Rectangle(x, y, 1, 1)
+                : new Rectangle(data.xCoord, data.yCoord, objectData.Width, objectData.Height);
+
+            if (TileID.Sets.Platforms[held.createTile] && !PlatformsInOpenAir && !AnyTileAround(x, y))
+                return false;
+
+            Rectangle area = arm.AreaTiles;
+            for (int tx = footprint.Left; tx < footprint.Right; tx++)
+            {
+                for (int ty = footprint.Top; ty < footprint.Bottom; ty++)
+                {
+                    if (!WorldGen.InWorld(tx, ty, 5) || Framing.GetTileSafely(tx, ty).HasTile)
+                        return false;
+
+                    if (FootprintMustFitArea && (!area.Contains(tx, ty) || !arm.IsTileInReach(tx, ty)))
+                        return false;
+
+                    if (!Collision.EmptyTile(tx, ty, true))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Any active tile in the 3x3 around the target (the target itself is empty by now).
+        bool AnyTileAround(int x, int y)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                    if ((dx != 0 || dy != 0) && Framing.GetTileSafely(x + dx, y + dy).HasTile)
+                        return true;
+
+            return false;
         }
 
         // Copy of the vanilla rule for plain blocks (Player.PlaceThing_Tiles_BlockPlacementForAssortedThings, final else branch):

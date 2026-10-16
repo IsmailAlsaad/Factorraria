@@ -9,6 +9,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using Terraria.ObjectData;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 {
@@ -92,14 +93,25 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
         public bool IsTool(Item item) => item.pick > 0 || item.axe > 0 || item.hammer > 0;
 
-        // v1 only places plain solid blocks (the filter the spike validated): no furniture, torches, platforms, seeds,
-        // grass-type or moss tiles. Keeping the slot and the conveyor intake to the same rule means nothing can sit in the
-        // slot that the arm will never place.
-        public bool IsBlock(Item item)
+        // Anything a player could place: blocks, furniture, torches, platforms, saplings, walls. Left out: tools, containers (a chest
+        // would swallow items) and plain tiles the v1 plain-block filter rejects (grass-type, moss, non-solid or frame-important
+        // tiles that have no TileObjectData). Keeping the slot and the conveyor intake to this rule means nothing can sit in the slot
+        // that the arm will never place.
+        public bool IsPlaceable(Item item)
         {
-            int tile = item.createTile;
-            if (tile < 0 || IsTool(item))
+            if (item == null || item.IsAir || IsTool(item))
                 return false;
+
+            if (item.createWall >= 0)
+                return true;
+
+            int tile = item.createTile;
+            if (tile < 0 || Main.tileContainer[tile])
+                return false;
+
+            // Object route (TileObjectData): TileObject.CanPlace does the anchor / support check, so the tile type needs no filter.
+            if (TileObjectData.GetTileData(tile, item.placeStyle) != null)
+                return true;
 
             if (!Main.tileSolid[tile] || Main.tileFrameImportant[tile] || Main.tileMoss[tile])
                 return false;
@@ -113,7 +125,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (item == null || item.IsAir)
                 return false;
 
-            return IsTool(item) || IsBlock(item);
+            return IsTool(item) || IsPlaceable(item);
         }
 
         // The arm is a 1x1 solid tile, so vItems can never sit on its own footprint: it reads the 8 tiles around its anchor instead.
@@ -125,14 +137,14 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                         yield return new Point(Position.X + dx, Position.Y + dy);
         }
 
-        // Conveyors only ever hand over blocks, and only while the slot is empty or already holds that block;
+        // Conveyors only ever hand over placeable items, and only while the slot is empty or already holds that item;
         // a loaded tool is never replaced.
         protected override bool TryGetIntakeSlot(int itemType, out int slot, out int limit)
         {
             slot = 0;
             limit = 0;
 
-            if (!ContentSamples.ItemsByType.TryGetValue(itemType, out Item sample) || !IsBlock(sample))
+            if (!ContentSamples.ItemsByType.TryGetValue(itemType, out Item sample) || !IsPlaceable(sample))
                 return false;
 
             Item held = InputSlots[0];

@@ -744,7 +744,7 @@ tModLoader/other bases -> project types:
     +Texture:string[ov] +Slope(int,int)[ov]
 **RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, IMachineDynamicDraw, RoboticArmTile, RoboticArmVisual, RoboticArmWorker, VirtualItemSystem
   class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsBlock(Item) +IsAcceptedItem(Item) #IntakeTiles()[ov] #TryGetIntakeSlot(int,out int,out int)[ov] +CanDeliverDrops:bool +RouteDrop(Item) +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
+    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsPlaceable(Item) +IsAcceptedItem(Item) #IntakeTiles()[ov] #TryGetIntakeSlot(int,out int,out int)[ov] +CanDeliverDrops:bool +RouteDrop(Item) +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
 **RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, RoboticArmAreaEditorSystem, RoboticArmTileEntity, UIItemSlotWrapper
   class RoboticArmUIState : MachineUIStateBase
     #BuildElements()[ov]
@@ -755,7 +755,7 @@ tModLoader/other bases -> project types:
   class RoboticArmGhostSystem : ModSystem
     +Unload()[ov]
   class RoboticArmWorker
-    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +TreeStickyColumns:int +MaxStrikesPerTile:int +Tick()
+    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +TreeStickyColumns:int +FootprintMustFitArea:bool +PlatformsInOpenAir:bool +MaxStrikesPerTile:int +Tick()
     enum Phase
       {Idle, Reach, Strike}
     enum Job
