@@ -40,6 +40,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public int TreeStickyColumns = 3;         // an axe candidate within this many columns of the last tree chopped counts as the same tree
         public bool FootprintMustFitArea = true;  // a multi-tile object is only placed when every tile it covers is inside the area and the reach
         public bool PlatformsInOpenAir = false;   // false: a platform needs an active tile somewhere in the 3x3 around its target (vanilla's legacy rule), so the arm does not tile the whole area with platforms
+        public bool DebugPlacement = false;        // logs why an object placement was refused at the last moment (client.log)
         public int MaxStrikesPerTile = 40;        // strikes in a row that change nothing before the tile is given up on (PickTile silently ignores tiles above the pickaxe's power)
 
         enum Phase { Idle, Reach, Strike }
@@ -388,10 +389,18 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             int x = target.X;
             int y = target.Y;
             if (!TryGetObjectPlacement(x, y, held, false, out TileObject data, out Rectangle footprint))
+            {
+                if (DebugPlacement)
+                    arm.Mod.Logger.Info($"[RoboticArm] {held.Name} at ({x},{y}): placement check refused it at strike time");
                 return false;
+            }
 
             if (!TileObject.Place(data))
+            {
+                if (DebugPlacement)
+                    arm.Mod.Logger.Info($"[RoboticArm] {held.Name} at ({x},{y}): TileObject.Place returned false (footprint {footprint})");
                 return false;
+            }
 
             // Place can report success without changing anything; only a footprint that now holds the tile counts.
             bool any = false;
@@ -403,7 +412,11 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 }
 
             if (!any)
+            {
+                if (DebugPlacement)
+                    arm.Mod.Logger.Info($"[RoboticArm] {held.Name} at ({x},{y}): Place returned true but no footprint tile holds tile {held.createTile} (footprint {footprint})");
                 return false;
+            }
 
             WorldGen.SquareTileFrame(x, y);
             TileObjectData.CallPostPlacementPlayerHook(x, y, held.createTile, held.placeStyle, FacingFor(x), data.alternate, data);
@@ -595,7 +608,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (TileObjectData.GetTileData(held.createTile, held.placeStyle) == null)
                 return HasSupport(x, y);
 
-            return TryGetObjectPlacement(x, y, held, true, out _, out _);
+            // onlyCheck stays false even for scanning: true makes vanilla draw its placement hologram at the target.
+            return TryGetObjectPlacement(x, y, held, false, out _, out _);
         }
 
         // Copy of the rule in Player.PlaceThing_Walls: a wall goes where one of the four neighbours is a tile (any tile) or has a wall.
@@ -624,7 +638,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // The object route's whole check. TileObject.CanPlace is vanilla's support / anchor / overlap-with-tiles check for TileObjectData
         // tiles and says where the object's top-left corner lands, so the footprint comes from it. On top of that the arm requires:
         // every footprint tile empty (no replacing plants or machines) and free of players / NPCs, and (FootprintMustFitArea) inside
-        // the working area and the reach. onlyCheck true is for scanning; false fills in the data that TileObject.Place needs.
+        // the working area and the reach. onlyCheck must stay false (true draws vanilla's placement hologram).
         bool TryGetObjectPlacement(int x, int y, Item held, bool onlyCheck, out TileObject data, out Rectangle footprint)
         {
             footprint = default;
