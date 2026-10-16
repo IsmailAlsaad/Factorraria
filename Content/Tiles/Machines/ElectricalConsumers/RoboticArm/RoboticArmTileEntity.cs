@@ -41,12 +41,16 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public int AreaW = 7;
         public int AreaH = 7;
 
-        public int ReachTiles => (int)MathF.Ceiling(Reach / 16f);
+        // How far from the base tile (in tiles, in x and in y: a square, not a circle) the arm works. It does not depend on the
+        // visual arm length: past the arm's physical length the hand just stretches toward the target. The area can be dragged one
+        // tile further (AreaLimit); that outer ring is drawn red and is never worked.
+        public int ReachTiles = 10;
+        public int AreaLimit => ReachTiles + 1;
         public Rectangle AreaTiles => new Rectangle(Position.X + AreaX, Position.Y + AreaY, AreaW, AreaH);
 
         public void SetArea(int x, int y, int w, int h)
         {
-            int r = ReachTiles;
+            int r = AreaLimit;
             int left = Math.Clamp(x, -r, r);
             int top = Math.Clamp(y, -r, r);
             int right = Math.Clamp(x + Math.Max(w, 1) - 1, left, r);
@@ -58,9 +62,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             AreaH = bottom - top + 1;
         }
 
-        // Whether the middle of a tile is inside the reach circle (the overlay tints the rest red; the worker skips them).
+        // Whether a tile is inside the square reach (ReachTiles each way from the base). The overlay tints the rest red; the worker skips them.
         public bool IsTileInReach(int tileX, int tileY) =>
-            Vector2.DistanceSquared(new Vector2(tileX * 16f + 8f, tileY * 16f + 8f), Shoulder) <= Reach * Reach;
+            Math.Abs(tileX - Position.X) <= ReachTiles && Math.Abs(tileY - Position.Y) <= ReachTiles;
 
         public override void SaveData(TagCompound tag)
         {

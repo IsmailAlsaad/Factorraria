@@ -178,7 +178,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             Point mouseTile = Main.MouseWorld.ToTileCoordinates();
             int dx = mouseTile.X - dragStartTile.X;
             int dy = mouseTile.Y - dragStartTile.Y;
-            int reach = arm.ReachTiles;
+            int reach = arm.AreaLimit; // one tile past the reach: that ring is drawn red
             Rectangle start = dragStartArea;
 
             if (dragHandle == Handle.Move)
