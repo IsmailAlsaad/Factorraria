@@ -22,14 +22,15 @@ namespace Factorraria.Common.Net
         {
             public PacketDirection Direction;
             public PacketHandler Handler;
+            public int Cost = 1; // rate-limiter tokens one packet of this type costs
         }
 
         static readonly Dictionary<FactorrariaPacket, Route> routes = new();
         static Mod modInstance;
 
         // Extra tiles of slack on top of the vanilla tile range when the server checks a request, so latency and a moving player
-        // are not rejected. Patch 1.4 moves this into the server config.
-        public static float ReachSlackTiles = 3f;
+        // are not rejected. Comes from the server config (NetworkConfig, patch 1.4).
+        public static float ReachSlackTiles => global::Factorraria.Content.Configs.NetworkConfig.Current.ReachSlackTiles;
 
         static Mod ModInstance => modInstance ??= ModLoader.GetMod("Factorraria");
 
@@ -79,12 +80,12 @@ namespace Factorraria.Common.Net
         // ---------------------------------------------------------------- routing
 
         /// <summary>Registers the handler for a packet type. Call from ModSystem.Load() on every side. A type can only be registered once.</summary>
-        public static void Register(FactorrariaPacket type, PacketDirection direction, PacketHandler handler)
+        public static void Register(FactorrariaPacket type, PacketDirection direction, PacketHandler handler, int cost = 1)
         {
             if (routes.ContainsKey(type))
                 throw new InvalidOperationException("Factorraria packet " + type + " is already registered");
 
-            routes[type] = new Route { Direction = direction, Handler = handler };
+            routes[type] = new Route { Direction = direction, Handler = handler, Cost = cost };
         }
 
         public static void Clear()
@@ -114,6 +115,10 @@ namespace Factorraria.Common.Net
                     Warn(type + " arrived on the wrong side (netMode " + Main.netMode + "), dropped");
                     return;
                 }
+
+                // Every client-to-server packet goes through the per-player rate limiter (patch 1.4) before its handler runs.
+                if (toServer && !NetRateLimiter.TryConsume(whoAmI, route.Cost))
+                    return;
 
                 route.Handler(reader, toServer ? whoAmI : -1);
             }

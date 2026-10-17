@@ -259,6 +259,65 @@ Configs: {
 			Tooltip: Recipe Discovery debug: show EVERY recipe in machine browsers instead of only learned ones.
 		}
 	}
+
+	NetworkConfig: {
+		DisplayName: Multiplayer Network Config
+
+		ReachSlackTiles: {
+			Label: Reach Slack (tiles)
+			Tooltip: Extra tiles on top of the vanilla build range that the server allows when it checks a player's request.
+		}
+
+		RequestsPerSecond: {
+			Label: Requests Per Second
+			Tooltip: How many requests per second each player may send to the server (token bucket refill). 0 turns the limiter off.
+		}
+
+		RequestBurst: {
+			Label: Request Burst
+			Tooltip: How many requests a player can send at once before the rate limiter starts dropping them.
+		}
+
+		JoinChunkSize: {
+			Label: Join Sync Chunk Size
+			Tooltip: Bytes per packet when the server sends the full world state to a joining player.
+		}
+
+		JoinMaxProviderBytes: {
+			Label: Join Sync Max Bytes Per System
+			Tooltip: Largest state one system may send during join sync. Bigger states are skipped.
+		}
+
+		JoinRequestCooldownTicks: {
+			Label: Join Sync Cooldown (ticks)
+			Tooltip: Minimum time between two full-state requests from the same player.
+		}
+
+		CartUpdatesPerSecond: {
+			Label: Cart Updates Per Second
+			Tooltip: Reserved for the cart phase: how often the server sends cart positions.
+		}
+
+		CartInterestRadiusTiles: {
+			Label: Cart Interest Radius (tiles)
+			Tooltip: Reserved for the cart phase: players farther than this from a cart do not receive its updates.
+		}
+
+		CartInterpolationBufferMs: {
+			Label: Cart Interpolation Buffer (ms)
+			Tooltip: Reserved for the cart phase: how far behind the server clients draw carts to keep movement smooth.
+		}
+
+		MachineStateUpdatesPerSecond: {
+			Label: Machine State Updates Per Second
+			Tooltip: Reserved for the machine sync phase: maximum light and state updates per machine per second.
+		}
+
+		LiquidBroadcastsPerTick: {
+			Label: Liquid Broadcasts Per Tick
+			Tooltip: Reserved for the liquid phase: maximum world-liquid updates the server sends per tick.
+		}
+	}
 }
 
 Projectiles: {

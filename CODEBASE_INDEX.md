@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-17 | 204 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-17 | 207 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(22) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(9) LiquidNetworkSystem(9) RecipeKnowledgeSystem(8) RecipeCatalog(8) FurnaceOffsetConfig(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeBookLayout(7) FactorrariaNet(7) Entry(7) Direction(7)
+RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(22) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(9) LiquidNetworkSystem(9) FactorrariaNet(9) RecipeKnowledgeSystem(8) RecipeCatalog(8) FurnaceOffsetConfig(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeBookLayout(7) FactorrariaPacket(7) Entry(7)
 
 ## Inheritance
 Project bases -> derived:
@@ -23,18 +23,19 @@ Project bases -> derived:
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModSystem (37): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineDynamicDrawSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, MultiplayerBootProbeSystem, NetCoreSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedSystem, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (38): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineDynamicDrawSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedSystem, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (7): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (6): CartModuleItemGlobal, IceBladeItem, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalTile (6): AwakenedStatueGlobalTile, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MaterializerWireGuard, TilePlacedGlobalTile
+- ModCommand (4): NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
-- ModCommand (3): NetJoinCommand, NetPingCommand, RecipeDebugCommand
 - ModProjectile (3): IceBladeSwingProjectile, MechSuitArmProjectile, MechanicalArmProjectile
 - byte (3): CustomWireType, FactorrariaPacket, PacketDirection
 - GlobalNPC (2): AwakenedSpawnGlobalNPC, BossLootGlobal
+- ModConfig (2): FurnaceOffsetConfig, NetworkConfig
 - ModLiquid (2): FuelLiquid, OilLiquid
 - ModLiquidFall (2): FuelLiquidFall, OilLiquidFall
 - UIPanel (2): RecipeBrowserPanel, RecipeElement
@@ -45,7 +46,6 @@ tModLoader/other bases -> project types:
 - IEquatable (1): RecipeOutputKey
 - IPixelatedPrimitiveRenderer (1): IceBladeSwingProjectile
 - Mod (1): Factorraria
-- ModConfig (1): FurnaceOffsetConfig
 - ModTileEntity (1): BaseMachine
 - Particle (1): PuffExplosion
 
@@ -302,11 +302,11 @@ tModLoader/other bases -> project types:
     +SolveElbow(Vector2,Vector2,float,float,float,float)[s] +DrawSegment(SpriteBatch,Texture2D,Vector2,Vector2,Color,float)[s]
 
 ### Common/Net/
-**FactorrariaNet.cs** uses: Direction, FactorrariaPacket, Handle, PacketDirection
+**FactorrariaNet.cs** uses: Direction, Factorraria, FactorrariaPacket, Handle, NetRateLimiter, NetworkConfig, PacketDirection
   static class FactorrariaNet
-    +ReachSlackTiles:float[s] +IsServerSide:bool[s] +HasLocalClient:bool[s] +IsSinglePlayer:bool[s] +IsOwner(Player)[s] +InReach(Player,int,int)[s] +WriteItem(BinaryWriter,Item)[s] +ReadItem(BinaryReader)[s] +Register(FactorrariaPacket,PacketDirection,PacketHandler)[s] +Clear()[s] +Handle(BinaryReader,int)[s] +SendRequest(FactorrariaPacket,Action<BinaryWriter>)[s] +SendToClient(int,FactorrariaPacket,Action<BinaryWriter>)[s] +Broadcast(FactorrariaPacket,Action<BinaryWriter>,int)[s] +SendToNearby(Vector2,float,FactorrariaPacket,Action<BinaryWriter>,int)[s] +Log(string)[s]
+    +ReachSlackTiles:float[s] +IsServerSide:bool[s] +HasLocalClient:bool[s] +IsSinglePlayer:bool[s] +IsOwner(Player)[s] +InReach(Player,int,int)[s] +WriteItem(BinaryWriter,Item)[s] +ReadItem(BinaryReader)[s] +Register(FactorrariaPacket,PacketDirection,PacketHandler,int)[s] +Clear()[s] +Handle(BinaryReader,int)[s] +SendRequest(FactorrariaPacket,Action<BinaryWriter>)[s] +SendToClient(int,FactorrariaPacket,Action<BinaryWriter>)[s] +Broadcast(FactorrariaPacket,Action<BinaryWriter>,int)[s] +SendToNearby(Vector2,float,FactorrariaPacket,Action<BinaryWriter>,int)[s] +Log(string)[s]
     sealed class Route
-      +Direction:PacketDirection +Handler:PacketHandler
+      +Direction:PacketDirection +Handler:PacketHandler +Cost:int
 **FactorrariaPacket.cs** uses: TilePlaced
   enum FactorrariaPacket : byte
     {Ping, PingReply, JoinRequest, JoinChunk, JoinDone, TilePlaced}
@@ -315,7 +315,7 @@ tModLoader/other bases -> project types:
 **FactorrariaPlayerSync.cs** uses: JoinSync
   class FactorrariaPlayerSync : ModPlayer
     +OnEnterWorld()[ov] +PlayerDisconnect()[ov] +CopyClientState(ModPlayer)[ov] +SyncPlayer(int,int,bool)[ov] +SendClientChanges(ModPlayer)[ov]
-**JoinSync.cs** uses: FactorrariaNet, FactorrariaPacket
+**JoinSync.cs** uses: Factorraria, FactorrariaNet, FactorrariaPacket, NetworkConfig
   static class JoinSync
     +ChunkSize:int[s] +MaxProviderBytes:int[s] +RequestCooldownTicks:uint[s] +Completed:bool[s] +AnnounceInChat:bool[s] +JoinCompleted:event Action[s] +Register(string,Action<BinaryWriter>,Action<BinaryReader>)[s] +RegisterDisconnectHook(Action<int>)[s] +Clear()[s] +RequestFullState()[s] +HandleRequest(BinaryReader,int)[s] +ServerTick()[s] +HandleChunk(BinaryReader,int)[s] +HandleDone(BinaryReader,int)[s] +OnPlayerDisconnect(int)[s]
     sealed class Provider
@@ -333,12 +333,20 @@ tModLoader/other bases -> project types:
 **NetCoreSystem.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection
   class NetCoreSystem : ModSystem
     +Load()[ov] +Unload()[ov] +SendPing(Action<string>)[s]
+**NetFloodCommand.cs** uses: FactorrariaNet, FactorrariaPacket
+  class NetFloodCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **NetJoinCommand.cs** uses: FactorrariaNet, JoinSync
   class NetJoinCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **NetPingCommand.cs** uses: NetCoreSystem
   class NetPingCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
+**NetRateLimiter.cs** uses: FactorrariaNet, JoinSync, NetworkConfig
+  static class NetRateLimiter
+    +TryConsume(int,int)[s] +Reset(int)[s] +ResetAll()[s]
+  class NetRateLimiterSystem : ModSystem
+    +Load()[ov] +Unload()[ov]
 **TilePlaced.cs** uses: FactorrariaNet, FactorrariaPacket
   interface ITilePlacedConsumer
     +AppliesTo(int) +OnTilePlaced(int,int,int,int)
@@ -563,6 +571,9 @@ tModLoader/other bases -> project types:
 **FurnaceOffsetConfig.cs**
   class FurnaceOffsetConfig : ModConfig
     +Mode:ConfigScope[ov] +OffsetX:float +OffsetY:float +AngleOffset:float +AngleOffset2:float +animationOffset:int +fireCropOffset:float +animationSpeedDivider:int +EnableDebugs:bool +RevealAllRecipes:bool +VItemOffset:float
+**NetworkConfig.cs**
+  class NetworkConfig : ModConfig
+    +Current:NetworkConfig[s] +Mode:ConfigScope[ov] +ReachSlackTiles:float +RequestsPerSecond:int +RequestBurst:int +JoinChunkSize:int +JoinMaxProviderBytes:int +JoinRequestCooldownTicks:int +CartUpdatesPerSecond:int +CartInterestRadiusTiles:int +CartInterpolationBufferMs:int +MachineStateUpdatesPerSecond:int +LiquidBroadcastsPerTick:int
 
 ### Content/Items/Carts/
 **CartItem.cs** uses: CartSystem

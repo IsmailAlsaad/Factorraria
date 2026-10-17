@@ -41,10 +41,10 @@ namespace Factorraria.Common.Net
             public int Filled;
         }
 
-        // Tunables. Plain static fields on purpose (hot reload); patch 1.4 moves them into the server config.
-        public static int ChunkSize = 6000;
-        public static int MaxProviderBytes = 8000000;
-        public static uint RequestCooldownTicks = 120;
+        // Tunables. They come from the server config (NetworkConfig, patch 1.4).
+        public static int ChunkSize => global::Factorraria.Content.Configs.NetworkConfig.Current.JoinChunkSize;
+        public static int MaxProviderBytes => global::Factorraria.Content.Configs.NetworkConfig.Current.JoinMaxProviderBytes;
+        public static uint RequestCooldownTicks => (uint)System.Math.Max(0, global::Factorraria.Content.Configs.NetworkConfig.Current.JoinRequestCooldownTicks);
 
         static readonly List<Provider> providers = new();
         static readonly List<Action<int>> disconnectHooks = new();
