@@ -14,7 +14,7 @@ Model assumed: **server-authoritative**. The server (or the host in single-playe
 Severity: **B** blocker (breaks or dupes in MP) / **H** high / **M** medium / **L** low.
 
 ## Cross-cutting findings
-- **X1 (B)** The mod has no `HandlePacket`, no packet types, no `OnPlayerJoined`/world-join sync. Needed once, in `Factorraria.cs`, as a packet router + `ModPacket` helper.
+- **X1 (B)** The mod has no `HandlePacket`, no packet types, no `OnPlayerJoined`/world-join sync. Needed once, in `Factorraria.cs`, as a packet router + `ModPacket` helper. **Status:** router and helpers added in patch 1.1 (applied, untested).
 - **X2 (B)** Client-only hooks (`ModTile.PlaceInWorld`, `ModItem.UseItem`, `GlobalTile.PlaceInWorld`, UI clicks) mutate registries in the client process only. The server never learns. Every one needs "client sends request, server applies, server broadcasts".
 - **X3 (H)** World data (`Save/LoadWorldData`) loads on the server only. Clients start with empty registries, so all registries that UI/draw code reads need a full sync on join plus deltas.
 - **X4 (M)** Several ModSystems run `PostUpdateWorld` on clients too with no guard (VirtualItem, Cart). Each needs `if (Main.netMode == NetmodeID.MultiplayerClient) return;` or a client-side interpolation path.

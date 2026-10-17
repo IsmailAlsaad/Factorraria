@@ -1,0 +1,23 @@
+﻿using System.IO;
+
+namespace Factorraria.Common.Net
+{
+    // Every Factorraria packet type. Values are explicit and part of the wire format: append new ids at the end, never renumber
+    // or reuse one (client and server must run the same mod version, but old ids in logs and notes should keep their meaning).
+    public enum FactorrariaPacket : byte
+    {
+        Ping = 0,        // client -> server: round trip test (patch 1.1)
+        PingReply = 1,   // server -> client: answer to Ping
+    }
+
+    // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.
+    public enum PacketDirection : byte
+    {
+        ToServer,
+        ToClient
+    }
+
+    // sender: for ToServer packets the player index of the sender, or -1 when server code called the request itself
+    // (for example the Robotic Arm worker). For ToClient packets it is always -1.
+    public delegate void PacketHandler(BinaryReader reader, int sender);
+}

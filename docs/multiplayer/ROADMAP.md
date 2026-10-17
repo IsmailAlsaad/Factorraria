@@ -39,7 +39,7 @@ Survey base: GitHub commit `25510ef` (183 `.cs` files). **Version 2** also cover
 One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and done. Each patch marks itself `[~]`; a small follow-up patch records your test results.
 
 - [x] 0 Dedicated-server boot and test rig (0.1-0.5; patches mp_0, mp_0b, mp_0c: server-safe detour guards + [MP-Boot] probe; tested in single-player, on a dedicated server via the .bat with one client, and with a Host & Play client; results in section 8 and the test rig notes)
-- [ ] 1.1 Net core
+- [~] 1.1 Net core (patch_mp_1_1_net_core.ps1: router, helpers, request helper, /fping; applied, untested)
 - [ ] 1.2 Player sync and join sync
 - [ ] 1.3 Tile-placed request (G0)
 - [ ] 1.4 Server-side network config and rate limiter
@@ -191,6 +191,14 @@ Phases 4 and 5 are one working unit: after Phase 4 alone, machines exist on the 
 **Test checklist:** ping round trip client-to-server-to-client; late-join test with a dummy provider that sends a counter; tile-placed log appears on the server when a client places a block; single-player ignores all packets and still works; kicking/leaving fires the disconnect hook.
 
 **Exit criteria:** the three mechanisms (request, join sync, tile-placed) demonstrably work in a server + 2 client session.
+
+**Net core API (added by patch 1.1, all in `Common/Net/`; later patches build on this)**
+- `FactorrariaPacket` (explicit byte ids, append only), `PacketDirection` (`ToServer` / `ToClient`) and `PacketHandler(BinaryReader reader, int sender)`. For `ToServer` packets `sender` is the player index, or `-1` when server code made the request itself (for example the Robotic Arm worker). For `ToClient` packets it is always `-1`.
+- `FactorrariaNet.Register(type, direction, handler)` from a `ModSystem.Load()` on every side. `Factorraria.HandlePacket` forwards to `FactorrariaNet.Handle`, which drops unknown ids and packets that arrive on the wrong side, and catches every exception so a bad packet cannot crash the server.
+- `FactorrariaNet.SendRequest(type, write)`: on a client it sends the packet; in single-player and from server code it runs the server handler right there through the same write/read path.
+- `SendToClient`, `Broadcast`, `SendToNearby(center, radiusTiles, ...)`: do nothing unless this is a dedicated server (in single-player the server state already is the player's state).
+- Helpers: `IsServerSide`, `HasLocalClient`, `IsSinglePlayer`, `IsOwner(player)`, `InReach(player, tileX, tileY)` (vanilla tile range + block range + held item boost + `ReachSlackTiles`), `WriteItem` / `ReadItem` (vanilla item serializer: stack, prefix and mod data survive), `Log`.
+- Every handler must validate its input (target exists, reach, state, value ranges) and must read exactly what the writer wrote. `/fping` is the test command (a Chat command, so it runs on the client that typed it).
 
 ---
 
