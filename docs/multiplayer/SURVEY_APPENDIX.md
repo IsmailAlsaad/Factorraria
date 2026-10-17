@@ -114,7 +114,7 @@ Severity: **B** blocker / **H** high / **M** medium / **L** low.
 - Static data (e.g. `ItemID.Sets`, `SetDefaults` edits, loot rules) is built per process from the same mod code, so deterministic edits are safe on both sides.
 
 ## New cross-cutting finding
-**G0 (B) - "tile placed" notification is missing.** Four systems depend on knowing when a player placed a tile (chest conveyor, liquid topology, awakened statues, machine/pipe placement), and all four only hear it on the placing client. One shared mechanism fixes all of them: a small client-to-server packet sent from a single `PlaceInWorld` hook (position + tile type), validated on the server (tile at that position matches, player is in reach), which then runs the same logic the hook runs today. Build it once in the net-plumbing phase.
+**G0 (B) - "tile placed" notification is missing.** Four systems depend on knowing when a player placed a tile (chest conveyor, liquid topology, awakened statues, machine/pipe placement), and all four only hear it on the placing client. One shared mechanism fixes all of them: a small client-to-server packet sent from a single `PlaceInWorld` hook (position + tile type), validated on the server (tile at that position matches, player is in reach), which then runs the same logic the hook runs today. Build it once in the net-plumbing phase. **Status:** `TilePlaced` packet, `TilePlacedGlobalTile` hook and the `ITilePlacedConsumer` registry added in patch 1.3 (applied, untested); the real consumers move over in patch 3.3.
 
 ## Per-class findings
 

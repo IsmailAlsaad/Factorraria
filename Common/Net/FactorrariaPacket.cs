@@ -11,6 +11,7 @@ namespace Factorraria.Common.Net
         JoinRequest = 2, // client -> server: "send me the full state" (patch 1.2)
         JoinChunk = 3,   // server -> client: one chunk of one join provider's data (patch 1.2)
         JoinDone = 4,    // server -> client: every provider has been sent (patch 1.2)
+        TilePlaced = 5,  // client -> server: "I placed tile <type> at (x, y)" (patch 1.3)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

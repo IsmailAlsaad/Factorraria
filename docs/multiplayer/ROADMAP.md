@@ -40,9 +40,9 @@ One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and
 
 - [x] 0 Dedicated-server boot and test rig (0.1-0.5; patches mp_0, mp_0b, mp_0c: server-safe detour guards + [MP-Boot] probe; tested in single-player, on a dedicated server via the .bat with one client, and with a Host & Play client; results in section 8 and the test rig notes)
 - [x] 1.1 Net core (patch_mp_1_1_net_core.ps1: router, helpers, request helper, /fping; tested: single-player direct run, dedicated server + client round trip 16.8 ms, everything else unchanged)
-- [~] 1.2 Player sync and join sync (patch_mp_1_2_join_sync.ps1: JoinSync provider registry, chunked join packets, FactorrariaPlayerSync, disconnect hooks, /fjoin; applied, untested)
-  - Next chat prompt: "Implement patch 1.3 (tile-placed request, G0)". Net core and join sync APIs are in the Phase 1 section of this roadmap. If 1.2 tests are not reported yet, start the chat by reporting them. The two test providers (test-counter, test-blob) in JoinSyncSystem are temporary: remove them in Phase 10.
-- [ ] 1.3 Tile-placed request (G0)
+- [x] 1.2 Player sync and join sync (patch_mp_1_2_join_sync.ps1: JoinSync provider registry, chunked join packets, FactorrariaPlayerSync, disconnect hooks, /fjoin; tested: single-player no-op, dedicated server + client full sync 2/2 providers 20012 bytes ~115 ms, repeated /fjoin works, everything else unchanged)
+- [~] 1.3 Tile-placed request (G0) (patch_mp_1_3_tile_placed.ps1: TilePlacedGlobalTile hook, TilePlaced packet + validation, ITilePlacedConsumer registry, test log consumer; applied, untested)
+  - Next chat prompt: "Implement patch 1.4 (server-side config and rate limiter)". Net core, join sync and tile-placed APIs are in the Phase 1 section of this roadmap. The test providers (test-counter, test-blob in JoinSyncSystem) and the test consumer (PlacementLogConsumer in TilePlacedSystem) are temporary: remove them in Phase 10.
 - [ ] 1.4 Server-side network config and rate limiter
 - [ ] 2.1 MechSuitPlayer owner gating
 - [ ] 2.2 CartEquipPlayer
@@ -209,6 +209,13 @@ Phases 4 and 5 are one working unit: after Phase 4 alone, machines exist on the 
 - `JoinSync.RegisterDisconnectHook(Action<int> playerIndex)`: runs from `ModPlayer.PlayerDisconnect()` on the server and on remote clients (tModLoader's documented behavior). The disconnecting player's join job and cooldown are cleared first. The mech suit arms (2.1), cart panels (Phase 6/9) and pending requests (Phase 10) register their cleanup here.
 - `FactorrariaPlayerSync` (ModPlayer) holds `OnEnterWorld`, `PlayerDisconnect` and empty `SyncPlayer` / `CopyClientState` / `SendClientChanges` stubs for per-player state that other clients need later.
 - Temporary test providers `test-counter` (a counter that increases on every full-state generation) and `test-blob` (20000 bytes with a checksum, so it needs four chunks) live in `JoinSyncSystem`; remove them in Phase 10. `/fjoin` re-requests the state and prints the summary in chat.
+
+**Tile-placed API (added by patch 1.3, all in `Common/Net/`)**
+- `ITilePlacedConsumer { bool AppliesTo(int tileType); void OnTilePlaced(int x, int y, int tileType, int placer); }`, registered with `TilePlaced.Register(consumer)` from `ModSystem.Load()` on every side. Consumers run only where the simulation runs (single-player, the server), never on a multiplayer client, and must be **idempotent**: the same placement can reach a consumer twice. `placer` is the player index, or -1 for server code or single-player.
+- The single shared hook is `TilePlacedGlobalTile.PlaceInWorld`. Systems must NOT add their own `PlaceInWorld` hooks for this; patch 3.3 moves the existing ones (chest conveyor, liquid topology, awakened statues, pipes, motors, priority conveyors, machine placement) into consumers.
+- On a multiplayer client the hook sends `TilePlaced` (x, y, tile type). The server (`TilePlaced.HandleRequest`) checks the position is in the world, the type is valid, the tile at that position is that type, and the sender is in reach (`FactorrariaNet.InReach`), logs a rejection otherwise, then runs the consumers. In single-player and on a server the hook runs the consumers directly (after the same tile check).
+- Server code that places tiles (the Robotic Arm) needs nothing extra: it already calls `TileLoader.PlaceInWorld`, which reaches the hook. Other server code can call `TilePlaced.RunConsumers(x, y, tileType)` directly.
+- Temporary test consumer `PlacementLogConsumer` in `TilePlacedSystem` logs `[MP-Net] tile placed: ...` for every placement (`TilePlacedSystem.LogPlacements`); remove it in Phase 10. No rate limit yet (patch 1.4).
 
 ---
 
