@@ -38,7 +38,7 @@ Survey base: GitHub commit `25510ef` (183 `.cs` files). **Version 2** also cover
 
 One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and done. Each patch marks itself `[~]`; a small follow-up patch records your test results.
 
-- [~] 0 Dedicated-server boot and test rig (0.1-0.5; patch_mp_0_server_boot.ps1: server-safe detour guards + [MP-Boot] probe; awaiting your server and Host & Play runs)
+- [x] 0 Dedicated-server boot and test rig (0.1-0.5; patches mp_0, mp_0b, mp_0c: server-safe detour guards + [MP-Boot] probe; tested in single-player, on a dedicated server via the .bat with one client, and with a Host & Play client; results in section 8 and the test rig notes)
 - [ ] 1.1 Net core
 - [ ] 1.2 Player sync and join sync
 - [ ] 1.3 Tile-placed request (G0)
@@ -173,6 +173,8 @@ Phases 4 and 5 are one working unit: after Phase 4 alone, machines exist on the 
 **Test checklist:** server starts and loads world; simulation ticks with zero players and no exceptions; single-player world loads and behaves as before; log shows the answers to 0.2 and 0.4.
 
 **Exit criteria:** clean server start; verification items 1, 4, 12 and 13 of the master list answered.
+
+**Result:** met. Items 1, 4, 12 and 19 are answered; item 13 only has its first half (the server boots with ModLiquidLib loaded), and the custom-liquid sync half stays open for 8.4.
 
 ---
 
@@ -422,23 +424,37 @@ Set up in Phase 0, used in every phase.
 | Slow connection (simulated latency) | Interpolation, rollback and rejection behavior |
 | Robotic Arm (Phase 7b) | Arm working with players near and far, area edits by two clients, arm placing machine tiles, power loss mid-strike |
 
-### Phase 0 test rig (added by patch mp_0; items marked "to confirm" are unverified until your first session)
+### Phase 0 test rig (verified in the first session except where marked "to confirm")
 
 The probe writes `[MP-Boot]` lines through `Mod.Logger.Info`: into `client.log` for any process that has a client (single-player, Host & Play host, joining client) and into `server.log` on a dedicated server. Both are in the tModLoader `Logs` folder (location to confirm).
 
-1. **Dedicated server alone:** launch the `TerrariaServer` profile with a test world and no client. Expect no exception during load, one `world loaded` line, and a `summary` line about 2 seconds later (task 0.1, 0.2, 0.5).
-2. **Host & Play:** host from your normal client, join with a second client. Compare the `pid`, `netMode` and `dedServ` values in each log (task 0.4, verification item 1). Same pid in host and server lines means the same process.
+1. **Dedicated server:** run `start-tModLoaderServer.bat` from the tModLoader install folder (Windows; the `TerrariaServer` Visual Studio profile starts the same server), choose a test world, and wait for it to load. The server needs Factorraria, ModLiquidLib and Luminance enabled. Its log is `server.log`.
+2. **Join it:** Multiplayer, Join via IP, `127.0.0.1`. Start the server first. The client log (`client.log`, or `client2.log` for a second simultaneous instance) shows `netMode=MultiplayerClient`.
 3. **Second local client:** a second tModLoader instance needs its own save folder. The `-savedirectory <path>` flag is the first thing to try (to confirm); record what actually worked here.
 4. **Single-player regression:** load a normal world; behavior is unchanged and the log shows one `world loaded` and one `summary` line.
+5. **Host & Play:** the host process is a client (`netMode=MultiplayerClient`), so the server runs in a separate process.
+
+**Observed in Phase 0 (same test world: 589 pipe tiles, 79 machine entities in single-player and on the server)**
+
+| What the probe saw | Single-player | Dedicated server | Joining client |
+|---|---|---|---|
+| Pipe tiles registered | 589 | 589 | 0 (Phase 3.3 must register them on clients) |
+| Machine entities | 79 | 79 | 6 (how entities reach clients is for 4.5/5.1) |
+| Machines with geometry initialised | 1 | 0 | 0 (confirms M2: geometry is only set up from draw code; Patch 4.1) |
+| Visual textures loaded | 13 of 13 | 0 of 13 (requests only) | 13 of 13 |
+| Awakened statue entries | 44 | 44 | 44 |
+
+- The server's `summary` line arrived about 2 seconds after the client connected but 30 seconds after the world loaded. That is consistent with an empty dedicated server not running its update loop until a client connects, so machines would not run while nobody is online. Treat it as expected unless a later phase needs otherwise.
+- The `[MP-Boot]` probe stays in for now (`MultiplayerBootProbeSystem`, `EnableProbe`); later phases reuse it to check state on each side. Remove it in Phase 10.
 
 ## 8. Master verification list (open items)
 
 | # | Item | Resolved in |
 |---|---|---|
-| 1 | Host & Play: same or separate process | Phase 0 |
+| 1 | Host & Play: same or separate process | **Answered (Phase 0): separate process.** The Host & Play host process logged `netMode=MultiplayerClient`, not `Server`. A standalone server logged `pid=2292 netMode=Server dedServ=True`, a different pid from the client (3888) |
 | 2 | `PlaceInWorld` is client-only on a dedicated server (call site confirmed in tModLoader source) | Phase 1.3 test |
-| 3 | Pipe registration and self-heal on server | 3.3 |
-| 4 | `TrackData.EnsureLoaded` works on a dedicated server | Phase 0, 9.6 |
+| 3 | Pipe registration and self-heal on server | 3.3 (partly seen in Phase 0: a dedicated server registers all 589 pipe tiles at world load, same as single-player; a joining client registers 0; placement self-heal still to verify) |
+| 4 | `TrackData.EnsureLoaded` works on a dedicated server | **Answered (Phase 0): loaded** on the dedicated server and on a joining client; 9.6 still adds the logger-only failure message |
 | 5 | `ItemSlot.Handle` with chest context sends no chest sync with index -1 | 6.2 |
 | 6 | Right-click `ItemSlot` path syncs the changed slot | 2.6 |
 | 7 | Owner-side `Projectile.Kill()` propagates to other clients | 2.1, 2.4 |
@@ -446,14 +462,14 @@ The probe writes `[MP-Boot]` lines through `Mod.Logger.Info`: into `client.log` 
 | 9 | `LiquidMerge` stone result reaches clients | 8.4 |
 | 10 | `UseItem` runs for remote players on every client (owner gate is correct either way) | 2.x tests |
 | 11 | `SyncEquipment` slot index mapping for `miscEquips` | 2.2 |
-| 12 | No client-only call in any `Load()`/`PostSetupContent()` | Phase 0 |
-| 13 | ModLiquidLib custom liquid sync | Phase 0, 8.4 |
+| 12 | No client-only call in any `Load()`/`PostSetupContent()` | **Answered (Phase 0):** the dedicated server loads the mod and the world with no exception. Visual registry: 13 definitions registered, 0 On textures loaded on the server (requests only, as designed) |
+| 13 | ModLiquidLib custom liquid sync | Phase 0 (server boots with ModLiquidLib loaded), 8.4 (the sync itself, still open) |
 | 14 | Tile-entity removal is broadcast to clients when the server kills a machine (added while compiling; items 1-13 come from step 10) | 4.4 |
 | 15 | Server accepts placement of the Robotic Arm made through the arm item's client-only mode switch (A6) | 7b.6 |
 | 16 | Which `WorldGen` kill/place calls broadcast when run on a server (A2); the fix (explicit `SendTileSquare`) works regardless | 7b.2 |
 | 17 | The arm's hidden `Player` `whoAmI` is never used as an ignore-client argument (A12) | 7b.7 |
 | 18 | Items inactivated inside `OnSpawn` do not appear on clients (A13) | 7b.3 |
-| 19 | `MachineDynamicDrawSystem` detour on a dedicated server is harmless; add the guard (A7) | Phase 0.5 |
+| 19 | `MachineDynamicDrawSystem` detour on a dedicated server is harmless; add the guard (A7) | **Answered (Phase 0.5):** guard added (also on the statue draw and overhang preview detours); the server boots and runs cleanly with them |
 
 ## 9. Biggest risks
 
