@@ -39,7 +39,8 @@ Survey base: GitHub commit `25510ef` (183 `.cs` files). **Version 2** also cover
 One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and done. Each patch marks itself `[~]`; a small follow-up patch records your test results.
 
 - [x] 0 Dedicated-server boot and test rig (0.1-0.5; patches mp_0, mp_0b, mp_0c: server-safe detour guards + [MP-Boot] probe; tested in single-player, on a dedicated server via the .bat with one client, and with a Host & Play client; results in section 8 and the test rig notes)
-- [~] 1.1 Net core (patch_mp_1_1_net_core.ps1: router, helpers, request helper, /fping; applied, untested)
+- [x] 1.1 Net core (patch_mp_1_1_net_core.ps1: router, helpers, request helper, /fping; tested: single-player direct run, dedicated server + client round trip 16.8 ms, everything else unchanged)
+  - Next chat prompt: "Implement patch 1.2 (player sync and join-provider registry)". Net core API is in the Phase 1 section of this roadmap; 1.1 is done and tested.
 - [ ] 1.2 Player sync and join sync
 - [ ] 1.3 Tile-placed request (G0)
 - [ ] 1.4 Server-side network config and rate limiter
