@@ -43,14 +43,15 @@ One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and
 - [x] 1.2 Player sync and join sync (patch_mp_1_2_join_sync.ps1: JoinSync provider registry, chunked join packets, FactorrariaPlayerSync, disconnect hooks, /fjoin; tested: single-player no-op, dedicated server + client full sync 2/2 providers 20012 bytes ~115 ms, repeated /fjoin works, everything else unchanged)
 - [x] 1.3 Tile-placed request (G0) (patch_mp_1_3_tile_placed.ps1: TilePlacedGlobalTile hook, TilePlaced packet + validation, ITilePlacedConsumer registry, test log consumer; tested: single-player logs placements, dedicated server logs them with the right player, one line per placement)
 - [x] 1.4 Server-side network config and rate limiter (patch_mp_1_4_net_config.ps1: NetworkConfig ServerSide ModConfig, per-player token-bucket NetRateLimiter applied in FactorrariaNet.Handle, /fflood; flood test passed on a dedicated server, join sync and tile-placed worked with a second client; config screen, limiter-off and JoinChunkSize checks not yet reported)
-  - Next chat prompt: "Implement patch 2.7 (Robotic Arm preparation, A1 and A3)" (the roadmap recommends it before more arm work; Phase 2 patches are otherwise independent). Phase 1 exit criteria (request, join sync, tile-placed all working in a server + 2 client session) still need one run with two clients. Net core, join sync, tile-placed and network config APIs are in the Phase 1 section. Temporary test code to remove in Phase 10: test-counter and test-blob (JoinSyncSystem), PlacementLogConsumer (TilePlacedSystem), /fflood.
+  - Next chat prompt: "Implement patch 2.7 (Robotic Arm preparation, A1 and A3)" (the roadmap recommends it before more arm work; Phase 2 patches are otherwise independent). Phase 1 exit criteria (request, join sync, tile-placed all working in a server + 2 client session): the two-client run was skipped by decision on 2026-10-17 and is assumed to work (each piece was tested separately with one client). Net core, join sync, tile-placed and network config APIs are in the Phase 1 section. Temporary test code to remove in Phase 10: test-counter and test-blob (JoinSyncSystem), PlacementLogConsumer (TilePlacedSystem), /fflood.
 - [ ] 2.1 MechSuitPlayer owner gating
 - [ ] 2.2 CartEquipPlayer
 - [ ] 2.3 Ice Blade facing / PuffExplosion
 - [ ] 2.4 Mechanical Arm pull velocity
 - [ ] 2.5 ConveyorPhysicsSystem
 - [ ] 2.6 VanillaConveyorGlobalItem slot sync
-- [ ] 2.7 Robotic Arm preparation (A1, A3)
+- [~] 2.7 Robotic Arm preparation (A1, A3) (patch_mp_2_7_arm_motion.ps1: RoboticArmMotion owned by the entity and ticked after the worker, worker and visual read it, BaseMachine.IsAnyPlayerNear used by RouteDrop; applied, untested)
+  - Next chat prompt: "Implement patch 2.1 (MechSuitPlayer owner gating)" (Phase 2 patches are independent; or continue with whichever Phase 2 patch you prefer). The arm now has no client-only dependency in its timing, so Phase 7b.1 only needs to confirm it on a dedicated server. Temporary test code to remove in Phase 10 is unchanged (test-counter, test-blob, PlacementLogConsumer, /fflood).
 - [ ] 3.1 Custom wires
 - [ ] 3.2 Recipe knowledge, world-shared
 - [ ] 3.3 Tile-placed consumers
@@ -239,6 +240,11 @@ Phases 4 and 5 are one working unit: after Phase 4 alone, machines exist on the 
 | 2.5 | Step 1 `ConveyorPhysicsSystem` | Players: local player only; NPCs: server (+`netUpdate`); items: same on both sides as vanilla |
 | 2.6 | Step 3 `VanillaConveyorGlobalItem` | After the right-click type swap, sync the inventory slot (verify item 6) |
 | 2.7 | A1, A3 | **Robotic Arm preparation, single-player safe, recommended before further arm work.** Move reach time, strike length and impact point into a motion model owned by `RoboticArmWorker`, so it no longer waits on `RoboticArmVisual`; add a server-side `IsAnyPlayerNear(worldPos, range)` helper and use it in `RouteDrop` instead of `IsOnScreen`. The visual keeps reading the same model so animation and world change stay in step |
+
+**Robotic Arm preparation (added by patch 2.7)**
+- `RoboticArmMotion` (arm folder) holds the hand's target, side, spring, strike timer and impact point, with no texture or screen dependency. The entity owns one (`arm.Motion`) and ticks it right after `worker.Tick()`, the same order the visual used to tick in. The worker calls `SetTarget`, `StartStrike`, `InPosition`, `Striking` and `ImpactPoint` on it; `RoboticArmVisual` only reads it (hand, side, bend, strike progress) to solve the elbow and draw.
+- On a multiplayer client no logic tick runs, so `DynamicUpdate` ticks the motion itself there (idle until Phase 7b feeds it the server's target and strike events, A5b). Held-tool length: sprite diagonal everywhere except a dedicated server, which falls back to the item's width and height (so a server's reach timing for a tool can differ by a tick or two from a client's drawing; the world change always follows the server's timing).
+- `BaseMachine.IsAnyPlayerNear(worldPos, margin)` is the server-safe "is anyone watching" test (any active player's screen-sized box, `NearPlayerWidth` x `NearPlayerHeight`, tunable). `RouteDrop` uses `IsAnyPlayerNear || IsOnScreen`, so single-player behaves as before and the host's own screen still counts.
 
 **Test checklist (per patch):** two clients each use the item at the same time; neither sees duplicated arms/projectiles; pressing Space on one client does not affect the other client's mech suit or arm; ice blade swings face the owner's cursor on both screens; standing on conveyors moves only your own character on your screen and NPCs don't jitter; swapping a conveyor item's direction survives a relog; no errors on the dedicated server console. For 2.7: in single-player the arm behaves exactly as before (same strike timing, same drops), and with the visual temporarily disabled the worker still mines, chops, hammers and places.
 

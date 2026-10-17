@@ -26,7 +26,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
     // The work logic of one Robotic Arm (runs in the entity's Update, never saved). Idle -> Reach -> Strike, then straight on to the
     // next target if there is one, otherwise back to Idle (the visual eases the hand to its idle pose when its target is cleared).
-    // It drives RoboticArmVisual through SetTarget / StartStrike / InPosition and reads the area and reach from the entity.
+    // It drives the entity's RoboticArmMotion (no client-only state) through SetTarget / StartStrike / InPosition and reads the area and reach
+    // from the entity, so it works the same with no visual (dedicated server). The visual only reads that motion to draw it.
     // A placeable item in the slot (block, furniture, torch, platform, wall, sapling...) is placed into empty tiles (Phase 4, item 4). A tool mines (Phase 5): the pickaxe breaks tiles, the axe chops
     // trees, the hammer smashes walls. One target is struck repeatedly until it changes or stops responding. Drops are caught by
     // RoboticArmDropCapture for the duration of each strike and routed by the entity (conveyor vItems, off-screen vItems, or world items).
@@ -116,7 +117,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                     // the arm waits in Reach until power returns.
                     if (!arm.isOn)
                     {
-                        arm.Visual?.SetTarget(null);
+                        arm.Motion.SetTarget(null);
                         phase = Phase.Reach;
                         phaseTimer = 0;
                         return true;
@@ -151,7 +152,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             phase = Phase.Idle;
             rescanTimer = 0;
             hasPending = false;
-            arm.Visual?.SetTarget(null);
+            arm.Motion.SetTarget(null);
         }
 
         void BeginReach(Point tile, Job newJob)
@@ -166,7 +167,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             strikesOnTarget = 0;
             phase = Phase.Reach;
             phaseTimer = 0;
-            arm.Visual?.SetTarget(TileCenter(tile));
+            arm.Motion.SetTarget(TileCenter(tile));
         }
 
         bool TickReach(Item held)
@@ -181,15 +182,15 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             // The arm still reports a job (isWorking) so the grid keeps counting its demand and does not flicker.
             if (!arm.isOn)
             {
-                if (arm.Visual != null && arm.Visual.HasTarget)
-                    arm.Visual.SetTarget(null);
+                if (arm.Motion.HasTarget)
+                    arm.Motion.SetTarget(null);
 
                 return OutputAllows(job);
             }
 
             // Power is (back): aim at the kept target.
-            if (arm.Visual != null && !arm.Visual.HasTarget)
-                arm.Visual.SetTarget(TileCenter(target));
+            if (!arm.Motion.HasTarget)
+                arm.Motion.SetTarget(TileCenter(target));
 
             // Conveyor clogged: wait where we are, no power, and the reach timeout does not run.
             if (!OutputAllows(job))
@@ -205,12 +206,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 return true;
             }
 
-            RoboticArmVisual visual = arm.Visual;
-            if (visual == null || !visual.InPosition || visual.Striking)
+            RoboticArmMotion motion = arm.Motion;
+            if (!motion.InPosition || motion.Striking)
                 return true;
 
             strikeLength = System.Math.Max(held.useTime, MinStrikeTicks);
-            visual.StartStrike(strikeLength);
+            motion.StartStrike(strikeLength);
             phase = Phase.Strike;
             phaseTimer = 0;
             impactDone = false;
@@ -221,7 +222,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         {
             phaseTimer++;
 
-            float impactPoint = arm.Visual?.ImpactPoint ?? 0.6f;
+            float impactPoint = arm.Motion.ImpactPoint;
             if (!impactDone && phaseTimer >= (int)(strikeLength * impactPoint))
             {
                 impactDone = true;

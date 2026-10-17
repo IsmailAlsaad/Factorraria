@@ -9,56 +9,37 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 {
-    // Client-only animation state of one Robotic Arm: where the hand is, which side the elbow bends to, and the strike animation.
-    // It is driven by whoever owns the arm's logic (SetTarget / StartStrike) and only ever reads that state, so the real worker
-    // (Phase 4) can replace the Phase 2 debug controller without touching this class. Never saved, never synced.
+    // Client-only drawing state of one Robotic Arm: the elbow, the claw angle and the textures. Where the hand is, which side the arm is
+    // on and the strike timing come from RoboticArmMotion (owned by the entity and ticked on the logic side), so the worker never waits on
+    // this class (patch 2.7). It only reads the motion model and draws it. Never saved, never synced.
     public class RoboticArmVisual
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
-        public float TrackSmoothTime = 0.06f;     // seconds for the hand to settle onto a moving target (critically damped spring)
-        public float BendSmoothTime = 0.15f;      // seconds for the ELBOW to swing from one side to the other (only the elbow eases when the side flips)
         public float AimSmoothing = 0.25f;        // how fast the claw turns toward its aim
-        public float IdleOffsetX = 16f;            // idle hand position relative to the shoulder (X is mirrored by side)
-        public float IdleOffsetY = -20f;          // also the height of the point the hand sweeps over when switching side
         public float IdleAimTilt = 1.6f;          // idle claw angle away from straight up
-        public float SideDeadZone = 6f;           // target must be this far to one side before the arm switches side
         public float SwingArc = 1.1f;             // radians the claw swings the tool back before it strikes
         public float SwingEndAngle = 0.33f;       // radians the claw ends the swing PAST the target line (follow-through), before it returns to rest
-        public float ThrustDistance = 6f;         // extra reach of a block thrust
-        public float ImpactPoint = 0.6f;          // fraction of the strike at which the tool/block touches the target (Phase 4 changes the world here)
-        public float HoldBackMax = 70f;           // longest distance the claw hub stops short of the target (grip + tool length)
-        public float GripDistance = 12f;          // claw hub to the spot between its jaws where a tool grip / block centre sits
         public float ClawPivotX = 9f;             // the claw's hub centre inside MechanicalArmProjectile.png, in sprite pixels
         public float ClawPivotY = 16f;
         public float BlockScale = 0.8f;           // a held block is drawn a bit smaller than its item sprite
         public float BeamThickness = 0.45f;       // beam sprite scale across the arm (the shared hook arm uses 0.7)
         public float JointScale = 1f;
-        public float InPositionDistance = 3f;
 
         Asset<Texture2D> beamTexture;
         Asset<Texture2D> jointTexture;
         Asset<Texture2D> clawTexture;
 
         bool initialized;
-        Vector2 head;
-        int side = 1;                 // 1 = target/elbow on the right, -1 = left
-        float bend = -1f;             // eased bend sign handed to the IK (-side when settled)
+        RoboticArmMotion motion;
         float aimAngle;
-        Vector2? target;              // world position of the target tile centre
-        int strikeTimer;
-        int strikeDuration;
-        bool inPosition;
-        Vector2 headVelocity;         // spring velocities (see DampStep)
-        float bendVelocity;
         float drawAngle;              // claw angle incl. the tool swing, set once per tick in Update so both draw passes agree
         Vector2 elbow;                // solved once per tick in Update, shared by both draw passes
 
-        public int Side => side;
-        public Vector2 Head => head;
-        public bool HasTarget => target.HasValue;
-        public bool Striking => strikeTimer > 0;
-        public bool InPosition => inPosition;
-        public float StrikeProgress => Striking ? 1f - strikeTimer / (float)strikeDuration : 0f;
+        // Read from the motion model (the hand position, side, grip and impact point are logic state, not drawing state).
+        Vector2 head => motion.Head;
+        int side => motion.Side;
+        float GripDistance => motion.GripDistance;
+        float ImpactPoint => motion.ImpactPoint;
 
         public RoboticArmVisual()
         {
@@ -67,90 +48,31 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             clawTexture = ModContent.Request<Texture2D>("Factorraria/Content/Projectiles/Hooks/MechanicalArmProjectile", AssetRequestMode.ImmediateLoad);
         }
 
-        public void SetTarget(Vector2? worldTarget)
+        // Once per tick. The motion model is ticked by the logic side first (the entity), so this only solves the elbow and the claw angle.
+        public void Update(RoboticArmMotion motion, Vector2 shoulder, float upperArm, float forearm, Item held, bool heldIsTool)
         {
-            target = worldTarget;
-            if (!target.HasValue)
-                strikeTimer = 0;
-        }
-
-        public void StartStrike(int ticks)
-        {
-            strikeDuration = Math.Max(ticks, 2);
-            strikeTimer = strikeDuration;
-        }
-
-        public void Update(Vector2 shoulder, float upperArm, float forearm, Item held, bool heldIsTool)
-        {
-            float reach = upperArm + forearm;
+            this.motion = motion;
+            if (!motion.Initialized)
+                return;
 
             if (!initialized)
             {
-                head = shoulder + new Vector2(side * IdleOffsetX, IdleOffsetY);
-                bend = -side;
                 aimAngle = IdleAim();
                 initialized = true;
             }
 
-            if (strikeTimer > 0)
-                strikeTimer--;
-
-            // Side switching: the side (and with it the elbow's bend direction) changes the moment the target crosses to the other
-            // side of the shoulder. Only the elbow eases to its new position (the bend value); the hand never leaves the target.
-            if (target.HasValue)
-            {
-                float dx = target.Value.X - shoulder.X;
-                if (MathF.Abs(dx) > SideDeadZone)
-                    side = dx > 0f ? 1 : -1;
-            }
-
-            Vector2 goal = shoulder + new Vector2(side * IdleOffsetX, IdleOffsetY);
             float desiredAim = IdleAim();
-            bool aiming = target.HasValue;
-
-            if (aiming)
-            {
-                Vector2 toTarget = target.Value - shoulder;
-                float distance = toTarget.Length();
-                Vector2 dir = distance > 1f ? toTarget / distance : new Vector2(0f, -1f);
-
-                // The hub stops short of the target by the grip distance (plus the tool length for a tool), so that what the claw
-                // holds is what reaches the target tile.
-                float hold = GripDistance;
-                if (!held.IsAir && heldIsTool)
-                    hold = MathHelper.Clamp(GripDistance + ItemLength(held) * 0.85f, 0f, HoldBackMax);
-
-                hold = MathF.Min(hold, distance * 0.5f);
-                goal = target.Value - dir * hold;
-
-                // Blocks are thrust forward at the target instead of swung.
-                if (!held.IsAir && !heldIsTool && Striking)
-                    goal += dir * ThrustCurve(StrikeProgress) * ThrustDistance;
-
-                Vector2 fromShoulder = goal - shoulder;
-                float maxDistance = reach * 0.98f;
-                if (fromShoulder.Length() > maxDistance)
-                    goal = shoulder + Vector2.Normalize(fromShoulder) * maxDistance;
-            }
-
-            // The hand moves with a critically damped spring (smooth start and stop).
-            head.X = DampStep(head.X, goal.X, ref headVelocity.X, TrackSmoothTime);
-            head.Y = DampStep(head.Y, goal.Y, ref headVelocity.Y, TrackSmoothTime);
-            bend = DampStep(bend, -side, ref bendVelocity, BendSmoothTime);
-
-            elbow = MechanicalArmIK.SolveElbow(shoulder, head, upperArm, forearm, bend, -MathHelper.PiOver2 + side * 0.5f);
+            elbow = MechanicalArmIK.SolveElbow(shoulder, head, upperArm, forearm, motion.Bend, -MathHelper.PiOver2 + side * 0.5f);
 
             // The claw faces along the line from the ELBOW joint to the target tile.
-            if (aiming && (target.Value - elbow).LengthSquared() > 1f)
-                desiredAim = (target.Value - elbow).ToRotation();
+            if (motion.HasTarget && (motion.Target.Value - elbow).LengthSquared() > 1f)
+                desiredAim = (motion.Target.Value - elbow).ToRotation();
 
             aimAngle += MathHelper.WrapAngle(desiredAim - aimAngle) * AimSmoothing;
 
             drawAngle = aimAngle;
             if (!held.IsAir && heldIsTool)
-                drawAngle += side * SwingCurve(StrikeProgress) * SwingArc;
-
-            inPosition = aiming && Vector2.Distance(head, goal) < InPositionDistance;
+                drawAngle += side * SwingCurve(motion.StrikeProgress) * SwingArc;
         }
 
         // Drawn BEHIND the tiles (see MachineDynamicDrawSystem): the two beams, the elbow joint, the claw and the held item.
@@ -207,19 +129,6 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             }
         }
 
-        // One step of a critically damped spring (same maths as a "smooth damp"): eases in and out and never overshoots.
-        float DampStep(float current, float goal, ref float velocity, float time)
-        {
-            float dt = 1f / 60f;
-            float omega = 2f / MathF.Max(time, 0.0001f);
-            float x = omega * dt;
-            float decay = 1f / (1f + x + 0.48f * x * x + 0.235f * x * x * x);
-            float change = current - goal;
-            float temp = (velocity + omega * change) * dt;
-            velocity = (velocity - omega * temp) * decay;
-            return goal + (change + temp) * decay;
-        }
-
         // Wind-up (0 -> -1), fast sweep onto the target (-1 -> 0 at ImpactPoint), small follow-through and return.
         float SwingCurve(float p)
         {
@@ -237,29 +146,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             return SwingEndAngle / MathF.Max(SwingArc, 0.0001f) * MathF.Sin(r * MathHelper.Pi); // the caller multiplies by SwingArc, so the peak is SwingEndAngle radians
         }
 
-        // Forward to the target by ImpactPoint, then back.
-        float ThrustCurve(float p)
-        {
-            if (p < ImpactPoint)
-            {
-                float t = p / ImpactPoint;
-                return t * t * (3f - 2f * t);
-            }
-
-            float r = (p - ImpactPoint) / (1f - ImpactPoint);
-            return 1f - r * r * (3f - 2f * r);
-        }
-
         float IdleAim() => -MathHelper.PiOver2 + side * IdleAimTilt;
 
         static Color LightAt(Vector2 world) => Lighting.GetColor((int)(world.X / 16f), (int)(world.Y / 16f));
-
-        static float ItemLength(Item item)
-        {
-            Main.instance.LoadItem(item.type);
-            Texture2D texture = TextureAssets.Item[item.type].Value;
-            Rectangle frame = Main.itemAnimations[item.type]?.GetFrame(texture) ?? texture.Frame();
-            return MathF.Sqrt(frame.Width * frame.Width + frame.Height * frame.Height);
-        }
     }
 }

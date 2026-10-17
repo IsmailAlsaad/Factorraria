@@ -33,6 +33,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         RoboticArmVisual visual;
         public RoboticArmVisual Visual => visual;
 
+        // The hand's motion (target, side, reach spring, strike timer, impact point). Owned here so the worker never waits on the client-only
+        // visual (A1). Ticked once per logic tick right after the worker; the visual only reads it. Never saved, never synced.
+        public RoboticArmMotion Motion { get; } = new RoboticArmMotion();
+
         // Working area: the tile offset of its top-left corner from the base tile, and its size in tiles. Saved. Phase 3's overlay
         // edits it (RoboticArmAreaEditorSystem) and Phase 4's scanner reads it. It always stays inside the square of tiles the arm
         // can reach (ReachTiles each way from the base), which is also its size cap.
@@ -93,6 +97,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             // Only draws power while the worker has a valid job (nothing to do = idle, no demand).
             isWorking = worker.Tick();
+
+            Item held = InputSlots[0];
+            Motion.Update(Shoulder, UpperArmLength, ForearmLength, held, !held.IsAir && IsTool(held));
         }
 
         public bool IsTool(Item item) => item.pick > 0 || item.axe > 0 || item.hammer > 0;
@@ -212,8 +219,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
         // Called by RoboticArmDropCapture for every item a strike spawns. Turns the drop into a vItem:
         //  - a conveyor in the 3x3: onto a free conveyor tile (a full belt leaves the drop as a world item; CanDeliverDrops already paused the arm);
-        //  - no conveyor and the arm is off-screen: onto a free neighbouring tile, so the world item cap is not eaten by unseen drops;
-        //  - no conveyor and on-screen: left alone, so it drops into the world like vanilla.
+        //  - no conveyor and no player near (and not on this screen): onto a free neighbouring tile, so the world item cap is not eaten by unseen drops;
+        //  - no conveyor and someone is near: left alone, so it drops into the world like vanilla.
         public void RouteDrop(Item item)
         {
             Point tile;
@@ -221,7 +228,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             if (HasAdjacentConveyor())
                 found = TryFindFreeAdjacentConveyorTile(out tile);
-            else if (!IsOnScreen(Shoulder))
+            else if (!IsAnyPlayerNear(Shoulder) && !IsOnScreen(Shoulder))
                 found = TryFindFreeGroundTile(out tile);
             else
                 return;
@@ -253,7 +260,14 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             visual ??= new RoboticArmVisual();
 
             Item held = InputSlots[0];
-            visual.Update(Shoulder, UpperArmLength, ForearmLength, held, !held.IsAir && IsTool(held));
+            bool heldIsTool = !held.IsAir && IsTool(held);
+
+            // On a multiplayer client no logic tick runs for the arm, so nothing else ticks its motion model here (Phase 7b feeds its target
+            // and strikes from the server's events). In single-player and on the server the entity's own Update already did.
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                Motion.Update(Shoulder, UpperArmLength, ForearmLength, held, heldIsTool);
+
+            visual.Update(Motion, Shoulder, UpperArmLength, ForearmLength, held, heldIsTool);
         }
 
         public bool TryGetDynamicBounds(out Vector2 center, out float radius)

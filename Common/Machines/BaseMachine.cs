@@ -885,6 +885,30 @@ namespace Factorraria.Common.Machines
             return id;
         }
 
+        // Server-safe version of IsOnScreen (patch 2.7, A3): true when any active player's screen-sized rectangle (centred on the player)
+        // contains the position. It reads the synced player positions, so it works on a dedicated server, where IsOnScreen is always false.
+        // Client-only drawing code keeps using IsOnScreen. Use this for logic that asks "is anyone watching".
+        public float NearPlayerWidth = 1920f;
+        public float NearPlayerHeight = 1080f;
+
+        public bool IsAnyPlayerNear(Vector2 worldPos, float margin = 100f)
+        {
+            float halfWidth = NearPlayerWidth / 2f + margin;
+            float halfHeight = NearPlayerHeight / 2f + margin;
+
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                Player player = Main.player[i];
+                if (player == null || !player.active)
+                    continue;
+
+                if (MathF.Abs(player.Center.X - worldPos.X) <= halfWidth && MathF.Abs(player.Center.Y - worldPos.Y) <= halfHeight)
+                    return true;
+            }
+
+            return false;
+        }
+
         public static bool IsOnScreen(Vector2 worldPos, float margin = 100f)
         {
             if (Main.dedServ) return false;
