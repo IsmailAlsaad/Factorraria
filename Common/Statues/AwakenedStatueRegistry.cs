@@ -65,6 +65,7 @@ namespace Factorraria.Common.Statues
         public int RightFacingStyleOffset = 165;   // the right-facing style of a statue is its left-facing style plus this
 
         public bool IsStatueTile(int tileType) => statueTileTypes.Contains(tileType);
+        public int EntryCount => entries.Count;
         public bool TryGet(int tileType, int style, out AwakenedStatueEntry entry) => entries.TryGetValue((tileType, style), out entry);
 
         // Pass only the left-facing style. The right-facing style (style + RightFacingStyleOffset) is registered automatically

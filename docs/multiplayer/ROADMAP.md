@@ -34,6 +34,64 @@ Survey base: GitHub commit `25510ef` (183 `.cs` files). **Version 2** also cover
 
 ---
 
+## Progress
+
+One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and done. Each patch marks itself `[~]`; a small follow-up patch records your test results.
+
+- [~] 0 Dedicated-server boot and test rig (0.1-0.5; patch_mp_0_server_boot.ps1: server-safe detour guards + [MP-Boot] probe; awaiting your server and Host & Play runs)
+- [ ] 1.1 Net core
+- [ ] 1.2 Player sync and join sync
+- [ ] 1.3 Tile-placed request (G0)
+- [ ] 1.4 Server-side network config and rate limiter
+- [ ] 2.1 MechSuitPlayer owner gating
+- [ ] 2.2 CartEquipPlayer
+- [ ] 2.3 Ice Blade facing / PuffExplosion
+- [ ] 2.4 Mechanical Arm pull velocity
+- [ ] 2.5 ConveyorPhysicsSystem
+- [ ] 2.6 VanillaConveyorGlobalItem slot sync
+- [ ] 2.7 Robotic Arm preparation (A1, A3)
+- [ ] 3.1 Custom wires
+- [ ] 3.2 Recipe knowledge, world-shared
+- [ ] 3.3 Tile-placed consumers
+- [ ] 3.4 Replicas for chest conveyors and awakened statues
+- [ ] 4.1 Server-safe geometry
+- [ ] 4.2 Placement
+- [ ] 4.3 Placement info
+- [ ] 4.4 Kill path
+- [ ] 4.5 Entity bootstrap
+- [ ] 5.1 Snapshot
+- [ ] 5.2 Light updates
+- [ ] 5.3 Detail channel
+- [ ] 5.4 Power flags
+- [ ] 6.1 Machine request family and lifetime
+- [ ] 6.2 Slot edits
+- [ ] 6.3 Recipe selection
+- [ ] 6.4 Toggles and guard
+- [ ] 7.1 Server authority
+- [ ] 7.2 Replication
+- [ ] 7.3 Priority conveyors
+- [ ] 7.4 Integration review
+- [ ] 7b.1 Server worker
+- [ ] 7b.2 World-edit broadcast
+- [ ] 7b.3 Drop routing
+- [ ] 7b.4 Visual events
+- [ ] 7b.5 Area request
+- [ ] 7b.6 Placement
+- [ ] 7b.7 Ghost player
+- [ ] 8.1 World liquid broadcast
+- [ ] 8.2 Tank sync
+- [ ] 8.3 Motor rotate request
+- [ ] 8.4 Verification
+- [ ] 9.1 Identity and guards
+- [ ] 9.2 Replication
+- [ ] 9.3 Input as requests
+- [ ] 9.4 Cargo and world interaction
+- [ ] 9.5 Chest panel
+- [ ] 9.6 Events and verification
+- [ ] 10 Hardening and release
+
+---
+
 ## 1. Goal and success definition
 
 Make Factorraria work in multiplayer on **dedicated servers and Host & Play**, with single-player behavior unchanged.
@@ -363,6 +421,15 @@ Set up in Phase 0, used in every phase.
 | Save, stop, restart server | All state persists; ids and registries stable |
 | Slow connection (simulated latency) | Interpolation, rollback and rejection behavior |
 | Robotic Arm (Phase 7b) | Arm working with players near and far, area edits by two clients, arm placing machine tiles, power loss mid-strike |
+
+### Phase 0 test rig (added by patch mp_0; items marked "to confirm" are unverified until your first session)
+
+The probe writes `[MP-Boot]` lines through `Mod.Logger.Info`: into `client.log` for any process that has a client (single-player, Host & Play host, joining client) and into `server.log` on a dedicated server. Both are in the tModLoader `Logs` folder (location to confirm).
+
+1. **Dedicated server alone:** launch the `TerrariaServer` profile with a test world and no client. Expect no exception during load, one `world loaded` line, and a `summary` line about 2 seconds later (task 0.1, 0.2, 0.5).
+2. **Host & Play:** host from your normal client, join with a second client. Compare the `pid`, `netMode` and `dedServ` values in each log (task 0.4, verification item 1). Same pid in host and server lines means the same process.
+3. **Second local client:** a second tModLoader instance needs its own save folder. The `-savedirectory <path>` flag is the first thing to try (to confirm); record what actually worked here.
+4. **Single-player regression:** load a normal world; behavior is unchanged and the log shows one `world loaded` and one `summary` line.
 
 ## 8. Master verification list (open items)
 

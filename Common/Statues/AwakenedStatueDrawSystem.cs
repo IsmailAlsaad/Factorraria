@@ -25,11 +25,13 @@ namespace Factorraria.Common.Statues
 
         public override void Load()
         {
+            if (Main.dedServ) return; // no screen on a dedicated server: the draw detour is never needed there
             On_Main.DrawNPCs += DrawBeforeNpcs;
         }
 
         public override void Unload()
         {
+            if (Main.dedServ) return; // matches Load()
             On_Main.DrawNPCs -= DrawBeforeNpcs;
         }
 
