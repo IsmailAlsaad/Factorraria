@@ -264,6 +264,7 @@ There is no distance check, so a UI stays open while the player walks away or di
 
 ### U8 (M) `ItemSlot.Handle` with `ChestItem` context outside a chest
 Slots use `ItemSlot.Context.ChestItem`. Vanilla chest slots send chest sync messages using `Player.chest`, which is -1 here. Verify (in tModLoader's `ItemSlot`/`Player` source, since `ItemSlot.cs.patch` only shows diffs) that no `SyncChestItem` is sent with chest index -1; if it is, either use a different context or block it, because the server could log errors or process a bogus chest index.
+**Status (confirmed in testing, interim fix applied):** on a dedicated server with one client, clicking a machine slot (the Robotic Arm input) threw `IndexOutOfRangeException` at `ItemSlot.Handle` in `UIItemSlotWrapper`. The wrapper now temporarily reports netMode as single-player around the call. Edits stay on the client copy until 6.2 (`SlotEdit`) replaces the workaround.
 
 ### U9 (M) `MaterializerRightClickGuard`
 It restores the monolith's tile frames after vanilla toggles them on right-click. If vanilla already sent the toggled frame to the server before the guard undoes it locally, the server and other clients would see the monolith flip while the local client shows it unchanged. **Fix:** prevent the vanilla interaction for the Materializer tile (skip `orig`) instead of undoing it, and keep the existing `PreHitWire` guard on the server (step 3).

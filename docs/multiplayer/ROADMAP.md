@@ -493,7 +493,7 @@ The probe writes `[MP-Boot]` lines through `Mod.Logger.Info`: into `client.log` 
 | 2 | `PlaceInWorld` is client-only on a dedicated server (call site confirmed in tModLoader source) | Phase 1.3 test |
 | 3 | Pipe registration and self-heal on server | 3.3 (partly seen in Phase 0: a dedicated server registers all 589 pipe tiles at world load, same as single-player; a joining client registers 0; placement self-heal still to verify) |
 | 4 | `TrackData.EnsureLoaded` works on a dedicated server | **Answered (Phase 0): loaded** on the dedicated server and on a joining client; 9.6 still adds the logger-only failure message |
-| 5 | `ItemSlot.Handle` with chest context sends no chest sync with index -1 | 6.2 |
+| 5 | `ItemSlot.Handle` with chest context sends no chest sync with index -1 | **Answered (patch 2.7 follow-up): it does send one and throws `IndexOutOfRangeException` on a multiplayer client** (seen clicking the Robotic Arm slot). `UIItemSlotWrapper` now runs the click with netMode shown as single-player (interim). The edit stays client-side until 6.2 adds `SlotEdit`; 6.2 should replace this workaround |
 | 6 | Right-click `ItemSlot` path syncs the changed slot | 2.6 |
 | 7 | Owner-side `Projectile.Kill()` propagates to other clients | 2.1, 2.4 |
 | 8 | Monolith right-click frame flip sent before the guard undoes it | 6.4 |

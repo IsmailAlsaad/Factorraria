@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ID;
 using Terraria.UI;
 
 namespace Factorraria.Content.UI
@@ -89,7 +90,23 @@ namespace Factorraria.Content.UI
 
             if (allowInteraction || (Main.mouseItem.IsAir && !item.IsAir))
             {
-                ItemSlot.Handle(ref item, context);
+                // The ChestItem context makes vanilla send a chest-slot sync for Player.chest, which is -1 here (these are machine slots,
+                // not a chest). On a multiplayer client that throws IndexOutOfRangeException inside ItemSlot.Handle (survey U8, verification
+                // item 5). So the click runs with netMode shown as single-player. Interim fix: the edit only changes this client's copy of
+                // the machine until Phase 6.2 adds the SlotEdit request that sends it to the server.
+                int realNetMode = Main.netMode;
+                if (realNetMode == NetmodeID.MultiplayerClient)
+                    Main.netMode = NetmodeID.SinglePlayer;
+
+                try
+                {
+                    ItemSlot.Handle(ref item, context);
+                }
+                finally
+                {
+                    Main.netMode = realNetMode;
+                }
+
                 setItem(item);
             }
 
