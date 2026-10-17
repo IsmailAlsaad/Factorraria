@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-17 | 208 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-17 | 209 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(22) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) RecipeOutputGroup(10) VirtualItemSystem(9) LiquidNetworkSystem(9) FactorrariaNet(9) RecipeKnowledgeSystem(8) RecipeCatalog(8) FurnaceOffsetConfig(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeBookLayout(7) FactorrariaPacket(7) Entry(7)
+RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(22) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) FactorrariaNet(11) RecipeOutputGroup(10) VirtualItemSystem(9) LiquidNetworkSystem(9) RecipeKnowledgeSystem(8) RecipeCatalog(8) FurnaceOffsetConfig(8) FactorrariaPacket(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeBookLayout(7) Entry(7)
 
 ## Inheritance
 Project bases -> derived:
@@ -23,7 +23,7 @@ Project bases -> derived:
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModSystem (38): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineDynamicDrawSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedSystem, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (39): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineDynamicDrawSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedSystem, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
@@ -309,7 +309,7 @@ tModLoader/other bases -> project types:
       +Direction:PacketDirection +Handler:PacketHandler +Cost:int
 **FactorrariaPacket.cs** uses: TilePlaced
   enum FactorrariaPacket : byte
-    {Ping, PingReply, JoinRequest, JoinChunk, JoinDone, TilePlaced}
+    {Ping, PingReply, JoinRequest, JoinChunk, JoinDone, TilePlaced, MechSuitStateRequest, MechSuitState}
   enum PacketDirection : byte
     {ToServer, ToClient}
 **FactorrariaPlayerSync.cs** uses: JoinSync
@@ -327,6 +327,11 @@ tModLoader/other bases -> project types:
 **JoinSyncSystem.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
   class JoinSyncSystem : ModSystem
     +TestProvidersEnabled:bool[s] +TestBlobSize:int[s] +LastTestCounter:int[s] +Load()[ov] +PostUpdateEverything()[ov] +Unload()[ov]
+**MechSuitNet.cs** uses: FactorrariaNet, FactorrariaPacket, MechSuitPlayer, PacketDirection
+  class MechSuitNetSystem : ModSystem
+    +Load()[ov]
+  static class MechSuitNet
+    +ReportState(bool)[s] +SendState(int,bool,int,int)[s] +HandleRequest(BinaryReader,int)[s] +HandleState(BinaryReader,int)[s]
 **MultiplayerBootProbeSystem.cs** uses: AwakenedStatueRegistry, BaseMachine, LiquidNetworkSystem, MachineVisualRegistry, Probe, TrackData
   class MultiplayerBootProbeSystem : ModSystem
     +EnableProbe:bool[s] +SummaryDelayTicks:int[s] +Load()[ov] +PostSetupContent()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
@@ -674,7 +679,7 @@ tModLoader/other bases -> project types:
   class SteelScrewItem : ModItem
 
 ### Content/Items/Mounts/
-**MechSuitItem.cs** uses: MechSuitArmProjectile
+**MechSuitItem.cs** uses: FactorrariaNet, MechSuitArmProjectile, MechSuitNet
   class MechSuitItem : ModItem
     +UseItem(Player)[ov]
   static class MechSuitTileSearch
@@ -682,7 +687,7 @@ tModLoader/other bases -> project types:
   struct MechArmSlot
     +ProjectileIndex:int +AnchorTile:Point +IsActive:bool
   class MechSuitPlayer : ModPlayer
-    +MaxArms:int[c] +IsActive:bool +Activate() +Deactivate() +PreUpdateMovement()[ov]
+    +MaxArms:int[c] +IsActive:bool +Activate() +Deactivate() +SetReportedState(bool) +PlayerDisconnect()[ov] +SyncPlayer(int,int,bool)[ov] +PreUpdateMovement()[ov]
 
 ### Content/Items/Weapons/
 **IceBladeItem.cs** uses: IceBladeSwingProjectile

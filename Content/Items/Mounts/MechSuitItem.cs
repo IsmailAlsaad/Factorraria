@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.Projectiles.Mounts;
+﻿using Factorraria.Common.Net;
+using Factorraria.Content.Projectiles.Mounts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,11 @@ namespace Factorraria.Content.Items.Mounts
 
         public override bool? UseItem(Player player)
         {
+            // UseItem also runs for remote players on every machine, and on the server. Only the owner's own client toggles the suit; everyone
+            // else learns the flag from MechSuitNet.
+            if (!FactorrariaNet.IsOwner(player))
+                return true;
+
             MechSuitPlayer mechPlayer = player.GetModPlayer<MechSuitPlayer>();
 
             if (mechPlayer.IsActive)
@@ -122,12 +128,19 @@ namespace Factorraria.Content.Items.Mounts
         {
             IsActive = true;
             searchCooldown = 0;
+            MechSuitNet.ReportState(true);
         }
 
         public void Deactivate()
         {
             IsActive = false;
+            RetractArms();
+            MechSuitNet.ReportState(false);
+        }
 
+        // Owner only: kills this player's own arm projectiles and forgets them.
+        void RetractArms()
+        {
             for (int i = 0; i < MaxArms; i++)
             {
                 if (arms[i].IsActive)
@@ -137,9 +150,36 @@ namespace Factorraria.Content.Items.Mounts
             }
         }
 
+        // Called by MechSuitNet on the server and on remote clients: mirrors the owner's flag so the arm projectiles (which run everywhere)
+        // know the suit is on. The owner ignores it, because its own flag is the source.
+        public void SetReportedState(bool active)
+        {
+            if (FactorrariaNet.IsOwner(Player))
+                return;
+
+            IsActive = active;
+        }
+
+        // Server and remote clients: the player left, so their mirrored flag goes with them (their arms die with them, see MechSuitArmProjectile.AI).
+        public override void PlayerDisconnect()
+        {
+            IsActive = false;
+        }
+
+        // Server: a client is being told about this player (a late joiner). Tell it whether this player is in the suit.
+        public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
+        {
+            if (Main.netMode == NetmodeID.Server && IsActive && toWho >= 0)
+                MechSuitNet.SendState(Player.whoAmI, true, toWho);
+        }
+
         public override void PreUpdateMovement()
         {
             if (!IsActive) return;
+
+            // PreUpdateMovement runs for every player on every machine. Only the owner drives the suit (the movement, the arm launches, the
+            // dismount); everyone else sees the result through the synced position and the arm projectiles.
+            if (!FactorrariaNet.IsOwner(Player)) return;
 
             if (Player.dead)
             {
@@ -147,8 +187,9 @@ namespace Factorraria.Content.Items.Mounts
                 return;
             }
 
-            // Space (Jump) while active = full dismount, retracts everything.
-            if (PlayerInput.Triggers.JustPressed.Jump)
+            // Space (Jump) while active = full dismount, retracts everything. A fresh press is controlJump with releaseJump still set (this
+            // runs before vanilla's own jump code clears it). PlayerInput would read the local keyboard for every player.
+            if (Player.controlJump && Player.releaseJump)
             {
                 Deactivate();
                 return;
@@ -242,19 +283,19 @@ namespace Factorraria.Content.Items.Mounts
             if (!MechSuitTileSearch.TryFindNearestAnchorTile(Player.Center, SearchRadiusPixels, exclude, out Point tile))
                 return; // nothing in range — will just retry next eligible tick (fallback to gravity is implicit: no arm means normal player physics elsewhere still hold)
 
+            // The anchor tile and the bend side travel in ai[0..2] of the spawn packet, so every machine builds the same arm from the packet itself.
             int projIndex = Projectile.NewProjectile(
                 Player.GetSource_Misc("MechSuitArm"),
                 Player.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<MechSuitArmProjectile>(),
                 0, 0f,
-                Player.whoAmI);
+                Player.whoAmI,
+                tile.X, tile.Y,
+                (slot % 2 == 0) ? 1f : -1f); // alternate bend so multiple arms fan out visually instead of overlapping
 
-            if (Main.projectile[projIndex].ModProjectile is MechSuitArmProjectile armComp)
-            {
-                armComp.AnchorTile = tile;
-                armComp.ArmBendSign = (slot % 2 == 0) ? 1f : -1f; // alternate bend so multiple arms fan out visually instead of overlapping
-            }
+            if (projIndex < 0 || projIndex >= Main.maxProjectiles)
+                return;
 
             arms[slot] = new MechArmSlot { ProjectileIndex = projIndex, AnchorTile = tile };
         }

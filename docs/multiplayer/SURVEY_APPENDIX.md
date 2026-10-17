@@ -455,6 +455,7 @@ Severity: **B** blocker / **H** high / **M** medium / **L** low.
 
 ### I7 (M) Mech suit arm projectiles
 Same two issues as step 2 (anchor tile and bend sign need `NetSend/NetReceive`; owner-only spawn). Added here: `MechSuitArmProjectile` also kills itself locally (`Projectile.Kill()` at line 73), so retract/kill needs to be driven by synced state.
+**Status (patch 2.1, applied, untested):** the suit flag is synced with `MechSuitStateRequest`/`MechSuitState` (`Common/Net/MechSuitNet.cs`) and the anchor tile and bend side now travel in `ai[0..2]`, so `NetSend/NetReceive` were not needed. Every machine kills its own copy of an arm when the owner leaves or the mirrored flag clears. The step 2 findings for `MechSuitPlayer` (duplicate spawns, local keyboard Space, per-process arm indices, remote velocity override) are all handled by the owner gate.
 
 ### I8 (L) Items and tiles that need nothing
 Materials (`ByriteAlloy*`, `Coke`, `*Sheet`, `GoldPlate`, `GoldWire`, `MeteoritePanel`, `SimpleCircuit`, `Steel*`), `SiliconOre*` and `PureSilicon*` (item + ore tile), `MechanicalAssemblerItem`, and the joke items (draw hooks only; `IsmailsCaneItem` hold style is cosmetic). They are deterministic data and run the same on every side.

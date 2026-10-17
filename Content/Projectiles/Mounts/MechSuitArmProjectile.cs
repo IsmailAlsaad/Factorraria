@@ -18,13 +18,16 @@ namespace Factorraria.Content.Projectiles.Mounts
         const float ForearmLength = 100f;
         const float FlySpeed = 24f;
 
-        public Point AnchorTile;
-        public float ArmBendSign = 1f;
+        // Set by MechSuitPlayer through the spawn packet: ai[0], ai[1] = anchor tile, ai[2] = bend side. Read on every machine, never written after spawn.
+        public Point AnchorTile => new Point((int)Projectile.ai[0], (int)Projectile.ai[1]);
+        public float ArmBendSign => Projectile.ai[2] >= 0f ? 1f : -1f;
 
         float fallbackAngle;
         bool fallbackAngleSet;
 
-        public bool Latched => Projectile.ai[0] == 1f;
+        // Each machine works this out itself from the anchor (ai[0..2] now carry the anchor and bend side).
+        bool latched;
+        public bool Latched => latched;
 
         static Asset<Texture2D> ArmSegmentTexture;
         static Asset<Texture2D> JointTexture;
@@ -68,6 +71,7 @@ namespace Factorraria.Content.Projectiles.Mounts
             Player player = Main.player[Projectile.owner];
             MechSuitPlayer mechPlayer = player.GetModPlayer<MechSuitPlayer>();
 
+            // Runs on every machine. IsActive is the owner's real flag on the owner's client and the mirrored flag (MechSuitNet) everywhere else.
             if (!player.active || player.dead || !mechPlayer.IsActive)
             {
                 Projectile.Kill();
@@ -88,7 +92,7 @@ namespace Factorraria.Content.Projectiles.Mounts
                 if (distance <= FlySpeed)
                 {
                     Projectile.Center = AnchorWorldPos;
-                    Projectile.ai[0] = 1f;
+                    latched = true;
                 }
                 else
                 {
