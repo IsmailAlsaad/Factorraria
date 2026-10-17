@@ -23,6 +23,18 @@ namespace Factorraria.Common.Net
         int ticksSinceLoad;
         bool summaryPending;
 
+        // Fires once at mod load, before any world exists, on every side. If this line is missing from the log, the loaded
+        // .tmod does not contain this class (stale or failed build, or a different copy of the mod is enabled).
+        public override void Load()
+        {
+            Mod.Logger.Info("[MP-Boot] probe system Load(): " + Describe() + " enabled=" + EnableProbe);
+        }
+
+        public override void PostSetupContent()
+        {
+            Mod.Logger.Info("[MP-Boot] probe system PostSetupContent(): " + Describe());
+        }
+
         public override void OnWorldLoad()
         {
             if (!EnableProbe)

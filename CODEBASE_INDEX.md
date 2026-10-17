@@ -302,7 +302,7 @@ tModLoader/other bases -> project types:
 ### Common/Net/
 **MultiplayerBootProbeSystem.cs** uses: AwakenedStatueRegistry, BaseMachine, LiquidNetworkSystem, MachineVisualRegistry, Probe, TrackData
   class MultiplayerBootProbeSystem : ModSystem
-    +EnableProbe:bool[s] +SummaryDelayTicks:int[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
+    +EnableProbe:bool[s] +SummaryDelayTicks:int[s] +Load()[ov] +PostSetupContent()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
 
 ### Common/Networks/
 **LiquidNetwork.cs** uses: BaseMachine, Direction, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MotorTileEntityBase, WorldLiquidSources
