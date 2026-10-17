@@ -40,8 +40,8 @@ One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and
 
 - [x] 0 Dedicated-server boot and test rig (0.1-0.5; patches mp_0, mp_0b, mp_0c: server-safe detour guards + [MP-Boot] probe; tested in single-player, on a dedicated server via the .bat with one client, and with a Host & Play client; results in section 8 and the test rig notes)
 - [x] 1.1 Net core (patch_mp_1_1_net_core.ps1: router, helpers, request helper, /fping; tested: single-player direct run, dedicated server + client round trip 16.8 ms, everything else unchanged)
-  - Next chat prompt: "Implement patch 1.2 (player sync and join-provider registry)". Net core API is in the Phase 1 section of this roadmap; 1.1 is done and tested.
-- [ ] 1.2 Player sync and join sync
+- [~] 1.2 Player sync and join sync (patch_mp_1_2_join_sync.ps1: JoinSync provider registry, chunked join packets, FactorrariaPlayerSync, disconnect hooks, /fjoin; applied, untested)
+  - Next chat prompt: "Implement patch 1.3 (tile-placed request, G0)". Net core and join sync APIs are in the Phase 1 section of this roadmap. If 1.2 tests are not reported yet, start the chat by reporting them. The two test providers (test-counter, test-blob) in JoinSyncSystem are temporary: remove them in Phase 10.
 - [ ] 1.3 Tile-placed request (G0)
 - [ ] 1.4 Server-side network config and rate limiter
 - [ ] 2.1 MechSuitPlayer owner gating
@@ -200,6 +200,15 @@ Phases 4 and 5 are one working unit: after Phase 4 alone, machines exist on the 
 - `SendToClient`, `Broadcast`, `SendToNearby(center, radiusTiles, ...)`: do nothing unless this is a dedicated server (in single-player the server state already is the player's state).
 - Helpers: `IsServerSide`, `HasLocalClient`, `IsSinglePlayer`, `IsOwner(player)`, `InReach(player, tileX, tileY)` (vanilla tile range + block range + held item boost + `ReachSlackTiles`), `WriteItem` / `ReadItem` (vanilla item serializer: stack, prefix and mod data survive), `Log`.
 - Every handler must validate its input (target exists, reach, state, value ranges) and must read exactly what the writer wrote. `/fping` is the test command (a Chat command, so it runs on the client that typed it).
+
+**Join sync API (added by patch 1.2, all in `Common/Net/`)**
+- `JoinSync.Register(key, serverWrite, clientRead)` from `ModSystem.Load()` on every side. `key` is a short stable string and is what identifies the provider on the wire (never a list index). `serverWrite` runs on the server and must write the system's complete state; `clientRead` runs on the client, must read exactly what was written and must replace local state (a second request, such as `/fjoin`, runs it again).
+- Flow: `FactorrariaPlayerSync.OnEnterWorld` calls `JoinSync.RequestFullState()` -> `JoinRequest(token)` -> the server queues one job per player and, from `JoinSyncSystem.PostUpdateEverything`, serializes one provider at a time and sends one chunk per tick (`JoinSync.ChunkSize`, 6000 bytes) -> `JoinChunk` -> `JoinDone` (provider count, byte count). The client reassembles each provider, calls its reader, then sets `JoinSync.Completed` and raises `JoinSync.JoinCompleted` (UI that depends on synced state can rebuild there). The log line `[MP-Net] join sync #N: ...` lists any provider that did not arrive.
+- Guards: one job per player at a time, `RequestCooldownTicks` (120) between requests from the same player, stale tokens dropped, `MaxProviderBytes` cap, a provider that throws is skipped and reported as missing, and a reader that does not consume exactly the bytes written is logged. Patch 1.4 moves the tunables into the server config.
+- Single-player: the request handler only logs, nothing is sent, `JoinSync.Completed` is true immediately and no provider runs.
+- `JoinSync.RegisterDisconnectHook(Action<int> playerIndex)`: runs from `ModPlayer.PlayerDisconnect()` on the server and on remote clients (tModLoader's documented behavior). The disconnecting player's join job and cooldown are cleared first. The mech suit arms (2.1), cart panels (Phase 6/9) and pending requests (Phase 10) register their cleanup here.
+- `FactorrariaPlayerSync` (ModPlayer) holds `OnEnterWorld`, `PlayerDisconnect` and empty `SyncPlayer` / `CopyClientState` / `SendClientChanges` stubs for per-player state that other clients need later.
+- Temporary test providers `test-counter` (a counter that increases on every full-state generation) and `test-blob` (20000 bytes with a checksum, so it needs four chunks) live in `JoinSyncSystem`; remove them in Phase 10. `/fjoin` re-requests the state and prints the summary in chat.
 
 ---
 

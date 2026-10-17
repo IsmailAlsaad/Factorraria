@@ -16,7 +16,7 @@ Severity: **B** blocker (breaks or dupes in MP) / **H** high / **M** medium / **
 ## Cross-cutting findings
 - **X1 (B)** The mod has no `HandlePacket`, no packet types, no `OnPlayerJoined`/world-join sync. Needed once, in `Factorraria.cs`, as a packet router + `ModPacket` helper. **Status:** router and helpers added in patch 1.1 (tested: ping round trip client-server-client works).
 - **X2 (B)** Client-only hooks (`ModTile.PlaceInWorld`, `ModItem.UseItem`, `GlobalTile.PlaceInWorld`, UI clicks) mutate registries in the client process only. The server never learns. Every one needs "client sends request, server applies, server broadcasts".
-- **X3 (H)** World data (`Save/LoadWorldData`) loads on the server only. Clients start with empty registries, so all registries that UI/draw code reads need a full sync on join plus deltas.
+- **X3 (H)** World data (`Save/LoadWorldData`) loads on the server only. Clients start with empty registries, so all registries that UI/draw code reads need a full sync on join plus deltas. **Status:** join-provider registry (`JoinSync`) added in patch 1.2 (applied, untested); the real providers arrive with 3.1, 3.2, 3.4, 7.2 and 9.2.
 - **X4 (M)** Several ModSystems run `PostUpdateWorld` on clients too with no guard (VirtualItem, Cart). Each needs `if (Main.netMode == NetmodeID.MultiplayerClient) return;` or a client-side interpolation path.
 
 ## Per-system findings
@@ -87,9 +87,9 @@ These belong to the **recipe knowledge** sync designed in the roadmap (world-sha
 - `RecipeDebugCommand` reads the sets locally; on a client it would show empty unless synced (or made server-side via `CommandType.World`).
 
 ## Missing player-level plumbing (to add in the roadmap)
-1. A `FactorrariaPlayerSync` ModPlayer: `SyncPlayer`, `CopyClientState`, `SendClientChanges` for any per-player state other clients need (currently just the mech suit flag, optionally).
-2. `OnEnterWorld` hook: request the full world-state sync (knowledge sets, wires, chest-conveyor entries, awakened statues, carts, vItems) from the server. Pairs with the X3 finding in step 1.
-3. An `OnLeave`/death reset for the mech suit so a disconnecting player does not leave arm projectiles behind.
+1. A `FactorrariaPlayerSync` ModPlayer: `SyncPlayer`, `CopyClientState`, `SendClientChanges` for any per-player state other clients need (currently just the mech suit flag, optionally). **Status:** `FactorrariaPlayerSync` added with empty stubs in patch 1.2 (applied, untested).
+2. `OnEnterWorld` hook: request the full world-state sync (knowledge sets, wires, chest-conveyor entries, awakened statues, carts, vItems) from the server. Pairs with the X3 finding in step 1. **Status:** `FactorrariaPlayerSync.OnEnterWorld` requests the state through `JoinSync` (patch 1.2, applied, untested).
+3. An `OnLeave`/death reset for the mech suit so a disconnecting player does not leave arm projectiles behind. **Status:** `JoinSync.RegisterDisconnectHook` added in patch 1.2 (applied, untested); the mech suit cleanup registers in patch 2.1.
 
 ## Roadmap inputs from this step
 - Phase "Player safety": owner-gating fixes for `MechSuitPlayer` and `CartEquipPlayer` (small, independent, good first PR).
