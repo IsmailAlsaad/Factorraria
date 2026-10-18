@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Knowledge;
+using Factorraria.Common.Net;
 using Factorraria.Content.Configs;
 using System.Collections.Generic;
 using Terraria;
@@ -46,6 +47,9 @@ namespace Factorraria.Common.Machines
 
         /// <summary>Bumped whenever the set of held-ingredient recipes changes. Pair with RecipeKnowledgeSystem.Version for UI rebuilds.</summary>
         public static int HeldVersion { get; private set; }
+
+        /// <summary>True if some recipe takes this item type as an input. Before the index is built it says yes to everything (the server checks seen reports with it).</summary>
+        public static bool IsIngredient(int itemType) => ingredientIndex.Count == 0 || ingredientIndex.ContainsKey(itemType);
 
         /// <summary>Call once after every machine book is built and registered in RecipeCatalog.</summary>
         public static void BuildIngredientIndex()
@@ -107,7 +111,7 @@ namespace Factorraria.Common.Machines
         {
             if (item == null || item.IsAir) return;
             if (!ingredientIndex.ContainsKey(item.type)) return;
-            RecipeKnowledgeSystem.MarkSeen(item.type);
+            RecipeKnowledgeNet.ReportSeen(item.type);   // marks it here at once; on a multiplayer client it is also sent to the server (batched)
         }
 
         /// <summary>Rebuilds heldItems/heldKeys from the saved seen set (also covers world load and a debug reset).</summary>

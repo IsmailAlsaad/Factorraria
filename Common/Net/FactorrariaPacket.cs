@@ -16,6 +16,11 @@ namespace Factorraria.Common.Net
         MechSuitState = 7,        // server -> client: "player <index>'s mech suit is on / off" (patch 2.1)
         WireEditRequest = 8,      // client -> server: "add / remove wire <type> at (x, y)" (patch 3.1)
         WireChanged = 9,          // server -> client: "the wire flags at (x, y) are now <flags>" (patch 3.1)
+        KnowledgeDelta = 10,      // server -> client: "recipe <catalog key> is now unlocked / crafted" (patch 3.2)
+        SeenDelta = 11,           // server -> client: "these ingredient item types are now seen" (patch 3.2)
+        SeenReport = 12,          // client -> server: "I have held these ingredient item types" (batched, patch 3.2)
+        ReadParchmentRequest = 13, // client -> server: "I read a parchment of pool <name>" (patch 3.2)
+        ReadParchmentResult = 14, // server -> client: answer to ReadParchmentRequest (patch 3.2)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

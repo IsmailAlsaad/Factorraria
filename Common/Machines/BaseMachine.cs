@@ -1,5 +1,6 @@
 using Factorraria.Common.Knowledge;
 using Factorraria.Common.Liquids;
+using Factorraria.Common.Net;
 using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
 using Factorraria.Content.VirtualItems;
@@ -288,10 +289,11 @@ namespace Factorraria.Common.Machines
             // Discovery: finishing a recipe marks it crafted for the whole world.
             if (recipe.TryGetPrimaryOutput(out RecipeOutputKey discoveredKey))
             {
-                // Recipe book: credit the craft to this machine's recipe. Singleplayer only; netcode is Phase 6.
+                // Recipe book: credit the craft to this machine's recipe. The server (or single-player) marks it and tells every
+                // client; a multiplayer client does nothing here and learns it from that broadcast (patch 3.2).
                 string machineName = RecipeCatalog.NameOf(Recipes);
                 if (machineName != null)
-                    RecipeKnowledgeSystem.MarkCrafted(RecipeCatalog.KeyFor(machineName, discoveredKey));
+                    RecipeKnowledgeNet.ServerMarkCrafted(RecipeCatalog.KeyFor(machineName, discoveredKey));
             }
 
             CraftsFinished++;

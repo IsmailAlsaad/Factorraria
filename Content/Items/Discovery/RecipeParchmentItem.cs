@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Knowledge;
 using Factorraria.Common.Machines;
+using Factorraria.Common.Net;
 using Factorraria.Common.Systems;
 using System.Collections.Generic;
 using System.IO;
@@ -36,31 +37,18 @@ namespace Factorraria.Content.Items.Discovery
             Item.value = Item.sellPrice(silver: 75);
         }
 
-        public override bool CanRightClick() => true;
+        // While a read request is waiting for the server's answer (multiplayer client), a second click would send a second request.
+        public override bool CanRightClick() => !RecipeKnowledgeNet.ReadPending;
 
         public override void RightClick(Player player)
         {
-            // The recipe is chosen now, at read time: pool first, then the whole book.
-            if (!ScrollPools.TryRoll(PoolName, Main.rand, out string key))
-            {
-                keepOnThisClick = true;
-                Main.NewText("The ink fades, but there is nothing left in the world for this parchment to teach.", 200, 200, 200);
-                return;
-            }
-
-            if (!RecipeCatalog.TryResolve(key, out string machine, out RecipeOutputGroup group))
-            {
-                keepOnThisClick = true;   // should not happen (the roll only returns catalog keys); never lose the item over it
-                Main.NewText("The writing on this parchment has faded beyond reading.", 200, 200, 200);
-                return;
-            }
-
-            RecipeKnowledgeSystem.Unlock(key);
-
-            // Open the recipe book on the page that was just unlocked (client only).
-            if (!Main.dedServ) RecipeBookSystem.OpenAt(key);
-
-            // TODO (Phase 6): in multiplayer the roll and the unlock must run on the server.
+            // The roll and the unlock belong to the server (roadmap 3.2, finding I2). In single-player the request runs the server
+            // code right here and the answer is known before it returns. On a multiplayer client the answer comes later and the
+            // parchment is consumed then (RecipeKnowledgeNet.HandleReadResult), so keep it for now. A failed read keeps it too.
+            keepOnThisClick = true;
+            ParchmentReadResult result = RecipeKnowledgeNet.RequestReadParchment(PoolName);
+            if (result == ParchmentReadResult.Read)
+                keepOnThisClick = false;
         }
 
         public override bool ConsumeItem(Player player)

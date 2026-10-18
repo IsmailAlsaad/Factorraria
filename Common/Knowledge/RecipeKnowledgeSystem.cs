@@ -92,6 +92,22 @@ namespace Factorraria.Common.Knowledge
         }
 
 
+        /// <summary>
+        /// Client, join sync: replaces all three sets with the server's (patch 3.2) and bumps both version counters so every
+        /// panel and RecipeVisibility rebuild their caches.
+        /// </summary>
+        public static void ReplaceAll(IEnumerable<string> newUnlocked, IEnumerable<string> newCrafted, IEnumerable<int> newSeen)
+        {
+            unlocked.Clear();
+            crafted.Clear();
+            seenItems.Clear();
+            foreach (string key in newUnlocked) unlocked.Add(key);
+            foreach (string key in newCrafted) crafted.Add(key);
+            foreach (int type in newSeen) if (type > 0) seenItems.Add(type);
+            Version++;
+            SeenVersion++;
+        }
+
         // Persistence: the unlocked and crafted sets. Absent = everything hidden.
         public override void SaveWorldData(TagCompound tag)
         {

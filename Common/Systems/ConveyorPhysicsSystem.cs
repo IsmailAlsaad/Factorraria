@@ -132,7 +132,9 @@ namespace Factorraria.Common.Systems
                     break;
                 }
 
-                if(!(entity is Item))
+                // Vanilla moves a player standing on a vanilla belt by itself, but not NPCs or dropped items, so the mod pushes those.
+                // (Before patch 2.5c this check stopped every non-item here, which left NPCs on vanilla belts alone.)
+                if (entity is Player)
                 {
                     break;
                 }

@@ -2,6 +2,7 @@
 using Factorraria.Common.Machines;
 using Factorraria.Content.Items.Discovery;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Factorraria.Common.UI.RecipeBookUI;
 
@@ -15,7 +16,8 @@ namespace Factorraria.Common.Knowledge
     ///   /recipes list         list recipes unlocked by parchment in this world
     ///   /recipes crafted      list recipes crafted by a machine in this world
     ///   /recipes state        list every recipe that is not Hidden for you right now, with its state
-    ///   /recipes reset        forget every parchment unlock, crafted mark and seen ingredient in this world
+    ///   /recipes reset        forget every parchment unlock, crafted mark and seen ingredient in this world (single-player only)
+    ///   /recipes counts       how many unlocked / crafted / seen entries THIS process knows (multiplayer test: compare with the server log)
     ///   /recipes defpos       print the defense icon position (use at 1920x1080, UI scale 100%, to calibrate the book button)
     ///   /recipes btnreset     put the recipe book button back to its default spot (forgets where you dragged it)
     /// </summary>
@@ -23,7 +25,7 @@ namespace Factorraria.Common.Knowledge
     {
         public override string Command => "recipes";
         public override CommandType Type => CommandType.Chat;
-        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | reset | defpos | btnreset";
+        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | counts | reset | defpos | btnreset";
         public override string Description => "Recipe discovery debug tools";
 
         static void Give(CommandCaller caller, int type, string pool, int n, string what)
@@ -98,6 +100,9 @@ namespace Factorraria.Common.Knowledge
                     caller.Reply($"{shown} recipe(s) not hidden.", Color.LightGreen);
                     break;
                 }
+                case "counts":
+                    caller.Reply($"Known here: {RecipeKnowledgeSystem.UnlockedKeys.Count} unlocked, {RecipeKnowledgeSystem.CraftedKeys.Count} crafted, {RecipeKnowledgeSystem.SeenItems.Count} seen ingredient item(s).", Color.LightGreen);
+                    break;
                 case "btnreset":
                     RecipeBookButtonState.ResetPosition();
                     caller.Reply("Recipe book button position reset.", Color.LightGreen);
@@ -113,6 +118,12 @@ namespace Factorraria.Common.Knowledge
                     break;
                 }
                 case "reset":
+                    if (Main.netMode == NetmodeID.MultiplayerClient)
+                    {
+                        // A chat command runs on this client only, so a reset here would make this client disagree with the server.
+                        caller.Reply("/recipes reset only works in single-player (the server owns the knowledge in multiplayer).", Color.Yellow);
+                        break;
+                    }
                     RecipeKnowledgeSystem.ResetUnlocked();
                     RecipeKnowledgeSystem.ResetCrafted();
                     RecipeKnowledgeSystem.ResetSeen();
