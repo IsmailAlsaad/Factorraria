@@ -35,7 +35,7 @@ Severity: **B** blocker (breaks or dupes in MP) / **H** high / **M** medium / **
 | `RecipeBookSystem` / `RecipeBookPlayer` UI | Client UI | Fine once knowledge syncs. | L |
 | `MachineUISystem` | Client UI | Opens machine UI from local TileEntity data; needs open/close + slot-edit packets (UI step). | H |
 | `TimedCraftingSystem` | Client, local player | Vanilla crafting is client-side, so likely fine. Verify result creation uses normal recipe path (ModPlayer step). | L |
-| `AwakenedStatueSystem` | Client skip present | `QueueStatueCheck` is called from a client-side GlobalTile hook, so the server never queues. Awakened set must be synced for `AwakenedStatueDrawSystem` (draws nothing on clients today). | H |
+| `AwakenedStatueSystem` | Client skip present | `QueueStatueCheck` is called from a client-side GlobalTile hook, so the server never queues. Awakened set must be synced for `AwakenedStatueDrawSystem` (draws nothing on clients today). **Status:** replica, join provider `awakened-statues` and `AwakenedStatuesChanged` deltas added in patch 3.4b (applied, untested). | H |
 | `AwakenedSpawnSystem` / `AwakenedSpawnGlobalNPC` | Client skip present | Server spawning via `NPC.NewNPC` syncs itself. Looks correct; re-check in the NPC step. | L |
 | `WorldLiquidSources` | Static cache | Reads world liquid; fine server-side, but cart code using it must run on the server. | L |
 | `MachineRegisterationSystem`, `LiquidTypeRegistrationSystem`, `RecipeSystem`, `AwakenedStatueRegistry` | Load/PostSetupContent | Registration must be identical on server and client. Append-only liquid registry already helps. Needs a mod-version check; `LiquidTypeRegistry` indices travel in packets. | M |

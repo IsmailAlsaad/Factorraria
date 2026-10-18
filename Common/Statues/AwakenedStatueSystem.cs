@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Common.Net;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -35,6 +36,8 @@ namespace Factorraria.Common.Statues
         readonly List<Point16> pendingStatueChecks = new();
         readonly HashSet<Point16> handledThisTick = new();
         readonly HashSet<Point16> droppedOrigins = new();
+        readonly List<Point16> removedThisRescan = new();     // patch 3.4b: what the last rescan took away (sent to clients)
+        readonly List<AwakenedStatue> addedThisRescan = new(); // patch 3.4b: what the last rescan newly awakened or changed
 
         public IReadOnlyDictionary<Point16, AwakenedStatue> Awakened => awakened;
 
@@ -98,6 +101,10 @@ namespace Factorraria.Common.Statues
             Tile tile = Framing.GetTileSafely(statue.Origin.X, statue.Origin.Y);
             if (!tile.HasTile || tile.TileType != statue.Entry.TileType) return false;
 
+            // A multiplayer client holds only a replica of the set (patch 3.4b). Its own copy of the machine is not authoritative,
+            // so the server decides: a statue stays in the replica until the server says it is gone.
+            if (Main.netMode == NetmodeID.MultiplayerClient) return true;
+
             return TileEntity.ByPosition.TryGetValue(statue.OwnerOrigin, out TileEntity entity)
                 && entity is IStatueAwakener awakener && awakener.IsAwakening;
         }
@@ -106,7 +113,14 @@ namespace Factorraria.Common.Statues
         // awakening, then lets nearby awakening machines claim anything it just released.
         public void RescanFor(IStatueAwakener awakener)
         {
+            // Patch 3.4b: the awakened set is owned by the server. A client's copy of a machine also calls this from its own
+            // Update, and must not build a second, wrong set next to the replica.
+            if (Main.netMode == NetmodeID.MultiplayerClient) return;
+
             Point16 owner = awakener.AwakenerOrigin;
+
+            removedThisRescan.Clear();
+            addedThisRescan.Clear();
 
             released.Clear();
             foreach (var pair in awakened)
@@ -142,6 +156,15 @@ namespace Factorraria.Common.Statues
                     droppedOrigins.Add(pair.Key);
             }
             ClearTagsFor(droppedOrigins);
+
+            // Patch 3.4b: tell the clients. A dropped origin that is still in the set was re-claimed with a different statue,
+            // which is already in addedThisRescan, so only the ones nobody holds any more are removals.
+            foreach (Point16 origin in droppedOrigins)
+            {
+                if (!awakened.ContainsKey(origin))
+                    removedThisRescan.Add(origin);
+            }
+            AwakenedStatueNet.BroadcastDelta(removedThisRescan, addedThisRescan);
         }
 
         // Removes the spawn tag from every enemy that belongs to one of these statue origins (one pass over the NPC array).
@@ -158,6 +181,32 @@ namespace Factorraria.Common.Statues
                 if (tag.Tagged && origins.Contains(tag.Origin))
                     tag.Release();
             }
+        }
+
+        // ---- Replica (patch 3.4b, multiplayer client only; Common/Net/AwakenedStatueNet.cs calls these) ----
+
+        // Adds, replaces or removes one statue of the replica. A client only needs the origin and the entry (sprite, flip, offset);
+        // the size comes from the tile type's object data (every style of one statue tile has the same size).
+        public void SetReplicaStatue(Point16 origin, bool present, AwakenedStatueEntry entry)
+        {
+            if (!present || entry == null)
+            {
+                awakened.Remove(origin);
+                return;
+            }
+
+            TileObjectData data = TileObjectData.GetTileData(entry.TileType, 0);
+            if (data == null) return;
+
+            awakened[origin] = new AwakenedStatue { Origin = origin, Entry = entry, OwnerOrigin = origin, Width = data.Width, Height = data.Height };
+        }
+
+        // Join sync: replaces the whole replica.
+        public void ReplaceReplica(List<KeyValuePair<Point16, AwakenedStatueEntry>> all)
+        {
+            awakened.Clear();
+            foreach (KeyValuePair<Point16, AwakenedStatueEntry> pair in all)
+                SetReplicaStatue(pair.Key, true, pair.Value);
         }
 
         // Adds every free registered statue within the machine's radius to that machine.
@@ -190,7 +239,10 @@ namespace Factorraria.Common.Statues
 
                     // Reuse the object a machine just released (keeps its cooldown and enemy counts).
                     if (!released.TryGetValue(origin, out AwakenedStatue statue) || statue.Entry != entry)
+                    {
                         statue = new AwakenedStatue { Origin = origin, Entry = entry, Width = data.Width, Height = data.Height };
+                        addedThisRescan.Add(statue);   // new to everyone (or a different statue now): clients must hear about it
+                    }
 
                     statue.OwnerOrigin = awakener.AwakenerOrigin;
                     awakened.Add(origin, statue);
