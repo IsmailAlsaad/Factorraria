@@ -130,7 +130,7 @@ namespace Factorraria.Content.Items.Mounts
         bool jumpWasDown; // owner only: last frame's controlJump, for the dismount press edge
         // Owner only. Vanilla sends the player packet only when something changes, and the owner's velocity is overwritten every frame, so
         // while it hovers still nothing triggers a send and the others drift. Re-announce the position this often (ticks) while suited.
-        int PosResyncTicks = 15;
+        int PosResyncTicks = 1;
         int posResyncTimer;
         Vector2 lastMoveInput;
 
@@ -199,10 +199,6 @@ namespace Factorraria.Content.Items.Mounts
             if (IsActive && !FactorrariaNet.IsOwner(Player))
             {
                 Player.gravity = 0f;
-                // Do not extrapolate from the last velocity packet (a packet that says "stopped" sends no velocity, so the old one kept
-                // being used and the copy slid on until the next position packet). The control bits in the same packet say what the
-                // owner is holding, so run the owner's rule on them: stop is instant, and each position packet only corrects drift.
-                Player.velocity = ReadMoveInput() * MoveSpeed;
             }
         }
 
@@ -212,7 +208,16 @@ namespace Factorraria.Content.Items.Mounts
 
             // PreUpdateMovement runs for every player on every machine. Only the owner drives the suit (the movement, the arm launches, the
             // dismount); everyone else sees the result through the synced position and the arm projectiles.
-            if (!FactorrariaNet.IsOwner(Player)) return;
+            if (!FactorrariaNet.IsOwner(Player))
+            {
+                // Remote copy. Set the velocity here, right before vanilla's move step, so nothing earlier in the frame can leave a trace:
+                // an enemy hit received for this copy adds knockback, but the owner discards its own knockback (its velocity is overwritten
+                // every frame), so this copy must too. The control bits from the player packet say what the owner is holding; a packet
+                // that says "stopped" carries no velocity, so extrapolating the old one made the copy slide on. The position packets
+                // (sent every tick by the owner, see PosResyncTicks) are what keep the copy where the owner actually is.
+                Player.velocity = ReadMoveInput() * MoveSpeed;
+                return;
+            }
 
             if (Player.dead)
             {
