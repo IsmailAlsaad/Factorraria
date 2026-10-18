@@ -748,6 +748,7 @@ namespace Factorraria.Common.Machines
         {
             InitializeGeometry();
             InsideBiome = DetermineBiomeAt(i, j);
+            MachinePlacementInfo.OnServerPlaced(this);   // patch 4.3: on a dedicated server the placing client's biome arrives in a follow-up packet
             //Main.NewText(InsideBiome);
         }
 
@@ -893,6 +894,7 @@ namespace Factorraria.Common.Machines
                 TileObjectData tileData = TileObjectData.GetTileData(type, style, alternate);
                 NetMessage.SendTileSquare(Main.myPlayer, topLeft.X, topLeft.Y, tileData.Width, tileData.Height);
                 NetMessage.SendData(Terraria.ID.MessageID.TileEntityPlacement, number: topLeft.X, number2: topLeft.Y, number3: Type);
+                MachinePlacementInfo.SendBiome(topLeft.X, topLeft.Y);   // patch 4.3: the server cannot detect the biome itself
                 return -1;
             }
 

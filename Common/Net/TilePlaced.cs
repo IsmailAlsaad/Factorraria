@@ -51,6 +51,8 @@ namespace Factorraria.Common.Net
                     writer.Write((short)y);
                     writer.Write((ushort)tileType);
                 });
+                // Patch 4.3: vanilla-tile machines also report the placer's biome (ModTile machines do it from Hook_AfterPlacement).
+                MachinePlacementInfo.SendBiomeForVanillaTile(x, y, tileType);
                 return;
             }
 
