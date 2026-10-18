@@ -447,6 +447,8 @@ Severity: **B** blocker / **H** high / **M** medium / **L** low.
 ### I5 (M) Ice Blade swing projectile
 `IceBladeSwingProjectile` computes its facing from `Main.MouseWorld` on **every** client (`isFacingRight`), so remote players' swings are mirrored according to each viewer's mouse. `Owner.itemAnimation/itemTime`, `Owner.releaseUseItem` and the swing timers are deterministic per client and fine. **Fix:** the owner decides the facing once (store it in `Projectile.ai`/`spriteDirection` and call `netUpdate`), everyone else reads it. Also `PuffExplosion(...).Spawn()` is called inside `AI()`, which also runs on a dedicated server: guard with `!Main.dedServ` (the particle systems may not exist on a server).
 
+**Status (patch 2.3, applied, untested):** `IceBladeItem.Shoot` passes the facing as ai0 and `IceBladeSwingProjectile` keeps it in `ai[0]`; only the owner rewrites it (with `netUpdate`) when the cursor crosses the player, so viewers read it instead of their own mouse. `ReleasedSwing` returns early when `Main.dedServ`. Side effect to watch: each `netUpdate` also re-sends `ai[1]` (the swing timer), so a remote copy's swing can jump back a few ticks when the facing flips.
+
 ### I6 (M) Mechanical Arm hook
 `MechanicalArmItem.Shoot` is owner-only (fine) and the projectile already uses `Projectile.netUpdate` when latching/retracting, and keeps jump/grapple input behind `Main.myPlayer == Projectile.owner`. Remaining issues:
 - `player.velocity +=` and the speed cap (pull toward the hook) run on every client for the owner's `Player` object; only the owner's client should apply it (others receive the synced position/velocity).

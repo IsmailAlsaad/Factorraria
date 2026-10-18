@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.Configs;
+﻿using Factorraria.Common.Net;
+using Factorraria.Content.Configs;
 using Factorraria.Content.Particles;
 using Luminance.Common.Easings;
 using Luminance.Core.Graphics;
@@ -22,7 +23,9 @@ namespace Factorraria.Content.Projectiles.Weapons
         private ref float Timer => ref Projectile.ai[1]; // Timer to keep track of progression of each stage
         float TimerCap = 180f; // Maximum value of the timer
 
-        bool isFacingRight => Main.MouseWorld.X > Owner.MountedCenter.X;
+        // Facing is decided once, by the owner, and stored in ai[0] (1 = right, -1 = left, 0 = not set yet). Reading Main.MouseWorld here made every
+        // viewer mirror the swing by their own mouse. Until ai[0] arrives, fall back to the direction the player is facing.
+        bool isFacingRight => Projectile.ai[0] != 0f ? Projectile.ai[0] > 0f : Owner.direction > 0;
         
         Player Owner => Main.player[Projectile.owner];
 
@@ -61,6 +64,17 @@ namespace Factorraria.Content.Projectiles.Weapons
             {
                 Projectile.Kill();
                 return;
+            }
+
+            // Owner only: follow the cursor side and tell everyone when it flips. ai[0] also travels in the spawn packet (see IceBladeItem.Shoot).
+            if (FactorrariaNet.IsOwner(Owner))
+            {
+                float facing = Main.MouseWorld.X > Owner.MountedCenter.X ? 1f : -1f;
+                if (Projectile.ai[0] != facing)
+                {
+                    Projectile.ai[0] = facing;
+                    Projectile.netUpdate = true;
+                }
             }
 
             SetSwordPosition();
@@ -177,6 +191,10 @@ namespace Factorraria.Content.Projectiles.Weapons
 
         void ReleasedSwing()
         {
+            // The particle systems only exist where there is a screen; AI also runs on a dedicated server.
+            if (Main.dedServ)
+                return;
+
             // Spawn puff explosion particles
             for (int i = 0; i < 3; i++)
             {

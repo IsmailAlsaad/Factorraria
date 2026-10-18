@@ -30,7 +30,9 @@ namespace Factorraria.Content.Items.Weapons
 
         public override bool Shoot(Item item, Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
-            Projectile.NewProjectile(source, position, velocity, type, damage, knockback, player.whoAmI);
+            // Shoot runs on the owner only. Pass the facing in ai[0] so the spawn packet already carries it and no viewer guesses.
+            float facing = Main.MouseWorld.X > player.MountedCenter.X ? 1f : -1f;
+            Projectile.NewProjectile(source, position, velocity, type, damage, knockback, player.whoAmI, facing);
 
             return false;
         }
