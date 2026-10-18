@@ -128,12 +128,19 @@ namespace Factorraria.Content.Items.Mounts
         int searchCooldown;
         int armResyncTimer;
         bool jumpWasDown; // owner only: last frame's controlJump, for the dismount press edge
+        // Owner only. Vanilla sends the player packet only when something changes, and the owner's velocity is overwritten every frame, so
+        // while it hovers still nothing triggers a send and the others drift. Re-announce the position this often (ticks) while suited.
+        int PosResyncTicks = 15;
+        int posResyncTimer;
+        Vector2 lastMoveInput;
 
         public void Activate()
         {
             IsActive = true;
             searchCooldown = 0;
             armResyncTimer = ArmResyncTicks;
+            posResyncTimer = 0;
+            lastMoveInput = Vector2.Zero;
             jumpWasDown = Player.controlJump; // Space still held from before the toggle is not a dismount press
             MechSuitNet.ReportState(true);
         }
@@ -190,7 +197,13 @@ namespace Factorraria.Content.Items.Mounts
         public override void PostUpdateRunSpeeds()
         {
             if (IsActive && !FactorrariaNet.IsOwner(Player))
+            {
                 Player.gravity = 0f;
+                // Do not extrapolate from the last velocity packet (a packet that says "stopped" sends no velocity, so the old one kept
+                // being used and the copy slid on until the next position packet). The control bits in the same packet say what the
+                // owner is holding, so run the owner's rule on them: stop is instant, and each position packet only corrects drift.
+                Player.velocity = ReadMoveInput() * MoveSpeed;
+            }
         }
 
         public override void PreUpdateMovement()
@@ -220,12 +233,22 @@ namespace Factorraria.Content.Items.Mounts
 
             UpdateArms();
             ApplyFreeMovement();
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                Vector2 input = ReadMoveInput();
+                if (input != lastMoveInput || --posResyncTimer <= 0)
+                {
+                    lastMoveInput = input;
+                    posResyncTimer = PosResyncTicks;
+                    Player.netUpdate = true;
+                }
+            }
         }
 
-        void ApplyFreeMovement()
+        // The suit's direction rule, from the control bits. Used by the owner (real keys) and by remote copies (bits from the player packet).
+        Vector2 ReadMoveInput()
         {
-            Player.gravity = 0f;
-
             Vector2 move = Vector2.Zero;
             if (Player.controlLeft) move.X -= 1f;
             if (Player.controlRight) move.X += 1f;
@@ -234,6 +257,15 @@ namespace Factorraria.Content.Items.Mounts
 
             if (move != Vector2.Zero)
                 move.Normalize();
+
+            return move;
+        }
+
+        void ApplyFreeMovement()
+        {
+            Player.gravity = 0f;
+
+            Vector2 move = ReadMoveInput();
 
             // Directly setting velocity (not position) keeps normal tile collision intact —
             // the vanilla movement step that follows still runs Collision.TileCollision on this.
