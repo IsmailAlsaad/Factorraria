@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Mounts;
+using Factorraria.Common.Net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -32,12 +33,17 @@ namespace Factorraria.Content.Projectiles.Hooks
         static Asset<Texture2D> ArmSegmentTexture;
         static Asset<Texture2D> JointTexture;
 
-        // ai[0]: 0 = flying, 1 = latched, 2 = retracting
+        // ai[0]: 0 = flying, 1 = latched, 2 = retracting, 3 = released (the owner pressed Jump; every copy removes itself)
         // ai[1]: bend sign, -1 or 1, locked in on first tick (synced)
         // localAI[0]: fallback "cocked" elbow angle for the near-zero-distance case (visual only, not synced)
         // localAI[1]: 0/1 init flag for the two fields above
         bool Latched => Projectile.ai[0] == 1f;
         bool Retracting => Projectile.ai[0] == 2f;
+        bool Released => Projectile.ai[0] == 3f;
+
+        // Owner only: how many AI updates the owner keeps a released arm alive, so the state packet (netUpdate) goes out before it is removed.
+        int ReleaseKillTicks = 4;
+        int releaseTicks;
         const float RetractSpeed = 14f; // pixels per AI tick while pulling back in
 
         public override void Load()
@@ -91,6 +97,15 @@ namespace Factorraria.Content.Projectiles.Hooks
                 Projectile.netUpdate = true;
             }
 
+            if (Released)
+            {
+                // The owner let go. Remote copies remove themselves as soon as they see the state; Projectile.Kill() on the owner is not
+                // known to reach other clients (verification item 7), so the removal does not depend on it.
+                if (!FactorrariaNet.IsOwner(player) || --releaseTicks <= 0)
+                    Projectile.Kill();
+                return;
+            }
+
             if (Retracting)
             {
                 UpdateRetract(player);
@@ -105,18 +120,23 @@ namespace Factorraria.Content.Projectiles.Hooks
             {
                 Projectile.timeLeft = 2;
 
-                if(playerOldSpeed == Vector2.Zero)
+                // The push and the Jump release belong to the owner only. The other machines hold a copy of the player whose position and
+                // velocity come from the player packets, so adding velocity there as well pushed it twice.
+                if (FactorrariaNet.IsOwner(player))
                 {
-                    playerOldSpeed = player.velocity;
-                }
+                    if (playerOldSpeed == Vector2.Zero)
+                    {
+                        playerOldSpeed = player.velocity;
+                    }
 
-                if (Main.myPlayer == Projectile.owner && PlayerInput.Triggers.JustPressed.Jump)
-                {
-                    Projectile.Kill(); // instant — no retract animation
-                    return;
-                }
+                    if (PlayerInput.Triggers.JustPressed.Jump)
+                    {
+                        Release(); // instant for the owner (hidden at once), synced to everyone else
+                        return;
+                    }
 
-                ApplyPush(player);
+                    ApplyPush(player);
+                }
             }
 
             if (Vector2.Distance(player.Center, Projectile.Center) >= DetachDistance)
@@ -137,6 +157,13 @@ namespace Factorraria.Content.Projectiles.Hooks
             }
 
             Projectile.Center += toPlayer / distance * RetractSpeed;
+        }
+
+        void Release()
+        {
+            Projectile.ai[0] = 3f;
+            releaseTicks = ReleaseKillTicks;
+            Projectile.netUpdate = true;
         }
 
         void BeginRetract()
@@ -185,6 +212,9 @@ namespace Factorraria.Content.Projectiles.Hooks
 
         public override bool PreDraw(ref Color lightColor)
         {
+            if (Released)
+                return false; // the owner let go: nothing to draw while the copies wait to be removed
+
             Player player = Main.player[Projectile.owner];
 
             Vector2 shoulder = player.Center;
