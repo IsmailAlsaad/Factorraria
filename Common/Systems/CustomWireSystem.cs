@@ -217,6 +217,51 @@ namespace Factorraria.Common.Systems
             return false;
         }
 
+        /// <summary>The wire flags at a tile (None when there is no wire).</summary>
+        public static CustomWireType WireAt(int x, int y)
+        {
+            return WireGrid.TryGetValue(new Point16(x, y), out CustomWireType type) ? type : CustomWireType.None;
+        }
+
+        /// <summary>
+        /// Sets the exact wire flags of one tile (None removes the entry). Used by the network code (patch 3.1) when the server tells a
+        /// client what a tile holds; it drops no items and plays no sound.
+        /// </summary>
+        public static void SetWireAt(int x, int y, CustomWireType wireType)
+        {
+            Point16 position = new Point16(x, y);
+
+            if (wireType == CustomWireType.None)
+            {
+                WireGrid.Remove(position);
+            }
+            else
+            {
+                WireGrid[position] = wireType;
+            }
+
+            RefreshFramesAround(x, y);
+            PowerGridSystem.gridNeedsRebuilding = true;
+        }
+
+        /// <summary>Replaces the whole grid (join sync, patch 3.1) and rebuilds every frame.</summary>
+        public static void ReplaceAll(List<KeyValuePair<Point16, CustomWireType>> wires)
+        {
+            WireGrid.Clear();
+            frameCache.Clear();
+
+            foreach (var pair in wires)
+            {
+                if (pair.Value != CustomWireType.None)
+                {
+                    WireGrid[pair.Key] = pair.Value;
+                }
+            }
+
+            RebuildAllFrames();
+            PowerGridSystem.gridNeedsRebuilding = true;
+        }
+
         public override void PostDrawTiles()
         {
             if (WireGrid.Count == 0) 

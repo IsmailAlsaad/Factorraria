@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Factorraria.Common.Net;
 
 namespace Factorraria.Content.Items.Wires
 {
@@ -26,36 +27,27 @@ namespace Factorraria.Content.Items.Wires
 
         public override bool? UseItem(Player player)
         {
+            // Owner only (Player.tileTargetX/Y is the local mouse tile). The owner picks which wire to cut from its own copy of the
+            // wire grid (kept complete by join sync) and asks the server; the server removes it, spawns the returned wire item once
+            // and tells everyone else.
+            if (!FactorrariaNet.IsOwner(player))
+                return null;
+
             int tileX = Player.tileTargetX;
             int tileY = Player.tileTargetY;
 
-            if (CustomWireSystem.RemoveWire(tileX, tileY, CustomWireType.Tin))
+            if (CustomWireSystem.HasWire(tileX, tileY, CustomWireType.Tin))
             {
-                Item.NewItem(
-                    player.GetSource_ItemUse(Item),
-                    tileX * 16,
-                    tileY * 16,
-                    16,
-                    16,
-                    ModContent.ItemType<Items.Wires.TinWireItem>()
-                    );
-
+                CustomWireNet.RequestEdit(false, tileX, tileY, CustomWireType.Tin);
                 SoundEngine.PlaySound(SoundID.Dig, new Vector2(tileX, tileY) * 16f);
 
                 return false;
             }
-            if (CustomWireSystem.RemoveWire(tileX, tileY, CustomWireType.Copper))
+            if (CustomWireSystem.HasWire(tileX, tileY, CustomWireType.Copper))
             {
-                Item.NewItem(
-                    player.GetSource_ItemUse(Item),
-                    tileX * 16,
-                    tileY * 16,
-                    16,
-                    16,
-                    ModContent.ItemType<Items.Wires.CopperWireItem>()
-                    );
-
+                CustomWireNet.RequestEdit(false, tileX, tileY, CustomWireType.Copper);
                 SoundEngine.PlaySound(SoundID.Dig, new Vector2(tileX, tileY) * 16f);
+
                 return false;
             }
 

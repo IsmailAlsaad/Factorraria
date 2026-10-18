@@ -3,6 +3,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Factorraria.Common.Net;
 using Factorraria.Common.Systems;
 using Factorraria.Common;
 using Terraria.DataStructures;
@@ -28,6 +29,11 @@ namespace Factorraria.Content.Items.Wires
 
         public override bool? UseItem(Player player)
         {
+            // Player.tileTargetX/Y is the LOCAL mouse tile, so only the owner may read it. Every other copy of this player (on the
+            // server and on the other clients) does nothing: the wire reaches them from the server (WireChanged).
+            if (!FactorrariaNet.IsOwner(player))
+                return null;
+
             int tileX = Player.tileTargetX;
             int tileY = Player.tileTargetY;
 
@@ -36,7 +42,7 @@ namespace Factorraria.Content.Items.Wires
                 return false;
             }
 
-            CustomWireSystem.AddWire(tileX, tileY, CustomWireType.Copper);
+            CustomWireNet.RequestEdit(true, tileX, tileY, CustomWireType.Copper);
 
             SoundEngine.PlaySound(SoundID.Dig,new Vector2(tileX * 16, tileY * 16));
 
