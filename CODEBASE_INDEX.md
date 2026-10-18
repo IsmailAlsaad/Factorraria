@@ -465,9 +465,9 @@ tModLoader/other bases -> project types:
   class ChestConveyorEntry
     +TopLeft:Point +ChestIndex:int +Mode:ChestConveyorMode +Left:ChestSideRole +Right:ChestSideRole
   class ChestConveyorSystem : ModSystem
-    +Enabled:bool[s] +HasListedChestAbove(int,int)[s] +QueueProbe(int,int,bool)[s] +Entries:IEnumerable<ChestConveyorEntry>[s] +CycleMode(ChestConveyorEntry)[s] +TryCycleModeAt(Point,out ChestConveyorMode)[s] +SetReplicaEntry(Point,bool,ChestConveyorMode)[s] +ReplaceReplica(List<KeyValuePair<Point, ChestConveyorMode>>)[s] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
+    +Enabled:bool[s] +ProbeRetryTicks:int[s] +HasListedChestAbove(int,int)[s] +QueueProbe(int,int,bool)[s] +Entries:IEnumerable<ChestConveyorEntry>[s] +CycleMode(ChestConveyorEntry)[s] +TryCycleModeAt(Point,out ChestConveyorMode)[s] +SetReplicaEntry(Point,bool,ChestConveyorMode)[s] +ReplaceReplica(List<KeyValuePair<Point, ChestConveyorMode>>)[s] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
     struct Probe
-      +Tile:Point +AllowAdd:bool
+      +Tile:Point +AllowAdd:bool +Age:int
 **ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet
   class ConveyorPhysicsSystem : ModSystem
     +ConveyorSpeed:float[c] +NpcSyncTicks:int[s] +ItemSyncTicks:int[s] +LogStats:bool[s] +PostUpdateNPCs()[ov]

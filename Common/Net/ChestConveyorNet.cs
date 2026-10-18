@@ -70,12 +70,8 @@ namespace Factorraria.Common.Net
             if (!player.active || player.dead || !WorldGen.InWorld(x, y, 1))
                 return;
 
-            // In single-player the chest is open on screen, so the reach check adds nothing.
-            if (Main.netMode != NetmodeID.SinglePlayer && !FactorrariaNet.InReach(player, x, y))
-            {
-                FactorrariaNet.Log("[ChestConveyor] mode request from " + player.name + " rejected: (" + x + ", " + y + ") is out of reach");
-                return;
-            }
+            // Patch 3.4c: no reach check on purpose. The server's copy of the player position is not reliable enough for an open
+            // chest UI (it rejected a real click), and cycling a mode is harmless. The entry check below still applies.
 
             var chest = new Point(x, y);
             if (!ChestConveyorSystem.TryCycleModeAt(chest, out ChestConveyorMode mode))

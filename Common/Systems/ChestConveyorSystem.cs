@@ -58,7 +58,13 @@ namespace Factorraria.Common.Systems
         {
             public Point Tile;
             public bool AllowAdd;
+            public int Age;   // ticks this probe has been waiting for its chest to exist
         }
+
+        // Patch 3.4c: a client places the chest tile first and the server creates the Chest object a moment later (vanilla chest
+        // message), so a probe that finds no chest is retried for this many ticks before it is dropped.
+        public static int ProbeRetryTicks = 180;
+        private static readonly List<Probe> retry = new List<Probe>();
 
         private static readonly Dictionary<Point, ChestConveyorEntry> entries = new Dictionary<Point, ChestConveyorEntry>();
         private static readonly List<Probe> pending = new List<Probe>();
@@ -209,7 +215,15 @@ namespace Factorraria.Common.Systems
                 int chestIndex = FindChestContaining(probe.Tile);
                 if (chestIndex < 0)
                 {
-                    continue; // nothing there (a destroyed chest's entry is cleaned up by ValidateEntry)
+                    // Nothing there yet (a destroyed chest's entry is cleaned up by ValidateEntry). On a server the chest may still be
+                    // on its way, so keep the probe for a while.
+                    if (Main.netMode == NetmodeID.Server && probe.Age < ProbeRetryTicks)
+                    {
+                        probe.Age++;
+                        retry.Add(probe);
+                    }
+
+                    continue;
                 }
 
                 Chest chest = Main.chest[chestIndex];
@@ -238,6 +252,8 @@ namespace Factorraria.Common.Systems
             }
 
             pending.Clear();
+            pending.AddRange(retry);
+            retry.Clear();
         }
 
         // Finds the chest (any index) whose 2x2 footprint contains this tile, by testing the four possible top-left corners.
