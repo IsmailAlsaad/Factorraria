@@ -687,7 +687,7 @@ tModLoader/other bases -> project types:
   struct MechArmSlot
     +ProjectileIndex:int +AnchorTile:Point +IsActive:bool
   class MechSuitPlayer : ModPlayer
-    +MaxArms:int[c] +IsActive:bool +Activate() +Deactivate() +SetReportedState(bool) +PlayerDisconnect()[ov] +SyncPlayer(int,int,bool)[ov] +PreUpdateMovement()[ov]
+    +MaxArms:int[c] +IsActive:bool +Activate() +Deactivate() +SetReportedState(bool) +PlayerDisconnect()[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov]
 
 ### Content/Items/Weapons/
 **IceBladeItem.cs** uses: IceBladeSwingProjectile

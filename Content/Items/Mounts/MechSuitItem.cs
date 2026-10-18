@@ -121,13 +121,20 @@ namespace Factorraria.Content.Items.Mounts
 
         public bool IsActive { get; private set; }
 
+        // Owner only. How often (in ticks) the owner re-announces its live arms so a client that joined later creates them.
+        int ArmResyncTicks = 180;
+
         MechArmSlot[] arms = new MechArmSlot[MaxArms];
         int searchCooldown;
+        int armResyncTimer;
+        bool jumpWasDown; // owner only: last frame's controlJump, for the dismount press edge
 
         public void Activate()
         {
             IsActive = true;
             searchCooldown = 0;
+            armResyncTimer = ArmResyncTicks;
+            jumpWasDown = Player.controlJump; // Space still held from before the toggle is not a dismount press
             MechSuitNet.ReportState(true);
         }
 
@@ -170,7 +177,20 @@ namespace Factorraria.Content.Items.Mounts
         public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
         {
             if (Main.netMode == NetmodeID.Server && IsActive && toWho >= 0)
+            {
                 MechSuitNet.SendState(Player.whoAmI, true, toWho);
+                Mod.Logger.Info($"[MechSuit] sent suit flag of player {Player.whoAmI} to joining client {toWho}"); // 2.1b test line, remove in Phase 10
+            }
+        }
+
+        // Runs for every player on every machine, before vanilla adds gravity to velocity.Y this frame. PreUpdateMovement is too late for
+        // that: gravity is already added by then, and Player.gravity is reset at the start of the next update. The remote copy of a suited
+        // player is moved only by the position and velocity packets, so with normal gravity it sags between packets and plays the falling
+        // pose. The owner overwrites its velocity in ApplyFreeMovement, so it does not need this.
+        public override void PostUpdateRunSpeeds()
+        {
+            if (IsActive && !FactorrariaNet.IsOwner(Player))
+                Player.gravity = 0f;
         }
 
         public override void PreUpdateMovement()
@@ -187,9 +207,12 @@ namespace Factorraria.Content.Items.Mounts
                 return;
             }
 
-            // Space (Jump) while active = full dismount, retracts everything. A fresh press is controlJump with releaseJump still set (this
-            // runs before vanilla's own jump code clears it). PlayerInput would read the local keyboard for every player.
-            if (Player.controlJump && Player.releaseJump)
+            // Space (Jump) while active = full dismount, retracts everything. A fresh press is controlJump going from up to down. releaseJump
+            // cannot be used: vanilla's jump code runs earlier in Player.Update and has already cleared it on every frame where controlJump is
+            // held, so "controlJump && releaseJump" was never true here. PlayerInput would read the local keyboard for every player.
+            bool jumpPressed = Player.controlJump && !jumpWasDown;
+            jumpWasDown = Player.controlJump;
+            if (jumpPressed)
             {
                 Deactivate();
                 return;
@@ -264,6 +287,19 @@ namespace Factorraria.Content.Items.Mounts
             {
                 TryLaunchNewArm(freeSlot);
                 searchCooldown = SearchCooldownTicks;
+            }
+
+            // Vanilla sends a projectile only when it spawns, so a client that joins while we are suited never gets our arms. Marking them
+            // netUpdate every few seconds makes the owner send them again: the server relays it, a client without the arm creates it, and a
+            // client that already has it re-applies the same anchor and position. Single-player has nobody to tell.
+            if (Main.netMode == NetmodeID.MultiplayerClient && --armResyncTimer <= 0)
+            {
+                armResyncTimer = ArmResyncTicks;
+                for (int i = 0; i < MaxArms; i++)
+                {
+                    if (arms[i].IsActive)
+                        Main.projectile[arms[i].ProjectileIndex].netUpdate = true;
+                }
             }
         }
 
