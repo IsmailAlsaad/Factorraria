@@ -85,6 +85,34 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
                 .AddTile(TileID.Anvils)
                 .Register();
 
+            // Extractinator
+            Recipe.Create(ItemID.Extractinator, 1)
+                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 3)
+                .AddIngredient(ItemID.Chain, 5)
+                .AddIngredient(ItemID.LeadBar, 12)
+                .AddTile(TileID.Anvils)
+                .Register();
+            Recipe.Create(ItemID.Extractinator, 1)
+                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 3)
+                .AddIngredient(ItemID.Chain, 5)
+                .AddIngredient(ItemID.IronBar, 12)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            // Ice Machine
+            Recipe.Create(ItemID.IceMachine, 1)
+                .AddIngredient(ItemID.TungstenBar, 8)
+                .AddIngredient(ItemID.IceBlock, 15)
+                .AddIngredient(ItemID.Shiverthorn, 2)
+                .AddTile(TileID.Anvils)
+                .Register();
+            Recipe.Create(ItemID.IceMachine, 1)
+                .AddIngredient(ItemID.SilverBar, 8)
+                .AddIngredient(ItemID.IceBlock, 15)
+                .AddIngredient(ItemID.Shiverthorn, 2)
+                .AddTile(TileID.Anvils)
+                .Register();
+
             // Mechanical Hammer (Autohammer)
             Recipe.Create(ItemID.Autohammer, 1)
                 .AddIngredient(ItemID.LeadHammer, 1)

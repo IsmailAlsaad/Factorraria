@@ -16,7 +16,7 @@ namespace Factorraria.Common.Liquids
     // liquid network a topology-relevant tile appeared/disappeared — mirrors
     // PipeTileBase's role, just without the auto-shaping (motors don't reframe
     // based on neighbors, they're a fixed sprite rotated via right-click instead).
-    public abstract class MotorTileBase<TEntity> : ModTile where TEntity : MotorTileEntityBase, new()
+    public abstract class MotorTileBase<TEntity> : ModTile, IMotorTile where TEntity : MotorTileEntityBase, new()
     {
         public override void SetStaticDefaults()
         {
@@ -62,12 +62,7 @@ namespace Factorraria.Common.Liquids
         // NEW: this is the piece that was missing. A motor is a bridge point in the
         // liquid network's topology (unlike other machines, which are dead ends), so
         // placing/breaking one needs to invalidate the network the same way a pipe does.
-        public override void PlaceInWorld(int i, int j, Item item)
-        {
-            LiquidNetworkSystem.networkNeedsRebuilding = true;
-            PowerGridSystem.gridNeedsRebuilding = true;
-        }
-
+        // Patch 3.3: the rebuild flags on placement are set by MotorPlacedConsumer on the server (Common/Net/TilePlacedConsumers.cs).
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             LiquidNetworkSystem.networkNeedsRebuilding = true;

@@ -14,29 +14,7 @@ namespace Factorraria.Common.Globals
     // A destroyed chest is dropped lazily by the system's per-tick validation, so KillTile needs no hook.
     public class ChestConveyorGlobalTile : GlobalTile
     {
-        public override void PlaceInWorld(int i, int j, int type, Item item)
-        {
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-            {
-                return;
-            }
-
-            if (TileID.Sets.BasicChest[type])
-            {
-                ChestConveyorSystem.QueueProbe(i, j, true);
-                return;
-            }
-
-            if (VirtualItemSystem.IsConveyorTile(i, j, out _, out _))
-            {
-                ChestConveyorSystem.QueueProbe(i, j - 1, true);
-                return;
-            }
-
-            if (ChestConveyorSystem.HasListedChestAbove(i, j))
-            {
-                ChestConveyorSystem.QueueProbe(i, j - 1, false);
-            }
-        }
+        // Patch 3.3: the placement hook moved to ChestConveyorPlacedConsumer (Common/Net/TilePlacedConsumers.cs), which runs on the
+        // server and in single-player. PlaceInWorld here only ran on the placing client, so the server never probed.
     }
 }

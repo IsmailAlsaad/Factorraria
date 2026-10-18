@@ -139,12 +139,14 @@ namespace Factorraria.Common.Systems
                     break;
                 }
 
-                if (tile.TileType == TileID.ConveyorBeltRight)
+                // The mod's convention: the vanilla ConveyorBeltLeft tile is the CLOCKWISE belt (VirtualItemSystem.IsConveyorTile,
+                // VanillaConveyorGlobalItem's tooltip), and clockwise pushes to the right like the Clockwise Priority Conveyor.
+                if (tile.TileType == TileID.ConveyorBeltLeft)
                 {
                     pushSpeed = ConveyorSpeed;
                     break;
                 }
-                else if (tile.TileType == TileID.ConveyorBeltLeft)
+                else if (tile.TileType == TileID.ConveyorBeltRight)
                 {
                     pushSpeed = -ConveyorSpeed;
                     break;

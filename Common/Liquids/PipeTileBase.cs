@@ -57,7 +57,8 @@ namespace Factorraria.Common.Liquids
         // Fires when this exact pipe is placed.
         public override void PlaceInWorld(int i, int j, Item item)
         {
-            LiquidNetworkSystem.RegisterPipeTile(new Point(i, j));
+            // Patch 3.3: registering the pipe with the network is done by PipePlacedConsumer on the server (this hook only runs on the
+            // placing client). Only the sprite is framed here.
             ReframeSelfAndNeighbors(i, j);
         }
 

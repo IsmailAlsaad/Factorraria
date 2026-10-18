@@ -59,11 +59,7 @@ namespace Factorraria.Content.Tiles.Conveyors
             return false;
         }
 
-        public override void PlaceInWorld(int i, int j, Item item)
-        {
-            VirtualItemSystem.OnPriorityConveyorPlaced(i, j);
-        }
-
+        // Patch 3.3: placement is handled by PriorityConveyorPlacedConsumer (Common/Net/TilePlacedConsumers.cs) on the server.
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             if (!fail && !effectOnly)

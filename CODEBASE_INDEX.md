@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-18 | 211 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-18 | 212 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(24) RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(22) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) FactorrariaPacket(10) VirtualItemSystem(9) RecipeOutputGroup(9) LiquidNetworkSystem(9) RecipeCatalog(8) FurnaceOffsetConfig(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeKnowledgeSystem(7) RecipeBookLayout(7) PacketDirection(7)
+FactorrariaNet(25) RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(22) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) LiquidNetworkSystem(10) FactorrariaPacket(10) VirtualItemSystem(9) RecipeOutputGroup(9) RecipeCatalog(8) FurnaceOffsetConfig(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeKnowledgeSystem(7) RecipeBookLayout(7) PacketDirection(7)
 
 ## Inheritance
 Project bases -> derived:
@@ -15,15 +15,16 @@ Project bases -> derived:
 - IElectricConsumer: ElectricConsumerMachine
 - IElectricProducer: ElectricProducerMachine
 - IMachineDynamicDraw: RoboticArmTileEntity
+- IMotorTile: MotorTileBase
 - IStatueAwakener: MagicMaterializerTileEntity
-- ITilePlacedConsumer: PlacementLogConsumer
+- ITilePlacedConsumer: AwakenedStatuePlacedConsumer, ChestConveyorPlacedConsumer, LiquidTopologyPlacedConsumer, MotorPlacedConsumer, PipePlacedConsumer, PlacementLogConsumer, PriorityConveyorPlacedConsumer
 - IZoomScalable: RecipeBrowserPanel
 - MachineUIStateBase: AutohammerUIState, DecayChamberUIState, ExtractinatorUIState, FurnaceUIState, GelBurnerUIState, HellforgeUIState, IceMachineUIState, LiquidDistillatorUIState, MechanicalAssemblerUIState, RoboticArmUIState, SolidifierUIState
 - MotorTileBase: MotorMK1Tile
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModSystem (41): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineDynamicDrawSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedSystem, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (42): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineDynamicDrawSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
@@ -147,15 +148,14 @@ tModLoader/other bases -> project types:
     +ModifyNPCLoot(NPC,NPCLoot)[ov]
   static class NPCLootExtensions
     +RemoveLoot(NPCLoot,int)[s]
-**ChestConveyorGlobalTile.cs** uses: ChestConveyorSystem, VirtualItemSystem
+**ChestConveyorGlobalTile.cs**
   class ChestConveyorGlobalTile : GlobalTile
-    +PlaceInWorld(int,int,int,Item)[ov]
 **GlobalWallOverride.cs**
   class GlobalWallOverride : GlobalWall
     +Drop(int,int,int,ref int)[ov]
 **LiquidTopologyGlobalTile.cs** uses: LiquidNetworkSystem, PipeTierRegistry
   class LiquidTopologyGlobalTile : GlobalTile
-    +PlaceInWorld(int,int,int,Item)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov]
+    +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +MarkIfNextToPipe(int,int)[s]
 
 ### Common/Knowledge/
 **RecipeCatalog.cs** uses: RecipeBook, RecipeKey, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey
@@ -208,9 +208,9 @@ tModLoader/other bases -> project types:
     +Recolor(GraphicsDevice,Texture2D,Color,Color,float)[s]
   static class LiquidTextureCache
     +GetOrCreate(string,Texture2D,LiquidTypeDefinition,float)[s] +Clear()[s]
-**MotorTileBase.cs** uses: LiquidNetworkSystem, MotorTileEntityBase, PowerGridSystem
-  abstract class MotorTileBase<TEntity> : ModTile
-    +CanPlace(int,int)[ov] +PlaceInWorld(int,int,Item)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov]
+**MotorTileBase.cs** uses: IMotorTile, LiquidNetworkSystem, MotorTileEntityBase, PowerGridSystem
+  abstract class MotorTileBase<TEntity> : ModTile, IMotorTile
+    +CanPlace(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov]
 **MotorTileEntityBase.cs** ns!=Factorraria.Common.Machines uses: Direction, ElectricConsumerMachine, LiquidNetworkSystem, PipeTileBase
   abstract class MotorTileEntityBase : ElectricConsumerMachine
     +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +Update()[ov] #UpdateMotor()[v] +OnRightClick(int,int)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
@@ -375,6 +375,22 @@ tModLoader/other bases -> project types:
     +AppliesTo(int) +OnTilePlaced(int,int,int,int)
   static class TilePlaced
     +Register(ITilePlacedConsumer)[s] +Clear()[s] +NotifyPlaced(int,int,int)[s] +RunConsumers(int,int,int,int)[s] +HandleRequest(BinaryReader,int)[s]
+**TilePlacedConsumers.cs** ns!=Factorraria.Common.Liquids uses: AwakenedStatueRegistry, AwakenedStatueSystem, ChestConveyorSystem, ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet, ITilePlacedConsumer, LiquidNetworkSystem, LiquidTopologyGlobalTile, PipeTierRegistry, PowerGridSystem, TilePlaced, VirtualItemSystem
+  interface IMotorTile
+  class TilePlacedConsumersSystem : ModSystem
+    +LogConsumers:bool[s] +Load()[ov] ~Log(string,int,int,int)[s]
+  sealed class ChestConveyorPlacedConsumer : ITilePlacedConsumer
+    +AppliesTo(int) +OnTilePlaced(int,int,int,int)
+  sealed class LiquidTopologyPlacedConsumer : ITilePlacedConsumer
+    +AppliesTo(int) +OnTilePlaced(int,int,int,int)
+  sealed class AwakenedStatuePlacedConsumer : ITilePlacedConsumer
+    +AppliesTo(int) +OnTilePlaced(int,int,int,int)
+  sealed class PipePlacedConsumer : ITilePlacedConsumer
+    +AppliesTo(int) +OnTilePlaced(int,int,int,int)
+  sealed class MotorPlacedConsumer : ITilePlacedConsumer
+    +AppliesTo(int) +OnTilePlaced(int,int,int,int)
+  sealed class PriorityConveyorPlacedConsumer : ITilePlacedConsumer
+    +AppliesTo(int) +OnTilePlaced(int,int,int,int)
 **TilePlacedGlobalTile.cs** uses: TilePlaced
   class TilePlacedGlobalTile : GlobalTile
     +PlaceInWorld(int,int,int,Item)[ov]
@@ -413,7 +429,7 @@ tModLoader/other bases -> project types:
     +OutlinePulseSpeed:float +OutlineScaleAmplitude:float +OutlineMinOpacity:float +PadLeft:int +PadRight:int +PadTop:int +PadBottom:int +Load()[ov] +Unload()[ov]
 **AwakenedStatueGlobalTile.cs** uses: AwakenedStatueRegistry, AwakenedStatueSystem
   class AwakenedStatueGlobalTile : GlobalTile
-    +PreHitWire(int,int,int)[ov] +PlaceInWorld(int,int,int,Item)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov]
+    +PreHitWire(int,int,int)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov]
 **AwakenedStatueRegistry.cs** uses: AwakenedStatueEntries
   class AwakenedLootDrop
     +ItemType:int +Chance:float +Min:int +Max:int
@@ -761,10 +777,10 @@ tModLoader/other bases -> project types:
 ### Content/Tiles/Conveyors/
 **ClockwisePriorityConveyorTile.cs** uses: VirtualItemSystem
   class ClockwisePriorityConveyorTile : ModTile
-    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +PlaceInWorld(int,int,Item)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
+    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
 **CounterClockwisePriorityConveyorTile.cs** uses: VirtualItemSystem
   class CounterClockwisePriorityConveyorTile : ModTile
-    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +PlaceInWorld(int,int,Item)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
+    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/
 **AutohammerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, CopperWireItem, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, RecipeBook, SimpleCircuitItem, TinWireItem

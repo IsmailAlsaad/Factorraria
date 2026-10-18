@@ -15,12 +15,7 @@ namespace Factorraria.Common.Statues
             return !ModContent.GetInstance<AwakenedStatueSystem>().IsAwakenedTile(i, j);
         }
 
-        public override void PlaceInWorld(int i, int j, int type, Item item)
-        {
-            if (ModContent.GetInstance<AwakenedStatueRegistry>().IsStatueTile(type))
-                ModContent.GetInstance<AwakenedStatueSystem>().QueueStatueCheck(i, j);
-        }
-
+        // Patch 3.3: placement is handled by AwakenedStatuePlacedConsumer (Common/Net/TilePlacedConsumers.cs) on the server.
         public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             if (fail || effectOnly) return;

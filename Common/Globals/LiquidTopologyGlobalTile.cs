@@ -10,15 +10,14 @@ namespace Factorraria.Common.Globals
     // by solid rock), so flag a rebuild when that happens.
     public class LiquidTopologyGlobalTile : GlobalTile
     {
-        public override void PlaceInWorld(int i, int j, int type, Item item) => MarkIfNextToPipe(i, j);
-
+        // Patch 3.3: placement is handled by LiquidTopologyPlacedConsumer (Common/Net/TilePlacedConsumers.cs) on the server.
         public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             if (!fail && !effectOnly)
                 MarkIfNextToPipe(i, j);
         }
 
-        static void MarkIfNextToPipe(int i, int j)
+        public static void MarkIfNextToPipe(int i, int j)
         {
             if (IsPipe(i - 1, j) || IsPipe(i + 1, j) || IsPipe(i, j - 1) || IsPipe(i, j + 1))
                 LiquidNetworkSystem.networkNeedsRebuilding = true;

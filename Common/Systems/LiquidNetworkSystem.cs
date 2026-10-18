@@ -30,8 +30,12 @@ namespace Factorraria.Common.Systems
 
             if (networkNeedsRebuilding)
             {
+                HealPipeList();
                 RebuildNetworks();
                 RestoreSavedNetworkTypes();
+
+                if (Main.netMode == NetmodeID.Server)
+                    Mod.Logger.Info("[MP-Net] [Pipes] networks rebuilt: " + ActiveNetworks.Count + " network(s), " + AllPipeTiles.Count + " pipe tile(s)");
                 networkNeedsRebuilding = false;
                 flowNeedsRecalculating = false;
             }
@@ -52,7 +56,35 @@ namespace Factorraria.Common.Systems
             }
         }
 
-        // Called from PipeTileBase.PlaceInWorld / KillTile.
+        // Roadmap 3.3 (finding P1). Before this patch a pipe placed by a client was never registered on the server, so the saved list
+        // can miss pipes (and, after a pipe was removed some other way, hold positions that are no longer pipes). Once per world load,
+        // before the first network rebuild: drop saved positions whose tile is not a pipe and add every pipe tile found in the world.
+        static bool pipeListNeedsHeal = true;
+
+        void HealPipeList()
+        {
+            if (!pipeListNeedsHeal)
+                return;
+
+            pipeListNeedsHeal = false;
+
+            int removed = AllPipeTiles.RemoveWhere(p => !WorldGen.InWorld(p.X, p.Y) || !Main.tile[p.X, p.Y].HasTile || !PipeTierRegistry.IsPipeTile(Main.tile[p.X, p.Y].TileType));
+
+            int added = 0;
+            for (int x = 0; x < Main.maxTilesX; x++)
+            {
+                for (int y = 0; y < Main.maxTilesY; y++)
+                {
+                    Tile tile = Main.tile[x, y];
+                    if (tile.HasTile && PipeTierRegistry.IsPipeTile(tile.TileType) && AllPipeTiles.Add(new Point(x, y)))
+                        added++;
+                }
+            }
+
+            Mod.Logger.Info("[MP-Net] [Pipes] self-heal on world load: removed " + removed + " stale position(s), added " + added + " missing pipe tile(s), " + AllPipeTiles.Count + " in total");
+        }
+
+        // Called from PipePlacedConsumer (patch 3.3, where the simulation runs) and PipeTileBase.KillTile.
         public static void RegisterPipeTile(Point pos)
         {
             AllPipeTiles.Add(pos);
@@ -70,6 +102,7 @@ namespace Factorraria.Common.Systems
             AllPipeTiles.Clear();
             ActiveNetworks.Clear();
             networkNeedsRebuilding = true;
+            pipeListNeedsHeal = true;
         }
 
         public override void OnWorldUnload()
