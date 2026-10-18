@@ -235,19 +235,8 @@ namespace Factorraria.Common.Machines
 
         void InitializeMachine(BaseMachine machine)
         {
-            if (machine.MachineInitialized)
-            {
-                return;
-            }
-
-            TileEntityHelper.TryGetEntityFromTile(machine.Position.X, machine.Position.Y, out _, out machine.cornerPosition);
-            Tile tile = Framing.GetTileSafely(machine.Position.X, machine.Position.Y);
-            TileObjectData data = TileObjectData.GetTileData(tile.TileType, 0);
-            machine.MachineHeight = data.Height;
-            machine.MachineWidth = data.Width;
-            machine.MachineCenter = machine.cornerPosition.ToVector2() * 16 + new Vector2(machine.MachineWidth, machine.MachineHeight) * 8f;
-
-            machine.MachineInitialized = true;
+            // Patch 4.1: the real work moved to BaseMachine.InitializeGeometry so a dedicated server can run it too.
+            machine.InitializeGeometry();
         }
 
         // Assumes the motor art is drawn facing Right at 0 rotation — Facing's default value.

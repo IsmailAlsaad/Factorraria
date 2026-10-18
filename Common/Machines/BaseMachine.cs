@@ -234,8 +234,33 @@ namespace Factorraria.Common.Machines
 
         #region Tick
 
+        // Patch 4.1 (M2): the footprint numbers come from TileObjectData, which exists on a dedicated server, instead of from draw
+        // code. The entity always lives at the top-left corner of its tiles, so the corner is simply Position. Called from
+        // OnPlaced, from the start of Update (covers entities loaded from the world, which never run OnPlaced) and from the draw
+        // override. Returns false (and stays uninitialised, so it is retried) while the tile data or the position is not usable.
+        public bool InitializeGeometry()
+        {
+            if (MachineInitialized) return true;
+            if (Position.X <= 0 && Position.Y <= 0) return false;
+
+            TileObjectData data = TileObjectData.GetTileData(ValidTileType, 0);
+            if (data == null) return false;
+
+            cornerPosition = Position;
+            MachineWidth = data.Width;
+            MachineHeight = data.Height;
+            MachineCenter = cornerPosition.ToVector2() * 16 + new Vector2(MachineWidth, MachineHeight) * 8f;
+            MachineInitialized = true;
+
+            if (Main.netMode == Terraria.ID.NetmodeID.Server)
+                FactorrariaNet.Log("[Machines] geometry initialised: " + GetType().Name + " at (" + Position.X + ", " + Position.Y + ") " + MachineWidth + "x" + MachineHeight);
+
+            return true;
+        }
+
         public override void Update()
         {
+            InitializeGeometry();
             ScanVItems();
             ReleaseOutputSlotsToConveyor();
             if (!IsElectric) isOn = true;       // only power-network machines are switched by the grid
@@ -721,6 +746,7 @@ namespace Factorraria.Common.Machines
         // i, j is always the entity's top-left corner.
         public virtual void OnPlaced(int i, int j)
         {
+            InitializeGeometry();
             InsideBiome = DetermineBiomeAt(i, j);
             //Main.NewText(InsideBiome);
         }
