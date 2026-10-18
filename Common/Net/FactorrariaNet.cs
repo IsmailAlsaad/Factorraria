@@ -47,6 +47,20 @@ namespace Factorraria.Common.Net
         /// <summary>True only for the player this process controls. Gate input, Main.MouseWorld and one-time spawns with it (rule 4).</summary>
         public static bool IsOwner(Player player) => player != null && HasLocalClient && player.whoAmI == Main.myPlayer;
 
+        /// <summary>
+        /// Owner only, multiplayer client only: send this player's position, velocity and controls to everyone right now (vanilla message 13).
+        /// Player has no netUpdate flag, and vanilla sends this message only when something it watches changes (a key, a jump), so anything
+        /// that moves the owner without a key press (the Mech Suit, the Mechanical Arm's push) has to ask for it. Call it after the movement
+        /// of the frame (PostUpdate, or a projectile's AI, which runs after the players), so the packet carries this frame's position.
+        /// </summary>
+        public static void SyncPlayerNow(Player player)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient || !IsOwner(player) || !player.active)
+                return;
+
+            NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, player.whoAmI);
+        }
+
         // ---------------------------------------------------------------- reach
 
         /// <summary>

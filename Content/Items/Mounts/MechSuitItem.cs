@@ -238,16 +238,21 @@ namespace Factorraria.Content.Items.Mounts
 
             UpdateArms();
             ApplyFreeMovement();
+        }
 
-            if (Main.netMode == NetmodeID.MultiplayerClient)
+        // After vanilla has moved the player this frame (so the packet carries the new position). Owner only: send the suit's position when the
+        // input changes and every PosResyncTicks, because the owner's velocity is overwritten every frame and vanilla sees nothing worth sending.
+        public override void PostUpdate()
+        {
+            if (!IsActive || !FactorrariaNet.IsOwner(Player))
+                return;
+
+            Vector2 input = ReadMoveInput();
+            if (input != lastMoveInput || --posResyncTimer <= 0)
             {
-                Vector2 input = ReadMoveInput();
-                if (input != lastMoveInput || --posResyncTimer <= 0)
-                {
-                    lastMoveInput = input;
-                    posResyncTimer = PosResyncTicks;
-                    Player.netUpdate = true;
-                }
+                lastMoveInput = input;
+                posResyncTimer = PosResyncTicks;
+                FactorrariaNet.SyncPlayerNow(Player);
             }
         }
 

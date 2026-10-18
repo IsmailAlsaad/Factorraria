@@ -304,7 +304,7 @@ tModLoader/other bases -> project types:
 ### Common/Net/
 **FactorrariaNet.cs** uses: Direction, Factorraria, FactorrariaPacket, Handle, NetRateLimiter, NetworkConfig, PacketDirection
   static class FactorrariaNet
-    +ReachSlackTiles:float[s] +IsServerSide:bool[s] +HasLocalClient:bool[s] +IsSinglePlayer:bool[s] +IsOwner(Player)[s] +InReach(Player,int,int)[s] +WriteItem(BinaryWriter,Item)[s] +ReadItem(BinaryReader)[s] +Register(FactorrariaPacket,PacketDirection,PacketHandler,int)[s] +Clear()[s] +Handle(BinaryReader,int)[s] +SendRequest(FactorrariaPacket,Action<BinaryWriter>)[s] +SendToClient(int,FactorrariaPacket,Action<BinaryWriter>)[s] +Broadcast(FactorrariaPacket,Action<BinaryWriter>,int)[s] +SendToNearby(Vector2,float,FactorrariaPacket,Action<BinaryWriter>,int)[s] +Log(string)[s]
+    +ReachSlackTiles:float[s] +IsServerSide:bool[s] +HasLocalClient:bool[s] +IsSinglePlayer:bool[s] +IsOwner(Player)[s] +SyncPlayerNow(Player)[s] +InReach(Player,int,int)[s] +WriteItem(BinaryWriter,Item)[s] +ReadItem(BinaryReader)[s] +Register(FactorrariaPacket,PacketDirection,PacketHandler,int)[s] +Clear()[s] +Handle(BinaryReader,int)[s] +SendRequest(FactorrariaPacket,Action<BinaryWriter>)[s] +SendToClient(int,FactorrariaPacket,Action<BinaryWriter>)[s] +Broadcast(FactorrariaPacket,Action<BinaryWriter>,int)[s] +SendToNearby(Vector2,float,FactorrariaPacket,Action<BinaryWriter>,int)[s] +Log(string)[s]
     sealed class Route
       +Direction:PacketDirection +Handler:PacketHandler +Cost:int
 **FactorrariaPacket.cs** uses: TilePlaced
@@ -687,7 +687,7 @@ tModLoader/other bases -> project types:
   struct MechArmSlot
     +ProjectileIndex:int +AnchorTile:Point +IsActive:bool
   class MechSuitPlayer : ModPlayer
-    +MaxArms:int[c] +IsActive:bool +Activate() +Deactivate() +SetReportedState(bool) +PlayerDisconnect()[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov]
+    +MaxArms:int[c] +IsActive:bool +Activate() +Deactivate() +SetReportedState(bool) +PlayerDisconnect()[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov]
 
 ### Content/Items/Weapons/
 **IceBladeItem.cs** uses: IceBladeSwingProjectile
@@ -728,7 +728,7 @@ tModLoader/other bases -> project types:
 ### Content/Projectiles/Hooks/
 **MechanicalArmProjectile.cs** uses: FactorrariaNet, MechanicalArmIK
   class MechanicalArmProjectile : ModProjectile
-    +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +OnTileCollide(Vector2)[ov] +PreDraw(ref Color)[ov]
+    +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +OnKill(int)[ov] +OnTileCollide(Vector2)[ov] +PreDraw(ref Color)[ov]
 
 ### Content/Projectiles/Mounts/
 **MechSuitArmProjectile.cs** uses: MechSuitPlayer, MechanicalArmIK

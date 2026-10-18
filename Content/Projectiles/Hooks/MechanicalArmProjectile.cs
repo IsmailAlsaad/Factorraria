@@ -147,6 +147,8 @@ namespace Factorraria.Content.Projectiles.Hooks
 
         void UpdateRetract(Player player)
         {
+            FactorrariaNet.SyncPlayerNow(player); // the owner is still carrying the push's momentum while the arm reels in
+
             Vector2 toPlayer = player.Center - Projectile.Center;
             float distance = toPlayer.Length();
 
@@ -171,6 +173,12 @@ namespace Factorraria.Content.Projectiles.Hooks
             Projectile.ai[0] = 2f;
             Projectile.tileCollide = false; // was embedded in a tile — don't let it re-collide flying back through the same spot
             Projectile.netUpdate = true;
+        }
+
+        // One last player packet when the arm goes away (release, reel-in or death), so the owner's final position and velocity are not stale.
+        public override void OnKill(int timeLeft)
+        {
+            FactorrariaNet.SyncPlayerNow(Main.player[Projectile.owner]);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -203,6 +211,11 @@ namespace Factorraria.Content.Projectiles.Hooks
                 player.velocity *= (Math.Min(MaxPushSpeed + playerOldSpeed.Length(), playerSpeedCap)) / speed;
 
             player.fallStart = (int)(player.position.Y / 16f);
+
+            // The push changes the owner's velocity without any key press, and vanilla only sends the player when it sees a change it watches.
+            // Mid-air that happens anyway; on the ground it did not, so the other client saw the owner standing still for a second or two and
+            // then a snap. Send the player every tick while pushing (the projectile's AI runs after the players, so the position is current).
+            FactorrariaNet.SyncPlayerNow(player);
 
             if (Main.myPlayer == Projectile.owner && PlayerInput.Triggers.JustPressed.Grapple)
             {
