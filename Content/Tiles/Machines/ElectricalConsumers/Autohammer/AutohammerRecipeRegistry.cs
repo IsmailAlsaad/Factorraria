@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
+using Factorraria.Content.Items.Conveyors;
 using Factorraria.Content.Items.Hooks;
 using Factorraria.Content.Items.Machines;
 using Factorraria.Content.Items.Materials;
@@ -96,6 +97,18 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
                 .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 3)
                 .AddIngredient(ItemID.Chain, 5)
                 .AddIngredient(ItemID.IronBar, 12)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            // Priority Conveyors
+            Recipe.Create(ModContent.ItemType<ClockwisePriorityConveyor>(), 8)
+                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 1)
+                .AddIngredient(ItemID.ConveyorBeltRight, 8)
+                .AddTile(TileID.Anvils)
+                .Register();
+            Recipe.Create(ModContent.ItemType<CounterClockwisePriorityConveyor>(), 8)
+                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 1)
+                .AddIngredient(ItemID.ConveyorBeltLeft, 8)
                 .AddTile(TileID.Anvils)
                 .Register();
 

@@ -85,7 +85,13 @@ namespace Factorraria.Common.Machines
 
     public class MachineVisualDefinition
     {
-        public Func<int, int, BaseMachine> GetEntity;
+        public Func<int, int, BaseMachine> GetEntity;       // finds the entity, or CREATES it when missing (single-player and server only)
+        public Func<int, int, BaseMachine> FindEntity;      // lookup only, never creates (patch 4.2)
+
+        // Patch 4.2: what draw, light, right-click and kill code call. A multiplayer client only looks up (the server creates entities
+        // and shares them); single-player keeps creating a missing one on demand until the entity bootstrap in patch 4.5.
+        public BaseMachine ResolveEntity(int i, int j)
+            => Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient ? FindEntity?.Invoke(i, j) : GetEntity(i, j);
         public Asset<Texture2D> OnTexture;
         public Asset<Texture2D> OffTexture;
         public Asset<Texture2D> AltOnTexture;          // optional second On look, see MachineVisualRegistry.RegisterAlternateOn
@@ -112,6 +118,7 @@ namespace Factorraria.Common.Machines
             Definitions[tileType] = new MachineVisualDefinition
             {
                 GetEntity = (i, j) => TileEntityHelper.GetOrCreateEntity<T>(i, j),
+                FindEntity = (i, j) => TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity found, out _) ? found as BaseMachine : null,
                 OnTexture = ModContent.Request<Texture2D>(onPath),
                 OffTexture = ModContent.Request<Texture2D>(offPath)
             };
@@ -190,7 +197,11 @@ namespace Factorraria.Common.Machines
             if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var def))
                 return true;
 
-            BaseMachine entity = def.GetEntity(i, j);
+            BaseMachine entity = def.ResolveEntity(i, j);
+
+            // A multiplayer client without an entity for this tile (the server has not shared one) draws the plain vanilla tile.
+            if (entity == null)
+                return true;
 
             InitializeMachine(entity);
 
@@ -254,29 +265,23 @@ namespace Factorraria.Common.Machines
                 return; // not a registered machine, ignore
 
             TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity entity, out Point16 topLeft);
-            BaseMachine machine = visualDef.GetEntity(topLeft.X, topLeft.Y);
+            BaseMachine machine = visualDef.ResolveEntity(topLeft.X, topLeft.Y);
+            if (machine == null)
+                return;
 
             machine.OnRightClick(topLeft.X, topLeft.Y); // machine decides what happens
         }
-        public override void PlaceInWorld(int i, int j, int type, Item item)
-        {
-            if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var def))
-                return;
-
-            // i,j is the cursor tile; resolve the multi-tile's top-left corner.
-            TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 corner);
-
-            // Creates + registers the entity (power grid / liquid network) if it doesn't exist yet.
-            BaseMachine machine = def.GetEntity(corner.X, corner.Y);
-            machine?.OnPlaced(corner.X, corner.Y);
-        }
+        // Patch 4.2: PlaceInWorld moved to MachinePlacedConsumer (Common/Net/MachinePlacement.cs). It must run on the server, not on
+        // the placing client.
         public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var def))
                 return;
 
             TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity entity, out Point16 position);
-            BaseMachine machine = def.GetEntity(position.X, position.Y);
+            BaseMachine machine = def.ResolveEntity(position.X, position.Y);
+            if (machine == null)
+                return;
 
             foreach (var item in machine.InputSlots.Concat(machine.OutputSlots))
             {
@@ -293,7 +298,7 @@ namespace Factorraria.Common.Machines
                 return;
 
             TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity entity, out Point16 position);
-            BaseMachine machine = def.GetEntity(position.X, position.Y);
+            BaseMachine machine = def.ResolveEntity(position.X, position.Y);
 
             if(machine == null)
             { 

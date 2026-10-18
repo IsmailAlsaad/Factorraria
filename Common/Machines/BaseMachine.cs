@@ -880,37 +880,63 @@ namespace Factorraria.Common.Machines
             Tile tile = Framing.GetTileSafely(x, y);
             return tile.HasTile && tile.TileType == ValidTileType;
         }
+        // Patch 4.2 (M1). Runs on the process that placed the tile: the placing client (it asks the server and creates nothing itself),
+        // single-player, or the server (Robotic Arm placements). The entity always lives at the top-left corner of the multitile.
         public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
         {
-            // Multiplayer stuff I don't know
-            //if (Main.netMode == NetmodeID.MultiplayerClient)
-            //{
-            //    // Synchronize the 3x2 tile area across the network // should somehow make it per tileArea
-            //    NetMessage.SendTileSquare(Main.myPlayer, i, j, 3, 2);
-            //    NetMessage.SendData(MessageID.TileEntityPlacement, number: -1, number2: i, number3: j, number4: Type);
-            //    return -1;
-            //}
-
-            // The hook is given the placement origin tile of a multitile, but the entity always lives at the top-left corner.
             Point16 topLeft = TileObjectData.TopLeft(i, j);
-            i = topLeft.X;
-            j = topLeft.Y;
 
-            Tile tile = Framing.GetTileSafely(i, j);
+            if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
+            {
+                // Same as tModLoader's Generic_Hook_AfterPlacement: send the tile square, then ask the server to place the entity.
+                // The server answers with the entity (message 86), so there is no local entity and no id to return.
+                TileObjectData tileData = TileObjectData.GetTileData(type, style, alternate);
+                NetMessage.SendTileSquare(Main.myPlayer, topLeft.X, topLeft.Y, tileData.Width, tileData.Height);
+                NetMessage.SendData(Terraria.ID.MessageID.TileEntityPlacement, number: topLeft.X, number2: topLeft.Y, number3: Type);
+                return -1;
+            }
+
+            Tile tile = Framing.GetTileSafely(topLeft.X, topLeft.Y);
             if (!tile.HasTile || tile.TileType != ValidTileType)
                 return -1;
 
-            int id = Place(i, j);
-            if (id != -1 && ByID.TryGetValue(id, out TileEntity entity))
+            // Single-player and server: creates, registers, runs OnPlaced and (on a server) shares the entity with the clients.
+            BaseMachine machine = MachinePlacement.ServerPlace(type, topLeft.X, topLeft.Y);
+            if (machine != null)
+                return machine.ID;
+
+            // Not in the visual registry (should not happen for a machine tile): plain placement as before.
+            int id = Place(topLeft.X, topLeft.Y);
+            if (id != -1 && ByID.TryGetValue(id, out TileEntity entity) && entity is BaseMachine fallback)
             {
-                if (entity is BaseMachine machine)
-                {
-                    machine.OnPlaced(i, j);
-                }
-                PowerGridSystem.RegisterMachineToMasterList(entity);
-                LiquidNetworkSystem.networkNeedsRebuilding = true;
+                fallback.OnPlaced(topLeft.X, topLeft.Y);
+                MachinePlacement.Register(fallback);
+                MachinePlacement.Share(fallback);
             }
             return id;
+        }
+
+        // Patch 4.2: tModLoader calls this on the server when a client asks for a tile entity (message 87). The base version places a
+        // new entity every time, so a repeated or late request would create a second entity at the same position. Refuse when a
+        // machine is already there, and refuse when the tile is not there (the tile square always arrives first).
+        public override void NetPlaceEntityAttempt(int i, int j)
+        {
+            if (ByPosition.TryGetValue(new Point16(i, j), out TileEntity existing) && existing is BaseMachine)
+                return;
+
+            if (!IsTileValidForEntity(i, j))
+                return;
+
+            base.NetPlaceEntityAttempt(i, j);
+        }
+
+        // Patch 4.2: server only, between Place and message 86. The entity exists but is not shared yet.
+        public override void OnNetPlace()
+        {
+            OnPlaced(Position.X, Position.Y);
+            MachinePlacement.Register(this);
+
+            FactorrariaNet.Log("[Machines] placed " + GetType().Name + " at (" + Position.X + ", " + Position.Y + "), id " + ID + " (client request)");
         }
 
         // Server-safe version of IsOnScreen (patch 2.7, A3): true when any active player's screen-sized rectangle (centred on the player)

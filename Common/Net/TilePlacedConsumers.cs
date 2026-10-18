@@ -42,6 +42,7 @@ namespace Factorraria.Common.Net
             TilePlaced.Register(new PipePlacedConsumer());
             TilePlaced.Register(new MotorPlacedConsumer());
             TilePlaced.Register(new PriorityConveyorPlacedConsumer());
+            TilePlaced.Register(new MachinePlacedConsumer());   // patch 4.2
         }
 
         internal static void Log(string what, int x, int y, int placer)
