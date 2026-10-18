@@ -275,21 +275,15 @@ namespace Factorraria.Common.Machines
         // the placing client.
         public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
-            if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var def))
+            // Patch 4.4: the tile is only being damaged (fail) or only showing its break effect: the machine stays.
+            if (fail || effectOnly)
                 return;
 
-            TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity entity, out Point16 position);
-            BaseMachine machine = def.ResolveEntity(position.X, position.Y);
-            if (machine == null)
+            if (!MachineVisualRegistry.Definitions.ContainsKey(type))
                 return;
 
-            foreach (var item in machine.InputSlots.Concat(machine.OutputSlots))
-            {
-                if (!item.IsAir)
-                    Item.NewItem(new EntitySource_TileEntity(machine), position.X * 16 + 16, position.Y * 16 + 8, 16, 16, item);
-            }
-
-            machine.Kill(position.X, position.Y);
+            // Server and single-player drop the contents and remove the entity; a multiplayer client only removes its replica.
+            MachineRemoval.OnTileKilled(i, j);
         }
 
         public override void ModifyLight(int i, int j, int type, ref float r, ref float g, ref float b)

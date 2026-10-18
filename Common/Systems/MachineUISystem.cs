@@ -86,6 +86,11 @@ namespace Factorraria.Common.Systems
             if (!Main.playerInventory) // player closed their inventory (Esc, etc) — close ours too
                 CloseUI();
 
+            // Patch 4.4: on a multiplayer client the replica can disappear without our OnKill running; close the UI when the open machine is gone.
+            if (Main.netMode == NetmodeID.MultiplayerClient && openState?.CurrentEntity is BaseMachine open
+                && !(TileEntity.ByID.TryGetValue(open.ID, out TileEntity live) && ReferenceEquals(live, open)))
+                CloseUI();
+
             machineInterface?.Update(gameTime);
         }
 

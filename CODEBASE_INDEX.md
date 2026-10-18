@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-18 | 216 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-18 | 217 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(30) BaseMachine(24) RecipeBook(22) LiquidTypeRegistry(22) CustomRecipe(14) MachineUIStateBase(13) FactorrariaPacket(13) MachineUIElementEntry(12) LiquidStack(11) LiquidNetworkSystem(11) PacketDirection(10) VirtualItemSystem(9) TileEntityHelper(9) RecipeOutputGroup(9) RecipeCatalog(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8) Cart(8) RecipeOutputKey(7)
+FactorrariaNet(31) BaseMachine(25) RecipeBook(22) LiquidTypeRegistry(22) CustomRecipe(14) MachineUIStateBase(13) FactorrariaPacket(13) MachineUIElementEntry(12) LiquidStack(11) LiquidNetworkSystem(11) TileEntityHelper(10) PacketDirection(10) VirtualItemSystem(9) RecipeOutputGroup(9) RecipeCatalog(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8) Cart(8) RecipeOutputKey(7)
 
 ## Inheritance
 Project bases -> derived:
@@ -276,7 +276,7 @@ tModLoader/other bases -> project types:
 **MachineOverhangSystem.cs** uses: BaseMachine, MachineCanvas, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
     +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
-**MachineVisualOverride.cs** uses: BaseMachine, Direction, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MotorTileEntityBase, TileEntityHelper
+**MachineVisualOverride.cs** uses: BaseMachine, Direction, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineRemoval, MotorTileEntityBase, TileEntityHelper
   class LiquidOverlayLayer
     +SourceTexture:Asset<Texture2D> +GetLiquidStack:Func<BaseMachine, LiquidStack> +CacheKey:string
   class MachineCanvas
@@ -354,6 +354,9 @@ tModLoader/other bases -> project types:
     +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov] +Unload()[ov]
   static class MachinePlacementInfo
     +WaitTicks:int[s] +MaxEntries:int[s] +SendBiome(int,int)[s] +SendBiomeForVanillaTile(int,int,int)[s] +OnServerPlaced(BaseMachine)[s] +HandleBiomeReport(BinaryReader,int)[s] +Prune()[s] +Clear()[s]
+**MachineRemoval.cs** uses: BaseMachine, FactorrariaNet, TileEntityHelper
+  static class MachineRemoval
+    +OnTileKilled(int,int)[s]
 **MechSuitNet.cs** uses: FactorrariaNet, FactorrariaPacket, MechSuitPlayer, PacketDirection
   class MechSuitNetSystem : ModSystem
     +Load()[ov]
