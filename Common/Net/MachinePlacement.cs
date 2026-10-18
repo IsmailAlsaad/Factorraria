@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ObjectData;
 
 namespace Factorraria.Common.Net
 {
@@ -49,6 +50,48 @@ namespace Factorraria.Common.Net
 
             if (Main.netMode == NetmodeID.Server)
                 FactorrariaNet.Log("[Machines] placed " + machine.GetType().Name + " at (" + corner.X + ", " + corner.Y + "), id " + machine.ID);
+
+            return machine;
+        }
+
+        /// <summary>
+        /// Patch 4.5. The entity of the machine tile at x, y (any tile of the machine). Server and single-player create it when the tile
+        /// has none (power grid and liquid registration through GetEntity, geometry, and a share with the clients); a multiplayer client
+        /// only looks up. This is not a placement: OnPlaced does not run, so a bootstrapped machine keeps biome Unknown. Used by the
+        /// bootstrap scan (MachineBootstrapSystem) and by right-click; Phase 6.1's open-machine request should call it too.
+        /// </summary>
+        public static BaseMachine EnsureEntity(int x, int y)
+        {
+            if (!WorldGen.InWorld(x, y, 1))
+                return null;
+
+            Tile tile = Main.tile[x, y];
+            if (!tile.HasTile || !MachineVisualRegistry.Definitions.TryGetValue(tile.TileType, out MachineVisualDefinition def))
+                return null;
+
+            if (TileEntityHelper.TryGetEntityFromTile(x, y, out TileEntity existing, out Point16 corner))
+                return existing as BaseMachine;
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return null;
+
+            // The corner comes from the tile frame; only trust it when the tile has object data and the corner tile is the same machine tile.
+            if (TileObjectData.GetTileData(tile.TileType, 0) == null || !WorldGen.InWorld(corner.X, corner.Y, 1))
+                return null;
+
+            Tile cornerTile = Main.tile[corner.X, corner.Y];
+            if (!cornerTile.HasTile || cornerTile.TileType != tile.TileType)
+                return null;
+
+            BaseMachine machine = def.GetEntity(corner.X, corner.Y);   // Place + power grid registration + liquid rebuild flag
+            if (machine == null)
+                return null;
+
+            machine.InitializeGeometry();
+            Share(machine);
+
+            if (Main.netMode == NetmodeID.Server)
+                FactorrariaNet.Log("[Machines] bootstrapped " + machine.GetType().Name + " at (" + corner.X + ", " + corner.Y + "), id " + machine.ID);
 
             return machine;
         }

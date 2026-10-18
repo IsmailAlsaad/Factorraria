@@ -88,10 +88,9 @@ namespace Factorraria.Common.Machines
         public Func<int, int, BaseMachine> GetEntity;       // finds the entity, or CREATES it when missing (single-player and server only)
         public Func<int, int, BaseMachine> FindEntity;      // lookup only, never creates (patch 4.2)
 
-        // Patch 4.2: what draw, light, right-click and kill code call. A multiplayer client only looks up (the server creates entities
-        // and shares them); single-player keeps creating a missing one on demand until the entity bootstrap in patch 4.5.
-        public BaseMachine ResolveEntity(int i, int j)
-            => Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient ? FindEntity?.Invoke(i, j) : GetEntity(i, j);
+        // Patch 4.5: what draw and light code call. Lookup only, in every process: entities are created by the placement routes (4.2),
+        // by the bootstrap scan (MachineBootstrapSystem) and by MachinePlacement.EnsureEntity, never from draw code.
+        public BaseMachine ResolveEntity(int i, int j) => FindEntity?.Invoke(i, j);
         public Asset<Texture2D> OnTexture;
         public Asset<Texture2D> OffTexture;
         public Asset<Texture2D> AltOnTexture;          // optional second On look, see MachineVisualRegistry.RegisterAlternateOn
@@ -264,10 +263,12 @@ namespace Factorraria.Common.Machines
             if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var visualDef))
                 return; // not a registered machine, ignore
 
-            TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity entity, out Point16 topLeft);
-            BaseMachine machine = visualDef.ResolveEntity(topLeft.X, topLeft.Y);
+            // Patch 4.5: single-player creates a missing entity here (a safety net behind the bootstrap scan); a multiplayer client only looks up.
+            BaseMachine machine = MachinePlacement.EnsureEntity(i, j);
             if (machine == null)
                 return;
+
+            TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
 
             machine.OnRightClick(topLeft.X, topLeft.Y); // machine decides what happens
         }
