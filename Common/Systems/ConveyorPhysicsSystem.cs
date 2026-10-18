@@ -13,9 +13,21 @@ namespace Factorraria.Common.Systems
         // 2.5f matches vanilla Terraria conveyor belt speed (pixels per frame)
         public const float ConveyorSpeed = 2.5f;
 
-        // Dedicated server / Host & Play server: an NPC being carried is re-sent every this many ticks (staggered per NPC)
-        // so clients see it slide instead of jumping. Not const so hot reload can tweak it.
-        public static int NpcSyncTicks = 4;
+        // Dedicated server: a carried NPC or item is sent to the clients (vanilla SyncNPC / SyncItem) every this many ticks,
+        // staggered per entity, so clients see it slide. Not const so hot reload can tweak them.
+        public static int NpcSyncTicks = 3;
+        public static int ItemSyncTicks = 3;
+
+        // TEMPORARY diagnostics (remove in Phase 10): the server logs what it pushed and sent every 5 seconds, only when it was not zero.
+        public static bool LogStats = true;
+        static int npcsPushed;
+        static int itemsPushed;
+        static int syncsSent;
+
+        static bool SyncDue(int index, int everyTicks)
+        {
+            return (Main.GameUpdateCount + (uint)index) % (uint)Math.Max(1, everyTicks) == 0;
+        }
 
         public override void PostUpdateNPCs()
         {
@@ -33,8 +45,9 @@ namespace Factorraria.Common.Systems
                 }
             }
 
-            // 2. Push Enemies / NPCs: the server (or single-player) is the only side that does it. Clients get the new
-            //    position from the server, which flags the NPC for a vanilla NPC sync (netUpdate) while it is being carried.
+            // 2. Push Enemies / NPCs. Only the server (or single-player) pushes them; a client never does, because its own copy
+            //    of the NPC would run ahead of or behind the server's. The server sends the carried NPC to every client
+            //    (vanilla SyncNPC, position and velocity) a few times a second.
             if (FactorrariaNet.IsServerSide)
             {
                 for (int i = 0; i < Main.maxNPCs; i++)
@@ -42,23 +55,45 @@ namespace Factorraria.Common.Systems
                     NPC npc = Main.npc[i];
                     if (npc.active && TryApplyConveyorForce(npc))
                     {
-                        if (Main.netMode == NetmodeID.Server && (Main.GameUpdateCount + (uint)i) % (uint)Math.Max(1, NpcSyncTicks) == 0)
-                            npc.netUpdate = true;
+                        npcsPushed++;
+
+                        if (Main.netMode == NetmodeID.Server && SyncDue(i, NpcSyncTicks))
+                        {
+                            NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, i);
+                            syncsSent++;
+                        }
                     }
                 }
             }
 
-            // 3. Push Dropped Vanilla Items: unchanged on purpose. Item.Update runs on the server and on every client and
-            //    vanilla's own belts move items on both sides, so doing the same here keeps both copies in step.
-            //    (Do not restrict this to the server: the clients would then show items stuck until the next position packet.)
-            // Note: the check below is the same on every side, so the result is the same on every side.
-            for (int i = 0; i < Main.maxItems; i++)
+            // 3. Push Dropped Vanilla Items: same rule as NPCs. The server pushes and sends them (vanilla SyncItem), the
+            //    clients do not push, so a client can never show an item somewhere the server has not put it.
+            if (FactorrariaNet.IsServerSide)
             {
-                Item item = Main.item[i];
-                if (item.active && item.stack > 0)
+                for (int i = 0; i < Main.maxItems; i++)
                 {
-                    TryApplyConveyorForce(item);
+                    Item item = Main.item[i];
+                    if (item.active && item.stack > 0 && TryApplyConveyorForce(item))
+                    {
+                        itemsPushed++;
+
+                        if (Main.netMode == NetmodeID.Server && !item.instanced && SyncDue(i, ItemSyncTicks))
+                        {
+                            NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i);
+                            syncsSent++;
+                        }
+                    }
                 }
+            }
+
+            if (Main.netMode == NetmodeID.Server && Main.GameUpdateCount % 300 == 0)
+            {
+                if (LogStats && (npcsPushed > 0 || itemsPushed > 0))
+                    FactorrariaNet.Log("[Conveyor] last 5 s: NPC pushes " + npcsPushed + ", item pushes " + itemsPushed + ", sync packets sent " + syncsSent);
+
+                npcsPushed = 0;
+                itemsPushed = 0;
+                syncsSent = 0;
             }
         }
 

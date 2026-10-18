@@ -433,7 +433,7 @@ tModLoader/other bases -> project types:
       +Tile:Point +AllowAdd:bool
 **ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet
   class ConveyorPhysicsSystem : ModSystem
-    +ConveyorSpeed:float[c] +NpcSyncTicks:int[s] +PostUpdateNPCs()[ov]
+    +ConveyorSpeed:float[c] +NpcSyncTicks:int[s] +ItemSyncTicks:int[s] +LogStats:bool[s] +PostUpdateNPCs()[ov]
 **CustomWireSystem.cs** uses: CopperWireItem, IronCutterItem, LeadCutterItem, PowerGridSystem, TinWireItem
   enum CustomWireType : byte
     {None, Copper}
