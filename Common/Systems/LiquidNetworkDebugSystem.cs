@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Common.Systems
@@ -40,6 +41,16 @@ namespace Factorraria.Common.Systems
                 return;
 
             SpriteBatch spriteBatch = Main.spriteBatch;
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                // The liquid networks exist on the server only (roadmap 8.4, finding P6: this overlay stays single-player), so there is
+                // nothing to draw here. Say so instead of drawing nothing; the server log has the [Pipes] lines.
+                spriteBatch.Begin();
+                Utils.DrawBorderString(spriteBatch, "Liquid network debug view: single-player only (the networks live on the server, see its [Pipes] log lines)", new Vector2(20f, 140f), Color.Yellow, 0.8f);
+                spriteBatch.End();
+                return;
+            }
 
             spriteBatch.Begin(
                 SpriteSortMode.Deferred,

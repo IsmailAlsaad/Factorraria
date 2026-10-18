@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-18 | 212 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-18 | 213 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(25) RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(22) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) LiquidNetworkSystem(10) FactorrariaPacket(10) VirtualItemSystem(9) RecipeOutputGroup(9) RecipeCatalog(8) FurnaceOffsetConfig(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeKnowledgeSystem(7) RecipeBookLayout(7) PacketDirection(7)
+FactorrariaNet(26) RecipeBook(22) LiquidTypeRegistry(22) BaseMachine(22) CustomRecipe(14) MachineUIStateBase(13) MachineUIElementEntry(12) LiquidStack(11) FactorrariaPacket(11) LiquidNetworkSystem(10) VirtualItemSystem(9) RecipeOutputGroup(9) RecipeCatalog(8) PacketDirection(8) FurnaceOffsetConfig(8) Cart(8) TileEntityHelper(7) RecipeOutputKey(7) RecipeKnowledgeSystem(7) RecipeBookLayout(7)
 
 ## Inheritance
 Project bases -> derived:
@@ -24,7 +24,7 @@ Project bases -> derived:
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModSystem (42): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineDynamicDrawSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (43): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineDynamicDrawSystem, MachineOverhangSystem, MachineRegisterationSystem, MachineUISystem, MaterializerRightClickGuard, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
@@ -302,6 +302,11 @@ tModLoader/other bases -> project types:
     +SolveElbow(Vector2,Vector2,float,float,float,float)[s] +DrawSegment(SpriteBatch,Texture2D,Vector2,Vector2,Color,float)[s]
 
 ### Common/Net/
+**ChestConveyorNet.cs** uses: ChestConveyorEntry, ChestConveyorMode, ChestConveyorSystem, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
+  class ChestConveyorNetSystem : ModSystem
+    +Load()[ov]
+  static class ChestConveyorNet
+    +MaxJoinEntries:int[s] +BroadcastEntry(Point,bool,ChestConveyorMode)[s] +RequestCycle(Point)[s] +HandleCycleRequest(BinaryReader,int)[s] +HandleChanged(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
 **CustomWireNet.cs** uses: CopperWireItem, CustomWireSystem, CustomWireType, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, TinWireItem
   class CustomWireNetSystem : ModSystem
     +Load()[ov]
@@ -447,7 +452,7 @@ tModLoader/other bases -> project types:
     +IsAwakening:bool +AwakenerOrigin:Point16 +AwakenRadiusTiles:int +AwakenedStatueCount:int +AwakenedEnemyCount:int
 
 ### Common/Systems/
-**ChestConveyorSystem.cs** uses: VItemStacking, VirtualItem, VirtualItemSystem
+**ChestConveyorSystem.cs** uses: ChestConveyorNet, VItemStacking, VirtualItem, VirtualItemSystem
   enum ChestConveyorMode
     {InputOutput, Input, Output}
   enum ChestSideRole
@@ -455,7 +460,7 @@ tModLoader/other bases -> project types:
   class ChestConveyorEntry
     +TopLeft:Point +ChestIndex:int +Mode:ChestConveyorMode +Left:ChestSideRole +Right:ChestSideRole
   class ChestConveyorSystem : ModSystem
-    +Enabled:bool[s] +HasListedChestAbove(int,int)[s] +QueueProbe(int,int,bool)[s] +CycleMode(ChestConveyorEntry)[s] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
+    +Enabled:bool[s] +HasListedChestAbove(int,int)[s] +QueueProbe(int,int,bool)[s] +Entries:IEnumerable<ChestConveyorEntry>[s] +CycleMode(ChestConveyorEntry)[s] +TryCycleModeAt(Point,out ChestConveyorMode)[s] +SetReplicaEntry(Point,bool,ChestConveyorMode)[s] +ReplaceReplica(List<KeyValuePair<Point, ChestConveyorMode>>)[s] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
     struct Probe
       +Tile:Point +AllowAdd:bool
 **ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet

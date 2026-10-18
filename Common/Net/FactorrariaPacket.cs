@@ -21,6 +21,8 @@ namespace Factorraria.Common.Net
         SeenReport = 12,          // client -> server: "I have held these ingredient item types" (batched, patch 3.2)
         ReadParchmentRequest = 13, // client -> server: "I read a parchment of pool <name>" (patch 3.2)
         ReadParchmentResult = 14, // server -> client: answer to ReadParchmentRequest (patch 3.2)
+        ChestConveyorChanged = 15, // server -> client: "the chest conveyor entry at (x, y) is now present / absent with mode <m>" (patch 3.4a)
+        ChestConveyorModeRequest = 16, // client -> server: "cycle the conveyor mode of the chest at (x, y)" (patch 3.4a)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

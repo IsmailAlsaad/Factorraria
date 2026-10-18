@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.VirtualItems;
+﻿using Factorraria.Common.Net;
+using Factorraria.Content.VirtualItems;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -95,9 +96,61 @@ namespace Factorraria.Common.Systems
             pending.Add(new Probe { Tile = new Point(tileX, tileY), AllowAdd = allowAdd });
         }
 
+        /// <summary>All registered chests (the join provider writes them).</summary>
+        public static IEnumerable<ChestConveyorEntry> Entries => entries.Values;
+
+        /// <summary>
+        /// The mode button was clicked. The server owns the registry (patch 3.4a), so this is a request: single-player runs the
+        /// server code at once, a multiplayer client asks the server, which changes the mode and tells everyone.
+        /// </summary>
         public static void CycleMode(ChestConveyorEntry entry)
         {
+            ChestConveyorNet.RequestCycle(entry.TopLeft);
+        }
+
+        /// <summary>Server / single-player: really cycles the mode of the registered chest at this position. False if there is none.</summary>
+        public static bool TryCycleModeAt(Point chest, out ChestConveyorMode newMode)
+        {
+            newMode = ChestConveyorMode.InputOutput;
+
+            if (!entries.TryGetValue(chest, out ChestConveyorEntry entry))
+            {
+                return false;
+            }
+
             entry.Mode = (ChestConveyorMode)(((int)entry.Mode + 1) % 3);
+            newMode = entry.Mode;
+            return true;
+        }
+
+        /// <summary>Multiplayer client: adds, changes or removes one entry of the replica. A client only knows TopLeft and Mode.</summary>
+        public static void SetReplicaEntry(Point chest, bool present, ChestConveyorMode mode)
+        {
+            if (!present)
+            {
+                entries.Remove(chest);
+                return;
+            }
+
+            if (entries.TryGetValue(chest, out ChestConveyorEntry entry))
+            {
+                entry.Mode = mode;
+            }
+            else
+            {
+                entries[chest] = new ChestConveyorEntry { TopLeft = chest, Mode = mode };
+            }
+        }
+
+        /// <summary>Multiplayer client, join sync: replaces the whole replica.</summary>
+        public static void ReplaceReplica(List<KeyValuePair<Point, ChestConveyorMode>> all)
+        {
+            entries.Clear();
+
+            foreach (KeyValuePair<Point, ChestConveyorMode> pair in all)
+            {
+                entries[pair.Key] = new ChestConveyorEntry { TopLeft = pair.Key, Mode = pair.Value };
+            }
         }
 
         #endregion
@@ -136,6 +189,7 @@ namespace Factorraria.Common.Systems
             for (int i = 0; i < toRemove.Count; i++)
             {
                 entries.Remove(toRemove[i]);
+                ChestConveyorNet.BroadcastEntry(toRemove[i], false, ChestConveyorMode.InputOutput);
             }
 
             toRemove.Clear();
@@ -168,6 +222,7 @@ namespace Factorraria.Common.Systems
                     if (!RefreshRoles(entry, chest))
                     {
                         entries.Remove(key); // no conveyor under it any more
+                        ChestConveyorNet.BroadcastEntry(key, false, ChestConveyorMode.InputOutput);
                     }
                 }
                 else if (probe.AllowAdd)
@@ -177,6 +232,7 @@ namespace Factorraria.Common.Systems
                     if (RefreshRoles(entry, chest))
                     {
                         entries[key] = entry;
+                        ChestConveyorNet.BroadcastEntry(key, true, entry.Mode);
                     }
                 }
             }
