@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Input;
+﻿using Factorraria.Common.Net;
+using Microsoft.Xna.Framework.Input;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -49,6 +50,9 @@ namespace Factorraria.Content.Items.Conveyors
 
             // Tactile audio feedback
             Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick);
+
+            // RightClick runs on the clicking client only; send the slot so the server's copy gets the new type too.
+            FactorrariaNet.SyncInventoryItem(player, Item);
         }
 
         // 3. Prevent tModLoader from consuming 1 item from the stack upon right-click

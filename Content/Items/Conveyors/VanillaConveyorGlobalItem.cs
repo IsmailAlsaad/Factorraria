@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Input;
+﻿using Factorraria.Common.Net;
+using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
@@ -33,6 +34,9 @@ namespace Factorraria.Content.Items.Conveyors
             item.favorited = isFavorited;
 
             Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick);
+
+            // RightClick runs on the clicking client only, so the server's copy of this slot still holds the old type. Send the slot.
+            FactorrariaNet.SyncInventoryItem(player, item);
         }
 
         public override bool ConsumeItem(Item item, Player player) => false;

@@ -61,6 +61,27 @@ namespace Factorraria.Common.Net
             NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, player.whoAmI);
         }
 
+        /// <summary>
+        /// Owner only, multiplayer client only: tell the server (which relays to the others) what an inventory slot now holds, after code
+        /// changed that item in place (SetDefaults, stack, prefix). Finds the slot by reference in the player's inventory (0-58), so it
+        /// does nothing for an item that is not there (a chest or bank item, a copy). Sends vanilla's SyncEquipment message. Single-player
+        /// and the server do nothing.
+        /// </summary>
+        public static void SyncInventoryItem(Player player, Item item)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient || !IsOwner(player) || item == null)
+                return;
+
+            for (int i = 0; i < player.inventory.Length; i++)
+            {
+                if (ReferenceEquals(player.inventory[i], item))
+                {
+                    NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, player.whoAmI, i, item.prefix);
+                    return;
+                }
+            }
+        }
+
         // ---------------------------------------------------------------- reach
 
         /// <summary>
