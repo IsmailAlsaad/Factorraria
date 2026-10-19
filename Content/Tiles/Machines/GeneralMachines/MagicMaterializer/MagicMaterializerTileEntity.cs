@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
 using Factorraria.Common.Statues;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -44,6 +45,21 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
             BackgroundActive = !BackgroundActive;
             SoundEngine.PlaySound(SoundID.MenuTick);
         }
+
+        // Patch 5.1: the background toggle is part of the machine snapshot. The awakened statue and enemy counts stay server runtime state.
+        protected override void WriteSnapshotExtra(BinaryWriter writer)
+        {
+            base.WriteSnapshotExtra(writer);
+            writer.Write(BackgroundActive);
+        }
+
+        protected override void ReadSnapshotExtra(BinaryReader reader)
+        {
+            base.ReadSnapshotExtra(reader);
+            BackgroundActive = reader.ReadBoolean();
+        }
+
+        protected override string DescribeSnapshotExtra() => base.DescribeSnapshotExtra() + " background=" + (BackgroundActive ? "on" : "off");
 
         public override void SaveData(TagCompound tag)
         {

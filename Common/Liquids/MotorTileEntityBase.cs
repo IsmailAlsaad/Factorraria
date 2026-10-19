@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Systems;
+using System.IO;
 using Terraria.ModLoader.IO;
 
 namespace Factorraria.Common.Machines
@@ -40,6 +41,23 @@ namespace Factorraria.Common.Machines
             LiquidNetworkSystem.networkNeedsRebuilding = true;
             PipeTileBase.ReframeNeighbors(i, j);
         }
+
+        // Patch 5.1: the facing is part of the machine snapshot (the pipe network itself stays server-side until Phase 8).
+        protected override void WriteSnapshotExtra(BinaryWriter writer)
+        {
+            base.WriteSnapshotExtra(writer);
+            writer.Write((byte)Facing);
+        }
+
+        protected override void ReadSnapshotExtra(BinaryReader reader)
+        {
+            base.ReadSnapshotExtra(reader);
+            int facing = reader.ReadByte();
+            if (facing <= (int)Direction.Right)
+                Facing = (Direction)facing;
+        }
+
+        protected override string DescribeSnapshotExtra() => base.DescribeSnapshotExtra() + " facing=" + Facing;
 
         public override void SaveData(TagCompound tag)
         {

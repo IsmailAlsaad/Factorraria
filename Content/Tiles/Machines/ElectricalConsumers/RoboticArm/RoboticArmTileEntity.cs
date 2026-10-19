@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -69,6 +70,29 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // Whether a tile is inside the square reach (ReachTiles each way from the base). The overlay tints the rest red; the worker skips them.
         public bool IsTileInReach(int tileX, int tileY) =>
             Math.Abs(tileX - Position.X) <= ReachTiles && Math.Abs(tileY - Position.Y) <= ReachTiles;
+
+        // Patch 5.1: the working area is part of the machine snapshot. SetArea clamps it to the reach square, so a bad value cannot give an
+        // invalid area. The worker, the hand motion and the visual stay runtime state.
+        protected override void WriteSnapshotExtra(BinaryWriter writer)
+        {
+            base.WriteSnapshotExtra(writer);
+            writer.Write((short)AreaX);
+            writer.Write((short)AreaY);
+            writer.Write((short)AreaW);
+            writer.Write((short)AreaH);
+        }
+
+        protected override void ReadSnapshotExtra(BinaryReader reader)
+        {
+            base.ReadSnapshotExtra(reader);
+            int x = reader.ReadInt16();
+            int y = reader.ReadInt16();
+            int w = reader.ReadInt16();
+            int h = reader.ReadInt16();
+            SetArea(x, y, w, h);
+        }
+
+        protected override string DescribeSnapshotExtra() => base.DescribeSnapshotExtra() + " area=(" + AreaX + ", " + AreaY + ") " + AreaW + "x" + AreaH;
 
         public override void SaveData(TagCompound tag)
         {

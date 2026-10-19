@@ -7,6 +7,7 @@ using Factorraria.Content.VirtualItems;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Terraria;
 using Terraria.DataStructures;
@@ -876,6 +877,157 @@ namespace Factorraria.Common.Machines
                 Fuels[i].Restore(tag.GetInt(FuelKey("FuelRemaining", i)), tag.GetInt(FuelKey("FuelCapacity", i)));
         }
         
+        #region Network snapshot (patch 5.1)
+
+        // Server -> client copy of this machine, written whenever tModLoader sends the entity: with the tile section data (a client
+        // joins or reaches a section it has not received) and with vanilla's tile-entity sharing message 86 (MachinePlacement.Share).
+        // NetSend runs on the server only, NetReceive on a client only, never in single-player. The payload is length-prefixed so a short
+        // or unreadable payload cannot shift the rest of the stream. Geometry is derived, not sent: NetReceive recomputes it.
+        // Subclasses with extra state override WriteSnapshotExtra / ReadSnapshotExtra (call base first, read in the order written),
+        // never NetSend itself.
+        public override void NetSend(BinaryWriter writer)
+        {
+            byte[] payload = BuildSnapshot();
+            writer.Write7BitEncodedInt(payload.Length);
+            writer.Write(payload);
+            MachineSnapshot.CountSent(payload.Length);
+        }
+
+        // Called on a NEW instance that replaces any entity at this position (ID is not assigned yet, Position is). May run on the
+        // network thread: no UI, textures or world access in here or in ApplySnapshot.
+        public override void NetReceive(BinaryReader reader)
+        {
+            int length = reader.Read7BitEncodedInt();
+            byte[] payload = length > 0 ? reader.ReadBytes(length) : Array.Empty<byte>();
+            MachineSnapshot.CountReceived(payload.Length);
+
+            try
+            {
+                using var stream = new MemoryStream(payload);
+                using var payloadReader = new BinaryReader(stream);
+                ApplySnapshot(payloadReader);
+            }
+            catch (Exception e)
+            {
+                MachineSnapshot.CountFailed();
+                Mod?.Logger.Warn("[Machines] snapshot of " + GetType().Name + " at (" + Position.X + ", " + Position.Y + ") could not be read: " + e.Message);
+            }
+
+            InitializeGeometry();
+        }
+
+        public byte[] BuildSnapshot()
+        {
+            var stream = new MemoryStream();
+            var w = new BinaryWriter(stream);
+
+            w.Write((byte)1);   // snapshot format version
+
+            byte flags = 0;
+            if (isOn) flags |= 1;
+            if (isWorking) flags |= 2;
+            w.Write(flags);
+            w.Write((byte)InsideBiome);
+            w.Write7BitEncodedInt(Math.Max(0, WorkProgress));
+            w.Write7BitEncodedInt(Math.Max(0, CraftsFinished));
+            if (IsElectric) w.Write(GetSnapshotUseFraction());
+
+            MachineSnapshot.WriteRecipes(this, w);
+            MachineSnapshot.WriteItems(InputSlots, w);
+            MachineSnapshot.WriteItems(OutputSlots, w);
+            MachineSnapshot.WriteLiquids(InputLiquids, w);
+            MachineSnapshot.WriteLiquids(OutputLiquids, w);
+
+            w.Write7BitEncodedInt(Fuels.Length);
+            foreach (FuelModule fuel in Fuels)
+            {
+                w.Write7BitEncodedInt(fuel.Remaining);
+                w.Write7BitEncodedInt(fuel.Capacity);
+            }
+
+            WriteSnapshotExtra(w);
+            w.Flush();
+            return stream.ToArray();
+        }
+
+        void ApplySnapshot(BinaryReader r)
+        {
+            int version = r.ReadByte();
+            if (version != 1)
+                return;   // a format this build does not know: keep the defaults
+
+            byte flags = r.ReadByte();
+            isOn = (flags & 1) != 0;
+            isWorking = (flags & 2) != 0;
+
+            int biome = r.ReadByte();
+            if (Enum.IsDefined(typeof(MachineBiome), biome))
+                InsideBiome = (MachineBiome)biome;
+
+            WorkProgress = r.Read7BitEncodedInt();
+            CraftsFinished = r.Read7BitEncodedInt();
+            if (IsElectric) SetSnapshotUseFraction(r.ReadSingle());
+
+            MachineSnapshot.ReadRecipes(this, r);
+            MachineSnapshot.ReadItems(InputSlots, r);
+            MachineSnapshot.ReadItems(OutputSlots, r);
+            MachineSnapshot.ReadLiquids(InputLiquids, r);
+            MachineSnapshot.ReadLiquids(OutputLiquids, r);
+
+            int fuelCount = r.Read7BitEncodedInt();
+            for (int i = 0; i < fuelCount; i++)
+            {
+                int remaining = r.Read7BitEncodedInt();
+                int capacity = r.Read7BitEncodedInt();
+                if (i < Fuels.Length)
+                    Fuels[i].Restore(remaining, capacity);
+            }
+
+            ReadSnapshotExtra(r);
+        }
+
+        /// <summary>Extra state a subclass wants in the snapshot (motor facing, Materializer toggle, arm area). Call base first.</summary>
+        protected virtual void WriteSnapshotExtra(BinaryWriter writer) { }
+
+        /// <summary>Reads what WriteSnapshotExtra wrote, in the same order. Call base first.</summary>
+        protected virtual void ReadSnapshotExtra(BinaryReader reader) { }
+
+        /// <summary>Test aid for /fsnap (temporary): what a subclass adds to the one-line description.</summary>
+        protected virtual string DescribeSnapshotExtra() => "";
+
+        float GetSnapshotUseFraction() => this is IElectricConsumer consumer ? consumer.useFraction : this is IElectricProducer producer ? producer.useFraction : 0f;
+
+        void SetSnapshotUseFraction(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value)) value = 0f;
+            if (this is IElectricConsumer consumer) consumer.useFraction = value;
+            else if (this is IElectricProducer producer) producer.useFraction = value;
+        }
+
+        // Test aid for /fsnap (temporary, remove in Phase 10): one readable line with everything the snapshot carries, ending in a digest of
+        // the snapshot bytes, so a server console line and a client chat line for the same machine can be compared.
+        public string DescribeSnapshot()
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append(GetType().Name).Append(" (").Append(Position.X).Append(", ").Append(Position.Y).Append(") id ").Append(ID);
+            sb.Append(' ').Append(MachineWidth).Append('x').Append(MachineHeight).Append(MachineInitialized ? "" : " NO-GEOMETRY");
+            sb.Append(" | ").Append(isOn ? "on" : "off").Append(isWorking ? " working" : "").Append(" prog=").Append(WorkProgress);
+            sb.Append(" crafts=").Append(CraftsFinished).Append(" biome=").Append(InsideBiome);
+            if (IsElectric) sb.Append(" use=").Append(GetSnapshotUseFraction().ToString("0.##"));
+            sb.Append(" | in[").Append(MachineSnapshot.DescribeItems(InputSlots)).Append("] out[").Append(MachineSnapshot.DescribeItems(OutputSlots));
+            sb.Append("] liqIn[").Append(MachineSnapshot.DescribeLiquids(InputLiquids)).Append("] liqOut[").Append(MachineSnapshot.DescribeLiquids(OutputLiquids));
+            sb.Append("] fuel[");
+            for (int i = 0; i < Fuels.Length; i++)
+                sb.Append(i > 0 ? " " : "").Append(i).Append(':').Append(Fuels[i].Remaining).Append('/').Append(Fuels[i].Capacity);
+            sb.Append("] | ").Append(MachineSnapshot.DescribeRecipe(this));
+            string extra = DescribeSnapshotExtra();
+            if (extra.Length > 0) sb.Append(" |").Append(extra);
+            sb.Append(" | digest=").Append(MachineSnapshot.Digest(BuildSnapshot()).ToString("X8"));
+            return sb.ToString();
+        }
+
+        #endregion
+
         public override bool IsTileValidForEntity(int x, int y)
         {
             Tile tile = Framing.GetTileSafely(x, y);

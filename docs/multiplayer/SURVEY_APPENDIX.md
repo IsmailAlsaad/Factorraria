@@ -179,12 +179,13 @@ Clients draw and show UI from fields that exist only on the server: `isOn`, `isW
 1. **Join snapshot:** full state in `NetSend`/`NetReceive` (slots, tanks, flags, geometry). tModLoader sends it with the world.
 2. **Light updates:** a compact packet (isOn, isWorking, progress, crafts counter, tank type/amount for overlays) sent when changed, rate limited, only to clients near the machine.
 3. **Detail updates:** full slot/tank contents sent only to players who have that machine's UI open (subscribe on open, unsubscribe on close/leave), plus after each accepted UI edit.
+**Status:** channel 1 (the snapshot in `NetSend`/`NetReceive`) was implemented in patch 5.1 (see the Phase 5 block of the roadmap); channels 2 and 3 are open (patches 5.2 and 5.3).
 
 ### M4 (H) Interaction is local
 `BaseMachine.OnRightClick` opens the UI from client-side data. `MagicMaterializerTileEntity.OnRightClick` flips `BackgroundActive` locally, but the server's `Update` is what reads it, so the toggle does nothing in MP. `HasShimmer` also reads a tank the client does not have. **Fix:** right-click becomes "request open" (server subscribes the player and sends detail state); Materializer toggle becomes a request packet validated on the server. UI edits are step 5.
 
 ### M5 (H) `InsideBiome` uses the local player
-`DetermineBiomeAt` reads `Main.LocalPlayer` and returns Unknown on a server, so biome water (Snow Water etc. in `ResolveIncomingLiquid`) cannot work. **Fix:** the placing client computes the biome and includes it in the placement request (simple, and the value is already saved in `SaveData`), or a server-side tile scan. **Status:** the placing-client option was implemented in patch 4.3 (packet `MachineBiomeReport`, server state in `MachinePlacementInfo`, see the Phase 4 block of the roadmap). Still open: machines placed by server code (Robotic Arm) keep Unknown, and `InsideBiome` is not in the entity snapshot until patch 5.1.
+`DetermineBiomeAt` reads `Main.LocalPlayer` and returns Unknown on a server, so biome water (Snow Water etc. in `ResolveIncomingLiquid`) cannot work. **Fix:** the placing client computes the biome and includes it in the placement request (simple, and the value is already saved in `SaveData`), or a server-side tile scan. **Status:** the placing-client option was implemented in patch 4.3 (packet `MachineBiomeReport`, server state in `MachinePlacementInfo`, see the Phase 4 block of the roadmap). Still open: machines placed by server code (Robotic Arm) and bootstrapped machines keep Unknown. `InsideBiome` is in the entity snapshot since patch 5.1, and the server re-shares the machine once the reported biome is applied.
 
 ### M6 (H) `KillTile` / `OnKill` side effects
 `MachineVisualOverride.KillTile` drops slot contents and kills the entity in every process that sees the kill (details in step 3). `BaseMachine.OnKill` only flips static flags (fine on the server) and calls `MachineUISystem.NotifyMachineKilled`, which must also close the UI for subscribed clients. **Status:** the kill-path half was implemented in patch 4.4 (`MachineRemoval.OnTileKilled`, server-only drops, replica-only removal on clients, `fail`/`effectOnly` guard, UI liveness check). Still open: closing the UI for subscribed clients from the server (patch 5.3). `ReleaseHiddenIngredientSlots` uses `Item.NewItem` from `Update`, which is server-only and therefore correct.
@@ -202,6 +203,7 @@ Clients draw and show UI from fields that exist only on the server: `isOn`, `isW
 - **MagicMaterializer:** `Update` changes tiles and already calls `SendTileSquare` when `netMode == Server` (good). `OnKill` calls `AwakenedStatueSystem.RescanFor` (server only, fine). Needs `BackgroundActive` in snapshots and a toggle packet (M4).
 - **Motors:** pump/network behavior is in the liquid step (7); `Facing` goes into the snapshot.
 - **Furnace, DecayChamber, IceMachine, LiquidDistillator, Solidifier, MechanicalAssembler:** thin subclasses, no MP-specific code of their own; they inherit everything from the `BaseMachine` fixes.
+**Status (patch 5.1):** the snapshot covers every machine subclass: the `BaseMachine` fields for all of them, plus extras for the motor (`Facing`), the Materializer (`BackgroundActive`) and the Robotic Arm (`AreaX/Y/W/H`). The Extractinator, Hellforge, Gel Burner and Autohammer logic stays server-side and needs nothing more than the 5.2 light updates.
 
 ### M10 (M) Recipe knowledge hook
 `FinishRecipe` calls `RecipeKnowledgeSystem.MarkCrafted` on the server; the comment there says netcode was deferred. It needs the knowledge broadcast from step 1.
@@ -249,6 +251,7 @@ A replicated TileEntity can be replaced when a sync arrives (a new instance is r
 
 ### U3 (B) No server subscription / detail data
 The UI reads full machine state (slots, tanks, fuel, selected recipe) that clients only have in coarse form (step 4, M3). Opening the UI must send an "open machine" request; the server subscribes that player and sends the detail snapshot, then updates while open; closing (or disconnecting, or moving out of reach) unsubscribes.
+**Status:** the snapshot half of U3 is patch 5.1 (the replica has the slots, tanks, fuel and recipe pick whenever the entity is delivered); the subscription and detail channel are 5.3 and 6.1.
 
 ### U4 (H) Recipe selection is a direct call
 The recipe browser's `SetManualGroup` becomes a `SelectRecipe` request (machine id + stable recipe-group key). The server checks the group exists in that machine's `Recipes`, applies it, and syncs `ManualGroup` to subscribers. Recipes must be identified by **stable keys** (`RecipeCatalog.KeyFor`, liquid name, output item name), never by list index, because the registries are built separately on server and clients in `PostAddRecipes` and could differ in order. The same applies to syncing `SelectedRecipe` (needed on clients to compute the progress bar duration via `RecipeDuration`).

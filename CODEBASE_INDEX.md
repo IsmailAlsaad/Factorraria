@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-18 | 218 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-19 | 220 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(32) BaseMachine(25) RecipeBook(22) LiquidTypeRegistry(22) CustomRecipe(14) MachineUIStateBase(13) FactorrariaPacket(13) MachineUIElementEntry(12) TileEntityHelper(11) LiquidStack(11) LiquidNetworkSystem(11) PacketDirection(10) VirtualItemSystem(9) RecipeOutputGroup(9) RecipeCatalog(8) MachineVisualRegistry(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8) Cart(8)
+FactorrariaNet(33) BaseMachine(27) RecipeBook(23) LiquidTypeRegistry(23) CustomRecipe(15) MachineUIStateBase(13) FactorrariaPacket(13) MachineUIElementEntry(12) LiquidStack(12) TileEntityHelper(11) LiquidNetworkSystem(11) RecipeOutputGroup(10) PacketDirection(10) VirtualItemSystem(9) RecipeCatalog(9) RecipeOutputKey(8) MachineVisualRegistry(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -31,7 +31,7 @@ tModLoader/other bases -> project types:
 - ModPlayer (7): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (6): CartModuleItemGlobal, IceBladeItem, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalTile (6): AwakenedStatueGlobalTile, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MaterializerWireGuard, TilePlacedGlobalTile
-- ModCommand (5): NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, WireCountCommand
+- ModCommand (6): MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, WireCountCommand
 - byte (5): CustomWireType, FactorrariaPacket, KnowledgeKind, PacketDirection, ParchmentFailure
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - ModProjectile (3): IceBladeSwingProjectile, MechSuitArmProjectile, MechanicalArmProjectile
@@ -213,7 +213,7 @@ tModLoader/other bases -> project types:
     +CanPlace(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov]
 **MotorTileEntityBase.cs** ns!=Factorraria.Common.Machines uses: Direction, ElectricConsumerMachine, LiquidNetworkSystem, PipeTileBase
   abstract class MotorTileEntityBase : ElectricConsumerMachine
-    +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +Update()[ov] #UpdateMotor()[v] +OnRightClick(int,int)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
+    +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +Update()[ov] #UpdateMotor()[v] +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
 **PipeConnectionHelper.cs** uses: BaseMachine, Direction, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
   static class PipeConnectionHelper
     +CanConnect(int,int,Direction)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool)[s]
@@ -225,9 +225,9 @@ tModLoader/other bases -> project types:
     +InfiniteThreshold:int[c] +IsInfiniteSource(Point)[s] +ComputeIsInfinite(Point)[s] +OnWorldUnload()[ov]
 
 ### Common/Machines/
-**BaseMachine.cs** uses: CustomRecipe, FactorrariaNet, FuelChannel, FuelModule, FuelTable, IElectricConsumer, IElectricProducer, LiquidFuelChannel, LiquidFuelModule, LiquidFuelTable, LiquidIngredient, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MachineBiome, MachinePlacement, MachinePlacementInfo, MachineUIRegistry, MachineUISystem, PowerGridSystem, RecipeBook, RecipeCatalog, RecipeIngredient, RecipeKnowledgeNet, RecipeOutputGroup, RecipeOutputKey, VItemStacking, VirtualItem, VirtualItemSystem
+**BaseMachine.cs** uses: CustomRecipe, FactorrariaNet, FuelChannel, FuelModule, FuelTable, IElectricConsumer, IElectricProducer, LiquidFuelChannel, LiquidFuelModule, LiquidFuelTable, LiquidIngredient, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MachineBiome, MachinePlacement, MachinePlacementInfo, MachineSnapshot, MachineUIRegistry, MachineUISystem, PowerGridSystem, RecipeBook, RecipeCatalog, RecipeIngredient, RecipeKnowledgeNet, RecipeOutputGroup, RecipeOutputKey, VItemStacking, VirtualItem, VirtualItemSystem
   abstract class BaseMachine : ModTileEntity
-    +isOn:bool +isWorking:bool #WorkProgress:int +CraftsFinished:int #WorkDuration:int[v] #OutputSlotCount:int[v] +SelectedRecipe:CustomRecipe +ManualGroup:RecipeOutputGroup +SetManualGroup(RecipeOutputGroup) #RecipeGroups:List<RecipeOutputGroup>[v] +OutputMaxStack:int +InsideBiome:MachineBiome +cornerPosition:Point16 +MachineCenter:Vector2 +MachineWidth:int +MachineHeight:int +MachineInitialized:bool #InputLiquidCount:int[v] #OutputLiquidCount:int[v] +Recipes:RecipeBook[v] #FuelPerCraft:int[v] #FuelChannels:FuelChannel[v] #AcceptedLiquidFuels:LiquidFuelTable[v] #LiquidFuelPerCraft:int[v] #LiquidFuelChannels:LiquidFuelChannel[v] #RecipeDuration(CustomRecipe)[v] +ResolveRecipeDuration(CustomRecipe) #CanStartCraft(CustomRecipe)[v] +TreatsWorldLiquidAsInfinite(int)[v] #AcceptsInputLiquid(int,int)[v] +FuelSlotIndex:int[c] +FirstIngredientSlot:int[c] +Fuel:FuelModule +FuelSlotCount:int +LiquidFuelCount:int #InputSlotCount:int[v] +IngredientStart:int +IngredientSlotCount:int #AutoIngredientCount:int[v] #ProgressiveIngredientSlots:bool[v] +ActiveIngredientCount:int #IntakeIngredientCount:int[v] +Update()[ov] #OnRecipeFinished(CustomRecipe)[v] +WorkFraction:float +GetFuelBurnFraction(int) +OnKill()[ov] +GetPendingOutputType(int) #IntakeTiles()[v] #TryGetIntakeSlot(int,out int,out int)[v] #GetPickupRecipes()[v] +IsOnConveyorFloor() +NotifyAnimationFrame(int) +OnPlaced(int,int)[v] +ResolveIncomingLiquid(int) +OnRightClick(int,int)[v] #OnAnimationFrameChanged(int,int)[v] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +IsTileValidForEntity(int,int)[ov] +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnNetPlace()[ov] +NearPlayerWidth:float +NearPlayerHeight:float +IsAnyPlayerNear(Vector2,float) +IsOnScreen(Vector2,float)[s] +DetermineBiomeAt(int,int)[s]
+    +isOn:bool +isWorking:bool #WorkProgress:int +CraftsFinished:int #WorkDuration:int[v] #OutputSlotCount:int[v] +SelectedRecipe:CustomRecipe +ManualGroup:RecipeOutputGroup +SetManualGroup(RecipeOutputGroup) #RecipeGroups:List<RecipeOutputGroup>[v] +OutputMaxStack:int +InsideBiome:MachineBiome +cornerPosition:Point16 +MachineCenter:Vector2 +MachineWidth:int +MachineHeight:int +MachineInitialized:bool #InputLiquidCount:int[v] #OutputLiquidCount:int[v] +Recipes:RecipeBook[v] #FuelPerCraft:int[v] #FuelChannels:FuelChannel[v] #AcceptedLiquidFuels:LiquidFuelTable[v] #LiquidFuelPerCraft:int[v] #LiquidFuelChannels:LiquidFuelChannel[v] #RecipeDuration(CustomRecipe)[v] +ResolveRecipeDuration(CustomRecipe) #CanStartCraft(CustomRecipe)[v] +TreatsWorldLiquidAsInfinite(int)[v] #AcceptsInputLiquid(int,int)[v] +FuelSlotIndex:int[c] +FirstIngredientSlot:int[c] +Fuel:FuelModule +FuelSlotCount:int +LiquidFuelCount:int #InputSlotCount:int[v] +IngredientStart:int +IngredientSlotCount:int #AutoIngredientCount:int[v] #ProgressiveIngredientSlots:bool[v] +ActiveIngredientCount:int #IntakeIngredientCount:int[v] +Update()[ov] #OnRecipeFinished(CustomRecipe)[v] +WorkFraction:float +GetFuelBurnFraction(int) +OnKill()[ov] +GetPendingOutputType(int) #IntakeTiles()[v] #TryGetIntakeSlot(int,out int,out int)[v] #GetPickupRecipes()[v] +IsOnConveyorFloor() +NotifyAnimationFrame(int) +OnPlaced(int,int)[v] +ResolveIncomingLiquid(int) +OnRightClick(int,int)[v] #OnAnimationFrameChanged(int,int)[v] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +NetReceive(BinaryReader)[ov] +BuildSnapshot() #WriteSnapshotExtra(BinaryWriter)[v] #ReadSnapshotExtra(BinaryReader)[v] #DescribeSnapshotExtra()[v] +DescribeSnapshot() +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnNetPlace()[ov] +NearPlayerWidth:float +NearPlayerHeight:float +IsAnyPlayerNear(Vector2,float) +IsOnScreen(Vector2,float)[s] +DetermineBiomeAt(int,int)[s]
 **BaseRecipeRegistery.cs** uses: CustomRecipe, LiquidIngredient, LiquidTypeRegistry, RecipeIngredient, RecipeOutputGroup
   class RecipeBook
     +All:List<CustomRecipe> +Groups:List<RecipeOutputGroup> +MaxIngredientCount:int +MinIngredientCount:int +ConsumesLiquid(int) +Add(CustomRecipe)[v] +ImportVanillaRecipes(int,Func<Recipe, bool>,bool) #ShouldImport(Recipe)[v] #ShouldDisableOriginal(Recipe)[v] #ConvertVanillaRecipe(Recipe)[v] +Rebuild()[v] +Clear() +DisableCustomRecipe(Recipe,bool) +DisableCustomRecipe(int,bool) +DisableVanillaRecipe(Recipe) +DisableVanillaRecipe(CustomRecipe,bool) +DisableVanillaRecipe(int,bool) +DisableRecipe(int,bool) +DisableRecipe(CustomRecipe,bool) +DisableRecipe(Recipe,bool)
@@ -352,7 +352,7 @@ tModLoader/other bases -> project types:
     +ServerPlace(int,int,int)[s] +EnsureEntity(int,int)[s] +Share(BaseMachine)[s] +Register(BaseMachine)[s]
   sealed class MachinePlacedConsumer : ITilePlacedConsumer
     +AppliesTo(int) +OnTilePlaced(int,int,int,int)
-**MachinePlacementInfo.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineBiome, MachineVisualRegistry, PacketDirection, TileEntityHelper
+**MachinePlacementInfo.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineBiome, MachinePlacement, MachineVisualRegistry, PacketDirection, TileEntityHelper
   class MachinePlacementInfoSystem : ModSystem
     +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov] +Unload()[ov]
   static class MachinePlacementInfo
@@ -360,6 +360,14 @@ tModLoader/other bases -> project types:
 **MachineRemoval.cs** uses: BaseMachine, FactorrariaNet, TileEntityHelper
   static class MachineRemoval
     +OnTileKilled(int,int)[s]
+**MachineSnapshot.cs** uses: BaseMachine, CustomRecipe, LiquidIngredient, LiquidStack, LiquidTypeRegistry, RecipeBook, RecipeCatalog, RecipeIngredient, RecipeOutputGroup, RecipeOutputKey
+  static class MachineSnapshot
+    +Sent:int[s] +SentBytes:long[s] +Received:int[s] +ReceivedBytes:long[s] +Failed:int[s] +WriteItems(Item,BinaryWriter)[s] +ReadItems(Item,BinaryReader)[s] +WriteLiquids(LiquidStack,BinaryWriter)[s] +ReadLiquids(LiquidStack,BinaryReader)[s] +WriteRecipes(BaseMachine,BinaryWriter)[s] +ReadRecipes(BaseMachine,BinaryReader)[s] +Fingerprint(CustomRecipe)[s] +SafeName(int)[s] +Digest(byte)[s] +DescribeItems(Item)[s] +DescribeLiquids(LiquidStack)[s] +DescribeRecipe(BaseMachine)[s] +CountSent(int)[s] +CountReceived(int)[s] +CountFailed()[s]
+    sealed class GroupMap
+      +Count:int +ByKey:Dictionary<string, RecipeOutputGroup>
+**MachineSnapshotCommand.cs** uses: BaseMachine, FactorrariaNet, MachinePlacement, MachineSnapshot
+  class MachineSnapshotCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **MechSuitNet.cs** uses: FactorrariaNet, FactorrariaPacket, MechSuitPlayer, PacketDirection
   class MechSuitNetSystem : ModSystem
     +Load()[ov]
@@ -838,7 +846,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/
-**MechanicalAssemblerRecipeRegistry.cs** uses: CopperWireItem, CustomRecipe, GoldPlateItem, GoldWireItem, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
+**MechanicalAssemblerRecipeRegistry.cs** uses: CopperWireItem, CustomRecipe, GoldPlateItem, GoldWireItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
   class MechanicalAssemblerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **MechanicalAssemblerTile.cs** uses: MechanicalAssemblerItem, MechanicalAssemblerTileEntity
@@ -870,7 +878,7 @@ tModLoader/other bases -> project types:
     +Texture:string[ov] +Slope(int,int)[ov]
 **RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, IMachineDynamicDraw, RoboticArmMotion, RoboticArmTile, RoboticArmVisual, RoboticArmWorker, VirtualItemSystem
   class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +Motion:RoboticArmMotion +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaLimit:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsPlaceable(Item) +IsAcceptedItem(Item) #IntakeTiles()[ov] #TryGetIntakeSlot(int,out int,out int)[ov] +CanDeliverDrops:bool +RouteDrop(Item) +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
+    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +Motion:RoboticArmMotion +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaLimit:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsPlaceable(Item) +IsAcceptedItem(Item) #IntakeTiles()[ov] #TryGetIntakeSlot(int,out int,out int)[ov] +CanDeliverDrops:bool +RouteDrop(Item) +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
 **RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, RoboticArmAreaEditorSystem, RoboticArmTileEntity, UIItemSlotWrapper
   class RoboticArmUIState : MachineUIStateBase
     #BuildElements()[ov]
@@ -973,7 +981,7 @@ tModLoader/other bases -> project types:
     +LiquidFuels:LiquidFuelTable[s] +BuildRecipes()[s]
 **MagicMaterializerTileEntity.cs** uses: AwakenedStatueSystem, BaseMachine, IStatueAwakener, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, MagicMaterializerRegistry
   class MagicMaterializerTileEntity : BaseMachine, IStatueAwakener
-    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +ShimmerDrainPerSecond:float +AwakenRadiusTiles:int +IsAwakening:bool +AwakenerOrigin:Point16 +AwakenedStatueCount:int +AwakenedEnemyCount:int +BackgroundActive:bool +HasShimmer:bool +OnRightClick(int,int)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +TreatsWorldLiquidAsInfinite(int)[ov] +OnKill()[ov] +Update()[ov]
+    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +ShimmerDrainPerSecond:float +AwakenRadiusTiles:int +IsAwakening:bool +AwakenerOrigin:Point16 +AwakenedStatueCount:int +AwakenedEnemyCount:int +BackgroundActive:bool +HasShimmer:bool +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +TreatsWorldLiquidAsInfinite(int)[ov] +OnKill()[ov] +Update()[ov]
 **MaterializerRightClickGuard.cs** uses: MachineVisualRegistry, TileEntityHelper
   class MaterializerRightClickGuard : ModSystem
     +Load()[ov] +Unload()[ov]

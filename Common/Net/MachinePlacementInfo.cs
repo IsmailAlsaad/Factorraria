@@ -159,6 +159,7 @@ namespace Factorraria.Common.Net
         static void Apply(BaseMachine machine, MachineBiome biome, string why)
         {
             machine.InsideBiome = biome;
+            MachinePlacement.Share(machine);   // patch 5.1: the placement share went out before the biome was known; send the updated snapshot
             FactorrariaNet.Log("[Machines] biome " + biome + " applied to " + machine.GetType().Name + " at (" + machine.Position.X + ", " + machine.Position.Y + ") (" + why + ")");
         }
 
