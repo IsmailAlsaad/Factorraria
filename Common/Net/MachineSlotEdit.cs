@@ -302,7 +302,7 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            if (!next.IsAir && (next.type <= 0 || next.type >= ItemLoader.ItemCount || next.stack < 1 || next.stack > Math.Max(1, next.maxStack)))
+            if (!next.IsAir && (next.type <= ItemID.None || next.type >= ItemLoader.ItemCount || next.stack < 1 || next.stack > Math.Max(1, next.maxStack)))
             {
                 Reject(player, corner, seq, kind, index, current.Clone(), "not a valid item or stack: " + Describe(next));
                 return;
@@ -462,7 +462,7 @@ namespace Factorraria.Common.Net
                 return;
 
             Player player = Main.LocalPlayer;
-            Item leftover = player.GetItem(taken.Clone(), new GetItemSettings(NoText: true, NoSound: true));
+            Item leftover = player.GetItem(player.whoAmI, taken.Clone(), new GetItemSettings(NoText: true));
             SoundEngine.PlaySound(SoundID.Grab);
 
             // The inventory can have filled up during the round trip: whatever does not fit drops next to the player instead of vanishing.
