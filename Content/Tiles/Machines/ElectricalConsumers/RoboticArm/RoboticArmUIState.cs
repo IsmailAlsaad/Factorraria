@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.UI;
+﻿using Factorraria.Common.Net;
+using Factorraria.Common.UI;
 using Factorraria.Common.UI.CustomUIElements;
 using Factorraria.Content.UI;
 using Microsoft.Xna.Framework;
@@ -27,7 +28,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                     () => Entity.InputSlots[0],
                     v => Entity.InputSlots[0] = v,
                     ShowElements,
-                    item => Entity.IsAcceptedItem(item)),
+                    item => Entity.AcceptsSlotItem(MachineSlotKind.Input, 0, item),
+                    null, null,
+                    new MachineSlotBinding(() => Entity, MachineSlotKind.Input, 0)),
                 new Vector2(-20, 30), new Vector2(SlotSize, SlotSize)));
 
             list.Add(new MachineUIElementEntry(

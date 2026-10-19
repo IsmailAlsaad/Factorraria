@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Net;
 using Factorraria.Common.UI.CustomUIElements;
 using Factorraria.Content.Configs;
 using Factorraria.Content.UI;
@@ -123,7 +124,10 @@ namespace Factorraria.Common.UI
                 new UIItemSlotWrapper(ItemSlot.Context.ChestItem,
                     () => CurrentEntity.InputSlots[slotIndex],
                     v => CurrentEntity.InputSlots[slotIndex] = v,
-                    isVisible),
+                    isVisible,
+                    item => CurrentEntity.AcceptsSlotItem(MachineSlotKind.Input, slotIndex, item),
+                    null, null,
+                    new MachineSlotBinding(() => CurrentEntity, MachineSlotKind.Input, slotIndex)),
                 pos, new Vector2(SlotSize, SlotSize));
 
         protected MachineUIElementEntry OutputSlotEntry(int slotIndex, Vector2 pos, Func<bool> isVisible = null) =>
@@ -131,8 +135,11 @@ namespace Factorraria.Common.UI
                 new UIItemSlotWrapper(ItemSlot.Context.ChestItem,
                     () => CurrentEntity.OutputSlots[slotIndex],
                     v => CurrentEntity.OutputSlots[slotIndex] = v,
-                    isVisible, null, null,
-                    new OutputSlotAnimation(() => CurrentEntity, slotIndex).Draw),
+                    isVisible,
+                    item => CurrentEntity.AcceptsSlotItem(MachineSlotKind.Output, slotIndex, item),
+                    null,
+                    new OutputSlotAnimation(() => CurrentEntity, slotIndex).Draw,
+                    new MachineSlotBinding(() => CurrentEntity, MachineSlotKind.Output, slotIndex)),
                 pos, new Vector2(SlotSize, SlotSize));
 
         protected MachineUIElementEntry FuelSlotEntry(int fuelIndex, Vector2 pos) => InputSlotEntry(BaseMachine.FuelSlotIndex + fuelIndex, pos);

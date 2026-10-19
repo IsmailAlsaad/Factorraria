@@ -163,6 +163,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             return IsTool(item) || IsPlaceable(item);
         }
 
+        // Patch 6.2: the slot filter the UI and the server's slot edit validation share.
+        public override bool AcceptsSlotItem(global::Factorraria.Common.Net.MachineSlotKind kind, int index, Item item)
+        {
+            return kind == global::Factorraria.Common.Net.MachineSlotKind.Input && index == 0 && IsAcceptedItem(item);
+        }
+
         // The arm is a 1x1 solid tile, so vItems can never sit on its own footprint: it reads the 8 tiles around its anchor instead.
         protected override IEnumerable<Point> IntakeTiles()
         {

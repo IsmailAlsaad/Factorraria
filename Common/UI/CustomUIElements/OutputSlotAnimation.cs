@@ -29,6 +29,8 @@ namespace Factorraria.Common.UI.CustomUIElements
         BaseMachine lastMachine;
         int lastCrafts;
         uint lastDrawTick;
+        uint sessionStart;          // patch 6.2 (U10): when this machine's UI session started drawing
+        bool awaitingDetail;        // multiplayer client: the craft counter is not exact until the first detail packet of the session
 
         public OutputSlotAnimation(Func<BaseMachine> _getMachine, int _slotIndex)
         {
@@ -135,6 +137,19 @@ namespace Factorraria.Common.UI.CustomUIElements
             {
                 lastMachine = machine;
                 lastCrafts = machine.CraftsFinished;
+                sessionStart = now;
+                awaitingDetail = Main.netMode == NetmodeID.MultiplayerClient;
+                return;
+            }
+
+            // Patch 6.2 (U10): on a multiplayer client the replica's craft counter is only rounded by light updates until the first
+            // detail packet of this UI session arrives. That packet is the baseline, not a finished craft, so opening the UI stays silent.
+            // Gives up waiting after two seconds (a machine whose detail never comes still plays its sound).
+            if (awaitingDetail)
+            {
+                lastCrafts = machine.CraftsFinished;
+                if ((machine.LastDetailTick != 0 && machine.LastDetailTick >= sessionStart) || now - sessionStart > 120)
+                    awaitingDetail = false;
                 return;
             }
 

@@ -56,6 +56,23 @@ namespace Factorraria.Common.Machines
         public Item[] InputSlots => inputSlots ??= CreateItemArray(InputSlotCount);
         public Item[] OutputSlots => outputSlots ??= CreateItemArray(OutputSlotCount);
 
+        /// <summary>The slot array a slot edit (patch 6.2) addresses.</summary>
+        public Item[] SlotsOf(MachineSlotKind kind) => kind == MachineSlotKind.Output ? OutputSlots : InputSlots;
+
+        /// <summary>
+        /// The one accept filter for putting an item into a slot. The UI (UIItemSlotWrapper) uses it to refuse the cursor item and, on a
+        /// multiplayer client, the server uses it to validate a slot edit (patch 6.2), so both always agree. Taking items out is never
+        /// filtered. Default: everything goes in, except an ingredient slot that is hidden right now (ReleaseHiddenIngredientSlots would
+        /// throw its content out). Override for machines with their own rules (the Robotic Arm).
+        /// </summary>
+        public virtual bool AcceptsSlotItem(MachineSlotKind kind, int index, Item item)
+        {
+            if (kind == MachineSlotKind.Input && index >= IngredientStart + ActiveIngredientCount)
+                return false;
+
+            return true;
+        }
+
         static Item[] CreateItemArray(int count)
         {
             var arr = new Item[count];

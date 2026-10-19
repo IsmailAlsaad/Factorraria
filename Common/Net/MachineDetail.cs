@@ -159,6 +159,13 @@ namespace Factorraria.Common.Net
             SendToSubscribers(record);
         }
 
+        /// <summary>Server only (patch 6.2): true when this player currently has this machine's UI open, that is, they are on its subscriber list.</summary>
+        public bool IsSubscribed(int player, BaseMachine machine)
+        {
+            return player >= 0 && player < Main.maxPlayers && machine != null && playerMachine[player] == machine.ID
+                && records.TryGetValue(machine.ID, out Record record) && record.Subscribers.Exists(s => s.Player == player);
+        }
+
         // ---------------------------------------------------------------- server: lifetime
 
         /// <summary>Called from BaseMachine.OnKill (server only, every kill path): closes the UI of everyone who has this machine open.</summary>
@@ -449,6 +456,7 @@ namespace Factorraria.Common.Net
                 using var stream = new MemoryStream(bytes);
                 using var payloadReader = new BinaryReader(stream);
                 machine.ApplyDetail(payloadReader);
+                MachineSlotEdit.ReapplyPendingEdit(machine);   // patch 6.2: a slot edit still waiting for its answer stays visible
                 machine.LastDetailTick = Main.GameUpdateCount;
                 Interlocked.Increment(ref Applied);
             }
