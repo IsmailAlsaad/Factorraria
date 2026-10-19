@@ -11,7 +11,7 @@ namespace Factorraria.Common.Net
     {
         public override string Command => "fslot";
         public override CommandType Type => CommandType.Chat | CommandType.Console;
-        public override string Usage => "/fslot [reject]";
+        public override string Usage => "/fslot [reject|recipe]";
         public override string Description => "Multiplayer test (6.2): slot edit counters; 'reject' makes the next machine slot click get rejected on purpose.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -23,7 +23,14 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            caller.Reply(MachineSlotEdit.Describe(), Color.LightGreen);
+            if (args.Length > 0 && args[0].ToLowerInvariant() == "recipe")
+            {
+                MachineRecipeSelect.CorruptNextRequest = true;
+                caller.Reply("The next recipe pick will be sent wrong on purpose: the server rejects it and the browser shows the real pick again.", Color.LightGreen);
+                return;
+            }
+
+            caller.Reply(MachineSlotEdit.Describe() + " | " + MachineRecipeSelect.Describe(), Color.LightGreen);
         }
     }
 }

@@ -457,6 +457,7 @@ namespace Factorraria.Common.Net
                 using var payloadReader = new BinaryReader(stream);
                 machine.ApplyDetail(payloadReader);
                 MachineSlotEdit.ReapplyPendingEdit(machine);   // patch 6.2: a slot edit still waiting for its answer stays visible
+                MachineRecipeSelect.ReapplyPending(machine);   // patch 6.3: so does a recipe pick
                 machine.LastDetailTick = Main.GameUpdateCount;
                 Interlocked.Increment(ref Applied);
             }

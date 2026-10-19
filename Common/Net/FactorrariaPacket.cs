@@ -31,6 +31,8 @@ namespace Factorraria.Common.Net
         MachineDetailClosed = 22,      // server -> client: "your subscription to the machine at (x, y) ended (killed, out of reach, dead, full, rejected): close its UI" (patch 5.3)
         MachineSlotEditRequest = 23,   // client -> server: "slot <kind> <index> of the machine at (x, y) held <old item>, make it <new item>" (patch 6.2)
         MachineSlotEditResult = 24,    // server -> client: "edit <seq> was accepted / rejected; on a reject the slot really holds <item>" (patch 6.2)
+        MachineSelectRecipeRequest = 25, // client -> server: "on the machine at (x, y) I picked the recipe group with this catalog key (empty = auto)" (patch 6.3)
+        MachineSelectRecipeResult = 26,  // server -> client: "pick <seq> was accepted / rejected; the machine's real pick is this key" (patch 6.3)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.
