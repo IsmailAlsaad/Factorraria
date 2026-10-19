@@ -38,8 +38,18 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 return;
             }
 
+            self.tileInteractionHappened = true;    // the click counts as used, as vanilla's monolith branch did
+
+            // Patch 6.4b: vanilla's TileInteractionsUse marks the press as consumed (releaseUseTile = false) before anything else, so a held
+            // button or a hover does not fire again. Skipping orig skipped that too, so the toggle fired every tick. Act only on a fresh press
+            // and consume it the same way.
+            if (!self.controlUseTile || !self.releaseUseTile)
+                return;
+
+            self.tileInteractAttempted = true;
+            self.releaseUseTile = false;
+
             TileLoader.RightClick(myX, myY);        // MachineVisualOverride.RightClick: the Materializer's own handling
-            self.tileInteractionHappened = true;    // as vanilla's monolith branch did, so the click counts as used
         }
     }
 }
