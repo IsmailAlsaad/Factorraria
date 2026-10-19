@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Net;
 using Factorraria.Common.UI;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -65,24 +66,64 @@ namespace Factorraria.Common.Systems
 
             machineInterface.SetState(null);  // clear first...
             machineInterface.SetState(state); // ...then set, forces a clean re-initialize
+
+            // Patch 5.3: a multiplayer client asks the server for this machine's detail (slots, tanks, exact progress). Single-player
+            // and the host read the real entity, so nothing is sent there.
+            if (Main.netMode == NetmodeID.MultiplayerClient && entity != null)
+                MachineDetail.SendSubscribe(entity.Position, true);
         }
 
-        public void CloseUI()
+        public void CloseUI() => CloseUI(true);
+
+        // notifyServer: a multiplayer client tells the server it no longer has this machine open (patch 5.3). False when the server
+        // already ended the subscription (it killed the machine or sent a close notice).
+        void CloseUI(bool notifyServer)
         {
+            if (notifyServer && openState?.CurrentEntity != null && Main.netMode == NetmodeID.MultiplayerClient)
+                MachineDetail.SendSubscribe(openState.CurrentEntity.Position, false);
+
             machineInterface.SetState(null);
             openState = null;
         }
+
         public void NotifyMachineKilled(BaseMachine machine)
         {
             if (openState != null && openState.CurrentEntity == machine)
             {
-                CloseUI();
+                CloseUI(false);   // a killed machine's subscription is ended by the server
+            }
+        }
+
+        // Patch 5.3: the server ended this player's subscription (machine killed, out of reach, dead, refused). The packet handler may run
+        // on the network thread, so it only records the request; UpdateUI (main thread) closes the UI.
+        readonly object pendingCloseLock = new object();
+        bool hasPendingClose;
+        Point16 pendingClosePosition;
+
+        public void RequestCloseFromServer(int x, int y)
+        {
+            lock (pendingCloseLock)
+            {
+                hasPendingClose = true;
+                pendingClosePosition = new Point16((short)x, (short)y);
             }
         }
 
         // tModLoader calls this every frame, automatically.
         public override void UpdateUI(GameTime gameTime)
         {
+            bool closeFromServer = false;
+            Point16 closePosition;
+            lock (pendingCloseLock)
+            {
+                closePosition = pendingClosePosition;
+                closeFromServer = hasPendingClose;
+                hasPendingClose = false;
+            }
+
+            if (closeFromServer && openState?.CurrentEntity != null && openState.CurrentEntity.Position == closePosition)
+                CloseUI(false);
+
             if (!Main.playerInventory) // player closed their inventory (Esc, etc) — close ours too
                 CloseUI();
 

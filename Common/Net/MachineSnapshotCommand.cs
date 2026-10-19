@@ -47,7 +47,7 @@ namespace Factorraria.Common.Net
                 + " B), received " + MachineSnapshot.Received + " (" + MachineSnapshot.ReceivedBytes + " B), failed " + MachineSnapshot.Failed
                 + "; light: packets sent " + MachineLightSync.PacketsSent + " (" + MachineLightSync.EntriesSent + " entries, " + MachineLightSync.BytesSent
                 + " B), entries received " + MachineLightSync.EntriesReceived + " (applied " + MachineLightSync.Applied + ", missed " + MachineLightSync.Missed
-                + ", failed " + MachineLightSync.Failed + ")";
+                + ", failed " + MachineLightSync.Failed + "); " + MachineDetail.Describe();
             caller.Reply(summary, Color.LightGreen);
             FactorrariaNet.Log("[Snapshot] " + summary);
 

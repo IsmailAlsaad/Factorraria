@@ -345,6 +345,7 @@ namespace Factorraria.Common.Machines
                 PowerGridSystem.gridNeedsRebuilding = true;
             }
             ModContent.GetInstance<MachineUISystem>().NotifyMachineKilled(this);
+            MachineDetailSystem.NotifyMachineKilled(this);   // patch 5.3: server only, closes the UI of every client that has this machine open
         }
 
         #endregion
@@ -1032,6 +1033,10 @@ namespace Factorraria.Common.Machines
 
         public void ApplyLightState(BinaryReader r)
         {
+            // Patch 5.3: while this replica gets detail packets (its UI is open) the exact values win over the rounded light values.
+            if (LastDetailTick != 0 && Main.GameUpdateCount - LastDetailTick < (uint)MachineDetail.FreshTicks)
+                return;
+
             byte flags = r.ReadByte();
             int progress = r.Read7BitEncodedInt();
             int crafts = r.Read7BitEncodedInt();
@@ -1062,6 +1067,75 @@ namespace Factorraria.Common.Machines
 
             MachineLightSync.ReadTanks(InputLiquids, r);
             MachineLightSync.ReadTanks(OutputLiquids, r);
+        }
+
+        // ---- Detail channel (patch 5.3) ----
+        // The full, exact state a player with this machine's UI open needs: flags, exact progress, crafts, use fraction, manual group and
+        // running recipe, every input and output slot, exact tank amounts and fuel. Same codecs as the 5.1 snapshot, but without the
+        // biome and the subclass extras (arm area, motor facing, Materializer toggle: they have their own requests later), so applying it
+        // never touches those. BuildDetail runs on the server (MachineDetailSystem), ApplyDetail on a client replica, in place: it never
+        // replaces the entity and never sends anything.
+        public uint LastDetailTick;   // client replica: Main.GameUpdateCount when the last detail arrived (0 = never)
+
+        public byte[] BuildDetail()
+        {
+            var stream = new MemoryStream();
+            var w = new BinaryWriter(stream);
+
+            w.Write((byte)1);   // detail format version
+
+            byte flags = 0;
+            if (isOn) flags |= 1;
+            if (isWorking) flags |= 2;
+            w.Write(flags);
+            w.Write7BitEncodedInt(Math.Max(0, WorkProgress));
+            w.Write7BitEncodedInt(Math.Max(0, CraftsFinished));
+            if (IsElectric) w.Write(GetSnapshotUseFraction());
+
+            MachineSnapshot.WriteRecipes(this, w);
+            MachineSnapshot.WriteItems(InputSlots, w);
+            MachineSnapshot.WriteItems(OutputSlots, w);
+            MachineSnapshot.WriteLiquids(InputLiquids, w);
+            MachineSnapshot.WriteLiquids(OutputLiquids, w);
+
+            w.Write7BitEncodedInt(Fuels.Length);
+            foreach (FuelModule fuel in Fuels)
+            {
+                w.Write7BitEncodedInt(fuel.Remaining);
+                w.Write7BitEncodedInt(fuel.Capacity);
+            }
+
+            w.Flush();
+            return stream.ToArray();
+        }
+
+        public void ApplyDetail(BinaryReader r)
+        {
+            int version = r.ReadByte();
+            if (version != 1)
+                return;   // a format this build does not know: keep what the replica has
+
+            byte flags = r.ReadByte();
+            isOn = (flags & 1) != 0;
+            isWorking = (flags & 2) != 0;
+            WorkProgress = r.Read7BitEncodedInt();
+            CraftsFinished = r.Read7BitEncodedInt();
+            if (IsElectric) SetSnapshotUseFraction(r.ReadSingle());
+
+            MachineSnapshot.ReadRecipes(this, r);
+            MachineSnapshot.ReadItems(InputSlots, r);
+            MachineSnapshot.ReadItems(OutputSlots, r);
+            MachineSnapshot.ReadLiquids(InputLiquids, r);
+            MachineSnapshot.ReadLiquids(OutputLiquids, r);
+
+            int fuelCount = r.Read7BitEncodedInt();
+            for (int i = 0; i < fuelCount; i++)
+            {
+                int remaining = r.Read7BitEncodedInt();
+                int capacity = r.Read7BitEncodedInt();
+                if (i < Fuels.Length)
+                    Fuels[i].Restore(remaining, capacity);
+            }
         }
 
         float GetSnapshotUseFraction() => this is IElectricConsumer consumer ? consumer.useFraction : this is IElectricProducer producer ? producer.useFraction : 0f;

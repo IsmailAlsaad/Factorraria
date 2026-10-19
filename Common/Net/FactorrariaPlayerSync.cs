@@ -17,6 +17,7 @@ namespace Factorraria.Common.Net
         public override void PlayerDisconnect()
         {
             JoinSync.OnPlayerDisconnect(Player.whoAmI);
+            MachineDetailSystem.OnPlayerLeft(Player.whoAmI);   // patch 5.3 (server only)
         }
 
         public override void CopyClientState(ModPlayer targetCopy)

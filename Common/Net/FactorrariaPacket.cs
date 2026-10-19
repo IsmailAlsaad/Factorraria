@@ -26,6 +26,9 @@ namespace Factorraria.Common.Net
         AwakenedStatuesChanged = 17,   // server -> client: "these statue origins are no longer awakened, these now are" (patch 3.4b)
         MachineBiomeReport = 18,       // client -> server: "the machine I just placed at (x, y) is in biome <b>" (patch 4.3)
         MachineLightUpdate = 19,       // server -> client: "these machines near you changed: flags, progress, crafts, use, recipe, fuel, tank levels" (patch 5.2)
+        MachineSubscribeRequest = 20,  // client -> server: "I opened / closed the UI of the machine at (x, y)" (patch 5.3)
+        MachineDetail = 21,            // server -> client: "here is the full, exact state of the machine at (x, y) you have open" (patch 5.3)
+        MachineDetailClosed = 22,      // server -> client: "your subscription to the machine at (x, y) ended (killed, out of reach, dead, full, rejected): close its UI" (patch 5.3)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.
