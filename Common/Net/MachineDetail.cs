@@ -471,9 +471,10 @@ namespace Factorraria.Common.Net
         {
             short x = reader.ReadInt16();
             short y = reader.ReadInt16();
-            reader.ReadByte();   // DetailCloseReason, for logs only
+            var reason = (DetailCloseReason)reader.ReadByte();
             Interlocked.Increment(ref ClosedReceived);
-            ModContent.GetInstance<MachineUISystem>().RequestCloseFromServer(x, y);
+            // Walking out of reach closes like clicking the machine again (sound, inventory); the other reasons close silently.
+            ModContent.GetInstance<MachineUISystem>().RequestCloseFromServer(x, y, reason == DetailCloseReason.OutOfReach);
         }
 
         // Test aid (temporary, used by /fsnap).

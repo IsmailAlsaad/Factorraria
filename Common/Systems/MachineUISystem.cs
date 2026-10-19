@@ -98,13 +98,15 @@ namespace Factorraria.Common.Systems
         // on the network thread, so it only records the request; UpdateUI (main thread) closes the UI.
         readonly object pendingCloseLock = new object();
         bool hasPendingClose;
+        bool pendingCloseFull;
         Point16 pendingClosePosition;
 
-        public void RequestCloseFromServer(int x, int y)
+        public void RequestCloseFromServer(int x, int y, bool full = false)
         {
             lock (pendingCloseLock)
             {
                 hasPendingClose = true;
+                pendingCloseFull = full;
                 pendingClosePosition = new Point16((short)x, (short)y);
             }
         }
@@ -113,16 +115,25 @@ namespace Factorraria.Common.Systems
         public override void UpdateUI(GameTime gameTime)
         {
             bool closeFromServer = false;
+            bool closeFull = false;
             Point16 closePosition;
             lock (pendingCloseLock)
             {
                 closePosition = pendingClosePosition;
                 closeFromServer = hasPendingClose;
+                closeFull = pendingCloseFull;
                 hasPendingClose = false;
             }
 
             if (closeFromServer && openState?.CurrentEntity != null && openState.CurrentEntity.Position == closePosition)
+            {
+                if (closeFull)
+                {
+                    SoundEngine.PlaySound(SoundID.MenuClose);
+                    Main.playerInventory = false;
+                }
                 CloseUI(false);
+            }
 
             if (!Main.playerInventory) // player closed their inventory (Esc, etc) — close ours too
                 CloseUI();

@@ -533,7 +533,7 @@ tModLoader/other bases -> project types:
     +Load()[ov] +PostSetupContent()[ov] +PostAddRecipes()[ov] +Unload()[ov]
 **MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, MachineDetail, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem
   class MachineUISystem : ModSystem
-    +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +NotifyMachineKilled(BaseMachine) +RequestCloseFromServer(int,int) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +NotifyMachineKilled(BaseMachine) +RequestCloseFromServer(int,int,bool) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
