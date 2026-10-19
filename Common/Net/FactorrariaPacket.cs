@@ -33,6 +33,8 @@ namespace Factorraria.Common.Net
         MachineSlotEditResult = 24,    // server -> client: "edit <seq> was accepted / rejected; on a reject the slot really holds <item>" (patch 6.2)
         MachineSelectRecipeRequest = 25, // client -> server: "on the machine at (x, y) I picked the recipe group with this catalog key (empty = auto)" (patch 6.3)
         MachineSelectRecipeResult = 26,  // server -> client: "pick <seq> was accepted / rejected; the machine's real pick is this key" (patch 6.3)
+        MaterializerToggleRequest = 27,  // client -> server: "switch the starry background of the Materializer at (x, y) to on / off" (patch 6.4)
+        MaterializerBackgroundChanged = 28, // server -> client(s): "the Materializer at (x, y) now has its background on / off (asked by player <n>)" (patch 6.4)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

@@ -30,7 +30,7 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            caller.Reply(MachineSlotEdit.Describe() + " | " + MachineRecipeSelect.Describe(), Color.LightGreen);
+            caller.Reply(MachineSlotEdit.Describe() + " | " + MachineRecipeSelect.Describe() + " | " + MaterializerToggle.Describe(), Color.LightGreen);
         }
     }
 }

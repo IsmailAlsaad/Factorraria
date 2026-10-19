@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
+using Factorraria.Common.Net;
 using Factorraria.Common.Statues;
 using System.IO;
 using Terraria;
@@ -40,6 +41,14 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
 
         public override void OnRightClick(int i, int j)
         {
+            // Patch 6.4: on a multiplayer client the server owns the value. The request carries the wanted value; the answer (a broadcast)
+            // changes every replica and plays the click for the player who asked. Nothing is flipped here.
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                MaterializerToggle.Request(this);
+                return;
+            }
+
             if (!HasShimmer) return;
 
             BackgroundActive = !BackgroundActive;
