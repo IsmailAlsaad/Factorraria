@@ -4,7 +4,7 @@ generated 2026-10-19 | 222 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(35) BaseMachine(29) RecipeBook(24) LiquidTypeRegistry(24) CustomRecipe(16) FactorrariaPacket(15) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) PacketDirection(12) MachineUIElementEntry(12) LiquidNetworkSystem(11) RecipeOutputGroup(10) VirtualItemSystem(9) RecipeCatalog(9) RecipeOutputKey(8) MachineVisualRegistry(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8)
+FactorrariaNet(37) BaseMachine(29) RecipeBook(24) LiquidTypeRegistry(24) CustomRecipe(16) FactorrariaPacket(15) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) PacketDirection(12) MachineUIElementEntry(12) LiquidNetworkSystem(11) RecipeOutputGroup(10) VirtualItemSystem(9) RecipeCatalog(9) RecipeOutputKey(8) MachineVisualRegistry(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -351,7 +351,7 @@ tModLoader/other bases -> project types:
   enum DetailCloseReason : byte
     {Closed, Killed, OutOfReach, Dead, Full, Rejected}
   class MachineDetailSystem : ModSystem
-    +ScanIntervalTicks:int +MaxSubscribersPerMachine:int +KeepReachExtraTiles:float +Load()[ov] +OnSubscribeRequest(int,int,int,bool) +Push(BaseMachine) +NotifyMachineKilled(BaseMachine)[s] +OnPlayerLeft(int)[s] +PostUpdateEverything()[ov] +DescribeSubscriptions() +OnWorldUnload()[ov] +Unload()[ov]
+    +ScanIntervalTicks:int +MaxSubscribersPerMachine:int +KeepReachExtraTiles:float +Load()[ov] +OnSubscribeRequest(int,int,int,bool) +Push(BaseMachine) +NotifyMachineKilled(BaseMachine)[s] +OnPlayerLeft(int)[s] +PostUpdateEverything()[ov] ~WithinReach(Player,BaseMachine,float)[s] +DescribeSubscriptions() +OnWorldUnload()[ov] +Unload()[ov]
     sealed class Subscriber
       +Player:int +SentVersion:uint
     sealed class Record
@@ -531,13 +531,13 @@ tModLoader/other bases -> project types:
 **MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MagicMaterializerRegistry, MagicMaterializerTileEntity, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MotorMK1Tile, MotorMK1TileEntity, RecipeBook, RecipeCatalog, RecipeVisibility, RoboticArmTile, RoboticArmTileEntity, RoboticArmUIState, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState
   class MachineRegisterationSystem : ModSystem
     +Load()[ov] +PostSetupContent()[ov] +PostAddRecipes()[ov] +Unload()[ov]
-**MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, MachineDetail, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem
+**MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, FactorrariaNet, MachineDetail, MachineDetailSystem, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem
   class MachineUISystem : ModSystem
     +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +NotifyMachineKilled(BaseMachine) +RequestCloseFromServer(int,int,bool) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
-**PowerGridSystem.cs** uses: CustomWireSystem, CustomWireType, IElectricConsumer, IElectricProducer, PowerNetwork, TileEntityHelper
+**PowerGridSystem.cs** uses: CustomWireSystem, CustomWireType, FactorrariaNet, IElectricConsumer, IElectricProducer, PowerNetwork, TileEntityHelper
   class PowerGridSystem : ModSystem
     +AllMachines:HashSet<TileEntity>[s] +ActivePowerNetworks:List<PowerNetwork>[s] +gridNeedsRebuilding:bool[s] +PostUpdateWorld()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RegisterMachineToMasterList(TileEntity)[s]
 **RecipeBookSystem.cs** uses: CartChestUISystem, Factorraria, MachineUISystem, RecipeBookArt, RecipeBookButtonState, RecipeBookState, RecipeIcon

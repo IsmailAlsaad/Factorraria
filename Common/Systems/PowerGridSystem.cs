@@ -1,5 +1,6 @@
 ﻿
 using Factorraria.Common.Machines;
+using Factorraria.Common.Net;
 using Factorraria.Common.PowerGrid;
 using Microsoft.Xna.Framework;
 using System;
@@ -18,6 +19,10 @@ namespace Factorraria.Common.Systems
         public static List<PowerNetwork> ActivePowerNetworks = new List<PowerNetwork>();
         public static bool gridNeedsRebuilding = true;
 
+        // Patch 5.4: saved machines are indexed once per world. The old check ("when the machine list is empty") was skipped whenever a
+        // machine had registered itself first (the 4.5 bootstrap scan, an early client placement), which left every saved machine out of the grids.
+        bool machinesIndexed;
+
         public override void PostUpdateWorld()
         {
             if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
@@ -25,9 +30,10 @@ namespace Factorraria.Common.Systems
 
             if (gridNeedsRebuilding)
             {
-                if (AllMachines.Count == 0)
+                if (!machinesIndexed)
                 {
                     InitializeMachinesList();
+                    machinesIndexed = true;
                 }
 
                 RebuildNetworks();
@@ -56,6 +62,7 @@ namespace Factorraria.Common.Systems
             AllMachines.Clear();
             ActivePowerNetworks.Clear();
             gridNeedsRebuilding = true;
+            machinesIndexed = false;
         }
 
         public override void OnWorldUnload()
@@ -79,6 +86,20 @@ namespace Factorraria.Common.Systems
                 {
                     ActivePowerNetworks.Add(network);
                 }
+            }
+
+            // Test aid (temporary, patch 5.4): the server's view of the grids after every rebuild.
+            if (Main.netMode == Terraria.ID.NetmodeID.Server)
+            {
+                int producers = 0;
+                int consumers = 0;
+                foreach (PowerNetwork built in ActivePowerNetworks)
+                {
+                    producers += built.electricProducers.Count;
+                    consumers += built.electricConsumers.Count;
+                }
+
+                FactorrariaNet.Log("[Power] rebuilt: " + AllMachines.Count + " electric machine(s), " + ActivePowerNetworks.Count + " network(s), " + producers + " producer(s), " + consumers + " consumer(s)");
             }
         }
 

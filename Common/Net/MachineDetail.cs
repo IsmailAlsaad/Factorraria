@@ -338,7 +338,7 @@ namespace Factorraria.Common.Net
 
         // Reach to the nearest tile of the machine's footprint (a 3x3 machine is used from its edge, not its centre). Same rules as
         // FactorrariaNet.InReach plus extraTiles.
-        static bool WithinReach(Player player, BaseMachine machine, float extraTiles)
+        internal static bool WithinReach(Player player, BaseMachine machine, float extraTiles)
         {
             if (player == null || !player.active || player.dead)
                 return false;

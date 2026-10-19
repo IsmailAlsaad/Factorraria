@@ -86,10 +86,27 @@ namespace Factorraria.Common.Systems
             openState = null;
         }
 
+        // Walking away closes like clicking the machine again, plus the inventory (patches 5.3b and 5.3c). The silent closes (killed,
+        // dead, refused, Esc) use CloseUI directly.
+        void CloseFull(bool notifyServer)
+        {
+            SoundEngine.PlaySound(SoundID.MenuClose);
+            Main.playerInventory = false;
+            CloseUI(notifyServer);
+        }
+
+        // Test aid (temporary, patch 5.3c): which path closed or tried to close the machine UI on a multiplayer client.
+        void LogClosed(string why)
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                FactorrariaNet.Log("[Detail] machine UI close on the client: " + why);
+        }
+
         public void NotifyMachineKilled(BaseMachine machine)
         {
             if (openState != null && openState.CurrentEntity == machine)
             {
+                LogClosed("OnKill ran on the client for the open machine");
                 CloseUI(false);   // a killed machine's subscription is ended by the server
             }
         }
@@ -125,23 +142,47 @@ namespace Factorraria.Common.Systems
                 hasPendingClose = false;
             }
 
-            if (closeFromServer && openState?.CurrentEntity != null && openState.CurrentEntity.Position == closePosition)
+            if (closeFromServer)
             {
-                if (closeFull)
+                if (openState?.CurrentEntity != null && openState.CurrentEntity.Position == closePosition)
                 {
-                    SoundEngine.PlaySound(SoundID.MenuClose);
-                    Main.playerInventory = false;
+                    LogClosed("server notice at (" + closePosition.X + ", " + closePosition.Y + "), " + (closeFull ? "full close" : "silent close"));
+                    if (closeFull)
+                        CloseFull(false);
+                    else
+                        CloseUI(false);
                 }
-                CloseUI(false);
+                else
+                {
+                    LogClosed("server notice at (" + closePosition.X + ", " + closePosition.Y + ") ignored, open machine: "
+                        + (openState?.CurrentEntity != null ? "(" + openState.CurrentEntity.Position.X + ", " + openState.CurrentEntity.Position.Y + ")" : "none"));
+                }
+            }
+
+            // Patch 5.3c: a multiplayer client does not depend on the server notice alone. When its own living player is further away than
+            // the server's keep-reach (the same formula the server uses), it does the full close itself: sound, inventory, panel.
+            if (Main.netMode == NetmodeID.MultiplayerClient && Main.playerInventory && openState?.CurrentEntity is BaseMachine reachMachine
+                && !Main.LocalPlayer.dead
+                && !MachineDetailSystem.WithinReach(Main.LocalPlayer, reachMachine, ModContent.GetInstance<MachineDetailSystem>().KeepReachExtraTiles))
+            {
+                LogClosed("local player out of reach of (" + reachMachine.Position.X + ", " + reachMachine.Position.Y + ")");
+                CloseFull(true);
             }
 
             if (!Main.playerInventory) // player closed their inventory (Esc, etc) — close ours too
+            {
+                if (openState != null)
+                    LogClosed("inventory was closed");
                 CloseUI();
+            }
 
             // Patch 4.4: on a multiplayer client the replica can disappear without our OnKill running; close the UI when the open machine is gone.
             if (Main.netMode == NetmodeID.MultiplayerClient && openState?.CurrentEntity is BaseMachine open
                 && !(TileEntity.ByID.TryGetValue(open.ID, out TileEntity live) && ReferenceEquals(live, open)))
+            {
+                LogClosed("the open machine's replica was replaced or removed");
                 CloseUI();
+            }
 
             machineInterface?.Update(gameTime);
         }
