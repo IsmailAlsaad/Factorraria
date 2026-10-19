@@ -25,6 +25,15 @@ namespace Factorraria.Common.Systems
         // and to detect "clicked the same machine again" (close) vs "clicked a different one" (switch).
         Point16 openPosition;
 
+        // Patch 6.1: the open machine's own position (its entity's Position, the top-left corner). A multiplayer client re-resolves the
+        // live replica from it every frame, because a replica can be replaced by a later sync.
+        Point16 openEntityPosition;
+
+        // Patch 6.1: a multiplayer client right-clicked a machine tile whose replica has not arrived yet: the UI opens when it does.
+        bool hasPendingOpen;
+        Point16 pendingOpenTile;
+        uint pendingOpenUntil;
+
         // The machine whose UI is open right now (null when none). Read-only for other systems.
         public BaseMachine OpenMachine => openState?.CurrentEntity;
 
@@ -59,6 +68,7 @@ namespace Factorraria.Common.Systems
             global::Factorraria.Common.Carts.CartChestUISystem.Close(false); // nor a cart inventory
 
             openPosition = clickedPosition;
+            openEntityPosition = entity != null ? entity.Position : clickedPosition;
             state.CurrentEntity = entity; // tell the UI which specific machine to display
             openState = state;
 
@@ -100,6 +110,20 @@ namespace Factorraria.Common.Systems
         {
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 FactorrariaNet.Log("[Detail] machine UI close on the client: " + why);
+        }
+
+        // Patch 6.1: a multiplayer client with no replica for the machine tile at i, j asks the server (an open request makes the server
+        // create and share the entity) and opens the UI as soon as the replica is here. Gives up after 3 seconds.
+        public void RequestOpenWhenReplicaArrives(int i, int j)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient || (hasPendingOpen && Main.GameUpdateCount <= pendingOpenUntil))
+                return;
+
+            hasPendingOpen = true;
+            pendingOpenTile = new Point16((short)i, (short)j);
+            pendingOpenUntil = Main.GameUpdateCount + 180;
+            FactorrariaNet.Log("[Detail] open request for the machine tile at (" + i + ", " + j + "): no replica here yet, asked the server");
+            MachineDetail.SendSubscribe(pendingOpenTile, true);
         }
 
         public void NotifyMachineKilled(BaseMachine machine)
@@ -176,12 +200,40 @@ namespace Factorraria.Common.Systems
                 CloseUI();
             }
 
-            // Patch 4.4: on a multiplayer client the replica can disappear without our OnKill running; close the UI when the open machine is gone.
-            if (Main.netMode == NetmodeID.MultiplayerClient && openState?.CurrentEntity is BaseMachine open
-                && !(TileEntity.ByID.TryGetValue(open.ID, out TileEntity live) && ReferenceEquals(live, open)))
+            // Patches 4.4 and 6.1: on a multiplayer client the replica can be replaced by a later sync, or disappear without our OnKill
+            // running. The UI keeps the machine's position and re-resolves the live replica every frame: a replaced one is rebound (so the
+            // UI and OpenMachine, which the arm's area editor reads, never touch a stale copy), a missing one closes the UI.
+            if (Main.netMode == NetmodeID.MultiplayerClient && openState?.CurrentEntity != null)
             {
-                LogClosed("the open machine's replica was replaced or removed");
-                CloseUI();
+                if (TileEntity.ByPosition.TryGetValue(openEntityPosition, out TileEntity resolved) && resolved is BaseMachine live)
+                {
+                    if (!ReferenceEquals(live, openState.CurrentEntity))
+                    {
+                        FactorrariaNet.Log("[Detail] machine UI rebound to the live replica at (" + openEntityPosition.X + ", " + openEntityPosition.Y + ")");
+                        openState.CurrentEntity = live;
+                    }
+                }
+                else
+                {
+                    LogClosed("the open machine's replica was removed");
+                    CloseUI();
+                }
+            }
+
+            // Patch 6.1: finish an open that was waiting for its replica.
+            if (hasPendingOpen)
+            {
+                if (Main.GameUpdateCount > pendingOpenUntil)
+                {
+                    hasPendingOpen = false;
+                    FactorrariaNet.Log("[Detail] pending open at (" + pendingOpenTile.X + ", " + pendingOpenTile.Y + ") gave up: the replica never arrived");
+                }
+                else if (TileEntityHelper.TryGetEntityFromTile(pendingOpenTile.X, pendingOpenTile.Y, out TileEntity arrived, out Point16 arrivedCorner) && arrived is BaseMachine arrivedMachine)
+                {
+                    hasPendingOpen = false;
+                    FactorrariaNet.Log("[Detail] replica arrived for the pending open at (" + arrivedCorner.X + ", " + arrivedCorner.Y + ")");
+                    arrivedMachine.OnRightClick(arrivedCorner.X, arrivedCorner.Y);
+                }
             }
 
             machineInterface?.Update(gameTime);

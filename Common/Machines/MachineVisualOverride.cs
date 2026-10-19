@@ -267,7 +267,12 @@ namespace Factorraria.Common.Machines
             // Patch 4.5: single-player creates a missing entity here (a safety net behind the bootstrap scan); a multiplayer client only looks up.
             BaseMachine machine = MachinePlacement.EnsureEntity(i, j);
             if (machine == null)
+            {
+                // Patch 6.1: a multiplayer client with no replica asks the server for it (the open request creates and shares the entity there).
+                if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient && global::Factorraria.Common.UI.MachineUIRegistry.Definitions.ContainsKey(type))
+                    ModContent.GetInstance<global::Factorraria.Common.Systems.MachineUISystem>().RequestOpenWhenReplicaArrives(i, j);
                 return;
+            }
 
             TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
 

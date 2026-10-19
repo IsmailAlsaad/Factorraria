@@ -99,26 +99,19 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            Player who = Main.player[player];
-            if (!who.active || who.dead || !WorldGen.InWorld(x, y, 1))
+            // Patch 6.1: the shared validation (also creates and shares a missing entity for a machine tile).
+            RequestCheck check = MachineRequest.Validate(player, x, y, 0f, out BaseMachine machine, out Point16 corner);
+            if (check == RequestCheck.Ignored)
                 return;
 
-            if (!TileEntityHelper.TryGetEntityFromTile(x, y, out TileEntity entity, out Point16 corner) || !(entity is BaseMachine machine))
-            {
-                MachineDetail.Rejected++;
-                SendClosed(player, new Point16((short)x, (short)y), DetailCloseReason.Rejected);
-                return;
-            }
-
-            if (!machine.MachineInitialized)
-                machine.InitializeGeometry();
-
-            if (!WithinReach(who, machine, 0f))
+            if (check == RequestCheck.Refused)
             {
                 MachineDetail.Rejected++;
                 SendClosed(player, corner, DetailCloseReason.Rejected);
                 return;
             }
+
+            Player who = Main.player[player];
 
             // Subscribing again to the machine the player already has just refreshes their copy.
             if (playerMachine[player] != machine.ID)

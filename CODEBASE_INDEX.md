@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-19 | 222 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-19 | 223 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(37) BaseMachine(29) RecipeBook(24) LiquidTypeRegistry(24) CustomRecipe(16) FactorrariaPacket(15) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) PacketDirection(12) MachineUIElementEntry(12) LiquidNetworkSystem(11) RecipeOutputGroup(10) VirtualItemSystem(9) RecipeCatalog(9) RecipeOutputKey(8) MachineVisualRegistry(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8)
+FactorrariaNet(37) BaseMachine(30) RecipeBook(24) LiquidTypeRegistry(24) CustomRecipe(16) FactorrariaPacket(15) TileEntityHelper(13) MachineUIStateBase(13) LiquidStack(13) PacketDirection(12) MachineUIElementEntry(12) LiquidNetworkSystem(11) RecipeOutputGroup(10) VirtualItemSystem(9) RecipeCatalog(9) RecipeOutputKey(8) MachineVisualRegistry(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -29,10 +29,10 @@ tModLoader/other bases -> project types:
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (7): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
+- byte (7): CustomWireType, DetailCloseReason, FactorrariaPacket, KnowledgeKind, PacketDirection, ParchmentFailure, RequestCheck
 - GlobalItem (6): CartModuleItemGlobal, IceBladeItem, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalTile (6): AwakenedStatueGlobalTile, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MaterializerWireGuard, TilePlacedGlobalTile
 - ModCommand (6): MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, WireCountCommand
-- byte (6): CustomWireType, DetailCloseReason, FactorrariaPacket, KnowledgeKind, PacketDirection, ParchmentFailure
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - ModProjectile (3): IceBladeSwingProjectile, MechSuitArmProjectile, MechanicalArmProjectile
 - GlobalNPC (2): AwakenedSpawnGlobalNPC, BossLootGlobal
@@ -276,7 +276,7 @@ tModLoader/other bases -> project types:
 **MachineOverhangSystem.cs** uses: BaseMachine, MachineCanvas, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
     +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
-**MachineVisualOverride.cs** uses: BaseMachine, Direction, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachinePlacement, MachineRemoval, MotorTileEntityBase, TileEntityHelper
+**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, TileEntityHelper
   class LiquidOverlayLayer
     +SourceTexture:Asset<Texture2D> +GetLiquidStack:Func<BaseMachine, LiquidStack> +CacheKey:string
   class MachineCanvas
@@ -347,7 +347,7 @@ tModLoader/other bases -> project types:
 **MachineBootstrapSystem.cs** uses: FactorrariaNet, MachinePlacement, MachineVisualRegistry, TileEntityHelper
   class MachineBootstrapSystem : ModSystem
     +ColumnsPerTick:int[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
-**MachineDetail.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineUISystem, PacketDirection, TileEntityHelper
+**MachineDetail.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineRequest, MachineUISystem, PacketDirection, RequestCheck, TileEntityHelper
   enum DetailCloseReason : byte
     {Closed, Killed, OutOfReach, Dead, Full, Rejected}
   class MachineDetailSystem : ModSystem
@@ -380,6 +380,11 @@ tModLoader/other bases -> project types:
 **MachineRemoval.cs** uses: BaseMachine, FactorrariaNet, TileEntityHelper
   static class MachineRemoval
     +OnTileKilled(int,int)[s]
+**MachineRequest.cs** uses: BaseMachine, MachineDetailSystem, MachinePlacement
+  enum RequestCheck : byte
+    {Ok, Ignored, Refused}
+  static class MachineRequest
+    +Validate(int,int,int,float,out BaseMachine,out Point16)[s]
 **MachineSnapshot.cs** uses: BaseMachine, CustomRecipe, LiquidIngredient, LiquidStack, LiquidTypeRegistry, RecipeBook, RecipeCatalog, RecipeIngredient, RecipeOutputGroup, RecipeOutputKey
   static class MachineSnapshot
     +Sent:int[s] +SentBytes:long[s] +Received:int[s] +ReceivedBytes:long[s] +Failed:int[s] +WriteItems(Item,BinaryWriter)[s] +ReadItems(Item,BinaryReader)[s] +WriteLiquids(LiquidStack,BinaryWriter)[s] +ReadLiquids(LiquidStack,BinaryReader)[s] +WriteRecipes(BaseMachine,BinaryWriter)[s] +ReadRecipes(BaseMachine,BinaryReader)[s] +Fingerprint(CustomRecipe)[s] +SafeName(int)[s] +Digest(byte)[s] +DescribeItems(Item)[s] +DescribeLiquids(LiquidStack)[s] +DescribeRecipe(BaseMachine)[s] +CountSent(int)[s] +CountReceived(int)[s] +CountFailed()[s]
@@ -531,9 +536,9 @@ tModLoader/other bases -> project types:
 **MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MagicMaterializerRegistry, MagicMaterializerTileEntity, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MotorMK1Tile, MotorMK1TileEntity, RecipeBook, RecipeCatalog, RecipeVisibility, RoboticArmTile, RoboticArmTileEntity, RoboticArmUIState, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState
   class MachineRegisterationSystem : ModSystem
     +Load()[ov] +PostSetupContent()[ov] +PostAddRecipes()[ov] +Unload()[ov]
-**MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, FactorrariaNet, MachineDetail, MachineDetailSystem, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem
+**MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, FactorrariaNet, MachineDetail, MachineDetailSystem, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem, TileEntityHelper
   class MachineUISystem : ModSystem
-    +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +NotifyMachineKilled(BaseMachine) +RequestCloseFromServer(int,int,bool) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +RequestOpenWhenReplicaArrives(int,int) +NotifyMachineKilled(BaseMachine) +RequestCloseFromServer(int,int,bool) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
