@@ -153,15 +153,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
             // Gel Burner (Steampunk boiler)
             Recipe.Create(ItemID.SteampunkBoiler, 1)
                 .AddRecipeGroup(RecipeGroupID.IronBar, 10)
-                .AddIngredient(ItemID.TinBar, 5)
                 .AddIngredient(ItemID.Cog, 5)
-                .AddIngredient(ItemID.Torch, 3)
-                .AddTile(TileID.Anvils)
-                .Register();
-            Recipe.Create(ItemID.SteampunkBoiler, 1)
-                .AddRecipeGroup(RecipeGroupID.IronBar, 10)
-                .AddIngredient(ItemID.Cog, 5)
-                .AddIngredient(ItemID.CopperBar, 5)
                 .AddIngredient(ItemID.Torch, 3)
                 .AddTile(TileID.Anvils)
                 .Register();
