@@ -265,6 +265,7 @@ The recipe browser's `SetManualGroup` becomes a `SelectRecipe` request (machine 
 
 ### U6 (H) Priority conveyor filter
 `ClockwisePriorityConveyorTile.RightClick` (and the counter-clockwise twin) call `VirtualItemSystem.SetConveyorFilter` from the client, with the held item as the filter. The server never learns the filter. Also `PlaceInWorld` (client only) calls `OnPriorityConveyorPlaced`, so the server never builds networks for newly placed priority conveyors. **Fix:** request packet for the filter (item type), the shared "tile placed" packet (step 3, G0) for placement, and filter data included in the conveyor join sync. Fully covered with the tiles in step 8.
+**Status (patch 7.3, applied, untested):** the filter is set through `ConveyorFilterRequest` (server validates reach, tile and item type); the server broadcasts and joins send every filtered network (filter + tiles), and clients draw the filter icons from that replica.
 
 ### U7 (M) Reach and lifetime
 There is no distance check, so a UI stays open while the player walks away or dies, and in MP a server-side subscription would leak. Add: close when the player is out of tile reach, dead, or the machine is gone; server-side unsubscribe on leave/death/reach and cap the number of subscribers per machine.
@@ -453,6 +454,7 @@ Severity: **B** blocker / **H** high / **M** medium / **L** low.
 - Items (`ClockwisePriorityConveyor`, counter-clockwise twin): the right-click rotation swap is a local `SetDefaults` (step 3: needs an owner-side slot sync).
 - Tiles (`ClockwisePriorityConveyorTile` and twin): `RightClick` sets the conveyor filter on the client (`VirtualItemSystem.SetConveyorFilter`), `PlaceInWorld` registers the conveyor on the client only, and `KillTile`/`CanDrop` call `OnPriorityConveyorKilled` on both sides (harmless on clients if the vItem list is a replica, but `CanDrop` also calls it again, so make sure it is idempotent).
 - **Fix:** `SetConveyorFilter` request (position + item type, server validates), the shared "tile placed" request (step 3, G0) for `OnPriorityConveyorPlaced`, and filter data included in the join/conveyor snapshot. See step 5 U6.
+**Status (patch 7.3, applied, untested):** `OnPriorityConveyorKilled` is idempotent (a tile not in the map returns at once); placement registration is server-side since 3.3; the right-click rotation swap of the priority conveyor items is still local and stays open.
 
 ### I5 (M) Ice Blade swing projectile
 `IceBladeSwingProjectile` computes its facing from `Main.MouseWorld` on **every** client (`isFacingRight`), so remote players' swings are mirrored according to each viewer's mouse. `Owner.itemAnimation/itemTime`, `Owner.releaseUseItem` and the swing timers are deterministic per client and fine. **Fix:** the owner decides the facing once (store it in `Projectile.ai`/`spriteDirection` and call `netUpdate`), everyone else reads it. Also `PuffExplosion(...).Spawn()` is called inside `AI()`, which also runs on a dedicated server: guard with `!Main.dedServ` (the particle systems may not exist on a server).

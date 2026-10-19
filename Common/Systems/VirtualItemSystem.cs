@@ -48,7 +48,8 @@ namespace Factorraria.Content.VirtualItems
             // replicates them, so nothing converts, picks up or moves here.
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
-                VItemNet.ClientTick();   // patch 7.2: apply what the server sent and move the replicas
+                VItemNet.ClientTick();
+                ConveyorFilterNet.ClientTick();   // patch 7.3: apply the latest filtered-network snapshot   // patch 7.2: apply what the server sent and move the replicas
                 return;
             }
 
@@ -68,7 +69,8 @@ namespace Factorraria.Content.VirtualItems
                 }
             }
 
-            VItemNet.ServerTick();   // patch 7.2: send each subscribed player what changed near them (does nothing off a dedicated server)
+            VItemNet.ServerTick();
+            ConveyorFilterNet.ServerTick();   // patch 7.3: broadcast the filtered networks when they changed   // patch 7.2: send each subscribed player what changed near them (does nothing off a dedicated server)
         }
 
         // --- ITEM ID SAFETY GUARD ---
@@ -138,7 +140,7 @@ namespace Factorraria.Content.VirtualItems
         public static string Describe()
         {
             return "vItems: netMode=" + Main.netMode + " list=" + virtualItems.Count + " ids=" + vItemsById.Count + " nextId=" + nextVItemId
-                + " converted=" + WorldItemsConverted + " pickups=" + PlayerPickups + " | " + VItemNet.Describe();
+                + " converted=" + WorldItemsConverted + " pickups=" + PlayerPickups + " | " + VItemNet.Describe() + " | " + ConveyorFilterNet.Describe();
         }
 
         // --- WORLD LIFECYCLE ---
@@ -909,6 +911,7 @@ namespace Factorraria.Content.VirtualItems
         public static void OnPriorityConveyorPlaced(int x, int y)
         {
             RebuildNetworkAt(x, y);
+            ConveyorFilterNet.MarkDirty();
         }
 
         /// <summary>
@@ -919,10 +922,15 @@ namespace Factorraria.Content.VirtualItems
         {
             Point removedPoint = new Point(x, y);
 
-            if (ConveyorNetworkMap.TryGetValue(removedPoint, out PriorityConveyorNetwork oldNetwork))
+            // Patch 7.3: this is called from both KillTile and CanDrop (and on clients too). The first call removes the tile from the map,
+            // so a tile that is not in the map is already handled (or was never part of any network): nothing left to do.
+            if (!ConveyorNetworkMap.TryGetValue(removedPoint, out PriorityConveyorNetwork oldNetwork))
             {
-                oldNetwork.Tiles.Remove(removedPoint);
+                return;
             }
+
+            oldNetwork.Tiles.Remove(removedPoint);
+            ConveyorFilterNet.MarkDirty();
 
             // Completely erase destroyed tile from map lookup
             ConveyorNetworkMap.Remove(removedPoint);
@@ -952,10 +960,31 @@ namespace Factorraria.Content.VirtualItems
             if (network != null)
             {
                 network.FilteredItemId = itemId == network.FilteredItemId ? ItemID.None : itemId;
+                ConveyorFilterNet.MarkDirty();
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Patch 7.3, multiplayer client only: replaces the whole network map with the filtered networks the server sent. A client only
+        /// needs them to draw the filter icons; the server runs the simulation.
+        /// </summary>
+        public static void ReplaceFilterNetworks(List<KeyValuePair<int, List<Point>>> networks)
+        {
+            ConveyorNetworkMap.Clear();
+
+            foreach (KeyValuePair<int, List<Point>> entry in networks)
+            {
+                PriorityConveyorNetwork network = new PriorityConveyorNetwork(entry.Key);
+
+                foreach (Point tile in entry.Value)
+                {
+                    network.Tiles.Add(tile);
+                    ConveyorNetworkMap[tile] = network;
+                }
+            }
         }
 
         /// <summary>

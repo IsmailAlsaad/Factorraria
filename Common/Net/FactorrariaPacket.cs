@@ -37,6 +37,8 @@ namespace Factorraria.Common.Net
         MaterializerBackgroundChanged = 28, // server -> client(s): "the Materializer at (x, y) now has its background on / off (asked by player <n>)" (patch 6.4)
         VItemSubscribeRequest = 29,   // client -> server: "my join sync is done, send me the vItems near me from now on" (patch 7.2)
         VItemDelta = 30,              // server -> client: "these vItems appeared / changed / disappeared near you" (patch 7.2)
+        ConveyorFilterRequest = 31,   // client -> server: "set / clear the filter of the priority conveyor network at (x, y) to item type <t>" (patch 7.3)
+        PriorityFiltersChanged = 32,  // server -> client: "these are now all the filtered priority conveyor networks (filter + tiles)" (patch 7.3)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

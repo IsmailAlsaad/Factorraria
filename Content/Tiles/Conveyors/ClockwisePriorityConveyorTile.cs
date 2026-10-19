@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.VirtualItems;
+﻿using Factorraria.Common.Net;
+using Factorraria.Content.VirtualItems;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
@@ -53,7 +54,7 @@ namespace Factorraria.Content.Tiles.Conveyors
             // If holding an item, use its ID; otherwise, reset to ItemID.None
             int targetFilterId = !heldItem.IsAir ? heldItem.type : ItemID.None;
 
-            if (VirtualItemSystem.SetConveyorFilter(i, j, targetFilterId))
+            if (ConveyorFilterNet.RequestSet(i, j, targetFilterId))
             {
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick, new Microsoft.Xna.Framework.Vector2(i * 16, j * 16));
                 return true;
