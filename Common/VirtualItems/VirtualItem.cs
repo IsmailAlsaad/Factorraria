@@ -33,6 +33,9 @@ namespace Factorraria.Content.VirtualItems
 
         public bool active;         // Is this item active in the world?
 
+        // Patch 7.1: stable runtime id handed out by VirtualItemSystem when the vItem is spawned (0 = none). Never saved, never reused in a session.
+        public int Id;
+
         // --- TIMERS ---
         public int pickupCooldown;  // Ticks before player/machine can collect
         public int cartGrabCooldown; // Ticks before a cart can grab it. Set when a cart spills it. Unlike pickupCooldown, falling does not reset it.
@@ -212,6 +215,7 @@ namespace Factorraria.Content.VirtualItems
         public void Remove()
         {
             active = false;
+            VirtualItemSystem.ForgetId(this);
 
             // Unregister occupied tiles from dictionary
             VirtualItemSystem.UnregisterItemTile(new Point(currentTileX, currentTileY), this);

@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-19 | 227 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-19 | 228 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(40) BaseMachine(34) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(18) CustomRecipe(16) PacketDirection(15) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) VirtualItemSystem(9) RecipeOutputKey(8) MachineVisualRegistry(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8)
+FactorrariaNet(40) BaseMachine(34) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(18) CustomRecipe(16) PacketDirection(15) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) VirtualItemSystem(10) RecipeCatalog(10) RecipeOutputKey(8) MachineVisualRegistry(8) JoinSync(8) FurnaceOffsetConfig(8) Entry(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -28,8 +28,8 @@ tModLoader/other bases -> project types:
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - byte (9): CustomWireType, DetailCloseReason, EditFlags, FactorrariaPacket, KnowledgeKind, MachineSlotKind, PacketDirection, ParchmentFailure, RequestCheck
+- ModCommand (8): MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
-- ModCommand (7): MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, WireCountCommand
 - ModPlayer (7): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (6): CartModuleItemGlobal, IceBladeItem, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalTile (6): AwakenedStatueGlobalTile, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MaterializerWireGuard, TilePlacedGlobalTile
@@ -490,6 +490,9 @@ tModLoader/other bases -> project types:
     +LogPlacements:bool[s] +Load()[ov] +Unload()[ov]
     sealed class PlacementLogConsumer : ITilePlacedConsumer
       +AppliesTo(int) +OnTilePlaced(int,int,int,int)
+**VItemTestCommand.cs** uses: VirtualItemSystem
+  class VItemTestCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 
 ### Common/Networks/
 **LiquidNetwork.cs** uses: BaseMachine, Direction, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MotorTileEntityBase, WorldLiquidSources
@@ -585,7 +588,7 @@ tModLoader/other bases -> project types:
     +AddRecipes()[ov]
 **VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FurnaceOffsetConfig, PriorityConveyorNetwork, VItemGlobalItem, VirtualItem
   class VirtualItemSystem : ModSystem
-    +tileItemMap:Dictionary<Point, VirtualItem>[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +TryGetConveyorFilter(int,int,out int)[s]
+    +tileItemMap:Dictionary<Point, VirtualItem>[s] +vItemsById:Dictionary<int, VirtualItem>[s] +WorldItemsConverted:int[s] +PlayerPickups:int[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +TryGetById(int,out VirtualItem)[s] +ForgetId(VirtualItem)[s] +Describe()[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +TryGetConveyorFilter(int,int,out int)[s]
 
 ### Common/UI/
 **ChestConveyorModeUI.cs** uses: ChestConveyorEntry, ChestConveyorMode, ChestConveyorSystem
@@ -687,7 +690,7 @@ tModLoader/other bases -> project types:
     +CanMerge(Item,Item)[s] +Insert(Item,int,int,Item,Func<int, Item, bool>,Action<int>)[s]
 **VirtualItem.cs** ns!=Factorraria.Content.VirtualItems uses: VItemGlobalItem, VItemStacking, VirtualItemSystem
   class VirtualItem
-    +itemType:int +stackSize:int +prefix:int +active:bool +pickupCooldown:int +cartGrabCooldown:int +frame:int +frameCounter:int +currentTileX:int +currentTileY:int +targetTileX:int +targetTileY:int +worldPosition:Vector2 +moveSpeed:float +Update() +SetTargetTile(int,int) +GetSourceRectangle(Texture2D) +Remove() +MoveVirtualItem() +TryMergeWithVirtualItem(VirtualItem)
+    +itemType:int +stackSize:int +prefix:int +active:bool +Id:int +pickupCooldown:int +cartGrabCooldown:int +frame:int +frameCounter:int +currentTileX:int +currentTileY:int +targetTileX:int +targetTileY:int +worldPosition:Vector2 +moveSpeed:float +Update() +SetTargetTile(int,int) +GetSourceRectangle(Texture2D) +Remove() +MoveVirtualItem() +TryMergeWithVirtualItem(VirtualItem)
 
 ### Common/WorldGeneration/
 **PostWorldGenEdits.cs**

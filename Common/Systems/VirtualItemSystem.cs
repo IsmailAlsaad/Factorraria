@@ -25,6 +25,14 @@ namespace Factorraria.Content.VirtualItems
         public static List<VirtualItem> virtualItems = new List<VirtualItem>();
 
         public static Dictionary<Point, VirtualItem> tileItemMap = new Dictionary<Point, VirtualItem>();
+
+        // Patch 7.1: stable runtime ids so replication (7.2) can name a vItem on the wire. Server and single-player only (clients get their own list in 7.2).
+        public static Dictionary<int, VirtualItem> vItemsById = new Dictionary<int, VirtualItem>();
+        static int nextVItemId = 1;
+
+        // Temporary test counters for patch 7.1 (remove in Phase 10)
+        public static int WorldItemsConverted;
+        public static int PlayerPickups;
         public static Dictionary<Point, PriorityConveyorNetwork> ConveyorNetworkMap { get; private set; } = new Dictionary<Point, PriorityConveyorNetwork>();
 
         private static string hoveredVItemText = null;
@@ -35,6 +43,13 @@ namespace Factorraria.Content.VirtualItems
 
         public override void PostUpdateWorld()
         {
+            // Patch 7.1: the server (or single-player) owns the conveyor simulation. A multiplayer client keeps no vItems of its own until 7.2
+            // replicates them, so nothing converts, picks up or moves here.
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                return;
+            }
+
             ConvertItemsToVItems();
             CheckPlayerPickups();
 
@@ -85,17 +100,52 @@ namespace Factorraria.Content.VirtualItems
             }
         }
 
+        // --- STABLE IDS (patch 7.1) ---
+        static void AddVItem(VirtualItem newItem)
+        {
+            newItem.Id = nextVItemId++;
+            vItemsById[newItem.Id] = newItem;
+            virtualItems.Add(newItem);
+        }
+
+        /// <summary>Finds a live vItem by its stable id (server and single-player).</summary>
+        public static bool TryGetById(int id, out VirtualItem item)
+        {
+            return vItemsById.TryGetValue(id, out item) && item.active;
+        }
+
+        /// <summary>Called by VirtualItem.Remove: the id stops resolving as soon as the vItem is removed.</summary>
+        public static void ForgetId(VirtualItem item)
+        {
+            if (item.Id != 0 && vItemsById.TryGetValue(item.Id, out VirtualItem existing) && existing == item)
+            {
+                vItemsById.Remove(item.Id);
+            }
+        }
+
+        // Temporary test helper for patch 7.1 (remove in Phase 10)
+        public static string Describe()
+        {
+            return "vItems: netMode=" + Main.netMode + " list=" + virtualItems.Count + " ids=" + vItemsById.Count + " nextId=" + nextVItemId
+                + " converted=" + WorldItemsConverted + " pickups=" + PlayerPickups;
+        }
+
         // --- WORLD LIFECYCLE ---
         public override void OnWorldLoad()
         {
             virtualItems.Clear();
             tileItemMap.Clear();
+            vItemsById.Clear();
+            nextVItemId = 1;
+            WorldItemsConverted = 0;
+            PlayerPickups = 0;
         }
 
         public override void OnWorldUnload()
         {
             virtualItems.Clear();
             tileItemMap.Clear();
+            vItemsById.Clear();
         }
 
         // --- SAVE DATA TO WORLD ---
@@ -149,6 +199,7 @@ namespace Factorraria.Content.VirtualItems
         {
             virtualItems.Clear();
             tileItemMap.Clear();
+            vItemsById.Clear();
 
             if (tag.ContainsKey("virtualItemsData") == true)
             {
@@ -437,7 +488,7 @@ namespace Factorraria.Content.VirtualItems
                 return null;
             }
 
-            virtualItems.Add(newItem);
+            AddVItem(newItem);
             return newItem;
         }
 
@@ -460,7 +511,7 @@ namespace Factorraria.Content.VirtualItems
                 return null;
             }
 
-            virtualItems.Add(newItem);
+            AddVItem(newItem);
             return newItem;
         }
 
@@ -549,6 +600,11 @@ namespace Factorraria.Content.VirtualItems
 
         public static void ConvertItemsToVItems()
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                return;
+            }
+
             foreach (var worldItem in Main.ActiveItems)
             {
                 if (!worldItem.TryGetGlobalItem<VItemGlobalItem>(out VItemGlobalItem globalItem) || globalItem.ConveyorImmunityTimer > 0)
@@ -582,8 +638,17 @@ namespace Factorraria.Content.VirtualItems
                     continue;
                 }
 
+                int worldItemIndex = worldItem.whoAmI;
                 worldItem.active = false;
                 worldItem.TurnToAir();
+                WorldItemsConverted++;
+
+                // Patch 7.1: tell the clients the world item is gone. In single-player there is nobody to tell.
+                if (Main.netMode == NetmodeID.Server)
+                {
+                    NetMessage.SendData(MessageID.SyncItem, -1, -1, null, worldItemIndex);
+                }
+
                 return;
             }
         }
@@ -630,6 +695,13 @@ namespace Factorraria.Content.VirtualItems
 
         public static void CheckPlayerPickups()
         {
+            // Patch 7.1: runs where the vItems live. It loops every player using the positions and inventories the server knows;
+            // the item it drops at the player is an ordinary world item, which vanilla then hands to that player.
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                return;
+            }
+
             for (int p = 0; p < Main.maxPlayers; p++)
             {
                 Player player = Main.player[p];
@@ -673,6 +745,7 @@ namespace Factorraria.Content.VirtualItems
                             {
                                 spawnedItem.GetGlobalItem<VItemGlobalItem>().ConveyorImmunityTimer = 60;
                                 spawnedItem.noGrabDelay = 0;
+                                PlayerPickups++;
                             }
                         }
                     }
