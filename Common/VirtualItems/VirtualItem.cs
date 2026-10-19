@@ -36,6 +36,12 @@ namespace Factorraria.Content.VirtualItems
         // Patch 7.1: stable runtime id handed out by VirtualItemSystem when the vItem is spawned (0 = none). Never saved, never reused in a session.
         public int Id;
 
+        // Patch 7.2: client replicas only. The server tells the client where the vItem is going and how many pixels it moves per tick.
+        public float ReplicaStep;
+
+        // Pixels per tick the vItem is moving toward its target right now (what a replica needs to move the same way).
+        public float StepPerTick => moveSpeed * CurrentFallVelocity;
+
         // --- TIMERS ---
         public int pickupCooldown;  // Ticks before player/machine can collect
         public int cartGrabCooldown; // Ticks before a cart can grab it. Set when a cart spills it. Unlike pickupCooldown, falling does not reset it.
@@ -161,6 +167,79 @@ namespace Factorraria.Content.VirtualItems
             {
                 cartGrabCooldown--;
             }
+        }
+
+        private VirtualItem() { }
+
+        /// <summary>
+        /// Patch 7.2, multiplayer client only: a display copy of a server vItem. It owns the payload, is never put in tileItemMap and runs
+        /// ReplicaTick instead of Update, so no conveyor logic ever runs for it.
+        /// </summary>
+        public static VirtualItem CreateReplica(int id, Item payload, Vector2 position, int targetX, int targetY, float step)
+        {
+            VirtualItem replica = new VirtualItem();
+            replica.Payload = payload;
+            replica.active = true;
+            replica.Id = id;
+            replica.worldPosition = position;
+            replica.currentTileX = (int)(position.X / 16f);
+            replica.currentTileY = (int)(position.Y / 16f);
+            replica.targetTileX = targetX;
+            replica.targetTileY = targetY;
+            replica.moveSpeed = 1f;
+            replica.ReplicaStep = step;
+            return replica;
+        }
+
+        /// <summary>Applies one update entry. newPayload is null when only the stack changed.</summary>
+        public void ApplyReplicaState(Item newPayload, int stack, Vector2 position, int targetX, int targetY, float step)
+        {
+            if (newPayload != null)
+            {
+                Payload = newPayload;
+            }
+            else if (Payload != null)
+            {
+                Payload.stack = stack;
+            }
+
+            targetTileX = targetX;
+            targetTileY = targetY;
+            ReplicaStep = step;
+
+            // Between updates the replica moves on its own the same way the server does, so only a real difference is corrected.
+            if (Vector2.Distance(worldPosition, position) > 6f)
+            {
+                worldPosition = position;
+            }
+        }
+
+        /// <summary>Client replica: animate and move toward the target tile, exactly like MoveVirtualItem does on the server.</summary>
+        public void ReplicaTick()
+        {
+            if (active == false)
+            {
+                return;
+            }
+
+            AnimateItem();
+
+            Vector2 targetPixelPosition = new Vector2((targetTileX * 16) + 8, (targetTileY * 16) + 8);
+            float distanceToTarget = Vector2.Distance(worldPosition, targetPixelPosition);
+
+            if (distanceToTarget <= ReplicaStep)
+            {
+                worldPosition = targetPixelPosition;
+            }
+            else
+            {
+                Vector2 direction = targetPixelPosition - worldPosition;
+                direction.Normalize();
+                worldPosition = worldPosition + (direction * ReplicaStep);
+            }
+
+            currentTileX = (int)(worldPosition.X / 16f);
+            currentTileY = (int)(worldPosition.Y / 16f);
         }
 
         public void SetTargetTile(int newTargetX, int newTargetY)

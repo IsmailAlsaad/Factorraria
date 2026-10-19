@@ -35,6 +35,8 @@ namespace Factorraria.Common.Net
         MachineSelectRecipeResult = 26,  // server -> client: "pick <seq> was accepted / rejected; the machine's real pick is this key" (patch 6.3)
         MaterializerToggleRequest = 27,  // client -> server: "switch the starry background of the Materializer at (x, y) to on / off" (patch 6.4)
         MaterializerBackgroundChanged = 28, // server -> client(s): "the Materializer at (x, y) now has its background on / off (asked by player <n>)" (patch 6.4)
+        VItemSubscribeRequest = 29,   // client -> server: "my join sync is done, send me the vItems near me from now on" (patch 7.2)
+        VItemDelta = 30,              // server -> client: "these vItems appeared / changed / disappeared near you" (patch 7.2)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

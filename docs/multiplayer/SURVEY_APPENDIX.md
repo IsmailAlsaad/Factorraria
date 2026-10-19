@@ -665,6 +665,7 @@ New virtual, default is the machine's footprint (`cornerPosition`, `MachineWidth
 ### A13 (L) Drop capture
 `RoboticArmDropCaptureSystem`/`GlobalItem.OnSpawn` runs while the server executes `Item.NewItem`, then sets the item inactive when a drop becomes a vItem. Verify (item 18) that this does not leave a ghost world item on clients (the spawn broadcast must see an inactive item). `VirtualItemSystem.SpawnVirtualItem`, `IsConveyorTile` and `IsTileOccupied` are server-only calls after Phase 7.1, which is where the arm runs.
 **Status (patch 7.1, applied, untested):** the vItem simulation, world-item conversion and player pickup run only on the server and in single-player; `SpawnVirtualItem` hands out stable ids (`VirtualItem.Id`), so the arm worker and every other server caller get ids. Whether `OnSpawn`-inactivated items leave ghosts on clients is still verification item 18.
+**Status (patch 7.2, applied, untested):** clients now receive vItems through `VItemDelta` (see the roadmap 7.2 note) and draw them from replicas; the `VItemGlobalItem` immunity timer stays server-only as planned, and the arm worker, machines and the extractinator keep spawning vItems on the server only.
 
 ### A14 (L) Worker state
 `RoboticArmWorker` is created lazily in `Update()` and not saved; cooldowns use `Main.GameUpdateCount`. All server-side and fine after a restart (it just re-scans). Tunables are instance fields.

@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Networks;
+﻿using Factorraria.Common.Net;
+using Factorraria.Common.Networks;
 using Factorraria.Common.VirtualItems;
 using Factorraria.Content.Configs;
 using Factorraria.Content.Tiles.Conveyors;
@@ -47,6 +48,7 @@ namespace Factorraria.Content.VirtualItems
             // replicates them, so nothing converts, picks up or moves here.
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
+                VItemNet.ClientTick();   // patch 7.2: apply what the server sent and move the replicas
                 return;
             }
 
@@ -65,6 +67,8 @@ namespace Factorraria.Content.VirtualItems
                     virtualItems.RemoveAt(i);
                 }
             }
+
+            VItemNet.ServerTick();   // patch 7.2: send each subscribed player what changed near them (does nothing off a dedicated server)
         }
 
         // --- ITEM ID SAFETY GUARD ---
@@ -108,7 +112,14 @@ namespace Factorraria.Content.VirtualItems
             virtualItems.Add(newItem);
         }
 
-        /// <summary>Finds a live vItem by its stable id (server and single-player).</summary>
+        /// <summary>Patch 7.2, client only: adds a replica that already carries the server's id.</summary>
+        public static void AddReplica(VirtualItem replica)
+        {
+            vItemsById[replica.Id] = replica;
+            virtualItems.Add(replica);
+        }
+
+        /// <summary>Finds a live vItem by its stable id (on a client: a live replica).</summary>
         public static bool TryGetById(int id, out VirtualItem item)
         {
             return vItemsById.TryGetValue(id, out item) && item.active;
@@ -127,7 +138,7 @@ namespace Factorraria.Content.VirtualItems
         public static string Describe()
         {
             return "vItems: netMode=" + Main.netMode + " list=" + virtualItems.Count + " ids=" + vItemsById.Count + " nextId=" + nextVItemId
-                + " converted=" + WorldItemsConverted + " pickups=" + PlayerPickups;
+                + " converted=" + WorldItemsConverted + " pickups=" + PlayerPickups + " | " + VItemNet.Describe();
         }
 
         // --- WORLD LIFECYCLE ---

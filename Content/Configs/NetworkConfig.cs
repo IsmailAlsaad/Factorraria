@@ -63,5 +63,20 @@ namespace Factorraria.Content.Configs
         [DefaultValue(20)]
         [Range(1, 200)]
         public int LiquidBroadcastsPerTick = 20;
+
+        // ---- vItem replication (patch 7.2): a player is sent the vItems inside a rectangle around them
+
+        [DefaultValue(110)]
+        [Range(20, 400)]
+        public int VItemInterestHalfWidthTiles = 110;
+
+        [DefaultValue(70)]
+        [Range(20, 300)]
+        public int VItemInterestHalfHeightTiles = 70;
+
+        // Most spawn entries and most update entries one player receives in one tick (removals get twice this). A big backlog is spread over ticks.
+        [DefaultValue(100)]
+        [Range(10, 400)]
+        public int VItemMaxEntriesPerPacket = 100;
     }
 }
