@@ -995,6 +995,75 @@ namespace Factorraria.Common.Machines
         /// <summary>Test aid for /fsnap (temporary): what a subclass adds to the one-line description.</summary>
         protected virtual string DescribeSnapshotExtra() => "";
 
+        // ---- Light updates (patch 5.2) ----
+        // The small, frequently changing part of the machine state. BuildLightState runs on the server (MachineLightSyncSystem), and
+        // ApplyLightState on a client replica, in place: it never replaces the entity and never sends anything. Values are QUANTIZED on
+        // purpose (progress rounded down to progressStep ticks, tank amounts in 1/32 of capacity, use fraction in 1/255) so the payload
+        // only changes when something visible changes; the system compares payload bytes to decide whether to send. Slots are not part of it.
+        // The running recipe travels as a content fingerprint (0 = none), the same fingerprint the 5.1 snapshot uses.
+        public byte[] BuildLightState(int progressStep, uint recipeFingerprint)
+        {
+            var stream = new MemoryStream();
+            var w = new BinaryWriter(stream);
+
+            byte flags = 0;
+            if (isOn) flags |= 1;
+            if (isWorking) flags |= 2;
+            w.Write(flags);
+
+            int step = Math.Max(1, progressStep);
+            w.Write7BitEncodedInt(Math.Max(0, WorkProgress) / step * step);
+            w.Write7BitEncodedInt(Math.Max(0, CraftsFinished));
+            if (IsElectric) w.Write(MachineLightSync.QuantizeUse(GetSnapshotUseFraction()));
+            w.Write(recipeFingerprint);
+
+            w.Write7BitEncodedInt(Fuels.Length);
+            foreach (FuelModule fuel in Fuels)
+            {
+                w.Write7BitEncodedInt(fuel.Remaining);
+                w.Write7BitEncodedInt(fuel.Capacity);
+            }
+
+            MachineLightSync.WriteTanks(InputLiquids, w);
+            MachineLightSync.WriteTanks(OutputLiquids, w);
+            w.Flush();
+            return stream.ToArray();
+        }
+
+        public void ApplyLightState(BinaryReader r)
+        {
+            byte flags = r.ReadByte();
+            int progress = r.Read7BitEncodedInt();
+            int crafts = r.Read7BitEncodedInt();
+            byte use = IsElectric ? r.ReadByte() : (byte)0;
+            uint fingerprint = r.ReadUInt32();
+
+            isOn = (flags & 1) != 0;
+            isWorking = (flags & 2) != 0;
+            WorkProgress = progress;
+            CraftsFinished = crafts;
+
+            // Leave the exact value from the snapshot alone while it still quantizes to what the server sent.
+            if (IsElectric && MachineLightSync.QuantizeUse(GetSnapshotUseFraction()) != use)
+                SetSnapshotUseFraction(use / 255f);
+
+            CustomRecipe resolved = MachineLightSync.FindRecipe(Recipes, fingerprint);
+            if (!ReferenceEquals(SelectedRecipe, resolved))
+                SelectedRecipe = resolved;
+
+            int fuelCount = r.Read7BitEncodedInt();
+            for (int i = 0; i < fuelCount; i++)
+            {
+                int remaining = r.Read7BitEncodedInt();
+                int capacity = r.Read7BitEncodedInt();
+                if (i < Fuels.Length && (Fuels[i].Remaining != remaining || Fuels[i].Capacity != capacity))
+                    Fuels[i].Restore(remaining, capacity);
+            }
+
+            MachineLightSync.ReadTanks(InputLiquids, r);
+            MachineLightSync.ReadTanks(OutputLiquids, r);
+        }
+
         float GetSnapshotUseFraction() => this is IElectricConsumer consumer ? consumer.useFraction : this is IElectricProducer producer ? producer.useFraction : 0f;
 
         void SetSnapshotUseFraction(float value)
@@ -1023,6 +1092,7 @@ namespace Factorraria.Common.Machines
             string extra = DescribeSnapshotExtra();
             if (extra.Length > 0) sb.Append(" |").Append(extra);
             sb.Append(" | digest=").Append(MachineSnapshot.Digest(BuildSnapshot()).ToString("X8"));
+            sb.Append(" light=").Append(MachineSnapshot.Digest(BuildLightState(ModContent.GetInstance<MachineLightSyncSystem>().ProgressStepTicks, MachineLightSync.FingerprintOrZero(SelectedRecipe))).ToString("X8"));
             return sb.ToString();
         }
 

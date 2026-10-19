@@ -179,7 +179,7 @@ Clients draw and show UI from fields that exist only on the server: `isOn`, `isW
 1. **Join snapshot:** full state in `NetSend`/`NetReceive` (slots, tanks, flags, geometry). tModLoader sends it with the world.
 2. **Light updates:** a compact packet (isOn, isWorking, progress, crafts counter, tank type/amount for overlays) sent when changed, rate limited, only to clients near the machine.
 3. **Detail updates:** full slot/tank contents sent only to players who have that machine's UI open (subscribe on open, unsubscribe on close/leave), plus after each accepted UI edit.
-**Status:** channel 1 (the snapshot in `NetSend`/`NetReceive`) was implemented in patch 5.1 (see the Phase 5 block of the roadmap); channels 2 and 3 are open (patches 5.2 and 5.3).
+**Status:** channel 1 (the snapshot in `NetSend`/`NetReceive`) was implemented in patch 5.1 (see the Phase 5 block of the roadmap); channel 2 (light updates) was implemented in patch 5.2 (packet `MachineLightUpdate`, see the Phase 5 block of the roadmap); channel 3 is open (patch 5.3).
 
 ### M4 (H) Interaction is local
 `BaseMachine.OnRightClick` opens the UI from client-side data. `MagicMaterializerTileEntity.OnRightClick` flips `BackgroundActive` locally, but the server's `Update` is what reads it, so the toggle does nothing in MP. `HasShimmer` also reads a tank the client does not have. **Fix:** right-click becomes "request open" (server subscribes the player and sends detail state); Materializer toggle becomes a request packet validated on the server. UI edits are step 5.
@@ -191,10 +191,10 @@ Clients draw and show UI from fields that exist only on the server: `isOn`, `isW
 `MachineVisualOverride.KillTile` drops slot contents and kills the entity in every process that sees the kill (details in step 3). `BaseMachine.OnKill` only flips static flags (fine on the server) and calls `MachineUISystem.NotifyMachineKilled`, which must also close the UI for subscribed clients. **Status:** the kill-path half was implemented in patch 4.4 (`MachineRemoval.OnTileKilled`, server-only drops, replica-only removal on clients, `fail`/`effectOnly` guard, UI liveness check). Still open: closing the UI for subscribed clients from the server (patch 5.3). `ReleaseHiddenIngredientSlots` uses `Item.NewItem` from `Update`, which is server-only and therefore correct.
 
 ### M7 (M) Power state sync
-`isOn` is written by `PowerNetwork` (server). `useFraction`, `isOn` and `isWorking` feed the electricity icon/UI and animation, so they belong in the light update (M3). `PowerGridSystem.RegisterMachineToMasterList` is currently only called from `Hook_AfterPlacement`; the server placement path must call it, and after load `InitializeMachinesList` already rebuilds from `TileEntity.ByPosition`.
+`isOn` is written by `PowerNetwork` (server). `useFraction`, `isOn` and `isWorking` feed the electricity icon/UI and animation, so they belong in the light update (M3). `PowerGridSystem.RegisterMachineToMasterList` is currently only called from `Hook_AfterPlacement`; the server placement path must call it, and after load `InitializeMachinesList` already rebuilds from `TileEntity.ByPosition`. **Status:** `isOn`, `isWorking` and `useFraction` travel in the light update since patch 5.2; confirming that grids form on the server stays with patch 5.4.
 
 ### M8 (M) Visual effects are draw-driven (this is fine)
-`OnAnimationFrameChanged` (dust, gore, sounds in Furnace, GelBurner, MechanicalAssembler, etc.) is triggered from `PreDraw`/`NotifyAnimationFrame`, so it runs only on clients and uses `isOn && isWorking`. Once M3 syncs those two flags the effects work with no change. `Main.netMode == Server` early-outs already present are harmless.
+`OnAnimationFrameChanged` (dust, gore, sounds in Furnace, GelBurner, MechanicalAssembler, etc.) is triggered from `PreDraw`/`NotifyAnimationFrame`, so it runs only on clients and uses `isOn && isWorking`. Once M3 syncs those two flags the effects work with no change. `Main.netMode == Server` early-outs already present are harmless. **Status:** the two flags reach clients in the light update since patch 5.2, so no effect code changed.
 
 ### M9 (M) Machine-specific notes
 - **Extractinator:** server `Update` spawns vItems directly; correct once `VirtualItemSystem` is server-authoritative (step 1). `ExtractinatorBlockPlayer` (step 2) stays local.

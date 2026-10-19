@@ -25,6 +25,7 @@ namespace Factorraria.Common.Net
         ChestConveyorModeRequest = 16, // client -> server: "cycle the conveyor mode of the chest at (x, y)" (patch 3.4a)
         AwakenedStatuesChanged = 17,   // server -> client: "these statue origins are no longer awakened, these now are" (patch 3.4b)
         MachineBiomeReport = 18,       // client -> server: "the machine I just placed at (x, y) is in biome <b>" (patch 4.3)
+        MachineLightUpdate = 19,       // server -> client: "these machines near you changed: flags, progress, crafts, use, recipe, fuel, tank levels" (patch 5.2)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

@@ -80,12 +80,6 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
                 .AddTile(TileID.Anvils)
                 .Register();
 
-            // Bone
-            Recipe.Create(ItemID.Bone, 4)
-                .AddIngredient(ItemID.Skull, 1)
-                .AddTile(TileID.Anvils)
-                .Register();
-
             // Extractinator
             Recipe.Create(ItemID.Extractinator, 1)
                 .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 3)

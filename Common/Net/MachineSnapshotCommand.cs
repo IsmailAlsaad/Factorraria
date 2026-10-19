@@ -44,7 +44,10 @@ namespace Factorraria.Common.Net
 
             string side = Main.netMode == NetmodeID.Server ? "server" : Main.netMode == NetmodeID.MultiplayerClient ? "client replicas" : "single-player";
             string summary = "fsnap [" + side + "]: " + machines.Count + " machine(s); snapshots sent " + MachineSnapshot.Sent + " (" + MachineSnapshot.SentBytes
-                + " B), received " + MachineSnapshot.Received + " (" + MachineSnapshot.ReceivedBytes + " B), failed " + MachineSnapshot.Failed;
+                + " B), received " + MachineSnapshot.Received + " (" + MachineSnapshot.ReceivedBytes + " B), failed " + MachineSnapshot.Failed
+                + "; light: packets sent " + MachineLightSync.PacketsSent + " (" + MachineLightSync.EntriesSent + " entries, " + MachineLightSync.BytesSent
+                + " B), entries received " + MachineLightSync.EntriesReceived + " (applied " + MachineLightSync.Applied + ", missed " + MachineLightSync.Missed
+                + ", failed " + MachineLightSync.Failed + ")";
             caller.Reply(summary, Color.LightGreen);
             FactorrariaNet.Log("[Snapshot] " + summary);
 
