@@ -199,9 +199,14 @@ namespace Factorraria.Common.Carts
 
                 // The dropped item is a plain Item here, so stack changes and TurnToAir apply to it directly.
                 // Once everything has moved into the chest, switch the world item off (same as VirtualItemSystem does).
-                if (cart.TryAddToChest(worldItem) && worldItem.IsAir)
+                if (cart.TryAddToChest(worldItem))
                 {
-                    worldItem.active = false;
+                    if (worldItem.IsAir)
+                    {
+                        worldItem.active = false;
+                    }
+
+                    VirtualItemSystem.SyncWorldItem(worldItem.whoAmI); // patch 7.4: a partial or full pickup must reach the clients
                 }
             }
         }
@@ -376,9 +381,14 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
-                if (cart.TryAddFuel(worldItem) && worldItem.IsAir)
+                if (cart.TryAddFuel(worldItem))
                 {
-                    worldItem.active = false;
+                    if (worldItem.IsAir)
+                    {
+                        worldItem.active = false;
+                    }
+
+                    VirtualItemSystem.SyncWorldItem(worldItem.whoAmI); // patch 7.4: a partial or full pickup must reach the clients
                 }
             }
         }
