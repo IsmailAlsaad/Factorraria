@@ -4,7 +4,7 @@ generated 2026-10-20 | 230 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(43) BaseMachine(34) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(20) PacketDirection(17) CustomRecipe(16) MachineUIStateBase(13) LiquidStack(13) VirtualItemSystem(12) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) RecipeOutputKey(8) MachineVisualRegistry(8) FurnaceOffsetConfig(8) Factorraria(8)
+FactorrariaNet(44) BaseMachine(34) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(20) PacketDirection(17) CustomRecipe(16) MachineUIStateBase(13) LiquidStack(13) VirtualItemSystem(12) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) RecipeOutputKey(8) MachineVisualRegistry(8) FurnaceOffsetConfig(8) Factorraria(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -965,11 +965,11 @@ tModLoader/other bases -> project types:
 **RoboticArmVisual.cs** uses: MechanicalArmIK, RoboticArmMotion
   class RoboticArmVisual
     +AimSmoothing:float +IdleAimTilt:float +SwingArc:float +SwingEndAngle:float +ClawPivotX:float +ClawPivotY:float +BlockScale:float +BeamThickness:float +JointScale:float +Update(RoboticArmMotion,Vector2,float,float,Item,bool) +DrawBehind(SpriteBatch,Vector2,Item,bool)
-**RoboticArmWorker.cs** uses: BaseMachine, PureSiliconTile, RoboticArmDropCaptureSystem, RoboticArmMotion, RoboticArmTileEntity, SiliconOreTile, TileEntityHelper
+**RoboticArmWorker.cs** uses: BaseMachine, FactorrariaNet, PureSiliconTile, RoboticArmDropCaptureSystem, RoboticArmMotion, RoboticArmTileEntity, SiliconOreTile, TileEntityHelper
   class RoboticArmGhostSystem : ModSystem
     +Unload()[ov]
   class RoboticArmWorker
-    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +TreeStickyColumns:int +FootprintMustFitArea:bool +PlatformsInOpenAir:bool +DebugPlacement:bool +MaxStrikesPerTile:int +Tick()
+    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +TreeStickyColumns:int +FootprintMustFitArea:bool +PlatformsInOpenAir:bool +DebugPlacement:bool +MaxStrikesPerTile:int +Reaches:int +ReachTimeouts:int +Strikes:int +TilesChanged:int +Placements:int +Describe() +Tick()
     enum Phase
       {Idle, Reach, Strike}
     enum Job

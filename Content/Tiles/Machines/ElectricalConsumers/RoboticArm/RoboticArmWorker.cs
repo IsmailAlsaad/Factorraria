@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Net;
 using Factorraria.Content.Tiles.Ores;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -65,6 +66,24 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         Job pendingJob;
         int lastTreeX;
         bool hasLastTree;
+
+        // Patch 7b.1 TEMPORARY test code (remove in Phase 10): proves on a dedicated server that the worker reaches, strikes and finishes
+        // with no RoboticArmVisual. Counters are shown by /fsnap (RoboticArmTileEntity.DescribeSnapshotExtra); the [Arm] lines go to the
+        // server log only.
+        public int Reaches;
+        public int ReachTimeouts;
+        public int Strikes;
+        public int TilesChanged;
+        public int Placements;
+
+        public string Describe() => "reaches=" + Reaches + " timeouts=" + ReachTimeouts + " strikes=" + Strikes + " changed=" + TilesChanged + " placed=" + Placements
+            + " phase=" + phase + (phase == Phase.Idle ? "" : " target=(" + target.X + ", " + target.Y + ") job=" + job);
+
+        void Log(string message)
+        {
+            if (Main.netMode == NetmodeID.Server)
+                FactorrariaNet.Log("[Arm] (" + arm.Position.X + ", " + arm.Position.Y + ") " + message);
+        }
 
         public RoboticArmWorker(RoboticArmTileEntity arm)
         {
@@ -168,6 +187,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             phase = Phase.Reach;
             phaseTimer = 0;
             arm.Motion.SetTarget(TileCenter(tile));
+            Reaches++;
+            Log("reach to (" + tile.X + ", " + tile.Y + ") job=" + newJob + " visual=" + (arm.Visual == null ? "none" : "present"));
         }
 
         bool TickReach(Item held)
@@ -202,6 +223,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (++phaseTimer > ReachTimeoutTicks)
             {
                 cooldowns[target] = Main.GameUpdateCount + (uint)BlockedCooldownTicks;
+                ReachTimeouts++;
+                Log("REACH TIMEOUT at (" + target.X + ", " + target.Y + ") after " + phaseTimer + " ticks (the hand never settled; this is the A1 symptom)");
                 Abort();
                 return true;
             }
@@ -212,6 +235,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             strikeLength = System.Math.Max(held.useTime, MinStrikeTicks);
             motion.StartStrike(strikeLength);
+            Log("in position after " + phaseTimer + " ticks, strike of " + strikeLength + " ticks at (" + target.X + ", " + target.Y + ")");
             phase = Phase.Strike;
             phaseTimer = 0;
             impactDone = false;
@@ -270,6 +294,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (!IsValidTarget(target.X, target.Y, held, job))
                 return; // the world changed under the arm mid-strike; the next scan picks something else
 
+            Strikes++;
             if (job == Job.Place)
             {
                 TryPlace(held);
@@ -306,8 +331,16 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             // Any change (tile gone, grass turned into dirt, wall gone) counts as progress and resets the no-progress count.
             Tile after = Framing.GetTileSafely(x, y);
-            if (after.HasTile != hadTile || after.TileType != type || after.WallType != wall)
+            bool changedNow = after.HasTile != hadTile || after.TileType != type || after.WallType != wall;
+            if (changedNow)
+            {
                 strikesOnTarget = 0;
+                TilesChanged++;
+            }
+
+            if (changedNow || strikesOnTarget == 1)
+                Log("strike " + strikeJob + " at (" + x + ", " + y + "): tile " + (hadTile ? type.ToString() : "none") + " -> " + (after.HasTile ? after.TileType.ToString() : "none")
+                    + ", wall " + wall + " -> " + after.WallType + (changedNow ? " CHANGED" : " (no change yet)"));
         }
 
         // Copy of the axe branch of Player.ItemCheck_UseMiningTools_ActuallyUseMiningTool (vanilla has no public method for it).
@@ -364,6 +397,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 return;
             }
 
+            Placements++;
+            Log("placed " + held.Name + " at (" + target.X + ", " + target.Y + "), " + (held.stack - 1) + " left in the slot");
             held.stack--;
 
             if (held.stack <= 0)

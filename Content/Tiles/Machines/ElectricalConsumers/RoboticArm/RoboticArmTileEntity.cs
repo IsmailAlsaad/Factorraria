@@ -92,7 +92,11 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             SetArea(x, y, w, h);
         }
 
-        protected override string DescribeSnapshotExtra() => base.DescribeSnapshotExtra() + " area=(" + AreaX + ", " + AreaY + ") " + AreaW + "x" + AreaH;
+        // Patch 7b.1 (temporary, remove in Phase 10): the worker counters and the hand's motion state, so a server console can show that the
+        // arm works with no visual (visual=none).
+        protected override string DescribeSnapshotExtra() => base.DescribeSnapshotExtra() + " area=(" + AreaX + ", " + AreaY + ") " + AreaW + "x" + AreaH
+            + " | worker[" + (worker == null ? "not started" : worker.Describe()) + "] motion[target=" + Motion.HasTarget + " inPos=" + Motion.InPosition
+            + " striking=" + Motion.Striking + " side=" + Motion.Side + "] visual=" + (Visual == null ? "none" : "present");
 
         public override void SaveData(TagCompound tag)
         {
