@@ -48,8 +48,8 @@ namespace Factorraria.Content.VirtualItems
             // replicates them, so nothing converts, picks up or moves here.
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
-                VItemNet.ClientTick();
-                ConveyorFilterNet.ClientTick();   // patch 7.3: apply the latest filtered-network snapshot   // patch 7.2: apply what the server sent and move the replicas
+                // Patch 7.3b: the client ticks (VItemNet / ConveyorFilterNet) run from VItemNetSystem.PostUpdateEverything instead.
+
                 return;
             }
 

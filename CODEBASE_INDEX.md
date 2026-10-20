@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-19 | 230 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-20 | 230 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(42) BaseMachine(34) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(20) PacketDirection(17) CustomRecipe(16) MachineUIStateBase(13) LiquidStack(13) VirtualItemSystem(12) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) RecipeOutputKey(8) MachineVisualRegistry(8) FurnaceOffsetConfig(8) Factorraria(8)
+FactorrariaNet(43) BaseMachine(34) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(20) PacketDirection(17) CustomRecipe(16) MachineUIStateBase(13) LiquidStack(13) VirtualItemSystem(12) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) RecipeOutputKey(8) MachineVisualRegistry(8) FurnaceOffsetConfig(8) Factorraria(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -495,9 +495,9 @@ tModLoader/other bases -> project types:
     +LogPlacements:bool[s] +Load()[ov] +Unload()[ov]
     sealed class PlacementLogConsumer : ITilePlacedConsumer
       +AppliesTo(int) +OnTilePlaced(int,int,int,int)
-**VItemNet.cs** uses: Factorraria, FactorrariaNet, FactorrariaPacket, JoinSync, NetworkConfig, PacketDirection, VirtualItem, VirtualItemSystem
+**VItemNet.cs** uses: ConveyorFilterNet, Factorraria, FactorrariaNet, FactorrariaPacket, JoinSync, NetworkConfig, PacketDirection, VirtualItem, VirtualItemSystem
   class VItemNetSystem : ModSystem
-    +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov]
+    +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
   static class VItemNet
     +ServerPackets:int[s] +ServerSpawns:int[s] +ServerUpdates:int[s] +ServerRemoves:int[s] +ClientPackets:int[s] +ClientSpawns:int[s] +ClientUpdates:int[s] +ClientRemoves:int[s] +ClientMissed:int[s] +Reset()[s] +Describe()[s] +Subscribe()[s] +HandleSubscribe(BinaryReader,int)[s] +OnDisconnect(int)[s] +ServerTick()[s] +HandleDelta(BinaryReader,int)[s] +ClientTick()[s]
     sealed class Known
@@ -510,7 +510,7 @@ tModLoader/other bases -> project types:
       +Id:int +Stack:int +Payload:Item +Position:Vector2 +TileX:int +TileY:int +Step:float
     sealed class Batch
       +Reset:bool +Spawns:List<SpawnEntry> +Updates:List<UpdateEntry> +Removes:List<int>
-**VItemTestCommand.cs** uses: VirtualItemSystem
+**VItemTestCommand.cs** uses: FactorrariaNet, VirtualItemSystem
   class VItemTestCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 

@@ -317,6 +317,21 @@ Configs: {
 			Label: Liquid Broadcasts Per Tick
 			Tooltip: Reserved for the liquid phase: maximum world-liquid updates the server sends per tick.
 		}
+
+		VItemInterestHalfWidthTiles: {
+			Label: V Item Interest Half Width Tiles
+			Tooltip: ""
+		}
+
+		VItemInterestHalfHeightTiles: {
+			Label: V Item Interest Half Height Tiles
+			Tooltip: ""
+		}
+
+		VItemMaxEntriesPerPacket: {
+			Label: V Item Max Entries Per Packet
+			Tooltip: ""
+		}
 	}
 }
 

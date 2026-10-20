@@ -16,7 +16,9 @@ namespace Factorraria.Common.Net
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
-            caller.Reply(VirtualItemSystem.Describe(), Color.LightGreen);
+            string text = VirtualItemSystem.Describe();
+            caller.Reply(text, Color.LightGreen);
+            FactorrariaNet.Log("[fvitem] " + text);
         }
     }
 }

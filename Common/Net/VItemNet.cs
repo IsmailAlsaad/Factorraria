@@ -27,6 +27,17 @@ namespace Factorraria.Common.Net
         public override void OnWorldLoad() => VItemNet.Reset();
 
         public override void OnWorldUnload() => VItemNet.Reset();
+
+        // Patch 7.3b: PostUpdateWorld (WorldGen.UpdateWorld) does not run on a multiplayer client, so the client side of 7.2 and 7.3 never ticked.
+        // PostUpdateEverything runs on every side.
+        public override void PostUpdateEverything()
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+                return;
+
+            VItemNet.ClientTick();
+            ConveyorFilterNet.ClientTick();
+        }
     }
 
     // vItem replication (roadmap patch 7.2, finding "VirtualItemSystem" and the vItem part of step 1).
