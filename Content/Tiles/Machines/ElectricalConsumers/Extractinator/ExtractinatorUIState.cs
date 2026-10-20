@@ -13,7 +13,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator
         {
             var list = new List<MachineUIElementEntry>();
 
-            list.Add(InputSlotEntry(0, new Vector2(-60, 0)));
+            list.Add(InputSlotEntry(0, new Vector2(-6, 54)));
 
             list.Add(new MachineUIElementEntry(
                 new ElectricityUIIcon(Entity.GetUseFraction),
