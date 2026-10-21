@@ -307,7 +307,7 @@ namespace Factorraria.Common.Net
             else if (args.Length > 0 && args[0] == "off")
                 RoboticArmWorker.BroadcastTileSquares = false;
 
-            string text = "Robotic Arm tile broadcast is " + (RoboticArmWorker.BroadcastTileSquares ? "ON" : "OFF") + " on this side (netMode " + Main.netMode + ").";
+            string text = "Robotic Arm tile broadcast is " + (RoboticArmWorker.BroadcastTileSquares ? "ON" : "OFF") + " on this side (netMode " + Main.netMode + "). " + RoboticArmNet.Describe() + " (patch 7b.4 counters)";
             caller.Reply(text, Color.LightGreen);
             FactorrariaNet.Log("[farmsend] " + text);
         }

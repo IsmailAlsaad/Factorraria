@@ -38,6 +38,46 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // visual (A1). Ticked once per logic tick right after the worker; the visual only reads it. Never saved, never synced.
         public RoboticArmMotion Motion { get; } = new RoboticArmMotion();
 
+        // Patch 7b.4 (A5b). Server: remembers what the nearby players were last told about the hand. Client: the held item type the server
+        // sent (the slot of an arm nobody opened is not replicated); -1 = no packet yet, the replicated slot is used.
+        readonly RoboticArmNet.Tracker netTracker = new RoboticArmNet.Tracker();
+        int netHeldType = -1;
+        static readonly Item noItem = new Item();
+
+        // What the client draws in the claw.
+        public Item HeldForVisual
+        {
+            get
+            {
+                if (Main.netMode == NetmodeID.MultiplayerClient && netHeldType >= 0)
+                {
+                    if (netHeldType == 0)
+                        return noItem;
+
+                    if (ContentSamples.ItemsByType.TryGetValue(netHeldType, out Item sample))
+                        return sample;
+                }
+
+                return InputSlots[0];
+            }
+        }
+
+        // Client, main thread (RoboticArmNet.PostUpdateEverything): replays what the server's hand does in this replica's own motion model.
+        public void ApplyNetState(bool hasTarget, int tileX, int tileY, int strikeTicks, int heldType)
+        {
+            netHeldType = heldType;
+
+            if (!hasTarget)
+            {
+                Motion.SetTarget(null);
+                return;
+            }
+
+            Motion.SetTarget(new Vector2(tileX * 16f + 8f, tileY * 16f + 8f));
+            if (strikeTicks > 0)
+                Motion.StartStrike(strikeTicks);
+        }
+
         // Working area: the tile offset of its top-left corner from the base tile, and its size in tiles. Saved. Phase 3's overlay
         // edits it (RoboticArmAreaEditorSystem) and Phase 4's scanner reads it. It always stays inside the square of tiles the arm
         // can reach (ReachTiles each way from the base), which is also its size cap.
@@ -128,6 +168,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             Item held = InputSlots[0];
             Motion.Update(Shoulder, UpperArmLength, ForearmLength, held, !held.IsAir && IsTool(held));
+            netTracker.Tick(this); // patch 7b.4: tells the nearby players what the hand does (server only)
         }
 
         public bool IsTool(Item item) => item.pick > 0 || item.axe > 0 || item.hammer > 0;
@@ -298,7 +339,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             visual ??= new RoboticArmVisual();
 
-            Item held = InputSlots[0];
+            Item held = HeldForVisual;
             bool heldIsTool = !held.IsAir && IsTool(held);
 
             // On a multiplayer client no logic tick runs for the arm, so nothing else ticks its motion model here (Phase 7b feeds its target
@@ -322,7 +363,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // Behind the tiles: the beams, the elbow joint, the claw and the held item.
         public void DynamicDrawBehindTiles(SpriteBatch spriteBatch)
         {
-            Item held = InputSlots[0];
+            Item held = HeldForVisual;
             visual?.DrawBehind(spriteBatch, Shoulder, held, !held.IsAir && IsTool(held));
         }
     }

@@ -43,6 +43,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public Vector2? Target => target;
         public bool HasTarget => target.HasValue;
         public bool Striking => strikeTimer > 0;
+        public int StrikeDuration => strikeDuration;   // patch 7b.4: the server sends it so a client's swing is as long as the real strike
         public bool InPosition => inPosition;
         public float StrikeProgress => Striking ? 1f - strikeTimer / (float)strikeDuration : 0f;
 
