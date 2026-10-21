@@ -24,6 +24,10 @@ namespace Factorraria.Common.Net
     //  - Nothing on a multiplayer client ever creates a machine entity any more (draw, light, right-click and kill code only look up).
     public static class MachinePlacement
     {
+        // TEMPORARY test aid (patch 7b.6, remove in Phase 10). Set by /farmsend placereject in the server console: the next machine entity
+        // request (message 87) is refused by BaseMachine.NetPlaceEntityAttempt, as if the server had said no.
+        public static bool RejectNextEntityRequest;
+
         /// <summary>
         /// Server or single-player only (returns null on a multiplayer client or for a tile that is not a registered machine).
         /// x, y is any tile of the machine. Creates the entity, registers it with the power grid and liquid network, runs OnPlaced and

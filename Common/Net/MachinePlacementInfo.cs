@@ -39,6 +39,7 @@ namespace Factorraria.Common.Net
         public override void OnWorldUnload()
         {
             MachinePlacementInfo.Clear();
+            MachinePlacement.RejectNextEntityRequest = false; // patch 7b.6 test aid
         }
 
         public override void Unload()

@@ -182,6 +182,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (item == null || item.IsAir || IsTool(item))
                 return false;
 
+            // Patch 7b.6 (A6): the Mechanical Arm item switches createTile / consumable on the OWNER's copy while Shift is held, so what
+            // this filter sees depends on which copy it looks at (the owner's cursor item can stay in placing mode, the server rebuilds
+            // the item in hook mode, ContentSamples is hook mode). Refuse it by type so the client filter, the server's slot edit filter,
+            // the conveyor intake and the worker all agree: an arm never places arms.
+            if (item.type == ModContent.ItemType<global::Factorraria.Content.Items.Hooks.MechanicalArmItem>())
+                return false;
+
             if (item.createWall >= 0)
                 return true;
 

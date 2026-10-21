@@ -1236,6 +1236,15 @@ namespace Factorraria.Common.Machines
         // machine is already there, and refuse when the tile is not there (the tile square always arrives first).
         public override void NetPlaceEntityAttempt(int i, int j)
         {
+            // TEMPORARY (patch 7b.6, remove in Phase 10): /farmsend placereject in the server console refuses the next request, so the test
+            // can see what a refused placement leaves behind (the tile, no entity; right-click or the bootstrap scan creates it later).
+            if (MachinePlacement.RejectNextEntityRequest)
+            {
+                MachinePlacement.RejectNextEntityRequest = false;
+                FactorrariaNet.Log("[Machines] entity request for " + GetType().Name + " at (" + i + ", " + j + ") refused (test: /farmsend placereject)");
+                return;
+            }
+
             if (ByPosition.TryGetValue(new Point16(i, j), out TileEntity existing) && existing is BaseMachine)
                 return;
 
