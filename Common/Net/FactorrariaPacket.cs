@@ -44,6 +44,8 @@ namespace Factorraria.Common.Net
         ArmEffect = 35,               // server -> nearby clients: "play the block-placing sound at tile (x, y)" (patch 7b.4b; break and hit effects use vanilla message 17)
         ArmAreaRequest = 36,          // client -> server: "set the working area of the Robotic Arm at (x, y) to (ax, ay) w x h" or, with the query flag, "tell me its real area" (patch 7b.5)
         ArmAreaChanged = 37,          // server -> client(s): "the Robotic Arm at (x, y) now has this area" (seq = the sender's request, 0 = a broadcast to the others; accepted flag) (patch 7b.5)
+        MotorRotateRequest = 38,      // client -> server: "turn the motor at (x, y) to facing <f>" (patch 8.3)
+        MotorFacingChanged = 39,      // server -> every client (or only the asker, when nothing changed): "the motor at (x, y) now faces <f>" (patch 8.3)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

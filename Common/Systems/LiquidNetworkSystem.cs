@@ -20,6 +20,9 @@ namespace Factorraria.Common.Systems
         public static bool networkNeedsRebuilding = true;
         public static bool flowNeedsRecalculating = false;
 
+        // TEMPORARY (patch 8.1b, remove in Phase 10): how many times the networks were rebuilt, for the [Pipes] log line and /fpipes.
+        public static int RebuildCount;
+
         const float DecayPerClimbTile = 0.5f * 3600f;
 
 
@@ -34,8 +37,9 @@ namespace Factorraria.Common.Systems
                 RebuildNetworks();
                 RestoreSavedNetworkTypes();
 
+                RebuildCount++;
                 if (Main.netMode == NetmodeID.Server)
-                    Mod.Logger.Info("[MP-Net] [Pipes] networks rebuilt: " + ActiveNetworks.Count + " network(s), " + AllPipeTiles.Count + " pipe tile(s)");
+                    Mod.Logger.Info("[MP-Net] [Pipes] networks rebuilt: " + ActiveNetworks.Count + " network(s), " + AllPipeTiles.Count + " pipe tile(s); " + global::Factorraria.Common.Net.LiquidPipeDiagnostics.Summary());
                 networkNeedsRebuilding = false;
                 flowNeedsRecalculating = false;
             }

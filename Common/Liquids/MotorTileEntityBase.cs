@@ -36,6 +36,14 @@ namespace Factorraria.Common.Machines
 
         public override void OnRightClick(int i, int j)
         {
+            // Patch 8.3 (P3): the server owns Facing (its liquid networks read it). A multiplayer client only asks; the server turns the
+            // motor and tells every client (MotorRotate), and the reframing of the neighbouring pipes happens when that answer arrives.
+            if (Terraria.Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
+            {
+                global::Factorraria.Common.Net.MotorRotate.Request(this);
+                return;
+            }
+
             Facing = Facing.Rotate90();
 
             LiquidNetworkSystem.networkNeedsRebuilding = true;
