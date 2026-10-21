@@ -964,7 +964,7 @@ tModLoader/other bases -> project types:
     +TrackSmoothTime:float +BendSmoothTime:float +IdleOffsetX:float +IdleOffsetY:float +SideDeadZone:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +GripDistance:float +InPositionDistance:float +Initialized:bool +Side:int +Head:Vector2 +Bend:float +Target:Vector2? +HasTarget:bool +Striking:bool +StrikeDuration:int +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool)
 **RoboticArmNet.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, RoboticArmMotion, RoboticArmTileEntity
   class RoboticArmNet : ModSystem
-    +NearbyTiles:float[c] +Sent:int[s] +Received:int[s] +Missed:int[s] +Describe()[s] +Load()[ov] +Unload()[ov] +PostUpdateEverything()[ov]
+    +NearbyTiles:float[c] +Sent:int[s] +Received:int[s] +Missed:int[s] +EffectsSent:int[s] +SoundsPlayed:int[s] +Describe()[s] +Load()[ov] +Unload()[ov] +SendTileAction(Vector2,int,int,int,int)[s] +SendPlaceSound(Vector2,int,int)[s] +PostUpdateEverything()[ov]
     struct State
       +X:short +Y:short +HasTarget:bool +TargetX:short +TargetY:short +StrikeTicks:int +HeldType:ushort
     class Tracker
@@ -981,11 +981,11 @@ tModLoader/other bases -> project types:
 **RoboticArmVisual.cs** uses: MechanicalArmIK, RoboticArmMotion
   class RoboticArmVisual
     +AimSmoothing:float +IdleAimTilt:float +SwingArc:float +SwingEndAngle:float +ClawPivotX:float +ClawPivotY:float +BlockScale:float +BeamThickness:float +JointScale:float +Update(RoboticArmMotion,Vector2,float,float,Item,bool) +DrawBehind(SpriteBatch,Vector2,Item,bool)
-**RoboticArmWorker.cs** uses: BaseMachine, FactorrariaNet, PureSiliconTile, RoboticArmDropCaptureSystem, RoboticArmMotion, RoboticArmTileEntity, SiliconOreTile, TileEntityHelper
+**RoboticArmWorker.cs** uses: BaseMachine, FactorrariaNet, PureSiliconTile, RoboticArmDropCaptureSystem, RoboticArmMotion, RoboticArmNet, RoboticArmTileEntity, SiliconOreTile, TileEntityHelper
   class RoboticArmGhostSystem : ModSystem
     +Unload()[ov]
   class RoboticArmWorker
-    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +TreeStickyColumns:int +FootprintMustFitArea:bool +PlatformsInOpenAir:bool +DebugPlacement:bool +MaxStrikesPerTile:int +Reaches:int +ReachTimeouts:int +Strikes:int +TilesChanged:int +Placements:int +BroadcastTileSquares:bool[s] +TileSquares:int +TileSquareTiles:int +Describe() +Tick()
+    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +TreeStickyColumns:int +FootprintMustFitArea:bool +PlatformsInOpenAir:bool +DebugPlacement:bool +MaxStrikesPerTile:int +Reaches:int +ReachTimeouts:int +Strikes:int +TilesChanged:int +Placements:int +BroadcastTileSquares:bool[s] +BroadcastTileEffects:bool[s] +TileSquares:int +TileSquareTiles:int +Describe() +Tick()
     enum Phase
       {Idle, Reach, Strike}
     enum Job

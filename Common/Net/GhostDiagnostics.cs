@@ -297,7 +297,7 @@ namespace Factorraria.Common.Net
     {
         public override string Command => "farmsend";
         public override CommandType Type => CommandType.Chat | CommandType.Console;
-        public override string Usage => "/farmsend [on|off|status]";
+        public override string Usage => "/farmsend [on|off|fxon|fxoff|status]";
         public override string Description => "Multiplayer test (7b.2): switches the Robotic Arm's explicit tile broadcast (type it in the server console).";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -306,8 +306,12 @@ namespace Factorraria.Common.Net
                 RoboticArmWorker.BroadcastTileSquares = true;
             else if (args.Length > 0 && args[0] == "off")
                 RoboticArmWorker.BroadcastTileSquares = false;
+            else if (args.Length > 0 && args[0] == "fxon")
+                RoboticArmWorker.BroadcastTileEffects = true;
+            else if (args.Length > 0 && args[0] == "fxoff")
+                RoboticArmWorker.BroadcastTileEffects = false;
 
-            string text = "Robotic Arm tile broadcast is " + (RoboticArmWorker.BroadcastTileSquares ? "ON" : "OFF") + " on this side (netMode " + Main.netMode + "). " + RoboticArmNet.Describe() + " (patch 7b.4 counters)";
+            string text = "Robotic Arm tile broadcast is " + (RoboticArmWorker.BroadcastTileSquares ? "ON" : "OFF") + " on this side (netMode " + Main.netMode + "). " + " Dig and place effects are " + (RoboticArmWorker.BroadcastTileEffects ? "ON" : "OFF") + ". " + RoboticArmNet.Describe() + " (patch 7b.4 counters)";
             caller.Reply(text, Color.LightGreen);
             FactorrariaNet.Log("[farmsend] " + text);
         }

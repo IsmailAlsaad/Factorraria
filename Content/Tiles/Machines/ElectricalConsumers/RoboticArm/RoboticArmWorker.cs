@@ -81,6 +81,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // sends by itself (verification item 16); remove the flag in Phase 10 and keep the broadcast. TileSquares and TileSquareTiles are
         // TEMPORARY counters (shown by /fsnap).
         public static bool BroadcastTileSquares = true;
+
+        // Patch 7b.4b: dust and sounds on the clients (see RoboticArmNet). Test switch only (/farmsend fxoff); remove the flag in Phase 10, keep the effects.
+        public static bool BroadcastTileEffects = true;
         public int TileSquares;
         public int TileSquareTiles;
 
@@ -341,6 +344,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             // Any change (tile gone, grass turned into dirt, wall gone) counts as progress and resets the no-progress count.
             Tile after = Framing.GetTileSafely(x, y);
+            BroadcastStrikeEffects(strikeJob, x, y, hadTile, type, wall, after);
             bool changedNow = after.HasTile != hadTile || after.TileType != type || after.WallType != wall;
             if (changedNow)
             {
@@ -374,6 +378,34 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             TileSquares++;
             TileSquareTiles += width * height;
             Log("tile square (" + x0 + ", " + y0 + ") " + width + "x" + height + " for " + why);
+        }
+
+        // Patch 7b.4b. After a strike, BEFORE the tile square of the same strike: tells the players near the arm to replay the hit (dust, sound,
+        // and the break itself) with vanilla's tile-manipulation message. A hit that changed nothing is sent as a "fail" hit (dust and sound only).
+        void BroadcastStrikeEffects(Job strikeJob, int x, int y, bool hadTile, ushort type, ushort wall, Tile after)
+        {
+            if (Main.netMode != NetmodeID.Server || !BroadcastTileEffects)
+                return;
+
+            if (strikeJob == Job.Wall)
+            {
+                if (wall != 0)
+                    RoboticArmNet.SendTileAction(arm.Shoulder, 2, x, y, after.WallType != wall ? 0 : 1);
+            }
+            else if (hadTile)
+            {
+                bool tileChanged = !after.HasTile || after.TileType != type;
+                RoboticArmNet.SendTileAction(arm.Shoulder, 0, x, y, tileChanged ? 0 : 1);
+            }
+        }
+
+        // After a successful placement: the block-placing sound for the players near the arm.
+        void BroadcastPlaceEffect()
+        {
+            if (Main.netMode != NetmodeID.Server || !BroadcastTileEffects)
+                return;
+
+            RoboticArmNet.SendPlaceSound(arm.Shoulder, target.X, target.Y);
         }
 
         // Trees, palms, giant mushrooms and cacti drop their whole column when one tile of it (or the tile under it) goes.
@@ -471,6 +503,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 return;
             }
 
+            BroadcastPlaceEffect();
             BroadcastPlaced(held);
             Placements++;
             Log("placed " + held.Name + " at (" + target.X + ", " + target.Y + "), " + (held.stack - 1) + " left in the slot");

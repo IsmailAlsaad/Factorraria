@@ -41,6 +41,7 @@ namespace Factorraria.Common.Net
         PriorityFiltersChanged = 32,  // server -> client: "these are now all the filtered priority conveyor networks (filter + tiles)" (patch 7.3)
         GhostCheckRequest = 33,       // client -> server: "these world items and vItems are what I show near me, compare them with yours" (patch 7b.2, TEMPORARY test)
         ArmState = 34,                // server -> nearby clients: "the Robotic Arm at (x, y) now aims at tile (tx, ty) / has no target, starts a strike of <n> ticks, holds item type <t>" (patch 7b.4)
+        ArmEffect = 35,               // server -> nearby clients: "play the block-placing sound at tile (x, y)" (patch 7b.4b; break and hit effects use vanilla message 17)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

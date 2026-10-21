@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Concurrent;
 using System.IO;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -37,6 +38,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public static int Sent;
         public static int Received;
         public static int Missed;
+        public static int EffectsSent;   // patch 7b.4b: tile-manipulation messages and place sounds sent
+        public static int SoundsPlayed;  // patch 7b.4b: place sounds a client played
 
         struct State
         {
@@ -50,12 +53,14 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         }
 
         static readonly ConcurrentQueue<State> incoming = new ConcurrentQueue<State>();
+        static readonly ConcurrentQueue<Point> placeSounds = new ConcurrentQueue<Point>();
 
-        public static string Describe() => "armNet: sent=" + Sent + " received=" + Received + " missed=" + Missed;
+        public static string Describe() => "armNet: sent=" + Sent + " received=" + Received + " missed=" + Missed + " | effects sent=" + EffectsSent + " place sounds played=" + SoundsPlayed;
 
         public override void Load()
         {
             FactorrariaNet.Register(FactorrariaPacket.ArmState, PacketDirection.ToClient, HandleState);
+            FactorrariaNet.Register(FactorrariaPacket.ArmEffect, PacketDirection.ToClient, HandlePlaceSound);
         }
 
         public override void Unload()
@@ -78,11 +83,68 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             incoming.Enqueue(state);
         }
 
+        // ---------------------------------------------------------------- patch 7b.4b: dig and place effects
+        //
+        // A strike on the server changes the world but plays nothing: dust and sounds are made by vanilla code that only runs where there is
+        // a screen, and the tile squares of 7b.2 carry data only. A player's mining reaches other players the same way: the server forwards
+        // vanilla's tile-manipulation message (id 17), and every receiving client runs WorldGen.KillTile / KillWall itself, which makes the
+        // dust and the hit or break sound, and breaks the tile there too. The arm now sends that same message to the players near it, BEFORE
+        // the tile square of the same strike (so the client still has the tile when it replays the hit; the square then makes the result
+        // exact). A client never spawns the drops of such a replay (vanilla relies on that for other players' mining), the server's drops are
+        // the real ones. Placement is not replayed (a replayed object placement would run the placement hooks, which for machines talk to the
+        // server); the placement sound alone travels in ArmEffect.
+
+        /// <summary>Server: sends vanilla's tile-manipulation message (action 0 kill tile, 2 kill wall; fail 1 = only a hit) to the players near center.</summary>
+        public static void SendTileAction(Vector2 center, int action, int x, int y, int fail)
+        {
+            if (Main.netMode != NetmodeID.Server)
+                return;
+
+            float radius = NearbyTiles * 16f;
+            float radiusSquared = radius * radius;
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                Player player = Main.player[i];
+                if (player == null || !player.active || Vector2.DistanceSquared(player.Center, center) > radiusSquared)
+                    continue;
+
+                NetMessage.SendData(MessageID.TileManipulation, i, -1, null, action, x, y, fail, 0);
+                EffectsSent++;
+            }
+        }
+
+        /// <summary>Server: the block-placing sound at a tile, for the players near center.</summary>
+        public static void SendPlaceSound(Vector2 center, int x, int y)
+        {
+            if (Main.netMode != NetmodeID.Server)
+                return;
+
+            FactorrariaNet.SendToNearby(center, NearbyTiles, FactorrariaPacket.ArmEffect, writer =>
+            {
+                writer.Write((short)x);
+                writer.Write((short)y);
+            });
+            EffectsSent++;
+        }
+
+        static void HandlePlaceSound(System.IO.BinaryReader reader, int sender)
+        {
+            int x = reader.ReadInt16();
+            int y = reader.ReadInt16();
+            placeSounds.Enqueue(new Point(x, y));
+        }
+
         // Client, main thread.
         public override void PostUpdateEverything()
         {
             if (Main.netMode != NetmodeID.MultiplayerClient)
                 return;
+
+            while (placeSounds.TryDequeue(out Point tile))
+            {
+                SoundsPlayed++;
+                SoundEngine.PlaySound(SoundID.Dig, new Vector2(tile.X * 16f + 8f, tile.Y * 16f + 8f));
+            }
 
             while (incoming.TryDequeue(out State state))
             {
