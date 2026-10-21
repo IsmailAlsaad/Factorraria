@@ -198,6 +198,20 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
                 .AddIngredient(ItemID.Minecart, 1)
                 .AddTile(TileID.Anvils)
                 .Register();
+
+            // Solidifier
+            Recipe.Create(ItemID.Solidifier, 1)
+                .AddRecipeGroup(RecipeGroupID.IronBar, 12)
+                .AddIngredient(ItemID.Glass, 6)
+                .AddIngredient(ModContent.ItemType<CopperWireItem>(), 8)
+                .AddTile(TileID.Anvils)
+                .Register();
+            Recipe.Create(ItemID.Solidifier, 1)
+                .AddRecipeGroup(RecipeGroupID.IronBar, 12)
+                .AddIngredient(ItemID.Glass, 6)
+                .AddIngredient(ModContent.ItemType<TinWireItem>(), 8)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
     }
 }
