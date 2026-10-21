@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-21 | 232 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-21 | 233 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(46) BaseMachine(34) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(22) PacketDirection(19) CustomRecipe(16) VirtualItemSystem(13) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) Factorraria(9) RecipeOutputKey(8) MachineVisualRegistry(8) FurnaceOffsetConfig(8)
+FactorrariaNet(47) BaseMachine(35) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(23) PacketDirection(20) CustomRecipe(16) VirtualItemSystem(13) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) Factorraria(9) RoboticArmTileEntity(8) RecipeOutputKey(8) MachineVisualRegistry(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -24,7 +24,7 @@ Project bases -> derived:
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModSystem (55): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (56): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModCommand (10): ArmSendCommand, GhostCheckCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
@@ -337,7 +337,7 @@ tModLoader/other bases -> project types:
 **FactorrariaPlayerSync.cs** uses: JoinSync, MachineDetailSystem
   class FactorrariaPlayerSync : ModPlayer
     +OnEnterWorld()[ov] +PlayerDisconnect()[ov] +CopyClientState(ModPlayer)[ov] +SyncPlayer(int,int,bool)[ov] +SendClientChanges(ModPlayer)[ov]
-**GhostDiagnostics.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, RoboticArmNet, RoboticArmWorker, VirtualItem, VirtualItemSystem
+**GhostDiagnostics.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, RoboticArmAreaNet, RoboticArmNet, RoboticArmWorker, VirtualItem, VirtualItemSystem
   static class GhostDiagnostics
     +RouteDropConversions:int[s] +WorldItemSyncs:int[s] +WorldItemSyncsInactive:int[s] +ChecksHandled:int[s] +GhostWorldItemsFound:int[s] +GhostVItemsFound:int[s] +OnRouteDrop(int,int,int,int,int,int)[s] +OnWorldItemSync(int,string)[s] +DescribeLocal()[s] +SendCheck(Player)[s] +HandleCheck(BinaryReader,int)[s]
   class GhostDiagnosticsSystem : ModSystem
@@ -472,6 +472,15 @@ tModLoader/other bases -> project types:
     +SeenBatchTicks:int[s] +MaxSeenPerPacket:int[s] +ReadTimeoutTicks:int[s] +MaxPoolNameLength:int[s] +MaxJoinEntries:int[s] +ReadPending:bool[s] +ClearPending()[s] +ServerMarkCrafted(string)[s] +HandleKnowledgeDelta(BinaryReader,int)[s] +ReportSeen(int)[s] +Update()[s] +HandleSeenReport(BinaryReader,int)[s] +HandleSeenDelta(BinaryReader,int)[s] +RequestReadParchment(string)[s] +HandleReadRequest(BinaryReader,int)[s] +HandleReadResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
     enum KnowledgeKind : byte
       {Unlocked, Crafted}
+**RoboticArmAreaNet.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineDetailSystem, MachineRequest, PacketDirection, RequestCheck, RoboticArmAreaEditorSystem, RoboticArmNet, RoboticArmTileEntity
+  static class RoboticArmAreaNet
+    +RejectNext:bool[s] +ServerAccepted:int[s] +ServerRejected:int[s] +ServerQueries:int[s] +ServerBroadcasts:int[s] +ClientSent:int[s] +ClientQueries:int[s] +ClientApplied:int[s] +ClientRestored:int[s] +Commit(RoboticArmTileEntity,Rectangle)[s] +RequestRefresh(RoboticArmTileEntity)[s] +HandleRequest(BinaryReader,int)[s] +HandleChanged(BinaryReader,int)[s] +Update(int)[s] +Reset()[s] +Describe()[s]
+    sealed class Pending
+      +Seq:int +Corner:Point16 +Tick:uint +IsQuery:bool
+    sealed class Result
+      +Corner:Point16 +Seq:int +Accepted:bool +HasArea:bool +H:int X, Y, W,
+  class RoboticArmAreaNetSystem : ModSystem
+    +AnswerTimeoutTicks:int +MinRequestSpacingTicks:int +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov] +Unload()[ov]
 **SlotEditTestCommand.cs** uses: MachineRecipeSelect, MachineSlotEdit, MaterializerToggle
   class SlotEditTestCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
@@ -949,9 +958,9 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/RoboticArm/
-**RoboticArmAreaEditorSystem.cs** uses: MachineUISystem, RoboticArmTileEntity
+**RoboticArmAreaEditorSystem.cs** uses: MachineUISystem, RoboticArmAreaNet, RoboticArmTileEntity
   class RoboticArmAreaEditorSystem : ModSystem
-    +MoveHandleOffset:Vector2 +ResizeHandleOffset:Vector2 +TexturePath:string +DraggingHandle:bool +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +MoveHandleOffset:Vector2 +ResizeHandleOffset:Vector2 +TexturePath:string +DraggingHandle:bool +IsDraggingArm(RoboticArmTileEntity) +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
     enum Handle
       {None, Move, Resize}
 **RoboticArmDropCapture.cs** uses: RoboticArmTileEntity

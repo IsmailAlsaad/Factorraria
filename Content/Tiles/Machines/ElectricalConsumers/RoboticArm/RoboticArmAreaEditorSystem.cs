@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Systems;
+﻿using Factorraria.Common.Net;
+using Factorraria.Common.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -59,6 +60,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
         // True while the move or resize handle is held. The arm's UI hides its slots and power icon during that time.
         public bool DraggingHandle => dragHandle != Handle.None;
+
+        // Patch 7b.5: the net layer (RoboticArmAreaNet) keeps an answer aside while this editor still drags the same arm.
+        public bool IsDraggingArm(RoboticArmTileEntity arm) => dragHandle != Handle.None && dragArm == arm;
+
+        // The arm whose UI was open last frame; a change means a UI was just opened (or the replica was rebound), so a multiplayer client
+        // asks the server for the arm's real area (a replica that missed a broadcast, or an older snapshot, is corrected here).
+        RoboticArmTileEntity lastOpenArm;
 
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
@@ -121,7 +129,19 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             RoboticArmTileEntity arm = OpenArm;
             Player player = Main.LocalPlayer;
 
-            // Closing the UI, or switching to another arm, ends any drag.
+            // Patch 7b.5: a UI was just opened for this arm: a multiplayer client asks for the real area (single-player: nothing is sent).
+            if (arm != lastOpenArm)
+            {
+                lastOpenArm = arm;
+                if (arm != null)
+                    RoboticArmAreaNet.RequestRefresh(arm);
+            }
+
+            // Closing the UI, or switching to another arm, ends any drag. That drag is cancelled: the preview is thrown away by asking
+            // the server for the real area (nothing is sent in single-player).
+            if (dragHandle != Handle.None && (arm == null || arm != dragArm))
+                RoboticArmAreaNet.RequestRefresh(dragArm);
+
             if (arm == null || arm != dragArm)
                 dragHandle = Handle.None;
 
@@ -143,6 +163,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                     return;
                 }
 
+                // Mouse released: the whole drag becomes ONE request (patch 7b.5). Single-player and the host send nothing.
+                RoboticArmAreaNet.Commit(arm, dragStartArea);
                 dragHandle = Handle.None;
             }
 
