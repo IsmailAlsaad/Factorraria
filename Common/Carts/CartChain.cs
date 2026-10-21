@@ -308,6 +308,11 @@ namespace Factorraria.Common.Carts
         /// </summary>
         public void UpdateCarriages()
         {
+            if (Terraria.Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
+            {
+                return; // patch 9.1: carriage positions are computed by the server and synced (C2)
+            }
+
             for (int i = 0; i < Carriages.Count; i++)
             {
                 Cart cart = Carriages[i];

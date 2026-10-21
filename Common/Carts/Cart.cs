@@ -649,6 +649,13 @@ namespace Factorraria.Common.Carts
         public float Rotation;
         public bool Active = true;
 
+        /// <summary>
+        /// Stable id (patch 9.1, C2/C9): assigned by CartSystem when the cart is created or loaded, saved with it, never reused.
+        /// The network packets (9.2 on) and the chest panel (9.5) find a cart by this id, never by list index or reference.
+        /// 0 = no id yet. A client replica carries the id the server sent. A test-only fake replica uses -1.
+        /// </summary>
+        public int Id;
+
         /// <summary>The chain this cart belongs to (as the motor or as a carriage). Null for a free cart.</summary>
         public CartChain Chain;
 
@@ -841,6 +848,11 @@ namespace Factorraria.Common.Carts
 
         public void Update()
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                return; // patch 9.1: the server owns the simulation, a client only interpolates (ClientStep)
+            }
+
             if (!Active || IsCarriage)
             {
                 return; // carriages are placed by their chain (CartChain.UpdateCarriages)
@@ -1301,6 +1313,88 @@ namespace Factorraria.Common.Carts
 
         #endregion
 
+        #region Client replica (multiplayer)
+
+        // Patch 9.1 (C2). A client never simulates a cart. A replica is a cart the server told it about (patch 9.2 sends the state):
+        // ApplyNetState stores the newest server state and ClientStep, called once per tick by CartSystem on a client, eases the
+        // drawn position and tilt toward it. Not saved, never run on the server or in single-player.
+        private Vector2 netPosition;
+        private Vector2 netVelocity;
+        private float netRotation;
+        private int netAge;
+        private bool hasNetState;
+
+        /// <summary>True once the server has sent at least one state for this replica.</summary>
+        public bool HasNetState
+        {
+            get { return hasNetState; }
+        }
+
+        /// <summary>
+        /// Stores the newest server state. velocity is in pixels per tick (Speed along X while on the track, Velocity while derailed).
+        /// The first state makes the replica appear in place; later states are eased toward by ClientStep.
+        /// </summary>
+        public void ApplyNetState(Vector2 position, Vector2 velocity, float rotation, int facing, bool onTrack)
+        {
+            bool first = !hasNetState;
+
+            netPosition = position;
+            netVelocity = velocity;
+            netRotation = rotation;
+            netAge = 0;
+            Facing = facing < 0 ? -1 : 1;
+            OnTrack = onTrack;
+
+            if (first)
+            {
+                Position = position;
+                Rotation = rotation;
+                hasNetState = true;
+            }
+        }
+
+        /// <summary>
+        /// One client tick: the target is the last server position pushed forward along the last velocity (at most leadMaxTicks, enough
+        /// to cover the gap between two packets), the drawn position eases toward it and snaps when it is far off, then the wheel
+        /// animation runs from the synced speed. Tuning is part of 9.6.
+        /// </summary>
+        public void ClientStep()
+        {
+            if (!Active || !hasNetState)
+            {
+                return;
+            }
+
+            int leadMaxTicks = 6;
+            float snapDistance = 96f;
+            float ease = 0.35f;
+
+            if (netAge < 10000)
+            {
+                netAge++;
+            }
+
+            Vector2 target = netPosition + netVelocity * Math.Min(netAge, leadMaxTicks);
+            Vector2 delta = target - Position;
+
+            if (delta.LengthSquared() > snapDistance * snapDistance)
+            {
+                Position = target;
+            }
+            else
+            {
+                Position += delta * ease;
+            }
+
+            Rotation += (netRotation - Rotation) * ease;
+            Velocity = netVelocity;
+            Speed = OnTrack ? netVelocity.X : 0f;
+
+            UpdateAnimation();
+        }
+
+        #endregion
+
         #region Save / load
 
         /// <summary>Bump when the save layout changes. A missing "version" key is version 0 (pre data model).</summary>
@@ -1310,6 +1404,7 @@ namespace Factorraria.Common.Carts
         {
             TagCompound tag = new TagCompound();
             tag["version"] = SaveVersion;
+            tag["id"] = Id;
             tag["skin"] = Skin;
             tag["module"] = (int)Module;
 
@@ -1421,6 +1516,7 @@ namespace Factorraria.Common.Carts
             cart.OnTrack = tag.GetBool("onTrack");
             cart.LoadChainId = tag.GetInt("chainId");   // 0 = not in a chain (also what saves from before chains read as)
             cart.LoadChainSlot = tag.GetInt("chainSlot");
+            cart.Id = tag.GetInt("id");                 // 0 = saved before cart ids existed; CartSystem.LoadWorldData assigns one
 
             if (cart.ChestItems != null && tag.ContainsKey("chest"))
             {

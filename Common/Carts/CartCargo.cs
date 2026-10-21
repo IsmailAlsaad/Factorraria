@@ -61,6 +61,11 @@ namespace Factorraria.Common.Carts
 
         public static void Update(Cart cart)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                return; // patch 9.1: cargo (pickups, spills, liquid, fuel) is server simulation only
+            }
+
             if (cart.Module == CartModule.Chest)
             {
                 PickUpConveyorItems(cart);

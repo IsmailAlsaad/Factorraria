@@ -30,6 +30,46 @@ namespace Factorraria.Common.Carts
         private static bool reportedFailure;
         private static bool chainsNeedRebuild; // set by LoadWorldData, handled on the first tick the track tables are ready
 
+        #region Ids (patch 9.1)
+
+        // Every cart has a stable Id (Cart.Id): assigned from this counter when the cart is created or loaded, saved with the cart,
+        // never reused (the counter is saved too and only goes up). Only the server and single-player create carts; a client replica
+        // carries the id the server sent (patch 9.2) and never touches this counter.
+        private static int nextCartId = 1;
+
+        /// <summary>The id the next new cart will get.</summary>
+        public static int NextCartId => nextCartId;
+
+        /// <summary>Gives the cart the next id if it has none yet.</summary>
+        public static void AssignId(Cart cart)
+        {
+            if (cart.Id <= 0)
+            {
+                cart.Id = nextCartId++;
+            }
+        }
+
+        /// <summary>The live cart with this id, or null (unknown id, or the cart is gone). Use this instead of holding a Cart across ticks.</summary>
+        public static Cart FindById(int id)
+        {
+            if (id <= 0)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                if (Carts[i].Id == id)
+                {
+                    return Carts[i].Active ? Carts[i] : null;
+                }
+            }
+
+            return null;
+        }
+
+        #endregion
+
         #region Lifecycle / saving
 
         public override void Load()
@@ -162,6 +202,7 @@ namespace Factorraria.Common.Carts
         public override void OnWorldUnload()
         {
             Carts.Clear();
+            nextCartId = 1;
             TrackData.Reset();
         }
 
@@ -173,6 +214,15 @@ namespace Factorraria.Common.Carts
                 if (Carts[i].Active && Carts[i].Chain != null && Carts[i].Chain.Motor == Carts[i])
                 {
                     Carts[i].Chain.SaveId = nextChainId++;
+                }
+            }
+
+            // Defensive: every cart that is saved has an id (carts get theirs when created, so this normally does nothing).
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                if (Carts[i].Active)
+                {
+                    AssignId(Carts[i]);
                 }
             }
 
@@ -190,16 +240,47 @@ namespace Factorraria.Common.Carts
             {
                 tag["carts"] = saved;
             }
+
+            if (nextCartId > 1)
+            {
+                tag["nextCartId"] = nextCartId; // saved even with no carts left, so an id is never handed out twice
+            }
         }
 
         public override void LoadWorldData(TagCompound tag)
         {
             Carts.Clear();
+            nextCartId = Math.Max(1, tag.GetInt("nextCartId"));
 
             foreach (TagCompound cartTag in tag.GetList<TagCompound>("carts"))
             {
                 Carts.Add(Cart.Load(cartTag));
             }
+
+            // The counter must be above every saved id, then carts without an id (saved before 9.1) and duplicates (a damaged save)
+            // get fresh ones in list order.
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                if (Carts[i].Id >= nextCartId)
+                {
+                    nextCartId = Carts[i].Id + 1;
+                }
+            }
+
+            HashSet<int> usedIds = new HashSet<int>();
+            int assigned = 0;
+
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                if (Carts[i].Id <= 0 || !usedIds.Add(Carts[i].Id))
+                {
+                    Carts[i].Id = nextCartId++;
+                    usedIds.Add(Carts[i].Id);
+                    assigned++;
+                }
+            }
+
+            Mod.Logger.Info("[Carts] loaded " + Carts.Count + " cart(s), next id " + nextCartId + ", " + assigned + " id(s) assigned on load");
 
             chainsNeedRebuild = true;
         }
@@ -209,6 +290,27 @@ namespace Factorraria.Common.Carts
         #region Simulation
 
         public override void PostUpdateWorld()
+        {
+            // Patch 9.1 (C2): the server (or single-player) owns the whole simulation; a client only eases its replicas toward the
+            // last state the server sent. With no replicas yet (until 9.2) the client loop does nothing.
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                ClientInterpolate();
+                return;
+            }
+
+            ServerSimulate();
+        }
+
+        private static void ClientInterpolate()
+        {
+            for (int i = 0; i < Carts.Count; i++)
+            {
+                Carts[i].ClientStep();
+            }
+        }
+
+        private static void ServerSimulate()
         {
             if (Carts.Count == 0)
             {
@@ -366,6 +468,7 @@ namespace Factorraria.Common.Carts
             cart.SetModule(module);
             cart.Position = railPoint;
             cart.OnTrack = true;
+            AssignId(cart);
             Carts.Add(cart);
             return cart;
         }

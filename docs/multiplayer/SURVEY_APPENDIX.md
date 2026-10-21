@@ -329,6 +329,8 @@ Add a stable `Id` to every cart (monotonic counter, saved and restored), plus th
 Skin is sent as the stable **skin key string** (not the item type), module item as item type.
 
 ### C2 (B) Simulation guard
+**Status (patch 9.1, applied, untested):** `CartSystem.PostUpdateWorld` runs `ClientInterpolate()` on a multiplayer client (only `Cart.ClientStep()` on each replica) and `ServerSimulate()` everywhere else; `Cart.Update`, `CartCargo.Update` and `CartChain.UpdateCarriages` also return at once on a client. Replicas are fed through `Cart.ApplyNetState` (patch 9.2 sends the states). Chain id and slot for the coupling visuals are part of 9.2.
+
 `PostUpdateWorld`, `CartChain` updates and `CartCargo.Update` must run only when `Main.netMode != MultiplayerClient`. Clients get a separate light `PostUpdateWorld` that only advances interpolation. Carriage positions are computed by the server (`CartChain.UpdateCarriages`), so clients draw them from synced positions; the client only needs chain id and slot for coupling visuals.
 
 ### C3 (B) Input becomes requests
@@ -358,6 +360,8 @@ All click handling stays on the owning client (it needs `Main.mouse*` and the he
 `CartChain` (motor + carriages, `AutoAttach`, `RebuildFromSave`) and `Cart.TryCollide`/`Bumped` events run purely in the server simulation. The client needs only chain id/slot and the bump event for visuals/sound. Bump sounds (`SoundEngine.PlaySound` in `CartCargo`) are no-ops on a server, so they need a small `CartEvent` broadcast (bump, pour) for nearby clients.
 
 ### C9 (M) Save/load and IDs
+**Status (patch 9.1, applied, untested):** every cart has `Cart.Id` (saved as `id`), the counter `nextCartId` is saved as `nextCartId` (also with no carts left) and only goes up; on load it is raised above every saved id, carts without an id (older saves) and duplicate ids get fresh ones in list order, and the load logs `[Carts] loaded N cart(s), next id X, Y id(s) assigned on load`. `CartSystem.FindById(id)` is the lookup. `Cart.SaveVersion` was not bumped: a missing `id` reads as 0.
+
 `SaveWorldData`/`LoadWorldData` already work on the server. Add `Id` (and the next-id counter) to save data; old saves assign ids on load.
 
 ### C10 (L) Items and tooltips
