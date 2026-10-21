@@ -657,7 +657,7 @@ namespace Factorraria.Content.VirtualItems
                 WorldItemsConverted++;
 
                 // Patch 7.1: tell the clients the world item is gone. In single-player there is nobody to tell.
-                SyncWorldItem(worldItemIndex);
+                SyncWorldItem(worldItemIndex, "convert to vItem");
 
                 return;
             }
@@ -668,13 +668,14 @@ namespace Factorraria.Content.VirtualItems
         /// or emptied. Call it after any server-side code edits a world item directly (Item.NewItem broadcasts by itself). Does
         /// nothing in single-player or on a client.
         /// </summary>
-        public static void SyncWorldItem(int worldItemIndex)
+        public static void SyncWorldItem(int worldItemIndex, string source = "unknown")
         {
             if (Main.netMode != NetmodeID.Server || worldItemIndex < 0 || worldItemIndex >= Main.maxItems)
             {
                 return;
             }
 
+            global::Factorraria.Common.Net.GhostDiagnostics.OnWorldItemSync(worldItemIndex, source); // patch 7b.2 TEMPORARY (remove in Phase 10)
             NetMessage.SendData(MessageID.SyncItem, -1, -1, null, worldItemIndex);
         }
 

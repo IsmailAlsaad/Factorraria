@@ -270,8 +270,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (!found)
                 return;
 
-            if (VirtualItemSystem.SpawnVirtualItem(item.Clone(), tile.X, tile.Y) == null)
+            VirtualItem converted = VirtualItemSystem.SpawnVirtualItem(item.Clone(), tile.X, tile.Y);
+            if (converted == null)
                 return;
+
+            // Patch 7b.2 TEMPORARY (remove in Phase 10): ghost-item diagnostic, see GhostDiagnostics.
+            if (Main.netMode == NetmodeID.Server)
+                global::Factorraria.Common.Net.GhostDiagnostics.OnRouteDrop(item.whoAmI, item.type, item.stack, converted.Id, tile.X, tile.Y);
 
             item.TurnToAir();
             item.active = false;

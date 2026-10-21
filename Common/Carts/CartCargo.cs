@@ -206,7 +206,7 @@ namespace Factorraria.Common.Carts
                         worldItem.active = false;
                     }
 
-                    VirtualItemSystem.SyncWorldItem(worldItem.whoAmI); // patch 7.4: a partial or full pickup must reach the clients
+                    VirtualItemSystem.SyncWorldItem(worldItem.whoAmI, "cart chest pickup"); // patch 7.4: a partial or full pickup must reach the clients
                 }
             }
         }
@@ -388,7 +388,7 @@ namespace Factorraria.Common.Carts
                         worldItem.active = false;
                     }
 
-                    VirtualItemSystem.SyncWorldItem(worldItem.whoAmI); // patch 7.4: a partial or full pickup must reach the clients
+                    VirtualItemSystem.SyncWorldItem(worldItem.whoAmI, "cart fuel pickup"); // patch 7.4: a partial or full pickup must reach the clients
                 }
             }
         }

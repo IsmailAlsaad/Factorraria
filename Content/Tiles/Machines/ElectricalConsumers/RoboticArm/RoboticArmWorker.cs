@@ -76,7 +76,15 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public int TilesChanged;
         public int Placements;
 
-        public string Describe() => "reaches=" + Reaches + " timeouts=" + ReachTimeouts + " strikes=" + Strikes + " changed=" + TilesChanged + " placed=" + Placements
+        // Patch 7b.2 (A2): after a strike that changed the world and after a placement, the server sends the touched area to every client
+        // with NetMessage.SendTileSquare. The flag exists only so a test can switch it off (/farmsend off) and see what vanilla already
+        // sends by itself (verification item 16); remove the flag in Phase 10 and keep the broadcast. TileSquares and TileSquareTiles are
+        // TEMPORARY counters (shown by /fsnap).
+        public static bool BroadcastTileSquares = true;
+        public int TileSquares;
+        public int TileSquareTiles;
+
+        public string Describe() => "reaches=" + Reaches + " timeouts=" + ReachTimeouts + " strikes=" + Strikes + " changed=" + TilesChanged + " placed=" + Placements + " squares=" + TileSquares + "(" + TileSquareTiles + " tiles)"
             + " phase=" + phase + (phase == Phase.Idle ? "" : " target=(" + target.X + ", " + target.Y + ") job=" + job);
 
         void Log(string message)
@@ -308,6 +316,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             bool hadTile = before.HasTile;
             ushort type = before.TileType;
             ushort wall = before.WallType;
+            Tile above = Framing.GetTileSafely(x, y - 1);
+            bool tall = (hadTile && IsTallPlant(type)) || (above.HasTile && IsTallPlant(above.TileType));
 
             strikesOnTarget++;
             Job strikeJob = job;
@@ -336,11 +346,75 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             {
                 strikesOnTarget = 0;
                 TilesChanged++;
+                BroadcastStrike(x, y, hadTile ? type : (ushort)0, tall);
             }
 
             if (changedNow || strikesOnTarget == 1)
                 Log("strike " + strikeJob + " at (" + x + ", " + y + "): tile " + (hadTile ? type.ToString() : "none") + " -> " + (after.HasTile ? after.TileType.ToString() : "none")
                     + ", wall " + wall + " -> " + after.WallType + (changedNow ? " CHANGED" : " (no change yet)"));
+        }
+
+        // Patch 7b.2 (A2). Sends the rectangle [x - left, x + right] x [y - up, y + down] (clamped to the world) to every client. Server
+        // only; single-player has nobody to tell. A duplicate of a change vanilla already broadcast is harmless (same tile data).
+        void BroadcastArea(int x, int y, int left, int right, int up, int down, string why)
+        {
+            if (Main.netMode != NetmodeID.Server || !BroadcastTileSquares)
+                return;
+
+            int x0 = System.Math.Max(0, x - left);
+            int y0 = System.Math.Max(0, y - up);
+            int x1 = System.Math.Min(Main.maxTilesX - 1, x + right);
+            int y1 = System.Math.Min(Main.maxTilesY - 1, y + down);
+            int width = System.Math.Min(255, x1 - x0 + 1);
+            int height = System.Math.Min(255, y1 - y0 + 1);
+            if (width <= 0 || height <= 0)
+                return;
+
+            NetMessage.SendTileSquare(-1, x0, y0, width, height);
+            TileSquares++;
+            TileSquareTiles += width * height;
+            Log("tile square (" + x0 + ", " + y0 + ") " + width + "x" + height + " for " + why);
+        }
+
+        // Trees, palms, giant mushrooms and cacti drop their whole column when one tile of it (or the tile under it) goes.
+        static bool IsTallPlant(ushort type)
+        {
+            return type == TileID.Trees || type == TileID.PalmTree || type == TileID.MushroomTrees || type == TileID.Cactus;
+        }
+
+        // After a strike that changed the target tile or wall. A multi-tile object is covered by its object size on every side (the
+        // target can be any tile of it); a tall plant by a column above the target.
+        void BroadcastStrike(int x, int y, ushort type, bool tall)
+        {
+            if (tall)
+            {
+                BroadcastArea(x, y, 4, 4, 40, 2, "tree or cactus");
+                return;
+            }
+
+            int pad = 1;
+            if (type != 0)
+            {
+                TileObjectData data = TileObjectData.GetTileData(type, 0);
+                if (data != null)
+                    pad = System.Math.Max(data.Width, data.Height);
+            }
+
+            BroadcastArea(x, y, pad, pad, pad, pad, "strike");
+        }
+
+        // After a successful placement, once every hook has run (frames of the neighbors and the new tile entity are final by now).
+        void BroadcastPlaced(Item held)
+        {
+            int pad = 1;
+            if (held.createWall < 0)
+            {
+                TileObjectData data = TileObjectData.GetTileData(held.createTile, held.placeStyle);
+                if (data != null)
+                    pad = System.Math.Max(data.Width, data.Height);
+            }
+
+            BroadcastArea(target.X, target.Y, pad, pad, pad, pad, "placed " + held.Name);
         }
 
         // Copy of the axe branch of Player.ItemCheck_UseMiningTools_ActuallyUseMiningTool (vanilla has no public method for it).
@@ -397,6 +471,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 return;
             }
 
+            BroadcastPlaced(held);
             Placements++;
             Log("placed " + held.Name + " at (" + target.X + ", " + target.Y + "), " + (held.stack - 1) + " left in the slot");
             held.stack--;

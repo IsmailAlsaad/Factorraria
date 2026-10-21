@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-21 | 230 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-21 | 231 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(44) BaseMachine(34) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(20) PacketDirection(17) CustomRecipe(16) MachineUIStateBase(13) LiquidStack(13) VirtualItemSystem(12) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) RecipeOutputKey(8) MachineVisualRegistry(8) FurnaceOffsetConfig(8) Factorraria(8)
+FactorrariaNet(45) BaseMachine(34) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(21) PacketDirection(18) CustomRecipe(16) VirtualItemSystem(13) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) Factorraria(9) RecipeOutputKey(8) MachineVisualRegistry(8) FurnaceOffsetConfig(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -24,11 +24,11 @@ Project bases -> derived:
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModSystem (53): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (54): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
+- ModCommand (10): ArmSendCommand, GhostCheckCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - byte (9): CustomWireType, DetailCloseReason, EditFlags, FactorrariaPacket, KnowledgeKind, MachineSlotKind, PacketDirection, ParchmentFailure, RequestCheck
-- ModCommand (8): MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (7): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (6): CartModuleItemGlobal, IceBladeItem, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
@@ -337,6 +337,15 @@ tModLoader/other bases -> project types:
 **FactorrariaPlayerSync.cs** uses: JoinSync, MachineDetailSystem
   class FactorrariaPlayerSync : ModPlayer
     +OnEnterWorld()[ov] +PlayerDisconnect()[ov] +CopyClientState(ModPlayer)[ov] +SyncPlayer(int,int,bool)[ov] +SendClientChanges(ModPlayer)[ov]
+**GhostDiagnostics.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, RoboticArmWorker, VirtualItem, VirtualItemSystem
+  static class GhostDiagnostics
+    +RouteDropConversions:int[s] +WorldItemSyncs:int[s] +WorldItemSyncsInactive:int[s] +ChecksHandled:int[s] +GhostWorldItemsFound:int[s] +GhostVItemsFound:int[s] +OnRouteDrop(int,int,int,int,int,int)[s] +OnWorldItemSync(int,string)[s] +DescribeLocal()[s] +SendCheck(Player)[s] +HandleCheck(BinaryReader,int)[s]
+  class GhostDiagnosticsSystem : ModSystem
+    +Load()[ov]
+  class GhostCheckCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
+  class ArmSendCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **JoinSync.cs** uses: Factorraria, FactorrariaNet, FactorrariaPacket, NetworkConfig
   static class JoinSync
     +ChunkSize:int[s] +MaxProviderBytes:int[s] +RequestCooldownTicks:uint[s] +Completed:bool[s] +AnnounceInChat:bool[s] +JoinCompleted:event Action[s] +Register(string,Action<BinaryWriter>,Action<BinaryReader>)[s] +RegisterDisconnectHook(Action<int>)[s] +Clear()[s] +RequestFullState()[s] +HandleRequest(BinaryReader,int)[s] +ServerTick()[s] +HandleChunk(BinaryReader,int)[s] +HandleDone(BinaryReader,int)[s] +OnPlayerDisconnect(int)[s]
@@ -606,9 +615,9 @@ tModLoader/other bases -> project types:
 **RecipeSystem.cs** uses: RecipeBook
   class RecipeSystem : ModSystem
     +AddRecipes()[ov]
-**VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, FurnaceOffsetConfig, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem
+**VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, Factorraria, FurnaceOffsetConfig, GhostDiagnostics, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem
   class VirtualItemSystem : ModSystem
-    +tileItemMap:Dictionary<Point, VirtualItem>[s] +vItemsById:Dictionary<int, VirtualItem>[s] +WorldItemsConverted:int[s] +PlayerPickups:int[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +AddReplica(VirtualItem)[s] +TryGetById(int,out VirtualItem)[s] +ForgetId(VirtualItem)[s] +Describe()[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +SyncWorldItem(int)[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +ReplaceFilterNetworks(List<KeyValuePair<int, List<Point>>>)[s] +TryGetConveyorFilter(int,int,out int)[s]
+    +tileItemMap:Dictionary<Point, VirtualItem>[s] +vItemsById:Dictionary<int, VirtualItem>[s] +WorldItemsConverted:int[s] +PlayerPickups:int[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +AddReplica(VirtualItem)[s] +TryGetById(int,out VirtualItem)[s] +ForgetId(VirtualItem)[s] +Describe()[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +SyncWorldItem(int,string)[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +ReplaceFilterNetworks(List<KeyValuePair<int, List<Point>>>)[s] +TryGetConveyorFilter(int,int,out int)[s]
 
 ### Common/UI/
 **ChestConveyorModeUI.cs** uses: ChestConveyorEntry, ChestConveyorMode, ChestConveyorSystem
@@ -956,7 +965,7 @@ tModLoader/other bases -> project types:
 **RoboticArmTile.cs** uses: MechanicalArmItem, RoboticArmTileEntity
   class RoboticArmTile : ModTile
     +Texture:string[ov] +Slope(int,int)[ov]
-**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, Factorraria, IMachineDynamicDraw, MachineSlotKind, RoboticArmMotion, RoboticArmTile, RoboticArmVisual, RoboticArmWorker, VirtualItemSystem
+**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, Factorraria, GhostDiagnostics, IMachineDynamicDraw, MachineSlotKind, RoboticArmMotion, RoboticArmTile, RoboticArmVisual, RoboticArmWorker, VirtualItem, VirtualItemSystem
   class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
     +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +Motion:RoboticArmMotion +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaLimit:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsPlaceable(Item) +IsAcceptedItem(Item) +AcceptsSlotItem(global::MachineSlotKind,int,Item)[ov] #IntakeTiles()[ov] #TryGetIntakeSlot(int,out int,out int)[ov] +CanDeliverDrops:bool +RouteDrop(Item) +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
 **RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineSlotBinding, MachineSlotKind, MachineUIElementEntry, MachineUIStateBase, RoboticArmAreaEditorSystem, RoboticArmTileEntity, UIItemSlotWrapper
@@ -969,7 +978,7 @@ tModLoader/other bases -> project types:
   class RoboticArmGhostSystem : ModSystem
     +Unload()[ov]
   class RoboticArmWorker
-    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +TreeStickyColumns:int +FootprintMustFitArea:bool +PlatformsInOpenAir:bool +DebugPlacement:bool +MaxStrikesPerTile:int +Reaches:int +ReachTimeouts:int +Strikes:int +TilesChanged:int +Placements:int +Describe() +Tick()
+    +RescanInterval:int +MinStrikeTicks:int +ReachTimeoutTicks:int +BlockedCooldownTicks:int +TreeStickyColumns:int +FootprintMustFitArea:bool +PlatformsInOpenAir:bool +DebugPlacement:bool +MaxStrikesPerTile:int +Reaches:int +ReachTimeouts:int +Strikes:int +TilesChanged:int +Placements:int +BroadcastTileSquares:bool[s] +TileSquares:int +TileSquareTiles:int +Describe() +Tick()
     enum Phase
       {Idle, Reach, Strike}
     enum Job
