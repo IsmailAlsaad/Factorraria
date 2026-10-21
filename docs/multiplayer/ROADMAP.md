@@ -189,6 +189,7 @@ One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and
 - [ ] 9.5 Chest panel
 - [ ] 9.6 Events and verification
 - [ ] 10 Hardening and release
+- [~] Side feature (not multiplayer): Underground Desert oil worldgen (plan Oil_ocean_plan.md; Common/WorldGeneration/OilWorldGen.cs). Patch 1 (diagnostic skeleton, log only, no carving) applied, untested: next is patch 2 (the pool), then patch 3 (the pockets). Needs no packets: the oil is written into the world at generation and reaches clients through the normal tile section data; a dedicated-server join on an oil world is the test for verification item 13 (custom liquid type in section data). Temporary test code to remove in Phase 10: the [OilGen] log lines in OilWorldGen and the diagnostic part of its log line.
 
 ---
 
