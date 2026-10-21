@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-21 | 233 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-21 | 234 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(47) BaseMachine(35) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(23) PacketDirection(20) CustomRecipe(16) VirtualItemSystem(13) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) Factorraria(9) RoboticArmTileEntity(8) RecipeOutputKey(8) MachineVisualRegistry(8)
+FactorrariaNet(48) BaseMachine(35) RecipeBook(25) LiquidTypeRegistry(24) FactorrariaPacket(23) PacketDirection(20) CustomRecipe(16) VirtualItemSystem(13) MachineUIStateBase(13) LiquidStack(13) TileEntityHelper(12) MachineUIElementEntry(12) RecipeOutputGroup(11) LiquidNetworkSystem(11) RecipeCatalog(10) JoinSync(10) Factorraria(10) RoboticArmTileEntity(8) RecipeOutputKey(8) MachineVisualRegistry(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -24,10 +24,10 @@ Project bases -> derived:
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModSystem (56): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (57): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartMountBlocker, CartSystem, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
-- ModCommand (10): ArmSendCommand, GhostCheckCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
+- ModCommand (11): ArmSendCommand, GhostCheckCommand, LiquidBroadcastCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - byte (9): CustomWireType, DetailCloseReason, EditFlags, FactorrariaPacket, KnowledgeKind, MachineSlotKind, PacketDirection, ParchmentFailure, RequestCheck
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (7): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
@@ -358,6 +358,11 @@ tModLoader/other bases -> project types:
 **JoinSyncSystem.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
   class JoinSyncSystem : ModSystem
     +TestProvidersEnabled:bool[s] +TestBlobSize:int[s] +LastTestCounter:int[s] +Load()[ov] +PostUpdateEverything()[ov] +Unload()[ov]
+**LiquidBroadcast.cs** uses: FactorrariaNet, NetworkConfig
+  class LiquidBroadcastSystem : ModSystem
+    +Marked:int[s] +SentWater:int[s] +SentSquares:int[s] +PeakQueue:int[s] +TicksOverCap:int[s] +Mark(int,int)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +Describe()[s]
+  class LiquidBroadcastCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **MachineBootstrapSystem.cs** uses: FactorrariaNet, MachinePlacement, MachineVisualRegistry, TileEntityHelper
   class MachineBootstrapSystem : ModSystem
     +ColumnsPerTick:int[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
@@ -533,7 +538,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 
 ### Common/Networks/
-**LiquidNetwork.cs** uses: BaseMachine, Direction, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MotorTileEntityBase, WorldLiquidSources
+**LiquidNetwork.cs** uses: BaseMachine, Direction, Factorraria, LiquidBroadcastSystem, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MotorTileEntityBase, WorldLiquidSources
   struct PipeAttachment
     +Position:Point +PipePosition:Point +MouthDirection:Direction +Machine:BaseMachine
   struct MotorAttachment

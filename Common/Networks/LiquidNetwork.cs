@@ -346,6 +346,7 @@ namespace Factorraria.Common.Networks
             if (actualDrain <= 0) return 0f;
 
             tile.LiquidAmount -= (byte)actualDrain;
+            global::Factorraria.Common.Net.LiquidBroadcastSystem.Mark(pos.X, pos.Y); // patch 8.1: server tells the clients (no-op elsewhere)
             if (tile.LiquidAmount <= 0)
                 tile.ClearTile();
 
@@ -393,6 +394,7 @@ namespace Factorraria.Common.Networks
                 tile.LiquidType = (int)LiquidTypeRegistry.ToTileLiquidId(liquidType);
 
             tile.LiquidAmount += (byte)give;
+            global::Factorraria.Common.Net.LiquidBroadcastSystem.Mark(pos.X, pos.Y); // patch 8.1: server tells the clients (no-op elsewhere)
             WorldGen.SquareTileFrame(pos.X, pos.Y);
 
             float remaining = worldDepositBank.GetValueOrDefault(pos) - give;
