@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Factorraria.Content.Liquids.Oil;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.GameContent.Generation;
@@ -77,7 +78,7 @@ namespace Factorraria.Common.WorldGeneration
                 return;
             }
 
-            int oilType = ModLiquidLib.ModLoader.LiquidLoader.LiquidType<Factorraria.Content.Liquids.Oil.OilLiquid>();
+            int oilType = ModLiquidLib.ModLoader.LiquidLoader.LiquidType<OilLiquid>();
             if (oilType <= 0)
             {
                 Mod.Logger.Warn("[OilGen] oil liquid type is " + oilType + ", skipping");
