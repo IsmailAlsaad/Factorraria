@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Content.Liquids.Fuel;
+using Microsoft.Xna.Framework;
 using ModLiquidLib.ID;
 using ModLiquidLib.ModLoader;
 using Terraria;
@@ -47,19 +48,23 @@ namespace Factorraria.Content.Liquids.Oil
         {
             if (otherLiquid == LiquidID.Water)
             {
-                return TileID.TeamBlockBlue; //When the liquid collides with water. Blue team block is created
+                return TileID.Asphalt;
             }
             else if (otherLiquid == LiquidID.Lava)
             {
-                return TileID.TeamBlockRed; //When the liquid collides with lava. Red team block is created
+                return TileID.Asphalt;
             }
             else if (otherLiquid == LiquidID.Honey)
             {
-                return TileID.TeamBlockYellow; //When the liquid collides with honey. Yellow team block is created
+                return TileID.Asphalt;
             }
             else if (otherLiquid == LiquidID.Shimmer)
             {
-                return TileID.TeamBlockPink; //When the liquid collides with shimmer. Pink team block is created
+                return TileID.Asphalt;
+            }
+            else if (otherLiquid == LiquidLoader.LiquidType<FuelLiquid>())
+            {
+                return TileID.Asphalt;
             }
 
             //The base return is what the liquid generates by default. This is useful for when this liquid collides with another modded liquids that this liquid has no support for.
