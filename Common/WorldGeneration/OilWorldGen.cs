@@ -36,7 +36,7 @@ namespace Factorraria.Common.WorldGeneration
 
         public double PoolFraction = 0.10;            // the pool fills the bottom 10% of the oval's height
         public int ShellThickness = 8;                // thick Sandstone band just inside the oval edge
-        public double ShellStartFraction = 0.25;      // the shell starts this far below the top of the oval (keeps it off the surface)
+        public double ShellStartFraction = 0.75;      // the shell starts this far below the top of the oval (keeps it off the surface)
         public int OvalInset = 0;                     // shrink the ellipse by this many tiles on every side
 
         public int ScanMarginTop = 5;                 // scan this many rows above the rectangle
@@ -46,6 +46,8 @@ namespace Factorraria.Common.WorldGeneration
 
         private readonly string[] anchorNames = { "Settle Liquids Again", "Settle Liquids", "Tile Cleanup", "Final Cleanup" };
         private string usedAnchor = "none";
+        private Rectangle checkArea;                  // pool bounding box, for the liquid readback
+        private Rectangle checkAbove;                 // oval interior above the pool
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
@@ -62,6 +64,9 @@ namespace Factorraria.Common.WorldGeneration
                 int insertAt = a < 2 ? index + 1 : index;
                 tasks.Insert(insertAt, new PassLegacy("Factorraria Underground Desert Oil", GenerateOil, 30));
                 usedAnchor = anchorNames[a];
+                checkArea = Rectangle.Empty;
+                checkAbove = Rectangle.Empty;
+                tasks.Add(new PassLegacy("Factorraria Oil Check", CheckOil, 1));   // runs after every other pass
                 Mod.Logger.Info("[OilGen] pass inserted, anchor=" + usedAnchor);
                 return;
             }
@@ -338,6 +343,49 @@ namespace Factorraria.Common.WorldGeneration
 
             if (poolCells <= 100)
                 Mod.Logger.Warn("[OilGen] pool has only " + poolCells + " cells: it will NOT act as an infinite source (needs more than 100)");
+
+            checkArea = new Rectangle(r.Left, poolTopY, r.Width, yMax - poolTopY + 1);
+            checkAbove = new Rectangle(r.Left, shellTopY, r.Width, Math.Max(0, poolTopY - shellTopY));
+            Mod.Logger.Info("[OilGen] readback right after carving (oilType=" + oilType + "): pool box [" + CountLiquids(checkArea, oilType)
+                + "], above pool [" + CountLiquids(checkAbove, oilType) + "]");
+        }
+
+        // Runs after every other worldgen pass: shows whether a later pass changed the liquid we wrote.
+        private void CheckOil(GenerationProgress progress, GameConfiguration configuration)
+        {
+            if (checkArea.Width <= 0)
+                return;
+
+            int oilType = ModLiquidLib.ModLoader.LiquidLoader.LiquidType<OilLiquid>();
+            Tile sample = Main.tile[checkArea.Center.X, checkArea.Bottom - 10];
+            Mod.Logger.Info("[OilGen] readback at END of worldgen (oilType=" + oilType + "): pool box [" + CountLiquids(checkArea, oilType)
+                + "], above pool [" + CountLiquids(checkAbove, oilType) + "], sample cell type=" + sample.LiquidType + " amount=" + sample.LiquidAmount + " hasTile=" + sample.HasTile);
+        }
+
+        private string CountLiquids(Rectangle area, int oilType)
+        {
+            long oil = 0, water = 0, lava = 0, honey = 0, shimmer = 0, other = 0;
+            for (int x = area.Left; x < area.Right; x++)
+            {
+                for (int y = area.Top; y < area.Bottom; y++)
+                {
+                    if (!WorldGen.InWorld(x, y, 10))
+                        continue;
+
+                    Tile tile = Main.tile[x, y];
+                    if (tile.LiquidAmount == 0)
+                        continue;
+
+                    int type = tile.LiquidType;
+                    if (type == oilType) oil++;
+                    else if (type == LiquidID.Water) water++;
+                    else if (type == LiquidID.Lava) lava++;
+                    else if (type == LiquidID.Honey) honey++;
+                    else if (type == LiquidID.Shimmer) shimmer++;
+                    else other++;
+                }
+            }
+            return "oil=" + oil + " lava=" + lava + " water=" + water + " honey=" + honey + " shimmer=" + shimmer + " other=" + other;
         }
         // True when the cell is in the world and is a desert block (any sand, hardened sand or sandstone tile)
         // or carries a desert wall. Walls are used too: carved caves keep their walls, so they identify the biome

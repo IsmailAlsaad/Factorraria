@@ -4,7 +4,7 @@ generated 2026-10-22 | 238 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(51) BaseMachine(36) RecipeBook(25) LiquidTypeRegistry(25) FactorrariaPacket(24) PacketDirection(21) CustomRecipe(16) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidStack(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) Factorraria(12) RecipeOutputGroup(11) RecipeCatalog(10) JoinSync(10) MachineVisualRegistry(9) Cart(9) RoboticArmTileEntity(8)
+FactorrariaNet(51) BaseMachine(36) RecipeBook(25) LiquidTypeRegistry(25) FactorrariaPacket(24) PacketDirection(21) CustomRecipe(16) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidStack(13) LiquidNetworkSystem(13) Factorraria(13) MachineUIElementEntry(12) RecipeOutputGroup(11) RecipeCatalog(10) JoinSync(10) MachineVisualRegistry(9) Cart(9) RoboticArmTileEntity(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -753,7 +753,7 @@ tModLoader/other bases -> project types:
     +itemType:int +stackSize:int +prefix:int +active:bool +Id:int +ReplicaStep:float +StepPerTick:float +pickupCooldown:int +cartGrabCooldown:int +frame:int +frameCounter:int +currentTileX:int +currentTileY:int +targetTileX:int +targetTileY:int +worldPosition:Vector2 +moveSpeed:float +Update() +CreateReplica(int,Item,Vector2,int,int,float)[s] +ApplyReplicaState(Item,int,Vector2,int,int,float) +ReplicaTick() +SetTargetTile(int,int) +GetSourceRectangle(Texture2D) +Remove() +MoveVirtualItem() +TryMergeWithVirtualItem(VirtualItem)
 
 ### Common/WorldGeneration/
-**OilWorldGen.cs** uses: OilLiquid
+**OilWorldGen.cs** uses: Factorraria, OilLiquid
   class OilWorldGen : ModSystem
     +Enabled:bool +PoolDepth:int +FloorThickness:int +RimMargin:int +MinPoolDepthHere:int +PocketAttemptsPerTile:double +PocketExponent:double +PocketMinDepthFraction:double +PocketRadiusXMin:double +PocketRadiusXMax:double +PocketRadiusYMin:double +PocketRadiusYMax:double +PocketMaxCells:int +ExcludeHive:bool +PoolFraction:double +ShellThickness:int +ShellStartFraction:double +OvalInset:int +ScanMarginTop:int +ScanMarginBottom:int +MinColumnHeight:int +SmoothRadius:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
 **PostWorldGenEdits.cs**
