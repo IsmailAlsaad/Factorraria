@@ -13,7 +13,8 @@ namespace Factorraria.Common.WorldGeneration
 {
     // Underground Desert oil: one giant pool at the bottom of the biome, small sealed pockets above it that
     // thin out to zero at the top. Plan: Oil_ocean_plan.md.
-    // PATCH 1 = diagnostic skeleton only: pass insertion, bail-outs, desert mask, per-column limits, log line. NO carving yet.
+    // PATCH 2 = the pool (4.4): pass insertion, bail-outs, desert mask, per-column limits, flat-surfaced pool at the bottom with sealing.
+    // The pockets (4.5) come in patch 3.
     // Randomness (later patches): WorldGen.genRand only. Tunables are public instance fields (hot reload friendly),
     // read via ModContent.GetInstance<OilWorldGen>().
     public class OilWorldGen : ModSystem
@@ -31,7 +32,13 @@ namespace Factorraria.Common.WorldGeneration
         public double PocketRadiusYMin = 1.0;
         public double PocketRadiusYMax = 3.0;
         public int PocketMaxCells = 60;               // hard cap, must stay under 100
-        public bool ExcludeHive = true;
+        public bool ExcludeHive = false;              // the hive rectangle covers nearly the whole biome (see the patch 1 logs): a rectangle test would reject almost every pocket. Patch 3 relies on the ring-solid test instead.
+
+        public double PoolSurfacePercentile = 0.5;    // 0.5 = median of (bottom - floor thickness). Lower = wider pool, but deeper in the middle.
+        public int FloorNoiseAmplitude = 2;           // +/- tiles of smooth noise on the pool floor
+        public int FloorNoiseStep = 8;                // columns between noise knots
+        public int ObstacleColumnSpread = 3;          // columns excluded on each side of a chest or furniture
+        public int MaxSealIterations = 8;
 
         public int ScanMarginTop = 5;                 // scan this many rows above the rectangle
         public int ScanMarginBottom = 10;             // and this many below it
@@ -174,11 +181,308 @@ namespace Factorraria.Common.WorldGeneration
                 + ", " + columns
                 + ", " + stats
                 + ", cells by tile only/wall only/both=" + tileOnly + "/" + wallOnly + "/" + both
-                + " (patch 1: no carving yet)");
+                + " (patch 2: carving the pool)");
 
+            GeneratePool(progress, r, oilType, valid, smoothBottom);
             progress.Set(1f);
         }
 
+        // ---- Step C: the pool (patch 2) ----
+        private void GeneratePool(GenerationProgress progress, Rectangle r, int oilType, bool[] valid, int[] bottom)
+        {
+            int width = r.Width;
+
+            // 1. One flat surface level for the whole pool (a liquid surface must be level).
+            List<int> floors = new List<int>();
+            for (int i = 0; i < width; i++)
+            {
+                if (valid[i])
+                    floors.Add(bottom[i] - FloorThickness);
+            }
+            if (floors.Count == 0)
+                return;
+            floors.Sort();
+            int pick = Math.Clamp((int)(floors.Count * PoolSurfacePercentile), 0, floors.Count - 1);
+            int poolSurfaceY = floors[pick] - PoolDepth;
+
+            // 2. Per-column floor: biome bottom minus the solid layer, plus smooth 1D value noise (not white noise).
+            int[] floor = new int[width];
+            int step = Math.Max(1, FloorNoiseStep);
+            int[] knots = new int[width / step + 2];
+            for (int k = 0; k < knots.Length; k++)
+                knots[k] = WorldGen.genRand.Next(-FloorNoiseAmplitude, FloorNoiseAmplitude + 1);
+
+            int maxFloor = int.MinValue;
+            for (int i = 0; i < width; i++)
+            {
+                double f = (i % step) / (double)step;
+                double noise = knots[i / step] * (1 - f) + knots[i / step + 1] * f;
+                floor[i] = bottom[i] - FloorThickness + (int)Math.Round(noise);
+                if (valid[i] && floor[i] > maxFloor)
+                    maxFloor = floor[i];
+            }
+
+            int rows = maxFloor - poolSurfaceY + 1;
+            if (rows <= 0)
+            {
+                Mod.Logger.Warn("[OilGen] pool: poolSurfaceY=" + poolSurfaceY + " is below every floor, no pool");
+                return;
+            }
+
+            progress.Set(0.2f);
+
+            bool[,] inR = new bool[width, rows];
+            bool[] excluded = new bool[width];
+
+            bool InR(int x, int y)
+            {
+                int i = x - r.Left;
+                int j = y - poolSurfaceY;
+                return i >= 0 && i < width && j >= 0 && j < rows && inR[i, j];
+            }
+
+            void ExcludeAround(int i)
+            {
+                for (int k = i - ObstacleColumnSpread; k <= i + ObstacleColumnSpread; k++)
+                {
+                    if (k >= 0 && k < width)
+                        excluded[k] = true;
+                }
+            }
+
+            // 3. Candidate region R. Returns true when an obstacle forced new column exclusions.
+            bool BuildRegion()
+            {
+                Array.Clear(inR, 0, inR.Length);
+                bool changed = false;
+
+                for (int i = 0; i < width; i++)
+                {
+                    if (!valid[i] || excluded[i] || floor[i] - poolSurfaceY < MinPoolDepthHere)
+                        continue;
+
+                    int x = r.Left + i;
+                    for (int y = poolSurfaceY; y <= floor[i]; y++)
+                    {
+                        if (!WorldGen.InWorld(x, y, 10))
+                            continue;
+
+                        // Rim test: stay RimMargin tiles away from the biome edge.
+                        if (!IsDesertCell(x - RimMargin, y, out _, out _) || !IsDesertCell(x + RimMargin, y, out _, out _))
+                            continue;
+
+                        Tile tile = Main.tile[x, y];
+                        if (IsObstacle(tile))
+                        {
+                            ExcludeAround(i);
+                            changed = true;
+                            break;
+                        }
+
+                        if (IsClearable(tile))
+                            inR[i, y - poolSurfaceY] = true;
+                    }
+                }
+
+                return changed;
+            }
+
+            // The ring: 4-neighbours of R that are not in R, except the cell above each top-row cell (the free surface).
+            List<Point> BuildRing()
+            {
+                HashSet<Point> ring = new HashSet<Point>();
+                for (int i = 0; i < width; i++)
+                {
+                    for (int j = 0; j < rows; j++)
+                    {
+                        if (!inR[i, j])
+                            continue;
+
+                        int x = r.Left + i;
+                        int y = poolSurfaceY + j;
+                        if (j != 0 && !InR(x, y - 1)) ring.Add(new Point(x, y - 1));
+                        if (!InR(x, y + 1)) ring.Add(new Point(x, y + 1));
+                        if (!InR(x - 1, y)) ring.Add(new Point(x - 1, y));
+                        if (!InR(x + 1, y)) ring.Add(new Point(x + 1, y));
+                    }
+                }
+                return new List<Point>(ring);
+            }
+
+            // 4 + 5. Obstacles, then seal check and plugging, repeated until stable.
+            int plugged = 0;
+            int iterations = 0;
+            bool converged = false;
+            List<Point> ringCells = null;
+
+            for (; iterations < MaxSealIterations; iterations++)
+            {
+                if (BuildRegion())
+                    continue;
+
+                ringCells = BuildRing();
+                bool again = false;
+
+                foreach (Point p in ringCells)
+                {
+                    if (!WorldGen.InWorld(p.X, p.Y, 10))
+                    {
+                        ExcludeNeighbourColumns(p);
+                        again = true;
+                        continue;
+                    }
+
+                    Tile tile = Main.tile[p.X, p.Y];
+                    if (IsObstacle(tile))
+                    {
+                        ExcludeAround(p.X - r.Left);
+                        again = true;
+                        continue;
+                    }
+
+                    if (IsSolidBlock(tile))
+                        continue;
+
+                    // Breach: plug it with Sandstone.
+                    tile.LiquidAmount = 0;
+                    WorldGen.PlaceTile(p.X, p.Y, TileID.Sandstone, true, true);
+                    plugged++;
+
+                    if (!IsSolidBlock(Main.tile[p.X, p.Y]))
+                    {
+                        ExcludeNeighbourColumns(p);
+                        again = true;
+                    }
+                }
+
+                if (!again)
+                {
+                    converged = true;
+                    break;
+                }
+            }
+
+            void ExcludeNeighbourColumns(Point cell)
+            {
+                if (InR(cell.X, cell.Y - 1) || InR(cell.X, cell.Y + 1))
+                    excluded[Math.Clamp(cell.X - r.Left, 0, width - 1)] = true;
+                if (InR(cell.X - 1, cell.Y)) excluded[Math.Clamp(cell.X - 1 - r.Left, 0, width - 1)] = true;
+                if (InR(cell.X + 1, cell.Y)) excluded[Math.Clamp(cell.X + 1 - r.Left, 0, width - 1)] = true;
+            }
+
+            if (!converged)
+            {
+                Mod.Logger.Warn("[OilGen] pool: could not seal the pool in " + MaxSealIterations + " passes, nothing carved (plugged=" + plugged + ")");
+                return;
+            }
+
+            progress.Set(0.7f);
+
+            // 6. Commit. Sand directly above oil is turned into Sandstone first (falling sand would otherwise drop into the pool).
+            int cells = 0;
+            int sandConverted = 0;
+            int columnsWithOil = 0;
+            int maxDepth = 0;
+
+            for (int i = 0; i < width; i++)
+            {
+                int depth = 0;
+                int x = r.Left + i;
+
+                for (int j = 0; j < rows; j++)
+                {
+                    if (!inR[i, j])
+                        continue;
+
+                    int y = poolSurfaceY + j;
+
+                    if (!InR(x, y - 1))
+                    {
+                        Tile above = Main.tile[x, y - 1];
+                        if (above.HasTile && Main.tileSand[above.TileType])
+                        {
+                            above.TileType = TileID.Sandstone;
+                            sandConverted++;
+                        }
+                    }
+
+                    Tile tile = Main.tile[x, y];
+                    if (tile.HasTile && !IsDesertBlock(tile))
+                        WorldGen.KillTile(x, y, false, false, true);   // pots, torches, plants: removes whole objects
+
+                    tile = Main.tile[x, y];
+                    tile.HasTile = false;
+                    tile.LiquidType = oilType;
+                    tile.LiquidAmount = byte.MaxValue;
+
+                    cells++;
+                    depth++;
+                }
+
+                if (depth > 0)
+                    columnsWithOil++;
+                if (depth > maxDepth)
+                    maxDepth = depth;
+            }
+
+            // 7. Re-frame the block edges around the pool.
+            foreach (Point p in ringCells)
+            {
+                if (WorldGen.InWorld(p.X, p.Y, 10))
+                    WorldGen.SquareTileFrame(p.X, p.Y, true);
+            }
+
+            int excludedCount = 0;
+            for (int i = 0; i < width; i++)
+            {
+                if (excluded[i])
+                    excludedCount++;
+            }
+
+            Mod.Logger.Info("[OilGen] pool: poolSurfaceY=" + poolSurfaceY + ", pool cells=" + cells
+                + ", columns with oil=" + columnsWithOil + "/" + width + ", max depth=" + maxDepth
+                + ", plugged=" + plugged + ", sand ceilings converted=" + sandConverted
+                + ", excluded columns=" + excludedCount + ", seal passes=" + (iterations + 1));
+
+            if (cells <= 100)
+                Mod.Logger.Warn("[OilGen] pool has only " + cells + " cells: it will NOT act as an infinite source (needs more than 100)");
+            else if (cells < 400)
+                Mod.Logger.Warn("[OilGen] pool is small (" + cells + " cells), tiny desert?");
+        }
+
+        private static bool IsSolidBlock(Tile tile)
+        {
+            return tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType] && !tile.IsActuated;
+        }
+
+        private static bool IsDesertBlock(Tile tile)
+        {
+            if (!tile.HasTile)
+                return false;
+            int type = tile.TileType;
+            return TileID.Sets.Conversion.Sand[type] || TileID.Sets.Conversion.HardenedSand[type] || TileID.Sets.Conversion.Sandstone[type];
+        }
+
+        // Multi-tile or entity-like non-solid things (chests, furniture, statues...) are never destroyed.
+        // Pots and torches are the decorations we allow to be cleared.
+        private static bool IsObstacle(Tile tile)
+        {
+            if (!tile.HasTile)
+                return false;
+            int type = tile.TileType;
+            return Main.tileFrameImportant[type] && !Main.tileSolid[type] && type != TileID.Pots && type != TileID.Torches;
+        }
+
+        // Air, desert blocks, pots, torches and plain non-solid plants can be carved. Everything else stays and acts as a wall.
+        private static bool IsClearable(Tile tile)
+        {
+            if (!tile.HasTile)
+                return true;
+            int type = tile.TileType;
+            if (IsDesertBlock(tile) || type == TileID.Pots || type == TileID.Torches)
+                return true;
+            return !Main.tileSolid[type] && !Main.tileFrameImportant[type];
+        }
         // True when the cell is in the world and is a desert block (any sand, hardened sand or sandstone tile)
         // or carries a desert wall. Walls are used too: carved caves keep their walls, so they identify the biome
         // even where the tile is air.
