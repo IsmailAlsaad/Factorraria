@@ -23,7 +23,7 @@ namespace Factorraria.Common.WorldGeneration
     {
         public bool Enabled = true;
         public int PoolDepth = 14;                    // tiles of oil at the deepest point
-        public int FloorThickness = 4;                // solid tiles kept under the pool
+        public int FloorThickness = 20;                // solid tiles kept under the pool
         public int RimMargin = 3;                     // solid desert kept between oil and the biome edge
         public int MinPoolDepthHere = 3;              // a column shallower than this gets no pool
         public double PocketAttemptsPerTile = 0.02;
@@ -38,9 +38,9 @@ namespace Factorraria.Common.WorldGeneration
 
         public double PoolFraction = 0.10;            // the pool fills the bottom 10% of the oval's height
         // ShellStartFraction (the line below this block) is no longer used by the code and can be deleted.
-        public int ShellThickness = 5;                // full Sandstone thickness (lower part of the oval)
-        public double ShellFullFraction = 0.8;        // fraction of the oval height (0 = top, 1 = bottom): from here down the shell is full thickness
-        public double ShellEndFraction = 0.6;         // the shell tapers linearly to zero thickness here; above it there is no shell
+        public int ShellThickness = 20;                // full Sandstone thickness (lower part of the oval)
+        public double ShellFullFraction = 0.9;        // fraction of the oval height (0 = top, 1 = bottom): from here down the shell is full thickness
+        public double ShellEndFraction = 0.75;         // the shell tapers linearly to zero thickness here; above it there is no shell
         public int OvalInset = 8;                     // shrink the ellipse by this many tiles on every side
 
         public int ScanMarginTop = 5;                 // scan this many rows above the rectangle
