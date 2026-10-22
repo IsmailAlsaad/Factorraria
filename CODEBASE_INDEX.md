@@ -755,7 +755,7 @@ tModLoader/other bases -> project types:
 ### Common/WorldGeneration/
 **OilWorldGen.cs** uses: OilLiquid
   class OilWorldGen : ModSystem
-    +Enabled:bool +PoolDepth:int +FloorThickness:int +RimMargin:int +MinPoolDepthHere:int +PocketAttemptsPerTile:double +PocketExponent:double +PocketMinDepthFraction:double +PocketRadiusXMin:double +PocketRadiusXMax:double +PocketRadiusYMin:double +PocketRadiusYMax:double +PocketMaxCells:int +ExcludeHive:bool +PoolSurfacePercentile:double +FloorNoiseAmplitude:int +FloorNoiseStep:int +ObstacleColumnSpread:int +MaxSealIterations:int +ScanMarginTop:int +ScanMarginBottom:int +MinColumnHeight:int +SmoothRadius:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
+    +Enabled:bool +PoolDepth:int +FloorThickness:int +RimMargin:int +MinPoolDepthHere:int +PocketAttemptsPerTile:double +PocketExponent:double +PocketMinDepthFraction:double +PocketRadiusXMin:double +PocketRadiusXMax:double +PocketRadiusYMin:double +PocketRadiusYMax:double +PocketMaxCells:int +ExcludeHive:bool +PoolFraction:double +ShellThickness:int +ShellStartFraction:double +OvalInset:int +ScanMarginTop:int +ScanMarginBottom:int +MinColumnHeight:int +SmoothRadius:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
 **PostWorldGenEdits.cs**
   class PostWorldGenEdits : ModSystem
     +Enabled:bool[s] +PostWorldGen()[ov]
