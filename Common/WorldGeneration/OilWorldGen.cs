@@ -418,7 +418,7 @@ namespace Factorraria.Common.WorldGeneration
             if (poolCellList.Count == 0)
                 return;
 
-            int oilType = ModLiquidLib.ModLoader.LiquidLoader.LiquidType<Factorraria.Content.Liquids.Oil.OilLiquid>();
+            int oilType = ModLiquidLib.ModLoader.LiquidLoader.LiquidType<OilLiquid>();
             int fixedCells = 0;
             foreach (Point p in poolCellList)
             {
