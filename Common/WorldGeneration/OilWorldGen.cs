@@ -41,7 +41,7 @@ namespace Factorraria.Common.WorldGeneration
         public int ShellThickness = 20;                // full Sandstone thickness (lower part of the oval)
         public double ShellFullFraction = 0.9;        // fraction of the oval height (0 = top, 1 = bottom): from here down the shell is full thickness
         public double ShellEndFraction = 0.75;         // the shell tapers linearly to zero thickness here; above it there is no shell
-        public int OvalInset = 8;                     // shrink the ellipse by this many tiles on every side
+        public int OvalInset = 0;                     // shrink the ellipse by this many tiles on every side
 
         public int ScanMarginTop = 5;                 // scan this many rows above the rectangle
         public int ScanMarginBottom = 10;             // and this many below it
@@ -58,10 +58,10 @@ namespace Factorraria.Common.WorldGeneration
 
         // Saved by GenerateOval for the foreign-liquid sweep and the leftover check (the restore and check passes run later).
         // Pockets (patch 3): every empty tile in the oval above the pool may start a blob of oil.
-        public double PocketMaxChance = 0.02;         // chance per empty tile right above the pool; falls linearly to 0 at the top of the oval
+        public double PocketMaxChance = 0.001;         // chance per empty tile right above the pool; falls linearly to 0 at the top of the oval
         public double PocketChanceExponent = 1.0;     // 1 = linear; above 1 makes pockets rarer in the middle heights
-        public int PocketCellsBottom = 150;           // cells in a pocket started right above the pool
-        public int PocketCellsTop = 50;               // cells in a pocket started at the very top
+        public int PocketCellsBottom = 70;           // cells in a pocket started right above the pool
+        public int PocketCellsTop = 20;               // cells in a pocket started at the very top
         public int MaxLiquidBodyCells = 6000;         // a foreign liquid body bigger than this is cleared only inside the oval, not as a whole
         private Rectangle ovalRect;
         private int ovalPoolTopY;
