@@ -566,8 +566,9 @@ namespace Factorraria.Common.WorldGeneration
 
         private static bool IsLiquidMergeBlock(int tileType)
         {
-            return tileType == TileID.TeamBlockRed || tileType == TileID.TeamBlockBlue || tileType == TileID.TeamBlockYellow
-                || tileType == TileID.TeamBlockPink || tileType == TileID.TeamBlockWhite;
+            //return tileType == TileID.TeamBlockRed || tileType == TileID.TeamBlockBlue || tileType == TileID.TeamBlockYellow
+            //    || tileType == TileID.TeamBlockPink || tileType == TileID.TeamBlockWhite;
+            return tileType == TileID.Asphalt;
         }
 
         private bool InFootprint(int x, int y)
