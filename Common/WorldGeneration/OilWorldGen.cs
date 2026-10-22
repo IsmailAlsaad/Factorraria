@@ -57,6 +57,11 @@ namespace Factorraria.Common.WorldGeneration
         private int probeOilType;
 
         // Saved by GenerateOval for the foreign-liquid sweep and the leftover check (the restore and check passes run later).
+        // Pockets (patch 3): every empty tile in the oval above the pool may start a blob of oil.
+        public double PocketMaxChance = 0.02;         // chance per empty tile right above the pool; falls linearly to 0 at the top of the oval
+        public double PocketChanceExponent = 1.0;     // 1 = linear; above 1 makes pockets rarer in the middle heights
+        public int PocketCellsBottom = 150;           // cells in a pocket started right above the pool
+        public int PocketCellsTop = 50;               // cells in a pocket started at the very top
         public int MaxLiquidBodyCells = 6000;         // a foreign liquid body bigger than this is cleared only inside the oval, not as a whole
         private Rectangle ovalRect;
         private int ovalPoolTopY;
@@ -402,6 +407,7 @@ namespace Factorraria.Common.WorldGeneration
             footLeft = r.Left;
             footTop = yMin;
             int sweptNow = SweepForeignLiquid(oilType);
+            GeneratePockets(oilType);
             Mod.Logger.Info("[OilGen] foreign liquid swept above the pool: " + sweptNow + " cells; leftovers in footprint: " + CountLeftovers());
 
             checkArea = new Rectangle(r.Left, poolTopY, r.Width, yMax - poolTopY + 1);
@@ -467,6 +473,80 @@ namespace Factorraria.Common.WorldGeneration
             }
 
             return 1;
+        }
+
+        // Patch 3: every empty tile (no block, no liquid) in the oval above the pool has a chance to start a pocket. The chance goes from
+        // PocketMaxChance just above the pool down to 0 at the top of the oval; the pocket size goes from PocketCellsBottom down to PocketCellsTop.
+        // A pocket is a breadth-first blob of neighbouring empty tiles, each set to a full tile of oil, stopped at the size limit or when it runs
+        // out of empty tiles. Pocket cells join poolCellList so the restore pass protects them from Final Cleanup too.
+        private void GeneratePockets(int oilType)
+        {
+            if (!ovalValid)
+                return;
+
+            double topY = ovalCy - ovalB;
+            double span = Math.Max(1.0, ovalPoolTopY - topY);
+            Point[] steps = { new Point(1, 0), new Point(-1, 0), new Point(0, 1), new Point(0, -1) };
+            Queue<Point> queue = new Queue<Point>();
+            int pockets = 0;
+            long cells = 0;
+
+            for (int x = ovalRect.Left; x < ovalRect.Right; x++)
+            {
+                for (int y = ovalRect.Top; y < ovalPoolTopY; y++)
+                {
+                    if (!WorldGen.InWorld(x, y, 10) || !InsideOval(x, y))
+                        continue;
+
+                    Tile seed = Main.tile[x, y];
+                    if (seed.HasTile || seed.LiquidAmount > 0)
+                        continue;
+
+                    double depth = Math.Max(0.0, Math.Min(1.0, (y + 0.5 - topY) / span));   // 0 = top of the oval, 1 = pool surface
+                    double chance = PocketMaxChance * Math.Pow(depth, PocketChanceExponent);
+                    if (WorldGen.genRand.NextDouble() >= chance)
+                        continue;
+
+                    int limit = (int)Math.Round(PocketCellsTop + (PocketCellsBottom - PocketCellsTop) * depth);
+                    if (limit < 1)
+                        continue;
+
+                    int placed = 0;
+                    queue.Clear();
+                    seed.LiquidType = oilType;
+                    seed.LiquidAmount = byte.MaxValue;
+                    poolCellList.Add(new Point(x, y));
+                    queue.Enqueue(new Point(x, y));
+                    placed++;
+
+                    while (queue.Count > 0 && placed < limit)
+                    {
+                        Point p = queue.Dequeue();
+                        for (int s = 0; s < 4 && placed < limit; s++)
+                        {
+                            int nx = p.X + steps[s].X;
+                            int ny = p.Y + steps[s].Y;
+                            if (ny >= ovalPoolTopY || !WorldGen.InWorld(nx, ny, 10) || !InsideOval(nx, ny))
+                                continue;
+
+                            Tile n = Main.tile[nx, ny];
+                            if (n.HasTile || n.LiquidAmount > 0)
+                                continue;
+
+                            n.LiquidType = oilType;
+                            n.LiquidAmount = byte.MaxValue;
+                            poolCellList.Add(new Point(nx, ny));
+                            queue.Enqueue(new Point(nx, ny));
+                            placed++;
+                        }
+                    }
+
+                    pockets++;
+                    cells += placed;
+                }
+            }
+
+            Mod.Logger.Info("[OilGen] pockets: " + pockets + " pockets, " + cells + " oil cells (max chance " + PocketMaxChance + ", size " + PocketCellsTop + ".." + PocketCellsBottom + ")");
         }
 
         private bool InsideOval(int x, int y)
