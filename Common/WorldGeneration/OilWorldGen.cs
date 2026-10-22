@@ -35,7 +35,10 @@ namespace Factorraria.Common.WorldGeneration
         public bool ExcludeHive = false;              // the hive rectangle covers nearly the whole biome (see the patch 1 logs): a rectangle test would reject almost every pocket. Patch 3 relies on the ring-solid test instead.
 
         public double PoolFraction = 0.10;            // the pool fills the bottom 10% of the oval's height
-        public int ShellThickness = 8;                // thick Sandstone band just inside the oval edge
+        // ShellStartFraction (the line below this block) is no longer used by the code and can be deleted.
+        public int ShellThickness = 5;                // full Sandstone thickness (lower part of the oval)
+        public double ShellFullFraction = 0.6;        // fraction of the oval height (0 = top, 1 = bottom): from here down the shell is full thickness
+        public double ShellEndFraction = 0.3;         // the shell tapers linearly to zero thickness here; above it there is no shell
         public double ShellStartFraction = 0.75;      // the shell starts this far below the top of the oval (keeps it off the surface)
         public int OvalInset = 0;                     // shrink the ellipse by this many tiles on every side
 
@@ -48,6 +51,9 @@ namespace Factorraria.Common.WorldGeneration
         private string usedAnchor = "none";
         private Rectangle checkArea;                  // pool bounding box, for the liquid readback
         private Rectangle checkAbove;                 // oval interior above the pool
+        private readonly List<Point> poolCellList = new List<Point>();   // every oil cell we wrote, for the restore pass
+        private long lastProbeOil;
+        private int probeOilType;
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
@@ -66,6 +72,17 @@ namespace Factorraria.Common.WorldGeneration
                 usedAnchor = anchorNames[a];
                 checkArea = Rectangle.Empty;
                 checkAbove = Rectangle.Empty;
+                poolCellList.Clear();
+                lastProbeOil = 0;
+
+                // A tiny probe after every later pass: logs only when the oil count in the pool box changes, naming the pass that changed it.
+                for (int i = tasks.Count - 1; i > insertAt; i--)
+                {
+                    string passName = tasks[i].Name;
+                    tasks.Insert(i + 1, new PassLegacy("Factorraria Oil Probe (" + passName + ")", (p, c) => ProbeAfter(passName), 0.01));
+                }
+
+                tasks.Add(new PassLegacy("Factorraria Oil Restore", RestoreOil, 1));
                 tasks.Add(new PassLegacy("Factorraria Oil Check", CheckOil, 1));   // runs after every other pass
                 Mod.Logger.Info("[OilGen] pass inserted, anchor=" + usedAnchor);
                 return;
@@ -193,7 +210,7 @@ namespace Factorraria.Common.WorldGeneration
 
         // ---- Step C (patch 2b): the oval ----
         // The desert is a vertically elongated oval. Model it as an ellipse inscribed in the desert rectangle, then:
-        //  - shell: a thick Sandstone band just inside the ellipse edge (like the shimmer's stone oval), from ShellStartFraction down;
+        //  - shell: a Sandstone band just inside the ellipse edge (like the shimmer's stone oval): full thickness below ShellFullFraction, tapering to zero at ShellEndFraction;
         //  - pool: everything inside the shell and in the bottom PoolFraction of the oval is cleared and filled with oil.
         private void GenerateOval(GenerationProgress progress, Rectangle r, int oilType)
         {
@@ -211,7 +228,8 @@ namespace Factorraria.Common.WorldGeneration
             }
 
             int poolTopY = r.Bottom - (int)Math.Round(PoolFraction * r.Height);
-            int shellTopY = r.Top + (int)Math.Round(ShellStartFraction * r.Height);
+            int shellTopY = r.Top + (int)Math.Round(ShellEndFraction * r.Height);
+            poolCellList.Clear();
             int yMin = shellTopY;
             int yMax = r.Bottom;
 
@@ -237,7 +255,16 @@ namespace Factorraria.Common.WorldGeneration
                     if (outer > 1.0)
                         continue;
 
-                    double inner = dx * dx / (ia * ia) + dy * dy / (ib * ib);
+                    double t = (y + 0.5 - r.Top) / r.Height;   // 0 = top of the oval, 1 = bottom
+                    double thickness = t >= ShellFullFraction
+                        ? ShellThickness
+                        : ShellThickness * (t - ShellEndFraction) / Math.Max(0.0001, ShellFullFraction - ShellEndFraction);
+                    if (thickness < 0.5)
+                        thickness = 0;
+
+                    double rowA = a - thickness;
+                    double rowB = b - thickness;
+                    double inner = dx * dx / (rowA * rowA) + dy * dy / (rowB * rowB);
                     if (inner > 1.0)
                     {
                         kind[i, j] = 1;
@@ -302,6 +329,7 @@ namespace Factorraria.Common.WorldGeneration
                         tile.HasTile = false;
                         tile.LiquidType = oilType;
                         tile.LiquidAmount = byte.MaxValue;
+                        poolCellList.Add(new Point(x, y));
                     }
                 }
             }
@@ -348,6 +376,65 @@ namespace Factorraria.Common.WorldGeneration
             checkAbove = new Rectangle(r.Left, shellTopY, r.Width, Math.Max(0, poolTopY - shellTopY));
             Mod.Logger.Info("[OilGen] readback right after carving (oilType=" + oilType + "): pool box [" + CountLiquids(checkArea, oilType)
                 + "], above pool [" + CountLiquids(checkAbove, oilType) + "]");
+
+            probeOilType = oilType;
+            lastProbeOil = CountOil(checkArea, oilType);
+        }
+
+        private long CountOil(Rectangle area, int oilType)
+        {
+            long oil = 0;
+            for (int x = area.Left; x < area.Right; x++)
+            {
+                for (int y = area.Top; y < area.Bottom; y++)
+                {
+                    if (!WorldGen.InWorld(x, y, 10))
+                        continue;
+
+                    Tile tile = Main.tile[x, y];
+                    if (tile.LiquidAmount > 0 && tile.LiquidType == oilType)
+                        oil++;
+                }
+            }
+            return oil;
+        }
+
+        private void ProbeAfter(string passName)
+        {
+            if (checkArea.Width <= 0)
+                return;
+
+            long oil = CountOil(checkArea, probeOilType);
+            if (oil != lastProbeOil)
+            {
+                Mod.Logger.Info("[OilGen] probe: oil in pool box went " + lastProbeOil + " -> " + oil + " during/after pass '" + passName + "'");
+                lastProbeOil = oil;
+            }
+        }
+
+        // Workaround: re-applies oil to every pool cell that no longer holds it, after all other passes.
+        private void RestoreOil(GenerationProgress progress, GameConfiguration configuration)
+        {
+            if (poolCellList.Count == 0)
+                return;
+
+            int oilType = ModLiquidLib.ModLoader.LiquidLoader.LiquidType<Factorraria.Content.Liquids.Oil.OilLiquid>();
+            int fixedCells = 0;
+            foreach (Point p in poolCellList)
+            {
+                Tile tile = Main.tile[p.X, p.Y];
+                if (tile.HasTile)
+                    continue;
+
+                if (tile.LiquidType != oilType || tile.LiquidAmount < byte.MaxValue)
+                {
+                    tile.LiquidType = oilType;
+                    tile.LiquidAmount = byte.MaxValue;
+                    fixedCells++;
+                }
+            }
+
+            Mod.Logger.Info("[OilGen] restore pass: re-applied oil to " + fixedCells + " of " + poolCellList.Count + " pool cells");
         }
 
         // Runs after every other worldgen pass: shows whether a later pass changed the liquid we wrote.
