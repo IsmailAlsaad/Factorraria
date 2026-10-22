@@ -39,6 +39,8 @@ namespace Factorraria.Common.Net
             string side = Main.netMode == NetmodeID.Server ? "server" : Main.netMode == NetmodeID.MultiplayerClient ? "client" : "single-player";
             caller.Reply("fcarts [" + side + "]: " + CartSystem.Carts.Count + " cart(s), next id " + CartSystem.NextCartId, Color.LightGreen);
             FactorrariaNet.Log("[Carts] fcarts [" + side + "]: " + CartSystem.Carts.Count + " cart(s), next id " + CartSystem.NextCartId);
+            caller.Reply(CartNet.Describe(), Color.LightGreen);
+            FactorrariaNet.Log("[Carts] " + CartNet.Describe());
 
             for (int i = 0; i < CartSystem.Carts.Count; i++)
             {
@@ -89,7 +91,7 @@ namespace Factorraria.Common.Net
             return "fake replica removed";
         }
 
-        public override void PostUpdateWorld()
+        public override void PostUpdateEverything()
         {
             if (fake == null)
             {

@@ -57,6 +57,34 @@ namespace Factorraria.Common.Carts
 
         #region Building and tearing down
 
+        /// <summary>
+        /// Patch 9.2: a chain object for client replicas. It has no trail (the server places the carriages) and is never simulated, it only
+        /// gives CartSystem's chain drawing the motor and the carriages in order. Built by CartNet from the chain ids and slots the server sends.
+        /// </summary>
+        public static CartChain CreateReplica(Cart motor)
+        {
+            return new CartChain(motor, true);
+        }
+
+        private CartChain(Cart motor, bool replica)
+        {
+            Motor = motor;
+            samples = new TrailSample[1];
+            motor.Chain = this;
+        }
+
+        /// <summary>Replica chains only: sets the carriages in slot order and points each of them at this chain.</summary>
+        public void SetReplicaCarriages(List<Cart> carriages)
+        {
+            Carriages.Clear();
+
+            for (int i = 0; i < carriages.Count; i++)
+            {
+                Carriages.Add(carriages[i]);
+                carriages[i].Chain = this;
+            }
+        }
+
         public CartChain(Cart motor)
         {
             Motor = motor;

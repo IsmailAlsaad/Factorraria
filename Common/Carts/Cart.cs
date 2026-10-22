@@ -277,7 +277,7 @@ namespace Factorraria.Common.Carts
         /// <summary>True while a fuel item is being burned (the flame gauge is not empty).</summary>
         public bool IsBurning
         {
-            get { return burner != null && burner.Remaining > 0; }
+            get { return (burner != null && burner.Remaining > 0) || NetBurning; }
         }
 
         /// <summary>0..1 of the current fuel item left, -1 when nothing is burning. Same meaning as the Gel Burner's flame gauge.</summary>
@@ -1323,6 +1323,15 @@ namespace Factorraria.Common.Carts
         private float netRotation;
         private int netAge;
         private bool hasNetState;
+
+        /// <summary>Replica only (patch 9.2): the server said this cart's fuel is burning. Drives the motor smoke on a client; false on the server.</summary>
+        public bool NetBurning;
+
+        /// <summary>Replica only (patch 9.2): id of the motor of the chain this cart belongs to (its own id for a motor), 0 = free cart.</summary>
+        public int NetMotorId;
+
+        /// <summary>Replica only (patch 9.2): 0 = the motor, 1 = the carriage directly behind it, and so on.</summary>
+        public int NetSlot;
 
         /// <summary>True once the server has sent at least one state for this replica.</summary>
         public bool HasNetState

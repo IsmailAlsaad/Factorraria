@@ -293,16 +293,19 @@ namespace Factorraria.Common.Carts
         {
             // Patch 9.1 (C2): the server (or single-player) owns the whole simulation; a client only eases its replicas toward the
             // last state the server sent. With no replicas yet (until 9.2) the client loop does nothing.
+            // PostUpdateWorld (WorldGen.UpdateWorld) never runs on a multiplayer client (see patch 7.3b), so the client side is driven by
+            // CartNet.ClientTick from PostUpdateEverything. 9.1 had the client branch here, which therefore never ticked.
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
-                ClientInterpolate();
                 return;
             }
 
             ServerSimulate();
+            global::Factorraria.Common.Net.CartNet.ServerTick();
         }
 
-        private static void ClientInterpolate()
+        /// <summary>Client only, called every tick by CartNet.ClientTick: eases every replica toward its last server state.</summary>
+        public static void ClientInterpolate()
         {
             for (int i = 0; i < Carts.Count; i++)
             {

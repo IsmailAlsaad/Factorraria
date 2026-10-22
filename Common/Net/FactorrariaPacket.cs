@@ -46,6 +46,9 @@ namespace Factorraria.Common.Net
         ArmAreaChanged = 37,          // server -> client(s): "the Robotic Arm at (x, y) now has this area" (seq = the sender's request, 0 = a broadcast to the others; accepted flag) (patch 7b.5)
         MotorRotateRequest = 38,      // client -> server: "turn the motor at (x, y) to facing <f>" (patch 8.3)
         MotorFacingChanged = 39,      // server -> every client (or only the asker, when nothing changed): "the motor at (x, y) now faces <f>" (patch 8.3)
+        CartSubscribeRequest = 40,    // client -> server: "my join sync is done, send me the carts near me from now on" (patch 9.2)
+        CartDelta = 41,               // server -> client: "these carts appeared / changed module, tank, burning or chain state near you (full state each), these disappeared" (patch 9.2)
+        CartMove = 42,                // server -> client: "these carts you know moved: position, velocity, rotation, facing, on track" (patch 9.2, sent at CartUpdatesPerSecond)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

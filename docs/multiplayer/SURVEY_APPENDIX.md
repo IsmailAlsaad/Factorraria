@@ -321,6 +321,8 @@ Severity: **B** blocker / **H** high / **M** medium / **L** low.
 ## Findings
 
 ### C1 (B) Cart replication layer is missing entirely
+**Status (patch 9.2, applied, untested):** implemented in Common/Net/CartNet.cs as three packets instead of four: `CartSubscribeRequest` (sent after the join sync; the first delta after it replaces the join provider), `CartDelta` (full state of carts that entered the radius or changed module, module item, tank, burning flag or chain place, plus removals) and `CartMove` (motion, at `CartUpdatesPerSecond`, only for carts whose motion changed). Chain membership travels as the motor's cart id plus slot. Chest contents, fuel slots and the bump / pour events are not part of 9.2 (9.4, 9.5, 9.6). The client tick runs from `PostUpdateEverything` because `PostUpdateWorld` does not run on a client.
+
 Add a stable `Id` to every cart (monotonic counter, saved and restored), plus these server-to-client messages:
 - `CartSpawn` (full state: id, skin key, module, module item, position, velocity/speed, rotation, onTrack, facing, chain id + slot, tank type/amount, fuel burn fraction, filters) and `CartRemove(id)`.
 - `CartMove` (id, position, speed, rotation, onTrack, facing, anim frame), sent at a fixed rate (about 15/s) **only for carts near each player** (interest radius around two screens); the client buffers about 100 ms and interpolates. A cart entering a player's radius gets a `CartSpawn`; leaving it gets a `CartRemove` for that client only.
