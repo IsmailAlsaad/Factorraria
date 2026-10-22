@@ -96,7 +96,7 @@ namespace Factorraria.Common.Carts
         /// <summary>Placeholder bumper "boing". Swap the sound here once there is a real one.</summary>
         private static void OnCartBumped(Cart cart)
         {
-            SoundEngine.PlaySound(SoundID.Item56, cart.Position);
+            Factorraria.Common.Net.CartSound.Play(Factorraria.Common.Net.CartSoundKind.Bump, cart.Position);
 
             CartCargo.OnBump(cart); // chest: spill items as vItems, terrarium: pour the tank out
         }
@@ -107,7 +107,7 @@ namespace Factorraria.Common.Carts
         /// </summary>
         private static void OnCartCoupled(Cart motor, Cart carriage)
         {
-            SoundEngine.PlaySound(SoundID.Item37, carriage.Position);
+            Factorraria.Common.Net.CartSound.Play(Factorraria.Common.Net.CartSoundKind.Couple, carriage.Position);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace Factorraria.Common.Carts
         private static void OnCartCollide(Cart left, Cart right)
         {
             Vector2 midPoint = (left.Position + right.Position) * 0.5f;
-            SoundEngine.PlaySound(SoundID.Item53, midPoint);
+            Factorraria.Common.Net.CartSound.Play(Factorraria.Common.Net.CartSoundKind.Collide, midPoint);
         }
 
         /// <summary>

@@ -560,7 +560,7 @@ namespace Factorraria.Common.Carts
 
             if (poured)
             {
-                SoundEngine.PlaySound(SoundID.SplashWeak, cart.Position);
+                Factorraria.Common.Net.CartSound.Play(Factorraria.Common.Net.CartSoundKind.Pour, cart.Position);
             }
         }
 

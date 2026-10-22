@@ -361,6 +361,8 @@ All click handling stays on the owning client (it needs `Main.mouse*` and the he
 `TrackData.EnsureLoaded()` reads private vanilla minecart tables by reflection (`_tileHeight`, `_trackType`, `_boostLeft`) and retries silently when they are null. It must be verified that vanilla initialises these on a dedicated server (if they are filled by a client-only load path, carts silently stay disabled there). Also `ReportFailureOnce` uses `Main.NewText`, which should become a logger-only message on a server.
 
 ### C8 (M) Chains and bumps
+**Status (patch 9.6a, applied, untested):** the bump, cart-vs-cart, chain coupling and terrarium pour sounds all go through `CartSound.Play` (Common/Net/CartSound.cs). Single-player plays them locally; a dedicated server sends packet `CartSound` (45) to the players within 80 tiles, rate limited per kind; a client plays it in `CartSoundSystem.PostUpdateEverything`. Chain id and slot for the link drawing were already done in 9.2 (CartDelta). Not done: bump spill and pour visual effects, only the sounds.
+
 `CartChain` (motor + carriages, `AutoAttach`, `RebuildFromSave`) and `Cart.TryCollide`/`Bumped` events run purely in the server simulation. The client needs only chain id/slot and the bump event for visuals/sound. Bump sounds (`SoundEngine.PlaySound` in `CartCargo`) are no-ops on a server, so they need a small `CartEvent` broadcast (bump, pour) for nearby clients.
 
 ### C9 (M) Save/load and IDs

@@ -1,0 +1,136 @@
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Concurrent;
+using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+namespace Factorraria.Common.Net
+{
+    // The cart events that make a sound. The numbers are part of the wire format (append only).
+    public enum CartSoundKind : byte
+    {
+        Bump = 0,    // a cart hit a bumper track
+        Collide = 1, // two carts collided
+        Couple = 2,  // a free cart hooked onto a motor's chain
+        Pour = 3     // a terrarium cart poured or drained liquid
+    }
+
+    // Patch 9.6a (finding C8). Carts only simulate on the server (or in single-player), and a dedicated server has no audio, so a sound
+    // played where the event happens is never heard in multiplayer. CartSound.Play is the one place every cart sound goes through:
+    //   single-player      -> plays the sound right here
+    //   dedicated server   -> sends CartSound to the players near the position (rate limited per kind, so a pile-up is not a flood)
+    //   multiplayer client -> does nothing (clients never run the events; the packet below plays it)
+    public static class CartSound
+    {
+        public static int NearbyTiles = 80;      // players further away than this do not get the packet
+        public static int MinTicksBetween = 4;   // server: the same kind is sent at most once per this many ticks
+
+        static uint[] lastSent = new uint[4];
+
+        public static void Play(CartSoundKind kind, Vector2 position)
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            if (Main.netMode == NetmodeID.Server)
+            {
+                int index = (int)kind;
+                if (index < 0 || index >= lastSent.Length)
+                    return;
+
+                uint now = Main.GameUpdateCount;
+                if (lastSent[index] != 0 && now - lastSent[index] < (uint)MinTicksBetween)
+                    return;
+                lastSent[index] = now;
+
+                FactorrariaNet.SendToNearby(position, NearbyTiles, FactorrariaPacket.CartSound, writer =>
+                {
+                    writer.Write((byte)kind);
+                    writer.Write(position.X);
+                    writer.Write(position.Y);
+                });
+                return;
+            }
+
+            PlayLocal(kind, position);
+        }
+
+        public static void ResetServerState()
+        {
+            for (int i = 0; i < lastSent.Length; i++)
+                lastSent[i] = 0;
+        }
+
+        // Client and single-player: the real sound.
+        public static void PlayLocal(CartSoundKind kind, Vector2 position)
+        {
+            if (Main.dedServ)
+                return;
+
+            switch (kind)
+            {
+                case CartSoundKind.Bump:
+                    SoundEngine.PlaySound(SoundID.Item56, position); // placeholder bumper "boing"
+                    break;
+                case CartSoundKind.Collide:
+                    SoundEngine.PlaySound(SoundID.Item53, position);
+                    break;
+                case CartSoundKind.Couple:
+                    SoundEngine.PlaySound(SoundID.Item37, position);
+                    break;
+                case CartSoundKind.Pour:
+                    SoundEngine.PlaySound(SoundID.SplashWeak, position);
+                    break;
+            }
+        }
+    }
+
+    public class CartSoundSystem : ModSystem
+    {
+        struct Pending
+        {
+            public CartSoundKind Kind;
+            public Vector2 Position;
+        }
+
+        static ConcurrentQueue<Pending> incoming = new ConcurrentQueue<Pending>();
+
+        public override void Load()
+        {
+            FactorrariaNet.Register(FactorrariaPacket.CartSound, PacketDirection.ToClient, HandleSound);
+        }
+
+        public override void OnWorldLoad() => Clear();
+
+        public override void OnWorldUnload() => Clear();
+
+        static void Clear()
+        {
+            while (incoming.TryDequeue(out _)) { }
+            CartSound.ResetServerState();
+        }
+
+        static void HandleSound(System.IO.BinaryReader reader, int sender)
+        {
+            byte kind = reader.ReadByte();
+            float x = reader.ReadSingle();
+            float y = reader.ReadSingle();
+            if (kind > (byte)CartSoundKind.Pour)
+                return;
+
+            incoming.Enqueue(new Pending { Kind = (CartSoundKind)kind, Position = new Vector2(x, y) });
+        }
+
+        // Client, main thread.
+        public override void PostUpdateEverything()
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+                return;
+
+            int budget = 8; // never more than a handful of sounds in one tick
+            while (budget-- > 0 && incoming.TryDequeue(out Pending sound))
+                CartSound.PlayLocal(sound.Kind, sound.Position);
+        }
+    }
+}
