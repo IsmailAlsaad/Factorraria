@@ -43,6 +43,8 @@ namespace Factorraria.Common.Net
             FactorrariaNet.Log("[Carts] " + CartNet.Describe());
             caller.Reply(CartInputNet.Describe(), Color.LightGreen);
             FactorrariaNet.Log("[Carts] " + CartInputNet.Describe());
+            caller.Reply(CartCargoNet.Describe(), Color.LightGreen);
+            FactorrariaNet.Log("[Carts] " + CartCargoNet.Describe());
 
             for (int i = 0; i < CartSystem.Carts.Count; i++)
             {

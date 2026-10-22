@@ -723,15 +723,10 @@ namespace Factorraria.Common.Carts
 
             lastPlate = plate;
 
-            // Same as vanilla: a client asks the server to hit the switch, single player / server trips the wires directly.
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-            {
-                NetMessage.SendData(MessageID.HitSwitch, -1, -1, null, plate.X, plate.Y);
-            }
-            else
-            {
-                Wiring.HitSwitch(plate.X, plate.Y);
-            }
+            // Patch 9.4 (C6): carts only simulate on the server or in single-player (Update, TickCarriage and the chain return on a client),
+            // so the wires are tripped directly, once per roll-on. The old client branch (a HitSwitch packet to the server) could never run.
+            global::Factorraria.Common.Net.CartCargoNet.PlatesHit++; // TEMPORARY test counter
+            Wiring.HitSwitch(plate.X, plate.Y);
         }
 
         /// <summary>

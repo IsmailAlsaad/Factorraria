@@ -90,6 +90,11 @@ namespace Factorraria.Common.Carts
 
         public static void OnBump(Cart cart)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                return; // patch 9.4: spills and pours change shared world state, so only the server (or single-player) runs them
+            }
+
             if (cart.Module == CartModule.Chest)
             {
                 SpillChest(cart);
@@ -165,6 +170,7 @@ namespace Factorraria.Common.Carts
                     continue; // chest has no room for this one
                 }
 
+                CartCargoNet.ChestVItems++; // patch 9.4 TEMPORARY counter (VItemNet.ServerTick sends the new stack or the removal)
                 vItem.stackSize = offered.IsAir ? 0 : offered.stack;
 
                 if (vItem.stackSize <= 0)
@@ -205,16 +211,50 @@ namespace Factorraria.Common.Carts
 
                 // The dropped item is a plain Item here, so stack changes and TurnToAir apply to it directly.
                 // Once everything has moved into the chest, switch the world item off (same as VirtualItemSystem does).
+                int itemType = worldItem.type;
+
                 if (cart.TryAddToChest(worldItem))
                 {
-                    if (worldItem.IsAir)
-                    {
-                        worldItem.active = false;
-                    }
-
-                    VirtualItemSystem.SyncWorldItem(worldItem.whoAmI, "cart chest pickup"); // patch 7.4: a partial or full pickup must reach the clients
+                    FinishWorldItemPickup(worldItem, false);
+                }
+                else
+                {
+                    CartCargoNet.NoteChestRefused(cart.Id, itemType); // full or filtered: the world item is left exactly as it was, nothing is sent
                 }
             }
+        }
+
+        /// <summary>
+        /// Patch 9.4 (C4): the one place where a cart finishes taking (all or part of) a dropped world item. The caller has already moved
+        /// the stack into the cart. A fully taken item is switched off, then the change is sent: on the server VirtualItemSystem.SyncWorldItem
+        /// sends vanilla's SyncItem (an off or empty item goes out as type 0, so clients drop it; a partly taken one goes out with its new
+        /// stack), in single-player it does nothing. Without this a client keeps a ghost item (R3).
+        /// </summary>
+        private static void FinishWorldItemPickup(Item worldItem, bool fuel)
+        {
+            int index = worldItem.whoAmI;
+            bool whole = worldItem.IsAir;
+
+            if (whole)
+            {
+                worldItem.active = false;
+            }
+
+            if (fuel)
+            {
+                if (whole) CartCargoNet.FuelWorldWhole++; else CartCargoNet.FuelWorldPartial++;
+            }
+            else
+            {
+                if (whole) CartCargoNet.ChestWorldWhole++; else CartCargoNet.ChestWorldPartial++;
+            }
+
+            if (Main.netMode == NetmodeID.Server)
+            {
+                CartCargoNet.ItemSyncs++;
+            }
+
+            VirtualItemSystem.SyncWorldItem(index, fuel ? "cart fuel pickup" : "cart chest pickup");
         }
 
         /// <summary>
@@ -361,6 +401,7 @@ namespace Factorraria.Common.Carts
                     continue; // slot full or holds a different fuel
                 }
 
+                CartCargoNet.FuelVItems++; // patch 9.4 TEMPORARY counter
                 vItem.stackSize = offered.IsAir ? 0 : offered.stack;
 
                 if (vItem.stackSize <= 0)
@@ -389,12 +430,7 @@ namespace Factorraria.Common.Carts
 
                 if (cart.TryAddFuel(worldItem))
                 {
-                    if (worldItem.IsAir)
-                    {
-                        worldItem.active = false;
-                    }
-
-                    VirtualItemSystem.SyncWorldItem(worldItem.whoAmI, "cart fuel pickup"); // patch 7.4: a partial or full pickup must reach the clients
+                    FinishWorldItemPickup(worldItem, true);
                 }
             }
         }
@@ -488,6 +524,11 @@ namespace Factorraria.Common.Carts
         /// </summary>
         public static void PourTank(Cart cart)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                return; // patch 9.4: pouring edits world liquid, so only the server (or single-player) runs it
+            }
+
             LiquidStack tank = cart.Tank;
             if (tank == null)
             {
@@ -565,13 +606,21 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        /// <summary>Same as BucketBase: a client tells the server about a liquid change. Single player needs nothing.</summary>
+        /// <summary>
+        /// Patch 9.4 (C6): the liquid a cart drains or pours is edited on the server (cart code never runs on a client), so the SERVER has to
+        /// tell the clients; the old client-only NetMessage.sendWater could never run. The position goes to the 8.1 LiquidBroadcastSystem,
+        /// which queues it once per tick, sends vanilla's water message (or a 1x1 tile square for a custom liquid) to the clients that
+        /// have the tile loaded, and respects the per-tick cap. Single-player needs nothing; Mark itself ignores every side but the server.
+        /// </summary>
         private static void SendWater(int x, int y)
         {
-            if (Main.netMode == NetmodeID.MultiplayerClient)
+            if (Main.netMode == NetmodeID.SinglePlayer)
             {
-                NetMessage.sendWater(x, y);
+                return;
             }
+
+            CartCargoNet.LiquidMarks++;
+            LiquidBroadcastSystem.Mark(x, y);
         }
 
         #endregion

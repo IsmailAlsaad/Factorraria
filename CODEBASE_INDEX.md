@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-22 | 241 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-23 | 242 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(54) BaseMachine(36) FactorrariaPacket(27) RecipeBook(25) LiquidTypeRegistry(25) PacketDirection(24) CustomRecipe(16) Factorraria(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidStack(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) RecipeOutputGroup(11) JoinSync(11) Cart(11) RecipeCatalog(10) MachineVisualRegistry(9) RoboticArmTileEntity(8)
+FactorrariaNet(55) BaseMachine(36) FactorrariaPacket(27) RecipeBook(25) LiquidTypeRegistry(25) PacketDirection(24) CustomRecipe(16) Factorraria(15) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidStack(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) RecipeOutputGroup(11) JoinSync(11) Cart(11) RecipeCatalog(10) MachineVisualRegistry(9) RoboticArmTileEntity(8)
 
 ## Inheritance
 Project bases -> derived:
@@ -58,14 +58,14 @@ tModLoader/other bases -> project types:
     +HandlePacket(BinaryReader,int)[ov]
 
 ### Common/Carts/
-**Cart.cs** uses: CartChain, CartSkinTable, CartSkins, FuelLiquid, FuelModule, GelBurnerRecipeRegistry, LiquidStack, LiquidTypeRegistry, Record, SkinAnimation, TrackData, TrackEnd, TrackSample
+**Cart.cs** uses: CartCargoNet, CartChain, CartSkinTable, CartSkins, Factorraria, FuelLiquid, FuelModule, GelBurnerRecipeRegistry, LiquidStack, LiquidTypeRegistry, Record, SkinAnimation, TrackData, TrackEnd, TrackSample
   enum CartModule
     {Empty, Chest, Terrarium, Motor}
   static class CartPhysics
     +WheelHalfBase:float[c] +HitboxWidth:int[c] +HitboxHeight:int[c] +MaxSpeed:float[c] +Drag:float[c] +BoostAccel:float[c] +ShoveSpeed:float[c] +MaxStep:float[c] +Gravity:float[c] +MaxFallSpeed:float[c] +GroundFriction:float[c] +RerailDelay:int[c] +BumpCooldown:int[c] +CollisionRestitution:float[c] +CollisionMinSpeed:float[c] +AnimStopSpeed:float[c] +AnimPixelsPerFrame:float[c] +AnimMaxFramesPerTick:float[c] +PickupPadding:float[c] +SpillGrabCooldown:int[c] +TerrariumDrainPerTick:int[c] +MaxCarriages:int[c] +ChainSpacing:float[c] +ChainSampleStep:float[c] +ChainCloseGapSpeed:float[c] +CouplingMaxRelativeSpeed:float[c] +MotorSpeedCap:float[c] +MotorAccel:float[c]
   class Cart
     +Skin:string +SkinType:int +Module:CartModule +ModuleItem:int +IsChestItem(Item)[s] +IsTerrariumItem(Item)[s] +ChestSlots:int[c] +TryAddToChest(Item,bool) +ChestItems:Item +SlotFilter:int +IsSlotFiltered(int) +HasFilterFor(int) +SlotAccepts(int,Item) +FilterKeepCount(int,Item) +SetFilterFromSlots() +NormalizeTank() +OverflowItems:List<Item> +Tank:LiquidStack +FuelSlotCap:int[c] +Fuel:Item +IsBurning:bool +FuelBurnFraction:float +AcceptsFuel(int)[s] +AcceptsFuel(Item)[s] +TryAddFuel(Item) +RestoreBurn(int,int) +IsLavaSkin(int)[s] +IsMechSkin(int)[s] +FuelLiquidOf(int)[s] +IsMotorSkin(int)[s] +UsesLava:bool +FuelLiquid:int +UsesLiquid:bool +IsFuelLiquid(int) +AlwaysRuns:bool +HasPanel:bool +SpeedMultiplier:float +AccelMultiplier:float +SpeedLimit:float +DriveSpeedCap:float +DriveAccel:float +LiquidPerTick:float +LiquidCapacity:float +SetModule(CartModule,int) +ModuleItemType(CartModule)[s] +CollectPickupItems() +Position:Vector2 +Speed:float +Velocity:Vector2 +OnTrack:bool +Rotation:float +Active:bool +Id:int +Chain:CartChain +IsCarriage:bool +Body:Cart +CollisionMass:int +ChainSlack:float +ReplayScanIndex:int +LoadChainId:int +LoadChainSlot:int +Facing:int +AnimFrame:int +Bumped:event Action<Cart>[s] +Collided:event Action<Cart, Cart>[s] +FrameChanged:event Action<Cart, int, int>[s] +Driving:event Action<Cart>[s] +AlongSpeed:float +TryCollide(Cart,Cart)[s] +Hitbox:Rectangle +Update() +TickCarriage() +ReplayBump() +Shove(float) +TryRailPose(float,float,float,out float,out float)[s] +NetBurning:bool +NetMotorId:int +NetSlot:int +HasNetState:bool +ApplyNetState(Vector2,Vector2,float,int,bool) +ClientStep() +Save() +Load(TagCompound)[s]
-**CartCargo.cs** uses: Cart, CartChestUIState, CartGeometry, CartModule, CartPhysics, CartSound, CartSoundKind, LiquidStack, LiquidTypeRegistry, VirtualItem, VirtualItemSystem, WorldLiquidSources
+**CartCargo.cs** uses: Cart, CartCargoNet, CartChestUIState, CartGeometry, CartModule, CartPhysics, CartSound, CartSoundKind, LiquidBroadcastSystem, LiquidStack, LiquidTypeRegistry, VirtualItem, VirtualItemSystem, WorldLiquidSources
   static class CartCargo
     +WindowColumns:int[c] +WindowRows:int[c] +Update(Cart)[s] +OnBump(Cart)[s] +GetWindow(Cart,out int,out int)[s] +PourTank(Cart)[s]
 **CartChain.cs** uses: Cart, CartModule, CartPhysics, Direction, Record
@@ -307,7 +307,10 @@ tModLoader/other bases -> project types:
     +Load()[ov]
   static class AwakenedStatueNet
     +MaxJoinEntries:int[s] +MaxChangesPerPacket:int[s] +BroadcastDelta(List<Point16>,List<AwakenedStatue>)[s] +HandleChanged(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
-**CartDiagnostics.cs** uses: Cart, CartInputNet, CartModule, CartNet, CartSkins, CartSystem, FactorrariaNet
+**CartCargoNet.cs** uses: FactorrariaNet
+  static class CartCargoNet
+    +ChestWorldWhole:int[s] +ChestWorldPartial:int[s] +ChestRefused:int[s] +FuelWorldWhole:int[s] +FuelWorldPartial:int[s] +ChestVItems:int[s] +FuelVItems:int[s] +ItemSyncs:int[s] +LiquidMarks:int[s] +PlatesHit:int[s] +NoteChestRefused(int,int)[s] +Describe()[s]
+**CartDiagnostics.cs** uses: Cart, CartCargoNet, CartInputNet, CartModule, CartNet, CartSkins, CartSystem, FactorrariaNet
   class CartDiagnosticsCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
   class CartTestFeed : ModSystem
