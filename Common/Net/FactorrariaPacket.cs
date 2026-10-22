@@ -49,6 +49,8 @@ namespace Factorraria.Common.Net
         CartSubscribeRequest = 40,    // client -> server: "my join sync is done, send me the carts near me from now on" (patch 9.2)
         CartDelta = 41,               // server -> client: "these carts appeared / changed module, tank, burning or chain state near you (full state each), these disappeared" (patch 9.2)
         CartMove = 42,                // server -> client: "these carts you know moved: position, velocity, rotation, facing, on track" (patch 9.2, sent at CartUpdatesPerSecond)
+        CartActionRequest = 43,       // client -> server: "I placed / installed a module in / shoved / picked up a cart" (kind byte first, patch 9.3)
+        CartActionResult = 44,        // server -> client: "your place or install request was accepted or refused" (the client then consumes the item, patch 9.3)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

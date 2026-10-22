@@ -426,7 +426,7 @@ namespace Factorraria.Common.Carts
             railPoint = Vector2.Zero;
             onTrack = false;
 
-            if (Main.netMode != NetmodeID.SinglePlayer || !TrackData.EnsureLoaded())
+            if (!TrackData.EnsureLoaded())
             {
                 return false;
             }
@@ -488,7 +488,7 @@ namespace Factorraria.Common.Carts
         /// </summary>
         public override void PostUpdatePlayers()
         {
-            if (Main.dedServ || Main.gameMenu || Main.netMode != NetmodeID.SinglePlayer)
+            if (Main.dedServ || Main.gameMenu)
             {
                 return;
             }
@@ -536,6 +536,12 @@ namespace Factorraria.Common.Carts
 
                 Main.mouseLeftRelease = false; // we used this click
 
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                {
+                    global::Factorraria.Common.Net.CartInputNet.RequestInstallOrShove(held, target);
+                    return;
+                }
+
                 if (TryInstallModule(held, target))
                 {
                     SoundEngine.PlaySound(SoundID.Dig, target.Position);
@@ -560,6 +566,12 @@ namespace Factorraria.Common.Carts
 
                 if (target.HasPanel && !Terraria.UI.ItemSlot.ShiftInUse)
                 {
+                    if (Main.netMode == NetmodeID.MultiplayerClient)
+                    {
+                        global::Factorraria.Common.Net.CartInputNet.PanelNotReady(); // chest and fuel contents are not synced yet (patch 9.5)
+                        return;
+                    }
+
                     CartChestUISystem.Toggle(target);
                     return;
                 }
@@ -567,6 +579,12 @@ namespace Factorraria.Common.Carts
                 if (target.AlwaysRuns && !Terraria.UI.ItemSlot.ShiftInUse)
                 {
                     return; // the mechanical cart has no panel: only Shift + Right click picks it up
+                }
+
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                {
+                    global::Factorraria.Common.Net.CartInputNet.RequestPickUp(target);
+                    return;
                 }
 
                 PickUp(player, target);
@@ -607,6 +625,12 @@ namespace Factorraria.Common.Carts
 
         private static bool TryPlaceFromItem(Player player, Item held)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                // The server re-checks everything and spawns the cart; the item is consumed when it answers "accepted".
+                return global::Factorraria.Common.Net.CartInputNet.RequestPlace(player, held);
+            }
+
             Vector2 railPoint;
             if (!CheckPlacement(player, Player.tileTargetX, Player.tileTargetY, out railPoint, out _))
             {
@@ -629,21 +653,8 @@ namespace Factorraria.Common.Carts
         /// <summary>Installs the held item as a module if it is one. Chest and Terrarium exist so far (Motor comes later).</summary>
         private static bool TryInstallModule(Item held, Cart cart)
         {
-            if (held == null || held.IsAir || cart.Module != CartModule.Empty || Cart.IsMotorSkin(cart.SkinType))
-            {
-                return false;
-            }
-
             CartModule module;
-            if (Cart.IsChestItem(held))
-            {
-                module = CartModule.Chest;
-            }
-            else if (Cart.IsTerrariumItem(held))
-            {
-                module = CartModule.Terrarium;
-            }
-            else
+            if (!GetInstallModule(held, cart, out module))
             {
                 return false;
             }
@@ -657,6 +668,38 @@ namespace Factorraria.Common.Carts
             }
 
             return true;
+        }
+
+        /// <summary>Which module the held item would install in this cart, without changing anything (false: not a module, or the cart cannot take one).</summary>
+        public static bool GetInstallModule(Item held, Cart cart, out CartModule module)
+        {
+            module = CartModule.Empty;
+
+            if (held == null || held.IsAir || cart == null || cart.Module != CartModule.Empty || Cart.IsMotorSkin(cart.SkinType))
+            {
+                return false;
+            }
+
+            if (Cart.IsChestItem(held))
+            {
+                module = CartModule.Chest;
+                return true;
+            }
+
+            if (Cart.IsTerrariumItem(held))
+            {
+                module = CartModule.Terrarium;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>True when the player is within clicking range of the cart (the client's own check, with slackPixels extra for the server's lagging copy of the player).</summary>
+        public static bool IsInInteractRange(Player player, Cart cart, float slackPixels)
+        {
+            return player != null && player.active && !player.dead && cart != null && cart.Active
+                && Vector2.Distance(player.Center, cart.Position) <= InteractRange + slackPixels;
         }
 
         /// <summary>Removes the cart and gives the player its skin item, module item and contents.</summary>
@@ -780,7 +823,7 @@ namespace Factorraria.Common.Carts
             valid = false;
             skinType = ItemID.Minecart;
 
-            if (Main.dedServ || Main.gameMenu || Main.netMode != NetmodeID.SinglePlayer)
+            if (Main.dedServ || Main.gameMenu)
             {
                 return false;
             }

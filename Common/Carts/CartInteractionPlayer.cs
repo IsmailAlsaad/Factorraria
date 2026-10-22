@@ -14,7 +14,7 @@ namespace Factorraria.Common.Carts
     {
         public override bool CanUseItem(Item item)
         {
-            if (Player.whoAmI != Main.myPlayer || Main.netMode != NetmodeID.SinglePlayer || !Main.mouseLeft)
+            if (Player.whoAmI != Main.myPlayer || !Main.mouseLeft)
             {
                 return true;
             }

@@ -41,6 +41,8 @@ namespace Factorraria.Common.Net
             FactorrariaNet.Log("[Carts] fcarts [" + side + "]: " + CartSystem.Carts.Count + " cart(s), next id " + CartSystem.NextCartId);
             caller.Reply(CartNet.Describe(), Color.LightGreen);
             FactorrariaNet.Log("[Carts] " + CartNet.Describe());
+            caller.Reply(CartInputNet.Describe(), Color.LightGreen);
+            FactorrariaNet.Log("[Carts] " + CartInputNet.Describe());
 
             for (int i = 0; i < CartSystem.Carts.Count; i++)
             {

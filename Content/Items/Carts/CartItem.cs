@@ -41,6 +41,17 @@ namespace Factorraria.Content.Items.Carts
 
         public override bool? UseItem(Player player)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                // The server spawns the cart and the item is consumed when it answers "accepted" (patch 9.3), so the use itself consumes nothing.
+                if (player.whoAmI == Main.myPlayer)
+                {
+                    global::Factorraria.Common.Net.CartInputNet.RequestPlace(player, CartSkinTable.GetHeldItem(player));
+                }
+
+                return false;
+            }
+
             Vector2 railPoint;
             if (!CartSystem.CanPlaceAt(player, Player.tileTargetX, Player.tileTargetY, out railPoint))
             {
