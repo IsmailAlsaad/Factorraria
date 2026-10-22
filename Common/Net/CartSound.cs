@@ -13,7 +13,8 @@ namespace Factorraria.Common.Net
         Bump = 0,    // a cart hit a bumper track
         Collide = 1, // two carts collided
         Couple = 2,  // a free cart hooked onto a motor's chain
-        Pour = 3     // a terrarium cart poured or drained liquid
+        Pour = 3,    // a terrarium cart poured or drained liquid
+        PressurePlate = 4 // patch 9.4b: a cart tripped a pressure plate track (the server has no audio, so clients play the click)
     }
 
     // Patch 9.6a (finding C8). Carts only simulate on the server (or in single-player), and a dedicated server has no audio, so a sound
@@ -26,7 +27,7 @@ namespace Factorraria.Common.Net
         public static int NearbyTiles = 80;      // players further away than this do not get the packet
         public static int MinTicksBetween = 4;   // server: the same kind is sent at most once per this many ticks
 
-        static uint[] lastSent = new uint[4];
+        static uint[] lastSent = new uint[5];
 
         public static void Play(CartSoundKind kind, Vector2 position)
         {
@@ -82,6 +83,9 @@ namespace Factorraria.Common.Net
                 case CartSoundKind.Pour:
                     SoundEngine.PlaySound(SoundID.SplashWeak, position);
                     break;
+                case CartSoundKind.PressurePlate:
+                    SoundEngine.PlaySound(SoundID.Mech, position); // vanilla's switch / pressure plate click
+                    break;
             }
         }
     }
@@ -116,7 +120,7 @@ namespace Factorraria.Common.Net
             byte kind = reader.ReadByte();
             float x = reader.ReadSingle();
             float y = reader.ReadSingle();
-            if (kind > (byte)CartSoundKind.Pour)
+            if (kind > (byte)CartSoundKind.PressurePlate)
                 return;
 
             incoming.Enqueue(new Pending { Kind = (CartSoundKind)kind, Position = new Vector2(x, y) });

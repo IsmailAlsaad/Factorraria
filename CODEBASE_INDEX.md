@@ -58,7 +58,7 @@ tModLoader/other bases -> project types:
     +HandlePacket(BinaryReader,int)[ov]
 
 ### Common/Carts/
-**Cart.cs** uses: CartCargoNet, CartChain, CartSkinTable, CartSkins, Factorraria, FuelLiquid, FuelModule, GelBurnerRecipeRegistry, LiquidStack, LiquidTypeRegistry, Record, SkinAnimation, TrackData, TrackEnd, TrackSample
+**Cart.cs** uses: CartCargoNet, CartChain, CartSkinTable, CartSkins, CartSound, CartSoundKind, Factorraria, FuelLiquid, FuelModule, GelBurnerRecipeRegistry, LiquidStack, LiquidTypeRegistry, Record, SkinAnimation, TrackData, TrackEnd, TrackSample
   enum CartModule
     {Empty, Chest, Terrarium, Motor}
   static class CartPhysics
@@ -343,7 +343,7 @@ tModLoader/other bases -> project types:
       +Moves:List<MoveEntry>
 **CartSound.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection
   enum CartSoundKind : byte
-    {Bump, Collide, Couple, Pour}
+    {Bump, Collide, Couple, Pour, PressurePlate}
   static class CartSound
     +NearbyTiles:int[s] +MinTicksBetween:int[s] +Play(CartSoundKind,Vector2)[s] +ResetServerState()[s] +PlayLocal(CartSoundKind,Vector2)[s]
   class CartSoundSystem : ModSystem

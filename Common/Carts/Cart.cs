@@ -727,6 +727,13 @@ namespace Factorraria.Common.Carts
             // so the wires are tripped directly, once per roll-on. The old client branch (a HitSwitch packet to the server) could never run.
             global::Factorraria.Common.Net.CartCargoNet.PlatesHit++; // TEMPORARY test counter
             Wiring.HitSwitch(plate.X, plate.Y);
+
+            // Patch 9.4b: a dedicated server has no audio, so no client ever heard the plate click. Single-player is left exactly as it was
+            // (it plays whatever Wiring.HitSwitch plays itself); only the server sends the click to the players nearby.
+            if (Main.netMode == NetmodeID.Server)
+            {
+                global::Factorraria.Common.Net.CartSound.Play(global::Factorraria.Common.Net.CartSoundKind.PressurePlate, new Vector2(plate.X * 16f + 8f, plate.Y * 16f + 8f));
+            }
         }
 
         /// <summary>
