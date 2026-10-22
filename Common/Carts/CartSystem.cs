@@ -13,6 +13,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using Factorraria.Common.Net;
 
 namespace Factorraria.Common.Carts
 {
@@ -96,7 +97,7 @@ namespace Factorraria.Common.Carts
         /// <summary>Placeholder bumper "boing". Swap the sound here once there is a real one.</summary>
         private static void OnCartBumped(Cart cart)
         {
-            Factorraria.Common.Net.CartSound.Play(Factorraria.Common.Net.CartSoundKind.Bump, cart.Position);
+            CartSound.Play(CartSoundKind.Bump, cart.Position);
 
             CartCargo.OnBump(cart); // chest: spill items as vItems, terrarium: pour the tank out
         }
@@ -107,7 +108,7 @@ namespace Factorraria.Common.Carts
         /// </summary>
         private static void OnCartCoupled(Cart motor, Cart carriage)
         {
-            Factorraria.Common.Net.CartSound.Play(Factorraria.Common.Net.CartSoundKind.Couple, carriage.Position);
+            CartSound.Play(CartSoundKind.Couple, carriage.Position);
         }
 
         /// <summary>
@@ -117,7 +118,7 @@ namespace Factorraria.Common.Carts
         private static void OnCartCollide(Cart left, Cart right)
         {
             Vector2 midPoint = (left.Position + right.Position) * 0.5f;
-            Factorraria.Common.Net.CartSound.Play(Factorraria.Common.Net.CartSoundKind.Collide, midPoint);
+            CartSound.Play(CartSoundKind.Collide, midPoint);
         }
 
         /// <summary>
@@ -301,7 +302,7 @@ namespace Factorraria.Common.Carts
             }
 
             ServerSimulate();
-            global::Factorraria.Common.Net.CartNet.ServerTick();
+            global::CartNet.ServerTick();
         }
 
         /// <summary>Client only, called every tick by CartNet.ClientTick: eases every replica toward its last server state.</summary>
@@ -538,7 +539,7 @@ namespace Factorraria.Common.Carts
 
                 if (Main.netMode == NetmodeID.MultiplayerClient)
                 {
-                    global::Factorraria.Common.Net.CartInputNet.RequestInstallOrShove(held, target);
+                    global::CartInputNet.RequestInstallOrShove(held, target);
                     return;
                 }
 
@@ -568,7 +569,7 @@ namespace Factorraria.Common.Carts
                 {
                     if (Main.netMode == NetmodeID.MultiplayerClient)
                     {
-                        global::Factorraria.Common.Net.CartInputNet.PanelNotReady(); // chest and fuel contents are not synced yet (patch 9.5)
+                        global::CartInputNet.PanelNotReady(); // chest and fuel contents are not synced yet (patch 9.5)
                         return;
                     }
 
@@ -583,7 +584,7 @@ namespace Factorraria.Common.Carts
 
                 if (Main.netMode == NetmodeID.MultiplayerClient)
                 {
-                    global::Factorraria.Common.Net.CartInputNet.RequestPickUp(target);
+                    global::CartInputNet.RequestPickUp(target);
                     return;
                 }
 
@@ -628,7 +629,7 @@ namespace Factorraria.Common.Carts
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
                 // The server re-checks everything and spawns the cart; the item is consumed when it answers "accepted".
-                return global::Factorraria.Common.Net.CartInputNet.RequestPlace(player, held);
+                return global::CartInputNet.RequestPlace(player, held);
             }
 
             Vector2 railPoint;

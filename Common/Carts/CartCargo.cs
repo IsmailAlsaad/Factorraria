@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Liquids;
+using Factorraria.Common.Net;
 using Factorraria.Content.VirtualItems;
 using Microsoft.Xna.Framework;
 using System;
@@ -560,7 +561,7 @@ namespace Factorraria.Common.Carts
 
             if (poured)
             {
-                Factorraria.Common.Net.CartSound.Play(Factorraria.Common.Net.CartSoundKind.Pour, cart.Position);
+                CartSound.Play(CartSoundKind.Pour, cart.Position);
             }
         }
 
