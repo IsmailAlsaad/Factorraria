@@ -1,4 +1,4 @@
-﻿using Factorraria.Common.Liquids;
+using Factorraria.Common.Liquids;
 using Factorraria.Content.Configs;
 using Factorraria.Content.Items.Carts;
 using Microsoft.Xna.Framework;
@@ -302,7 +302,7 @@ namespace Factorraria.Common.Carts
             }
 
             ServerSimulate();
-            global::CartNet.ServerTick();
+            CartNet.ServerTick();
         }
 
         /// <summary>Client only, called every tick by CartNet.ClientTick: eases every replica toward its last server state.</summary>
@@ -539,7 +539,7 @@ namespace Factorraria.Common.Carts
 
                 if (Main.netMode == NetmodeID.MultiplayerClient)
                 {
-                    global::CartInputNet.RequestInstallOrShove(held, target);
+                    CartInputNet.RequestInstallOrShove(held, target);
                     return;
                 }
 
@@ -569,7 +569,7 @@ namespace Factorraria.Common.Carts
                 {
                     if (Main.netMode == NetmodeID.MultiplayerClient)
                     {
-                        global::CartInputNet.PanelNotReady(); // chest and fuel contents are not synced yet (patch 9.5)
+                        CartInputNet.PanelNotReady(); // chest and fuel contents are not synced yet (patch 9.5)
                         return;
                     }
 
@@ -584,7 +584,7 @@ namespace Factorraria.Common.Carts
 
                 if (Main.netMode == NetmodeID.MultiplayerClient)
                 {
-                    global::CartInputNet.RequestPickUp(target);
+                    CartInputNet.RequestPickUp(target);
                     return;
                 }
 
@@ -629,7 +629,7 @@ namespace Factorraria.Common.Carts
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
                 // The server re-checks everything and spawns the cart; the item is consumed when it answers "accepted".
-                return global::CartInputNet.RequestPlace(player, held);
+                return CartInputNet.RequestPlace(player, held);
             }
 
             Vector2 railPoint;
