@@ -37,10 +37,9 @@ namespace Factorraria.Common.WorldGeneration
         public double PoolFraction = 0.10;            // the pool fills the bottom 10% of the oval's height
         // ShellStartFraction (the line below this block) is no longer used by the code and can be deleted.
         public int ShellThickness = 5;                // full Sandstone thickness (lower part of the oval)
-        public double ShellFullFraction = 0.6;        // fraction of the oval height (0 = top, 1 = bottom): from here down the shell is full thickness
-        public double ShellEndFraction = 0.3;         // the shell tapers linearly to zero thickness here; above it there is no shell
-        public double ShellStartFraction = 0.75;      // the shell starts this far below the top of the oval (keeps it off the surface)
-        public int OvalInset = 0;                     // shrink the ellipse by this many tiles on every side
+        public double ShellFullFraction = 0.8;        // fraction of the oval height (0 = top, 1 = bottom): from here down the shell is full thickness
+        public double ShellEndFraction = 0.6;         // the shell tapers linearly to zero thickness here; above it there is no shell
+        public int OvalInset = 8;                     // shrink the ellipse by this many tiles on every side
 
         public int ScanMarginTop = 5;                 // scan this many rows above the rectangle
         public int ScanMarginBottom = 10;             // and this many below it
