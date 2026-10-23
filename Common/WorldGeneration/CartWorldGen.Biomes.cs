@@ -115,7 +115,7 @@ namespace Factorraria.Common.WorldGeneration
                 return ItemID.BeeMinecart;
 
             if (spot.Biome != CartBiome.Desert && spot.Depth == CartDepth.LavaLayer && WorldGen.genRand.NextDouble() < HellcartChance)
-                return ItemID.DemonicHellcart;
+                return ItemID.HellMinecart;
 
             return ItemID.SteampunkMinecart;
         }
@@ -211,7 +211,7 @@ namespace Factorraria.Common.WorldGeneration
                 return ItemID.FrozenChest;
 
             if (spot.Biome == CartBiome.Desert)
-                return ItemID.SandstoneChest;
+                return ItemID.DesertChest;
 
             bool gold = WorldGen.genRand.NextDouble() < GoldChestShare2;
 
@@ -319,7 +319,7 @@ namespace Factorraria.Common.WorldGeneration
 
             if (spot.Biome == CartBiome.Snow)
             {
-                AddPool(t, new[] { ItemID.TungstenOre, ItemID.SilverOre, ItemID.PlatinumOre }, 2, OreMin, OreMax, 1.0);
+                AddPool(t, new int[] { ItemID.TungstenOre, ItemID.SilverOre, ItemID.PlatinumOre }, 2, OreMin, OreMax, 1.0);
             }
             else if (spot.Biome == CartBiome.Jungle)
             {
@@ -330,8 +330,8 @@ namespace Factorraria.Common.WorldGeneration
             }
             else if (spot.Biome == CartBiome.Desert)
             {
-                Add(t, ItemID.SturdyFossil, 8, 16, 0.5);
-                Add(t, ItemID.FossilOre, 30, 60, 0.9);
+                Add(t, ItemID.FossilOre, 8, 16, 0.5);
+                Add(t, ItemID.DesertFossil, 30, 60, 0.9);
                 Add(t, ItemID.CopperOre, 8, 20, 0.4);
                 Add(t, ItemID.GoldOre, 8, 20, 0.1);
                 Add(t, ItemID.Amber, 8, 20, 0.1);
