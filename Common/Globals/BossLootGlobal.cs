@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.GameContent.ItemDropRules;
 
 namespace Factorraria.Common.NPCs
 {
@@ -45,10 +46,10 @@ namespace Factorraria.Common.NPCs
                 npcLoot.Add(lastSegment);
             }
 
-            // King Slime (MAKE IT ONLY ON FIRST KILL)
+            // King Slime
             if (npc.type == NPCID.KingSlime)
             {
-                npcLoot.Add(ItemDropRule.Common(ItemID.SlimeStatue, 1, 3, 5));
+                npcLoot.Add(ItemDropRule.ByCondition(new FirstKingSlimeKillCondition(), ItemID.SlimeStatue, 1, 3, 5));
             }
 
             // Queen Bee
@@ -121,4 +122,13 @@ namespace Factorraria.Common.NPCs
             return false;
         }
     }
+
+
+    public class FirstKingSlimeKillCondition : IItemDropRuleCondition
+    {
+        public bool CanDrop(DropAttemptInfo info) => !NPC.downedSlimeKing;
+        public bool CanShowItemDropInUI() => true;
+        public string GetConditionDescription() => "Dropped the first time King Slime is defeated in a world";
+    }
 }
+
