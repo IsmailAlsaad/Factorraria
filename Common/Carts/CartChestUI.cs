@@ -141,7 +141,8 @@ namespace Factorraria.Common.Carts
                     item => WriteChestSlot(index, item),
                     null,
                     null,
-                    () => Cart.IsSlotFiltered(index));
+                    () => Cart.IsSlotFiltered(index),
+                    _cartSlot: new global::Factorraria.Common.Net.CartSlotBinding(() => Cart, false, index));
 
                 AddEntry(
                     slot,
@@ -174,7 +175,8 @@ namespace Factorraria.Common.Carts
                 () => Cart.Fuel ?? new Item(),
                 item => Cart.Fuel = ClampFuelStack(item),
                 null,
-                Cart.AcceptsFuel);
+                Cart.AcceptsFuel,
+                _cartSlot: new global::Factorraria.Common.Net.CartSlotBinding(() => Cart, true, 0));
 
             AddEntry(slot, position, new Vector2(SlotSize, SlotSize));
         }
@@ -266,7 +268,15 @@ namespace Factorraria.Common.Carts
         /// <summary>"Set filter": every slot holding an item is filtered for it, empty slots become unfiltered again.</summary>
         private void SetFilter()
         {
-            Cart.SetFilterFromSlots();
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                global::Factorraria.Common.Net.CartSlotEdit.ClientSetFilter(Cart); // patch 9.5: the server runs it on the real contents and pushes
+            }
+            else
+            {
+                Cart.SetFilterFromSlots();
+            }
+
             SoundEngine.PlaySound(SoundID.Unlock);
         }
 
@@ -365,16 +375,22 @@ namespace Factorraria.Common.Carts
 
         public static void NotifyCartRemoved(Cart cart)
         {
-            if (OpenCart == cart)
+            if (OpenCart == cart && Instance != null)
             {
-                Close(false);
+                Instance.CloseInternal(false, false); // the server ends the subscription itself when the cart is gone
             }
         }
 
         /// <summary>Shift-click from the player's inventory: sends the item into the open cart. True if anything moved.</summary>
-        public static bool TryShiftInsert(Item item)
+        public static bool TryShiftInsert(Item item, int inventorySlot = -1)
         {
             Cart cart = OpenCart;
+            if (cart != null && Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                // Patch 9.5: the server decides how much fits; the inventory is reduced when it answers.
+                return global::Factorraria.Common.Net.CartSlotEdit.ClientInsert(cart, item, inventorySlot);
+            }
+
             if (cart == null || !(cart.Module == CartModule.Motor ? cart.TryAddFuel(item) : cart.TryAddToChest(item)))
             {
                 return false;
@@ -397,6 +413,11 @@ namespace Factorraria.Common.Carts
                 return;
             }
 
+            if (state != null)
+            {
+                CloseInternal(false); // another cart's panel was open: end its subscription
+            }
+
             // Only one inventory-style panel at a time.
             ModContent.GetInstance<MachineUISystem>().CloseUI();
             RecipeBookSystem.Close(false);
@@ -407,14 +428,20 @@ namespace Factorraria.Common.Carts
             state = new CartChestUIState(cart);
             chestInterface.SetState(null);
             chestInterface.SetState(state);
+            global::Factorraria.Common.Net.CartPanelNet.ClientOpen(cart); // patch 9.5: multiplayer client only, asks the server for the contents
             Reposition();
         }
 
-        private void CloseInternal(bool playSound)
+        private void CloseInternal(bool playSound, bool tellServer = true)
         {
             if (state == null)
             {
                 return;
+            }
+
+            if (tellServer)
+            {
+                global::Factorraria.Common.Net.CartPanelNet.ClientClose(state.Cart); // patch 9.5: ends the subscription
             }
 
             if (playSound)
@@ -439,6 +466,13 @@ namespace Factorraria.Common.Carts
 
             Cart cart = state.Cart;
             Player player = Main.LocalPlayer;
+
+            if (Main.netMode == NetmodeID.MultiplayerClient
+                && (global::Factorraria.Common.Net.CartPanelNet.TakeServerClose(cart.Id) || CartSystem.FindById(cart.Id) != cart))
+            {
+                CloseInternal(false, false); // the server ended it, or the cart is gone or was replaced (found again by id, never by reference)
+                return;
+            }
 
             if (!Main.playerInventory || !cart.Active || !cart.HasPanel || player.dead
                 || Vector2.Distance(player.Center, cart.Position) > CloseRange)

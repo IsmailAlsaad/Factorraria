@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-23 | 245 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-23 | 247 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(55) BaseMachine(37) LiquidTypeRegistry(27) FactorrariaPacket(27) RecipeBook(25) PacketDirection(24) CustomRecipe(16) Factorraria(15) LiquidStack(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) Cart(12) RecipeOutputGroup(11) JoinSync(11) RecipeCatalog(10) MachineVisualRegistry(10) FurnaceOffsetConfig(9)
+FactorrariaNet(57) BaseMachine(37) FactorrariaPacket(29) LiquidTypeRegistry(27) RecipeBook(25) PacketDirection(25) Factorraria(17) CustomRecipe(16) Cart(15) LiquidStack(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) JoinSync(12) RecipeOutputGroup(11) RecipeCatalog(10) MachineVisualRegistry(10) CartModule(10)
 
 ## Inheritance
 Project bases -> derived:
@@ -24,11 +24,11 @@ Project bases -> derived:
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModSystem (65): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartInputNetSystem, CartMountBlocker, CartNetSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (66): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartInputNetSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
+- byte (16): CartAction, CartPanelAction, CartPanelCloseReason, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, RequestCheck
 - ModCommand (13): ArmSendCommand, CartDiagnosticsCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
-- byte (12): CartAction, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, FactorrariaPacket, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, RequestCheck
 - ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (7): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (6): CartModuleItemGlobal, IceBladeItem, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
@@ -64,7 +64,7 @@ tModLoader/other bases -> project types:
   static class CartPhysics
     +WheelHalfBase:float[c] +HitboxWidth:int[c] +HitboxHeight:int[c] +MaxSpeed:float[c] +Drag:float[c] +BoostAccel:float[c] +ShoveSpeed:float[c] +MaxStep:float[c] +Gravity:float[c] +MaxFallSpeed:float[c] +GroundFriction:float[c] +RerailDelay:int[c] +BumpCooldown:int[c] +CollisionRestitution:float[c] +CollisionMinSpeed:float[c] +AnimStopSpeed:float[c] +AnimPixelsPerFrame:float[c] +AnimMaxFramesPerTick:float[c] +PickupPadding:float[c] +SpillGrabCooldown:int[c] +TerrariumDrainPerTick:int[c] +MaxCarriages:int[c] +ChainSpacing:float[c] +ChainSampleStep:float[c] +ChainCloseGapSpeed:float[c] +CouplingMaxRelativeSpeed:float[c] +MotorSpeedCap:float[c] +MotorAccel:float[c]
   class Cart
-    +Skin:string +SkinType:int +Module:CartModule +ModuleItem:int +IsChestItem(Item)[s] +IsTerrariumItem(Item)[s] +ChestSlots:int[c] +TryAddToChest(Item,bool) +ChestItems:Item +SlotFilter:int +IsSlotFiltered(int) +HasFilterFor(int) +SlotAccepts(int,Item) +FilterKeepCount(int,Item) +SetFilterFromSlots() +NormalizeTank() +OverflowItems:List<Item> +Tank:LiquidStack +FuelSlotCap:int[c] +Fuel:Item +IsBurning:bool +FuelBurnFraction:float +AcceptsFuel(int)[s] +AcceptsFuel(Item)[s] +TryAddFuel(Item) +RestoreBurn(int,int) +IsLavaSkin(int)[s] +IsMechSkin(int)[s] +FuelLiquidOf(int)[s] +IsMotorSkin(int)[s] +UsesLava:bool +FuelLiquid:int +UsesLiquid:bool +IsFuelLiquid(int) +AlwaysRuns:bool +HasPanel:bool +SpeedMultiplier:float +AccelMultiplier:float +SpeedLimit:float +DriveSpeedCap:float +DriveAccel:float +LiquidPerTick:float +LiquidCapacity:float +SetModule(CartModule,int) +ModuleItemType(CartModule)[s] +CollectPickupItems() +Position:Vector2 +Speed:float +Velocity:Vector2 +OnTrack:bool +Rotation:float +Active:bool +Id:int +Chain:CartChain +IsCarriage:bool +Body:Cart +CollisionMass:int +ChainSlack:float +ReplayScanIndex:int +LoadChainId:int +LoadChainSlot:int +Facing:int +AnimFrame:int +Bumped:event Action<Cart>[s] +Collided:event Action<Cart, Cart>[s] +FrameChanged:event Action<Cart, int, int>[s] +Driving:event Action<Cart>[s] +AlongSpeed:float +TryCollide(Cart,Cart)[s] +Hitbox:Rectangle +Update() +TickCarriage() +ReplayBump() +Shove(float) +TryRailPose(float,float,float,out float,out float)[s] +NetBurning:bool +NetMotorId:int +NetSlot:int +HasNetState:bool +ApplyNetState(Vector2,Vector2,float,int,bool) +ClientStep() +Save() +Load(TagCompound)[s]
+    +Skin:string +SkinType:int +Module:CartModule +ModuleItem:int +IsChestItem(Item)[s] +IsTerrariumItem(Item)[s] +ChestSlots:int[c] +TryAddToChest(Item,bool) +ChestItems:Item +SlotFilter:int +IsSlotFiltered(int) +HasFilterFor(int) +SlotAccepts(int,Item) +FilterKeepCount(int,Item) +SetFilterFromSlots() +NormalizeTank() +OverflowItems:List<Item> +Tank:LiquidStack +FuelSlotCap:int[c] +Fuel:Item +IsBurning:bool +FuelBurnFraction:float +AcceptsFuel(int)[s] +AcceptsFuel(Item)[s] +TryAddFuel(Item) +RestoreBurn(int,int) +IsLavaSkin(int)[s] +IsMechSkin(int)[s] +FuelLiquidOf(int)[s] +IsMotorSkin(int)[s] +UsesLava:bool +FuelLiquid:int +UsesLiquid:bool +IsFuelLiquid(int) +AlwaysRuns:bool +HasPanel:bool +SpeedMultiplier:float +AccelMultiplier:float +SpeedLimit:float +DriveSpeedCap:float +DriveAccel:float +LiquidPerTick:float +LiquidCapacity:float +SetModule(CartModule,int) +ModuleItemType(CartModule)[s] +CollectPickupItems() +Position:Vector2 +Speed:float +Velocity:Vector2 +OnTrack:bool +Rotation:float +Active:bool +Id:int +Chain:CartChain +IsCarriage:bool +Body:Cart +CollisionMass:int +ChainSlack:float +ReplayScanIndex:int +LoadChainId:int +LoadChainSlot:int +Facing:int +AnimFrame:int +Bumped:event Action<Cart>[s] +Collided:event Action<Cart, Cart>[s] +FrameChanged:event Action<Cart, int, int>[s] +Driving:event Action<Cart>[s] +AlongSpeed:float +TryCollide(Cart,Cart)[s] +Hitbox:Rectangle +Update() +TickCarriage() +ReplayBump() +Shove(float) +TryRailPose(float,float,float,out float,out float)[s] +NetBurning:bool +NetBurnFraction:float +NetMotorId:int +NetSlot:int +HasNetState:bool +ApplyNetState(Vector2,Vector2,float,int,bool) +ClientStep() +Save() +Load(TagCompound)[s]
 **CartCargo.cs** uses: Cart, CartCargoNet, CartChestUIState, CartGeometry, CartModule, CartPhysics, CartSound, CartSoundKind, LiquidBroadcastSystem, LiquidStack, LiquidTypeRegistry, VirtualItem, VirtualItemSystem, WorldLiquidSources
   static class CartCargo
     +WindowColumns:int[c] +WindowRows:int[c] +Update(Cart)[s] +OnBump(Cart)[s] +GetWindow(Cart,out int,out int)[s] +PourTank(Cart)[s]
@@ -73,13 +73,13 @@ tModLoader/other bases -> project types:
     +Coupled:event Action<Cart, Cart>[s] +Motor:Cart +Carriages:List<Cart> +SaveId:int +Count:int +SetReplicaCarriages(List<Cart>) +Attach(Cart,bool) +Remove(Cart) +Dissolve() +Record(Vector2,float,bool) +MarkBump() +UpdateCarriages() +AutoAttach(List<Cart>)[s] +RebuildFromSave(List<Cart>)[s]
     struct TrailSample
       +Position:Vector2 +Rotation:float +Direction:int +Bump:bool +Air:bool
-**CartChestUI.cs** uses: Cart, CartModule, CartPhysics, FireUIElement, LiquidTankUIElement, MachineUISystem, RecipeBookSystem, UIItemSlotWrapper
+**CartChestUI.cs** uses: Cart, CartModule, CartPanelNet, CartPhysics, CartSlotBinding, CartSlotEdit, CartSystem, Factorraria, FireUIElement, LiquidTankUIElement, MachineUISystem, RecipeBookSystem, UIItemSlotWrapper
   class CartChestUIState : UIState
     +Columns:int[c] +Rows:int[c] +Cart:Cart +Panel:UIElement +Zoom:float +PanelW:float +PanelH:float +GapAboveCart:float +OnInitialize()[ov] +SetZoomScale(float) +Update(GameTime)[ov]
     sealed class Entry
       +Element:UIElement +BasePosition:Vector2 +BaseSize:Vector2 +Button:UITextPanel<string> +Text:string
   class CartChestUISystem : ModSystem
-    +IsOpen:bool[s] +OpenCart:Cart[s] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +Toggle(Cart)[s] +Close(bool)[s] +NotifyCartRemoved(Cart)[s] +TryShiftInsert(Item)[s] +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +IsOpen:bool[s] +OpenCart:Cart[s] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +Toggle(Cart)[s] +Close(bool)[s] +NotifyCartRemoved(Cart)[s] +TryShiftInsert(Item,int)[s] +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **CartEquipPlayer.cs** uses: FactorrariaNet
   class CartEquipPlayer : ModPlayer
     +PostUpdate()[ov]
@@ -315,7 +315,7 @@ tModLoader/other bases -> project types:
 **CartCargoNet.cs** uses: FactorrariaNet
   static class CartCargoNet
     +ChestWorldWhole:int[s] +ChestWorldPartial:int[s] +ChestRefused:int[s] +FuelWorldWhole:int[s] +FuelWorldPartial:int[s] +ChestVItems:int[s] +FuelVItems:int[s] +ItemSyncs:int[s] +LiquidMarks:int[s] +PlatesHit:int[s] +NoteChestRefused(int,int)[s] +Describe()[s]
-**CartDiagnostics.cs** uses: Cart, CartCargoNet, CartInputNet, CartModule, CartNet, CartSkins, CartSystem, FactorrariaNet
+**CartDiagnostics.cs** uses: Cart, CartCargoNet, CartInputNet, CartModule, CartNet, CartPanelNet, CartSkins, CartSystem, FactorrariaNet
   class CartDiagnosticsCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
   class CartTestFeed : ModSystem
@@ -326,7 +326,7 @@ tModLoader/other bases -> project types:
   enum CartAction : byte
     {Place, Install, Shove, PickUp}
   static class CartInputNet
-    +ServerPlaced:int[s] +ServerInstalled:int[s] +ServerShoved:int[s] +ServerPickedUp:int[s] +ServerRefused:int[s] +ClientSent:int[s] +ClientAccepted:int[s] +ClientRefused:int[s] +ClientConsumed:int[s] +ClientConsumeMissed:int[s] +Reset()[s] +Describe()[s] +RequestPlace(Player,Item)[s] +RequestInstallOrShove(Item,Cart)[s] +RequestPickUp(Cart)[s] +PanelNotReady()[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +ClientTick()[s]
+    +ServerPlaced:int[s] +ServerInstalled:int[s] +ServerShoved:int[s] +ServerPickedUp:int[s] +ServerRefused:int[s] +ClientSent:int[s] +ClientAccepted:int[s] +ClientRefused:int[s] +ClientConsumed:int[s] +ClientConsumeMissed:int[s] +Reset()[s] +Describe()[s] +RequestPlace(Player,Item)[s] +RequestInstallOrShove(Item,Cart)[s] +RequestPickUp(Cart)[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +ClientTick()[s]
     sealed class Result
       +Action:CartAction +Accepted:bool +ItemType:int
 **CartNet.cs** uses: Cart, CartChain, CartChestUISystem, CartModule, CartSkins, CartSystem, Factorraria, FactorrariaNet, FactorrariaPacket, JoinSync, NetworkConfig, PacketDirection
@@ -346,6 +346,34 @@ tModLoader/other bases -> project types:
       +Reset:bool +States:List<StateEntry> +Removes:List<int>
     sealed class MoveBatch
       +Moves:List<MoveEntry>
+**CartPanelEdit.cs** uses: Cart, CartModule, CartPanelAction, CartPanelNet, CartPanelSystem, CartSystem, FactorrariaNet, FactorrariaPacket, MachineSlotEdit, MachineSnapshot
+  static class CartSlotEdit
+    +ServerAccepted:int[s] +ServerRejected:int[s] +ServerInserts:int[s] +ServerInsertedItems:int[s] +ServerFilters:int[s] +ClientSent:int[s] +ClientConfirmed:int[s] +ClientRolledBack:int[s] +ClientInsertsSent:int[s] +ClientInsertsAccepted:int[s] +ClientInsertsRefused:int[s] +ClientInsertUnmatched:int[s] +WriteSlotItem(BinaryWriter,Item)[s] +ReadSlotItem(BinaryReader)[s] +IsBusy:bool[s] +PredictFuel(ref Item,Item,Item)[s] +SendEdit(Cart,bool,int,Item,Item,Item,Item,int)[s] +SendQuickTake(Cart,bool,int,Item)[s] +ClientInsert(Cart,Item,int)[s] +ClientSetFilter(Cart)[s] +ServerSlotEdit(int,int,BinaryReader)[s] +ServerInsert(int,int,BinaryReader)[s] +ServerSetFilter(int,int)[s] +HandleResult(BinaryReader,int)[s] +Update(int)[s] +ReapplyPending(Cart)[s] +Reset()[s]
+    enum EditFlags : byte
+      {None, QuickTake}
+    enum PendingKind : byte
+      {Slot, QuickTake, Insert}
+    sealed class Pending
+      +Seq:int +CartId:int +Kind:PendingKind +Fuel:bool +Index:int +SlotBefore:Item +SlotAfter:Item +CursorBefore:Item +CursorAfter:Item +FilterBefore:int +FilterAfter:int +InventorySlot:int +Tick:uint
+    sealed class Result
+      +CartId:int +Seq:int +Accepted:bool +Kind:PendingKind +Fuel:bool +Index:int +Slot:Item +Filter:int +Moved:int
+**CartPanelNet.cs** uses: Cart, CartModule, CartSlotEdit, CartSystem, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
+  enum CartPanelAction : byte
+    {Open, Close, SlotEdit, Insert, SetFilter}
+  enum CartPanelCloseReason : byte
+    {Closed, Gone, OutOfReach, Dead, Full, Rejected}
+  sealed class CartSlotBinding
+    +GetCart:Func<Cart> +Fuel:bool +Index:int
+  class CartPanelSystem : ModSystem
+    +ScanIntervalTicks:int +MaxSubscribersPerCart:int +CloseRangeTiles:float +KeepReachExtraTiles:float +AnswerTimeoutTicks:int +Load()[ov] +OnOpenRequest(int,int) +OnCloseRequest(int,int) +IsSubscribed(int,Cart) +InKeepReach(Player,Cart) +Push(Cart) +PostUpdateEverything()[ov] +DescribeSubscriptions() +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Unload()[ov]
+    sealed class Subscriber
+      +Player:int +SentVersion:uint
+    sealed class Record
+      +Cart:Cart +Id:int +Last:byte +Version:uint +Subscribers:List<Subscriber>
+  static class CartPanelNet
+    +ServerOpened:int[s] +ServerEnded:int[s] +ServerRefusedOpen:int[s] +ServerDetails:int[s] +ServerDetailBytes:long[s] +ClientReceived:int[s] +ClientApplied:int[s] +ClientMissed:int[s] +ClientFailed:int[s] +ClientClosedByServer:int[s] +NeedsDetail(Cart)[s] +ResetClient()[s] +ClientOpen(Cart)[s] +ClientClose(Cart)[s] +IsReady(int)[s] +TakeServerClose(int)[s] +HandleRequest(BinaryReader,int)[s] +BuildPayload(Cart)[s] +HandleDetail(BinaryReader,int)[s] +HandleClosed(BinaryReader,int)[s] +ClientTick()[s] +Describe()[s]
+    sealed class DetailPacket
+      +CartId:int +Bytes:byte
 **CartSound.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection
   enum CartSoundKind : byte
     {Bump, Collide, Couple, Pour, PressurePlate}
@@ -713,7 +741,7 @@ tModLoader/other bases -> project types:
 **RecipeIcon.cs** uses: LiquidTypeDefinition, LiquidTypeRegistry, RecipeOutputKey
   static class RecipeIcon
     +FadedTint:Color[s] +Clear()[s] +Draw(SpriteBatch,RecipeOutputKey,Vector2,float,float,bool)[s]
-**UIItemSlotWrapper.cs** ns!=Factorraria.Content.UI uses: BaseMachine, Handle, MachineSlotBinding, MachineSlotEdit
+**UIItemSlotWrapper.cs** ns!=Factorraria.Content.UI uses: BaseMachine, Cart, CartPanelNet, CartSlotBinding, CartSlotEdit, Factorraria, Handle, MachineSlotBinding, MachineSlotEdit
   class UIItemSlotWrapper : UIElement
     #DrawSelf(SpriteBatch)[ov]
 

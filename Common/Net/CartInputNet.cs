@@ -71,7 +71,6 @@ namespace Factorraria.Common.Net
 
         static readonly ConcurrentQueue<Result> results = new();
         static uint pendingUntil;
-        static uint lastNoticeTick;
         static readonly uint[] lastPlaceTick = new uint[Main.maxPlayers + 1];
 
         // Temporary test counters (remove in Phase 10).
@@ -90,7 +89,6 @@ namespace Factorraria.Common.Net
         {
             while (results.TryDequeue(out _)) { }
             pendingUntil = 0;
-            lastNoticeTick = 0;
             System.Array.Clear(lastPlaceTick, 0, lastPlaceTick.Length);
             ServerPlaced = ServerInstalled = ServerShoved = ServerPickedUp = ServerRefused = 0;
             ClientSent = ClientAccepted = ClientRefused = ClientConsumed = ClientConsumeMissed = 0;
@@ -188,16 +186,6 @@ namespace Factorraria.Common.Net
                 w.Write((byte)CartAction.PickUp);
                 w.Write(cartId);
             });
-        }
-
-        /// <summary>Temporary notice (removed with patch 9.5): the cart panel needs the synced contents.</summary>
-        public static void PanelNotReady()
-        {
-            if (Main.GameUpdateCount - lastNoticeTick < 120 && lastNoticeTick != 0)
-                return;
-
-            lastNoticeTick = Main.GameUpdateCount;
-            Main.NewText("Cart panels are not available in multiplayer yet (Shift + right click picks the cart up).", Color.Yellow);
         }
 
         // ---------------------------------------------------------------- server: requests

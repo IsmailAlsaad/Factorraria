@@ -577,13 +577,7 @@ namespace Factorraria.Common.Carts
 
                 if (target.HasPanel && !Terraria.UI.ItemSlot.ShiftInUse)
                 {
-                    if (Main.netMode == NetmodeID.MultiplayerClient)
-                    {
-                        CartInputNet.PanelNotReady(); // chest and fuel contents are not synced yet (patch 9.5)
-                        return;
-                    }
-
-                    CartChestUISystem.Toggle(target);
+                    CartChestUISystem.Toggle(target); // patch 9.5: a client opens it too (CartChestUISystem subscribes)
                     return;
                 }
 

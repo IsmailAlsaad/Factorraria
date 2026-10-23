@@ -283,7 +283,15 @@ namespace Factorraria.Common.Carts
         /// <summary>0..1 of the current fuel item left, -1 when nothing is burning. Same meaning as the Gel Burner's flame gauge.</summary>
         public float FuelBurnFraction
         {
-            get { return burner != null ? burner.GetBurnFraction(0f) : -1f; }
+            get
+            {
+                if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
+                {
+                    return NetBurnFraction; // patch 9.5: a replica has no burner, the open panel's detail says how much is left
+                }
+
+                return burner != null ? burner.GetBurnFraction(0f) : -1f;
+            }
         }
 
         /// <summary>Only what the Gel Burner can burn (GelBurnerRecipeRegistry.Fuels) is fuel.</summary>
@@ -1328,6 +1336,9 @@ namespace Factorraria.Common.Carts
 
         /// <summary>Replica only (patch 9.2): the server said this cart's fuel is burning. Drives the motor smoke on a client; false on the server.</summary>
         public bool NetBurning;
+
+        /// <summary>Replica only (patch 9.5): 0..1 of the burning fuel item left as the server's panel detail last said, -1 when nothing burns.</summary>
+        public float NetBurnFraction = -1f;
 
         /// <summary>Replica only (patch 9.2): id of the motor of the chain this cart belongs to (its own id for a motor), 0 = free cart.</summary>
         public int NetMotorId;

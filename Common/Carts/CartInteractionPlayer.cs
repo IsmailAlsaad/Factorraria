@@ -46,7 +46,7 @@ namespace Factorraria.Common.Carts
                 return false;
             }
 
-            return CartChestUISystem.TryShiftInsert(item);
+            return CartChestUISystem.TryShiftInsert(item, slot);
         }
     }
 }

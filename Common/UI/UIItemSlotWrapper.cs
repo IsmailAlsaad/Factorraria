@@ -21,9 +21,10 @@ namespace Factorraria.Content.UI
         Func<bool> favoriteLook; // optional: draw the slot with the vanilla "favorited" look
         Action<SpriteBatch, CalculatedStyle, Item> customDraw; // optional: replaces the default ItemSlot.Draw (animated output slots)
         MachineSlotBinding machineSlot; // optional (patch 6.2): this slot is a machine slot, so on a multiplayer client its clicks are sent to the server
+        CartSlotBinding cartSlot;       // optional (patch 9.5): this slot is a cart chest or fuel slot, same idea
         private static readonly Item[] favoriteDrawArray = new Item[11];
 
-        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<bool> _isVisible = null, Func<Item, bool> _canAcceptItem = null, Func<bool> _favoriteLook = null, Action<SpriteBatch, CalculatedStyle, Item> _customDraw = null, MachineSlotBinding _machineSlot = null)
+        public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<bool> _isVisible = null, Func<Item, bool> _canAcceptItem = null, Func<bool> _favoriteLook = null, Action<SpriteBatch, CalculatedStyle, Item> _customDraw = null, MachineSlotBinding _machineSlot = null, CartSlotBinding _cartSlot = null)
         {
             context = _context;
             getItem = _getItem;
@@ -33,6 +34,7 @@ namespace Factorraria.Content.UI
             favoriteLook = _favoriteLook;
             customDraw = _customDraw;
             machineSlot = _machineSlot;
+            cartSlot = _cartSlot;
         }
 
         // Runs vanilla's slot click. The ChestItem context makes vanilla send a chest-slot sync for Player.chest, which is -1 for a machine
@@ -90,6 +92,46 @@ namespace Factorraria.Content.UI
 
             if (!MachineSlotEdit.SameStack(slotBefore, item))
                 MachineSlotEdit.SendEdit(machine, machineSlot.Kind, machineSlot.Index, slotBefore, item, cursorBefore, Main.mouseItem);
+        }
+
+        // Multiplayer client, cart slot (patch 9.5): vanilla predicts the click, the server decides (see CartSlotEdit).
+        void ClickCartSlot(ref Item item)
+        {
+            global::Factorraria.Common.Carts.Cart cart = cartSlot.GetCart();
+            if (cart == null)
+                return;
+
+            // Until the first detail of the open panel has arrived the replica slot is not the real one: only hovering works.
+            // The same while an edit waits for its answer (one in flight at a time).
+            if (!CartPanelNet.IsReady(cart.Id) || CartSlotEdit.IsBusy)
+            {
+                if (!Main.mouseLeft && !Main.mouseRight)
+                    RunVanillaClick(ref item);
+                return;
+            }
+
+            // Shift-click moves the stack into the inventory, which cannot be undone: request first, hand over on accept.
+            if (!item.IsAir && Main.mouseLeft && Main.mouseLeftRelease && Main.keyState.PressingShift())
+            {
+                if (Main.LocalPlayer.ItemSpace(item).CanTakeItem)
+                {
+                    Main.mouseLeftRelease = false;
+                    CartSlotEdit.SendQuickTake(cart, cartSlot.Fuel, cartSlot.Index, item);
+                }
+                return;
+            }
+
+            Item slotBefore = item.Clone();
+            Item cursorBefore = Main.mouseItem.Clone();
+            int filterBefore = !cartSlot.Fuel && cart.SlotFilter != null && cartSlot.Index < cart.SlotFilter.Length ? cart.SlotFilter[cartSlot.Index] : 0;
+
+            RunVanillaClick(ref item);
+
+            if (cartSlot.Fuel && !CartSlotEdit.PredictFuel(ref item, slotBefore, cursorBefore))
+                return;   // a stack over the fuel cap with a busy cursor: the click was undone, nothing is sent
+
+            if (!MachineSlotEdit.SameStack(slotBefore, item))
+                CartSlotEdit.SendEdit(cart, cartSlot.Fuel, cartSlot.Index, slotBefore, item, cursorBefore, Main.mouseItem, filterBefore);
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
@@ -153,6 +195,8 @@ namespace Factorraria.Content.UI
             {
                 if (machineSlot != null && Main.netMode == NetmodeID.MultiplayerClient)
                     ClickMachineSlot(ref item);   // patch 6.2: predicted here, decided by the server
+                else if (cartSlot != null && Main.netMode == NetmodeID.MultiplayerClient)
+                    ClickCartSlot(ref item);      // patch 9.5: the same for cart slots
                 else
                     RunVanillaClick(ref item);    // single-player and the host edit the real slot; cart slots stay local until Phase 9
 

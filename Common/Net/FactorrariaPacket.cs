@@ -52,6 +52,10 @@ namespace Factorraria.Common.Net
         CartActionRequest = 43,       // client -> server: "I placed / installed a module in / shoved / picked up a cart" (kind byte first, patch 9.3)
         CartActionResult = 44,        // server -> client: "your place or install request was accepted or refused" (the client then consumes the item, patch 9.3)
         CartSound = 45,               // server -> nearby clients: "play cart sound <kind> at (x, y)": bump, cart-vs-cart, chain coupling, terrarium pour (patch 9.6a)
+        CartPanelRequest = 46,        // client -> server: cart panel action byte first: open, close, slot edit, insert, set filter (patch 9.5)
+        CartPanelDetail = 47,         // server -> subscriber: "this is the exact chest / fuel state of cart <id>" (patch 9.5)
+        CartPanelResult = 48,         // server -> sender: answer to a slot edit or an insert (patch 9.5)
+        CartPanelClosed = 49,         // server -> player: "your panel subscription of cart <id> ended" plus a reason (patch 9.5)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.
