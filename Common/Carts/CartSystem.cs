@@ -195,9 +195,19 @@ namespace Factorraria.Common.Carts
 
         public override void OnWorldLoad()
         {
-            // Do not clear Carts here: LoadWorldData may already have filled it.
+            // OnWorldLoad runs BEFORE LoadWorldData (WorldFile.LoadWorld), so clearing here is safe. It drops carts a
+            // just-generated world (CartWorldGen) left in memory, which would otherwise leak into the next world loaded.
+            Carts.Clear();
+            nextCartId = 1;
             TrackData.Reset();
             reportedFailure = false;
+        }
+
+        /// <summary>Start of every world generation: forget carts from any earlier world so CartWorldGen starts from nothing.</summary>
+        public override void ClearWorld()
+        {
+            Carts.Clear();
+            nextCartId = 1;
         }
 
         public override void OnWorldUnload()

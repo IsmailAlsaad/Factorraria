@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-23 | 243 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-23 | 244 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(55) BaseMachine(37) FactorrariaPacket(27) LiquidTypeRegistry(26) RecipeBook(25) PacketDirection(24) CustomRecipe(16) Factorraria(15) LiquidStack(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) RecipeOutputGroup(11) JoinSync(11) Cart(11) RecipeCatalog(10) MachineVisualRegistry(10) FurnaceOffsetConfig(9)
+FactorrariaNet(55) BaseMachine(37) FactorrariaPacket(27) LiquidTypeRegistry(26) RecipeBook(25) PacketDirection(24) CustomRecipe(16) Factorraria(15) LiquidStack(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) Cart(12) RecipeOutputGroup(11) JoinSync(11) RecipeCatalog(10) MachineVisualRegistry(10) FurnaceOffsetConfig(9)
 
 ## Inheritance
 Project bases -> derived:
@@ -24,7 +24,7 @@ Project bases -> derived:
 - MotorTileEntityBase: MotorMK1TileEntity
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
-- ModSystem (64): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartInputNetSystem, CartMountBlocker, CartNetSystem, CartSoundSystem, CartSystem, CartTestFeed, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (65): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartInputNetSystem, CartMountBlocker, CartNetSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - ModCommand (13): ArmSendCommand, CartDiagnosticsCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
@@ -106,7 +106,7 @@ tModLoader/other bases -> project types:
     +VanillaPrefix:string[c] +DefaultKey:string[c] +KeyOf(int)[s] +TryTypeOf(string,out int)[s]
 **CartSystem.cs** uses: Cart, CartCargo, CartChain, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartNet, CartPhysics, CartSkinTable, CartSkins, CartSound, CartSoundKind, FurnaceOffsetConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, PlacedSprite, TrackData, TrackSample
   class CartSystem : ModSystem
-    +Carts:List<Cart>[s] +NextCartId:int[s] +AssignId(Cart)[s] +FindById(int)[s] +Unload()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +ClientInterpolate()[s] +CheckPlacement(Player,int,int,out Vector2,out bool)[s] +SpawnCart(Vector2,int,CartModule)[s] +FindCartAtCursor(Player)[s] +GetInstallModule(Item,Cart,out CartModule)[s] +IsInInteractRange(Player,Cart,float)[s] +PickUp(Player,Cart)[s]
+    +Carts:List<Cart>[s] +NextCartId:int[s] +AssignId(Cart)[s] +FindById(int)[s] +Unload()[ov] +OnWorldLoad()[ov] +ClearWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +ClientInterpolate()[s] +CheckPlacement(Player,int,int,out Vector2,out bool)[s] +SpawnCart(Vector2,int,CartModule)[s] +FindCartAtCursor(Player)[s] +GetInstallModule(Item,Cart,out CartModule)[s] +IsInInteractRange(Player,Cart,float)[s] +PickUp(Player,Cart)[s]
 **TrackData.cs**
   enum TrackEnd
     {None, Stop, Bounce, Ramp, Open}
@@ -796,6 +796,9 @@ tModLoader/other bases -> project types:
     +itemType:int +stackSize:int +prefix:int +active:bool +Id:int +ReplicaStep:float +StepPerTick:float +pickupCooldown:int +cartGrabCooldown:int +frame:int +frameCounter:int +currentTileX:int +currentTileY:int +targetTileX:int +targetTileY:int +worldPosition:Vector2 +moveSpeed:float +Update() +CreateReplica(int,Item,Vector2,int,int,float)[s] +ApplyReplicaState(Item,int,Vector2,int,int,float) +ReplicaTick() +SetTargetTile(int,int) +GetSourceRectangle(Texture2D) +Remove() +MoveVirtualItem() +TryMergeWithVirtualItem(VirtualItem)
 
 ### Common/WorldGeneration/
+**CartWorldGen.cs** uses: Cart, CartChain, CartModule, CartPhysics, CartSystem, SiliconOreItem, TrackData, TrackSample
+  class CartWorldGen : ModSystem
+    +Enabled:bool +SpawnChancePerTile:double +LinkedChance:double +ChestChance:double +TerrariumChance:double +GoldChestShare:double +MinSpacingTiles:int +MaxCartsPerTrack:int +FlatMarginPx:int +HeadroomRowsMargin:int +LootWeightEmpty:int +LootWeightCoal:int +LootWeightGel:int +LootWeightOre:int +CoalMin:int +GelMin:int +OreSlots:int +OreMin:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
 **OilWorldGen.cs** uses: OilLiquid
   class OilWorldGen : ModSystem
     +Enabled:bool +PoolDepth:int +FloorThickness:int +RimMargin:int +MinPoolDepthHere:int +PocketAttemptsPerTile:double +PocketExponent:double +PocketMinDepthFraction:double +PocketRadiusXMin:double +PocketRadiusXMax:double +PocketRadiusYMin:double +PocketRadiusYMax:double +PocketMaxCells:int +ExcludeHive:bool +PoolFraction:double +ShellThickness:int +ShellFullFraction:double +ShellEndFraction:double +OvalInset:int +ScanMarginTop:int +ScanMarginBottom:int +MinColumnHeight:int +SmoothRadius:int +PocketMaxChance:double +PocketChanceExponent:double +PocketCellsBottom:int +PocketCellsTop:int +MaxLiquidBodyCells:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
@@ -1085,7 +1088,7 @@ tModLoader/other bases -> project types:
     +Fuels:FuelTable[s]
 **GelBurnerTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.GelBurner uses: ElectricProducerMachine, FuelTable, GelBurnerRecipeRegistry
   class GelBurnerTileEntity : ElectricProducerMachine
-    +ValidTileType:int[ov] +PowerSupply:float[ov] +GelFuels:FuelTable[s] #AcceptedFuels:FuelTable[ov] +Update()[ov] #OnAnimationFrameChanged(int,int)[ov]
+    +ValidTileType:int[ov] +PowerSupply:float[ov] +GelFuels:FuelTable[s] #AcceptedFuels:FuelTable[ov] +Update()[ov] #OnAnimationFrameChanged(int,int)[ov] #OnStartup()[ov] #OnShutdown()[ov]
 **GelBurnerUIState.cs** ns!=Factorraria.Content.Tiles.Machines.GelBurner uses: ElectricityUIIcon, FireUIElement, GelBurnerTileEntity, MachineUIElementEntry, MachineUIStateBase
   class GelBurnerUIState : MachineUIStateBase
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]
