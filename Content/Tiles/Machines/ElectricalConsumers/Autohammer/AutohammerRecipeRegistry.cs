@@ -25,7 +25,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
             Book.Clear();
 
             RegisterManualRecipes();
-            Book.ImportVanillaRecipes(TileID.Anvils,null,false);
+            Book.ImportVanillaRecipes(TileID.Anvils, null, false);
+
+            //Book.ImportVanillaRecipes(TileID.Autohammer); ?
 
             Book.Rebuild();
         }
