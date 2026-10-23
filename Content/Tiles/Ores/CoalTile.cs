@@ -5,8 +5,6 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Ores
 {
-    // Ore-style block that the vanilla Coal item places (the item is made placeable in VItemGlobalItem.SetDefaults).
-    // Needs Content/Tiles/Ores/CoalTile.png: 288x270 merge sheet, same layout as SiliconOreTile.png.
     internal class CoalTile : ModTile
     {
         public override void SetStaticDefaults()
@@ -21,7 +19,7 @@ namespace Factorraria.Content.Tiles.Ores
 
             AddMapEntry(new Color(45, 45, 50), CreateMapEntryName());
 
-            DustType = DustID.Stone;
+            DustType = DustID.Obsidian;
             RegisterItemDrop(ItemID.Coal);
             HitSound = SoundID.Tink;
 

@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using Factorraria.Content.Tiles.Ores;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -21,7 +22,12 @@ namespace Factorraria.Common.WorldGeneration
                     if (!tile.HasTile)
                         continue;
 
-                    if (tile.TileType == TileID.Demonite || tile.TileType == TileID.Crimtane || tile.TileType == TileID.Obsidian)
+                    if (tile.TileType == TileID.Demonite || tile.TileType == TileID.Crimtane)
+                    {
+                        tile.TileType = (ushort)ModContent.TileType<CoalTile>();
+                        WorldGen.SquareTileFrame(x, y, true);
+                    }
+                    if (tile.TileType == TileID.Obsidian)
                     {
                         tile.TileType = TileID.Stone;
                         WorldGen.SquareTileFrame(x, y, true);
