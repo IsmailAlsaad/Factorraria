@@ -499,6 +499,9 @@ namespace Factorraria.Common.WorldGeneration
                     if (!WorldGen.InWorld(x, y, 10) || !InsideOval(x, y))
                         continue;
 
+                    if (y < Main.worldSurface)
+                        continue;
+
                     Tile seed = Main.tile[x, y];
                     if (seed.HasTile || seed.LiquidAmount > 0)
                         continue;
@@ -527,7 +530,7 @@ namespace Factorraria.Common.WorldGeneration
                         {
                             int nx = p.X + steps[s].X;
                             int ny = p.Y + steps[s].Y;
-                            if (ny >= ovalPoolTopY || !WorldGen.InWorld(nx, ny, 10) || !InsideOval(nx, ny))
+                            if (ny < Main.worldSurface || ny >= ovalPoolTopY || !WorldGen.InWorld(nx, ny, 10) || !InsideOval(nx, ny))
                                 continue;
 
                             Tile n = Main.tile[nx, ny];
