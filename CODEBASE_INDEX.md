@@ -4,7 +4,7 @@ generated 2026-10-24 | 251 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(57) BaseMachine(37) FactorrariaPacket(29) LiquidTypeRegistry(28) RecipeBook(25) PacketDirection(25) Factorraria(18) CustomRecipe(17) Cart(16) LiquidStack(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) JoinSync(12) RecipeOutputGroup(11) CartModule(11) RecipeCatalog(10) MachineVisualRegistry(10)
+FactorrariaNet(57) BaseMachine(37) FactorrariaPacket(29) LiquidTypeRegistry(28) RecipeBook(25) PacketDirection(25) Factorraria(17) CustomRecipe(17) Cart(16) LiquidStack(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) JoinSync(12) RecipeOutputGroup(11) CartModule(11) RecipeCatalog(10) MachineVisualRegistry(10)
 
 ## Inheritance
 Project bases -> derived:
@@ -45,6 +45,7 @@ tModLoader/other bases -> project types:
 - GlobalProjectile (1): CartTrackHookBlocker
 - GlobalWall (1): GlobalWallOverride
 - IEquatable (1): RecipeOutputKey
+- IItemDropRuleCondition (1): FirstKingSlimeKillCondition
 - IPixelatedPrimitiveRenderer (1): IceBladeSwingProjectile
 - Mod (1): Factorraria
 - ModTileEntity (1): BaseMachine
@@ -154,6 +155,8 @@ tModLoader/other bases -> project types:
     +ModifyNPCLoot(NPC,NPCLoot)[ov]
   static class NPCLootExtensions
     +RemoveLoot(NPCLoot,int)[s]
+  class FirstKingSlimeKillCondition : IItemDropRuleCondition
+    +CanDrop(DropAttemptInfo) +CanShowItemDropInUI() +GetConditionDescription()
 **ChestConveyorGlobalTile.cs**
   class ChestConveyorGlobalTile : GlobalTile
 **GlobalWallOverride.cs**
@@ -806,7 +809,7 @@ tModLoader/other bases -> project types:
   class RecipeBookButton : UIElement
     +OnPressed:Action +MouseInside:bool +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
   class RecipeBookHeaderRow : UIElement
-    #DrawSelf(SpriteBatch)[ov]
+    +Machine:string +Collapsed:bool +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
   class RecipeBookEntry : UIElement
     +Key:string +Machine:string +Group:RecipeOutputGroup +State:RecipeState +ProductName:string +Selected:bool +OnChosen:Action<string> +IsFaded:bool +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
 **RecipeBookLayout.cs** uses: SearchBarTheme
@@ -824,7 +827,7 @@ tModLoader/other bases -> project types:
     +MouseInside:bool +Update(GameTime)[ov] +ScrollWheel(UIScrollWheelEvent)[ov] #DrawSelf(SpriteBatch)[ov]
 
 ### Common/VirtualItems/
-**VItemGlobalItem.cs** uses: CoalTile, Factorraria
+**VItemGlobalItem.cs** uses: CoalTile
   class VItemGlobalItem : GlobalItem
     +InstancePerEntity:bool[ov] +ConveyorImmunityTimer:int +Update(Item,ref float,ref float)[ov]
 **VItemStacking.cs** ns!=Factorraria.Content.VirtualItems

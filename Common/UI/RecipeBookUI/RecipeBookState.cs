@@ -29,6 +29,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         RecipeSearchBar searchBar;
         string searchFilter = "";
         bool filterDirty;
+        bool layoutDirty;                                    // a header was toggled: rebuild on the next Update (never mid-click)
+        HashSet<string> collapsedMachines = new();           // machine names whose recipe list is folded away (kept while the book object lives)
 
         // Window position: pixels away from the centered spot. Static so the book reopens where the player left it
         // (for the game session). Zero = centered.
@@ -106,7 +108,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             if (filterDirty && scrollbar != null) scrollbar.ViewPosition = 0f;   // new search starts at the top
             RecipeVisibility.Poll();    // HeldVersion only moves if someone scans; the book is visible, so keep it current
-            if (RecipeKnowledgeSystem.Version != builtVersion || RecipeVisibility.HeldVersion != builtHeldVersion || filterDirty) Rebuild();
+            if (RecipeKnowledgeSystem.Version != builtVersion || RecipeVisibility.HeldVersion != builtHeldVersion || filterDirty || layoutDirty) Rebuild();
             ApplyScroll(false);
             base.Update(gameTime);
         }
@@ -118,6 +120,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         {
             builtVersion = RecipeKnowledgeSystem.Version;
             filterDirty = false;
+            layoutDirty = false;
             if (listArea == null) return;
 
             listArea.RemoveAllChildren();
@@ -175,12 +178,15 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 }
                 shown++;
 
+                // While searching, every match is shown and the headers are not toggleable.
+                bool collapsed = !filtering && collapsedMachines.Contains(e.Machine);
                 if (e.Machine != lastMachine)
                 {
                     lastMachine = e.Machine;
-                    AddRow(new RecipeBookHeaderRow(e.Machine), y);
+                    AddRow(new RecipeBookHeaderRow(e.Machine, collapsed, filtering ? (Action<string>)null : ToggleMachine), y);
                     y += RecipeBookLayout.HeaderRowHeight;
                 }
+                if (collapsed) continue;
 
                 var entry = new RecipeBookEntry(e.Key, e.Machine, e.Group, state);
                 entry.OnChosen = key => Select(key, false);
@@ -340,6 +346,18 @@ namespace Factorraria.Common.UI.RecipeBookUI
         // ------------------------------------------------------------------------------------------
         // Selection
         // ------------------------------------------------------------------------------------------
+        void ToggleMachine(string machine)
+        {
+            if (!collapsedMachines.Remove(machine)) collapsedMachines.Add(machine);
+            layoutDirty = true;
+        }
+
+        void ExpandMachineOf(string key)
+        {
+            string machine = RecipeCatalog.MachineOf(key);
+            if (machine != null && collapsedMachines.Remove(machine)) Rebuild();
+        }
+
         void ClearSelection()
         {
             SelectedKey = null;
@@ -351,7 +369,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// <summary>Selects a recipe by catalog key. Ignored if it is not in the book list.</summary>
         public void Select(string key, bool scrollTo)
         {
-            if (key == null || !entryTop.ContainsKey(key)) return;
+            if (key == null) return;
+            ExpandMachineOf(key);   // a jump (ingredient click, parchment) must not land inside a folded machine
+            if (!entryTop.ContainsKey(key)) return;
 
             SelectedKey = key;
             foreach (UIElement row in rows)

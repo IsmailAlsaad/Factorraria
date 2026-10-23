@@ -86,22 +86,59 @@ namespace Factorraria.Common.UI.RecipeBookUI
         }
     }
 
-    /// <summary>Machine name divider in the list.</summary>
+    /// <summary>
+    /// Machine name divider in the list, with a small triangle (right = collapsed, down = expanded). Clicking the row
+    /// toggles that machine's recipe list. onToggle == null means the row is not toggleable (a search is active, so
+    /// every match is shown); the triangle then draws expanded and clicks do nothing.
+    /// </summary>
     public class RecipeBookHeaderRow : UIElement
     {
         readonly string text;
+        public readonly string Machine;
+        public readonly bool Collapsed;
+        readonly Action<string> onToggle;
 
-        public RecipeBookHeaderRow(string machineName)
+        public RecipeBookHeaderRow(string machine, bool collapsed, Action<string> onToggle)
         {
-            text = RecipeBookLayout.MachineName(machineName);
+            Machine = machine;
+            Collapsed = collapsed;
+            this.onToggle = onToggle;
+            text = RecipeBookLayout.MachineName(machine);
             Width.Set(0f, 1f);
             Height.Set(RecipeBookLayout.HeaderRowHeight, 0f);
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+            if (IsMouseHovering) Main.LocalPlayer.mouseInterface = true;
+        }
+
+        public override void LeftClick(UIMouseEvent evt)
+        {
+            base.LeftClick(evt);
+            if (onToggle == null) return;
+            SoundEngine.PlaySound(SoundID.MenuTick);
+            onToggle(Machine);
         }
 
         protected override void DrawSelf(SpriteBatch sb)
         {
             Rectangle r = GetDimensions().ToRectangle();
-            BookDraw.Text(sb, text, new Vector2(r.X + 4, r.Y + 4), RecipeBookLayout.PageBorder, 1.05f);
+            bool toggleable = onToggle != null;
+            if (toggleable && IsMouseHovering) BookDraw.Rect(sb, new Rectangle(r.X + 2, r.Y + 2, r.Width - 4, r.Height - 6), Color.White * 0.25f);
+
+            // Triangle built from 1px strips (no art needed). Right-pointing when collapsed, down-pointing when expanded.
+            Color c = RecipeBookLayout.PageBorder;
+            int cx = r.X + 10;
+            int cy = r.Y + 13;
+            for (int i = 0; i < 5; i++)
+            {
+                if (Collapsed && toggleable) BookDraw.Rect(sb, new Rectangle(cx - 2 + i, cy - 4 + i, 1, 9 - 2 * i), c);
+                else BookDraw.Rect(sb, new Rectangle(cx - 4 + i, cy - 2 + i, 9 - 2 * i, 1), c);
+            }
+
+            BookDraw.Text(sb, text, new Vector2(r.X + 20, r.Y + 4), RecipeBookLayout.PageBorder, 1.05f);
             BookDraw.Rect(sb, new Rectangle(r.X + 2, r.Bottom - 4, r.Width - 4, 2), RecipeBookLayout.PageBorder * 0.6f);
         }
     }
