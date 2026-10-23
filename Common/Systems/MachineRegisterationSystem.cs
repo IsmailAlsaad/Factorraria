@@ -42,84 +42,88 @@ namespace Factorraria.Common.Machines
         public override void PostSetupContent()
         {
             // Register every machine's Texture here
+            string basePath = "Factorraria/Content/Tiles/Machines/";
+
             MachineVisualRegistry.Register<FurnaceTileEntity>(TileID.Furnaces,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/Furnace/Furnace_On",
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/Furnace/Furnace_Off");
+                basePath + "GeneralMachines/Furnace/Furnace_On",
+                basePath + "GeneralMachines/Furnace/Furnace_Off");
 
 
             MachineVisualRegistry.Register<AutohammerTileEntity>(TileID.Autohammer,
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Autohammer/Autohammer_On",
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Autohammer/Autohammer_Off");
+                basePath + "ElectricalConsumers/Autohammer/Autohammer_On",
+                basePath + "ElectricalConsumers/Autohammer/Autohammer_Off");
 
 
             MachineVisualRegistry.Register<SolidifierTileEntity>(TileID.Solidifier,
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Solidifier/Solidifier_On",
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Solidifier/Solidifier_Off");
+                basePath + "ElectricalConsumers/Solidifier/Solidifier_On",
+                basePath + "ElectricalConsumers/Solidifier/Solidifier_Off");
             MachineVisualRegistry.RegisterLiquidOverlay(TileID.Solidifier,
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Solidifier/Solidifier_On_FirstLiquid",
+                basePath + "ElectricalConsumers/Solidifier/Solidifier_On_FirstLiquid",
                 entity => entity.InputLiquids[0]);
             MachineVisualRegistry.RegisterLiquidOverlay(TileID.Solidifier,
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Solidifier/Solidifier_On_SecondLiquid",
+                basePath + "ElectricalConsumers/Solidifier/Solidifier_On_SecondLiquid",
                 entity => entity.InputLiquids[1]);
 
 
             MachineVisualRegistry.Register<IceMachineTileEntity>(TileID.IceMachine,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/IceMachine/IceMachine_On",
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/IceMachine/IceMachine_Off");
+                basePath + "GeneralMachines/IceMachine/IceMachine_On",
+                basePath + "GeneralMachines/IceMachine/IceMachine_Off");
             MachineVisualRegistry.RegisterLiquidOverlay(TileID.IceMachine,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/IceMachine/IceMachine_On_FirstLiquid",
+                basePath + "GeneralMachines/IceMachine/IceMachine_On_FirstLiquid",
                 entity => entity.InputLiquids[0]);
 
 
             MachineVisualRegistry.Register<LiquidDistillatorTileEntity>(TileID.ImbuingStation,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/LiquidDistillator/LiquidDistillator_On",
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/LiquidDistillator/LiquidDistillator_Off");
+                basePath + "GeneralMachines/LiquidDistillator/LiquidDistillator_On",
+                basePath + "GeneralMachines/LiquidDistillator/LiquidDistillator_Off");
             MachineVisualRegistry.RegisterLiquidOverlay(TileID.ImbuingStation,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/LiquidDistillator/LiquidDistillator_On_FirstLiquid",
+                basePath + "GeneralMachines/LiquidDistillator/LiquidDistillator_On_FirstLiquid",
                 entity => entity.InputLiquids[0]);
             MachineVisualRegistry.RegisterLiquidOverlay(TileID.ImbuingStation,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/LiquidDistillator/LiquidDistillator_On_SecondLiquid",
+                basePath + "GeneralMachines/LiquidDistillator/LiquidDistillator_On_SecondLiquid",
                 entity => entity.OutputLiquids[0]);
 
 
             MachineVisualRegistry.Register<HellforgeTileEntity>(TileID.Hellforge,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/Hellforge/Hellforge_On",
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/Hellforge/Hellforge_Off");
+                basePath + "GeneralMachines/Hellforge/Hellforge_On",
+                basePath + "GeneralMachines/Hellforge/Hellforge_Off");
 
 
             MachineVisualRegistry.Register<DecayChamberTileEntity>(TileID.LesionStation,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/DecayChamber/DecayChamber_On",
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/DecayChamber/DecayChamber_Off");
+                basePath + "GeneralMachines/DecayChamber/DecayChamber_On",
+                basePath + "GeneralMachines/DecayChamber/DecayChamber_Off");
 
 
             MachineVisualRegistry.Register<MagicMaterializerTileEntity>(TileID.ShimmerMonolith,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/MagicMaterializer_On_Active",
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/MagicMaterializer_Off");
+                basePath + "GeneralMachines/MagicMaterializer/MagicMaterializer_On_Active",
+                basePath + "GeneralMachines/MagicMaterializer/MagicMaterializer_Off");
             // MagicMaterializer_On_Active is the Active look (starry background on); _On_Inactive is shown when the player cycled it off.
             MachineVisualRegistry.RegisterAlternateOn(TileID.ShimmerMonolith,
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/MagicMaterializer_On_Inactive",
+                basePath + "GeneralMachines/MagicMaterializer/MagicMaterializer_On_Inactive",
                 machine => machine is MagicMaterializerTileEntity materializer && !materializer.BackgroundActive);
 
 
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
-                "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_On",
-                "Factorraria/Content/Tiles/Machines/ElectricalProducers/GelBurner/GelBurner_Off");
+                basePath + "GeneralMachines/GelBurner/GelBurner_On",
+                basePath + "GeneralMachines/GelBurner/GelBurner_Off",
+                basePath + "GeneralMachines/GelBurner/GelBurner_Startup",
+                basePath + "GeneralMachines/GelBurner/GelBurner_Shutdown");
 
 
             MachineVisualRegistry.Register<ExtractinatorTileEntity>(TileID.Extractinator,
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Extractinator/Extractinator_On",
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/Extractinator/Extractinator_Off");
+                basePath + "GeneralMachines/Extractinator/Extractinator_On",
+                basePath + "GeneralMachines/Extractinator/Extractinator_Off");
 
 
             MachineVisualRegistry.Register<MotorMK1TileEntity>(ModContent.TileType<MotorMK1Tile>(),
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/Motors/MotorMK1_On",
-                "Factorraria/Content/Tiles/Machines/GeneralMachines/Motors/MotorMK1_Off");
+                basePath + "GeneralMachines/Motors/MotorMK1_On",
+                basePath + "GeneralMachines/Motors/MotorMK1_Off");
 
 
             MachineUIRegistry.Register(ModContent.TileType<MechanicalAssemblerTile>(), new MechanicalAssemblerUIState());
             MachineVisualRegistry.RegisterOverhang<MechanicalAssemblerTileEntity>(ModContent.TileType<MechanicalAssemblerTile>(),
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_On",
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_Off",
+                basePath + "GeneralMachines/MechanicalAssembler/MechanicalAssembler_On",
+                basePath + "GeneralMachines/MechanicalAssembler/MechanicalAssembler_Off",
                 footprintWidth: 3, footprintHeight: 3,
                 originX: 3, originY: 2,
                 onFrames: 5, offFrames: 1,
@@ -127,8 +131,8 @@ namespace Factorraria.Common.Machines
 
             MachineUIRegistry.Register(ModContent.TileType<RoboticArmTile>(), new RoboticArmUIState());
             MachineVisualRegistry.Register<RoboticArmTileEntity>(ModContent.TileType<RoboticArmTile>(),
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/RoboticArm/RoboticArm_On",
-                "Factorraria/Content/Tiles/Machines/ElectricalConsumers/RoboticArm/RoboticArm_Off");
+                basePath + "GeneralMachines/RoboticArm/RoboticArm_On",
+                basePath + "GeneralMachines/RoboticArm/RoboticArm_Off");
         }
 
         public override void PostAddRecipes()
