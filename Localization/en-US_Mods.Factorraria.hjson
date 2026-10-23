@@ -335,9 +335,7 @@ Configs: {
 	}
 }
 
-Keybinds: {
-	RecipeBookItemSearch.DisplayName: Recipe Book - Show Recipes Using Hovered Item
-}
+Keybinds.RecipeBookItemSearch.DisplayName: Recipe Book - Show Recipes Using Hovered Item
 
 Projectiles: {
 	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
@@ -347,7 +345,7 @@ Projectiles: {
 
 RecipeBook: {
 	ButtonTooltip: Recipe Book
-	SearchTooltip: "Press {0} on an item to view its recipes"
+	SearchTooltip: Press {0} on an item to view its recipes
 	KeyUnbound: "[unbound]"
 	InfoTooltip: Show in recipe book
 	Title: Recipe Book

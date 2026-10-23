@@ -11,6 +11,7 @@ using System.Linq;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
+using Terraria.ID;
 using Terraria.UI;
 
 namespace Factorraria.Common.UI.RecipeBookUI
