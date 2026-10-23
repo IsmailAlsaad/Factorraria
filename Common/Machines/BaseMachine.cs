@@ -793,6 +793,53 @@ namespace Factorraria.Common.Machines
         }
 
         protected virtual void OnAnimationFrameChanged(int newFrame, int previousFrame) { }
+
+        // ---- Startup / shutdown (patch: machine startup + shutdown animations) ----
+        // "Running" means isOn && isWorking. Both are already synced to clients (flags in the snapshot and the light state), so every
+        // process that draws the machine (single-player and each multiplayer client) detects the change itself, from MachineTransitionSystem.
+        // Nothing here is saved or sent. A dedicated server has no screen and never runs it.
+        public MachineTransition Transition { get; private set; }   // the one-shot animation playing right now (None = normal On/Off art)
+        public uint TransitionStartTick { get; private set; }       // Main.GameUpdateCount when it began
+        bool transitionSeeded;
+        bool lastRunningState;
+
+        // Override for custom sounds, dust or particles. Called once per start / stop, client-side only, whether or not
+        // a startup / shutdown animation is registered for the machine. It fires wherever the machine is, so check
+        // BaseMachine.IsOnScreen(...) yourself if an effect should only happen near the player. Don't change gameplay state here.
+        protected virtual void OnStartup() { }
+        protected virtual void OnShutdown() { }
+
+        // Called every tick by MachineTransitionSystem. The first observation of a machine (world load, joining a server,
+        // a machine placed while off) only records its state, so nothing plays for a machine that was already running.
+        internal void UpdateVisualTransition(MachineVisualDefinition def)
+        {
+            bool running = isOn && isWorking;
+
+            if (!transitionSeeded)
+            {
+                transitionSeeded = true;
+                lastRunningState = running;
+                return;
+            }
+
+            if (running != lastRunningState)
+            {
+                lastRunningState = running;
+                Transition = running ? MachineTransition.Startup : MachineTransition.Shutdown;
+                TransitionStartTick = Main.GameUpdateCount;
+
+                if (running) OnStartup();
+                else OnShutdown();
+            }
+
+            if (Transition == MachineTransition.None)
+                return;
+
+            // Flipping again mid-animation simply starts the opposite one from its first frame (handled above).
+            int duration = def?.GetTransitionDuration(Transition) ?? 0;
+            if (duration <= 0 || Main.GameUpdateCount - TransitionStartTick >= (uint)duration)
+                Transition = MachineTransition.None;
+        }
         
         static string FuelKey(string name, int i) => i == 0 ? name : name + i;
         public override void SaveData(TagCompound tag)

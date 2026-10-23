@@ -96,7 +96,8 @@ namespace Factorraria.Common.Machines
             return null;
         }
 
-        public static int AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j,float rotation = 0f)
+        // forcedFrame >= 0 draws exactly that frame (clamped to the texture) instead of the looping animation; used by startup/shutdown.
+        public static int AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j,float rotation = 0f, int forcedFrame = -1)
         {
             Tile thisTile = Framing.GetTileSafely(i, j);
             TileObjectData data = TileObjectData.GetTileData(thisTile.TileType, 0);
@@ -129,7 +130,7 @@ namespace Factorraria.Common.Machines
 
 
             TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
-            int frameYOffset = GetAnimationFrame(topLeft, frameCount);
+            int frameYOffset = forcedFrame >= 0 ? Math.Min(forcedFrame, Math.Max(0, frameCount - 1)) : GetAnimationFrame(topLeft, frameCount);
 
             Rectangle textureSlice = new Rectangle(thisTile.TileFrameX, frameY + frameHeight * frameYOffset, 16, data.CoordinateHeights[subY]);
             Color lightingColor = Lighting.GetColor(i, j);

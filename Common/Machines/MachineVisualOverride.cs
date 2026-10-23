@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Net;
+using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -13,6 +14,14 @@ using Terraria.ObjectData;
 
 namespace Factorraria.Common.Machines
 {
+    // Which one-shot visual a machine is playing right now. Client-side only: never saved, never sent over the network.
+    public enum MachineTransition : byte
+    {
+        None,
+        Startup,    // went from not (isOn && isWorking) to (isOn && isWorking)
+        Shutdown    // went from (isOn && isWorking) to not
+    }
+
     public class LiquidOverlayLayer
     {
         public Asset<Texture2D> SourceTexture;
@@ -98,6 +107,126 @@ namespace Factorraria.Common.Machines
         public Func<BaseMachine, bool> UseAltOn;
         public List<LiquidOverlayLayer> LiquidOverlays = new();
         public MachineCanvas Canvas;   // null = On and Off are normal footprint-sized sheets
+
+        // ---- Startup / shutdown animations (MachineVisualRegistry.RegisterStartup / RegisterShutdown) ----
+        public int TileType;
+        public Asset<Texture2D> StartupTexture;
+        public Asset<Texture2D> ShutdownTexture;
+        public int StartupFrames;              // overhang canvases only: frames stacked in the texture (normal sheets are auto-detected)
+        public int ShutdownFrames;
+        public int StartupTicksPerFrame;       // 0 = the animation speed from the config
+        public int ShutdownTicksPerFrame;
+        public List<LiquidOverlayLayer> StartupLiquidOverlays = new();    // drawn on top while the startup plays
+        public List<LiquidOverlayLayer> ShutdownLiquidOverlays = new();   // drawn on top while the shutdown plays
+        readonly bool[] transitionChecked = new bool[3];   // indexed by (int)MachineTransition
+        readonly bool[] transitionValid = new bool[3];
+
+        Asset<Texture2D> TransitionAsset(MachineTransition kind) => kind switch
+        {
+            MachineTransition.Startup => StartupTexture,
+            MachineTransition.Shutdown => ShutdownTexture,
+            _ => null
+        };
+
+        // Frames in the startup/shutdown texture. 0 = unusable.
+        public int GetTransitionFrameCount(MachineTransition kind)
+        {
+            Asset<Texture2D> asset = TransitionAsset(kind);
+            if (asset == null)
+                return 0;
+
+            if (Canvas != null)   // a canvas can't be auto-detected, the registration has to say how many frames there are
+                return kind == MachineTransition.Startup ? StartupFrames : ShutdownFrames;
+
+            TileObjectData data = TileObjectData.GetTileData(TileType, 0);
+            if (data == null || data.CoordinateFullHeight <= 0)
+                return 0;
+
+            return Math.Max(1, asset.Value.Height / data.CoordinateFullHeight);
+        }
+
+        public int GetTransitionTicksPerFrame(MachineTransition kind)
+        {
+            int custom = kind == MachineTransition.Startup ? StartupTicksPerFrame : ShutdownTicksPerFrame;
+            return custom > 0 ? custom : Math.Max(1, ModContent.GetInstance<FurnaceOffsetConfig>().animationSpeedDivider);
+        }
+
+        // Total length of the animation in ticks, 0 when there is no usable art (the OnStartup / OnShutdown hooks still fire).
+        public int GetTransitionDuration(MachineTransition kind)
+        {
+            if (!IsTransitionUsable(kind))
+                return 0;
+
+            return GetTransitionFrameCount(kind) * GetTransitionTicksPerFrame(kind);
+        }
+
+        // Overhang machines: the startup/shutdown texture must be the same canvas as the On texture, with the registered frame count.
+        // Checked once; a bad texture only disables that animation (and logs why), it never breaks the machine.
+        bool IsTransitionUsable(MachineTransition kind)
+        {
+            if (TransitionAsset(kind) == null)
+                return false;
+
+            int k = (int)kind;
+            if (!transitionChecked[k])
+            {
+                transitionChecked[k] = true;
+                transitionValid[k] = ValidateTransition(kind);
+            }
+
+            return transitionValid[k];
+        }
+
+        bool ValidateTransition(MachineTransition kind)
+        {
+            if (Canvas == null)
+                return GetTransitionFrameCount(kind) > 0;
+
+            string name = kind == MachineTransition.Startup ? "Startup" : "Shutdown";
+            int frames = GetTransitionFrameCount(kind);
+            if (frames <= 0)
+            {
+                MachineVisualRegistry.Warn($"{name} animation for tile {TileType} is ignored: an overhang machine must pass frames (how many frames are stacked in the texture).");
+                return false;
+            }
+
+            Texture2D on = OnTexture.Value;
+            if (!Canvas.Resolve(on, OffTexture.Value))
+                return false;   // the overhang system already reports this one
+
+            Texture2D tex = TransitionAsset(kind).Value;
+            int expectedHeight = Canvas.CanvasHeight * Canvas.CellSize * frames;
+            if (tex.Width != on.Width || (tex.Height != expectedHeight && tex.Height != expectedHeight - Canvas.Padding))
+            {
+                MachineVisualRegistry.Warn($"{name} animation for tile {TileType} is ignored: texture is {tex.Width}x{tex.Height}, with {frames} frame(s) on the {on.Width}px wide canvas it must be {on.Width}x{expectedHeight}.");
+                return false;
+            }
+
+            return true;
+        }
+
+        // The art to draw INSTEAD of the normal On/Off art while this machine's startup or shutdown is playing.
+        // Returns false when none is playing (or it has no usable art): draw the normal state then.
+        public bool TryGetActiveTransition(BaseMachine machine, out Texture2D texture, out int frame, out List<LiquidOverlayLayer> overlays)
+        {
+            texture = null;
+            frame = 0;
+            overlays = null;
+
+            MachineTransition kind = machine.Transition;
+            if (kind == MachineTransition.None || !IsTransitionUsable(kind))
+                return false;
+
+            int frames = GetTransitionFrameCount(kind);
+            if (frames <= 0)
+                return false;
+
+            uint elapsed = Main.GameUpdateCount - machine.TransitionStartTick;
+            frame = (int)Math.Min(elapsed / (uint)GetTransitionTicksPerFrame(kind), (uint)(frames - 1));
+            texture = TransitionAsset(kind).Value;
+            overlays = kind == MachineTransition.Startup ? StartupLiquidOverlays : ShutdownLiquidOverlays;
+            return true;
+        }
     }
 
     public static class MachineVisualRegistry
@@ -119,6 +248,7 @@ namespace Factorraria.Common.Machines
             {
                 GetEntity = (i, j) => TileEntityHelper.GetOrCreateEntity<T>(i, j),
                 FindEntity = (i, j) => TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity found, out _) ? found as BaseMachine : null,
+                TileType = tileType,
                 OnTexture = ModContent.Request<Texture2D>(onPath),
                 OffTexture = ModContent.Request<Texture2D>(offPath)
             };
@@ -154,6 +284,87 @@ namespace Factorraria.Common.Machines
                 CacheKey = texturePath // already unique per overlay, no need to invent a separate key
             });
         }
+
+        // ---- Startup / shutdown animations. Call after Register<T> / RegisterOverhang<T>, in PostSetupContent like everything else. ----
+        // RegisterStartup: played ONCE when the machine goes from not (isOn && isWorking) to (isOn && isWorking), then the On art takes over.
+        // RegisterShutdown: played ONCE when it goes from (isOn && isWorking) to not, then the Off art takes over.
+        // The texture is a vertical strip of frames, same layout as the On texture (normal machine: the usual tile sheet repeated per frame;
+        // overhang machine: the same canvas as On/Off, repeated per frame). Frames are auto-detected for normal machines; an overhang
+        // machine must pass frames. ticksPerFrame 0 = use the config's animation speed. A missing PNG only logs a warning (RequestIfExists):
+        // the machine then skips the animation, but OnStartup / OnShutdown still fire.
+        public static void RegisterStartup(int tileType, string texturePath, int frames = 0, int ticksPerFrame = 0)
+        {
+            MachineVisualDefinition def = RequireDefinition(tileType, nameof(RegisterStartup));
+            if (!ModContent.RequestIfExists<Texture2D>(texturePath, out Asset<Texture2D> asset, AssetRequestMode.AsyncLoad))
+            {
+                Warn($"RegisterStartup: texture '{texturePath}' not found, tile {tileType} has no startup animation yet.");
+                return;
+            }
+
+            def.StartupTexture = asset;
+            def.StartupFrames = frames;
+            def.StartupTicksPerFrame = ticksPerFrame;
+        }
+
+        public static void RegisterShutdown(int tileType, string texturePath, int frames = 0, int ticksPerFrame = 0)
+        {
+            MachineVisualDefinition def = RequireDefinition(tileType, nameof(RegisterShutdown));
+            if (!ModContent.RequestIfExists<Texture2D>(texturePath, out Asset<Texture2D> asset, AssetRequestMode.AsyncLoad))
+            {
+                Warn($"RegisterShutdown: texture '{texturePath}' not found, tile {tileType} has no shutdown animation yet.");
+                return;
+            }
+
+            def.ShutdownTexture = asset;
+            def.ShutdownFrames = frames;
+            def.ShutdownTicksPerFrame = ticksPerFrame;
+        }
+
+        // Liquid layer drawn on top of the startup (or shutdown) animation, recolored per liquid through LiquidTextureCache exactly like
+        // RegisterLiquidOverlay. The texture must have the SAME frame layout as the startup (or shutdown) texture it goes with.
+        // The cache key is the texture path, so every overlay needs its own PNG.
+        public static void RegisterStartupLiquidOverlay(int tileType, string texturePath, Func<BaseMachine, LiquidStack> getLiquidStack)
+        {
+            MachineVisualDefinition def = RequireDefinition(tileType, nameof(RegisterStartupLiquidOverlay));
+            AddTransitionOverlay(def.StartupLiquidOverlays, tileType, texturePath, getLiquidStack, nameof(RegisterStartupLiquidOverlay));
+        }
+
+        public static void RegisterShutdownLiquidOverlay(int tileType, string texturePath, Func<BaseMachine, LiquidStack> getLiquidStack)
+        {
+            MachineVisualDefinition def = RequireDefinition(tileType, nameof(RegisterShutdownLiquidOverlay));
+            AddTransitionOverlay(def.ShutdownLiquidOverlays, tileType, texturePath, getLiquidStack, nameof(RegisterShutdownLiquidOverlay));
+        }
+
+        static void AddTransitionOverlay(List<LiquidOverlayLayer> layers, int tileType, string texturePath, Func<BaseMachine, LiquidStack> getLiquidStack, string caller)
+        {
+            if (!ModContent.RequestIfExists<Texture2D>(texturePath, out Asset<Texture2D> asset, AssetRequestMode.AsyncLoad))
+            {
+                Warn($"{caller}: texture '{texturePath}' not found, tile {tileType} skips that liquid layer for now.");
+                return;
+            }
+
+            layers.Add(new LiquidOverlayLayer
+            {
+                SourceTexture = asset,
+                GetLiquidStack = getLiquidStack,
+                CacheKey = texturePath
+            });
+        }
+
+        static MachineVisualDefinition RequireDefinition(int tileType, string caller)
+        {
+            if (!Definitions.TryGetValue(tileType, out var def))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(tileType),
+                    $"{caller} failed for tile type {tileType}: call MachineVisualRegistry.Register (base On/Off textures) first."
+                );
+            }
+
+            return def;
+        }
+
+        internal static void Warn(string message) => ModContent.GetInstance<global::Factorraria.Factorraria>().Logger.Warn(message);
 
         // Use INSTEAD of Register<T> when the art is bigger than the tile footprint. BOTH the On and Off textures are
         // canvases of the SAME size (frames stacked vertically, each texture may have its own frame count), containing the
@@ -209,7 +420,7 @@ namespace Factorraria.Common.Machines
             {
                 // The whole machine (footprint tiles + overhang), On or Off, is drawn as one canvas by
                 // MachineOverhangSystem.PostDrawTiles, so nothing is drawn per tile here.
-                if (def.Canvas.Resolve(def.OnTexture.Value, def.OffTexture.Value))
+                if (def.Canvas.Resolve(def.OnTexture.Value, def.OffTexture.Value) && !def.TryGetActiveTransition(entity, out _, out _, out _))
                 {
                     TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
                     entity.NotifyAnimationFrame(TileEntityHelper.GetAnimationFrame(topLeft, def.Canvas.FrameCount(entity.isOn && entity.isWorking)));
@@ -217,31 +428,47 @@ namespace Factorraria.Common.Machines
                 return false;
             }
 
+            float rotation = entity is MotorTileEntityBase motor ? GetMotorRotation(motor.Facing) : 0f;
+
+            // A startup / shutdown that is playing replaces the On/Off art and the On liquid layers. It does not notify
+            // OnAnimationFrameChanged, so per-frame sounds of the normal On animation don't fire on its frames.
+            if (def.TryGetActiveTransition(entity, out Texture2D transitionTexture, out int transitionFrame, out List<LiquidOverlayLayer> transitionOverlays))
+            {
+                TileEntityHelper.AnimateTileEntity(spriteBatch, transitionTexture, i, j, rotation, transitionFrame);
+                DrawLiquidOverlays(spriteBatch, transitionOverlays, entity, i, j, rotation, transitionFrame);
+                return false;
+            }
+
             var texture = entity.isOn && entity.isWorking
                 ? (def.UseAltOn != null && def.UseAltOn(entity) ? def.AltOnTexture : def.OnTexture)
                 : def.OffTexture;
 
-            float rotation = entity is MotorTileEntityBase motor ? GetMotorRotation(motor.Facing) : 0f;
-
             int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j, rotation);
 
             if (entity.isOn && entity.isWorking)
-            {
-                foreach (var layer in def.LiquidOverlays)
-                {
-                    LiquidStack stack = layer.GetLiquidStack(entity);
-                    if (stack == null || stack.IsEmpty)
-                        continue;
-
-                    LiquidTypeDefinition liquidDef = LiquidTypeRegistry.Get(stack.LiquidType);
-                    Texture2D recolored = LiquidTextureCache.GetOrCreate(layer.CacheKey, layer.SourceTexture.Value, liquidDef);
-
-                    TileEntityHelper.AnimateTileEntity(spriteBatch, recolored, i, j, rotation);
-                }
-            }
+                DrawLiquidOverlays(spriteBatch, def.LiquidOverlays, entity, i, j, rotation, -1);
 
             entity.NotifyAnimationFrame(frame);
             return false;
+        }
+
+        // forcedFrame -1 = the normal looping animation, otherwise the exact frame (startup / shutdown).
+        static void DrawLiquidOverlays(SpriteBatch spriteBatch, List<LiquidOverlayLayer> layers, BaseMachine entity, int i, int j, float rotation, int forcedFrame)
+        {
+            if (layers == null)
+                return;
+
+            foreach (var layer in layers)
+            {
+                LiquidStack stack = layer.GetLiquidStack(entity);
+                if (stack == null || stack.IsEmpty)
+                    continue;
+
+                LiquidTypeDefinition liquidDef = LiquidTypeRegistry.Get(stack.LiquidType);
+                Texture2D recolored = LiquidTextureCache.GetOrCreate(layer.CacheKey, layer.SourceTexture.Value, liquidDef);
+
+                TileEntityHelper.AnimateTileEntity(spriteBatch, recolored, i, j, rotation, forcedFrame);
+            }
         }
 
         void InitializeMachine(BaseMachine machine)

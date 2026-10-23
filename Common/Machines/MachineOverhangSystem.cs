@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Factorraria.Common.Liquids;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
@@ -74,7 +76,15 @@ namespace Factorraria.Common.Machines
                 }
 
                 bool working = machine.isOn && machine.isWorking;
-                Texture2D texture = working ? def.OnTexture.Value : def.OffTexture.Value;
+                Texture2D texture;
+                int frame;
+                List<LiquidOverlayLayer> overlays;
+                if (!def.TryGetActiveTransition(machine, out texture, out frame, out overlays))
+                {
+                    texture = working ? def.OnTexture.Value : def.OffTexture.Value;
+                    frame = TileEntityHelper.GetAnimationFrame(corner, canvas.FrameCount(working));
+                    overlays = working ? def.LiquidOverlays : null;
+                }
                 int canvasWidth = canvas.CanvasWidth * 16;
                 int canvasHeight = canvas.CanvasHeight * 16;
 
@@ -83,7 +93,6 @@ namespace Factorraria.Common.Machines
                 if (!BaseMachine.IsOnScreen(canvasCenter, Math.Max(canvasWidth, canvasHeight) / 2f))
                     continue;
 
-                int frame = TileEntityHelper.GetAnimationFrame(corner, canvas.FrameCount(working));
                 int frameY = frame * canvas.FrameStride;
                 Color color = Lighting.GetColor(corner.X + data.Width / 2, corner.Y + data.Height / 2);
 
@@ -94,6 +103,8 @@ namespace Factorraria.Common.Machines
                 }
 
                 DrawCanvasCells(spriteBatch, texture, canvas, worldTopLeft, frameY, color);
+                if (overlays != null)
+                    DrawCanvasLiquidOverlays(spriteBatch, overlays, machine, canvas, worldTopLeft, frameY, color);
             }
 
             if (TryGetHologram(out MachineVisualDefinition holoDef, out Vector2 holoTopLeft, out bool holoValid))
@@ -110,6 +121,22 @@ namespace Factorraria.Common.Machines
 
             if (batchBegun)
                 spriteBatch.End();
+        }
+
+        // Recolored liquid layers (same LiquidTextureCache as normal machines) drawn over a canvas frame. Each layer texture has to
+        // share the frame layout of the canvas texture it goes with (On, startup or shutdown).
+        private static void DrawCanvasLiquidOverlays(SpriteBatch spriteBatch, List<LiquidOverlayLayer> layers, BaseMachine machine, MachineCanvas canvas, Vector2 worldTopLeft, int frameY, Color color)
+        {
+            foreach (LiquidOverlayLayer layer in layers)
+            {
+                LiquidStack stack = layer.GetLiquidStack(machine);
+                if (stack == null || stack.IsEmpty)
+                    continue;
+
+                LiquidTypeDefinition liquidDef = LiquidTypeRegistry.Get(stack.LiquidType);
+                Texture2D recolored = LiquidTextureCache.GetOrCreate(layer.CacheKey, layer.SourceTexture.Value, liquidDef);
+                DrawCanvasCells(spriteBatch, recolored, canvas, worldTopLeft, frameY, color);
+            }
         }
 
         // One 16x16 source cell per tile of the canvas, so the padding between cells in the texture is never drawn.
