@@ -38,6 +38,7 @@ namespace Factorraria.Common.Carts
         public const float GroundFriction = 0.92f; // X velocity multiplier per tick while sliding on the ground
         public const int RerailDelay = 15;         // ticks after derailing before the track can catch the cart again
         public static float RerailLandedReach = 16f; // a cart resting on the ground may be this far (px) under a rail surface and still be caught
+        public static float RerailStepSlack = 6f;    // px: how far under the surface the feet may be at the first path step that touches the rail (covers a 2 px step plus a 45 degree slope rise)
         public static float DerailTurnEase = 0.2f;   // 0..1 per tick: how fast a derailed cart turns toward its velocity direction
         public static float DerailMaxTilt = 1.1f;    // radians: steepest nose-up/nose-down angle while derailed
         public const int BumpCooldown = 10;        // ticks during which a second bounce does not re-fire the Bumped event
@@ -1290,6 +1291,7 @@ namespace Factorraria.Common.Carts
             bool hitCeiling = Velocity.Y < 0f && move.Y > Velocity.Y;
             bool hitWall = move.X != Velocity.X;
 
+            Vector2 previousPosition = Position;
             Position += move;
 
             if (hitWall)
@@ -1329,7 +1331,7 @@ namespace Factorraria.Common.Carts
                 Facing = Velocity.X > 0f ? 1 : -1; // a motor keeps its drive direction; everything else turns to face where it is going
             }
 
-            TryRerail(landed);
+            TryRerail(previousPosition, landed);
 
             if (Chain != null && Chain.Motor == this)
             {
@@ -1337,53 +1339,64 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        /// <summary>If our feet just crossed a rail surface while falling, snap onto it.</summary>
-        private void TryRerail(bool landed)
+        /// <summary>
+        /// Swept rail catch (a raycast for the feet). The path the feet took this tick, from previousPosition to Position, is walked in steps of at most
+        /// MaxStep px (the rail slice width, so no slice is skipped) and the first step where the feet reach the rail surface catches the cart at that
+        /// point. Testing only the end point let fast carts tunnel through rising slopes and through rails crossed during one tick.
+        /// </summary>
+        private void TryRerail(Vector2 previousPosition, bool landed)
         {
             if (rerailCooldown > 0 || Velocity.Y < 0f)
             {
                 return;
             }
 
-            TrackSample sample;
-            if (!TrackData.TrySample(Position.X, Position.Y, out sample) || !sample.HasSurface)
+            Vector2 path = Position - previousPosition;
+            int steps = Math.Max(1, (int)Math.Ceiling(Math.Max(Math.Abs(path.X), Math.Abs(path.Y)) / CartPhysics.MaxStep));
+
+            // A cart that fell through the rail while the rerail delay was running comes to rest on the block under it, so it gets a deeper window.
+            float maxBelow = landed ? Math.Max(CartPhysics.RerailStepSlack, CartPhysics.RerailLandedReach) : CartPhysics.RerailStepSlack;
+
+            for (int i = 1; i <= steps; i++)
             {
+                Vector2 point = previousPosition + path * (i / (float)steps);
+
+                TrackSample sample;
+                if (!TrackData.TrySample(point.X, point.Y, out sample) || !sample.HasSurface)
+                {
+                    continue;
+                }
+
+                float below = point.Y - sample.SurfaceY; // > 0 means our feet are under the rail surface
+                if (below < -1f)
+                {
+                    continue; // still above the rail, keep walking the path
+                }
+
+                if (below > maxBelow)
+                {
+                    return; // already deep under the rail: not a fall onto it
+                }
+
+                OnTrack = true;
+                Speed = MathHelper.Clamp(Velocity.X, -SpeedLimit, SpeedLimit);
+                Velocity = Vector2.Zero;
+
+                // Land exactly where the path met the rail (not where the tick ended), with the pose the cart would have rolling along here.
+                float poseY;
+                float poseRotation;
+                if (TryRailPose(point.X, sample.SurfaceY, 0f, out poseY, out poseRotation))
+                {
+                    Position = new Vector2(point.X, poseY);
+                    Rotation = poseRotation;
+                }
+                else
+                {
+                    Position = new Vector2(point.X, sample.SurfaceY);
+                    Rotation = 0f;
+                }
+
                 return;
-            }
-
-            float below = Position.Y - sample.SurfaceY; // > 0 means our feet are under the rail surface
-
-            // On a rising slope the surface climbs up to |Velocity.X| px per tick (rails are at most 45 degrees), so a fast cart
-            // can end a tick well under the surface. The catch window has to grow with the speed or the cart tunnels through.
-            float reach = Velocity.Y + 4f + Math.Abs(Velocity.X);
-
-            // The cart may also have fallen through the rail while the rerail delay was running and come to rest on the block under it.
-            if (landed)
-            {
-                reach = Math.Max(reach, CartPhysics.RerailLandedReach);
-            }
-
-            if (below < -1f || below > reach)
-            {
-                return;
-            }
-
-            OnTrack = true;
-            Speed = MathHelper.Clamp(Velocity.X, -SpeedLimit, SpeedLimit);
-            Velocity = Vector2.Zero;
-
-            // Take the same pose the cart would have rolling along here, so a landing on a slope does not pop flat first.
-            float poseY;
-            float poseRotation;
-            if (TryRailPose(Position.X, sample.SurfaceY, 0f, out poseY, out poseRotation))
-            {
-                Position = new Vector2(Position.X, poseY);
-                Rotation = poseRotation;
-            }
-            else
-            {
-                Position = new Vector2(Position.X, sample.SurfaceY);
-                Rotation = 0f;
             }
         }
 
