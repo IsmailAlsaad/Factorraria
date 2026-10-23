@@ -37,6 +37,9 @@ namespace Factorraria.Common.Carts
         public const float MaxFallSpeed = 10f;
         public const float GroundFriction = 0.92f; // X velocity multiplier per tick while sliding on the ground
         public const int RerailDelay = 15;         // ticks after derailing before the track can catch the cart again
+        public static float RerailLandedReach = 16f; // a cart resting on the ground may be this far (px) under a rail surface and still be caught
+        public static float DerailTurnEase = 0.2f;   // 0..1 per tick: how fast a derailed cart turns toward its velocity direction
+        public static float DerailMaxTilt = 1.1f;    // radians: steepest nose-up/nose-down angle while derailed
         public const int BumpCooldown = 10;        // ticks during which a second bounce does not re-fire the Bumped event
 
         public const float CollisionRestitution = 1f;   // 1 = perfectly elastic (equal masses swap speeds), 0 = carts stick together
@@ -1310,9 +1313,23 @@ namespace Factorraria.Common.Carts
                 }
             }
 
-            Rotation *= 0.92f;
+            // Face the direction of travel: nose up when rising, nose down when falling, flat once resting on the ground.
+            // Rotation is the world tilt of the cart's +X axis (same convention as on the track), so a leftward cart tilts the other way.
+            float tiltTarget = 0f;
+            if (Math.Abs(Velocity.X) > 0.05f || Velocity.Y != 0f)
+            {
+                float dir = Math.Abs(Velocity.X) > 0.05f ? Math.Sign(Velocity.X) : Facing;
+                tiltTarget = MathHelper.Clamp((float)Math.Atan2(Velocity.Y, Math.Abs(Velocity.X)) * dir, -CartPhysics.DerailMaxTilt, CartPhysics.DerailMaxTilt);
+            }
 
-            TryRerail();
+            Rotation += (tiltTarget - Rotation) * CartPhysics.DerailTurnEase;
+
+            if (Module != CartModule.Motor && Math.Abs(Velocity.X) > 0.3f)
+            {
+                Facing = Velocity.X > 0f ? 1 : -1; // a motor keeps its drive direction; everything else turns to face where it is going
+            }
+
+            TryRerail(landed);
 
             if (Chain != null && Chain.Motor == this)
             {
@@ -1321,7 +1338,7 @@ namespace Factorraria.Common.Carts
         }
 
         /// <summary>If our feet just crossed a rail surface while falling, snap onto it.</summary>
-        private void TryRerail()
+        private void TryRerail(bool landed)
         {
             if (rerailCooldown > 0 || Velocity.Y < 0f)
             {
@@ -1335,7 +1352,18 @@ namespace Factorraria.Common.Carts
             }
 
             float below = Position.Y - sample.SurfaceY; // > 0 means our feet are under the rail surface
-            if (below < -1f || below > Velocity.Y + 4f)
+
+            // On a rising slope the surface climbs up to |Velocity.X| px per tick (rails are at most 45 degrees), so a fast cart
+            // can end a tick well under the surface. The catch window has to grow with the speed or the cart tunnels through.
+            float reach = Velocity.Y + 4f + Math.Abs(Velocity.X);
+
+            // The cart may also have fallen through the rail while the rerail delay was running and come to rest on the block under it.
+            if (landed)
+            {
+                reach = Math.Max(reach, CartPhysics.RerailLandedReach);
+            }
+
+            if (below < -1f || below > reach)
             {
                 return;
             }
@@ -1343,8 +1371,20 @@ namespace Factorraria.Common.Carts
             OnTrack = true;
             Speed = MathHelper.Clamp(Velocity.X, -SpeedLimit, SpeedLimit);
             Velocity = Vector2.Zero;
-            Position = new Vector2(Position.X, sample.SurfaceY);
-            Rotation = 0f;
+
+            // Take the same pose the cart would have rolling along here, so a landing on a slope does not pop flat first.
+            float poseY;
+            float poseRotation;
+            if (TryRailPose(Position.X, sample.SurfaceY, 0f, out poseY, out poseRotation))
+            {
+                Position = new Vector2(Position.X, poseY);
+                Rotation = poseRotation;
+            }
+            else
+            {
+                Position = new Vector2(Position.X, sample.SurfaceY);
+                Rotation = 0f;
+            }
         }
 
         #endregion
