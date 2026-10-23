@@ -20,7 +20,7 @@ namespace Factorraria.Common.WorldGeneration
     /// cart (always out of fuel) with a carriage linked behind it. Every carriage then rolls its cargo: chest cart / terrarium cart / empty.
     /// All numbers are instance fields on purpose (hot reload can tweak them).
     /// </summary>
-    public class CartWorldGen : ModSystem
+    public partial class CartWorldGen : ModSystem
     {
         public bool Enabled = true;
         public double SpawnChancePerTile = 0.005;   // per vanilla track tile
@@ -33,13 +33,7 @@ namespace Factorraria.Common.WorldGeneration
         public int FlatMarginPx = 20;               // extra flat rail required beyond the cart footprint
         public int HeadroomRowsMargin = 0;          // extra empty tile rows required above the cart
 
-        // Chest cart loot (relative weights). Test table, to be replaced by the real one later.
-        public int LootWeightEmpty = 1;
-        public int LootWeightCoal = 1;
-        public int LootWeightGel = 1;
-        public int LootWeightOre = 1;
-        public int CoalMin = 5, CoalMax = 20;
-        public int GelMin = 50, GelMax = 200;
+        // Chest cart loot: the biome tables live in CartWorldGen.Biomes.cs. These feed the ore slots of the underground and snow tables.
         public int OreSlots = 3;
         public int OreMin = 7, OreMax = 20;
 
@@ -186,9 +180,9 @@ namespace Factorraria.Common.WorldGeneration
                 }
 
                 if (linked)
-                    SpawnLinked(railPoint, facing);
+                    SpawnLinked(tile, railPoint, facing);
                 else
-                    SpawnSolo(railPoint, facing);
+                    SpawnSolo(tile, railPoint, facing);
 
                 perTrack[trackId]++;
                 spawned.Add(tile);
@@ -274,95 +268,6 @@ namespace Factorraria.Common.WorldGeneration
             return true;
         }
 
-        private void SpawnSolo(Vector2 railPoint, int facing)
-        {
-            Cart cart = CartSystem.SpawnCart(railPoint, ItemID.Minecart); // later: pick the skin by biome
-            cart.Facing = facing;
-            RollCargo(cart);
-            statSolo++;
-        }
-
-        private void SpawnLinked(Vector2 railPoint, int facing)
-        {
-            // Motor first (Steampunk Minecart = motor cart, out of fuel because SetModule gives it an empty fuel slot)
-            Cart motor = CartSystem.SpawnCart(railPoint, ItemID.SteampunkMinecart);
-            motor.Facing = facing;
-
-            Cart carriage = CartSystem.SpawnCart(railPoint, ItemID.Minecart);
-            carriage.Facing = facing;
-            RollCargo(carriage);
-
-            // The new chain backfills its trail from the rail behind the motor and Attach snaps the carriage into slot 1.
-            CartChain chain = new CartChain(motor);
-            chain.Attach(carriage, false);
-            statLinked++;
-        }
-
-        private void RollCargo(Cart cart)
-        {
-            double roll = WorldGen.genRand.NextDouble();
-
-            if (roll < ChestChance)
-            {
-                int chestItem = WorldGen.genRand.NextDouble() < GoldChestShare ? ItemID.GoldChest : ItemID.Chest;
-                cart.SetModule(CartModule.Chest, chestItem);
-                FillChest(cart);
-                statChest++;
-            }
-            else if (roll < ChestChance + TerrariumChance)
-            {
-                cart.SetModule(CartModule.Terrarium, ItemID.Terrarium); // starts with an empty tank
-                statTerrarium++;
-            }
-        }
-
-        private void FillChest(Cart cart)
-        {
-            int total = LootWeightEmpty + LootWeightCoal + LootWeightGel + LootWeightOre;
-            if (total <= 0)
-                return;
-
-            int pick = WorldGen.genRand.Next(total);
-
-            if (pick < LootWeightEmpty)
-                return;
-            pick -= LootWeightEmpty;
-
-            if (pick < LootWeightCoal)
-            {
-                SetSlot(cart, 0, ItemID.Coal, WorldGen.genRand.Next(CoalMin, CoalMax + 1));
-                return;
-            }
-            pick -= LootWeightCoal;
-
-            if (pick < LootWeightGel)
-            {
-                SetSlot(cart, 0, ItemID.Gel, WorldGen.genRand.Next(GelMin, GelMax + 1));
-                return;
-            }
-
-            // Ore: OreSlots slots, each a different ore picked at random.
-            List<int> ores = new List<int>
-            {
-                ItemID.TinOre, ItemID.CopperOre, ItemID.IronOre, ItemID.LeadOre, ItemID.TungstenOre,
-                ItemID.SilverOre, ItemID.GoldOre, ItemID.PlatinumOre, ModContent.ItemType<SiliconOreItem>()
-            };
-
-            int slots = Math.Min(OreSlots, Math.Min(ores.Count, cart.ChestItems.Length));
-            for (int s = 0; s < slots; s++)
-            {
-                int index = WorldGen.genRand.Next(ores.Count);
-                SetSlot(cart, s, ores[index], WorldGen.genRand.Next(OreMin, OreMax + 1));
-                ores.RemoveAt(index);
-            }
-        }
-
-        private static void SetSlot(Cart cart, int slot, int type, int stack)
-        {
-            Item item = new Item();
-            item.SetDefaults(type);
-            item.stack = Math.Max(1, Math.Min(stack, item.maxStack));
-            cart.ChestItems[slot] = item;
-        }
+        // SpawnSolo, SpawnLinked, RollCargo, chest and terrarium contents: see CartWorldGen.Biomes.cs
     }
 }
