@@ -24,11 +24,11 @@ namespace Factorraria.Common.WorldGeneration
     {
         public bool Enabled = true;
         public double SpawnChancePerTile = 0.005;   // per vanilla track tile
-        public double LinkedChance = 0.20;          // of the spawns: motor cart + carriage (the rest are a lone carriage)
-        public double ChestChance = 0.40;           // per carriage: chest cart
+        public double LinkedChance = 0.30;          // of the spawns: motor cart + carriage (the rest are a lone carriage)
+        public double ChestChance = 0.60;           // per carriage: chest cart
         public double TerrariumChance = 0.10;       // per carriage: terrarium cart (the rest are empty)
         public double GoldChestShare = 0.5;         // of the chest carts: gold chest (the rest wooden)
-        public int MinSpacingTiles = 20;            // no two spawns closer than this (straight-line tiles)
+        public int MinSpacingTiles = 10;            // no two spawns closer than this (straight-line tiles)
         public int MaxCartsPerTrack = 3;            // per connected stretch of track
         public int FlatMarginPx = 20;               // extra flat rail required beyond the cart footprint
         public int HeadroomRowsMargin = 0;          // extra empty tile rows required above the cart
