@@ -45,10 +45,16 @@ namespace Factorraria.Common.NPCs
                 npcLoot.Add(lastSegment);
             }
 
-            // King Slime
+            // King Slime (MAKE IT ONLY ON FIRST KILL)
             if (npc.type == NPCID.KingSlime)
             {
-                npcLoot.Add(ItemDropRule.Common(ItemID.SlimeStatue, 1, 1, 3));
+                npcLoot.Add(ItemDropRule.Common(ItemID.SlimeStatue, 1, 3, 5));
+            }
+
+            // Queen Bee
+            if (npc.type == NPCID.QueenBee)
+            {
+                npcLoot.Add(ItemDropRule.Common(ItemID.BeeMinecart, 1, 1, 1));
             }
         }
     }

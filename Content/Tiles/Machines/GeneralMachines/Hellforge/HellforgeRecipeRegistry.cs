@@ -48,10 +48,26 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
                 new Item(ModContent.ItemType<PureSiliconItem>(), 1)));
 
             Book.Add(new CustomRecipe(
-                new List<Item> { 
-                    new Item(ItemID.StoneBlock, 20),
+                new List<Item> {
+                    new Item(ItemID.SilverOre, 4),
                     new Item(ItemID.FallenStar, 1)},
                 new Item(ItemID.Meteorite, 2)));
+            Book.Add(new CustomRecipe(
+                new List<Item> {
+                    new Item(ItemID.TungstenOre, 4),
+                    new Item(ItemID.FallenStar, 1)},
+                new Item(ItemID.Meteorite, 2)));
+
+            Book.Add(new CustomRecipe(
+                new List<Item> {
+                    new Item(ItemID.SilverBar, 3),
+                    new Item(ItemID.HellstoneBar, 3)},
+                new Item(ModContent.ItemType<ByriteAlloyItem>(), 1)));
+            Book.Add(new CustomRecipe(
+                new List<Item> {
+                    new Item(ItemID.TungstenBar, 3),
+                    new Item(ItemID.HellstoneBar, 3)},
+                new Item(ModContent.ItemType<ByriteAlloyItem>(), 1)));
         }
 
         static void RegisterLiquidFuels()

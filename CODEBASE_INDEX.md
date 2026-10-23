@@ -1160,7 +1160,7 @@ tModLoader/other bases -> project types:
     #BasePanelSize:Vector2[ov] +BasePanelOffset:Vector2[ov] #BuildElements()[ov] #UpdateLayout()[ov]
 
 ### Content/Tiles/Machines/GeneralMachines/Hellforge/
-**HellforgeRecipeRegistry.cs** uses: CokeItem, CustomRecipe, FurnaceRecipeRegistry, LiquidFuelTable, LiquidTypeRegistry, PureSiliconItem, RecipeBook, SiliconOreItem, SteelBarItem
+**HellforgeRecipeRegistry.cs** uses: ByriteAlloyItem, CokeItem, CustomRecipe, FurnaceRecipeRegistry, LiquidFuelTable, LiquidTypeRegistry, PureSiliconItem, RecipeBook, SiliconOreItem, SteelBarItem
   static class HellforgeRecipeRegistry
     +Book:RecipeBook[s] +LiquidFuels:LiquidFuelTable[s] +BuildRecipes()[s]
 **HellforgeTileEntity.cs** uses: BaseMachine, HellforgeRecipeRegistry, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, RecipeBook

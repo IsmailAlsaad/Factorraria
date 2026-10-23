@@ -362,10 +362,12 @@ All click handling stays on the owning client (it needs `Main.mouse*` and the he
 - `Cart.CheckPressurePlate` sends `HitSwitch` from a client and calls `Wiring.HitSwitch` directly otherwise. With the server simulating carts, the server takes the direct branch, which is correct; the client branch simply becomes dead code and can be removed to avoid confusion.
 
 ### C7 (M) `TrackData` on a dedicated server
+**Status (closed by decision 2026-10-23, no code change):** answered by evidence: loaded on a dedicated server and a client in Phase 0 and carts have run on a dedicated server since 9.1. The failure path was never exercised; `ReportFailureOnce` and its `Main.NewText` stay as they are (the only chat call in cart code, failure path only). A log-only message is an optional Phase 10 item.
+
 `TrackData.EnsureLoaded()` reads private vanilla minecart tables by reflection (`_tileHeight`, `_trackType`, `_boostLeft`) and retries silently when they are null. It must be verified that vanilla initialises these on a dedicated server (if they are filled by a client-only load path, carts silently stay disabled there). Also `ReportFailureOnce` uses `Main.NewText`, which should become a logger-only message on a server.
 
 ### C8 (M) Chains and bumps
-**Status (patch 9.6a, applied, tested 2026-10-22: everything works):** the bump, cart-vs-cart, chain coupling and terrarium pour sounds all go through `CartSound.Play` (Common/Net/CartSound.cs). Single-player plays them locally; a dedicated server sends packet `CartSound` (45) to the players within 80 tiles, rate limited per kind; a client plays it in `CartSoundSystem.PostUpdateEverything`. Chain id and slot for the link drawing were already done in 9.2 (CartDelta). Not done: bump spill and pour visual effects, only the sounds.
+**Status (patch 9.6a, applied, tested 2026-10-22: everything works):** the bump, cart-vs-cart, chain coupling and terrarium pour sounds all go through `CartSound.Play` (Common/Net/CartSound.cs). Single-player plays them locally; a dedicated server sends packet `CartSound` (45) to the players within 80 tiles, rate limited per kind; a client plays it in `CartSoundSystem.PostUpdateEverything`. Chain id and slot for the link drawing were already done in 9.2 (CartDelta). Bump spill and pour visual effects: none exist in single-player either (CartCargo has the sound only), so there is nothing to replicate.
 
 `CartChain` (motor + carriages, `AutoAttach`, `RebuildFromSave`) and `Cart.TryCollide`/`Bumped` events run purely in the server simulation. The client needs only chain id/slot and the bump event for visuals/sound. Bump sounds (`SoundEngine.PlaySound` in `CartCargo`) are no-ops on a server, so they need a small `CartEvent` broadcast (bump, pour) for nearby clients.
 
