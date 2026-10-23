@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using Factorraria.Content.Tiles.Ores;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -33,7 +34,7 @@ namespace Factorraria.Common.VirtualItems
                 entity.useTurn = true;
                 entity.autoReuse = true;
                 entity.consumable = true;
-                entity.createTile = ModContent.TileType<Factorraria.Content.Tiles.Ores.CoalTile>();
+                entity.createTile = ModContent.TileType<CoalTile>();
             }
         }
     }
