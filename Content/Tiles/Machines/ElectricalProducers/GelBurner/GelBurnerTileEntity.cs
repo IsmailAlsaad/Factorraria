@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Mono.Cecil;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 
@@ -100,6 +101,16 @@ namespace Factorraria.Content.Tiles.Machines.GelBurner
                 //g.rotation += 1f;
                 g.velocity *= 0.8f;
             }
+        }
+
+        protected override void OnStartup()
+        {
+            SoundEngine.PlaySound(SoundID.Item34 with { Volume = 0.4f }, MachineCenter);
+        }
+
+        protected override void OnShutdown()
+        {
+            SoundEngine.PlaySound(SoundID.Item45 with { Volume = 0.4f}, MachineCenter);
         }
     }
 }

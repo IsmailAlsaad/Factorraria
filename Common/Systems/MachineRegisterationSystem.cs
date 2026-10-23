@@ -104,15 +104,15 @@ namespace Factorraria.Common.Machines
 
 
             MachineVisualRegistry.Register<GelBurnerTileEntity>(TileID.SteampunkBoiler,
-                basePath + "GeneralMachines/GelBurner/GelBurner_On",
-                basePath + "GeneralMachines/GelBurner/GelBurner_Off",
-                basePath + "GeneralMachines/GelBurner/GelBurner_Startup",
-                basePath + "GeneralMachines/GelBurner/GelBurner_Shutdown");
+                basePath + "ElectricalProducers/GelBurner/GelBurner_On",
+                basePath + "ElectricalProducers/GelBurner/GelBurner_Off",
+                basePath + "ElectricalProducers/GelBurner/GelBurner_Startup",
+                basePath + "ElectricalProducers/GelBurner/GelBurner_Shutdown");
 
 
             MachineVisualRegistry.Register<ExtractinatorTileEntity>(TileID.Extractinator,
-                basePath + "GeneralMachines/Extractinator/Extractinator_On",
-                basePath + "GeneralMachines/Extractinator/Extractinator_Off");
+                basePath + "ElectricalConsumers/Extractinator/Extractinator_On",
+                basePath + "ElectricalConsumers/Extractinator/Extractinator_Off");
 
 
             MachineVisualRegistry.Register<MotorMK1TileEntity>(ModContent.TileType<MotorMK1Tile>(),
@@ -122,8 +122,8 @@ namespace Factorraria.Common.Machines
 
             MachineUIRegistry.Register(ModContent.TileType<MechanicalAssemblerTile>(), new MechanicalAssemblerUIState());
             MachineVisualRegistry.RegisterOverhang<MechanicalAssemblerTileEntity>(ModContent.TileType<MechanicalAssemblerTile>(),
-                basePath + "GeneralMachines/MechanicalAssembler/MechanicalAssembler_On",
-                basePath + "GeneralMachines/MechanicalAssembler/MechanicalAssembler_Off",
+                basePath + "ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_On",
+                basePath + "ElectricalConsumers/MechanicalAssembler/MechanicalAssembler_Off",
                 footprintWidth: 3, footprintHeight: 3,
                 originX: 3, originY: 2,
                 onFrames: 5, offFrames: 1,
@@ -131,8 +131,8 @@ namespace Factorraria.Common.Machines
 
             MachineUIRegistry.Register(ModContent.TileType<RoboticArmTile>(), new RoboticArmUIState());
             MachineVisualRegistry.Register<RoboticArmTileEntity>(ModContent.TileType<RoboticArmTile>(),
-                basePath + "GeneralMachines/RoboticArm/RoboticArm_On",
-                basePath + "GeneralMachines/RoboticArm/RoboticArm_Off");
+                basePath + "ElectricalConsumers/RoboticArm/RoboticArm_On",
+                basePath + "ElectricalConsumers/RoboticArm/RoboticArm_Off");
         }
 
         public override void PostAddRecipes()
