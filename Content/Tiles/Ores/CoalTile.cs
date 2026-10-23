@@ -21,7 +21,7 @@ namespace Factorraria.Content.Tiles.Ores
 
             DustType = DustID.Obsidian;
             RegisterItemDrop(ItemID.Coal);
-            HitSound = SoundID.Tink;
+            HitSound = SoundID.Dig;
 
             MineResist = 1f;
             MinPick = 0;
