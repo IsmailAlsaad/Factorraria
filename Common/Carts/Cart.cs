@@ -38,6 +38,7 @@ namespace Factorraria.Common.Carts
         public const float GroundFriction = 0.92f; // X velocity multiplier per tick while sliding on the ground
         public const int RerailDelay = 15;         // ticks after derailing before the track can catch the cart again
         public static float RerailLandedReach = 16f; // a cart resting on the ground may be this far (px) under a rail surface and still be caught
+        public static float DerailGuardRadius = 24f; // px: while the rerail delay runs, rails within this distance of the derail point are ignored; farther rails catch the cart at once
         public static float RerailStepSlack = 6f;    // px: how far under the surface the feet may be at the first path step that touches the rail (covers a 2 px step plus a 45 degree slope rise)
         public static float DerailTurnEase = 0.2f;   // 0..1 per tick: how fast a derailed cart turns toward its velocity direction
         public static float DerailMaxTilt = 1.1f;    // radians: steepest nose-up/nose-down angle while derailed
@@ -871,6 +872,7 @@ namespace Factorraria.Common.Carts
         }
 
         private int rerailCooldown;
+        private Vector2 derailPosition;
 
         public Rectangle Hitbox
         {
@@ -1269,6 +1271,7 @@ namespace Factorraria.Common.Carts
             Velocity = velocity;
             Speed = 0f;
             rerailCooldown = CartPhysics.RerailDelay;
+            derailPosition = Position;
         }
 
         #endregion
@@ -1346,7 +1349,7 @@ namespace Factorraria.Common.Carts
         /// </summary>
         private void TryRerail(Vector2 previousPosition, bool landed)
         {
-            if (rerailCooldown > 0 || Velocity.Y < 0f)
+            if (Velocity.Y < 0f)
             {
                 return;
             }
@@ -1360,6 +1363,13 @@ namespace Factorraria.Common.Carts
             for (int i = 1; i <= steps; i++)
             {
                 Vector2 point = previousPosition + path * (i / (float)steps);
+
+                // The rerail delay exists so a cart that just left the end of a rail is not caught by that same rail again. It only protects the
+                // area around the derail point: a fast cart that dropped onto a lower rail 3 ticks later must not be ignored for the other 12.
+                if (rerailCooldown > 0 && (point - derailPosition).LengthSquared() < CartPhysics.DerailGuardRadius * CartPhysics.DerailGuardRadius)
+                {
+                    continue;
+                }
 
                 TrackSample sample;
                 if (!TrackData.TrySample(point.X, point.Y, out sample) || !sample.HasSurface)
