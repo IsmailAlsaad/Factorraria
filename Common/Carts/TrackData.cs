@@ -12,7 +12,7 @@ namespace Factorraria.Common.Carts
         None,
         Stop,   // vanilla "regular" end piece: cart halts
         Bounce, // vanilla bumper: cart reverses
-        Ramp,   // launch ramp: cart is thrown off at 45 degrees
+        Ramp,   // sloped open end: the cart leaves along the slope it was on, with the velocity it had (gravity takes over)
         Open    // open end: cart falls off
     }
 

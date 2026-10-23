@@ -1226,7 +1226,9 @@ namespace Factorraria.Common.Carts
                     return false;
 
                 case TrackEnd.Ramp:
-                    Derail(new Vector2(Speed, -Math.Abs(Speed)));
+                    // The cart leaves with the velocity it had on the track: Speed along X and, because it was following the slope, Speed * tan(Rotation)
+                    // along Y (up on a rising slope, down on a falling one, zero on the flat). Gravity does the rest in UpdateDerailed.
+                    Derail(new Vector2(Speed, Speed * (float)Math.Tan(Rotation)));
                     return true;
 
                 case TrackEnd.Open:
