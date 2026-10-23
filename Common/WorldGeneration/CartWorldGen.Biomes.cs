@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Factorraria.Common.Carts;
 using Factorraria.Common.Liquids;
+using Factorraria.Common.Machines;
 using Factorraria.Content.Items.Materials;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -40,6 +41,7 @@ namespace Factorraria.Common.WorldGeneration
         {
             public CartBiome Biome;
             public CartDepth Depth;
+            public bool BelowRockLayer; // the cavern layer (the lava layer counts too); false = the dirt layer or above
         }
 
         // One line of a loot table: Slots slots, each one rolls Chance and, on a hit, takes a random item of Pool with Min..Max items.
@@ -64,6 +66,8 @@ namespace Factorraria.Common.WorldGeneration
                 spot.Depth = CartDepth.LavaLayer;
             else
                 spot.Depth = CartDepth.Underground;
+
+            spot.BelowRockLayer = tile.Y >= Main.rockLayer;
 
             int jungle = 0, snow = 0, desert = 0;
             int r = BiomeScanRadius;
@@ -226,6 +230,27 @@ namespace Factorraria.Common.WorldGeneration
             return gold ? ItemID.GoldChest : ItemID.Chest;
         }
 
+        /// <summary>
+        /// The water a terrarium cart holds here, using the same biome waters as the machines (LiquidTypeRegistry.WaterFor):
+        /// snow = Snow Water, desert = Desert Water underground / Oasis Water on the surface, and otherwise by layer:
+        /// Cavern Water below the rock layer, Underground Water in the dirt layer, plain Water on the surface (forest has no variant).
+        /// </summary>
+        private int BiomeWater(CartSpot spot)
+        {
+            MachineBiome biome;
+
+            if (spot.Biome == CartBiome.Snow)
+                biome = MachineBiome.Snow;
+            else if (spot.Biome == CartBiome.Desert)
+                biome = spot.Depth == CartDepth.Surface ? MachineBiome.Desert : MachineBiome.UndergroundDesert;
+            else if (spot.Depth == CartDepth.Surface)
+                biome = MachineBiome.Forest;
+            else
+                biome = spot.BelowRockLayer ? MachineBiome.Cavern : MachineBiome.Underground;
+
+            return LiquidTypeRegistry.WaterFor(biome);
+        }
+
         private void FillTerrarium(Cart cart, CartSpot spot)
         {
             double roll = WorldGen.genRand.NextDouble();
@@ -238,7 +263,7 @@ namespace Factorraria.Common.WorldGeneration
             }
             else if (roll >= TerrariumEmptyChance)
             {
-                liquid = roll < TerrariumEmptyChance + TerrariumWaterChance ? LiquidTypeRegistry.Water : LiquidTypeRegistry.Lava;
+                liquid = roll < TerrariumEmptyChance + TerrariumWaterChance ? BiomeWater(spot) : LiquidTypeRegistry.Lava;
             }
 
             if (liquid < 0)

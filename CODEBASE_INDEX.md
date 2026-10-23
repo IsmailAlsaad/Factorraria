@@ -796,7 +796,7 @@ tModLoader/other bases -> project types:
     +itemType:int +stackSize:int +prefix:int +active:bool +Id:int +ReplicaStep:float +StepPerTick:float +pickupCooldown:int +cartGrabCooldown:int +frame:int +frameCounter:int +currentTileX:int +currentTileY:int +targetTileX:int +targetTileY:int +worldPosition:Vector2 +moveSpeed:float +Update() +CreateReplica(int,Item,Vector2,int,int,float)[s] +ApplyReplicaState(Item,int,Vector2,int,int,float) +ReplicaTick() +SetTargetTile(int,int) +GetSourceRectangle(Texture2D) +Remove() +MoveVirtualItem() +TryMergeWithVirtualItem(VirtualItem)
 
 ### Common/WorldGeneration/
-**CartWorldGen.Biomes.cs** uses: Cart, CartChain, CartModule, CartSystem, LiquidTypeRegistry, SiliconOreItem
+**CartWorldGen.Biomes.cs** uses: Cart, CartChain, CartModule, CartSystem, LiquidTypeRegistry, MachineBiome, SiliconOreItem
   partial class CartWorldGen
     +BiomeScanRadius:int +BiomeMinTiles:int +DesertAmberChance:double +HellcartChance:double +ShroomCartChance:double +GemCartChance:double +GoldChestShare2:double +TerrariumEmptyChance:double +TerrariumWaterChance:double +JungleHoneyChance:double +TerrariumMaxAmount:int
     enum CartBiome
@@ -804,7 +804,7 @@ tModLoader/other bases -> project types:
     enum CartDepth
       {Surface, Underground, LavaLayer}
     struct CartSpot
-      +Biome:CartBiome +Depth:CartDepth
+      +Biome:CartBiome +Depth:CartDepth +BelowRockLayer:bool
     class LootEntry
       +Pool:int +Min:int +Max:int +Chance:double +Slots:int +Distinct:bool
 **CartWorldGen.cs** uses: CartPhysics, TrackData, TrackSample
