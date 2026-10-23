@@ -20,13 +20,23 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine
                 .TakesTicks(60));
 
             Book.Add(new CustomRecipe()
-                .WithAnyWaterInput(100f)
+                .WithLiquidInput(LiquidTypeRegistry.SnowWater, 50f)
                 .WithOutput(ItemID.SlushBlock, 1)
                 .TakesTicks(60));
 
             Book.Add(new CustomRecipe()
                 .WithLiquidInput(LiquidTypeRegistry.Oil, 50f)
                 .WithOutput(ModContent.ItemType<CokeItem>(), 1)
+                .TakesTicks(60));
+
+            Book.Add(new CustomRecipe()
+                .WithLiquidInput(LiquidTypeRegistry.Honey, 50f)
+                .WithOutput(ItemID.HoneyBlock, 1)
+                .TakesTicks(60));
+
+            Book.Add(new CustomRecipe()
+                .WithLiquidInput(LiquidTypeRegistry.Shimmer, 50f)
+                .WithOutput(ItemID.ShimmerBlock, 1)
                 .TakesTicks(60));
 
             Book.Rebuild();
