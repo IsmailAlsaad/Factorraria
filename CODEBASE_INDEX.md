@@ -273,7 +273,7 @@ tModLoader/other bases -> project types:
 **MachineDynamicDrawSystem.cs** uses: BaseMachine, IMachineDynamicDraw
   class MachineDynamicDrawSystem : ModSystem
     +Load()[ov] +Unload()[ov] +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
-**MachineOverhangSystem.cs** uses: BaseMachine, LiquidOverlayLayer, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineCanvas, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
+**MachineOverhangSystem.cs** uses: BaseMachine, LiquidOverlayLayer, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineCanvas, MachineTransition, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
     +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
 **MachineTransitionSystem.cs** uses: BaseMachine, MachineVisualDefinition, MachineVisualRegistry
@@ -283,13 +283,13 @@ tModLoader/other bases -> project types:
   enum MachineTransition : byte
     {None, Startup, Shutdown}
   class LiquidOverlayLayer
-    +SourceTexture:Asset<Texture2D> +GetLiquidStack:Func<BaseMachine, LiquidStack> +CacheKey:string
+    +SourceTexture:Asset<Texture2D> +GetLiquidStack:Func<BaseMachine, LiquidStack> +CacheKey:string +StartupTexture:Asset<Texture2D> +ShutdownTexture:Asset<Texture2D> +StartupCacheKey:string +ShutdownCacheKey:string +TryGetTexture(MachineTransition,out Texture2D,out string)
   class MachineCanvas
     +FootprintWidth:int +FootprintHeight:int +OnFrames:int +OffFrames:int +Padding:int +CanvasWidth:int +CanvasHeight:int +OriginX:float +OriginY:float +YOffset:float +Resolved:bool +Valid:bool +Error:string +CellSize:int +FrameStride:int +FrameCount(bool) +Resolve(Texture2D,Texture2D)
   class MachineVisualDefinition
-    +GetEntity:Func<int, int, BaseMachine> +FindEntity:Func<int, int, BaseMachine> +ResolveEntity(int,int) +OnTexture:Asset<Texture2D> +OffTexture:Asset<Texture2D> +AltOnTexture:Asset<Texture2D> +UseAltOn:Func<BaseMachine, bool> +LiquidOverlays:List<LiquidOverlayLayer> +Canvas:MachineCanvas +TileType:int +StartupTexture:Asset<Texture2D> +ShutdownTexture:Asset<Texture2D> +StartupFrames:int +ShutdownFrames:int +StartupTicksPerFrame:int +ShutdownTicksPerFrame:int +StartupLiquidOverlays:List<LiquidOverlayLayer> +ShutdownLiquidOverlays:List<LiquidOverlayLayer> +GetTransitionFrameCount(MachineTransition) +GetTransitionTicksPerFrame(MachineTransition) +GetTransitionDuration(MachineTransition) +TryGetActiveTransition(BaseMachine,out Texture2D,out int,out List<LiquidOverlayLayer>)
+    +GetEntity:Func<int, int, BaseMachine> +FindEntity:Func<int, int, BaseMachine> +ResolveEntity(int,int) +OnTexture:Asset<Texture2D> +OffTexture:Asset<Texture2D> +AltOnTexture:Asset<Texture2D> +UseAltOn:Func<BaseMachine, bool> +LiquidOverlays:List<LiquidOverlayLayer> +Canvas:MachineCanvas +TileType:int +StartupTexture:Asset<Texture2D> +ShutdownTexture:Asset<Texture2D> +GetTransitionFrameCount(MachineTransition) +GetTransitionTicksPerFrame(MachineTransition) +GetTransitionDuration(MachineTransition) +TryGetActiveTransition(BaseMachine,out Texture2D,out int,out MachineTransition)
   static class MachineVisualRegistry
-    +Definitions:Dictionary<int, MachineVisualDefinition>[s] +Register<T>(int,string,string)[s] +RegisterAlternateOn(int,string,Func<BaseMachine, bool>)[s] +RegisterLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>)[s] +RegisterStartup(int,string,int,int)[s] +RegisterShutdown(int,string,int,int)[s] +RegisterStartupLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>)[s] +RegisterShutdownLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>)[s] ~Warn(string)[s] +RegisterOverhang<T>(int,string,string,int,int,float,float,int,int,float)[s]
+    +Definitions:Dictionary<int, MachineVisualDefinition>[s] +Register<T>(int,string,string,string,string)[s] +RegisterAlternateOn(int,string,Func<BaseMachine, bool>)[s] +RegisterLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>,string,string)[s] ~Warn(string)[s] +RegisterOverhang<T>(int,string,string,int,int,float,float,int,int,float,string,string)[s]
   class MachineVisualOverride : GlobalTile
     +PreDraw(int,int,int,SpriteBatch)[ov] +RightClick(int,int,int)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +ModifyLight(int,int,int,ref float,ref float,ref float)[ov]
 **RecipeVisibility.cs** uses: CustomRecipe, Entry, FurnaceOffsetConfig, RecipeCatalog, RecipeIngredient, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey

@@ -78,12 +78,13 @@ namespace Factorraria.Common.Machines
                 bool working = machine.isOn && machine.isWorking;
                 Texture2D texture;
                 int frame;
-                List<LiquidOverlayLayer> overlays;
-                if (!def.TryGetActiveTransition(machine, out texture, out frame, out overlays))
+                MachineTransition transition;
+                bool drawLiquid = true;
+                if (!def.TryGetActiveTransition(machine, out texture, out frame, out transition))
                 {
                     texture = working ? def.OnTexture.Value : def.OffTexture.Value;
                     frame = TileEntityHelper.GetAnimationFrame(corner, canvas.FrameCount(working));
-                    overlays = working ? def.LiquidOverlays : null;
+                    drawLiquid = working;   // the On liquid layers only draw while running
                 }
                 int canvasWidth = canvas.CanvasWidth * 16;
                 int canvasHeight = canvas.CanvasHeight * 16;
@@ -103,8 +104,8 @@ namespace Factorraria.Common.Machines
                 }
 
                 DrawCanvasCells(spriteBatch, texture, canvas, worldTopLeft, frameY, color);
-                if (overlays != null)
-                    DrawCanvasLiquidOverlays(spriteBatch, overlays, machine, canvas, worldTopLeft, frameY, color);
+                if (drawLiquid)
+                    DrawCanvasLiquidOverlays(spriteBatch, def.LiquidOverlays, transition, machine, canvas, worldTopLeft, frameY, color);
             }
 
             if (TryGetHologram(out MachineVisualDefinition holoDef, out Vector2 holoTopLeft, out bool holoValid))
@@ -123,18 +124,21 @@ namespace Factorraria.Common.Machines
                 spriteBatch.End();
         }
 
-        // Recolored liquid layers (same LiquidTextureCache as normal machines) drawn over a canvas frame. Each layer texture has to
-        // share the frame layout of the canvas texture it goes with (On, startup or shutdown).
-        private static void DrawCanvasLiquidOverlays(SpriteBatch spriteBatch, List<LiquidOverlayLayer> layers, BaseMachine machine, MachineCanvas canvas, Vector2 worldTopLeft, int frameY, Color color)
+        // Recolored liquid layers (same LiquidTextureCache as normal machines) drawn over a canvas frame. kind picks each layer's On /
+        // startup / shutdown texture (a layer without that one is skipped); it has to share the frame layout of the canvas texture it goes with.
+        private static void DrawCanvasLiquidOverlays(SpriteBatch spriteBatch, List<LiquidOverlayLayer> layers, MachineTransition kind, BaseMachine machine, MachineCanvas canvas, Vector2 worldTopLeft, int frameY, Color color)
         {
             foreach (LiquidOverlayLayer layer in layers)
             {
+                if (!layer.TryGetTexture(kind, out Texture2D source, out string cacheKey))
+                    continue;
+
                 LiquidStack stack = layer.GetLiquidStack(machine);
                 if (stack == null || stack.IsEmpty)
                     continue;
 
                 LiquidTypeDefinition liquidDef = LiquidTypeRegistry.Get(stack.LiquidType);
-                Texture2D recolored = LiquidTextureCache.GetOrCreate(layer.CacheKey, layer.SourceTexture.Value, liquidDef);
+                Texture2D recolored = LiquidTextureCache.GetOrCreate(cacheKey, source, liquidDef);
                 DrawCanvasCells(spriteBatch, recolored, canvas, worldTopLeft, frameY, color);
             }
         }
