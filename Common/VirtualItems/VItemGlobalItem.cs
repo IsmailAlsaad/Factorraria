@@ -26,6 +26,14 @@ namespace Factorraria.Common.VirtualItems
             if(entity.type == ItemID.Coal)
             {
                 entity.maxStack = 9999;
+
+                entity.useStyle = ItemUseStyleID.Swing;
+                entity.useAnimation = 15;
+                entity.useTime = 10;
+                entity.useTurn = true;
+                entity.autoReuse = true;
+                entity.consumable = true;
+                entity.createTile = ModContent.TileType<Factorraria.Content.Tiles.Ores.CoalTile>();
             }
         }
     }

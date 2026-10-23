@@ -376,6 +376,7 @@ RecipeBook: {
 Tiles: {
 	PureSiliconTile.MapEntry: Pure Silicon
 	SiliconOreTile.MapEntry: Silicon Ore
+	CoalTile.MapEntry: Coal
 	MechanicalAssemblerTile.MapEntry: Mechanical Assembler
 	RoboticArmTile.MapEntry: Robotic Arm
 }

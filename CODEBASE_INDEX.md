@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-24 | 250 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-24 | 251 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(57) BaseMachine(37) FactorrariaPacket(29) LiquidTypeRegistry(28) RecipeBook(25) PacketDirection(25) Factorraria(17) CustomRecipe(17) Cart(16) LiquidStack(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) JoinSync(12) RecipeOutputGroup(11) CartModule(11) RecipeCatalog(10) MachineVisualRegistry(10)
+FactorrariaNet(57) BaseMachine(37) FactorrariaPacket(29) LiquidTypeRegistry(28) RecipeBook(25) PacketDirection(25) Factorraria(18) CustomRecipe(17) Cart(16) LiquidStack(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIStateBase(13) LiquidNetworkSystem(13) MachineUIElementEntry(12) JoinSync(12) RecipeOutputGroup(11) CartModule(11) RecipeCatalog(10) MachineVisualRegistry(10)
 
 ## Inheritance
 Project bases -> derived:
@@ -29,8 +29,8 @@ tModLoader/other bases -> project types:
 - byte (16): CartAction, CartPanelAction, CartPanelCloseReason, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, RequestCheck
 - ModCommand (13): ArmSendCommand, CartDiagnosticsCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
+- ModTile (9): ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (8): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
-- ModTile (8): ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - GlobalItem (6): CartModuleItemGlobal, IceBladeItem, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalTile (6): AwakenedStatueGlobalTile, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MaterializerWireGuard, TilePlacedGlobalTile
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
@@ -824,7 +824,7 @@ tModLoader/other bases -> project types:
     +MouseInside:bool +Update(GameTime)[ov] +ScrollWheel(UIScrollWheelEvent)[ov] #DrawSelf(SpriteBatch)[ov]
 
 ### Common/VirtualItems/
-**VItemGlobalItem.cs**
+**VItemGlobalItem.cs** uses: CoalTile, Factorraria
   class VItemGlobalItem : GlobalItem
     +InstancePerEntity:bool[ov] +ConveyorImmunityTimer:int +Update(Item,ref float,ref float)[ov]
 **VItemStacking.cs** ns!=Factorraria.Content.VirtualItems
@@ -1228,6 +1228,8 @@ tModLoader/other bases -> project types:
     #MaxFlowRate:float[ov]
 
 ### Content/Tiles/Ores/
+**CoalTile.cs**
+  class CoalTile : ModTile
 **PureSiliconTile.cs** uses: PureSiliconItem
   class PureSiliconTile : ModTile
 **SiliconOreTile.cs** uses: SiliconOreItem
