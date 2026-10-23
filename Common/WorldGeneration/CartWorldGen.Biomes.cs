@@ -218,8 +218,10 @@ namespace Factorraria.Common.WorldGeneration
             if (spot.Biome == CartBiome.Jungle)
                 return gold ? ItemID.GoldChest : ItemID.IvyChest;
 
+            int randomIndex = Main.rand.Next(0, 3);
+            int[] ChestOptions = new int[] { ItemID.ShadowChest, ItemID.GoldChest, ItemID.Chest };
             if (spot.Depth == CartDepth.LavaLayer)
-                return ItemID.ShadowChest;
+                return ChestOptions[randomIndex];
 
             return gold ? ItemID.GoldChest : ItemID.Chest;
         }
@@ -316,6 +318,11 @@ namespace Factorraria.Common.WorldGeneration
         {
             List<LootEntry> t = new List<LootEntry>();
             int[] gems = { ItemID.Amethyst, ItemID.Topaz, ItemID.Sapphire, ItemID.Emerald, ItemID.Ruby, ItemID.Diamond };
+            int[] ores =
+                {
+                    ItemID.TinOre, ItemID.CopperOre, ItemID.IronOre, ItemID.LeadOre, ItemID.TungstenOre,
+                    ItemID.SilverOre, ItemID.GoldOre, ItemID.PlatinumOre, ModContent.ItemType<SiliconOreItem>()
+                };
 
             if (spot.Biome == CartBiome.Snow)
             {
@@ -340,22 +347,17 @@ namespace Factorraria.Common.WorldGeneration
             {
                 Add(t, ItemID.SiltBlock, 30, 60, 0.9);
                 AddPool(t, gems, 2, 3, 10, 0.1);
-                Add(t, ItemID.GoldOre, 8, 20, 0.4);
-                Add(t, ItemID.PlatinumOre, 8, 20, 0.4);
+                AddPool(t, ores, OreSlots, OreMin, OreMax, 0.4);
             }
             else
             {
                 Add(t, ItemID.SiltBlock, 30, 60, 0.9);
                 Add(t, ItemID.StoneBlock, 30, 60, 0.7);
-                int[] ores =
-                {
-                    ItemID.TinOre, ItemID.CopperOre, ItemID.IronOre, ItemID.LeadOre, ItemID.TungstenOre,
-                    ItemID.SilverOre, ItemID.GoldOre, ItemID.PlatinumOre, ModContent.ItemType<SiliconOreItem>()
-                };
+
                 AddPool(t, ores, OreSlots, OreMin, OreMax, 1.0);
             }
 
-            Add(t, ItemID.Coal, 8, 20, 0.3);
+            Add(t, ItemID.Coal, 8, 20, 0.1);
             return t;
         }
 
