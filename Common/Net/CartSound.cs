@@ -89,7 +89,7 @@ namespace Factorraria.Common.Net
                     SoundEngine.PlaySound(SoundID.Mech, position); // vanilla's switch / pressure plate click
                     break;
                 case CartSoundKind.PassengerPickup:
-                    SoundEngine.PlaySound(SoundID.Grab, position); // placeholder "hop in" pop
+                    SoundEngine.PlaySound(SoundID.Grab with { Volume = 0.6f, Pitch = -0.2f }, position); // placeholder "hop in" pop
                     PuffDust(position, 1f);
                     break;
                 case CartSoundKind.PassengerRelease:
