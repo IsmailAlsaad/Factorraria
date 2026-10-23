@@ -23,7 +23,7 @@ namespace Factorraria.Common.WorldGeneration
     public partial class CartWorldGen : ModSystem
     {
         public bool Enabled = true;
-        public double SpawnChancePerTile = 0.05;   // per vanilla track tile
+        public double SpawnChancePerTile = 0.005;   // per vanilla track tile
         public double LinkedChance = 0.30;          // of the spawns: motor cart + carriage (the rest are a lone carriage)
         public double ChestChance = 0.60;           // per carriage: chest cart
         public double TerrariumChance = 0.10;       // per carriage: terrarium cart (the rest are empty)
