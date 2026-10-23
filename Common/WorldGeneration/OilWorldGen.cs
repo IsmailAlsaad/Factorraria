@@ -214,6 +214,7 @@ namespace Factorraria.Common.WorldGeneration
             Mod.Logger.Info("[OilGen] anchor=" + usedAnchor
                 + ", world=" + Main.maxTilesX + "x" + Main.maxTilesY
                 + ", desert rect=" + r
+                + ", worldSurface=" + Main.worldSurface
                 + ", hive rect=" + GenVars.UndergroundDesertHiveLocation
                 + ", oilType=" + oilType
                 + ", " + columns
@@ -579,6 +580,9 @@ namespace Factorraria.Common.WorldGeneration
                     if (!WorldGen.InWorld(x, y, 10) || !InsideOval(x, y))
                         continue;
 
+                    if (y < Main.worldSurface)
+                        continue;
+
                     Tile seed = Main.tile[x, y];
                     if (seed.LiquidAmount == 0 || seed.LiquidType == oilType)
                         continue;
@@ -607,6 +611,9 @@ namespace Factorraria.Common.WorldGeneration
                             int nx = p.X + steps[s].X;
                             int ny = p.Y + steps[s].Y;
                             if (!WorldGen.InWorld(nx, ny, 10))
+                                continue;
+
+                            if (ny < Main.worldSurface)
                                 continue;
 
                             Tile n = Main.tile[nx, ny];

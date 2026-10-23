@@ -212,7 +212,7 @@ namespace Factorraria.Common.WorldGeneration
                 return ItemID.MushroomChest;
 
             if (spot.Biome == CartBiome.Snow)
-                return ItemID.FrozenChest;
+                return ItemID.IceChest;
 
             if (spot.Biome == CartBiome.Desert)
                 return ItemID.DesertChest;
