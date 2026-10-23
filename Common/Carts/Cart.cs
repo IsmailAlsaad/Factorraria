@@ -58,6 +58,18 @@ namespace Factorraria.Common.Carts
 
         public const float MotorSpeedCap = 6f;           // top speed a motor cart reaches under its own power (boosters and collisions can still exceed it)
         public const float MotorAccel = 0.08f;           // speed a burning motor cart gains per tick towards its facing (0.12 = about 80 ticks to MaxSpeed)
+
+        // Cart passengers (CartPassengers). Ticks are game ticks (60 = 1 second), distances are pixels.
+        public static int PassengerPickupCooldown = 90;      // ticks before a released NPC can be picked up again
+        public static int PassengerGraceTicks = 3600;        // ticks after a bump release during which vanilla may not despawn the NPC (not for town NPCs)
+        public static float PassengerPickupPadding = 6f;     // the NPC's centre may be this far outside the cart's box and still be taken
+        public static float PassengerPickupRange = 120f;     // quick reject: NPCs further than this from the rail point are not even tested
+        public static float PassengerFloorLift = 6f;         // px the passenger's feet sit above the rail point (the cart floor)
+        public static float PassengerLaunchMinSpeed = 4f;    // sideways speed of a bump launch is the cart's speed, clamped to this range
+        public static float PassengerLaunchMaxSpeed = 10f;
+        public static float PassengerLaunchLift = 4f;        // upward speed of a bump launch
+        public static int PassengerRestoreTries = 600;       // ticks the server keeps trying to bring a saved passenger back after a world load
+        public static float PassengerRestoreRange = 400f;    // a saved town NPC is looked for this close to its cart
     }
 
     /// <summary>
@@ -96,6 +108,15 @@ namespace Factorraria.Common.Carts
         }
 
         public CartModule Module = CartModule.Empty;
+
+        /// <summary>Server / single-player only, never sent: index in Main.npc of the NPC riding this cart, -1 = none. See CartPassengers.</summary>
+        public int PassengerNpc = -1;
+
+        /// <summary>A passenger saved with the world that is not back in the cart yet (CartPassengers.TryRestore brings it back on the first ticks).</summary>
+        public TagCompound PendingPassenger;
+
+        /// <summary>Ticks CartPassengers.TryRestore has already tried for PendingPassenger.</summary>
+        public int PassengerRestoreTries;
 
         /// <summary>The exact item that installed the module (e.g. a Gold Chest), so pickup returns that item. 0 or less = use the default.</summary>
         public int ModuleItem;
@@ -1502,6 +1523,12 @@ namespace Factorraria.Common.Carts
                 tag["fuelCapacity"] = burner.Capacity;
             }
 
+            TagCompound passenger = CartPassengers.Save(this);
+            if (passenger != null)
+            {
+                tag["passenger"] = passenger; // optional key: older saves simply do not have it
+            }
+
             return tag;
         }
 
@@ -1609,6 +1636,11 @@ namespace Factorraria.Common.Carts
             if (tag.ContainsKey("fuelRemaining"))
             {
                 cart.RestoreBurn(tag.GetInt("fuelRemaining"), tag.GetInt("fuelCapacity"));
+            }
+
+            if (tag.ContainsKey("passenger"))
+            {
+                cart.PendingPassenger = tag.GetCompound("passenger"); // CartPassengers.TryRestore puts it back once the world is running
             }
 
             return cart;

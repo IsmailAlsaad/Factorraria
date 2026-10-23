@@ -549,6 +549,7 @@ namespace Factorraria.Common.Net
             }
 
             CartSystem.ClientInterpolate();
+            CartPassengers.ClientTick(); // riding NPCs follow the replicas that just moved
         }
 
         static void ApplyDelta(DeltaBatch batch)

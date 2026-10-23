@@ -67,6 +67,8 @@ namespace Factorraria.Common.Carts
                 return; // patch 9.1: cargo (pickups, spills, liquid, fuel) is server simulation only
             }
 
+            CartPassengers.Update(cart); // empty carts pick up and carry NPCs; also lets go when a module was installed
+
             if (cart.Module == CartModule.Chest)
             {
                 PickUpConveyorItems(cart);
@@ -102,6 +104,10 @@ namespace Factorraria.Common.Carts
             else if (cart.Module == CartModule.Terrarium)
             {
                 PourTank(cart);
+            }
+            else if (cart.Module == CartModule.Empty)
+            {
+                CartPassengers.OnBump(cart); // an empty cart throws its passenger out
             }
         }
 

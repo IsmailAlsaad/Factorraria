@@ -382,6 +382,8 @@ namespace Factorraria.Common.Carts
 
                 if (!cart.Active)
                 {
+                    CartPassengers.Release(cart, false); // picked up, destroyed or fell out of the world: the passenger drops out
+
                     if (cart.Chain != null)
                     {
                         cart.Chain.Remove(cart);

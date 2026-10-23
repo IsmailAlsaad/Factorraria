@@ -717,3 +717,17 @@ New virtual, default is the machine's footprint (`cornerPosition`, `MachineWidth
 
 ## Roadmap impact
 New **Phase 7b - Robotic Arm** (A1-A5b, A12-A14), a SP-safe preparation patch **2.7** (A1 motion model, A3 helper), plus edits to Phases 0, 1.3, 4.2, 5.1, 6.1, 6.2, 7.1, 10, the traceability table, the test matrix and the verification list. Details in the roadmap v2.
+
+---
+
+## Cart passengers (side feature, 2026-10-23)
+Not part of the ten survey steps; written while planning the feature (see the roadmap Progress entry 'Side feature (not multiplayer): Cart passengers').
+
+Engine facts verified in the tModLoader source (1.4.4 branch, 2026-10-23):
+- `GlobalNPC.SendExtraAI` / `ReceiveExtraAI` run whenever `SyncNPC` is sent or received (creation, player join, `netUpdate`), so a GlobalNPC can replicate a small value without its own packet. `NPCLoader.WriteExtraAI` shares ONE bit stream between all GlobalNPCs of all mods, and the reader only runs when the sender flagged extra data, so a GlobalNPC must write the same bits every time (a conditional write would shift another mod's bits). That is why `CartPassengerGlobalNPC` always writes one bit.
+- `GlobalNPC.CheckActive` returning false blocks vanilla despawn (same pattern as `AwakenedSpawnGlobalNPC`); `PostAI` runs even when `PreAI` returned false.
+- Terraria saves only town NPCs and `NPCID.Sets.SavesAndLoads` NPCs (and what mods save): `NPCLoader.SavesAndLoads(npc)` is the public test. Enemies are never saved, so a cart that must keep an enemy across exit and rejoin has to store the NPC type, netID and health itself and spawn it again.
+- `NPCID.Search.GetName` / `TryGetId` give a stable name for vanilla and modded NPC types (used as the saved key).
+- `CartPassengers.Pin` runs after the cart moved: on the server in `CartCargo.Update` (inside `PostUpdateWorld`), on a client in `CartNet.ClientTick` (inside `PostUpdateEverything`, after `ClientInterpolate`), so the NPC is drawn on the cart with no one-tick lag.
+
+Open question for Ismail's test: whether `PreAI` false plus `velocity = 0` is enough to hold every vanilla NPC still (flyers, hoppers). If one slides, pin it also in `PostAI`.
