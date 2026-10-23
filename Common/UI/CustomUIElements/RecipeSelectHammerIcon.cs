@@ -505,7 +505,7 @@ namespace Factorraria.Common.UI.CustomUIElements
 
     public class RecipeSearchBar : UIElement
     {
-        const int MaxLength = 24;
+        const int MaxLength = 32;   // item names like "#Hardened Sand Block" must fit
         const string Hint = "Search...";
 
         static readonly Color BgColor = new Color(20, 26, 55) * 0.9f;
@@ -527,6 +527,16 @@ namespace Factorraria.Common.UI.CustomUIElements
         public void SetZoomScale(float z) => zoom = z;
 
         public void Unfocus() => focused = false;
+
+        /// <summary>Optional tooltip text shown while the mouse is over the bar.</summary>
+        public Func<string> HoverText;
+
+        /// <summary>Sets the text from code without firing onTextChanged (the caller already knows).</summary>
+        public void SetText(string value)
+        {
+            text = value ?? "";
+            focused = false;
+        }
 
         public override void LeftClick(UIMouseEvent evt)
         {
@@ -616,6 +626,8 @@ namespace Factorraria.Common.UI.CustomUIElements
                     focused = false;
                 }
             }
+
+            if (IsMouseHovering && HoverText != null) Main.hoverItemName = HoverText();
 
             CalculatedStyle dims = GetDimensions();
             if (theme != null)

@@ -1,5 +1,7 @@
 ﻿using Factorraria.Common.Knowledge;
+using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
+using Factorraria.Common.Systems;
 using Factorraria.Common.UI.CustomUIElements;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -128,6 +130,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
             bool any = false;
             int shown = 0;
             string filter = searchFilter?.Trim();
+            // "#Name" searches by ingredient (recipes that take Name as an input); plain text searches by product name, as before.
+            bool byIngredient = !string.IsNullOrEmpty(filter) && filter[0] == '#';
+            if (byIngredient) filter = filter.Substring(1).Trim();
             bool filtering = !string.IsNullOrEmpty(filter);
 
             // Per machine: crafted recipes first, then the faded ones. OrderBy is stable, so each tier keeps the catalog's
@@ -141,6 +146,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 if (!machineOrder.ContainsKey(cat.Machine)) machineOrder[cat.Machine] = machineOrder.Count;
                 listed.Add((cat, catState));
             }
+
+            // Ingredient search: if some listed recipe takes an ingredient named exactly like the text ("Wood"), only exact
+            // names match, so "#Wood" does not also pull in Boreal Wood. Otherwise it falls back to a partial match.
+            bool exactIngredient = byIngredient && filtering && listed.Any(x => UsesIngredient(x.e.Group, x.state, filter, true));
 
             foreach (var (e, state) in listed.OrderBy(x => machineOrder[x.e.Machine]).ThenBy(x => x.state == RecipeState.Crafted ? 0 : 1))
             {
@@ -156,7 +165,13 @@ namespace Factorraria.Common.UI.RecipeBookUI
                     SelectedState = state;
                 }
 
-                if (filtering && (state == RecipeState.Crafted ? e.Group.Key.DisplayName : RecipeBookLayout.UnknownName).IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                if (filtering)
+                {
+                    bool matches = byIngredient
+                        ? UsesIngredient(e.Group, state, filter, exactIngredient)
+                        : (state == RecipeState.Crafted ? e.Group.Key.DisplayName : RecipeBookLayout.UnknownName).IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+                    if (!matches) continue;
+                }
                 shown++;
 
                 if (e.Machine != lastMachine)
@@ -205,6 +220,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             searchBar.Top.Set(s.Y, 0f);
             searchBar.Width.Set(s.Width, 0f);
             searchBar.Height.Set(s.Height, 0f);
+            searchBar.HoverText = () => string.Format(RecipeBookLayout.Text("SearchTooltip"), RecipeBookKeybindSystem.ItemSearchKeyName());
             panel.Append(searchBar);
         }
 
@@ -218,6 +234,46 @@ namespace Factorraria.Common.UI.RecipeBookUI
             filterDirty = true;
             BuildSearchBar();   // no-op before OnInitialize; the first OnInitialize builds a fresh bar
         }
+
+        /// <summary>Types text into the search bar from code (the item-search keybind uses "#Name"). Clears the selection so the right page does not show a recipe the filter hides.</summary>
+        public void SetSearch(string text)
+        {
+            searchFilter = text ?? "";
+            filterDirty = true;
+            searchBar?.SetText(searchFilter);
+            ClearSelection();
+        }
+
+        /// <summary>
+        /// Does any recipe of this group take an ingredient called `name`? Follows the detail page's reveal rule, so the search
+        /// never matches an ingredient the page would show as "???": a Crafted recipe shows every input; otherwise an item input
+        /// needs to have been seen (or crafted), liquids are hidden on held-ingredient recipes, and a made liquid needs to have been crafted.
+        /// </summary>
+        static bool UsesIngredient(RecipeOutputGroup group, RecipeState state, string name, bool exact)
+        {
+            bool reveal = state != RecipeState.Crafted;
+            bool fadeLiquids = state == RecipeState.FadedIngredient;
+            foreach (CustomRecipe recipe in group.Recipes)
+            {
+                foreach (RecipeIngredient input in recipe.Inputs)
+                {
+                    if (reveal && !RecipeVisibility.IsIngredientRevealed(input.Type)) continue;
+                    if (NameMatches(ContentSamples.ItemsByType[input.Type].Name, name, exact)) return true;
+                }
+                foreach (LiquidIngredient liquid in recipe.LiquidInputs)
+                {
+                    if (fadeLiquids) continue;
+                    if (reveal && !liquid.IsAnyWater && !RecipeVisibility.IsLiquidRevealed(liquid.LiquidType)) continue;
+                    string liquidName = liquid.IsAnyWater ? RecipeBookLayout.Text("AnyWater") : LiquidTypeRegistry.Get(liquid.LiquidType).Name;
+                    if (NameMatches(liquidName, name, exact)) return true;
+                }
+            }
+            return false;
+        }
+
+        static bool NameMatches(string candidate, string name, bool exact) =>
+            exact ? string.Equals(candidate, name, StringComparison.OrdinalIgnoreCase)
+                  : candidate.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0;
 
         // ------------------------------------------------------------------------------------------
         // Window dragging (the handle lives in RecipeBookDragHandle)

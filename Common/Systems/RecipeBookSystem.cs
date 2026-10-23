@@ -35,6 +35,8 @@ namespace Factorraria.Common.Systems
 
         public static void Open() => Instance?.OpenInternal(null);
         public static void OpenAt(string catalogKey) => Instance?.OpenInternal(catalogKey);
+        /// <summary>Opens the book with "#ItemName" in the search bar: lists the recipes that take this item as an ingredient.</summary>
+        public static void OpenIngredientSearch(int itemType) => Instance?.OpenIngredientSearchInternal(itemType);
         public static void Close(bool playSound = true) => Instance?.CloseInternal(playSound);
         public static void Toggle() => Instance?.ToggleInternal();
 
@@ -89,6 +91,13 @@ namespace Factorraria.Common.Systems
             bookInterface.SetState(bookState);
 
             if (catalogKey != null) bookState.Select(catalogKey, true);
+        }
+
+        void OpenIngredientSearchInternal(int itemType)
+        {
+            OpenInternal(null);
+            if (bookState == null || !ContentSamples.ItemsByType.TryGetValue(itemType, out Item sample)) return;
+            bookState.SetSearch("#" + sample.Name);
         }
 
         void CloseInternal(bool playSound)
