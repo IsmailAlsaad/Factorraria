@@ -62,9 +62,12 @@ namespace Factorraria.Common.Carts
         // Cart passengers (CartPassengers). Ticks are game ticks (60 = 1 second), distances are pixels.
         public static int PassengerPickupCooldown = 90;      // ticks before a released NPC can be picked up again
         public static int PassengerGraceTicks = 3600;        // ticks after a bump release during which vanilla may not despawn the NPC (not for town NPCs)
-        public static float PassengerPickupPadding = 6f;     // the NPC's centre may be this far outside the cart's box and still be taken
-        public static float PassengerPickupRange = 120f;     // quick reject: NPCs further than this from the rail point are not even tested
+        public static float PassengerPickupPadding = 6f;     // the NPC's hitbox may be this far outside the cart's box and still be taken
+        public static float PassengerPickupRange = 120f;     // quick reject: NPCs whose centre is further than this (plus their own height) from the rail point are not even tested
         public static float PassengerFloorLift = 6f;         // px the passenger's feet sit above the rail point (the cart floor)
+        public static float PassengerWallHeight = 32f;       // px above the rail point where the cart's front wall ends (the cart sprite hides everything below it); tune by eye
+        public static float PassengerMinVisible = 14f;       // a passenger is lifted until at least this many px of it show above the wall (short NPCs sit higher)
+        public static float PassengerMinInside = 8f;         // ...but never so high that its feet are less than this many px below the top of the wall
         public static float PassengerLaunchMinSpeed = 4f;    // sideways speed of a bump launch is the cart's speed, clamped to this range
         public static float PassengerLaunchMaxSpeed = 10f;
         public static float PassengerLaunchLift = 4f;        // upward speed of a bump launch

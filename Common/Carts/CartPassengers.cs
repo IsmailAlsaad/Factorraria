@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Common.Net;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -177,12 +178,14 @@ namespace Factorraria.Common.Carts
                     continue; // another cart took it earlier this tick
                 }
 
-                if (Vector2.DistanceSquared(cart.Position, npc.Center) > maxDistance * maxDistance)
+                float reach = maxDistance + npc.height; // a tall NPC's centre is far above the rail point even when it stands on the cart
+
+                if (Vector2.DistanceSquared(cart.Position, npc.Center) > reach * reach)
                 {
                     continue;
                 }
 
-                if (!CartGeometry.Contains(cart, npc.Center, pad))
+                if (!Touches(cart, npc, pad))
                 {
                     continue;
                 }
@@ -192,13 +195,40 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        private static void Capture(Cart cart, NPC npc, CartPassengerGlobalNPC tag)
+        /// <summary>
+        /// The NPC is taken when its hitbox reaches the cart's box (grown by pad) and its centre is over the cart along the floor. A hitbox test
+        /// is needed because a tall NPC's centre stands well above the cart box (35 px tall): the old centre-only test could only take an Ogre
+        /// when its walk bob happened to put the centre inside, which is why pickups were hit and miss.
+        /// </summary>
+        private static bool Touches(Cart cart, NPC npc, float pad)
+        {
+            Rectangle box = cart.Hitbox;
+            box.Inflate((int)pad, (int)pad);
+
+            if (!box.Intersects(npc.Hitbox))
+            {
+                return false;
+            }
+
+            float along = Vector2.Dot(npc.Center - CartGeometry.BoxCenter(cart), CartGeometry.Right(cart));
+
+            return Math.Abs(along) <= CartPhysics.HitboxWidth * 0.5f + pad;
+        }
+
+        /// <summary>announce = false for a passenger that is put back after a world load (no pickup sound then).</summary>
+        private static void Capture(Cart cart, NPC npc, CartPassengerGlobalNPC tag, bool announce = true)
         {
             tag.CarrierCartId = cart.Id;
             tag.GraceTicks = 0;
             cart.PassengerNpc = npc.whoAmI;
 
             Pin(cart, npc);
+
+            if (announce)
+            {
+                CartSound.Play(CartSoundKind.PassengerPickup, npc.Center); // after the pin, so the puff is where it now sits
+            }
+
             SyncNpc(npc);
         }
 
@@ -220,14 +250,13 @@ namespace Factorraria.Common.Carts
             tag.CarrierCartId = 0;
             tag.PickupCooldown = CartPhysics.PassengerPickupCooldown;
             tag.GraceTicks = npc.townNPC ? 0 : CartPhysics.PassengerGraceTicks;
+            npc.rotation = 0f; // it was tilted with the cart; the hitbox does not turn, so nothing jumps
+
+            CartSound.Play(CartSoundKind.PassengerRelease, npc.Center);
 
             if (launch)
             {
-                // A free cart has already turned round when Bumped fires, so it was travelling opposite to its Facing. A carriage replays
-                // the bump before it turns, so it is still travelling along its Facing.
-                float direction = cart.IsCarriage ? cart.Facing : -cart.Facing;
-                float speed = MathHelper.Clamp(Math.Abs(cart.Speed), CartPhysics.PassengerLaunchMinSpeed, CartPhysics.PassengerLaunchMaxSpeed);
-                npc.velocity = new Vector2(direction * speed, -CartPhysics.PassengerLaunchLift);
+                npc.velocity = new Vector2(0f, -CartPhysics.PassengerLaunchLift);
             }
             else
             {
@@ -237,13 +266,33 @@ namespace Factorraria.Common.Carts
             SyncNpc(npc);
         }
 
-        /// <summary>Puts the passenger on the cart's floor, upright, facing the way the cart faces. Server and clients both use this.</summary>
+        /// <summary>
+        /// How far (px) a passenger is lifted above the cart floor, on top of PassengerFloorLift, so that a short one still shows above the
+        /// cart's front wall: the shorter the NPC, the higher it sits, and a tall one is not lifted at all. It only uses fixed tuning numbers
+        /// and npc.height, so the server and every client work out the same value.
+        /// </summary>
+        public static float GetExtraLift(NPC npc)
+        {
+            float floor = CartPhysics.PassengerFloorLift;
+            float wanted = CartPhysics.PassengerWallHeight + CartPhysics.PassengerMinVisible - floor - npc.height;
+            float highest = Math.Max(0f, CartPhysics.PassengerWallHeight - CartPhysics.PassengerMinInside - floor);
+
+            return MathHelper.Clamp(wanted, 0f, highest);
+        }
+
+        /// <summary>
+        /// Puts the passenger in the cart: its hitbox CENTRE on the cart's up axis (floor lift + extra lift + half its height), tilted with the
+        /// cart and facing the way the cart faces. The centre is what is placed because a sprite turns about its centre while the cart turns
+        /// about its feet. Server and clients both use this, and the draw calls it once more (DrawRider) so the picture is exact whatever
+        /// vanilla did to the NPC in between.
+        /// </summary>
         public static void Pin(Cart cart, NPC npc)
         {
-            npc.Bottom = cart.Position + CartGeometry.Up(cart) * CartPhysics.PassengerFloorLift;
+            npc.Center = cart.Position + CartGeometry.Up(cart) * (CartPhysics.PassengerFloorLift + GetExtraLift(npc) + npc.height * 0.5f);
             npc.velocity = Vector2.Zero;
             npc.oldPosition = npc.position;
             npc.netOffset = Vector2.Zero;
+            npc.rotation = cart.Rotation;
 
             int facing = cart.Facing < 0 ? -1 : 1;
             npc.direction = facing;
@@ -291,6 +340,65 @@ namespace Factorraria.Common.Carts
                 }
             }
         }
+
+        #region Drawing (clients and single-player only; a dedicated server never draws)
+
+        /// <summary>True only while DrawRider draws a passenger: CartPassengerGlobalNPC.PreDraw lets exactly that draw through and hides vanilla's own.</summary>
+        public static bool DrawingPassenger;
+
+        // cart id -> the NPC riding it, rebuilt once per frame by CollectRiders from the carrier ids every copy of the game has
+        private static readonly Dictionary<int, NPC> riders = new Dictionary<int, NPC>();
+
+        /// <summary>Once per frame before the carts are drawn (CartSystem.PostDrawTiles).</summary>
+        public static void CollectRiders()
+        {
+            riders.Clear();
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+
+                if (!npc.active)
+                {
+                    continue;
+                }
+
+                int carrierId = npc.GetGlobalNPC<CartPassengerGlobalNPC>().CarrierCartId;
+
+                if (carrierId > 0)
+                {
+                    riders[carrierId] = npc;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws this cart's passenger. Call it right BEFORE the cart's own sprite: the cart wall then covers the NPC's lower part, so it looks
+        /// like it sits inside, instead of depending on where vanilla's NPC pass lands relative to PostDrawTiles. It is drawn behind every
+        /// other NPC and the players. The pin repeats here so the NPC is exactly on the cart as it is drawn this frame.
+        /// </summary>
+        public static void DrawRider(Cart cart)
+        {
+            if (!riders.TryGetValue(cart.Id, out NPC npc) || !npc.active || npc.GetGlobalNPC<CartPassengerGlobalNPC>().CarrierCartId != cart.Id)
+            {
+                return;
+            }
+
+            Pin(cart, npc);
+            DrawingPassenger = true;
+
+            try
+            {
+                Main.instance.DrawNPCCheckAlt(npc); // town NPC texture variants (party hats, shimmer...), same call vanilla's NPC pass makes
+                Main.instance.DrawNPC(npc.whoAmI, false);
+            }
+            finally
+            {
+                DrawingPassenger = false;
+            }
+        }
+
+        #endregion
 
         #region Saving: passengers stay in their carts across exit and rejoin
 
@@ -360,7 +468,7 @@ namespace Factorraria.Common.Carts
             }
 
             cart.PendingPassenger = null;
-            Capture(cart, npc, npc.GetGlobalNPC<CartPassengerGlobalNPC>());
+            Capture(cart, npc, npc.GetGlobalNPC<CartPassengerGlobalNPC>(), false);
         }
 
         private static NPC FindSavedNpc(int type, string givenName, Vector2 near)

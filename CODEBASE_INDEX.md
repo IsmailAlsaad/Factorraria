@@ -62,7 +62,7 @@ tModLoader/other bases -> project types:
   enum CartModule
     {Empty, Chest, Terrarium, Motor}
   static class CartPhysics
-    +WheelHalfBase:float[c] +HitboxWidth:int[c] +HitboxHeight:int[c] +MaxSpeed:float[c] +Drag:float[c] +BoostAccel:float[c] +ShoveSpeed:float[c] +MaxStep:float[c] +Gravity:float[c] +MaxFallSpeed:float[c] +GroundFriction:float[c] +RerailDelay:int[c] +BumpCooldown:int[c] +CollisionRestitution:float[c] +CollisionMinSpeed:float[c] +AnimStopSpeed:float[c] +AnimPixelsPerFrame:float[c] +AnimMaxFramesPerTick:float[c] +PickupPadding:float[c] +SpillGrabCooldown:int[c] +TerrariumDrainPerTick:int[c] +MaxCarriages:int[c] +ChainSpacing:float[c] +ChainSampleStep:float[c] +ChainCloseGapSpeed:float[c] +CouplingMaxRelativeSpeed:float[c] +MotorSpeedCap:float[c] +MotorAccel:float[c] +PassengerPickupCooldown:int[s] +PassengerGraceTicks:int[s] +PassengerPickupPadding:float[s] +PassengerPickupRange:float[s] +PassengerFloorLift:float[s] +PassengerLaunchMinSpeed:float[s] +PassengerLaunchMaxSpeed:float[s] +PassengerLaunchLift:float[s] +PassengerRestoreTries:int[s] +PassengerRestoreRange:float[s]
+    +WheelHalfBase:float[c] +HitboxWidth:int[c] +HitboxHeight:int[c] +MaxSpeed:float[c] +Drag:float[c] +BoostAccel:float[c] +ShoveSpeed:float[c] +MaxStep:float[c] +Gravity:float[c] +MaxFallSpeed:float[c] +GroundFriction:float[c] +RerailDelay:int[c] +BumpCooldown:int[c] +CollisionRestitution:float[c] +CollisionMinSpeed:float[c] +AnimStopSpeed:float[c] +AnimPixelsPerFrame:float[c] +AnimMaxFramesPerTick:float[c] +PickupPadding:float[c] +SpillGrabCooldown:int[c] +TerrariumDrainPerTick:int[c] +MaxCarriages:int[c] +ChainSpacing:float[c] +ChainSampleStep:float[c] +ChainCloseGapSpeed:float[c] +CouplingMaxRelativeSpeed:float[c] +MotorSpeedCap:float[c] +MotorAccel:float[c] +PassengerPickupCooldown:int[s] +PassengerGraceTicks:int[s] +PassengerPickupPadding:float[s] +PassengerPickupRange:float[s] +PassengerFloorLift:float[s] +PassengerWallHeight:float[s] +PassengerMinVisible:float[s] +PassengerMinInside:float[s] +PassengerLaunchMinSpeed:float[s] +PassengerLaunchMaxSpeed:float[s] +PassengerLaunchLift:float[s] +PassengerRestoreTries:int[s] +PassengerRestoreRange:float[s]
   class Cart
     +Skin:string +SkinType:int +Module:CartModule +PassengerNpc:int +PendingPassenger:TagCompound +PassengerRestoreTries:int +ModuleItem:int +IsChestItem(Item)[s] +IsTerrariumItem(Item)[s] +ChestSlots:int[c] +TryAddToChest(Item,bool) +ChestItems:Item +SlotFilter:int +IsSlotFiltered(int) +HasFilterFor(int) +SlotAccepts(int,Item) +FilterKeepCount(int,Item) +SetFilterFromSlots() +NormalizeTank() +OverflowItems:List<Item> +Tank:LiquidStack +FuelSlotCap:int[c] +Fuel:Item +IsBurning:bool +FuelBurnFraction:float +AcceptsFuel(int)[s] +AcceptsFuel(Item)[s] +TryAddFuel(Item) +RestoreBurn(int,int) +IsLavaSkin(int)[s] +IsMechSkin(int)[s] +FuelLiquidOf(int)[s] +IsMotorSkin(int)[s] +UsesLava:bool +FuelLiquid:int +UsesLiquid:bool +IsFuelLiquid(int) +AlwaysRuns:bool +HasPanel:bool +SpeedMultiplier:float +AccelMultiplier:float +SpeedLimit:float +DriveSpeedCap:float +DriveAccel:float +LiquidPerTick:float +LiquidCapacity:float +SetModule(CartModule,int) +ModuleItemType(CartModule)[s] +CollectPickupItems() +Position:Vector2 +Speed:float +Velocity:Vector2 +OnTrack:bool +Rotation:float +Active:bool +Id:int +Chain:CartChain +IsCarriage:bool +Body:Cart +CollisionMass:int +ChainSlack:float +ReplayScanIndex:int +LoadChainId:int +LoadChainSlot:int +Facing:int +AnimFrame:int +Bumped:event Action<Cart>[s] +Collided:event Action<Cart, Cart>[s] +FrameChanged:event Action<Cart, int, int>[s] +Driving:event Action<Cart>[s] +AlongSpeed:float +TryCollide(Cart,Cart)[s] +Hitbox:Rectangle +Update() +TickCarriage() +ReplayBump() +Shove(float) +TryRailPose(float,float,float,out float,out float)[s] +NetBurning:bool +NetBurnFraction:float +NetMotorId:int +NetSlot:int +HasNetState:bool +ApplyNetState(Vector2,Vector2,float,int,bool) +ClientStep() +Save() +Load(TagCompound)[s]
 **CartCargo.cs** uses: Cart, CartCargoNet, CartChestUIState, CartGeometry, CartModule, CartPassengers, CartPhysics, CartSound, CartSoundKind, LiquidBroadcastSystem, LiquidStack, LiquidTypeRegistry, VirtualItem, VirtualItemSystem, WorldLiquidSources
@@ -94,12 +94,12 @@ tModLoader/other bases -> project types:
     +Load()[ov] +Unload()[ov] +IsTrackTile(int,int)[s] +Log(string)[s] +IsTrackRightClick(Player)[s]
   class CartTrackHookBlocker : GlobalProjectile
     +InstancePerEntity:bool[ov] +AppliesToEntity(Projectile,bool)[ov] +OnSpawn(Projectile,IEntitySource)[ov] +GrappleCanLatchOnTo(Projectile,Player,int,int)[ov]
-**CartPassengerGlobalNPC.cs**
+**CartPassengerGlobalNPC.cs** uses: CartPassengers
   class CartPassengerGlobalNPC : GlobalNPC
-    +InstancePerEntity:bool[ov] +CarrierCartId:int +PickupCooldown:int +GraceTicks:int +IsCarried:bool +PreAI(NPC)[ov] +PostAI(NPC)[ov] +CheckActive(NPC)[ov] +CanHitPlayer(NPC,Player,ref int)[ov] +SendExtraAI(NPC,BitWriter,BinaryWriter)[ov] +ReceiveExtraAI(NPC,BitReader,BinaryReader)[ov]
-**CartPassengers.cs** uses: Cart, CartGeometry, CartModule, CartPassengerGlobalNPC, CartPhysics, CartSystem
+    +InstancePerEntity:bool[ov] +CarrierCartId:int +PickupCooldown:int +GraceTicks:int +IsCarried:bool +PreAI(NPC)[ov] +PostAI(NPC)[ov] +PreDraw(NPC,SpriteBatch,Vector2,Color)[ov] +CheckActive(NPC)[ov] +CanHitPlayer(NPC,Player,ref int)[ov] +SendExtraAI(NPC,BitWriter,BinaryWriter)[ov] +ReceiveExtraAI(NPC,BitReader,BinaryReader)[ov]
+**CartPassengers.cs** uses: Cart, CartGeometry, CartModule, CartPassengerGlobalNPC, CartPhysics, CartSound, CartSoundKind, CartSystem
   static class CartPassengers
-    +CanCarry(NPC)[s] +GetPassenger(Cart)[s] +Update(Cart)[s] +OnBump(Cart)[s] +Release(Cart,bool)[s] +Pin(Cart,NPC)[s] +ClientTick()[s] +Save(Cart)[s]
+    +CanCarry(NPC)[s] +GetPassenger(Cart)[s] +Update(Cart)[s] +OnBump(Cart)[s] +Release(Cart,bool)[s] +GetExtraLift(NPC)[s] +Pin(Cart,NPC)[s] +ClientTick()[s] +DrawingPassenger:a dedicated server never draws) bool[s] +CollectRiders()[s] +DrawRider(Cart)[s] +Save(Cart)[s]
 **CartSkinTable.cs** uses: Cart, CartItem, CartSkins, Factorraria
   static class CartSkinTable
     +FallbackIconScale:float[c] +RailSink:float[c] +GetHeldItem(Player)[s] +IsSkinItem(Item)[s] +IsPlaceable(Item)[s] +SkinTypeFor(Item)[s] +GetMountData(int)[s] +GetChainName(int)[s] +GetAnimation(int)[s] +GetPlacedSprite(int,int)[s]
@@ -382,7 +382,7 @@ tModLoader/other bases -> project types:
       +CartId:int +Bytes:byte
 **CartSound.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection
   enum CartSoundKind : byte
-    {Bump, Collide, Couple, Pour, PressurePlate}
+    {Bump, Collide, Couple, Pour, PressurePlate, PassengerPickup, PassengerRelease}
   static class CartSound
     +NearbyTiles:int[s] +MinTicksBetween:int[s] +Play(CartSoundKind,Vector2)[s] +ResetServerState()[s] +PlayLocal(CartSoundKind,Vector2)[s]
   class CartSoundSystem : ModSystem

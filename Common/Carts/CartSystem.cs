@@ -773,6 +773,8 @@ namespace Factorraria.Common.Carts
             float minY = Main.screenPosition.Y - padding;
             float maxY = Main.screenPosition.Y + Main.screenHeight + padding;
 
+            CartPassengers.CollectRiders(); // which NPC rides which cart, for DrawCart
+
             for (int i = 0; i < Carts.Count; i++)
             {
                 Cart motor = Carts[i];
@@ -856,7 +858,8 @@ namespace Factorraria.Common.Carts
         {
             SpriteEffects effects = cart.Facing < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
-            // The module goes first so the cart's front wall is drawn over it and it looks like it sits inside.
+            // The passenger and the module go first so the cart's front wall is drawn over them and they look like they sit inside.
+            CartPassengers.DrawRider(cart);
             DrawModule(cart, screen, light, effects);
             DrawCartSprite(cart.SkinType, cart.AnimFrame, screen, light, cart.Rotation, effects);
         }

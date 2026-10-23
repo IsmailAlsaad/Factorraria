@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System.IO;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -59,6 +61,12 @@ namespace Factorraria.Common.Carts
             }
         }
 
+        // A passenger is drawn by CartSystem (CartPassengers.DrawRider) inside its cart, behind the front wall; vanilla's own NPC pass skips it.
+        public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+        {
+            return CarrierCartId <= 0 || CartPassengers.DrawingPassenger;
+        }
+
         public override bool CheckActive(NPC npc)
         {
             return CarrierCartId <= 0 && GraceTicks <= 0;
@@ -84,6 +92,8 @@ namespace Factorraria.Common.Carts
 
         public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
         {
+            bool wasCarried = CarrierCartId > 0;
+
             if (bitReader.ReadBit())
             {
                 CarrierCartId = binaryReader.Read7BitEncodedInt();
@@ -91,6 +101,11 @@ namespace Factorraria.Common.Carts
             else
             {
                 CarrierCartId = 0;
+
+                if (wasCarried)
+                {
+                    npc.rotation = 0f; // it got out: stop tilting it with the cart (the server resets its own copy in Release)
+                }
             }
         }
     }

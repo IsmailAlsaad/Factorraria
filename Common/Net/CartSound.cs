@@ -14,7 +14,9 @@ namespace Factorraria.Common.Net
         Collide = 1, // two carts collided
         Couple = 2,  // a free cart hooked onto a motor's chain
         Pour = 3,    // a terrarium cart poured or drained liquid
-        PressurePlate = 4 // patch 9.4b: a cart tripped a pressure plate track (the server has no audio, so clients play the click)
+        PressurePlate = 4, // patch 9.4b: a cart tripped a pressure plate track (the server has no audio, so clients play the click)
+        PassengerPickup = 5,  // cart passengers B: an NPC got into a cart (sound plus a puff of dust)
+        PassengerRelease = 6  // cart passengers B: an NPC was thrown or dropped out of a cart
     }
 
     // Patch 9.6a (finding C8). Carts only simulate on the server (or in single-player), and a dedicated server has no audio, so a sound
@@ -27,7 +29,7 @@ namespace Factorraria.Common.Net
         public static int NearbyTiles = 80;      // players further away than this do not get the packet
         public static int MinTicksBetween = 4;   // server: the same kind is sent at most once per this many ticks
 
-        static uint[] lastSent = new uint[5];
+        static uint[] lastSent = new uint[System.Enum.GetValues(typeof(CartSoundKind)).Length];
 
         public static void Play(CartSoundKind kind, Vector2 position)
         {
@@ -86,6 +88,25 @@ namespace Factorraria.Common.Net
                 case CartSoundKind.PressurePlate:
                     SoundEngine.PlaySound(SoundID.Mech, position); // vanilla's switch / pressure plate click
                     break;
+                case CartSoundKind.PassengerPickup:
+                    SoundEngine.PlaySound(SoundID.Grab, position); // placeholder "hop in" pop
+                    PuffDust(position, 1f);
+                    break;
+                case CartSoundKind.PassengerRelease:
+                    SoundEngine.PlaySound(SoundID.Item1, position); // placeholder "thrown out" whoosh
+                    PuffDust(position, 1.6f);
+                    break;
+            }
+        }
+
+        // A small puff of smoke where a passenger got in or out. Dust is a client thing (a dedicated server never gets here), so it needs no sync.
+        static void PuffDust(Vector2 position, float strength)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2Circular(2f, 1.2f) * strength + new Vector2(0f, -0.6f);
+                Dust dust = Dust.NewDustPerfect(position + Main.rand.NextVector2Circular(10f, 6f), DustID.Smoke, velocity, 120, default, 1.3f);
+                dust.noGravity = true;
             }
         }
     }
@@ -120,7 +141,7 @@ namespace Factorraria.Common.Net
             byte kind = reader.ReadByte();
             float x = reader.ReadSingle();
             float y = reader.ReadSingle();
-            if (kind > (byte)CartSoundKind.PressurePlate)
+            if (kind > (byte)CartSoundKind.PassengerRelease)
                 return;
 
             incoming.Enqueue(new Pending { Kind = (CartSoundKind)kind, Position = new Vector2(x, y) });
