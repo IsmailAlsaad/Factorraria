@@ -173,7 +173,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 {
                     bool matches = byIngredient
                         ? UsesIngredient(e.Group, state, filter, exactIngredient)
-                        : (state == RecipeState.Crafted ? e.Group.Key.DisplayName : RecipeBookLayout.UnknownName).IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+                        : e.Group.Key.DisplayName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
                     if (!matches) continue;
                 }
                 shown++;

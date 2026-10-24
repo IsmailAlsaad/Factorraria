@@ -125,7 +125,7 @@ namespace Factorraria.Common.UI.CustomUIElements
 
                 bool nameKnown = machineName == null || RecipeVisibility.IsNameRevealedInBrowser(machineName, group, state);
                 string shownName = nameKnown ? group.Key.DisplayName : RecipeBookLayout.UnknownName;
-                if (!MatchesFilter(shownName)) continue;
+                if (!MatchesFilter(group.Key.DisplayName)) continue;
 
                 var cell = new RecipeElement(group, i, state, shownName, machineName == null ? null : RecipeCatalog.KeyFor(machineName, group));
                 cell.Selected = isCurrent;      // restores the highlight when the UI reopens
@@ -143,7 +143,7 @@ namespace Factorraria.Common.UI.CustomUIElements
             builtHeldVersion = RecipeVisibility.HeldVersion;
         }
 
-        // Filters on the name the player can actually see, so "???" products cannot be found by typing their real name.
+        // Filters on the real product name, even while the list shows "???" for it.
         bool MatchesFilter(string shownName)
         {
             if (string.IsNullOrWhiteSpace(searchFilter)) return true;

@@ -1258,6 +1258,7 @@ tModLoader/other bases -> project types:
 ### Content/Tiles/Statues/
 **MeteorHeadStatueGlobalNPC.cs**
   class MeteorHeadStatueGlobalNPC : GlobalNPC
+    +AppliesToEntity(NPC,bool)[ov] +ModifyNPCLoot(NPC,NPCLoot)[ov]
 **MeteorHeadStatueTile.cs** uses: Direction, MeteorHeadStatueItem
   class MeteorHeadStatueTile : ModTile
     +Texture:string[ov] +HitWire(int,int)[ov]
