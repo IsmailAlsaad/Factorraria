@@ -985,7 +985,7 @@ tModLoader/other bases -> project types:
 ### Content/Items/Statues/
 **MeteorHeadStatueItem.cs** uses: MeteorHeadStatueTile
   class MeteorHeadStatueItem : ModItem
-    +Texture:string[ov] +AddRecipes()[ov]
+    +Texture:string[ov]
 
 ### Content/Items/Weapons/
 **IceBladeItem.cs** uses: IceBladeSwingProjectile
@@ -1076,7 +1076,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/
-**MechanicalAssemblerRecipeRegistry.cs** uses: CopperWireItem, CustomRecipe, GoldPlateItem, GoldWireItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
+**MechanicalAssemblerRecipeRegistry.cs** uses: CopperWireItem, CustomRecipe, GoldPlateItem, GoldWireItem, MeteorHeadStatueItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
   class MechanicalAssemblerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **MechanicalAssemblerTile.cs** uses: MechanicalAssemblerItem, MechanicalAssemblerTileEntity
@@ -1256,10 +1256,9 @@ tModLoader/other bases -> project types:
   class SiliconOreTile : ModTile
 
 ### Content/Tiles/Statues/
-**MeteorHeadStatueGlobalNPC.cs** uses: AwakenedSpawnGlobalNPC, Entry, MeteorHeadStatueTile
+**MeteorHeadStatueGlobalNPC.cs**
   class MeteorHeadStatueGlobalNPC : GlobalNPC
-    +InstancePerEntity:bool[ov] +FromStatue:bool +AppliesToEntity(NPC,bool)[ov] +PreKill(NPC)[ov]
-**MeteorHeadStatueTile.cs** uses: Direction, MeteorHeadStatueGlobalNPC, MeteorHeadStatueItem
+**MeteorHeadStatueTile.cs** uses: Direction, MeteorHeadStatueItem
   class MeteorHeadStatueTile : ModTile
     +Texture:string[ov] +HitWire(int,int)[ov]
 

@@ -29,6 +29,11 @@ namespace Factorraria.Content.Tiles.Statues
             TileID.Sets.DisableSmartCursor[Type] = true;
             TileID.Sets.IsAMechanism[Type] = true;   // keeps this tile and its pressure plate when worldgen removes broken traps
 
+            // Vanilla loot gate for statue-spawned enemies: with a drop rarity of 0 a Meteor Head that has SpawnedFromStatue set never
+            // drops anything. Natural Meteor Heads and awakened ones (which never get the flag) keep their normal loot, and OnKill hooks
+            // (the awakened statue loot list) are untouched, unlike with a PreKill that returns false.
+            NPCID.Sets.StatueSpawnedDropRarity[NPCID.MeteorHead] = 0f;
+
             TileObjectData.newTile.CopyFrom(TileObjectData.Style2xX);
             TileObjectData.newTile.DrawYOffset = 2;
             TileObjectData.newTile.StyleHorizontal = true;
@@ -78,7 +83,7 @@ namespace Factorraria.Content.Tiles.Statues
             npc.npcSlots = 0f;                     // doesn't suppress natural spawns
             npc.SpawnedFromStatue = true;          // same flag the vanilla statues set
             npc.CanBeReplacedByOtherNPCs = true;   // can't fill the NPC array and block real spawns
-            npc.GetGlobalNPC<MeteorHeadStatueGlobalNPC>().FromStatue = true;   // no loot, see MeteorHeadStatueGlobalNPC
+
         }
     }
 }

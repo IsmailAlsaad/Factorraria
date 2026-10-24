@@ -1,29 +1,25 @@
-﻿using Factorraria.Common.Statues;
-using Terraria;
+﻿using Terraria;
+using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Statues
 {
-    // Meteor Heads that come from the Meteor Head Statue (wired spawn or awakened by a Magic Materializer) die without any loot:
-    // no coins and no meteorite (PreKill returning false skips the whole loot step, the same way vanilla skips it for some
-    // statue-spawned enemies). Natural Meteor Heads, and ones released from an awakened statue, drop their normal loot.
-    // Server / singleplayer only: loot is decided there, so none of this is synced.
+    // Loot for every Meteor Head (natural, awakened). Wired-statue ones are already blocked by
+    // NPCID.Sets.StatueSpawnedDropRarity in MeteorHeadStatueTile, which vanilla checks before any loot is rolled.
     public class MeteorHeadStatueGlobalNPC : GlobalNPC
     {
-        public override bool InstancePerEntity => true;
-
-        public bool FromStatue;   // set by MeteorHeadStatueTile.HitWire
-
         public override bool AppliesToEntity(NPC entity, bool lateInstantiation) => entity.type == NPCID.MeteorHead;
 
-        public override bool PreKill(NPC npc)
+        public override void SetDefaults(NPC npc)
         {
-            if (FromStatue) return false;
+            npc.value = 80f;   // coins on death, in copper (100 = 1 silver)
+        }
 
-            AwakenedSpawnGlobalNPC tag = npc.GetGlobalNPC<AwakenedSpawnGlobalNPC>();
-            bool fromAwakenedStatue = tag.Tagged && tag.Entry != null && tag.Entry.TileType == ModContent.TileType<MeteorHeadStatueTile>();
-            return !fromAwakenedStatue;
+        public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
+        {
+            // Common(item, chanceDenominator, min, max): 1 = always, 3 = 1 in 3
+            npcLoot.Add(ItemDropRule.Common(ItemID.Meteorite, 4, 1, 4)); // 25% 1-4 Meteorite
         }
     }
 }
