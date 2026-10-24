@@ -14,7 +14,7 @@ Project bases -> derived:
 - ElectricProducerMachine: GelBurnerTileEntity
 - IElectricConsumer: ElectricConsumerMachine
 - IElectricProducer: ElectricProducerMachine
-- IMachineDynamicDraw: RoboticArmTileEntity
+- IMachineDynamicDraw: ExtractinatorTileEntity, RoboticArmTileEntity
 - IMotorTile: MotorTileBase
 - IStatueAwakener: MagicMaterializerTileEntity
 - ITilePlacedConsumer: AwakenedStatuePlacedConsumer, ChestConveyorPlacedConsumer, LiquidTopologyPlacedConsumer, MachinePlacedConsumer, MotorPlacedConsumer, PipePlacedConsumer, PlacementLogConsumer, PriorityConveyorPlacedConsumer
@@ -1108,9 +1108,9 @@ tModLoader/other bases -> project types:
     +Input:int +Drops:List<ExtractinatorDrop> +Drop(int,double,int,int) +TotalPercent:double +TryRoll(out int,out int)
   static class ExtractinatorRecipeRegistry
     +Recipes:IReadOnlyDictionary<int, ExtractinatorRecipe>[s] +TryGet(int,out ExtractinatorRecipe)[s] +BuildRecipes()[s]
-**ExtractinatorTileEntity.cs** uses: ElectricConsumerMachine, ExtractinatorRecipe, ExtractinatorRecipeRegistry, VirtualItemSystem
-  class ExtractinatorTileEntity : ElectricConsumerMachine
-    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #WorkDuration:int[ov] +Update()[ov] #TryGetIntakeSlot(int,out int,out int)[ov]
+**ExtractinatorTileEntity.cs** uses: ElectricConsumerMachine, ExtractinatorRecipe, ExtractinatorRecipeRegistry, IMachineDynamicDraw, MachineUISystem, VirtualItemSystem
+  class ExtractinatorTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
+    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #WorkDuration:int[ov] +Update()[ov] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) #TryGetIntakeSlot(int,out int,out int)[ov]
 **ExtractinatorUIState.cs** uses: ElectricityUIIcon, ExtractinatorTileEntity, MachineUIElementEntry, MachineUIStateBase
   class ExtractinatorUIState : MachineUIStateBase
     #BuildElements()[ov]
