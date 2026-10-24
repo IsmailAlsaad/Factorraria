@@ -48,7 +48,7 @@ namespace Factorraria.Common.Knowledge
         // ==========================================================================================
         static void DefaultPool()
         {
-            ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a workshop.")
+            ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a factory.")
                 // Hellforge
                 .Add("Hellforge", ItemID.Meteorite)                                   // meteorite ore
                 .Add("Hellforge", ModContent.ItemType<SteelBarItem>())

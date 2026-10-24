@@ -869,6 +869,19 @@ namespace Factorraria.Common.Carts
             bodyLeft.AlongSpeed = ((massLeft - e * massRight) * vLeft + (1f + e) * massRight * vRight) / total;
             bodyRight.AlongSpeed = ((massRight - e * massLeft) * vRight + (1f + e) * massLeft * vLeft) / total;
 
+            if (bodyLeft.Module == CartModule.Motor && bodyRight.Module == CartModule.Motor)
+            {
+                if (bodyLeft.Facing > 0)
+                {
+                    bodyLeft.Facing = -1;
+                }
+
+                if (bodyRight.Facing < 0)
+                {
+                    bodyRight.Facing = 1;
+                }
+            }
+
             if (Collided != null)
             {
                 Collided(left, right);
