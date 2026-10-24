@@ -19,6 +19,8 @@ namespace Factorraria.Common.Net
         public int Facing = 1;   // 1 = facing right, -1 = left (the icon is flipped to match)
         public int SkinType;     // item type of the skin (the cart's item sprite is the icon)
         public int ModuleItemType; // item type drawn on top (chest, terrarium), 0 = nothing
+        public int PassengerNpcType; // NPC type the cart carries (drawn in the module slot), 0 = none
+        public string PassengerKey;  // wire key of that NPC type, only filled on the server
         public string SkinKey;   // wire keys, only filled on the server
         public string ModuleItemKey;
     }
@@ -109,13 +111,17 @@ namespace Factorraria.Common.Net
                 entry.SkinType = cart.SkinType;
                 entry.ModuleItemType = cart.ModuleItem > 0 ? cart.ModuleItem : Cart.ModuleItemType(cart.Module);
 
+                NPC passenger = CartPassengers.GetPassenger(cart);   // real NPCs only exist on the server and in single-player, which is where this runs
+                entry.PassengerNpcType = passenger != null ? passenger.type : 0;
+
                 if (withKeys)
                 {
                     entry.SkinKey = cart.Skin;
                     entry.ModuleItemKey = entry.ModuleItemType > 0 ? CartSkins.KeyOf(entry.ModuleItemType) : null;
+                    entry.PassengerKey = entry.PassengerNpcType > 0 ? NPCID.Search.GetName(entry.PassengerNpcType) : null;
                 }
 
-                hash = HashCode.Combine(hash, entry.Id, (int)entry.TileX, (int)entry.TileY, (int)entry.Module, entry.SkinType, entry.ModuleItemType, entry.Facing);
+                hash = HashCode.Combine(HashCode.Combine(hash, entry.Id, (int)entry.TileX, (int)entry.TileY, (int)entry.Module, entry.SkinType, entry.ModuleItemType, entry.Facing), entry.PassengerNpcType);
                 into.Add(entry);
             }
 
@@ -165,11 +171,13 @@ namespace Factorraria.Common.Net
             Dictionary<string, int> index = new Dictionary<string, int>();
             ushort[] skinIndex = new ushort[count];
             ushort[] moduleIndex = new ushort[count];
+            ushort[] passengerIndex = new ushort[count];
 
             for (int i = 0; i < count; i++)
             {
                 skinIndex[i] = Intern(entries[i].SkinKey, table, index);
                 moduleIndex[i] = Intern(entries[i].ModuleItemKey, table, index);
+                passengerIndex[i] = Intern(entries[i].PassengerKey, table, index);
             }
 
             FactorrariaNet.SendToClient(who, FactorrariaPacket.CartMapSnapshot, writer =>
@@ -189,6 +197,7 @@ namespace Factorraria.Common.Net
                     writer.Write((sbyte)entry.Facing);
                     writer.Write(skinIndex[i]);
                     writer.Write(moduleIndex[i]);
+                    writer.Write(passengerIndex[i]);
                 }
             });
 
@@ -236,6 +245,7 @@ namespace Factorraria.Common.Net
                 entry.Facing = reader.ReadSByte() < 0 ? -1 : 1;
                 int skinIndex = reader.ReadUInt16();
                 int moduleIndex = reader.ReadUInt16();
+                int passengerIndex = reader.ReadUInt16();
 
                 if (skinIndex >= tableCount || !CartSkins.TryTypeOf(table[skinIndex], out entry.SkinType))
                     entry.SkinType = ItemID.Minecart;
@@ -244,6 +254,9 @@ namespace Factorraria.Common.Net
                     entry.ModuleItemType = moduleItem;
                 else
                     entry.ModuleItemType = Cart.ModuleItemType(entry.Module);
+
+                if (passengerIndex < tableCount && NPCID.Search.TryGetId(table[passengerIndex], out int passengerNpc))
+                    entry.PassengerNpcType = passengerNpc;
 
                 entries[i] = entry;
             }

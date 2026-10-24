@@ -21,19 +21,22 @@ namespace Factorraria.Common.Carts
         public static int ModuleBottomPercent = 45;  // how far down the cart sprite the module's bottom edge sits (LOWER = module sits HIGHER; was 60)
         // The outline is CartMapConfig.OutlineThickness (a float) pixels of white, then the same of black; the canvas is padded by twice that, rounded up.
 
-        static readonly Dictionary<long, Texture2D> cache = new Dictionary<long, Texture2D>();
+        static readonly Dictionary<(int, int, int), Texture2D> cache = new Dictionary<(int, int, int), Texture2D>();
         static readonly List<Texture2D> owned = new List<Texture2D>();
 
-        public static Texture2D Get(int skinType, int moduleItemType)
+        public static Texture2D Get(int skinType, int moduleItemType, int npcType = 0)
         {
             if (moduleItemType < 0)
                 moduleItemType = 0;
 
-            long key = ((long)skinType << 32) | (uint)moduleItemType;
+            if (npcType < 0)
+                npcType = 0;
+
+            (int, int, int) key = (skinType, moduleItemType, npcType);
             if (cache.TryGetValue(key, out Texture2D icon))
                 return icon;
 
-            icon = Build(skinType, moduleItemType);
+            icon = Build(skinType, moduleItemType, npcType);
             cache[key] = icon;
             return icon;
         }
@@ -60,7 +63,7 @@ namespace Factorraria.Common.Carts
             });
         }
 
-        static Texture2D Build(int skinType, int moduleItemType)
+        static Texture2D Build(int skinType, int moduleItemType, int npcType)
         {
             Main.instance.LoadItem(skinType);
             Texture2D body = TextureAssets.Item[skinType].Value;
@@ -82,22 +85,39 @@ namespace Factorraria.Common.Carts
                 Color[] modulePixels = null;
                 int mw = 0;
                 int mh = 0;
+
+                // What sits behind the cart: the module's item sprite, or (an empty cart) the NPC it carries, in the same slot.
+                Color[] source = null;
+                int sourceW = 0;
+                int sourceH = 0;
+                int scalePercent = ModuleScalePercent;
                 if (module != null)
                 {
-                    Color[] source = new Color[module.Width * module.Height];
+                    source = new Color[module.Width * module.Height];
                     module.GetData(source);
+                    sourceW = module.Width;
+                    sourceH = module.Height;
+                }
+                else if (npcType > 0 && ReadNpcFrame(npcType, out source, out sourceW, out sourceH))
+                {
+                    // an NPC has to fit in the same box a module sprite gets
+                    int fit = Math.Max(1, bw * ModuleScalePercent / 100);
+                    scalePercent = Math.Clamp(fit * 100 / Math.Max(sourceW, sourceH), 1, 100);
+                }
 
+                if (source != null)
+                {
                     // nearest-neighbour shrink, keeps the pixel art crisp
-                    mw = Math.Max(1, module.Width * ModuleScalePercent / 100);
-                    mh = Math.Max(1, module.Height * ModuleScalePercent / 100);
+                    mw = Math.Max(1, sourceW * scalePercent / 100);
+                    mh = Math.Max(1, sourceH * scalePercent / 100);
                     modulePixels = new Color[mw * mh];
                     for (int y = 0; y < mh; y++)
                     {
                         for (int x = 0; x < mw; x++)
                         {
-                            int sx = Math.Min(module.Width - 1, x * 100 / ModuleScalePercent);
-                            int sy = Math.Min(module.Height - 1, y * 100 / ModuleScalePercent);
-                            modulePixels[y * mw + x] = source[sy * module.Width + sx];
+                            int sx = Math.Min(sourceW - 1, x * 100 / scalePercent);
+                            int sy = Math.Min(sourceH - 1, y * 100 / scalePercent);
+                            modulePixels[y * mw + x] = source[sy * sourceW + sx];
                         }
                     }
                 }
@@ -171,6 +191,61 @@ namespace Factorraria.Common.Carts
             {
                 ModContent.GetInstance<Factorraria>().Logger.Warn("[CartMap] could not build the icon for skin " + skinType + " module item " + moduleItemType + ": " + exception.Message);
                 return body;
+            }
+        }
+
+        // First animation frame of an NPC, cropped to its opaque pixels. False when nothing can be read.
+        static bool ReadNpcFrame(int npcType, out Color[] pixels, out int width, out int height)
+        {
+            pixels = null;
+            width = 0;
+            height = 0;
+
+            try
+            {
+                Main.instance.LoadNPC(npcType);
+                Texture2D texture = TextureAssets.Npc[npcType].Value;
+                int frames = Math.Max(1, Main.npcFrameCount[npcType]);
+                int frameHeight = Math.Max(1, texture.Height / frames);
+                Color[] frame = new Color[texture.Width * frameHeight];
+                texture.GetData(0, new Rectangle(0, 0, texture.Width, frameHeight), frame, 0, frame.Length);
+
+                int minX = texture.Width;
+                int minY = frameHeight;
+                int maxX = -1;
+                int maxY = -1;
+                for (int y = 0; y < frameHeight; y++)
+                {
+                    for (int x = 0; x < texture.Width; x++)
+                    {
+                        if (frame[y * texture.Width + x].A == 0)
+                            continue;
+
+                        minX = Math.Min(minX, x);
+                        minY = Math.Min(minY, y);
+                        maxX = Math.Max(maxX, x);
+                        maxY = Math.Max(maxY, y);
+                    }
+                }
+
+                if (maxX < 0)
+                    return false;
+
+                width = maxX - minX + 1;
+                height = maxY - minY + 1;
+                pixels = new Color[width * height];
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                        pixels[y * width + x] = frame[(y + minY) * texture.Width + x + minX];
+                }
+
+                return true;
+            }
+            catch (Exception exception)
+            {
+                ModContent.GetInstance<Factorraria>().Logger.Warn("[CartMap] could not read the sprite of NPC " + npcType + ": " + exception.Message);
+                return false;
             }
         }
 

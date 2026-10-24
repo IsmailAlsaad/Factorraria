@@ -96,7 +96,7 @@ tModLoader/other bases -> project types:
     +HoveredCartId:int[s] +HoverZoom:float +GapAboveCursor:float +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +PostDrawFullscreenMap(ref string)[ov]
 **CartMapIcons.cs** uses: CartMapConfig, Factorraria
   static class CartMapIcons
-    +ModuleScalePercent:int[s] +ModuleBottomPercent:int[s] +Get(int,int)[s] +Rebuild()[s] +Unload()[s]
+    +ModuleScalePercent:int[s] +ModuleBottomPercent:int[s] +Get(int,int,int)[s] +Rebuild()[s] +Unload()[s]
 **CartMapLayer.cs** uses: Cart, CartMapConfig, CartMapEntry, CartMapHoverSystem, CartMapIcons, CartMapNet, CartMapSystem, CartModule
   enum CartMapMode : byte
     {Off, All, MotorOnly}
@@ -362,9 +362,9 @@ tModLoader/other bases -> project types:
     +ServerPlaced:int[s] +ServerInstalled:int[s] +ServerShoved:int[s] +ServerPickedUp:int[s] +ServerRefused:int[s] +ClientSent:int[s] +ClientAccepted:int[s] +ClientRefused:int[s] +ClientConsumed:int[s] +ClientConsumeMissed:int[s] +Reset()[s] +Describe()[s] +RequestPlace(Player,Item)[s] +RequestInstallOrShove(Item,Cart)[s] +RequestPickUp(Cart)[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +ClientTick()[s]
     sealed class Result
       +Action:CartAction +Accepted:bool +ItemType:int
-**CartMapNet.cs** uses: Cart, CartModule, CartNet, CartSkins, CartSystem, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
+**CartMapNet.cs** uses: Cart, CartModule, CartNet, CartPassengers, CartSkins, CartSystem, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
   sealed class CartMapEntry
-    +Id:int +TileX:float +TileY:float +Module:CartModule +Facing:int +SkinType:int +ModuleItemType:int +SkinKey:string +ModuleItemKey:string
+    +Id:int +TileX:float +TileY:float +Module:CartModule +Facing:int +SkinType:int +ModuleItemType:int +PassengerNpcType:int +PassengerKey:string +SkinKey:string +ModuleItemKey:string
   static class CartMapNet
     +ResendIntervalTicks:int[s] +MaxEntries:int[s] +LocalRefreshTicks:int[s] +ServerSent:int[s] +ClientReceived:int[s] +Reset()[s] +OnDisconnect(int)[s] +Collect(List<CartMapEntry>)[s] +ServerTick()[s] +HandleSnapshot(BinaryReader,int)[s]
   class CartMapNetSystem : ModSystem

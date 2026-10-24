@@ -89,7 +89,7 @@ namespace Factorraria.Common.Carts
                 if (mode == CartMapMode.MotorOnly && entry.Module != CartModule.Motor)
                     continue;
 
-                Texture2D icon = CartMapIcons.Get(entry.SkinType, entry.ModuleItemType);
+                Texture2D icon = CartMapIcons.Get(entry.SkinType, entry.ModuleItemType, entry.PassengerNpcType);
                 if (icon == null)
                     continue;
 
@@ -104,6 +104,9 @@ namespace Factorraria.Common.Carts
                     text = Lang.GetItemNameValue(entry.SkinType);
                     if (entry.ModuleItemType > 0)
                         text += " + " + Lang.GetItemNameValue(entry.ModuleItemType);
+
+                    if (entry.PassengerNpcType > 0)
+                        text += " + " + Lang.GetNPCNameValue(entry.PassengerNpcType);
                 }
             }
         }
