@@ -83,7 +83,6 @@ namespace Factorraria.Content.Tiles.Statues
             npc.npcSlots = 0f;                     // doesn't suppress natural spawns
             npc.SpawnedFromStatue = true;          // same flag the vanilla statues set
             npc.CanBeReplacedByOtherNPCs = true;   // can't fill the NPC array and block real spawns
-
         }
     }
 }

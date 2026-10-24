@@ -547,6 +547,11 @@ namespace Factorraria.Common.Carts
                     return;
                 }
 
+                if (BucketPour.TryGetBucketLiquid(held, out int bucketLiquid) && BucketPour.CanPourCart(target, bucketLiquid))
+                {
+                    return; // the bucket pours into this cart (BucketPour); the click is not a shove
+                }
+
                 Main.mouseLeftRelease = false; // we used this click
 
                 if (Main.netMode == NetmodeID.MultiplayerClient)

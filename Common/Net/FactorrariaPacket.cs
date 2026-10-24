@@ -56,6 +56,8 @@ namespace Factorraria.Common.Net
         CartPanelDetail = 47,         // server -> subscriber: "this is the exact chest / fuel state of cart <id>" (patch 9.5)
         CartPanelResult = 48,         // server -> sender: answer to a slot edit or an insert (patch 9.5)
         CartPanelClosed = 49,         // server -> player: "your panel subscription of cart <id> ended" plus a reason (patch 9.5)
+        BucketPourRequest = 50,       // client -> server: "pour my liquid bucket into the machine at tile (x, y) / the liquid motor cart with this id" (kind byte first; side feature bucket pouring)
+        BucketPourResult = 51,        // server -> client: "your pour was accepted / refused; on accepted, swap the bucket of this item type for an empty one" (side feature bucket pouring)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

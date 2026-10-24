@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using Factorraria.Common.Net;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
@@ -24,7 +25,19 @@ namespace Factorraria.Common.Carts
                 return true;
             }
 
-            return CartSystem.FindCartAtCursor(Player) == null;
+            Cart cartUnderCursor = CartSystem.FindCartAtCursor(Player);
+            if (cartUnderCursor == null)
+            {
+                return true;
+            }
+
+            // A liquid bucket that the liquid motor cart can take: BucketPourGlobalItem pours it (and stops the use itself).
+            if (BucketPour.TryGetBucketLiquid(item, out int bucketLiquid) && BucketPour.CanPourCart(cartUnderCursor, bucketLiquid))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>While a cart inventory is open, shift-clicking an inventory item sends it into the cart.</summary>
