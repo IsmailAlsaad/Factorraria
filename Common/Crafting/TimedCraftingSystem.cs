@@ -105,7 +105,7 @@ namespace Factorraria.Common.Crafting
             bool freshClick = (Main.mouseLeft && Main.mouseLeftRelease) || (Main.mouseRight && Main.mouseRightRelease);
             if (!freshClick) return;
 
-            bool repeat = Main.mouseLeft && Main.mouseLeftRelease;   // left = repeat, right = single craft
+            bool repeat = !(Main.mouseLeft && Main.mouseLeftRelease);   // left = single craft, right = repeat (left wins if both are fresh)
             Main.LocalPlayer.GetModPlayer<TimedCraftingPlayer>().Toggle(r, repeat);
         }
 
@@ -117,7 +117,7 @@ namespace Factorraria.Common.Crafting
             if (Main.focusRecipe == focusBefore || Main.LocalPlayer == null) return;
             if (Main.focusRecipe < 0 || Main.focusRecipe >= Main.numAvailableRecipes) return;
 
-            Main.LocalPlayer.GetModPlayer<TimedCraftingPlayer>().NotifyFocusClick(Main.recipe[Main.availableRecipe[Main.focusRecipe]], Main.mouseLeft);
+            Main.LocalPlayer.GetModPlayer<TimedCraftingPlayer>().NotifyFocusClick(Main.recipe[Main.availableRecipe[Main.focusRecipe]], Main.mouseRight && !Main.mouseLeft);
         }
 
         void DrawSlotHooked(DrawSlotOrig orig, SpriteBatch sb, ref Item inv, int context, Vector2 position, Color lightColor)

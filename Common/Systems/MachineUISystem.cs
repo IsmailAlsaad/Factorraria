@@ -185,7 +185,7 @@ namespace Factorraria.Common.Systems
 
             // Patch 5.3c: a multiplayer client does not depend on the server notice alone. When its own living player is further away than
             // the server's keep-reach (the same formula the server uses), it does the full close itself: sound, inventory, panel.
-            if (Main.netMode == NetmodeID.MultiplayerClient && Main.playerInventory && openState?.CurrentEntity is BaseMachine reachMachine
+            if (Main.netMode != NetmodeID.Server && Main.playerInventory && openState?.CurrentEntity is BaseMachine reachMachine
                 && !Main.LocalPlayer.dead
                 && !MachineDetailSystem.WithinReach(Main.LocalPlayer, reachMachine, ModContent.GetInstance<MachineDetailSystem>().KeepReachExtraTiles))
             {
