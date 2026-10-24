@@ -11,7 +11,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
         {
             return new List<MachineUIElementEntry>
             {
-                FuelTankEntry(0, new Vector2(0f, 0f))
+                FuelTankEntry(0, new Vector2(8f, -90f))
             };
         }
     }
