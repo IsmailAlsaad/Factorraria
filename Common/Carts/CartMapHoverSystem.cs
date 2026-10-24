@@ -10,7 +10,7 @@ namespace Factorraria.Common.Carts
 {
     /// <summary>
     /// Fullscreen map: hovering a cart icon shows that cart's panel (chest slots, tank, motor fuel) next to the cursor, view-only.
-    /// CartMapLayer sets HoveredCartId during the map draw; this draws the panel later the same frame (before the mouse text).
+    /// CartMapLayer sets HoveredCartId during the map draw; PostDrawFullscreenMap draws the panel right after, the same frame.
     /// View-only because the interface is only ever Drawn, never Updated: nothing receives mouse hover or clicks.
     ///
     /// Multiplayer: the contents come from the local Cart object. Single-player always has them. A multiplayer client only has a
@@ -59,20 +59,12 @@ namespace Factorraria.Common.Carts
             state = null;
         }
 
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+        // Runs at the very end of the fullscreen map draw (same place the map button is drawn, which is known to work), after every
+        // map layer has had its Draw, so HoveredCartId is already set for this frame. The map draws before the interface layers
+        // and tModLoader stops drawing layers as soon as one returns false, so a normal interface layer was not a safe place.
+        public override void PostDrawFullscreenMap(ref string mouseText)
         {
-            int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
-            if (mouseTextIndex == -1)
-                return;
-
-            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
-                "Factorraria: Cart Map Hover",
-                delegate
-                {
-                    DrawHover();
-                    return true;
-                },
-                InterfaceScaleType.UI));
+            DrawHover();
         }
 
         void DrawHover()
@@ -105,9 +97,10 @@ namespace Factorraria.Common.Carts
 
             state.SetZoomScale(HoverZoom);
 
-            Vector2 mouse = Main.MouseScreen / Main.UIScale;
-            float maxX = Math.Max(0f, Main.screenWidth / Main.UIScale - state.PanelW);
-            float maxY = Math.Max(0f, Main.screenHeight / Main.UIScale - state.PanelH);
+            // Same coordinates the map button uses: Main.mouseX / screenWidth already follow the active zoom.
+            Vector2 mouse = new Vector2(Main.mouseX, Main.mouseY);
+            float maxX = Math.Max(0f, Main.screenWidth - state.PanelW);
+            float maxY = Math.Max(0f, Main.screenHeight - state.PanelH);
 
             float left = (float)Math.Round(MathHelper.Clamp(mouse.X - state.PanelW / 2f, 0f, maxX));
             float top = (float)Math.Round(MathHelper.Clamp(mouse.Y - state.PanelH - GapAboveCursor, 0f, maxY));

@@ -93,7 +93,7 @@ tModLoader/other bases -> project types:
     +CanUseItem(Item)[ov] +ShiftClickSlot(Item,int,int)[ov]
 **CartMapHoverSystem.cs** uses: Cart, CartChestUIState, CartMapMode, CartMapSettings, CartSystem
   class CartMapHoverSystem : ModSystem
-    +HoveredCartId:int[s] +HoverZoom:float +GapAboveCursor:float +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +HoveredCartId:int[s] +HoverZoom:float +GapAboveCursor:float +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +PostDrawFullscreenMap(ref string)[ov]
 **CartMapIcons.cs** uses: CartMapConfig, Factorraria
   static class CartMapIcons
     +ModuleScalePercent:int[s] +ModuleBottomPercent:int[s] +Get(int,int)[s] +Rebuild()[s] +Unload()[s]

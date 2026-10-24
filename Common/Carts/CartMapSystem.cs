@@ -21,7 +21,7 @@ namespace Factorraria.Common.Carts
     public class CartMapSystem : ModSystem
     {
         // The position is in the mod config (CartMapConfig.ButtonX / ButtonY); the size is the size of the art.
-        public int ButtonSize = 32;
+        public int ButtonSize = 64;
 
         readonly Asset<Texture2D>[] icons = new Asset<Texture2D>[3];
         readonly Asset<Texture2D>[] highlightIcons = new Asset<Texture2D>[3]; // optional *_Highlight art, drawn while the mouse is over the button
