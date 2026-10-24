@@ -52,21 +52,27 @@ namespace Factorraria.Common.Net
             if (item == null || item.IsAir)
                 return false;
 
-            if (item.type == ItemID.WaterBucket)
+            if (item.type == ItemID.WaterBucket || item.type == ItemID.BottomlessBucket)
             {
                 liquidType = LiquidTypeRegistry.Water;
                 return true;
             }
 
-            if (item.type == ItemID.LavaBucket)
+            if (item.type == ItemID.LavaBucket || item.type == ItemID.BottomlessLavaBucket)
             {
                 liquidType = LiquidTypeRegistry.Lava;
                 return true;
             }
 
-            if (item.type == ItemID.HoneyBucket)
+            if (item.type == ItemID.HoneyBucket || item.type == ItemID.BottomlessHoneyBucket)
             {
                 liquidType = LiquidTypeRegistry.Honey;
+                return true;
+            }
+
+            if (item.type == ItemID.BottomlessShimmerBucket)
+            {
+                liquidType = LiquidTypeRegistry.Shimmer;
                 return true;
             }
 
@@ -82,6 +88,11 @@ namespace Factorraria.Common.Net
 
             return false;
         }
+
+        /// <summary>Bottomless buckets never run out: a pour adds a bucket of liquid and the item stays as it is.</summary>
+        public static bool IsBottomless(int itemType) =>
+            itemType == ItemID.BottomlessBucket || itemType == ItemID.BottomlessLavaBucket
+            || itemType == ItemID.BottomlessHoneyBucket || itemType == ItemID.BottomlessShimmerBucket;
 
         static bool HasRoomForBucket(LiquidStack tank) => tank.Capacity - tank.Amount >= BucketUnits - 0.01f;
 
@@ -362,6 +373,9 @@ namespace Factorraria.Common.Net
         // One full bucket of this type becomes an empty bucket (the selected slot first), then every inventory slot that changed is sent.
         static void ConsumeBucket(Player player, int itemType)
         {
+            if (IsBottomless(itemType))
+                return;
+
             int slot = -1;
             Item selected = player.inventory[player.selectedItem];
             if (selected != null && !selected.IsAir && selected.type == itemType)
@@ -411,7 +425,13 @@ namespace Factorraria.Common.Net
     {
         public override bool AppliesToEntity(Item entity, bool lateInstantiation)
         {
-            return entity.type == ItemID.WaterBucket || entity.type == ItemID.LavaBucket || entity.type == ItemID.HoneyBucket || entity.ModItem is BucketBase;
+            return entity.type == ItemID.WaterBucket || entity.type == ItemID.LavaBucket || entity.type == ItemID.HoneyBucket
+                || IsBottomlessType(entity.type) || entity.ModItem is BucketBase;
+        }
+
+        static bool IsBottomlessType(int type)
+        {
+            return BucketPour.IsBottomless(type);
         }
 
         public override bool CanUseItem(Item item, Player player)

@@ -323,7 +323,7 @@ tModLoader/other bases -> project types:
     +MaxJoinEntries:int[s] +MaxChangesPerPacket:int[s] +BroadcastDelta(List<Point16>,List<AwakenedStatue>)[s] +HandleChanged(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
 **BucketPour.cs** uses: BaseMachine, BucketBase, Cart, CartModule, CartSystem, FactorrariaNet, FactorrariaPacket, LiquidStack, LiquidTypeRegistry, MachineRequest, PacketDirection, RequestCheck, TileEntityHelper
   static class BucketPour
-    +BucketUnits:float[s] +Reset()[s] +TryGetBucketLiquid(Item,out int)[s] +TryFindMachineTank(BaseMachine,int,out LiquidStack,out int)[s] +CanPourCart(Cart,int)[s] +TryPourAtCursor(Player,Item)[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +ClientTick()[s]
+    +BucketUnits:float[s] +Reset()[s] +TryGetBucketLiquid(Item,out int)[s] +IsBottomless(int)[s] +TryFindMachineTank(BaseMachine,int,out LiquidStack,out int)[s] +CanPourCart(Cart,int)[s] +TryPourAtCursor(Player,Item)[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +ClientTick()[s]
   class BucketPourGlobalItem : GlobalItem
     +AppliesToEntity(Item,bool)[ov] +CanUseItem(Item,Player)[ov]
   class BucketPourSystem : ModSystem
