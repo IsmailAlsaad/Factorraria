@@ -201,7 +201,7 @@ tModLoader/other bases -> project types:
 **RecipeKnowledgeSystem.cs**
   class RecipeKnowledgeSystem : ModSystem
     +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
-**ScrollPoolDefinitions.cs** uses: LiquidTypeRegistry, ScrollPools, SteelBarItem
+**ScrollPoolDefinitions.cs** uses: ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, PipeMK1Item, ScrollPools, SimpleCircuitItem, SteelBarItem
   static class ScrollPoolDefinitions
     +Register()[s]
 **ScrollPools.cs** uses: RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey

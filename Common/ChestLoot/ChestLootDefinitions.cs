@@ -72,6 +72,12 @@ namespace Factorraria.Common.ChestLoot
 
             // ---- your own rules go here ----
 
+            // DEFAULT SEALED SCROLL: every chest in the world has a 15% chance (0.15f) of one scroll of the "Default" pool.
+            // Change the chance here. Change WHAT the scroll can teach in ScrollPoolDefinitions.DefaultPool().
+            // Later, themed rules (e.g. "dungeon chest holding weapon X -> swap it for a scroll of pool Z") go below this line
+            // as extra rules: ChestLootRegistry.For(...).Where(...).Remove(item).Custom((chest, rand) => AddScroll(chest, rand, 1f, "Z"));
+            ChestLootRegistry.ForAll().Custom((chest, rand) => AddScroll(chest, rand, 0.15f, "Default"));
+
             // RECIPE DISCOVERY: sealed scrolls. Chances are first-pass numbers, tune them in the polish phase.
             // Only NEW worlds get these (loot rules run after worldgen). Existing worlds: use "/recipes scroll".
             // A scroll carries a pool name (see ScrollPoolDefinitions); no pool = rolls from the whole book.

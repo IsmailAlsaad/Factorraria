@@ -1,4 +1,8 @@
 ﻿using Factorraria.Common.Liquids;
+using Factorraria.Content.Items.Conveyors;
+using Factorraria.Content.Items.Hooks;
+using Factorraria.Content.Items.Liquids.Pipes;
+using Factorraria.Content.Items.Machines;
 using Factorraria.Content.Items.Materials;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -28,8 +32,54 @@ namespace Factorraria.Common.Knowledge
     {
         public static void Register()
         {
+            DefaultPool();
+
             // ---- your own pools go here (or uncomment the example) ----
             // Example_Dungeon();
+        }
+
+        // ==========================================================================================
+        // THE DEFAULT POOL: EDIT THIS LIST TO CHANGE WHAT A NORMAL CHEST SCROLL CAN TEACH.
+        // Every chest in the world has a 15% chance of a scroll of this pool (see ChestLootDefinitions).
+        // One line = one recipe. First argument = the machine that crafts it (catalog name), second = the product.
+        // Weights are relative (default 1). A recipe leaves the pool once it is unlocked or crafted; when the
+        // whole pool is used up the scroll falls back to any recipe in the book.
+        // To drop a recipe: delete or comment out its line. To make one rarer/more common: add weight: 0.5f / 2f.
+        // ==========================================================================================
+        static void DefaultPool()
+        {
+            ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a workshop.")
+                // Hellforge
+                .Add("Hellforge", ItemID.Meteorite)                                   // meteorite ore
+                .Add("Hellforge", ModContent.ItemType<SteelBarItem>())
+                .Add("Hellforge", ModContent.ItemType<ByriteAlloyItem>())
+
+                // Autohammer
+                .Add("Autohammer", ModContent.ItemType<ClockwisePriorityConveyor>(), weight: 0.5f)         // the two priority conveyors
+                .Add("Autohammer", ModContent.ItemType<CounterClockwisePriorityConveyor>(), weight: 0.5f)  // share ONE normal slot (0.5 + 0.5)
+                .Add("Autohammer", ModContent.ItemType<MechanicalArmItem>())
+                .Add("Autohammer", ItemID.SkeletronHand)
+                .Add("Autohammer", ItemID.Autohammer)
+                .Add("Autohammer", ItemID.Cog)
+                .Add("Autohammer", ModContent.ItemType<MechanicalAssemblerItem>())
+                .Add("Autohammer", ItemID.Extractinator)
+                .Add("Autohammer", ItemID.Solidifier)
+                .Add("Autohammer", ItemID.IceMachine)
+                .Add("Autohammer", ItemID.SteampunkBoiler)
+
+                // Mechanical Assembler
+                .Add("MechanicalAssembler", ModContent.ItemType<SimpleCircuitItem>())
+                .Add("MechanicalAssembler", ModContent.ItemType<GoldWireItem>())
+                .Add("MechanicalAssembler", ModContent.ItemType<PipeMK1Item>())      // lead pipe
+
+                // Ice Machine / Liquid Distillator / Decay Chamber
+                .Add("IceMachine", ModContent.ItemType<CokeItem>())
+                .AddLiquid("LiquidDistillator", LiquidTypeRegistry.Fuel)             // fuel liquid
+                .Add("DecayChamber", ItemID.CrimtaneBar)
+                .Add("DecayChamber", ItemID.DemoniteBar);
+
+            // NOT IN THE POOL: the Decay Chamber item itself (Lesion Station). Its recipe is a hand-craft at the
+            // Demon Altar (RecipeSystem.cs), and no machine book contains it, so there is no catalog recipe to teach.
         }
 
         // Real, compiled example that is NOT called by default. Adjust the entries to recipes that exist, then call it from Register().
