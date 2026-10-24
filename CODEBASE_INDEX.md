@@ -720,7 +720,7 @@ tModLoader/other bases -> project types:
 **PowerGridSystem.cs** uses: CustomWireSystem, CustomWireType, FactorrariaNet, IElectricConsumer, IElectricProducer, PowerNetwork, TileEntityHelper
   class PowerGridSystem : ModSystem
     +AllMachines:HashSet<TileEntity>[s] +ActivePowerNetworks:List<PowerNetwork>[s] +gridNeedsRebuilding:bool[s] +PostUpdateWorld()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RegisterMachineToMasterList(TileEntity)[s]
-**RecipeBookKeybindSystem.cs** uses: RecipeBookLayout, RecipeBookSystem, RecipeVisibility
+**RecipeBookKeybindSystem.cs** uses: RecipeBookLayout, RecipeBookSystem
   class RecipeBookKeybindSystem : ModSystem
     +ItemSearchKey:ModKeybind[s] +Load()[ov] +Unload()[ov] +ItemSearchKeyName()[s]
   class RecipeBookKeybindPlayer : ModPlayer

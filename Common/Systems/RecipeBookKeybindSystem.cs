@@ -43,8 +43,8 @@ namespace Factorraria.Common.Systems
 
             Item hover = Main.HoverItem;   // set by the last draw
             if (hover == null || hover.IsAir) return;
-            if (!RecipeVisibility.IsIngredient(hover.type)) return;   // no recipe takes it: nothing to show
 
+            // No IsIngredient gate: an item no recipe uses still types "#Name" into the book, so the empty list is the feedback.
             RecipeBookSystem.OpenIngredientSearch(hover.type);
         }
     }
