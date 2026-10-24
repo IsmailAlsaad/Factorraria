@@ -194,7 +194,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
             bool hover = IsMouseHovering;
 
             if (Selected) BookDraw.Frame(sb, r, new Color(214, 178, 48) * 0.55f, new Color(150, 110, 30), 2);
-            else if (hover) BookDraw.Rect(sb, r, Color.White * 0.25f);
+            else
+            {
+                if (Favorite) BookDraw.Rect(sb, r, RecipeBookLayout.FavoriteRowColor);   // faint orange
+                if (hover) BookDraw.Rect(sb, r, Color.White * 0.25f);                     // whitish on top (less orange when favorited)
+            }
 
             int box = RecipeBookLayout.EntryIconBox;
             RecipeIcon.Draw(sb, Group.Key, new Vector2(r.X + 6 + box / 2f, r.Center.Y), box, 1f, IsFaded);
@@ -210,7 +214,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             Rectangle star = RecipeBookLayout.StarRect(r);
             bool starHover = hover && star.Contains(Main.MouseScreen.ToPoint());
-            DrawStar(sb, star, Favorite, starHover);
+            if (Favorite || hover) DrawStar(sb, star, Favorite, starHover);   // the off star only appears while the row is hovered
             if (starHover) Main.hoverItemName = RecipeBookLayout.Text(Favorite ? "FavoriteRemove" : "FavoriteAdd");
         }
 

@@ -143,6 +143,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static readonly Color TextColor = new Color(60, 38, 18);
         public static readonly Color TextFadedColor = new Color(120, 98, 70);
 
+        /// <summary>Background of a favorited recipe row: the selection orange, but much fainter.</summary>
+        public static readonly Color FavoriteRowColor = new Color(214, 178, 48) * 0.25f;
+
         // ---- search bar + scrollbar palette (tweak the numbers here) ----
         public static readonly Color SearchBackground = new Color(200, 176, 128);
         public static readonly Color SearchIdleBorder = PageBorder;
