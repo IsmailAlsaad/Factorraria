@@ -380,7 +380,6 @@ Keybinds.RecipeBookItemSearch.DisplayName: Recipe Book - Show Recipes Using Hove
 Projectiles: {
 	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
 	MechSuitArmProjectile.DisplayName: Mech Suit Arm Projectile
-	IceBladeSwingProjectile.DisplayName: Ice Blade Swing Projectile
 }
 
 RecipeBook: {
