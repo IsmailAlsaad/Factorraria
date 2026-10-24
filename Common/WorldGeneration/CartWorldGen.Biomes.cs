@@ -159,6 +159,7 @@ namespace Factorraria.Common.WorldGeneration
 
             Cart cart = CartSystem.SpawnCart(railPoint, skin);
             cart.Facing = facing;
+            cart.PlacedByPlayer = false;
             RollCargo(cart, spot);
             statSolo++;
 
@@ -174,9 +175,11 @@ namespace Factorraria.Common.WorldGeneration
             // The motor is out of fuel / liquid: SpawnCart gives a motor skin its empty fuel slot or empty tank.
             Cart motor = CartSystem.SpawnCart(railPoint, motorSkin);
             motor.Facing = facing;
+            motor.PlacedByPlayer = false;
 
             Cart carriage = CartSystem.SpawnCart(railPoint, carriageSkin);
             carriage.Facing = facing;
+            carriage.PlacedByPlayer = false;
             RollCargo(carriage, spot);
 
             // The new chain backfills its trail from the rail behind the motor and Attach snaps the carriage into slot 1.

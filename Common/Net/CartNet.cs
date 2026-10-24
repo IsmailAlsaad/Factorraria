@@ -195,6 +195,12 @@ namespace Factorraria.Common.Net
             views.TryRemove(who, out _);
         }
 
+        /// <summary>Server: true once this player finished the join sync and asked for carts (used by the cart map snapshot).</summary>
+        public static bool IsSubscribed(int who)
+        {
+            return views.ContainsKey(who);
+        }
+
         /// <summary>Server (called from CartSystem.PostUpdateWorld after the simulation): sends every subscribed player what changed near them.</summary>
         public static void ServerTick()
         {

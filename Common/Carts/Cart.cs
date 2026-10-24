@@ -693,6 +693,12 @@ namespace Factorraria.Common.Carts
         /// </summary>
         public int Id;
 
+        /// <summary>
+        /// False for a cart made by world generation (CartWorldGen). Only player-placed carts show on the map. Default true, so a cart that is
+        /// placed, or picked up and placed again, is always player-placed. Saved only when false (key "worldgen").
+        /// </summary>
+        public bool PlacedByPlayer = true;
+
         /// <summary>The chain this cart belongs to (as the motor or as a carriage). Null for a free cart.</summary>
         public CartChain Chain;
 
@@ -1516,6 +1522,11 @@ namespace Factorraria.Common.Carts
             TagCompound tag = new TagCompound();
             tag["version"] = SaveVersion;
             tag["id"] = Id;
+
+            if (!PlacedByPlayer)
+            {
+                tag["worldgen"] = true; // optional key: a save without it means player-placed
+            }
             tag["skin"] = Skin;
             tag["module"] = (int)Module;
 
@@ -1631,6 +1642,7 @@ namespace Factorraria.Common.Carts
             cart.Speed = tag.GetFloat("speed");
             cart.Velocity = new Vector2(tag.GetFloat("vx"), tag.GetFloat("vy"));
             cart.OnTrack = tag.GetBool("onTrack");
+            cart.PlacedByPlayer = !tag.GetBool("worldgen");
             cart.LoadChainId = tag.GetInt("chainId");   // 0 = not in a chain (also what saves from before chains read as)
             cart.LoadChainSlot = tag.GetInt("chainSlot");
             cart.Id = tag.GetInt("id");                 // 0 = saved before cart ids existed; CartSystem.LoadWorldData assigns one
