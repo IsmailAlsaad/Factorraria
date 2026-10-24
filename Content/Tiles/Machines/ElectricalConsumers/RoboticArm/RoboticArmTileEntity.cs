@@ -173,27 +173,22 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
         public bool IsTool(Item item) => item.pick > 0 || item.axe > 0 || item.hammer > 0;
 
-        // Anything a player could place: blocks, furniture, torches, platforms, saplings, walls. Left out: tools, containers (a chest
-        // would swallow items) and plain tiles the v1 plain-block filter rejects (grass-type, moss, non-solid or frame-important
-        // tiles that have no TileObjectData). Keeping the slot and the conveyor intake to this rule means nothing can sit in the slot
-        // that the arm will never place.
+        // Anything a player could place: blocks, furniture, containers (chests, dressers), machines, the Robotic Arm itself, torches,
+        // platforms, saplings, walls. Left out: tools and plain tiles the v1 plain-block filter rejects (grass-type, moss, non-solid or
+        // frame-important tiles that have no TileObjectData). Keeping the slot and the conveyor intake to this rule means nothing can
+        // sit in the slot that the arm will never place.
         public bool IsPlaceable(Item item)
         {
             if (item == null || item.IsAir || IsTool(item))
                 return false;
 
-            // Patch 7b.6 (A6): the Mechanical Arm item switches createTile / consumable on the OWNER's copy while Shift is held, so what
-            // this filter sees depends on which copy it looks at (the owner's cursor item can stay in placing mode, the server rebuilds
-            // the item in hook mode, ContentSamples is hook mode). Refuse it by type so the client filter, the server's slot edit filter,
-            // the conveyor intake and the worker all agree: an arm never places arms.
-            if (item.type == ModContent.ItemType<global::Factorraria.Content.Items.Hooks.MechanicalArmItem>())
-                return false;
-
+            // The Mechanical Arm item used to be refused here because its createTile changed with Shift. It always carries its tile now
+            // (left click only places the machine), so every copy agrees and it goes through the generic rules below.
             if (item.createWall >= 0)
                 return true;
 
             int tile = item.createTile;
-            if (tile < 0 || Main.tileContainer[tile])
+            if (tile < 0)
                 return false;
 
             // Object route (TileObjectData): TileObject.CanPlace does the anchor / support check, so the tile type needs no filter.

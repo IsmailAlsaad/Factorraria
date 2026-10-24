@@ -505,6 +505,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             BroadcastPlaceEffect();
             BroadcastPlaced(held);
+            BroadcastContainerCreated(held);
             Placements++;
             Log("placed " + held.Name + " at (" + target.X + ", " + target.Y + "), " + (held.stack - 1) + " left in the slot");
             held.stack--;
@@ -564,8 +565,52 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             WorldGen.SquareTileFrame(x, y);
             TileObjectData.CallPostPlacementPlayerHook(x, y, held.createTile, held.placeStyle, FacingFor(x), data.alternate, data);
+
+            // A chest or dresser is created by that hook. If the world has no free chest slot left it made nothing: undo the tile
+            // instead of leaving a container that holds nothing (nothing was broadcast yet, so no client has seen it).
+            if (ChestUpdateMode(held.createTile) >= 0)
+            {
+                Point16 corner = TileObjectData.TopLeft(x, y);
+                if (Chest.FindChest(corner.X, corner.Y) < 0)
+                {
+                    WorldGen.KillTile(x, y, noItem: true);
+                    return false;
+                }
+            }
+
             TileLoader.PlaceInWorld(x, y, held);
             return true;
+        }
+
+        // The first number of the ChestUpdates packet (message 34) for a tile that owns a Main.chest entry, or -1 for any other tile.
+        // Same values vanilla's Chest.AfterPlacement_Hook uses for the request a client sends after placing one.
+        static int ChestUpdateMode(int type)
+        {
+            if (type == TileID.Containers) return 0;
+            if (type == TileID.Dressers) return 2;
+            if (type == TileID.Containers2) return 4;
+            if (TileID.Sets.BasicChest[type]) return 100;
+            if (TileID.Sets.BasicDresser[type]) return 102;
+            return -1;
+        }
+
+        // Vanilla's chest hook only creates the chest in the placing process. A player's placement is broadcast by the server after the
+        // client's request; the arm places on the server, so the server tells the clients here (index of the new Main.chest entry).
+        void BroadcastContainerCreated(Item held)
+        {
+            if (Main.netMode != NetmodeID.Server)
+                return;
+
+            int mode = ChestUpdateMode(held.createTile);
+            if (mode < 0)
+                return;
+
+            Point16 corner = TileObjectData.TopLeft(target.X, target.Y);
+            int index = Chest.FindChest(corner.X, corner.Y);
+            if (index < 0)
+                return;
+
+            NetMessage.SendData(MessageID.ChestUpdates, -1, -1, null, mode, corner.X, corner.Y, held.placeStyle, index, mode >= 100 ? held.createTile : 0);
         }
 
         bool PlacePlain(Item held)
