@@ -18,6 +18,7 @@ namespace Factorraria.Common.Carts
     public static class CartMapIcons
     {
         public static int ModuleScalePercent = 60;   // size of the module sprite relative to its item sprite
+        public static int NpcMaxSizePercentOfBody = 150; // a carried NPC is drawn at the cart's own scale but never wider/taller than this % of the cart sprite's width
         public static int ModuleBottomPercent = 45;  // how far down the cart sprite the module's bottom edge sits (LOWER = module sits HIGHER; was 60)
         // The outline is CartMapConfig.OutlineThickness (a float) pixels of white, then the same of black; the canvas is padded by twice that, rounded up.
 
@@ -29,8 +30,7 @@ namespace Factorraria.Common.Carts
             if (moduleItemType < 0)
                 moduleItemType = 0;
 
-            if (npcType < 0)
-                npcType = 0;
+
 
             (int, int, int) key = (skinType, moduleItemType, npcType);
             if (cache.TryGetValue(key, out Texture2D icon))
@@ -91,6 +91,7 @@ namespace Factorraria.Common.Carts
                 int sourceW = 0;
                 int sourceH = 0;
                 int scalePercent = ModuleScalePercent;
+                int passengerBottom = -1;   // set for a carried NPC: where its feet sit, from the top of the cart sprite
                 if (module != null)
                 {
                     source = new Color[module.Width * module.Height];
@@ -98,11 +99,19 @@ namespace Factorraria.Common.Carts
                     sourceW = module.Width;
                     sourceH = module.Height;
                 }
-                else if (npcType > 0 && ReadNpcFrame(npcType, out source, out sourceW, out sourceH))
+                else if (npcType != 0 && ReadNpcFrame(npcType, out source, out sourceW, out sourceH))
                 {
-                    // an NPC has to fit in the same box a module sprite gets
-                    int fit = Math.Max(1, bw * ModuleScalePercent / 100);
-                    scalePercent = Math.Clamp(fit * 100 / Math.Max(sourceW, sourceH), 1, 100);
+                    // Same idea as carrying it in the world: the icon's cart sprite stands for the cart's hitbox height, so the NPC is drawn at
+                    // that scale and its feet sit PassengerFloorLift + GetExtraLift(its hitbox height) above the cart floor (shorter NPCs higher).
+                    float worldToIcon = bh / (float)CartPhysics.HitboxHeight;
+                    int cap = Math.Max(1, bw * NpcMaxSizePercentOfBody / 100);
+                    scalePercent = Math.Clamp(Math.Min((int)Math.Round(100f * worldToIcon), cap * 100 / Math.Max(sourceW, sourceH)), 1, 400);
+
+                    float lift = CartPhysics.PassengerFloorLift;
+                    if (ContentSamples.NpcsByNetId.TryGetValue(npcType, out NPC sample))
+                        lift += CartPassengers.GetExtraLift(sample);
+
+                    passengerBottom = bh - (int)Math.Round(lift * worldToIcon);
                 }
 
                 if (source != null)
@@ -123,7 +132,7 @@ namespace Factorraria.Common.Carts
                 }
 
                 // The module may stick out above the cart body, so the canvas grows upwards (and sideways) when it has to.
-                int moduleBottom = bh * ModuleBottomPercent / 100;
+                int moduleBottom = passengerBottom >= 0 ? passengerBottom : bh * ModuleBottomPercent / 100;
                 int topExtra = modulePixels != null ? Math.Max(0, mh - moduleBottom) : 0;
                 int innerW = Math.Max(bw, mw);
                 float thickness = Math.Max(0f, CartMapConfig.Current.OutlineThickness);
@@ -194,8 +203,9 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        // First animation frame of an NPC, cropped to its opaque pixels. False when nothing can be read.
-        static bool ReadNpcFrame(int npcType, out Color[] pixels, out int width, out int height)
+        // First animation frame of an NPC (by netID, so Red Slime etc. work), cropped to its opaque pixels and tinted with the NPC's colour
+        // (slime variants share one sprite and differ only by colour). False when nothing can be read.
+        static bool ReadNpcFrame(int netId, out Color[] pixels, out int width, out int height)
         {
             pixels = null;
             width = 0;
@@ -203,6 +213,13 @@ namespace Factorraria.Common.Carts
 
             try
             {
+                if (!ContentSamples.NpcsByNetId.TryGetValue(netId, out NPC sample))
+                    return false;
+
+                int npcType = sample.type;
+                Color tint = sample.color;
+                bool tinted = tint.R != 0 || tint.G != 0 || tint.B != 0;
+
                 Main.instance.LoadNPC(npcType);
                 Texture2D texture = TextureAssets.Npc[npcType].Value;
                 int frames = Math.Max(1, Main.npcFrameCount[npcType]);
@@ -237,14 +254,20 @@ namespace Factorraria.Common.Carts
                 for (int y = 0; y < height; y++)
                 {
                     for (int x = 0; x < width; x++)
-                        pixels[y * width + x] = frame[(y + minY) * texture.Width + x + minX];
+                    {
+                        Color pixel = frame[(y + minY) * texture.Width + x + minX];
+                        if (tinted && pixel.A > 0)
+                            pixel = new Color(pixel.R * tint.R / 255, pixel.G * tint.G / 255, pixel.B * tint.B / 255, (int)pixel.A);   // premultiplied: scale colour only
+
+                        pixels[y * width + x] = pixel;
+                    }
                 }
 
                 return true;
             }
             catch (Exception exception)
             {
-                ModContent.GetInstance<Factorraria>().Logger.Warn("[CartMap] could not read the sprite of NPC " + npcType + ": " + exception.Message);
+                ModContent.GetInstance<Factorraria>().Logger.Warn("[CartMap] could not read the sprite of NPC " + netId + ": " + exception.Message);
                 return false;
             }
         }

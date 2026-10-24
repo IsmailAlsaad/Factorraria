@@ -48,6 +48,10 @@ namespace Factorraria.Content.Configs
         [DefaultValue(true)]
         public bool FlipLeftFacingSkins = true;
 
+        // A town NPC riding in a cart is shown in the cart's icon, so its normal head icon is hidden on the map while it is carried.
+        [DefaultValue(true)]
+        public bool HideCarriedNpcHead = true;
+
         public override void OnChanged()
         {
             CartMapIcons.Rebuild();

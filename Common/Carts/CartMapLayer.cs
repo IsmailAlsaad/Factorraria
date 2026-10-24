@@ -105,7 +105,7 @@ namespace Factorraria.Common.Carts
                     if (entry.ModuleItemType > 0)
                         text += " + " + Lang.GetItemNameValue(entry.ModuleItemType);
 
-                    if (entry.PassengerNpcType > 0)
+                    if (entry.PassengerNpcType != 0)
                         text += " + " + Lang.GetNPCNameValue(entry.PassengerNpcType);
                 }
             }

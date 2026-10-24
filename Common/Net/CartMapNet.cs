@@ -19,7 +19,7 @@ namespace Factorraria.Common.Net
         public int Facing = 1;   // 1 = facing right, -1 = left (the icon is flipped to match)
         public int SkinType;     // item type of the skin (the cart's item sprite is the icon)
         public int ModuleItemType; // item type drawn on top (chest, terrarium), 0 = nothing
-        public int PassengerNpcType; // NPC type the cart carries (drawn in the module slot), 0 = none
+        public int PassengerNpcType; // netID of the NPC the cart carries (can be negative: slime variants), drawn in the module slot, 0 = none
         public string PassengerKey;  // wire key of that NPC type, only filled on the server
         public string SkinKey;   // wire keys, only filled on the server
         public string ModuleItemKey;
@@ -112,13 +112,13 @@ namespace Factorraria.Common.Net
                 entry.ModuleItemType = cart.ModuleItem > 0 ? cart.ModuleItem : Cart.ModuleItemType(cart.Module);
 
                 NPC passenger = CartPassengers.GetPassenger(cart);   // real NPCs only exist on the server and in single-player, which is where this runs
-                entry.PassengerNpcType = passenger != null ? passenger.type : 0;
+                entry.PassengerNpcType = passenger != null ? passenger.netID : 0;   // netID, not type: a Red Slime is type Blue Slime with a negative netID
 
                 if (withKeys)
                 {
                     entry.SkinKey = cart.Skin;
                     entry.ModuleItemKey = entry.ModuleItemType > 0 ? CartSkins.KeyOf(entry.ModuleItemType) : null;
-                    entry.PassengerKey = entry.PassengerNpcType > 0 ? NPCID.Search.GetName(entry.PassengerNpcType) : null;
+                    entry.PassengerKey = entry.PassengerNpcType != 0 ? NPCID.Search.GetName(entry.PassengerNpcType) : null;
                 }
 
                 hash = HashCode.Combine(HashCode.Combine(hash, entry.Id, (int)entry.TileX, (int)entry.TileY, (int)entry.Module, entry.SkinType, entry.ModuleItemType, entry.Facing), entry.PassengerNpcType);
