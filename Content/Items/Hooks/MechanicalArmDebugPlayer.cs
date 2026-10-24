@@ -39,8 +39,7 @@ namespace Factorraria.Content.Items.Hooks
 
         public override void ProcessTriggers(TriggersSet triggersSet)
         {
-            if (!Enabled || Player.whoAmI != Main.myPlayer || !triggersSet.JustPressed.Grapple)
-                return;
+            if (!Enabled || Player.whoAmI != Main.myPlayer || !PlayerInput.Triggers.JustPressed.Grapple) return;
 
             Item slot = Player.miscEquips[4];
             int projType = ModContent.ProjectileType<MechanicalArmProjectile>();
