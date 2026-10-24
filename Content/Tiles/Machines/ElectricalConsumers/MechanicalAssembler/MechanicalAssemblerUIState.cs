@@ -31,7 +31,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
                 browserPos: productSlotPosition + new Vector2(80, 40));
 
             list.Add(new MachineUIElementEntry(
-                new ElectricityUIIcon(Entity.GetUseFraction),
+                new ElectricityUIIcon(Entity.GetUseFraction, null, () => Entity.WireToggle),
                 new Vector2(8, -50), new Vector2(40, 40)));
 
             return list;

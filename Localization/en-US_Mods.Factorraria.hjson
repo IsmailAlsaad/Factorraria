@@ -367,6 +367,11 @@ Configs: {
 			Label: Flip Left Facing Skins
 			Tooltip: ""
 		}
+
+		HideCarriedNpcHead: {
+			Label: Hide Carried Npc Head
+			Tooltip: ""
+		}
 	}
 }
 

@@ -34,7 +34,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 new Vector2(-20, 30), new Vector2(SlotSize, SlotSize)));
 
             list.Add(new MachineUIElementEntry(
-                new ElectricityUIIcon(Entity.GetUseFraction, ShowElements),
+                new ElectricityUIIcon(Entity.GetUseFraction, ShowElements, () => Entity.WireToggle),
                 new Vector2(-8, -70), new Vector2(40, 40)));
 
             return list;

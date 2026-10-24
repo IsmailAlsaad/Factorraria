@@ -16,7 +16,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator
             list.Add(InputSlotEntry(0, new Vector2(-6, 54)));
 
             list.Add(new MachineUIElementEntry(
-                new ElectricityUIIcon(Entity.GetUseFraction),
+                new ElectricityUIIcon(Entity.GetUseFraction, null, () => Entity.WireToggle),
                 new Vector2(0, -40), new Vector2(40, 40)));
 
             return list;

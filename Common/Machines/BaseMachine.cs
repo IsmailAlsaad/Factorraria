@@ -21,8 +21,16 @@ namespace Factorraria.Common.Machines
     {
         #region Variables
         public abstract int ValidTileType { get; }
-        public bool isOn { get; set; }
-        public bool isWorking { get; protected set; }
+        // Wire switch (vanilla Terraria wires; electric consumers and producers only, see ToggleByWire). A wire pulse flips WireToggle
+        // on the server / in single-player, and it is synced as flag bit 4 and saved. While it is true the machine reads as switched off:
+        // isOn and isWorking are MASKED when read, so everything that calculates them keeps writing the raw values as before and
+        // everything that reads them sees the override (PowerNetwork demand and supply, the machine's own "if (!isOn) return", visuals,
+        // sync). Masked isWorking takes the machine out of the grid's supply / demand; masked isOn freezes it exactly like a brownout.
+        bool rawOn;
+        bool rawWorking;
+        public bool WireToggle;
+        public bool isOn { get => rawOn && !WireToggle; set => rawOn = value; }
+        public bool isWorking { get => rawWorking && !WireToggle; protected set => rawWorking = value; }
         protected int WorkProgress;
         public int CraftsFinished;   // +1 per finished craft (runtime only); the output slot UI watches it for the finish sound
         protected virtual int WorkDuration => 120; // 60 ticks = 1 second, override per machine
@@ -278,6 +286,25 @@ namespace Factorraria.Common.Machines
         }
 
         bool IsElectric => this is IElectricConsumer || this is IElectricProducer;
+
+        // Whether a wire signal does anything to this machine (general machines such as the Furnace ignore wires).
+        public bool CanBeWireToggled => IsElectric;
+
+        long lastWireTick = -1;
+
+        // Flips the wire switch. Runs where wires run (the server and single-player; vanilla never runs wiring on a client, and a client
+        // would be refused here anyway). One flip per game tick, so a wire touching several tiles of this machine, or a switch wired
+        // with two colours, counts as one pulse. Returns whether it flipped.
+        public bool ToggleByWire()
+        {
+            if (!IsElectric) return false;
+            if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient) return false;
+            if (lastWireTick == Main.GameUpdateCount) return false;
+
+            lastWireTick = Main.GameUpdateCount;
+            WireToggle = !WireToggle;
+            return true;
+        }
 
         #endregion
 
@@ -913,6 +940,7 @@ namespace Factorraria.Common.Machines
             }
 
             tag["InsideBiome"] = (int)InsideBiome;
+            if (WireToggle) tag["WireToggle"] = true;   // written only when switched off, so old and new saves both load
 
             for (int i = 0; i < Fuels.Length; i++)
             {
@@ -967,6 +995,7 @@ namespace Factorraria.Common.Machines
             }
 
             WorkProgress = tag.GetInt("WorkProgress");
+            WireToggle = tag.ContainsKey("WireToggle") && tag.GetBool("WireToggle");
             Fuel?.Restore(tag.GetInt("FuelRemaining"), tag.GetInt("FuelCapacity"));
 
             for (int i = 0; i < Fuels.Length; i++)
@@ -1022,6 +1051,7 @@ namespace Factorraria.Common.Machines
             byte flags = 0;
             if (isOn) flags |= 1;
             if (isWorking) flags |= 2;
+            if (WireToggle) flags |= 4;
             w.Write(flags);
             w.Write((byte)InsideBiome);
             w.Write7BitEncodedInt(Math.Max(0, WorkProgress));
@@ -1055,6 +1085,7 @@ namespace Factorraria.Common.Machines
             byte flags = r.ReadByte();
             isOn = (flags & 1) != 0;
             isWorking = (flags & 2) != 0;
+            WireToggle = (flags & 4) != 0;
 
             int biome = r.ReadByte();
             if (Enum.IsDefined(typeof(MachineBiome), biome))
@@ -1105,6 +1136,7 @@ namespace Factorraria.Common.Machines
             byte flags = 0;
             if (isOn) flags |= 1;
             if (isWorking) flags |= 2;
+            if (WireToggle) flags |= 4;
             w.Write(flags);
 
             int step = Math.Max(1, progressStep);
@@ -1140,6 +1172,7 @@ namespace Factorraria.Common.Machines
 
             isOn = (flags & 1) != 0;
             isWorking = (flags & 2) != 0;
+            WireToggle = (flags & 4) != 0;
             WorkProgress = progress;
             CraftsFinished = crafts;
 
@@ -1182,6 +1215,7 @@ namespace Factorraria.Common.Machines
             byte flags = 0;
             if (isOn) flags |= 1;
             if (isWorking) flags |= 2;
+            if (WireToggle) flags |= 4;
             w.Write(flags);
             w.Write7BitEncodedInt(Math.Max(0, WorkProgress));
             w.Write7BitEncodedInt(Math.Max(0, CraftsFinished));
@@ -1213,6 +1247,7 @@ namespace Factorraria.Common.Machines
             byte flags = r.ReadByte();
             isOn = (flags & 1) != 0;
             isWorking = (flags & 2) != 0;
+            WireToggle = (flags & 4) != 0;
             WorkProgress = r.Read7BitEncodedInt();
             CraftsFinished = r.Read7BitEncodedInt();
             if (IsElectric) SetSnapshotUseFraction(r.ReadSingle());
@@ -1249,7 +1284,7 @@ namespace Factorraria.Common.Machines
             var sb = new System.Text.StringBuilder();
             sb.Append(GetType().Name).Append(" (").Append(Position.X).Append(", ").Append(Position.Y).Append(") id ").Append(ID);
             sb.Append(' ').Append(MachineWidth).Append('x').Append(MachineHeight).Append(MachineInitialized ? "" : " NO-GEOMETRY");
-            sb.Append(" | ").Append(isOn ? "on" : "off").Append(isWorking ? " working" : "").Append(" prog=").Append(WorkProgress);
+            sb.Append(" | ").Append(isOn ? "on" : "off").Append(isWorking ? " working" : "").Append(WireToggle ? " WIRE-OFF" : "").Append(" prog=").Append(WorkProgress);
             sb.Append(" crafts=").Append(CraftsFinished).Append(" biome=").Append(InsideBiome);
             if (IsElectric) sb.Append(" use=").Append(GetSnapshotUseFraction().ToString("0.##"));
             sb.Append(" | in[").Append(MachineSnapshot.DescribeItems(InputSlots)).Append("] out[").Append(MachineSnapshot.DescribeItems(OutputSlots));

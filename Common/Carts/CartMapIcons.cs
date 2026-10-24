@@ -6,6 +6,7 @@ using Terraria;
 using Factorraria.Content.Configs;
 using Terraria.GameContent;
 using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace Factorraria.Common.Carts
 {

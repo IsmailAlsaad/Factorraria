@@ -23,11 +23,17 @@ namespace Factorraria.Common.UI.CustomUIElements
 
         Func<float> FillAmount;
         Func<bool> IsVisible; // optional: the icon is skipped while this returns false
+        Func<bool> IsDisabled; // optional: while this returns true (switched off by a wire) the icon shows the disabled background
+        Asset<Texture2D> ElectricityDisabledBackground; // Lightning_Off_Background.png; null until the art exists
 
-        public ElectricityUIIcon(Func<float> getAmount, Func<bool> isVisible = null)
+        public ElectricityUIIcon(Func<float> getAmount, Func<bool> isVisible = null, Func<bool> isDisabled = null)
         {
             FillAmount = getAmount;
             IsVisible = isVisible;
+            IsDisabled = isDisabled;
+
+            // RequestIfExists: a missing PNG logs a warning instead of crashing (the draw code falls back to a tinted background).
+            ModContent.RequestIfExists<Texture2D>("Factorraria/Common/UI/CustomUIElements/Lightning_Off_Background", out ElectricityDisabledBackground);
 
             ElectricityFullIcon = ModContent.Request<Texture2D>("Factorraria/Common/UI/CustomUIElements/Lightning_On");
             ElectricityEmptyIcon = ModContent.Request<Texture2D>("Factorraria/Common/UI/CustomUIElements/Lightning_Off");
@@ -42,6 +48,19 @@ namespace Factorraria.Common.UI.CustomUIElements
             Vector2 drawPosition = dimensions.Position();
 
             float scale = dimensions.Width / ElectricityEmptyIcon.Width();
+
+            // Switched off by a wire signal: a static disabled background behind the empty bolt, no pulses and no fill.
+            if (IsDisabled != null && IsDisabled())
+            {
+                Texture2D disabledBackground = ElectricityDisabledBackground?.Value;
+                if (disabledBackground != null)
+                    spriteBatch.Draw(disabledBackground, drawPosition, null, Color.White, 0f, Vector2.Zero, dimensions.Width / disabledBackground.Width, SpriteEffects.None, 0f);
+                else
+                    spriteBatch.Draw(ElectricityIconBackground.Value, drawPosition, null, new Color(110, 110, 110) * 0.6f, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+
+                spriteBatch.Draw(ElectricityEmptyIcon.Value, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                return;
+            }
 
             spriteBatch.Draw(ElectricityEmptyIcon.Value, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 

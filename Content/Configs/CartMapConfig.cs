@@ -21,7 +21,7 @@ namespace Factorraria.Content.Configs
 
         // Pixels of white, then the same number of black, around each icon. 0 = no outline.
         // Fractions work: the outermost ring of each colour is drawn partly transparent (1.5 = one full pixel plus a half-strength one).
-        [DefaultValue(1.65f)]
+        [DefaultValue(1.6f)]
         [Range(0f, 4f)]
         [Increment(0.05f)]
         [Slider]
