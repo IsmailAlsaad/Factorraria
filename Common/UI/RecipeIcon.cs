@@ -51,14 +51,24 @@ namespace Factorraria.Common.UI
             }
 
             Main.instance.LoadItem(key.Id);
-            DrawTexture(sb, TextureAssets.Item[key.Id].Value, center, iconBox, zoom, tint);
+            Texture2D itemTex = TextureAssets.Item[key.Id].Value;
+
+            // Animated item sprites (Fallen Star etc.) are vertical sheets: draw only the current frame,
+            // the same one vanilla inventory slots show. Client-only drawing, nothing to sync.
+            Rectangle? itemFrame = null;
+            if (itemTex != null && Main.itemAnimations[key.Id] != null)
+                itemFrame = Main.itemAnimations[key.Id].GetFrame(itemTex);
+
+            DrawTexture(sb, itemTex, center, iconBox, zoom, tint, itemFrame);
         }
 
-        static void DrawTexture(SpriteBatch sb, Texture2D tex, Vector2 center, float iconBox, float zoom, Color tint)
+        /// <param name="frame">Source rectangle inside the texture (animated sheets). Null = whole texture.</param>
+        static void DrawTexture(SpriteBatch sb, Texture2D tex, Vector2 center, float iconBox, float zoom, Color tint, Rectangle? frame = null)
         {
             if (tex == null) return;
-            float fit = Math.Min(1f, iconBox / Math.Max(tex.Width, tex.Height));
-            sb.Draw(tex, center, null, tint, 0f, tex.Size() / 2f, fit * zoom, SpriteEffects.None, 0f);
+            Rectangle src = frame ?? tex.Bounds;
+            float fit = Math.Min(1f, iconBox / Math.Max(src.Width, src.Height));
+            sb.Draw(tex, center, src, tint, 0f, new Vector2(src.Width, src.Height) / 2f, fit * zoom, SpriteEffects.None, 0f);
         }
     }
 }
