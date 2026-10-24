@@ -209,6 +209,37 @@ namespace Factorraria.Common.Statues
                 SetReplicaStatue(pair.Key, true, pair.Value);
         }
 
+        // How many registered statues are inside the machine's radius, awakened or not. Used for the shimmer drain, which must
+        // not depend on whether the machine is currently awakening them. Read-only: claims nothing.
+        public int CountStatuesInRadius(IStatueAwakener awakener)
+        {
+            var registry = ModContent.GetInstance<AwakenedStatueRegistry>();
+
+            int radius = awakener.AwakenRadiusTiles;
+            int minX = Math.Max(1, awakener.AwakenerOrigin.X - radius);
+            int maxX = Math.Min(Main.maxTilesX - 2, awakener.AwakenerOrigin.X + radius);
+            int minY = Math.Max(1, awakener.AwakenerOrigin.Y - radius);
+            int maxY = Math.Min(Main.maxTilesY - 2, awakener.AwakenerOrigin.Y + radius);
+
+            int count = 0;
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    Tile tile = Main.tile[x, y];
+                    if (!tile.HasTile || !registry.IsStatueTile(tile.TileType)) continue;
+
+                    Point16 origin = TileObjectData.TopLeft(x, y);
+                    if (origin.X != x || origin.Y != y) continue;
+
+                    if (registry.TryGet(tile.TileType, TileObjectData.GetTileStyle(tile), out _))
+                        count++;
+                }
+            }
+
+            return count;
+        }
+
         // Adds every free registered statue within the machine's radius to that machine.
         void Claim(IStatueAwakener awakener)
         {
