@@ -76,7 +76,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator
             }
 
             if (consumed && ModContent.GetInstance<MachineUISystem>().OpenMachine == this)
-                SoundEngine.PlaySound(SoundID.Grab with { Volume = 0.5f }, MachineCenter);
+                SoundEngine.PlaySound(SoundID.Grab with { Volume = 0.4f , PitchVariance = 0.5f, MaxInstances = 0}, MachineCenter);
 
             if (!InputSlots[0].IsAir) lastInputType = InputSlots[0].type;
 
@@ -87,7 +87,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator
             int dustType = GetInputBlockDust(lastInputType);
             if (dustType < 0) return;
 
-            Dust d = Dust.NewDustPerfect(MachineCenter + Main.rand.NextVector2Circular(8f, 8f), dustType,
+            Dust d = Dust.NewDustPerfect(MachineCenter + Main.rand.NextVector2Circular(8f, 16f) + new Vector2(-9f,0f), dustType,
                 new Vector2(Main.rand.NextFloat(-1f, 1f), Main.rand.NextFloat(-1.5f, -0.3f)), 0, default, Main.rand.NextFloat(0.9f, 1.2f));
             d.noGravity = true;
         }
