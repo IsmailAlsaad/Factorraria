@@ -652,9 +652,9 @@ tModLoader/other bases -> project types:
     +Tiles:HashSet<Point> +FilteredItemId:int
 
 ### Common/Statues/
-**AwakenedSpawnGlobalNPC.cs** uses: AwakenedLootDrop, AwakenedStatue, AwakenedStatueEntry, AwakenedStatueSystem, Entry
+**AwakenedSpawnGlobalNPC.cs** uses: AwakenedLootDrop, AwakenedStatue, AwakenedStatueEntry, AwakenedStatueSystem, CartPassengerGlobalNPC, Entry
   class AwakenedSpawnGlobalNPC : GlobalNPC
-    +InstancePerEntity:bool[ov] +Tagged:bool +Origin:Point16 +Entry:AwakenedStatueEntry +Release() +CheckActive(NPC)[ov] +OnKill(NPC)[ov]
+    +InstancePerEntity:bool[ov] +Tagged:bool +Origin:Point16 +DespawnDistanceTiles:float +Entry:AwakenedStatueEntry +Release() +CheckActive(NPC)[ov] +OnKill(NPC)[ov]
 **AwakenedSpawnSystem.cs** uses: AwakenedSpawnGlobalNPC, AwakenedStatue, AwakenedStatueSystem, Entry, IStatueAwakener
   class AwakenedSpawnSystem : ModSystem
     +MaxEnemiesPerStatue:int +SpawnPassTicks:int +RefillDelayTicks:int +NpcSlotMargin:int +SpawnOffset:Vector2 +PostUpdateNPCs()[ov]

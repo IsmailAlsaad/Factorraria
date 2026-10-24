@@ -1,4 +1,6 @@
-﻿using Terraria;
+﻿using Factorraria.Common.Carts;
+using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -15,6 +17,9 @@ namespace Factorraria.Common.Statues
 
         public bool Tagged;
         public Point16 Origin;
+
+        // Tiles from the statue beyond which a wandering enemy loses its don't-despawn protection. A cart passenger is exempt.
+        public float DespawnDistanceTiles = 50f;
         public AwakenedStatueEntry Entry;   // the statue that spawned this enemy; its Loot list is rolled on death
 
         // Turns the enemy back into a normal one.
@@ -32,6 +37,16 @@ namespace Factorraria.Common.Statues
             bool held = statues.Awakened.TryGetValue(Origin, out AwakenedStatue statue)
                 && statue.Entry.Spawns(npc.type)
                 && statues.IsStillAwakened(statue);
+
+            // Wandered too far from its statue: stop protecting it, so it can despawn like a normal enemy (and the statue refills its
+            // slot). Server / single-player only, and never while a cart carries it (the cart moves it, it isn't wandering).
+            if (held
+                && Main.netMode != NetmodeID.MultiplayerClient
+                && !npc.GetGlobalNPC<CartPassengerGlobalNPC>().IsCarried
+                && Vector2.Distance(npc.Center, statue.Center) > DespawnDistanceTiles * 16f)
+            {
+                held = false;
+            }
 
             // Safety net: if the explicit release in AwakenedStatueSystem.RescanFor missed this enemy, drop the tag here.
             if (!held) Release();
