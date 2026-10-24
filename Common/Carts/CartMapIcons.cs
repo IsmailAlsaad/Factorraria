@@ -18,7 +18,7 @@ namespace Factorraria.Common.Carts
     public static class CartMapIcons
     {
         public static int ModuleScalePercent = 60;   // size of the module sprite relative to its item sprite
-        public static int ModuleBottomPercent = 55;  // how far down the cart sprite the module's bottom edge sits (LOWER = module sits HIGHER; was 60)
+        public static int ModuleBottomPercent = 45;  // how far down the cart sprite the module's bottom edge sits (LOWER = module sits HIGHER; was 60)
         // The outline is CartMapConfig.OutlineThickness (a float) pixels of white, then the same of black; the canvas is padded by twice that, rounded up.
 
         static readonly Dictionary<long, Texture2D> cache = new Dictionary<long, Texture2D>();
