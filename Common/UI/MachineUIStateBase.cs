@@ -119,16 +119,21 @@ namespace Factorraria.Common.UI
 
         protected const float SlotSize = 54f;
 
-        protected MachineUIElementEntry InputSlotEntry(int slotIndex, Vector2 pos, Func<bool> isVisible = null) =>
-            new MachineUIElementEntry(
-                new UIItemSlotWrapper(ItemSlot.Context.ChestItem,
-                    () => CurrentEntity.InputSlots[slotIndex],
-                    v => CurrentEntity.InputSlots[slotIndex] = v,
-                    isVisible,
-                    item => CurrentEntity.AcceptsSlotItem(MachineSlotKind.Input, slotIndex, item),
-                    null, null,
-                    new MachineSlotBinding(() => CurrentEntity, MachineSlotKind.Input, slotIndex)),
-                pos, new Vector2(SlotSize, SlotSize));
+        protected MachineUIElementEntry InputSlotEntry(int slotIndex, Vector2 pos, Func<bool> isVisible = null)
+        {
+            var wrapper = new UIItemSlotWrapper(ItemSlot.Context.ChestItem,
+                () => CurrentEntity.InputSlots[slotIndex],
+                v => CurrentEntity.InputSlots[slotIndex] = v,
+                isVisible,
+                item => CurrentEntity.AcceptsSlotItem(MachineSlotKind.Input, slotIndex, item),
+                null, null,
+                new MachineSlotBinding(() => CurrentEntity, MachineSlotKind.Input, slotIndex));
+
+            // The empty "next slot" auto mode shows is drawn faded; a manually picked recipe never has one.
+            wrapper.FadedWhen = () => CurrentEntity != null && CurrentEntity.IsExtraIngredientSlot(slotIndex);
+
+            return new MachineUIElementEntry(wrapper, pos, new Vector2(SlotSize, SlotSize));
+        }
 
         protected MachineUIElementEntry OutputSlotEntry(int slotIndex, Vector2 pos, Func<bool> isVisible = null) =>
             new MachineUIElementEntry(

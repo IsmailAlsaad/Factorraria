@@ -55,7 +55,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
 
             const float slotSize = 54f, gap = 6f;
             float step = slotSize + gap;
-            int n = Entity.ActiveIngredientCount;
+            int n = System.Math.Max(1, Entity.SettledIngredientCount);
 
             // Slot 0 stays put; each extra slot goes one step further left.
             for (int i = 0; i < ingredientEntries.Length; i++)

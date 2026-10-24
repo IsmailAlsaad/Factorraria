@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-24 | 256 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-24 | 255 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -29,7 +29,7 @@ tModLoader/other bases -> project types:
 - byte (16): CartAction, CartPanelAction, CartPanelCloseReason, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, RequestCheck
 - ModCommand (13): ArmSendCommand, CartDiagnosticsCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
-- ModPlayer (10): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmDebugPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
+- ModPlayer (9): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - ModTile (9): ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - GlobalItem (7): CartModuleItemGlobal, IceBladeItem, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalTile (6): AwakenedStatueGlobalTile, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MaterializerWireGuard, TilePlacedGlobalTile
@@ -236,7 +236,7 @@ tModLoader/other bases -> project types:
 ### Common/Machines/
 **BaseMachine.cs** uses: CustomRecipe, FactorrariaNet, FuelChannel, FuelModule, FuelTable, IElectricConsumer, IElectricProducer, LiquidFuelChannel, LiquidFuelModule, LiquidFuelTable, LiquidIngredient, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MachineBiome, MachineDetail, MachineDetailSystem, MachineLightSync, MachineLightSyncSystem, MachinePlacement, MachinePlacementInfo, MachineSlotKind, MachineSnapshot, MachineTransition, MachineUIRegistry, MachineUISystem, MachineVisualDefinition, PowerGridSystem, RecipeBook, RecipeCatalog, RecipeIngredient, RecipeKnowledgeNet, RecipeOutputGroup, RecipeOutputKey, VItemStacking, VirtualItem, VirtualItemSystem
   abstract class BaseMachine : ModTileEntity
-    +isOn:bool +isWorking:bool #WorkProgress:int +CraftsFinished:int #WorkDuration:int[v] #OutputSlotCount:int[v] +SelectedRecipe:CustomRecipe +ManualGroup:RecipeOutputGroup +SetManualGroup(RecipeOutputGroup) #RecipeGroups:List<RecipeOutputGroup>[v] +OutputMaxStack:int +InsideBiome:MachineBiome +cornerPosition:Point16 +MachineCenter:Vector2 +MachineWidth:int +MachineHeight:int +MachineInitialized:bool +SlotsOf(MachineSlotKind) +AcceptsSlotItem(MachineSlotKind,int,Item)[v] #InputLiquidCount:int[v] #OutputLiquidCount:int[v] +Recipes:RecipeBook[v] #FuelPerCraft:int[v] #FuelChannels:FuelChannel[v] #AcceptedLiquidFuels:LiquidFuelTable[v] #LiquidFuelPerCraft:int[v] #LiquidFuelChannels:LiquidFuelChannel[v] #RecipeDuration(CustomRecipe)[v] +ResolveRecipeDuration(CustomRecipe) #CanStartCraft(CustomRecipe)[v] +TreatsWorldLiquidAsInfinite(int)[v] #AcceptsInputLiquid(int,int)[v] +FuelSlotIndex:int[c] +FirstIngredientSlot:int[c] +Fuel:FuelModule +FuelSlotCount:int +LiquidFuelCount:int #InputSlotCount:int[v] +IngredientStart:int +IngredientSlotCount:int #AutoIngredientCount:int[v] #ProgressiveIngredientSlots:bool[v] +ActiveIngredientCount:int #IntakeIngredientCount:int[v] +Update()[ov] #OnRecipeFinished(CustomRecipe)[v] +WorkFraction:float +GetFuelBurnFraction(int) +OnKill()[ov] +GetPendingOutputType(int) #IntakeTiles()[v] #TryGetIntakeSlot(int,out int,out int)[v] #GetPickupRecipes()[v] +IsOnConveyorFloor() +NotifyAnimationFrame(int) +OnPlaced(int,int)[v] +ResolveIncomingLiquid(int) +OnRightClick(int,int)[v] #OnAnimationFrameChanged(int,int)[v] +Transition:MachineTransition +TransitionStartTick:uint #OnStartup()[v] #OnShutdown()[v] ~UpdateVisualTransition(MachineVisualDefinition) +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +NetReceive(BinaryReader)[ov] +BuildSnapshot() #WriteSnapshotExtra(BinaryWriter)[v] #ReadSnapshotExtra(BinaryReader)[v] #DescribeSnapshotExtra()[v] +BuildLightState(int,uint) +ApplyLightState(BinaryReader) +LastDetailTick:uint +BuildDetail() +ApplyDetail(BinaryReader) +DescribeSnapshot() +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnNetPlace()[ov] +NearPlayerWidth:float +NearPlayerHeight:float +IsAnyPlayerNear(Vector2,float) +IsOnScreen(Vector2,float)[s] +DetermineBiomeAt(int,int)[s]
+    +isOn:bool +isWorking:bool #WorkProgress:int +CraftsFinished:int #WorkDuration:int[v] #OutputSlotCount:int[v] +SelectedRecipe:CustomRecipe +ManualGroup:RecipeOutputGroup +SetManualGroup(RecipeOutputGroup) #RecipeGroups:List<RecipeOutputGroup>[v] +OutputMaxStack:int +InsideBiome:MachineBiome +cornerPosition:Point16 +MachineCenter:Vector2 +MachineWidth:int +MachineHeight:int +MachineInitialized:bool +SlotsOf(MachineSlotKind) +AcceptsSlotItem(MachineSlotKind,int,Item)[v] #InputLiquidCount:int[v] #OutputLiquidCount:int[v] +Recipes:RecipeBook[v] #FuelPerCraft:int[v] #FuelChannels:FuelChannel[v] #AcceptedLiquidFuels:LiquidFuelTable[v] #LiquidFuelPerCraft:int[v] #LiquidFuelChannels:LiquidFuelChannel[v] #RecipeDuration(CustomRecipe)[v] +ResolveRecipeDuration(CustomRecipe) #CanStartCraft(CustomRecipe)[v] +TreatsWorldLiquidAsInfinite(int)[v] #AcceptsInputLiquid(int,int)[v] +FuelSlotIndex:int[c] +FirstIngredientSlot:int[c] +Fuel:FuelModule +FuelSlotCount:int +LiquidFuelCount:int #InputSlotCount:int[v] +IngredientStart:int +IngredientSlotCount:int #AutoIngredientCount:int[v] #ProgressiveIngredientSlots:bool[v] +ActiveIngredientCount:int +ExtraIngredientIndex:int +IsExtraIngredientSlot(int) +SettledIngredientCount:int #IntakeIngredientCount:int[v] +Update()[ov] #OnRecipeFinished(CustomRecipe)[v] +WorkFraction:float +GetFuelBurnFraction(int) +OnKill()[ov] +GetPendingOutputType(int) #IntakeTiles()[v] #TryGetIntakeSlot(int,out int,out int)[v] #GetPickupRecipes()[v] +IsOnConveyorFloor() +NotifyAnimationFrame(int) +OnPlaced(int,int)[v] +ResolveIncomingLiquid(int) +OnRightClick(int,int)[v] #OnAnimationFrameChanged(int,int)[v] +Transition:MachineTransition +TransitionStartTick:uint #OnStartup()[v] #OnShutdown()[v] ~UpdateVisualTransition(MachineVisualDefinition) +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +NetReceive(BinaryReader)[ov] +BuildSnapshot() #WriteSnapshotExtra(BinaryWriter)[v] #ReadSnapshotExtra(BinaryReader)[v] #DescribeSnapshotExtra()[v] +BuildLightState(int,uint) +ApplyLightState(BinaryReader) +LastDetailTick:uint +BuildDetail() +ApplyDetail(BinaryReader) +DescribeSnapshot() +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnNetPlace()[ov] +NearPlayerWidth:float +NearPlayerHeight:float +IsAnyPlayerNear(Vector2,float) +IsOnScreen(Vector2,float)[s] +DetermineBiomeAt(int,int)[s]
 **BaseRecipeRegistery.cs** uses: CustomRecipe, LiquidIngredient, LiquidTypeRegistry, RecipeIngredient, RecipeOutputGroup
   class RecipeBook
     +All:List<CustomRecipe> +Groups:List<RecipeOutputGroup> +MaxIngredientCount:int +MinIngredientCount:int +ConsumesLiquid(int) +Add(CustomRecipe)[v] +ImportVanillaRecipes(int,Func<Recipe, bool>,bool) #ShouldImport(Recipe)[v] #ShouldDisableOriginal(Recipe)[v] #ConvertVanillaRecipe(Recipe)[v] +Rebuild()[v] +Clear() +DisableCustomRecipe(Recipe,bool) +DisableCustomRecipe(int,bool) +DisableVanillaRecipe(Recipe) +DisableVanillaRecipe(CustomRecipe,bool) +DisableVanillaRecipe(int,bool) +DisableRecipe(int,bool) +DisableRecipe(CustomRecipe,bool) +DisableRecipe(Recipe,bool)
@@ -757,7 +757,7 @@ tModLoader/other bases -> project types:
     +FadedTint:Color[s] +Clear()[s] +Draw(SpriteBatch,RecipeOutputKey,Vector2,float,float,bool)[s]
 **UIItemSlotWrapper.cs** ns!=Factorraria.Content.UI uses: BaseMachine, Cart, CartPanelNet, CartSlotBinding, CartSlotEdit, Factorraria, Handle, MachineSlotBinding, MachineSlotEdit
   class UIItemSlotWrapper : UIElement
-    #DrawSelf(SpriteBatch)[ov]
+    +FadedWhen:Func<bool> #DrawSelf(SpriteBatch)[ov]
 
 ### Common/UI/CustomUIElements/
 **ElectricityUIIcon.cs**
@@ -901,9 +901,6 @@ tModLoader/other bases -> project types:
     +PoolName:string +CanRightClick()[ov] +RightClick(Player)[ov] +ConsumeItem(Player)[ov] +CanStack(Item)[ov] +ModifyTooltips(List<TooltipLine>)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +NetSend(BinaryWriter)[ov] +NetReceive(BinaryReader)[ov]
 
 ### Content/Items/Hooks/
-**MechanicalArmDebugPlayer.cs** uses: MechanicalArmItem, MechanicalArmProjectile
-  class MechanicalArmDebugPlayer : ModPlayer
-    +Enabled:bool +ProcessTriggers(TriggersSet)[ov] +PostUpdate()[ov]
 **MechanicalArmItem.cs** uses: MechanicalArmProjectile, RoboticArmTile
   class MechanicalArmItem : ModItem
     +ResetToHookMode(Item)[s] +CanShoot(Player)[ov] +CanUseItem(Player)[ov] +HoldItem(Player)[ov] +UpdateInventory(Player)[ov]
@@ -993,7 +990,7 @@ tModLoader/other bases -> project types:
 ### Content/Items/Wires/
 **CopperWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
   class CopperWireItem : ModItem
-    +UseItem(Player)[ov]
+    +CanUseItem(Player)[ov] +UseItem(Player)[ov]
 **IronCutterItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
   class IronCutterItem : ModItem
     +UseItem(Player)[ov]
@@ -1002,7 +999,7 @@ tModLoader/other bases -> project types:
     +UseItem(Player)[ov]
 **TinWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
   class TinWireItem : ModItem
-    +UseItem(Player)[ov]
+    +CanUseItem(Player)[ov] +UseItem(Player)[ov]
 
 ### Content/Liquids/Fuel/
 **FuelLiquid.cs** uses: OilLiquid

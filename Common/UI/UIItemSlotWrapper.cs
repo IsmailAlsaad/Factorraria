@@ -23,6 +23,7 @@ namespace Factorraria.Content.UI
         MachineSlotBinding machineSlot; // optional (patch 6.2): this slot is a machine slot, so on a multiplayer client its clicks are sent to the server
         CartSlotBinding cartSlot;       // optional (patch 9.5): this slot is a cart chest or fuel slot, same idea
         private static readonly Item[] favoriteDrawArray = new Item[11];
+        public Func<bool> FadedWhen; // optional: draw the slot background dimmed while this returns true
 
         public UIItemSlotWrapper(int _context, Func<Item> _getItem, Action<Item> _setItem, Func<bool> _isVisible = null, Func<Item, bool> _canAcceptItem = null, Func<bool> _favoriteLook = null, Action<SpriteBatch, CalculatedStyle, Item> _customDraw = null, MachineSlotBinding _machineSlot = null, CartSlotBinding _cartSlot = null)
         {
@@ -154,6 +155,9 @@ namespace Factorraria.Content.UI
 
             float oldScale = Main.inventoryScale;
             Main.inventoryScale = scale;
+            Color oldInventoryBack = Main.inventoryBack;
+            if (FadedWhen != null && FadedWhen())
+                Main.inventoryBack = oldInventoryBack * 0.45f;
             // Favorited look: the inventory context draws a favorited item with the favorited slot background.
             bool useFavoriteLook = favoriteLook != null && !item.IsAir && favoriteLook();
             bool wasFavorited = item.favorited;
@@ -177,6 +181,7 @@ namespace Factorraria.Content.UI
 
             item.favorited = wasFavorited;
             Main.inventoryScale = oldScale;
+            Main.inventoryBack = oldInventoryBack;
 
             if (!IsMouseHovering)
             {

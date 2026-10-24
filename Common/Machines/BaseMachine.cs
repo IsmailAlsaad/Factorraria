@@ -220,6 +220,37 @@ namespace Factorraria.Common.Machines
             }
         }
 
+        // Auto mode's "next available" slot: the empty slot shown after the last filled one so the player can try
+        // multi-ingredient recipes. 0-based relative to IngredientStart; -1 when there is none (manual recipe,
+        // fixed slots, nothing beyond the auto count, or that slot already holds an item).
+        public int ExtraIngredientIndex
+        {
+            get
+            {
+                if (IngredientSlotCount == 0 || Recipes == null || ManualGroup != null || !ProgressiveIngredientSlots) return -1;
+
+                int active = ActiveIngredientCount;
+                if (active <= Math.Min(AutoIngredientCount, IngredientSlotCount)) return -1;
+
+                int last = active - 1;
+                int s = IngredientStart + last;
+                Item[] slots = InputSlots;
+                if (s < slots.Length && slots[s] != null && !slots[s].IsAir && slots[s].stack > 0) return -1;
+                return last;
+            }
+        }
+
+        // inputSlotIndex is an index into InputSlots (the same one InputSlotEntry takes).
+        public bool IsExtraIngredientSlot(int inputSlotIndex)
+        {
+            int extra = ExtraIngredientIndex;
+            return extra >= 0 && inputSlotIndex == IngredientStart + extra;
+        }
+
+        // Ingredient slots without the empty extra one. UIs that centre things on the slot row use this, so the
+        // row only re-centres once the player actually puts an item into the extra slot.
+        public int SettledIngredientCount => ActiveIngredientCount - (ExtraIngredientIndex >= 0 ? 1 : 0);
+
         // Slots conveyors may fill. Conveyors keep the old fixed behaviour in auto mode; the extra
         // progressive slots are for hand experimentation only.
         protected virtual int IntakeIngredientCount

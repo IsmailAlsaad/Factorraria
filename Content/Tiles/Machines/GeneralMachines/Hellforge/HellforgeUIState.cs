@@ -52,7 +52,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
             if (Entity == null || ingredientEntries == null || fuelTankEntry == null) return;
 
             const float step = SlotSize + 6f;
-            int n = Math.Max(1, Entity.ActiveIngredientCount);
+            int n = Math.Max(1, Entity.SettledIngredientCount);
 
             // Slot 0 stays put; each extra slot goes one step further left.
             for (int i = 0; i < ingredientEntries.Length; i++)
