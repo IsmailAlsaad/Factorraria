@@ -34,13 +34,20 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
         public int AwakenedEnemyCount { get; set; }
 
         // Whether the starry shimmer background is switched on while the tank has shimmer. Right-click flips it (only with
-        // shimmer in the tank). It is remembered when the tank runs dry and through saves.
+        // shimmer in the tank). It is remembered when the tank runs dry and through saves. (Shift + right click flips it.)
         public bool BackgroundActive = true;
 
         public bool HasShimmer => InputLiquids[0].LiquidType == LiquidTypeRegistry.Shimmer && InputLiquids[0].Amount > 0f;
 
         public override void OnRightClick(int i, int j)
         {
+            // Regular right click opens the tank UI (BaseMachine handles it, multiplayer included). Shift + right click flips the background.
+            if (!Terraria.UI.ItemSlot.ShiftInUse)
+            {
+                base.OnRightClick(i, j);
+                return;
+            }
+
             // Patch 6.4: on a multiplayer client the server owns the value. The request carries the wanted value; the answer (a broadcast)
             // changes every replica and plays the click for the player who asked. Nothing is flipped here.
             if (Main.netMode == NetmodeID.MultiplayerClient)

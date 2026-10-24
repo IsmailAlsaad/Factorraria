@@ -35,6 +35,7 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(TileID.Hellforge, new HellforgeUIState());
             MachineUIRegistry.Register(TileID.Extractinator, new ExtractinatorUIState());
             MachineUIRegistry.Register(TileID.LesionStation, new DecayChamberUIState());
+            MachineUIRegistry.Register(TileID.ShimmerMonolith, new MagicMaterializerUIState());
             // ModTile machines register their UI in PostSetupContent (their tile ids don't exist yet here)
             // etc...
         }
