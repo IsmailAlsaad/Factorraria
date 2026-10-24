@@ -14,7 +14,7 @@ namespace Factorraria.Content.Items.Hooks
         {
             Item.width = 24;
             Item.height = 24;
-            Item.maxStack = 1;
+            Item.maxStack = 99;
             Item.value = Item.buyPrice(gold: 2);
             Item.rare = ItemRarityID.LightRed;
 
@@ -34,7 +34,16 @@ namespace Factorraria.Content.Items.Hooks
         // Vanilla decides between shooting and placing from Item.shoot / Item.createTile, so those are switched here.
         // The mode is re-read whenever a use starts (CanUseItem) and while held (HoldItem, for the placement preview);
         // anywhere else in the inventory the item is always plain hook mode.
-        bool PlacingMode(Player player) => player.whoAmI == Main.myPlayer && Main.keyState.PressingShift();
+        // The inventory must be closed: Shift is also the quick-move key there, and placing mode swaps Item.shoot off,
+        // which would make the item stop counting as a hook (hook slot / right-click equip check Main.projHook[Item.shoot]).
+        bool PlacingMode(Player player) => player.whoAmI == Main.myPlayer && !Main.playerInventory && Main.keyState.PressingShift();
+
+        // Arms that are not in hand (hook slot, cursor) never get UpdateInventory, so MechanicalArmPlayer resets them through this.
+        public static void ResetToHookMode(Item item)
+        {
+            if (item != null && item.ModItem is MechanicalArmItem arm)
+                arm.ApplyMode(false);
+        }
 
         void ApplyMode(bool placing)
         {

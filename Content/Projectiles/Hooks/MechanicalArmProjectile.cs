@@ -59,6 +59,27 @@ namespace Factorraria.Content.Projectiles.Hooks
             JointTexture = null;
         }
 
+        public override void SetStaticDefaults()
+        {
+            // aiStyle is -1 (custom), so tModLoader does not flag this as a hook on its own. Without this the hook slot rejects the item
+            // and the Grapple keybind never picks it up.
+            Main.projHook[Type] = true;
+        }
+
+        // Grapple keybind launch (QuickGrapple, local client only). Returning non-null also skips vanilla's "max hooks out" check.
+        // One arm at a time: while one is out (flying, latched or retracting) the keybind launches nothing. While latched the same
+        // keypress is what retracts it (see ApplyPush), so it must not also fire a second arm.
+        public override bool? CanUseGrapple(Player player)
+        {
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile p = Main.projectile[i];
+                if (p.active && p.owner == player.whoAmI && p.type == Type && p.ai[0] != 3f)
+                    return false;
+            }
+            return true;
+        }
+
         public override void SetDefaults()
         {
             Projectile.width = 32;
