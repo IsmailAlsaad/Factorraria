@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-24 | 263 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-24 | 264 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -35,8 +35,8 @@ tModLoader/other bases -> project types:
 - GlobalTile (6): AwakenedStatueGlobalTile, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MaterializerWireGuard, TilePlacedGlobalTile
 - GlobalNPC (4): AwakenedSpawnGlobalNPC, BossLootGlobal, CartPassengerGlobalNPC, MeteorHeadStatueGlobalNPC
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
+- ModConfig (3): CartMapConfig, FurnaceOffsetConfig, NetworkConfig
 - ModProjectile (3): IceBladeSwingProjectile, MechSuitArmProjectile, MechanicalArmProjectile
-- ModConfig (2): FurnaceOffsetConfig, NetworkConfig
 - ModLiquid (2): FuelLiquid, OilLiquid
 - ModLiquidFall (2): FuelLiquidFall, OilLiquidFall
 - UIPanel (2): RecipeBrowserPanel, RecipeElement
@@ -91,19 +91,19 @@ tModLoader/other bases -> project types:
 **CartInteractionPlayer.cs** uses: BucketPour, Cart, CartChestUISystem, CartSkinTable, CartSystem
   class CartInteractionPlayer : ModPlayer
     +CanUseItem(Item)[ov] +ShiftClickSlot(Item,int,int)[ov]
-**CartMapIcons.cs** uses: Factorraria
+**CartMapIcons.cs** uses: CartMapConfig, Factorraria
   static class CartMapIcons
-    +ModuleScalePercent:int[s] +ModuleBottomPercent:int[s] +Get(int,int)[s] +Unload()[s]
-**CartMapLayer.cs** uses: CartMapEntry, CartMapIcons, CartMapNet, CartModule
+    +ModuleScalePercent:int[s] +ModuleBottomPercent:int[s] +Get(int,int)[s] +Rebuild()[s] +Unload()[s]
+**CartMapLayer.cs** uses: CartMapConfig, CartMapEntry, CartMapIcons, CartMapNet, CartMapSystem, CartModule
   enum CartMapMode : byte
     {Off, All, MotorOnly}
   static class CartMapSettings
     +Mode:CartMapMode[s] +Cycle()[s] +Describe(CartMapMode)[s]
   class CartMapLayer : ModMapLayer
-    +IconScale:float +IconScaleSelected:float +GetDefaultPosition()[ov] +Draw(ref MapOverlayDrawContext,ref string)[ov]
-**CartMapSystem.cs** uses: CartMapIcons, CartMapMode, CartMapSettings
+    +GetDefaultPosition()[ov] +Draw(ref MapOverlayDrawContext,ref string)[ov]
+**CartMapSystem.cs** uses: CartMapConfig, CartMapIcons, CartMapMode, CartMapSettings
   class CartMapSystem : ModSystem
-    +ButtonX:int +ButtonY:int +ButtonSize:int +Unload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +ButtonSize:int +Unload()[ov] +DrawButton(ref string)
 **CartMountBlocker.cs** uses: Cart
   class CartMountBlocker : ModSystem
     +Load()[ov] +Unload()[ov] +IsTrackTile(int,int)[s] +Log(string)[s] +IsTrackRightClick(Player)[s]
@@ -361,7 +361,7 @@ tModLoader/other bases -> project types:
       +Action:CartAction +Accepted:bool +ItemType:int
 **CartMapNet.cs** uses: Cart, CartModule, CartNet, CartSkins, CartSystem, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
   sealed class CartMapEntry
-    +Id:int +TileX:float +TileY:float +Module:CartModule +SkinType:int +ModuleItemType:int +SkinKey:string +ModuleItemKey:string
+    +Id:int +TileX:float +TileY:float +Module:CartModule +Facing:int +SkinType:int +ModuleItemType:int +SkinKey:string +ModuleItemKey:string
   static class CartMapNet
     +ResendIntervalTicks:int[s] +MaxEntries:int[s] +LocalRefreshTicks:int[s] +ServerSent:int[s] +ClientReceived:int[s] +Reset()[s] +OnDisconnect(int)[s] +Collect(List<CartMapEntry>)[s] +ServerTick()[s] +HandleSnapshot(BinaryReader,int)[s]
   class CartMapNetSystem : ModSystem
@@ -891,6 +891,9 @@ tModLoader/other bases -> project types:
     +DensityPerTile:double[s] +StrengthMin:int[s] +StrengthMax:int[s] +StepsMin:int[s] +StepsMax:int[s] +BottomMargin:int[s] +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
 
 ### Content/Configs/
+**CartMapConfig.cs** uses: CartMapIcons
+  class CartMapConfig : ModConfig
+    +Current:CartMapConfig[s] +Mode:ConfigScope[ov] +IconSize:float +OutlineThickness:int +ButtonX:int +ButtonY:int +InvertIconDirection:bool +OnChanged()[ov]
 **FurnaceOffsetConfig.cs**
   class FurnaceOffsetConfig : ModConfig
     +Mode:ConfigScope[ov] +OffsetX:float +OffsetY:float +AngleOffset:float +AngleOffset2:float +animationOffset:int +fireCropOffset:float +animationSpeedDivider:int +EnableDebugs:bool +RevealAllRecipes:bool +VItemOffset:float

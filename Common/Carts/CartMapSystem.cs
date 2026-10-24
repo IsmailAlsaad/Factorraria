@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Content.Configs;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System.Collections.Generic;
@@ -18,9 +19,7 @@ namespace Factorraria.Common.Carts
     /// </summary>
     public class CartMapSystem : ModSystem
     {
-        // Tuning, change in the editor with hot reload. Pixels from the top-left corner of the screen.
-        public int ButtonX = 24;
-        public int ButtonY = 24;
+        // The position is in the mod config (CartMapConfig.ButtonX / ButtonY); the size is the size of the art.
         public int ButtonSize = 32;
 
         readonly Asset<Texture2D>[] icons = new Asset<Texture2D>[3];
@@ -31,18 +30,7 @@ namespace Factorraria.Common.Carts
             CartMapIcons.Unload();
         }
 
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
-        {
-            int mouseText = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
-            if (mouseText == -1)
-                return;
 
-            layers.Insert(mouseText, new LegacyGameInterfaceLayer("Factorraria: Cart Map Button", delegate
-            {
-                DrawButton();
-                return true;
-            }, InterfaceScaleType.None));
-        }
 
         void RequestIcons()
         {
@@ -60,7 +48,7 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        void DrawButton()
+        public void DrawButton(ref string text)
         {
             if (!Main.mapFullscreen || Main.LocalPlayer == null)
                 return;
@@ -68,7 +56,8 @@ namespace Factorraria.Common.Carts
             RequestIcons();
 
             CartMapMode mode = CartMapSettings.Mode;
-            Rectangle area = new Rectangle(ButtonX, ButtonY, ButtonSize, ButtonSize);
+            CartMapConfig config = CartMapConfig.Current;
+            Rectangle area = new Rectangle(config.ButtonX, config.ButtonY, ButtonSize, ButtonSize);
             bool hover = area.Contains(Main.mouseX, Main.mouseY);
 
             Asset<Texture2D> icon = icons[(int)mode];
@@ -87,7 +76,7 @@ namespace Factorraria.Common.Carts
                 return;
 
             Main.LocalPlayer.mouseInterface = true;
-            Main.hoverItemName = "Carts on the map: " + CartMapSettings.Describe(mode) + " (click to change)";
+            text = "Show " + CartMapSettings.Describe(mode);
 
             if (Main.mouseLeft && Main.mouseLeftRelease)
             {

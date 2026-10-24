@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Net;
+using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -61,8 +62,7 @@ namespace Factorraria.Common.Carts
     /// </summary>
     public class CartMapLayer : ModMapLayer
     {
-        public float IconScale = 0.6f;
-        public float IconScaleSelected = 0.8f;
+
 
         readonly List<CartMapEntry> entries = new List<CartMapEntry>();
 
@@ -71,10 +71,15 @@ namespace Factorraria.Common.Carts
 
         public override void Draw(ref MapOverlayDrawContext context, ref string text)
         {
+            // The button is drawn from here (inside the map draw), so it always shows wherever the icons do. Fullscreen map only.
+            if (Main.mapFullscreen)
+                ModContent.GetInstance<CartMapSystem>().DrawButton(ref text);
+
             CartMapMode mode = CartMapSettings.Mode;
             if (mode == CartMapMode.Off)
                 return;
 
+            float scale = CartMapConfig.Current.IconSize;
             CartMapNet.Collect(entries);
 
             for (int i = 0; i < entries.Count; i++)
@@ -88,7 +93,8 @@ namespace Factorraria.Common.Carts
                 if (icon == null)
                     continue;
 
-                MapOverlayDrawContext.DrawResult result = context.Draw(icon, new Vector2(entry.TileX, entry.TileY), Color.White, new SpriteFrame(1, 1, 0, 0), IconScale, IconScaleSelected, Alignment.Center);
+                bool flip = (entry.Facing < 0) != CartMapConfig.Current.InvertIconDirection;
+                MapOverlayDrawContext.DrawResult result = context.Draw(icon, new Vector2(entry.TileX, entry.TileY), Color.White, new SpriteFrame(1, 1, 0, 0), scale, scale * 1.33f, Alignment.Center, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
 
                 if (result.IsMouseOver)
                 {

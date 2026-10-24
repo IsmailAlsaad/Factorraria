@@ -16,6 +16,7 @@ namespace Factorraria.Common.Net
         public float TileX;      // tile coordinates of the middle of the tile the cart is on (what MapOverlayDrawContext.Draw wants)
         public float TileY;
         public CartModule Module;
+        public int Facing = 1;   // 1 = facing right, -1 = left (the icon is flipped to match)
         public int SkinType;     // item type of the skin (the cart's item sprite is the icon)
         public int ModuleItemType; // item type drawn on top (chest, terrarium), 0 = nothing
         public string SkinKey;   // wire keys, only filled on the server
@@ -103,6 +104,7 @@ namespace Factorraria.Common.Net
                 entry.TileX = (int)(cart.Position.X / 16f) + 0.5f;
                 entry.TileY = (int)(cart.Position.Y / 16f) + 0.5f;
                 entry.Module = cart.Module;
+                entry.Facing = cart.Facing < 0 ? -1 : 1;
                 entry.SkinType = cart.SkinType;
                 entry.ModuleItemType = cart.ModuleItem > 0 ? cart.ModuleItem : Cart.ModuleItemType(cart.Module);
 
@@ -112,7 +114,7 @@ namespace Factorraria.Common.Net
                     entry.ModuleItemKey = entry.ModuleItemType > 0 ? CartSkins.KeyOf(entry.ModuleItemType) : null;
                 }
 
-                hash = HashCode.Combine(hash, entry.Id, (int)entry.TileX, (int)entry.TileY, (int)entry.Module, entry.SkinType, entry.ModuleItemType);
+                hash = HashCode.Combine(hash, entry.Id, (int)entry.TileX, (int)entry.TileY, (int)entry.Module, entry.SkinType, entry.ModuleItemType, entry.Facing);
                 into.Add(entry);
             }
 
@@ -183,6 +185,7 @@ namespace Factorraria.Common.Net
                     writer.Write((short)(int)entry.TileX);
                     writer.Write((short)(int)entry.TileY);
                     writer.Write((byte)entry.Module);
+                    writer.Write((sbyte)entry.Facing);
                     writer.Write(skinIndex[i]);
                     writer.Write(moduleIndex[i]);
                 }
@@ -229,6 +232,7 @@ namespace Factorraria.Common.Net
                 entry.TileX = reader.ReadInt16() + 0.5f;
                 entry.TileY = reader.ReadInt16() + 0.5f;
                 entry.Module = (CartModule)reader.ReadByte();
+                entry.Facing = reader.ReadSByte() < 0 ? -1 : 1;
                 int skinIndex = reader.ReadUInt16();
                 int moduleIndex = reader.ReadUInt16();
 

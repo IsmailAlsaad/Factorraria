@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Factorraria.Content.Configs;
 using Terraria.GameContent;
 using Terraria.ModLoader;
 
@@ -18,7 +19,7 @@ namespace Factorraria.Common.Carts
     {
         public static int ModuleScalePercent = 60;   // size of the module sprite relative to its item sprite
         public static int ModuleBottomPercent = 60;  // how far down the cart sprite the module's bottom edge sits
-        const int Pad = 2;                           // one pixel for the white ring, one for the black ring
+        // The outline is CartMapConfig.OutlineThickness pixels of white, then the same of black; the canvas is padded by twice that.
 
         static readonly Dictionary<long, Texture2D> cache = new Dictionary<long, Texture2D>();
         static readonly List<Texture2D> owned = new List<Texture2D>();
@@ -35,6 +36,12 @@ namespace Factorraria.Common.Carts
             icon = Build(skinType, moduleItemType);
             cache[key] = icon;
             return icon;
+        }
+
+        /// <summary>Forget every built icon (the config changed); they are rebuilt on the next map draw.</summary>
+        public static void Rebuild()
+        {
+            Unload();
         }
 
         public static void Unload()
@@ -99,28 +106,35 @@ namespace Factorraria.Common.Carts
                 int moduleBottom = bh * ModuleBottomPercent / 100;
                 int topExtra = modulePixels != null ? Math.Max(0, mh - moduleBottom) : 0;
                 int innerW = Math.Max(bw, mw);
-                int w = innerW + Pad * 2;
-                int h = bh + topExtra + Pad * 2;
+                float thickness = Math.Max(0, CartMapConfig.Current.OutlineThickness);
+                float Pad = thickness * 2;
+                int w = (int)(innerW + Pad * 2);
+                int h = (int)(bh + topExtra + Pad * 2);
 
                 Color[] canvas = new Color[w * h];
-                Blit(canvas, w, bodyPixels, bw, bh, Pad + (innerW - bw) / 2, Pad + topExtra);
+                Blit(canvas, w, bodyPixels, bw, bh, (int)(Pad + (innerW - bw) / 2), (int)(Pad + topExtra));
 
                 if (modulePixels != null)
-                    Blit(canvas, w, modulePixels, mw, mh, Pad + (innerW - mw) / 2, Pad + topExtra + moduleBottom - mh);
+                    Blit(canvas, w, modulePixels, mw, mh, (int)(Pad + (innerW - mw) / 2), (int)(Pad + topExtra + moduleBottom - mh));
 
                 bool[] solid = new bool[w * h];
                 for (int i = 0; i < solid.Length; i++)
                     solid[i] = canvas[i].A > 0;
 
-                bool[] white = Dilate(solid, w, h);
-                bool[] black = Dilate(white, w, h);
+                bool[] white = solid;
+                for (int ring = 0; ring < thickness; ring++)
+                    white = Dilate(white, w, h);
+
+                bool[] black = white;
+                for (int ring = 0; ring < thickness; ring++)
+                    black = Dilate(black, w, h);
 
                 Color[] result = new Color[w * h];
                 for (int i = 0; i < result.Length; i++)
                 {
-                    if (black[i])
+                    if (thickness > 0 && black[i])
                         result[i] = Color.Black;
-                    if (white[i])
+                    if (thickness > 0 && white[i])
                         result[i] = Color.White;
 
                     Over(result, i, canvas[i]);

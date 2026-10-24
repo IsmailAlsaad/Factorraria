@@ -334,6 +334,35 @@ Configs: {
 			Tooltip: ""
 		}
 	}
+
+	CartMapConfig: {
+		DisplayName: Cart Map Config
+
+		IconSize: {
+			Label: Icon Size
+			Tooltip: ""
+		}
+
+		OutlineThickness: {
+			Label: Outline Thickness
+			Tooltip: ""
+		}
+
+		ButtonX: {
+			Label: Button X
+			Tooltip: ""
+		}
+
+		ButtonY: {
+			Label: Button Y
+			Tooltip: ""
+		}
+
+		InvertIconDirection: {
+			Label: Invert Icon Direction
+			Tooltip: ""
+		}
+	}
 }
 
 Keybinds.RecipeBookItemSearch.DisplayName: Recipe Book - Show Recipes Using Hovered Item
