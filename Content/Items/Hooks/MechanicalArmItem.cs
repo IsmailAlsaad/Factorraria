@@ -52,7 +52,9 @@ namespace Factorraria.Content.Items.Hooks
 
         public override bool CanUseItem(Player player)
         {
-            Item.shoot = ProjectileID.None;
+            // The hook-slot copy also passes through here (QuickGrapple -> ItemCheck_CheckCanUse); only the held click-use may drop shoot.
+            if (player.HeldItem == Item)
+                Item.shoot = ProjectileID.None;
             return true;
         }
 
