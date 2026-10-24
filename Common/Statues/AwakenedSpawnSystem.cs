@@ -86,6 +86,7 @@ namespace Factorraria.Common.Statues
         bool TrySpawn(AwakenedStatue statue)
         {
             int npcType = statue.Entry.PickNpcType();
+            if (npcType < 0) return false;   // hardmode-only statue while hardmode is off
             if (!ContentSamples.NpcsByNetId.TryGetValue(npcType, out NPC sample)) return false;
 
             foreach (Point offset in spawnOffsets)

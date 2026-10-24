@@ -28,9 +28,11 @@ namespace Factorraria.Common.Statues
         // Any enemy this statue can spawn (hardmode ones included, so enemies already alive stay valid if hardmode changes).
         public bool Spawns(int npcType) => System.Array.IndexOf(NpcTypes, npcType) >= 0 || HardmodeNpcs.Contains(npcType);
 
+        // Returns -1 when nothing can spawn right now (empty base list and hardmode is off).
         public int PickNpcType()
         {
             int hardmodeCount = Main.hardMode ? HardmodeNpcs.Count : 0;
+            if (NpcTypes.Length + hardmodeCount == 0) return -1;
             int index = Main.rand.Next(NpcTypes.Length + hardmodeCount);
             return index < NpcTypes.Length ? NpcTypes[index] : HardmodeNpcs[index - NpcTypes.Length];
         }
@@ -77,11 +79,12 @@ namespace Factorraria.Common.Statues
         // Several enemies: a random one from the list is picked on every spawn.
         public AwakenedStatueEntry Add(int tileType, int style, int[] npcTypes, string spritePath, string outlinePath, Vector2 drawOffset = default)
         {
-            if (npcTypes == null || npcTypes.Length == 0)
+            if (npcTypes == null)
             {
-                Mod.Logger.Warn($"Awakened statue (tile {tileType}, style {style}): empty npcTypes list, statue not registered.");
+                Mod.Logger.Warn($"Awakened statue (tile {tileType}, style {style}): null npcTypes list, statue not registered.");
                 return new AwakenedStatueEntry();   // throwaway, so a chained .AddLoot does not crash
             }
+            // An empty list is valid: the statue only spawns what .AddHardmodeList(...) gives it, and only once hardmode is on.
 
             int rightStyle = style + RightFacingStyleOffset;
             bool addLeft = !entries.ContainsKey((tileType, style));
