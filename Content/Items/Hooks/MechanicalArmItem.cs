@@ -46,7 +46,9 @@ namespace Factorraria.Content.Items.Hooks
                 item.shoot = HookProjectile;
         }
 
-        public override bool CanShoot(Player player) => false;
+        // Click-use of the arm in hand must never shoot (left click only places). The hook-slot launch uses the hook-slot copy of the item,
+        // which is not the held item, so it is allowed through.
+        public override bool CanShoot(Player player) => player.HeldItem != Item;
 
         public override bool CanUseItem(Player player)
         {
