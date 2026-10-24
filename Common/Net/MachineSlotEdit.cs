@@ -74,6 +74,7 @@ namespace Factorraria.Common.Net
             public Item SlotAfter;
             public Item CursorBefore;
             public Item CursorAfter;
+            public Item Overflow;       // slot-cap leftover the cursor could not take; given to the player only when the server accepts
             public bool QuickTake;
             public bool Overlay;        // a detail packet that arrives while this is pending must not undo the predicted slot
             public uint Tick;
@@ -119,24 +120,26 @@ namespace Factorraria.Common.Net
         }
 
         /// <summary>
-        /// Slot caps for hand deposits (BaseMachine.GetSlotCap). Runs right after vanilla's click, on the client that clicked (single-player,
-        /// host or predicted client), so the cap is applied in the same frame: only the allowed amount stays in the slot and the rest goes
-        /// back to the cursor. If the cursor cannot take the rest back (a swap with a different item), the whole click is undone and
-        /// false is returned. Taking items out, and a stack already over the cap, are never touched.
+        /// Slot caps for hand deposits (BaseMachine.GetSlotCap). Runs right after vanilla's click, on the client that clicked (single-player
+        /// or predicted client), so the cap is applied in the same frame: only the allowed amount stays in the slot and the rest goes
+        /// back to the cursor. What the cursor cannot take (a swap with a different item, or a cursor stack already near its max) is
+        /// returned as an overflow item: the caller hands it to the player with GiveOverflow (single-player at once, a multiplayer
+        /// client only after the server accepted the edit, so a rejected click cannot duplicate items). Returns null when there is no
+        /// overflow. Taking items out, and a stack already over the cap, are never touched.
         /// </summary>
-        public static bool ClampAfterClick(BaseMachine machine, MachineSlotKind kind, int index, ref Item item, Item slotBefore, Item cursorBefore)
+        public static Item ClampAfterClick(BaseMachine machine, MachineSlotKind kind, int index, ref Item item, Item slotBefore, Item cursorBefore)
         {
             if (machine == null || item == null || item.IsAir)
-                return true;
+                return null;
 
             bool sameItem = slotBefore != null && !slotBefore.IsAir && slotBefore.type == item.type && slotBefore.prefix == item.prefix;
             int before = sameItem ? slotBefore.stack : 0;
             if (item.stack <= before)
-                return true;   // nothing was added
+                return null;   // nothing was added
 
             int limit = Math.Max(machine.GetSlotCap(kind, index, item), before);
             if (item.stack <= limit)
-                return true;
+                return null;
 
             int excess = item.stack - limit;
             Item cursor = Main.mouseItem;
@@ -147,19 +150,46 @@ namespace Factorraria.Common.Net
                 back.stack = excess;
                 item.stack = limit;
                 Main.mouseItem = back;
-                return true;
+                return null;
             }
 
-            if (cursor.type == item.type && cursor.prefix == item.prefix && cursor.stack + excess <= cursor.maxStack)
+            Item overflow = item.Clone();
+            item.stack = limit;
+
+            if (cursor.type == item.type && cursor.prefix == item.prefix)
             {
-                cursor.stack += excess;
-                item.stack = limit;
-                return true;
+                int room = Math.Max(0, cursor.maxStack - cursor.stack);
+                int toCursor = Math.Min(room, excess);
+                cursor.stack += toCursor;
+                excess -= toCursor;
             }
 
-            item = slotBefore != null ? slotBefore.Clone() : new Item();
-            Main.mouseItem = cursorBefore != null ? cursorBefore.Clone() : new Item();
-            return false;
+            if (excess <= 0)
+                return null;
+
+            overflow.stack = excess;
+            return overflow;
+        }
+
+        /// <summary>
+        /// Hands a slot-cap overflow to the player: it spawns inside the player's hitbox (stacks of at most the item's max stack), so it is
+        /// picked up at once, or lies next to them when the inventory is full. Nothing is lost whatever the inventory looks like.
+        /// </summary>
+        public static void GiveOverflow(Item overflow)
+        {
+            if (overflow == null || overflow.IsAir || overflow.stack <= 0)
+                return;
+
+            Player player = Main.LocalPlayer;
+            var source = player.GetSource_Misc("FactorrariaSlotCap");
+            int chunkMax = Math.Max(1, overflow.maxStack);
+            int left = overflow.stack;
+            while (left > 0)
+            {
+                int chunk = Math.Min(left, chunkMax);
+                player.QuickSpawnItem(source, overflow, chunk);
+                left -= chunk;
+            }
         }
 
         static void WriteSlotItem(BinaryWriter w, Item item)
@@ -201,7 +231,7 @@ namespace Factorraria.Common.Net
         /// Multiplayer client only. Called by UIItemSlotWrapper right after vanilla's click changed a machine slot (the local copy already
         /// holds slotAfter and the cursor holds cursorAfter). Remembers the states needed to undo it and sends the request.
         /// </summary>
-        public static void SendEdit(BaseMachine machine, MachineSlotKind kind, int index, Item slotBefore, Item slotAfter, Item cursorBefore, Item cursorAfter)
+        public static void SendEdit(BaseMachine machine, MachineSlotKind kind, int index, Item slotBefore, Item slotAfter, Item cursorBefore, Item cursorAfter, Item overflow = null)
         {
             if (Main.netMode != NetmodeID.MultiplayerClient || machine == null)
                 return;
@@ -215,6 +245,7 @@ namespace Factorraria.Common.Net
                 SlotAfter = slotAfter.Clone(),
                 CursorBefore = cursorBefore.Clone(),
                 CursorAfter = cursorAfter.Clone(),
+                Overflow = overflow?.Clone(),
                 Overlay = true
             };
             Begin(p, p.SlotBefore, p.SlotAfter, EditFlags.None);
@@ -478,6 +509,8 @@ namespace Factorraria.Common.Net
             if (r.Accepted)
             {
                 ClientConfirmed++;
+                if (p.Overflow != null)
+                    GiveOverflow(p.Overflow);
                 if (p.QuickTake)
                 {
                     if (slotOk && SameStack(slots[p.Index], p.SlotBefore))

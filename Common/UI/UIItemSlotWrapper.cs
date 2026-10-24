@@ -90,10 +90,10 @@ namespace Factorraria.Content.UI
             Item cursorBefore = Main.mouseItem.Clone();
 
             RunVanillaClick(ref item);
-            MachineSlotEdit.ClampAfterClick(machine, machineSlot.Kind, machineSlot.Index, ref item, slotBefore, cursorBefore);   // slot caps
+            Item overflow = MachineSlotEdit.ClampAfterClick(machine, machineSlot.Kind, machineSlot.Index, ref item, slotBefore, cursorBefore);   // slot caps
 
             if (!MachineSlotEdit.SameStack(slotBefore, item))
-                MachineSlotEdit.SendEdit(machine, machineSlot.Kind, machineSlot.Index, slotBefore, item, cursorBefore, Main.mouseItem);
+                MachineSlotEdit.SendEdit(machine, machineSlot.Kind, machineSlot.Index, slotBefore, item, cursorBefore, Main.mouseItem, overflow);   // the overflow is handed over when the server accepts
         }
 
         // Single-player and the host: vanilla edits the real slot, then a hand deposit is clamped to the slot cap (BaseMachine.GetSlotCap).
@@ -109,7 +109,7 @@ namespace Factorraria.Content.UI
             Item slotBefore = item.Clone();
             Item cursorBefore = Main.mouseItem.Clone();
             RunVanillaClick(ref item);
-            MachineSlotEdit.ClampAfterClick(machine, machineSlot.Kind, machineSlot.Index, ref item, slotBefore, cursorBefore);
+            MachineSlotEdit.GiveOverflow(MachineSlotEdit.ClampAfterClick(machine, machineSlot.Kind, machineSlot.Index, ref item, slotBefore, cursorBefore));   // slot caps, the rest goes to the player
         }
 
         // Multiplayer client, cart slot (patch 9.5): vanilla predicts the click, the server decides (see CartSlotEdit).

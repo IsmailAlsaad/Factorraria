@@ -546,11 +546,11 @@ tModLoader/other bases -> project types:
   sealed class MachineSlotBinding
     +Machine:Func<BaseMachine> +Kind:MachineSlotKind +Index:int
   static class MachineSlotEdit
-    +CorruptNextRequest:bool[s] +ServerAccepted:int[s] +ServerRejected:int[s] +ClientSent:int[s] +ClientConfirmed:int[s] +ClientRolledBack:int[s] +SameStack(Item,Item)[s] +ClampAfterClick(BaseMachine,MachineSlotKind,int,ref Item,Item,Item)[s] +IsBusy:bool[s] +SendEdit(BaseMachine,MachineSlotKind,int,Item,Item,Item,Item)[s] +SendQuickTake(BaseMachine,MachineSlotKind,int,Item)[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +Update(int)[s] +ReapplyPendingEdit(BaseMachine)[s] +Reset()[s] +Describe()[s]
+    +CorruptNextRequest:bool[s] +ServerAccepted:int[s] +ServerRejected:int[s] +ClientSent:int[s] +ClientConfirmed:int[s] +ClientRolledBack:int[s] +SameStack(Item,Item)[s] +ClampAfterClick(BaseMachine,MachineSlotKind,int,ref Item,Item,Item)[s] +GiveOverflow(Item)[s] +IsBusy:bool[s] +SendEdit(BaseMachine,MachineSlotKind,int,Item,Item,Item,Item,Item)[s] +SendQuickTake(BaseMachine,MachineSlotKind,int,Item)[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +Update(int)[s] +ReapplyPendingEdit(BaseMachine)[s] +Reset()[s] +Describe()[s]
     enum EditFlags : byte
       {None, QuickTake}
     sealed class Pending
-      +Seq:int +Corner:Point16 +Kind:MachineSlotKind +Index:int +SlotBefore:Item +SlotAfter:Item +CursorBefore:Item +CursorAfter:Item +QuickTake:bool +Overlay:bool +Tick:uint
+      +Seq:int +Corner:Point16 +Kind:MachineSlotKind +Index:int +SlotBefore:Item +SlotAfter:Item +CursorBefore:Item +CursorAfter:Item +Overflow:Item +QuickTake:bool +Overlay:bool +Tick:uint
     sealed class Result
       +Corner:Point16 +Seq:int +Accepted:bool +Kind:MachineSlotKind +Index:int +Slot:Item
   class MachineSlotEditSystem : ModSystem
@@ -1110,7 +1110,7 @@ tModLoader/other bases -> project types:
     +Recipes:IReadOnlyDictionary<int, ExtractinatorRecipe>[s] +TryGet(int,out ExtractinatorRecipe)[s] +BuildRecipes()[s]
 **ExtractinatorTileEntity.cs** uses: ElectricConsumerMachine, ExtractinatorRecipe, ExtractinatorRecipeRegistry, IMachineDynamicDraw, MachineUISystem, VirtualItemSystem
   class ExtractinatorTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #WorkDuration:int[ov] +Update()[ov] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) #TryGetIntakeSlot(int,out int,out int)[ov]
+    +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #WorkDuration:int[ov] +InputBuffer:int +Update()[ov] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) #TryGetIntakeSlot(int,out int,out int)[ov]
 **ExtractinatorUIState.cs** uses: ElectricityUIIcon, ExtractinatorTileEntity, MachineUIElementEntry, MachineUIStateBase
   class ExtractinatorUIState : MachineUIStateBase
     #BuildElements()[ov]

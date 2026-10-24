@@ -21,7 +21,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator
         public override float PowerDemand => 150f;       // placeholder, tune while playtesting
         protected override int InputSlotCount => 1;
         protected override int WorkDuration => 15;      // ticks per input item (vanilla use time), placeholder
-        const int InputBuffer = 50;                     // how many items conveyors may stack in the slot
+        public int InputBuffer = 50;                    // how many items conveyors AND hand deposits may stack in the slot
 
         // Recipes stays null on purpose: the extractinator rolls random drops, which the CustomRecipe pipeline can't express.
 
