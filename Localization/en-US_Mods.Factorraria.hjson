@@ -79,8 +79,8 @@ Items: {
 		DisplayName: Mechanical Arm
 		Tooltip:
 			'''
-			Fires like a grappling hook
-			Hold Shift and left click to place it as a machine
+			Can be placed
+			Equipable as a hook
 			'''
 	}
 

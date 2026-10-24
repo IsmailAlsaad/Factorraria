@@ -903,7 +903,7 @@ tModLoader/other bases -> project types:
 ### Content/Items/Hooks/
 **MechanicalArmItem.cs** uses: MechanicalArmProjectile, RoboticArmTile
   class MechanicalArmItem : ModItem
-    +ResetToHookMode(Item)[s] +CanUseItem(Player)[ov] +HoldItem(Player)[ov] +UpdateInventory(Player)[ov] +Shoot(Player,EntitySource_ItemUse_WithAmmo,Vector2,Vector2,int,int,float)[ov]
+    +ResetToHookMode(Item)[s] +CanShoot(Player)[ov] +CanUseItem(Player)[ov] +HoldItem(Player)[ov] +UpdateInventory(Player)[ov]
 **MechanicalArmPlayer.cs** uses: MechanicalArmItem
   class MechanicalArmPlayer : ModPlayer
     +PostUpdate()[ov]
