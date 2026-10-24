@@ -77,7 +77,9 @@ namespace Factorraria.Common.Statues
             => Add(tileType, style, new[] { npcType }, spritePath, outlinePath, drawOffset);
 
         // Several enemies: a random one from the list is picked on every spawn.
-        public AwakenedStatueEntry Add(int tileType, int style, int[] npcTypes, string spritePath, string outlinePath, Vector2 drawOffset = default)
+        // rightFacingOffset: how far the right-facing style is from the left-facing one. -1 uses RightFacingStyleOffset (the vanilla
+        // statues). A mod statue tile whose alternate placement is addAlternate(1) passes 1.
+        public AwakenedStatueEntry Add(int tileType, int style, int[] npcTypes, string spritePath, string outlinePath, Vector2 drawOffset = default, int rightFacingOffset = -1)
         {
             if (npcTypes == null)
             {
@@ -86,7 +88,7 @@ namespace Factorraria.Common.Statues
             }
             // An empty list is valid: the statue only spawns what .AddHardmodeList(...) gives it, and only once hardmode is on.
 
-            int rightStyle = style + RightFacingStyleOffset;
+            int rightStyle = style + (rightFacingOffset >= 0 ? rightFacingOffset : RightFacingStyleOffset);
             bool addLeft = !entries.ContainsKey((tileType, style));
             bool addRight = !entries.ContainsKey((tileType, rightStyle));
 

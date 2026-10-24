@@ -2,6 +2,7 @@
 using Factorraria.Content.Items.Liquids.Motors;
 using Factorraria.Content.Items.Liquids.Pipes;
 using Factorraria.Content.Items.Materials;
+using Factorraria.Content.Items.Statues;
 using Factorraria.Content.Items.Wires;
 using System.Collections.Generic;
 using Terraria;
@@ -28,6 +29,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
 
         static void RegisterManualRecipes()
         {
+            // Meteor Head Statue
+            Recipe.Create(ModContent.ItemType<MeteorHeadStatueItem>(), 1)
+                .AddIngredient(ItemID.Meteorite, 15)
+                .AddIngredient(ItemID.StoneBlock, 50)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+
             // Simple Circuit
             Recipe.Create(ModContent.ItemType<SimpleCircuitItem>(), 1)
                 .AddIngredient(ModContent.ItemType<PureSiliconItem>(), 3)

@@ -1,6 +1,8 @@
 ﻿using Factorraria.Common.Statues;
 using Microsoft.Xna.Framework;
+using Factorraria.Content.Tiles.Statues;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
 {
@@ -231,6 +233,16 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedMedusaStatue",
                 outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedMedusaStatue_Outline",
                 new Vector2(0, 2));
+
+            // MeteorHead statue (custom tile: style 0 is left-facing, style 1 is right-facing)
+            int[] MeteorHeadStatueNPCIDs = new int[] {
+                NPCID.MeteorHead
+            };
+            registry.Add(ModContent.TileType<MeteorHeadStatueTile>(), style: 0, MeteorHeadStatueNPCIDs,
+                spritePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedMeteorHeadStatue",
+                outlinePath: "Factorraria/Content/Tiles/Machines/GeneralMachines/MagicMaterializer/Statues/AwakenedMeteorHeadStatue_Outline",
+                new Vector2(0, 2),
+                rightFacingOffset: 1);
 
             // Mimic statue
             int[] MimicStatueNPCIDs = new int[] {

@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-24 | 255 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-24 | 258 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -25,16 +25,16 @@ Project bases -> derived:
 - PipeTileBase: PipeMK1Tile
 tModLoader/other bases -> project types:
 - ModSystem (68): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, CartChestUISystem, CartInputNetSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
-- ModItem (32): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
+- ModItem (33): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteorHeadStatueItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - byte (16): CartAction, CartPanelAction, CartPanelCloseReason, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, RequestCheck
 - ModCommand (13): ArmSendCommand, CartDiagnosticsCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
+- ModTile (10): ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (9): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
-- ModTile (9): ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - GlobalItem (7): CartModuleItemGlobal, IceBladeItem, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalTile (6): AwakenedStatueGlobalTile, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MaterializerWireGuard, TilePlacedGlobalTile
+- GlobalNPC (4): AwakenedSpawnGlobalNPC, BossLootGlobal, CartPassengerGlobalNPC, MeteorHeadStatueGlobalNPC
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
-- GlobalNPC (3): AwakenedSpawnGlobalNPC, BossLootGlobal, CartPassengerGlobalNPC
 - ModProjectile (3): IceBladeSwingProjectile, MechSuitArmProjectile, MechanicalArmProjectile
 - ModConfig (2): FurnaceOffsetConfig, NetworkConfig
 - ModLiquid (2): FuelLiquid, OilLiquid
@@ -670,7 +670,7 @@ tModLoader/other bases -> project types:
   class AwakenedStatueEntry
     +TileType:int +Style:int +FlipHorizontal:bool +NpcTypes:int +HardmodeNpcs:List<int> +Spawns(int) +PickNpcType() +AddHardmodeList(int) +Sprite:Asset<Texture2D> +Outline:Asset<Texture2D> +DrawOffset:Vector2 +Loot:List<AwakenedLootDrop> +AddLoot(int,float,int,int)
   class AwakenedStatueRegistry : ModSystem
-    +RightFacingStyleOffset:int +IsStatueTile(int) +EntryCount:int +TryGet(int,int,out AwakenedStatueEntry) +Add(int,int,int,string,string,Vector2) +Add(int,int,int,string,string,Vector2) +PostSetupContent()[ov] +Unload()[ov]
+    +RightFacingStyleOffset:int +IsStatueTile(int) +EntryCount:int +TryGet(int,int,out AwakenedStatueEntry) +Add(int,int,int,string,string,Vector2) +Add(int,int,int,string,string,Vector2,int) +PostSetupContent()[ov] +Unload()[ov]
 **AwakenedStatueSystem.cs** uses: AwakenedSpawnGlobalNPC, AwakenedStatueEntry, AwakenedStatueNet, AwakenedStatueRegistry, Entry, IStatueAwakener
   class AwakenedStatue
     +Origin:Point16 +Entry:AwakenedStatueEntry +OwnerOrigin:Point16 +Width:int +Height:int +LiveEnemies:int +LastLiveEnemies:int +SpawnCooldownTicks:int +Center:Vector2
@@ -982,6 +982,11 @@ tModLoader/other bases -> project types:
   class MechSuitPlayer : ModPlayer
     +MaxArms:int[c] +IsActive:bool +Activate() +Deactivate() +SetReportedState(bool) +PlayerDisconnect()[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov]
 
+### Content/Items/Statues/
+**MeteorHeadStatueItem.cs** uses: MeteorHeadStatueTile
+  class MeteorHeadStatueItem : ModItem
+    +Texture:string[ov] +AddRecipes()[ov]
+
 ### Content/Items/Weapons/
 **IceBladeItem.cs** uses: IceBladeSwingProjectile
   class IceBladeItem : GlobalItem
@@ -1208,7 +1213,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/GeneralMachines/MagicMaterializer/
-**AwakenedStatueEntries.cs** uses: AwakenedStatueRegistry
+**AwakenedStatueEntries.cs** uses: AwakenedStatueRegistry, MeteorHeadStatueTile
   static class AwakenedStatueEntries
     +Register(AwakenedStatueRegistry)[s]
 **MagicMaterializerItemTooltip.cs**
@@ -1249,6 +1254,14 @@ tModLoader/other bases -> project types:
   class PureSiliconTile : ModTile
 **SiliconOreTile.cs** uses: SiliconOreItem
   class SiliconOreTile : ModTile
+
+### Content/Tiles/Statues/
+**MeteorHeadStatueGlobalNPC.cs** uses: AwakenedSpawnGlobalNPC, Entry, MeteorHeadStatueTile
+  class MeteorHeadStatueGlobalNPC : GlobalNPC
+    +InstancePerEntity:bool[ov] +FromStatue:bool +AppliesToEntity(NPC,bool)[ov] +PreKill(NPC)[ov]
+**MeteorHeadStatueTile.cs** uses: Direction, MeteorHeadStatueGlobalNPC, MeteorHeadStatueItem
+  class MeteorHeadStatueTile : ModTile
+    +Texture:string[ov] +HitWire(int,int)[ov]
 
 ## Non-code files (png omitted; sprites follow <Name>_On/_Off/_On_FirstLiquid naming)
 - (root)/: .gitattributes, .gitignore, LICENSE; Factorraria.csproj; PROJECT_CONTEXT.md; build.txt, description.txt, description_workshop.txt

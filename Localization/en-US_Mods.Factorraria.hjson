@@ -50,6 +50,11 @@ Items: {
 		Tooltip: ""
 	}
 
+	MeteorHeadStatueItem: {
+		DisplayName: Meteor Head Statue
+		Tooltip: ""
+	}
+
 	MotorMK1Item: {
 		DisplayName: Motor MK1
 		Tooltip: Right click to rotate the tile
@@ -375,4 +380,5 @@ Tiles: {
 	CoalTile.MapEntry: Coal
 	MechanicalAssemblerTile.MapEntry: Mechanical Assembler
 	RoboticArmTile.MapEntry: Robotic Arm
+	MeteorHeadStatueTile.MapEntry: Meteor Head Statue
 }
