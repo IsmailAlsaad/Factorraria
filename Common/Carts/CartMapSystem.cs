@@ -14,7 +14,8 @@ namespace Factorraria.Common.Carts
 {
     /// <summary>
     /// The little button on the fullscreen map that cycles which carts are shown (none -> all -> motor only). Client-only, local choice.
-    /// Art (Ismail makes it): Content/UI/CartMap/CartMapButton_Off.png, CartMapButton_All.png, CartMapButton_Motor.png, 32x32 each.
+    /// Art (Ismail makes it): Content/UI/CartMap/CartMapButton_Off.png, CartMapButton_All.png, CartMapButton_Motor.png, 32x32 each,
+    /// plus an optional CartMapButton_Off_Highlight.png, _All_Highlight.png, _Motor_Highlight.png (32x32) shown while the mouse is over the button.
     /// Until the PNGs exist it draws a plain box with a text label, so the feature works without them.
     /// </summary>
     public class CartMapSystem : ModSystem
@@ -23,6 +24,7 @@ namespace Factorraria.Common.Carts
         public int ButtonSize = 32;
 
         readonly Asset<Texture2D>[] icons = new Asset<Texture2D>[3];
+        readonly Asset<Texture2D>[] highlightIcons = new Asset<Texture2D>[3]; // optional *_Highlight art, drawn while the mouse is over the button
         bool iconsRequested;
 
         public override void Unload()
@@ -43,8 +45,12 @@ namespace Factorraria.Common.Carts
             for (int i = 0; i < names.Length; i++)
             {
                 // RequestIfExists: a missing PNG only means the text fallback is drawn, it never crashes.
-                if (ModContent.RequestIfExists<Texture2D>("Factorraria/Content/UI/CartMap/" + names[i], out Asset<Texture2D> asset, AssetRequestMode.ImmediateLoad))
+                if (ModContent.RequestIfExists<Texture2D>("Factorraria/Common/UI/CartMap/" + names[i], out Asset<Texture2D> asset, AssetRequestMode.ImmediateLoad))
                     icons[i] = asset;
+
+                // Same name + _Highlight; missing = the normal art is just brightened on hover, as before.
+                if (ModContent.RequestIfExists<Texture2D>("Factorraria/Common/UI/CartMap/" + names[i] + "_Highlight", out Asset<Texture2D> highlight, AssetRequestMode.ImmediateLoad))
+                    highlightIcons[i] = highlight;
             }
         }
 
@@ -57,11 +63,16 @@ namespace Factorraria.Common.Carts
 
             CartMapMode mode = CartMapSettings.Mode;
             CartMapConfig config = CartMapConfig.Current;
-            Rectangle area = new Rectangle(config.ButtonX, config.ButtonY, ButtonSize, ButtonSize);
+            Rectangle area = new Rectangle(Main.screenWidth - ButtonSize - config.ButtonX, Main.screenHeight - ButtonSize - config.ButtonY, ButtonSize, ButtonSize);
             bool hover = area.Contains(Main.mouseX, Main.mouseY);
 
             Asset<Texture2D> icon = icons[(int)mode];
-            if (icon != null && icon.IsLoaded)
+            Asset<Texture2D> highlight = highlightIcons[(int)mode];
+            if (hover && highlight != null && highlight.IsLoaded)
+            {
+                Main.spriteBatch.Draw(highlight.Value, area, Color.White);
+            }
+            else if (icon != null && icon.IsLoaded)
             {
                 Main.spriteBatch.Draw(icon.Value, area, hover ? Color.White : new Color(220, 220, 220));
             }

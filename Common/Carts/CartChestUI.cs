@@ -67,6 +67,7 @@ namespace Factorraria.Common.Carts
 
         private readonly bool terrarium;
         private readonly bool motor;
+        private readonly bool readOnly; // map hover preview: no Set filter button, never updated so slots cannot be clicked
         private readonly float basePanelW;
         private readonly float basePanelH;
         private readonly List<Entry> entries = new List<Entry>();
@@ -86,14 +87,15 @@ namespace Factorraria.Common.Carts
         /// <summary>Gap between the top of the cart and the bottom of the UI, in UI pixels (follows the zoom).</summary>
         public float GapAboveCart => ((terrarium || motor) ? TerrariumGapAboveCart : ChestGapAboveCart) * Zoom;
 
-        public CartChestUIState(Cart cart)
+        public CartChestUIState(Cart cart, bool readOnly = false)
         {
             Cart = cart;
+            this.readOnly = readOnly;
 
             terrarium = cart.Module == CartModule.Terrarium || cart.Tank != null; // the lava cart is a motor with a tank: it shows the tank
             motor = cart.Module == CartModule.Motor && cart.Tank == null;
             basePanelW = terrarium ? TankWidth : motor ? MotorPanelWidth : ChestPanelWidth;
-            basePanelH = terrarium ? TankHeight : motor ? MotorPanelHeight : ChestPanelHeight;
+            basePanelH = terrarium ? TankHeight : motor ? MotorPanelHeight : (readOnly ? ChestPanelHeight - Gap - ButtonHeight : ChestPanelHeight);
         }
 
         public override void OnInitialize()
@@ -152,7 +154,8 @@ namespace Factorraria.Common.Carts
 
             float buttonTop = Pad + GridHeight + Gap;
 
-            AddButton("Set filter", new Vector2(Pad, buttonTop), SetFilter);
+            if (!readOnly)
+                AddButton("Set filter", new Vector2(Pad, buttonTop), SetFilter);
         }
 
         /// <summary>Terrarium cart: only the tank element machines use, nothing else.</summary>

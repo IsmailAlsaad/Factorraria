@@ -93,11 +93,14 @@ namespace Factorraria.Common.Carts
                 if (icon == null)
                     continue;
 
-                bool flip = (entry.Facing < 0) != CartMapConfig.Current.InvertIconDirection;
+                // Minecart and Mechanical Cart item sprites face left, all the others face right: flip those two the other way.
+                bool spriteFacesLeft = CartMapConfig.Current.FlipLeftFacingSkins && (entry.SkinType == Terraria.ID.ItemID.Minecart || Cart.IsMechSkin(entry.SkinType));
+                bool flip = ((entry.Facing < 0) != CartMapConfig.Current.InvertIconDirection) != spriteFacesLeft;
                 MapOverlayDrawContext.DrawResult result = context.Draw(icon, new Vector2(entry.TileX, entry.TileY), Color.White, new SpriteFrame(1, 1, 0, 0), scale, scale * 1.33f, Alignment.Center, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
 
                 if (result.IsMouseOver)
                 {
+                    CartMapHoverSystem.HoveredCartId = entry.Id;   // CartMapHoverSystem draws the cart's contents panel for it
                     text = Lang.GetItemNameValue(entry.SkinType);
                     if (entry.ModuleItemType > 0)
                         text += " + " + Lang.GetItemNameValue(entry.ModuleItemType);

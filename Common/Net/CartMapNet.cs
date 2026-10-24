@@ -39,7 +39,7 @@ namespace Factorraria.Common.Net
     {
         public static int ResendIntervalTicks = 120;
         public static int MaxEntries = 1000;
-        public static int LocalRefreshTicks = 10;
+        public static int LocalRefreshTicks = 1;   // single-player only (a multiplayer client uses the server snapshot every ResendIntervalTicks)
 
         static CartMapEntry[] clientEntries = Array.Empty<CartMapEntry>();
         static readonly ConcurrentDictionary<int, int> lastSentHash = new();
@@ -101,8 +101,9 @@ namespace Factorraria.Common.Net
 
                 CartMapEntry entry = new CartMapEntry();
                 entry.Id = cart.Id;
-                entry.TileX = (int)(cart.Position.X / 16f) + 0.5f;
-                entry.TileY = (int)(cart.Position.Y / 16f) + 0.5f;
+                // The server snapshot (withKeys) sends whole tiles; the local list (single-player) uses the exact position so the icon glides.
+                entry.TileX = withKeys ? (int)(cart.Position.X / 16f) + 0.5f : cart.Position.X / 16f;
+                entry.TileY = withKeys ? (int)(cart.Position.Y / 16f) + 0.5f : cart.Position.Y / 16f;
                 entry.Module = cart.Module;
                 entry.Facing = cart.Facing < 0 ? -1 : 1;
                 entry.SkinType = cart.SkinType;

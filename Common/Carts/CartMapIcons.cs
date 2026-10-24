@@ -10,7 +10,7 @@ using Terraria.ModLoader;
 namespace Factorraria.Common.Carts
 {
     /// <summary>
-    /// Builds the map icon for a (cart skin, module item) pair: the skin's item sprite with the module's item sprite on top, then a
+    /// Builds the map icon for a (cart skin, module item) pair: the module's item sprite with the skin's item sprite drawn over it (the module sits behind the cart), then a
     /// white ring and a black ring around the silhouette (the look of the vanilla NPC head icons). Built once on first use and cached.
     /// Client / main thread only (it reads item textures and makes a Texture2D); the map layer is the only caller.
     /// If a texture cannot be read the plain skin sprite is used instead, so the map never breaks.
@@ -18,8 +18,8 @@ namespace Factorraria.Common.Carts
     public static class CartMapIcons
     {
         public static int ModuleScalePercent = 60;   // size of the module sprite relative to its item sprite
-        public static int ModuleBottomPercent = 60;  // how far down the cart sprite the module's bottom edge sits
-        // The outline is CartMapConfig.OutlineThickness pixels of white, then the same of black; the canvas is padded by twice that.
+        public static int ModuleBottomPercent = 55;  // how far down the cart sprite the module's bottom edge sits (LOWER = module sits HIGHER; was 60)
+        // The outline is CartMapConfig.OutlineThickness (a float) pixels of white, then the same of black; the canvas is padded by twice that, rounded up.
 
         static readonly Dictionary<long, Texture2D> cache = new Dictionary<long, Texture2D>();
         static readonly List<Texture2D> owned = new List<Texture2D>();
@@ -106,36 +106,58 @@ namespace Factorraria.Common.Carts
                 int moduleBottom = bh * ModuleBottomPercent / 100;
                 int topExtra = modulePixels != null ? Math.Max(0, mh - moduleBottom) : 0;
                 int innerW = Math.Max(bw, mw);
-                float thickness = Math.Max(0, CartMapConfig.Current.OutlineThickness);
-                float Pad = thickness * 2;
-                int w = (int)(innerW + Pad * 2);
-                int h = (int)(bh + topExtra + Pad * 2);
+                float thickness = Math.Max(0f, CartMapConfig.Current.OutlineThickness);
+                int pad = (int)Math.Ceiling(thickness * 2f);
+                int w = innerW + pad * 2;
+                int h = bh + topExtra + pad * 2;
 
+                // Module first, then the cart body on top: the chest / terrarium sits BEHIND the cart.
                 Color[] canvas = new Color[w * h];
-                Blit(canvas, w, bodyPixels, bw, bh, (int)(Pad + (innerW - bw) / 2), (int)(Pad + topExtra));
-
                 if (modulePixels != null)
-                    Blit(canvas, w, modulePixels, mw, mh, (int)(Pad + (innerW - mw) / 2), (int)(Pad + topExtra + moduleBottom - mh));
+                    Blit(canvas, w, modulePixels, mw, mh, pad + (innerW - mw) / 2, pad + topExtra + moduleBottom - mh);
+
+                Blit(canvas, w, bodyPixels, bw, bh, pad + (innerW - bw) / 2, pad + topExtra);
 
                 bool[] solid = new bool[w * h];
                 for (int i = 0; i < solid.Length; i++)
                     solid[i] = canvas[i].A > 0;
 
-                bool[] white = solid;
-                for (int ring = 0; ring < thickness; ring++)
-                    white = Dilate(white, w, h);
+                // ringOf[i] = how many 8-neighbour steps pixel i is from the silhouette (0 = on it, int.MaxValue = out of range).
+                // A fractional thickness makes the outermost ring of each colour partly transparent.
+                int maxRing = (int)Math.Ceiling(thickness * 2f);
+                int[] ringOf = new int[w * h];
+                for (int i = 0; i < ringOf.Length; i++)
+                    ringOf[i] = solid[i] ? 0 : int.MaxValue;
 
-                bool[] black = white;
-                for (int ring = 0; ring < thickness; ring++)
-                    black = Dilate(black, w, h);
+                bool[] reached = solid;
+                for (int ring = 1; ring <= maxRing; ring++)
+                {
+                    bool[] grown = Dilate(reached, w, h);
+                    for (int i = 0; i < grown.Length; i++)
+                    {
+                        if (grown[i] && !reached[i])
+                            ringOf[i] = ring;
+                    }
+
+                    reached = grown;
+                }
 
                 Color[] result = new Color[w * h];
                 for (int i = 0; i < result.Length; i++)
                 {
-                    if (thickness > 0 && black[i])
-                        result[i] = Color.Black;
-                    if (thickness > 0 && white[i])
-                        result[i] = Color.White;
+                    int ring = ringOf[i];
+                    if (thickness > 0f && ring > 0 && ring != int.MaxValue)
+                    {
+                        float white = Math.Clamp(thickness - (ring - 1), 0f, 1f);
+                        float dark = Math.Clamp(thickness * 2f - (ring - 1), 0f, 1f);
+                        if (dark > 0f)
+                        {
+                            // premultiplied: white over black
+                            int value = (int)Math.Round(255f * white);
+                            int alpha = (int)Math.Round(255f * (white + dark * (1f - white)));
+                            result[i] = new Color(value, value, value, alpha);
+                        }
+                    }
 
                     Over(result, i, canvas[i]);
                 }

@@ -20,12 +20,15 @@ namespace Factorraria.Content.Configs
         public float IconSize = 0.6f;
 
         // Pixels of white, then the same number of black, around each icon. 0 = no outline.
-        [DefaultValue(1)]
-        [Range(0, 4)]
+        // Fractions work: the outermost ring of each colour is drawn partly transparent (1.5 = one full pixel plus a half-strength one).
+        [DefaultValue(1f)]
+        [Range(0f, 4f)]
+        [Increment(0.05f)]
         [Slider]
-        public float OutlineThickness = 1;
+        public float OutlineThickness = 1f;
 
-        // Where the none / all / motor button sits on the fullscreen map, in pixels from the top-left corner of the screen.
+        // Where the none / all / motor button sits on the fullscreen map, in pixels from the BOTTOM-RIGHT corner of the screen
+        // (ButtonX = gap to the right edge, ButtonY = gap to the bottom edge).
         [DefaultValue(24)]
         [Range(0, 1600)]
         [Slider]
@@ -39,6 +42,11 @@ namespace Factorraria.Content.Configs
         // Tick this if the icons face the wrong way (the icon follows the cart's facing; this flips it).
         [DefaultValue(false)]
         public bool InvertIconDirection = false;
+
+        // The Minecart and Mechanical Cart item sprites face LEFT (every other skin faces right), so their icon is flipped the other way.
+        // Untick this if you would rather have them drawn like the rest.
+        [DefaultValue(true)]
+        public bool FlipLeftFacingSkins = true;
 
         public override void OnChanged()
         {
