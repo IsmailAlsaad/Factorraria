@@ -151,12 +151,14 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public readonly RecipeOutputGroup Group;
         public readonly RecipeState State;
         public readonly string ProductName;
+        public readonly bool Favorite;
         public bool Selected;
         public Action<string> OnChosen;
 
-        public RecipeBookEntry(string key, string machine, RecipeOutputGroup group, RecipeState state)
+        public RecipeBookEntry(string key, string machine, RecipeOutputGroup group, RecipeState state, bool favorite)
         {
             Key = key;
+            Favorite = favorite;
             Machine = machine;
             Group = group;
             State = state;
@@ -177,6 +179,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
         {
             base.LeftClick(evt);
             SoundEngine.PlaySound(SoundID.MenuTick);
+            if (RecipeBookLayout.StarRect(GetDimensions().ToRectangle()).Contains(evt.MousePosition.ToPoint()))
+            {
+                // Toggle only; the book re-sorts on its next Update (never mid-click). The row is not selected.
+                Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().ToggleFavorite(Key);
+                return;
+            }
             OnChosen?.Invoke(Key);
         }
 
@@ -192,13 +200,63 @@ namespace Factorraria.Common.UI.RecipeBookUI
             RecipeIcon.Draw(sb, Group.Key, new Vector2(r.X + 6 + box / 2f, r.Center.Y), box, 1f, IsFaded);
 
             float textX = r.X + 6 + box + 8;
-            float maxWidth = r.Right - textX - 4;
+            float maxWidth = r.Right - textX - 4 - RecipeBookLayout.StarHitSize - RecipeBookLayout.StarRightPad;
             string shown = BookDraw.Fit(ProductName, maxWidth, 0.95f, out bool truncated);
             Vector2 size = FontAssets.MouseText.Value.MeasureString(shown) * 0.95f;
             BookDraw.Text(sb, shown, new Vector2(textX, r.Center.Y - size.Y / 2f + 2f),
                 IsFaded ? RecipeBookLayout.TextFadedColor : RecipeBookLayout.TextColor, 0.95f);
 
             if (hover && truncated) Main.hoverItemName = ProductName;
+
+            Rectangle star = RecipeBookLayout.StarRect(r);
+            bool starHover = hover && star.Contains(Main.MouseScreen.ToPoint());
+            DrawStar(sb, star, Favorite, starHover);
+            if (starHover) Main.hoverItemName = RecipeBookLayout.Text(Favorite ? "FavoriteRemove" : "FavoriteAdd");
+        }
+
+        // Code-made placeholder star, used until the RecipeBookStar_* PNGs exist.
+        static readonly string[] StarPattern =
+        {
+            "-----#-----",
+            "-----#-----",
+            "----###----",
+            "###########",
+            "-#########-",
+            "--#######--",
+            "--#######--",
+            "-####-####-",
+            "-###---###-",
+            "-#-------#-",
+        };
+
+        static void DrawStar(SpriteBatch sb, Rectangle box, bool on, bool hover)
+        {
+            var art = RecipeBookArt.Star(on, hover);
+            if (art != null)
+            {
+                Texture2D tex = art.Value;
+                sb.Draw(tex, new Vector2(box.Center.X - tex.Width / 2, box.Center.Y - tex.Height / 2), Color.White);
+                return;
+            }
+
+            Color c = on
+                ? (hover ? new Color(255, 232, 110) : new Color(236, 190, 40))
+                : (hover ? RecipeBookLayout.PageBorder * 0.8f : RecipeBookLayout.PageBorder * 0.4f);
+            int w = StarPattern[0].Length;
+            int h = StarPattern.Length;
+            int ox = box.Center.X - w / 2;
+            int oy = box.Center.Y - h / 2;
+            for (int y = 0; y < h; y++)
+            {
+                int x = 0;
+                while (x < w)
+                {
+                    if (StarPattern[y][x] != '#') { x++; continue; }
+                    int start = x;
+                    while (x < w && StarPattern[y][x] == '#') x++;
+                    BookDraw.Rect(sb, new Rectangle(ox + start, oy + y, x - start, 1), c);
+                }
+            }
         }
     }
 

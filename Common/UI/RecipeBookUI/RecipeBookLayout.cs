@@ -49,6 +49,15 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public const int EntryRowHeight = 36;
         public const int EntryIconBox = 28;
 
+        // Favorite star: native-size art is centered in a StarHitSize square, StarRightPad px from the row's right border.
+        // Keep the star PNGs at or below StarHitSize in both directions.
+        public const int StarHitSize = 24;
+        public const int StarRightPad = 6;
+
+        /// <summary>Hit box of a recipe row's star. `row` is the row's screen rectangle.</summary>
+        public static Rectangle StarRect(Rectangle row) =>
+            new Rectangle(row.Right - StarRightPad - StarHitSize, row.Center.Y - StarHitSize / 2, StarHitSize, StarHitSize);
+
         public static Rectangle LeftPage => new Rectangle(Margin, Margin, PanelWidth / 2 - Margin - Gutter, PanelHeight - 2 * Margin);
         public static Rectangle RightPage => new Rectangle(PanelWidth / 2 + Gutter, Margin, PanelWidth / 2 - Margin - Gutter, PanelHeight - 2 * Margin);
 
@@ -165,13 +174,25 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public const string ButtonPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookButton";
         public const string ButtonHoverPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookButton_Hover";
         public const string BackgroundPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookBackground";
+        public const string StarOffPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookStar_Off";
+        public const string StarOffHighlightedPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookStar_Off_Highlighted";
+        public const string StarOnPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookStar_On";
+        public const string StarOnHighlightedPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookStar_On_Highlighted";
 
         static Asset<Texture2D> button, buttonHover, background;
+        static Asset<Texture2D> starOff, starOffHighlighted, starOn, starOnHighlighted;
         static bool loaded;
 
         public static Asset<Texture2D> Button { get { Load(); return button; } }
         public static Asset<Texture2D> ButtonHover { get { Load(); return buttonHover; } }
         public static Asset<Texture2D> Background { get { Load(); return background; } }
+
+        /// <summary>Favorite star art for a state, or null if that PNG does not exist yet (the entry then draws a placeholder).</summary>
+        public static Asset<Texture2D> Star(bool on, bool highlighted)
+        {
+            Load();
+            return on ? (highlighted ? starOnHighlighted : starOn) : (highlighted ? starOffHighlighted : starOff);
+        }
 
         static void Load()
         {
@@ -180,6 +201,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
             button = TryRequest(ButtonPath);
             buttonHover = TryRequest(ButtonHoverPath);
             background = TryRequest(BackgroundPath);
+            starOff = TryRequest(StarOffPath);
+            starOffHighlighted = TryRequest(StarOffHighlightedPath);
+            starOn = TryRequest(StarOnPath);
+            starOnHighlighted = TryRequest(StarOnHighlightedPath);
         }
 
         static Asset<Texture2D> TryRequest(string path) =>
@@ -188,6 +213,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static void Clear()
         {
             button = buttonHover = background = null;
+            starOff = starOffHighlighted = starOn = starOnHighlighted = null;
             loaded = false;
         }
     }

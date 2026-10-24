@@ -44,6 +44,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         float lastView = -1f;
         int builtVersion = int.MinValue;
         int builtHeldVersion = int.MinValue;
+        int builtFavVersion = int.MinValue;
 
         // Selection is a catalog key so it survives rebuilds.
         public string SelectedKey { get; private set; }
@@ -108,7 +109,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             if (filterDirty && scrollbar != null) scrollbar.ViewPosition = 0f;   // new search starts at the top
             RecipeVisibility.Poll();    // HeldVersion only moves if someone scans; the book is visible, so keep it current
-            if (RecipeKnowledgeSystem.Version != builtVersion || RecipeVisibility.HeldVersion != builtHeldVersion || filterDirty || layoutDirty) Rebuild();
+            if (RecipeKnowledgeSystem.Version != builtVersion || RecipeVisibility.HeldVersion != builtHeldVersion || filterDirty || layoutDirty
+                || Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().FavoritesVersion != builtFavVersion) Rebuild();
             ApplyScroll(false);
             base.Update(gameTime);
         }
@@ -119,6 +121,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         void Rebuild()
         {
             builtVersion = RecipeKnowledgeSystem.Version;
+            RecipeBookPlayer favorites = Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>();
+            builtFavVersion = favorites.FavoritesVersion;
             filterDirty = false;
             layoutDirty = false;
             if (listArea == null) return;
@@ -139,7 +143,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (byIngredient) filter = filter.Substring(1).Trim();
             bool filtering = !string.IsNullOrEmpty(filter);
 
-            // Per machine: crafted recipes first, then the faded ones. OrderBy is stable, so each tier keeps the catalog's
+            // Per machine: favorited first, then crafted, then the faded ones. OrderBy is stable, so each tier keeps the catalog's
             // A-Z order, and machines keep the order they first appear in.
             var machineOrder = new Dictionary<string, int>();
             var listed = new List<(RecipeCatalog.Entry e, RecipeState state)>();
@@ -155,7 +159,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             // names match, so "#Wood" does not also pull in Boreal Wood. Otherwise it falls back to a partial match.
             bool exactIngredient = byIngredient && filtering && listed.Any(x => UsesIngredient(x.e.Group, x.state, filter, true));
 
-            foreach (var (e, state) in listed.OrderBy(x => machineOrder[x.e.Machine]).ThenBy(x => x.state == RecipeState.Crafted ? 0 : 1))
+            foreach (var (e, state) in listed.OrderBy(x => machineOrder[x.e.Machine]).ThenBy(x => favorites.IsFavorite(x.e.Key) ? 0 : x.state == RecipeState.Crafted ? 1 : 2))
             {
                 any = true;
 
@@ -188,7 +192,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 }
                 if (collapsed) continue;
 
-                var entry = new RecipeBookEntry(e.Key, e.Machine, e.Group, state);
+                var entry = new RecipeBookEntry(e.Key, e.Machine, e.Group, state, favorites.IsFavorite(e.Key));
                 entry.OnChosen = key => Select(key, false);
                 entry.Selected = isSelected;
                 entryTop[e.Key] = y;
