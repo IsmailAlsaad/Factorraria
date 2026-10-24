@@ -90,9 +90,26 @@ namespace Factorraria.Content.UI
             Item cursorBefore = Main.mouseItem.Clone();
 
             RunVanillaClick(ref item);
+            MachineSlotEdit.ClampAfterClick(machine, machineSlot.Kind, machineSlot.Index, ref item, slotBefore, cursorBefore);   // slot caps
 
             if (!MachineSlotEdit.SameStack(slotBefore, item))
                 MachineSlotEdit.SendEdit(machine, machineSlot.Kind, machineSlot.Index, slotBefore, item, cursorBefore, Main.mouseItem);
+        }
+
+        // Single-player and the host: vanilla edits the real slot, then a hand deposit is clamped to the slot cap (BaseMachine.GetSlotCap).
+        void ClickMachineSlotLocal(ref Item item)
+        {
+            BaseMachine machine = machineSlot.Machine();
+            if (machine == null)
+            {
+                RunVanillaClick(ref item);
+                return;
+            }
+
+            Item slotBefore = item.Clone();
+            Item cursorBefore = Main.mouseItem.Clone();
+            RunVanillaClick(ref item);
+            MachineSlotEdit.ClampAfterClick(machine, machineSlot.Kind, machineSlot.Index, ref item, slotBefore, cursorBefore);
         }
 
         // Multiplayer client, cart slot (patch 9.5): vanilla predicts the click, the server decides (see CartSlotEdit).
@@ -202,8 +219,10 @@ namespace Factorraria.Content.UI
                     ClickMachineSlot(ref item);   // patch 6.2: predicted here, decided by the server
                 else if (cartSlot != null && Main.netMode == NetmodeID.MultiplayerClient)
                     ClickCartSlot(ref item);      // patch 9.5: the same for cart slots
+                else if (machineSlot != null)
+                    ClickMachineSlotLocal(ref item);   // single-player and the host: real slot, hand deposit clamped to the slot cap
                 else
-                    RunVanillaClick(ref item);    // single-player and the host edit the real slot; cart slots stay local until Phase 9
+                    RunVanillaClick(ref item);    // cart slots stay local until Phase 9
 
                 setItem(item);
             }

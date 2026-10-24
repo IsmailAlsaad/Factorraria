@@ -49,7 +49,9 @@ namespace Factorraria.Common.Machines
         // Used to save and restore the player's manual selection. null = machine has no recipe list.
         protected virtual List<RecipeOutputGroup> RecipeGroups => null;
 
-        public int OutputMaxStack = Item.CommonMaxStack;
+        public int OutputMaxStack = Item.CommonMaxStack;   // fallback output cap for machines or items no recipe knows
+        public int OutputBufferMultiplier = 10;            // an output slot holds this many crafts' worth of the product
+        public int IngredientBufferMultiplier = 2;         // an input slot holds this many crafts' worth (conveyor intake AND hand deposits)
         public MachineBiome InsideBiome { get; set; } = MachineBiome.Unknown;
         public Point16 cornerPosition;
         public Vector2 MachineCenter;
@@ -79,6 +81,100 @@ namespace Factorraria.Common.Machines
                 return false;
 
             return true;
+        }
+
+        /// <summary>
+        /// The most `item` may hold in this slot when it is put in by hand. Same rules the conveyor intake uses (ingredients: a multiple of
+        /// the recipe's count, fuel: the fuel table's StackLimit) plus outputs: a multiple of the product's count per craft. Taking items
+        /// out is never limited and a stack that is already over the cap (an old save) is left alone by the callers.
+        /// UIItemSlotWrapper clamps the click with it (MachineSlotEdit.ClampAfterClick); the server's slot edit check refuses anything above it.
+        /// </summary>
+        public virtual int GetSlotCap(MachineSlotKind kind, int index, Item item)
+        {
+            if (item == null || item.IsAir) return 0;
+            int stackMax = Math.Max(1, item.maxStack);
+
+            if (kind == MachineSlotKind.Output)
+                return Math.Min(OutputCapFor(item.type), stackMax);
+
+            if (index < IngredientStart)
+            {
+                foreach (FuelModule f in Fuels)
+                    if (f.SlotIndex == index && f.CanAccept(item.type))
+                        return Math.Min(Math.Max(f.StackLimit(item.type), 1), stackMax);
+                return stackMax;
+            }
+
+            if (Recipes == null)   // hand-written machine: whatever its own intake rule allows
+            {
+                if (TryGetIntakeSlot(item.type, out int intakeSlot, out int intakeLimit) && intakeSlot == index)
+                    return Math.Min(Math.Max(intakeLimit, 1), stackMax);
+                return stackMax;
+            }
+
+            return Math.Min(IngredientCapFor(index, item.type), stackMax);
+        }
+
+        Dictionary<int, int> outputCapCache;
+
+        // Output slot cap for a product: OutputBufferMultiplier x the biggest per-craft amount any recipe of this machine makes of it.
+        public int OutputCapFor(int itemType)
+        {
+            outputCapCache ??= new Dictionary<int, int>();
+            if (outputCapCache.TryGetValue(itemType, out int cached)) return cached;
+
+            int perCraft = 0;
+            if (Recipes != null)
+                foreach (CustomRecipe recipe in Recipes.All)
+                    foreach (RecipeIngredient o in recipe.Outputs)
+                        if (o.Type == itemType) perCraft = Math.Max(perCraft, o.Stack);
+
+            int cap = perCraft > 0 ? perCraft * OutputBufferMultiplier : OutputMaxStack;
+            outputCapCache[itemType] = cap;
+            return cap;
+        }
+
+        // Hand deposit into an ingredient slot. Auto mode detects the recipe from what the slots would hold right after the deposit
+        // (the other filled slots plus this item), so the cap is known in the same frame as the click, before anything is taken.
+        int IngredientCapFor(int slotIndex, int itemType)
+        {
+            List<CustomRecipe> pool = ManualGroup != null ? ManualGroup.Recipes : Recipes.All;
+
+            int filled = 1;   // this slot
+            for (int s = IngredientStart; s < IngredientStart + ActiveIngredientCount; s++)
+            {
+                if (s == slotIndex) continue;
+                Item held = InputSlots[s];
+                if (!held.IsAir && held.stack > 0) filled++;
+            }
+
+            int best = ScanIngredientCap(pool, slotIndex, itemType, ManualGroup == null ? filled : -1);
+            if (best == 0) best = ScanIngredientCap(pool, slotIndex, itemType, -1);   // no recipe fits yet (more ingredients to come): loosest recipe that uses it
+            return Math.Max(best, 1);
+        }
+
+        int ScanIngredientCap(List<CustomRecipe> pool, int slotIndex, int itemType, int exactInputCount)
+        {
+            int best = 0;
+            foreach (CustomRecipe recipe in pool)
+            {
+                if (exactInputCount >= 0 && recipe.Inputs.Count != exactInputCount) continue;
+
+                int need = 0;
+                foreach (RecipeIngredient ing in recipe.Inputs)
+                    if (ing.Type == itemType) { need = ing.Stack; break; }
+                if (need == 0) continue;
+
+                bool fitsHeld = true;
+                for (int s = IngredientStart; s < IngredientStart + ActiveIngredientCount && fitsHeld; s++)
+                {
+                    if (s == slotIndex) continue;
+                    Item held = InputSlots[s];
+                    if (!held.IsAir && !RecipeUsesItem(recipe, held.type)) fitsHeld = false;
+                }
+                if (fitsHeld) best = Math.Max(best, need * IngredientBufferMultiplier);
+            }
+            return best;
         }
 
         static Item[] CreateItemArray(int count)
@@ -504,14 +600,14 @@ namespace Factorraria.Common.Machines
         // so two outputs can't both count on the same empty slot.
         int FindOutputSlot(RecipeIngredient output, int claimed)
         {
-            if (output.Stack > OutputMaxStack) return -1;
+            int cap = Math.Max(OutputCapFor(output.Type), output.Stack);   // one craft must always fit an empty slot
             int firstEmpty = -1;
             for (int i = 0; i < OutputSlots.Length; i++)
             {
                 if ((claimed & (1 << i)) != 0) continue;
                 Item slot = OutputSlots[i];
                 if (slot.IsAir) { if (firstEmpty == -1) firstEmpty = i; }
-                else if (slot.type == output.Type && slot.stack + output.Stack <= OutputMaxStack) return i;
+                else if (slot.type == output.Type && slot.stack + output.Stack <= cap) return i;
             }
             return firstEmpty;
         }
@@ -671,7 +767,7 @@ namespace Factorraria.Common.Machines
                 foreach (RecipeIngredient ing in recipe.Inputs)
                 {
                     if (ing.Type != itemType) continue;
-                    limit = Math.Max(limit, ing.Stack * 2);
+                    limit = Math.Max(limit, ing.Stack * IngredientBufferMultiplier);
                     break;
                 }
             }

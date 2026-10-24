@@ -118,6 +118,50 @@ namespace Factorraria.Common.Net
             return a.type == b.type && a.stack == b.stack && a.prefix == b.prefix;
         }
 
+        /// <summary>
+        /// Slot caps for hand deposits (BaseMachine.GetSlotCap). Runs right after vanilla's click, on the client that clicked (single-player,
+        /// host or predicted client), so the cap is applied in the same frame: only the allowed amount stays in the slot and the rest goes
+        /// back to the cursor. If the cursor cannot take the rest back (a swap with a different item), the whole click is undone and
+        /// false is returned. Taking items out, and a stack already over the cap, are never touched.
+        /// </summary>
+        public static bool ClampAfterClick(BaseMachine machine, MachineSlotKind kind, int index, ref Item item, Item slotBefore, Item cursorBefore)
+        {
+            if (machine == null || item == null || item.IsAir)
+                return true;
+
+            bool sameItem = slotBefore != null && !slotBefore.IsAir && slotBefore.type == item.type && slotBefore.prefix == item.prefix;
+            int before = sameItem ? slotBefore.stack : 0;
+            if (item.stack <= before)
+                return true;   // nothing was added
+
+            int limit = Math.Max(machine.GetSlotCap(kind, index, item), before);
+            if (item.stack <= limit)
+                return true;
+
+            int excess = item.stack - limit;
+            Item cursor = Main.mouseItem;
+
+            if (cursor == null || cursor.IsAir)
+            {
+                Item back = item.Clone();
+                back.stack = excess;
+                item.stack = limit;
+                Main.mouseItem = back;
+                return true;
+            }
+
+            if (cursor.type == item.type && cursor.prefix == item.prefix && cursor.stack + excess <= cursor.maxStack)
+            {
+                cursor.stack += excess;
+                item.stack = limit;
+                return true;
+            }
+
+            item = slotBefore != null ? slotBefore.Clone() : new Item();
+            Main.mouseItem = cursorBefore != null ? cursorBefore.Clone() : new Item();
+            return false;
+        }
+
         static void WriteSlotItem(BinaryWriter w, Item item)
         {
             bool present = item != null && !item.IsAir && item.stack > 0;
@@ -326,6 +370,14 @@ namespace Factorraria.Common.Net
             if (!removal && !machine.AcceptsSlotItem(kind, index, next))
             {
                 Reject(player, corner, seq, kind, index, current.Clone(), "the machine does not accept " + Describe(next) + " in this slot");
+                return;
+            }
+
+            // Slot caps: a hand deposit may not put more in than BaseMachine.GetSlotCap allows (the client clamps first, so this only
+            // refuses a stale prediction or a bad packet). A stack that only shrinks or stays is a removal and never reaches this.
+            if (!removal && next.stack > machine.GetSlotCap(kind, index, next))
+            {
+                Reject(player, corner, seq, kind, index, current.Clone(), "over the slot cap: " + Describe(next) + " (cap " + machine.GetSlotCap(kind, index, next) + ")");
                 return;
             }
 
