@@ -14,16 +14,6 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
 
         protected override int OutputSlotCount => 1;
 
-        public override void Update()
-        {
-            base.Update();
-
-            if (InputLiquids[0].Amount == 0f)
-            {
-                InputLiquids[0] =  new LiquidStack(LiquidTypeRegistry.Lava,1f);
-            }
-        }
-
         protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
         {
 

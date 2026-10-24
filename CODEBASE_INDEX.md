@@ -4,7 +4,7 @@ generated 2026-10-24 | 255 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(57) BaseMachine(37) FactorrariaPacket(29) LiquidTypeRegistry(28) RecipeBook(25) PacketDirection(25) Factorraria(17) CustomRecipe(17) Cart(16) MachineUIStateBase(14) LiquidStack(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIElementEntry(13) LiquidNetworkSystem(13) JoinSync(12) RecipeOutputGroup(11) CartModule(11) RecipeCatalog(10) MachineVisualRegistry(10)
+FactorrariaNet(57) BaseMachine(37) FactorrariaPacket(29) LiquidTypeRegistry(27) RecipeBook(25) PacketDirection(25) Factorraria(17) CustomRecipe(17) Cart(16) MachineUIStateBase(14) VirtualItemSystem(13) TileEntityHelper(13) MachineUIElementEntry(13) LiquidStack(13) LiquidNetworkSystem(13) JoinSync(12) RecipeOutputGroup(11) CartModule(11) RecipeCatalog(10) MachineVisualRegistry(10)
 
 ## Inheritance
 Project bases -> derived:
@@ -1178,9 +1178,9 @@ tModLoader/other bases -> project types:
 **HellforgeRecipeRegistry.cs** uses: ByriteAlloyItem, CokeItem, CustomRecipe, FurnaceRecipeRegistry, LiquidFuelTable, LiquidTypeRegistry, PureSiliconItem, RecipeBook, SiliconOreItem, SteelBarItem
   static class HellforgeRecipeRegistry
     +Book:RecipeBook[s] +LiquidFuels:LiquidFuelTable[s] +BuildRecipes()[s]
-**HellforgeTileEntity.cs** uses: BaseMachine, HellforgeRecipeRegistry, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, RecipeBook
+**HellforgeTileEntity.cs** uses: BaseMachine, HellforgeRecipeRegistry, LiquidFuelTable, RecipeBook
   class HellforgeTileEntity : BaseMachine
-    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] #OutputSlotCount:int[ov] +Update()[ov] #OnAnimationFrameChanged(int,int)[ov]
+    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] #OutputSlotCount:int[ov] #OnAnimationFrameChanged(int,int)[ov]
 **HellforgeUIState.cs** uses: HellforgeRecipeRegistry, HellforgeTileEntity, MachineUIElementEntry, MachineUIStateBase
   class HellforgeUIState : MachineUIStateBase
     +BasePanelOffset:Vector2[ov] #BuildElements()[ov] #UpdateLayout()[ov]
@@ -1219,7 +1219,7 @@ tModLoader/other bases -> project types:
     +LiquidFuels:LiquidFuelTable[s] +BuildRecipes()[s]
 **MagicMaterializerTileEntity.cs** uses: AwakenedStatueSystem, BaseMachine, IStatueAwakener, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, MagicMaterializerRegistry, MaterializerToggle
   class MagicMaterializerTileEntity : BaseMachine, IStatueAwakener
-    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +ShimmerDrainPerSecond:float +AwakenRadiusTiles:int +IsAwakening:bool +ResumeSeconds:float +AwakenerOrigin:Point16 +AwakenedStatueCount:int +AwakenedEnemyCount:int +BackgroundActive:bool +HasShimmer:bool +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +TreatsWorldLiquidAsInfinite(int)[ov] +OnKill()[ov] +Update()[ov]
+    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +ShimmerDrainPerSecond:float +AwakenRadiusTiles:int +IsAwakening:bool +AwakenerOrigin:Point16 +AwakenedStatueCount:int +AwakenedEnemyCount:int +BackgroundActive:bool +HasShimmer:bool +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +TreatsWorldLiquidAsInfinite(int)[ov] +OnKill()[ov] +Update()[ov]
 **MagicMaterializerUIState.cs** uses: MachineUIElementEntry, MachineUIStateBase
   class MagicMaterializerUIState : MachineUIStateBase
     #BuildElements()[ov]

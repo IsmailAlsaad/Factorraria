@@ -30,11 +30,15 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
         bool wasAwakening;
         bool removed;
 
-        // Runtime only (not saved). Set when the tank can't pay one tick of the drain; the machine stays off until the tank has
-        // refilled to ResumeSeconds worth of the demand that starved it, so a slow pump can't keep it limping along on a trickle.
+        // Runtime only (not saved). Set when the tank can't pay one tick of the drain. While starved nothing drains, so the
+        // machine measures what the pumps deliver per tick (average over 60 ticks) and stays off until that supply is at least
+        // the per-tick demand that starved it. Emptying the tank clears the latch.
         bool starved;
         float starvedDrainPerTick;
-        public float ResumeSeconds = 1f;
+        float lastTankAmount;
+        float windowGain;
+        int windowTicks;
+        float observedInflow = -1f;
         public Point16 AwakenerOrigin => Position;
         public int AwakenedStatueCount { get; set; }
         public int AwakenedEnemyCount { get; set; }
@@ -119,8 +123,22 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
             {
                 if (starved)
                 {
-                    float resumeAt = System.Math.Min(starvedDrainPerTick * 60f * ResumeSeconds, tank.Capacity - 0.01f);
-                    if (hasShimmer && tank.Amount >= resumeAt) starved = false;
+                    // Nothing drains while off, so every gain is the pumps' delivery. Ticks with a full tank say nothing about it.
+                    if (lastTankAmount < tank.Capacity - 0.01f)
+                    {
+                        windowGain += tank.Amount - lastTankAmount;
+                        windowTicks++;
+                        if (windowTicks >= 60)
+                        {
+                            observedInflow = System.Math.Max(0f, windowGain / windowTicks);
+                            windowGain = 0f;
+                            windowTicks = 0;
+                        }
+                    }
+                    lastTankAmount = tank.Amount;
+
+                    // Stay off while the supply is below the demand; come back only when it can keep up.
+                    if (hasShimmer && observedInflow >= starvedDrainPerTick && tank.Amount >= starvedDrainPerTick) starved = false;
                 }
 
                 if (!hasShimmer) starved = false;
@@ -145,6 +163,10 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
             {
                 starved = true;
                 starvedDrainPerTick = decreaseAmount;
+                lastTankAmount = tank.Amount;
+                windowGain = 0f;
+                windowTicks = 0;
+                observedInflow = -1f;
                 isWorking = false;
                 return;
             }
