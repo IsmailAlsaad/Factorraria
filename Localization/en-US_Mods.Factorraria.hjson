@@ -362,6 +362,11 @@ Configs: {
 			Label: Invert Icon Direction
 			Tooltip: ""
 		}
+
+		FlipLeftFacingSkins: {
+			Label: Flip Left Facing Skins
+			Tooltip: ""
+		}
 	}
 }
 
