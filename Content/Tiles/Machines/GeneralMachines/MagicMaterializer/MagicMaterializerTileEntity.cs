@@ -29,6 +29,12 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
 
         bool wasAwakening;
         bool removed;
+
+        // Runtime only (not saved). Set when the tank can't pay one tick of the drain; the machine stays off until the tank has
+        // refilled to ResumeSeconds worth of the demand that starved it, so a slow pump can't keep it limping along on a trickle.
+        bool starved;
+        float starvedDrainPerTick;
+        public float ResumeSeconds = 1f;
         public Point16 AwakenerOrigin => Position;
         public int AwakenedStatueCount { get; set; }
         public int AwakenedEnemyCount { get; set; }
@@ -107,9 +113,21 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
 
             LiquidStack tank = InputLiquids[0];
             bool hasShimmer = HasShimmer;
-            isWorking = hasShimmer;
 
-            SyncMonolithFrames(hasShimmer && BackgroundActive);
+            // Multiplayer: the server owns the working state (it is synced to clients), so a client never decides starvation itself.
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                if (starved)
+                {
+                    float resumeAt = System.Math.Min(starvedDrainPerTick * 60f * ResumeSeconds, tank.Capacity - 0.01f);
+                    if (hasShimmer && tank.Amount >= resumeAt) starved = false;
+                }
+
+                if (!hasShimmer) starved = false;
+                isWorking = hasShimmer && !starved;
+            }
+
+            SyncMonolithFrames(isWorking && BackgroundActive);
 
             // The statue list is rebuilt only when this machine switches on or off.
             if (IsAwakening != wasAwakening)
@@ -118,9 +136,19 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
                 ModContent.GetInstance<AwakenedStatueSystem>().RescanFor(this);
             }
 
-            if (!hasShimmer) return;
+            if (!isWorking) return;
 
             float decreaseAmount = ShimmerDrainPerSecond * AwakenedStatueCount;
+
+            // The tank can't pay this tick: switch off instead of limping along on whatever the pump trickles in.
+            if (Main.netMode != NetmodeID.MultiplayerClient && decreaseAmount > 0f && tank.Amount < decreaseAmount)
+            {
+                starved = true;
+                starvedDrainPerTick = decreaseAmount;
+                isWorking = false;
+                return;
+            }
+
             tank.Amount -= decreaseAmount;
             if (tank.Amount <= 0f)
             {

@@ -1219,7 +1219,7 @@ tModLoader/other bases -> project types:
     +LiquidFuels:LiquidFuelTable[s] +BuildRecipes()[s]
 **MagicMaterializerTileEntity.cs** uses: AwakenedStatueSystem, BaseMachine, IStatueAwakener, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, MagicMaterializerRegistry, MaterializerToggle
   class MagicMaterializerTileEntity : BaseMachine, IStatueAwakener
-    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +ShimmerDrainPerSecond:float +AwakenRadiusTiles:int +IsAwakening:bool +AwakenerOrigin:Point16 +AwakenedStatueCount:int +AwakenedEnemyCount:int +BackgroundActive:bool +HasShimmer:bool +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +TreatsWorldLiquidAsInfinite(int)[ov] +OnKill()[ov] +Update()[ov]
+    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +ShimmerDrainPerSecond:float +AwakenRadiusTiles:int +IsAwakening:bool +ResumeSeconds:float +AwakenerOrigin:Point16 +AwakenedStatueCount:int +AwakenedEnemyCount:int +BackgroundActive:bool +HasShimmer:bool +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +TreatsWorldLiquidAsInfinite(int)[ov] +OnKill()[ov] +Update()[ov]
 **MagicMaterializerUIState.cs** uses: MachineUIElementEntry, MachineUIStateBase
   class MagicMaterializerUIState : MachineUIStateBase
     #BuildElements()[ov]
