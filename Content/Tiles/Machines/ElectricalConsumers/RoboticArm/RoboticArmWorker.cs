@@ -59,6 +59,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         int phaseTimer;
         int strikeLength;
         bool impactDone;
+        bool strikeQueued;     // the impact is waiting in RoboticArmDeferredEditSystem; the strike cannot finish before it ran
         int lastItemType = -1;
         Rectangle lastArea;
         bool hasPending;       // idle scan found a job; it starts as soon as the arm has power
@@ -179,6 +180,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
         void Abort()
         {
+            strikeQueued = false; // a strike still waiting in the deferred queue is thrown away
             phase = Phase.Idle;
             rescanTimer = 0;
             hasPending = false;
@@ -261,10 +263,11 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             if (!impactDone && phaseTimer >= (int)(strikeLength * impactPoint))
             {
                 impactDone = true;
-                ApplyStrike(held);
+                strikeQueued = true;
+                ModContent.GetInstance<RoboticArmDeferredEditSystem>().Enqueue(RunQueuedStrike);
             }
 
-            if (phaseTimer < strikeLength)
+            if (phaseTimer < strikeLength || strikeQueued)
                 return;
 
             // Strike finished. Placing is one strike per tile; mining keeps hitting the same tile until it changes, stops responding
@@ -297,6 +300,25 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
             Abort();
             rescanTimer = RescanInterval;
+        }
+
+        // Runs from RoboticArmDeferredEditSystem.PostUpdateEverything, outside the tile entity loop. Re-checks everything that could
+        // have changed since the strike was queued (arm removed, item taken out, worker aborted).
+        void RunQueuedStrike()
+        {
+            if (!strikeQueued)
+                return;
+
+            strikeQueued = false;
+
+            if (!TileEntity.ByID.TryGetValue(arm.ID, out TileEntity live) || !ReferenceEquals(live, arm))
+                return;
+
+            Item held = arm.InputSlots[0];
+            if (held.IsAir || !(arm.IsPlaceable(held) || arm.IsTool(held)))
+                return;
+
+            ApplyStrike(held);
         }
 
         // The world change of one strike, at the impact point of the swing. Everything runs inside the drop-capture scope.

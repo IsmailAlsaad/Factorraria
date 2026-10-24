@@ -26,6 +26,15 @@ namespace Factorraria.Content.Items.Wires
             Item.useStyle = ItemUseStyleID.Swing;
             Item.consumable = true;
         }
+        public override bool CanUseItem(Player player)
+        {
+            // Out of reach: refuse the use so the swing never starts and nothing is consumed. Only the owner has a meaningful
+            // tileTargetX/Y; other copies of the player (server, other clients) must not be blocked by it.
+            if (!FactorrariaNet.IsOwner(player))
+                return true;
+
+            return player.IsTargetTileInItemRange(Item);
+        }
 
         public override bool? UseItem(Player player)
         {
