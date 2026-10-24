@@ -52,13 +52,13 @@ namespace Factorraria.Common.UI.CustomUIElements
             // Switched off by a wire signal: a static disabled background behind the empty bolt, no pulses and no fill.
             if (IsDisabled != null && IsDisabled())
             {
+                spriteBatch.Draw(ElectricityEmptyIcon.Value, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+
                 Texture2D disabledBackground = ElectricityDisabledBackground?.Value;
                 if (disabledBackground != null)
                     spriteBatch.Draw(disabledBackground, drawPosition, null, Color.White, 0f, Vector2.Zero, dimensions.Width / disabledBackground.Width, SpriteEffects.None, 0f);
                 else
                     spriteBatch.Draw(ElectricityIconBackground.Value, drawPosition, null, new Color(110, 110, 110) * 0.6f, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-
-                spriteBatch.Draw(ElectricityEmptyIcon.Value, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
                 return;
             }
 
