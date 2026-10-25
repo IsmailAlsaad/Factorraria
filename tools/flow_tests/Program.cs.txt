@@ -1,0 +1,259 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Factorraria.Common.Networks.Flow;
+
+static class T
+{
+    static int pass, fail;
+    public static void Check(bool ok, string name) { if (ok) pass++; else { fail++; Console.WriteLine("FAIL: " + name); } }
+    public static void Near(float a, float b, string name, float tol = 1e-3f) => Check(Math.Abs(a - b) <= tol, name + $" (got {a}, want {b})");
+    public static int Done() { Console.WriteLine($"{pass} passed, {fail} failed"); return fail; }
+}
+
+// Tiny world: nodes added by tile coordinates. 'P' pipe, '>' '<' '^' 'v' ON motor facing that way, lowercase 'o' variants = off motors.
+class World
+{
+    public List<FlowNode> Nodes = new();
+    public List<FlowPort> Sources = new(), Sinks = new();
+    public List<float> Offer = new(); public List<int> Type = new(); public List<float> Space = new();
+    public float Strength = 5 * 3600f;
+    public float Decay = 0.5f * 3600f;
+    public float Cap = float.MaxValue;
+
+    public int Pipe(int x, int y) { Nodes.Add(new FlowNode { X = x, Y = y }); return Nodes.Count - 1; }
+    public int Motor(int x, int y, FlowDir f, bool on = true, float? strength = null) { Nodes.Add(new FlowNode { X = x, Y = y, IsMotor = true, MotorOn = on, Facing = f, Strength = strength ?? Strength }); return Nodes.Count - 1; }
+    public void Row(int x0, int x1, int y) { for (int x = x0; x <= x1; x++) Pipe(x, y); }
+    public int Src(int node, FlowDir mouth, float offer, int type, int owner = -1) { Sources.Add(new FlowPort { Node = node, Mouth = mouth, Owner = owner }); Offer.Add(offer); Type.Add(type); return Sources.Count - 1; }
+    public int Sink(int node, FlowDir mouth, float space, int owner = -1) { Sinks.Add(new FlowPort { Node = node, Mouth = mouth, Owner = owner }); Space.Add(space); return Sinks.Count - 1; }
+    public int At(int x, int y) => Nodes.FindIndex(n => n.X == x && n.Y == y);
+
+    public List<FlowRoute> Routes() => FlowRouteFinder.Build(Nodes.ToArray(), Sources.ToArray(), Sinks.ToArray(), Decay, Cap);
+
+    public (List<FlowTransfer> list, float[] budget) Tick(FlowSolver solver, List<FlowRoute> routes)
+    {
+        var budget = new float[Nodes.Count];
+        for (int i = 0; i < Nodes.Count; i++) if (Nodes[i].IsMotor && Nodes[i].MotorOn) budget[i] = Math.Min(Nodes[i].Strength, Cap) / 3600f;
+        var space = Space.ToArray();
+        var offer = Offer.ToArray();
+        var list = new List<FlowTransfer>();
+        solver.Solve(routes, offer, Type.ToArray(), Sinks.Count, (k, t) => space[k], budget, list);
+        return (list, budget);
+    }
+}
+
+static class Program
+{
+    const float Big = 1e9f;
+    static float Sum(List<FlowTransfer> l) => l.Sum(t => t.Amount);
+
+    static int Main()
+    {
+        // 1. Single pump, source behind, sink in front.
+        {
+            var w = new World(); w.Row(0, 1, 0); int m = w.Motor(2, 0, FlowDir.Right); w.Row(3, 4, 0);
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0); w.Sink(w.At(4, 0), FlowDir.Right, Big);
+            var routes = w.Routes(); T.Check(routes.Count == 1, "1 route exists");
+            var (l, _) = w.Tick(new FlowSolver(), routes); T.Near(Sum(l), 5f, "1 single pump moves strength/3600 per tick");
+        }
+        // 2. Off pump alone: nothing moves (a pump needs an ON pump on the route).
+        {
+            var w = new World(); w.Row(0, 1, 0); w.Motor(2, 0, FlowDir.Right, on: false); w.Row(3, 4, 0);
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0); w.Sink(w.At(4, 0), FlowDir.Right, Big);
+            T.Check(w.Routes().Count == 0, "2 off pump alone gives no route");
+        }
+        // 3. Wrong way: sink behind, source in front.
+        {
+            var w = new World(); w.Row(0, 1, 0); w.Motor(2, 0, FlowDir.Right); w.Row(3, 4, 0);
+            w.Src(w.At(4, 0), FlowDir.Right, Big, 0); w.Sink(w.At(0, 0), FlowDir.Left, Big);
+            T.Check(w.Routes().Count == 0, "3 liquid never flows against a pump");
+        }
+        // 4. T-junction: one source, two sinks share the pump budget fairly, nothing over-allocated.
+        {
+            var w = new World(); w.Row(0, 1, 0); w.Motor(2, 0, FlowDir.Right); w.Row(3, 4, 0);
+            w.Pipe(3, 1); w.Pipe(4, 1);   // two branches going down from the line
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0);
+            int a = w.Sink(w.At(3, 1), FlowDir.Down, Big); int b = w.Sink(w.At(4, 1), FlowDir.Down, Big);
+            var routes = w.Routes(); var (l, _) = w.Tick(new FlowSolver(), routes);
+            T.Check(routes.Count == 2, "4 two routes");
+            T.Near(Sum(l), 5f, "4 total = pump budget (not doubled by the branch)");
+            T.Check(l.Count == 2 && Math.Abs(l[0].Amount - l[1].Amount) < 1e-4f, "4 split equally");
+        }
+        // 5. Sink with little space: leftover goes to the other sink.
+        {
+            var w = new World(); w.Row(0, 1, 0); w.Motor(2, 0, FlowDir.Right); w.Row(3, 4, 0); w.Pipe(4, -1); w.Pipe(4, 1);
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0);
+            w.Sink(w.At(4, -1), FlowDir.Up, 0.01f); w.Sink(w.At(4, 1), FlowDir.Down, Big);
+            var (l, _) = w.Tick(new FlowSolver(), w.Routes());
+            T.Near(Sum(l), 5f, "5 full budget used when one sink is nearly full");
+            T.Near(l.First(t => t.Dst == 0).Amount, 0.01f, "5 small sink gets only its space");
+        }
+        // 6. Source with small offer limits the transfer.
+        {
+            var w = new World(); w.Row(0, 1, 0); w.Motor(2, 0, FlowDir.Right); w.Row(3, 4, 0);
+            w.Src(w.At(0, 0), FlowDir.Left, 0.25f, 0); w.Sink(w.At(4, 0), FlowDir.Right, Big);
+            var (l, _) = w.Tick(new FlowSolver(), w.Routes()); T.Near(Sum(l), 0.25f, "6 offer limit");
+        }
+        // 7. Climb: source BELOW the pump level (liquid rises) is penalized, source ABOVE (liquid falls) is not.
+        {
+            var w = new World(); w.Motor(5, 0, FlowDir.Right);
+            for (int y = 0; y <= 3; y++) w.Pipe(4, y); w.Pipe(3, 3);      // intake goes down 3 tiles: source at (3,3), 3 tiles below
+            for (int x = 6; x <= 7; x++) w.Pipe(x, 0);
+            w.Src(w.At(3, 3), FlowDir.Left, Big, 0); w.Sink(w.At(7, 0), FlowDir.Right, Big);
+            var r = w.Routes(); T.Check(r.Count == 1 && r[0].Climbs == 3, "7a uphill intake climbs 3");
+            T.Near(r[0].RatePerMinute, 5 * 3600f - 3 * 0.5f * 3600f, "7a rate reduced by 3 climbs");
+
+            var w2 = new World(); w2.Motor(5, 0, FlowDir.Right);
+            for (int y = -3; y <= 0; y++) w2.Pipe(4, y); w2.Pipe(3, -3);   // source 3 tiles ABOVE the pump
+            for (int x = 6; x <= 7; x++) w2.Pipe(x, 0);
+            w2.Src(w2.At(3, -3), FlowDir.Left, Big, 0); w2.Sink(w2.At(7, 0), FlowDir.Right, Big);
+            var r2 = w2.Routes(); T.Check(r2.Count == 1 && r2[0].Climbs == 0, "7b downhill intake has no climb (bug fixed)");
+            T.Near(r2[0].RatePerMinute, 5 * 3600f, "7b full rate downhill");
+        }
+        // 8. Climb on the discharge side, and cut-off when the climb eats the whole rate.
+        {
+            var w = new World(); w.Motor(0, 0, FlowDir.Right); w.Pipe(1, 0);
+            for (int y = 0; y >= -9; y--) w.Pipe(2, y);   // 9 tiles up
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0);      // source attached at the motor's back
+            w.Sink(w.At(2, -9), FlowDir.Up, Big);
+            var r = w.Routes(); T.Check(r.Count == 1 && r[0].Climbs == 9, "8 climbs 9");
+            T.Near(r[0].RatePerMinute, 5 * 3600f - 9 * 0.5f * 3600f, "8 rate 0.5/min left");
+            var w2 = new World(); w2.Motor(0, 0, FlowDir.Right); w2.Pipe(1, 0);
+            for (int y = 0; y >= -10; y--) w2.Pipe(2, y);
+            w2.Src(w2.At(0, 0), FlowDir.Left, Big, 0); w2.Sink(w2.At(2, -10), FlowDir.Up, Big);
+            T.Check(w2.Routes().Count == 0, "8 10 climbs: pump too weak, no route");
+        }
+        // 9. Series pumps: the second pump adds climb budget; rate is capped by the weakest pump.
+        {
+            var w = new World(); w.Motor(0, 0, FlowDir.Right); w.Pipe(1, 0); w.Motor(2, 0, FlowDir.Right); w.Pipe(3, 0);
+            for (int y = -1; y >= -12; y--) w.Pipe(3, y);   // 12 climbs
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0); w.Sink(w.At(3, -12), FlowDir.Up, Big);
+            var r = w.Routes(); T.Check(r.Count == 1 && r[0].Pumps.Length == 2, "9 two pumps on route");
+            T.Near(r[0].RatePerMinute, Math.Min(5 * 3600f, 10 * 3600f - 12 * 0.5f * 3600f), "9 series rate");
+            var (l, budget) = w.Tick(new FlowSolver(), r); T.Check(l.Count == 1, "9 moves");
+        }
+        // 10. Off pump in series acts as a pipe when another pump on the route is ON.
+        {
+            var w = new World(); w.Motor(0, 0, FlowDir.Right); w.Pipe(1, 0); w.Motor(2, 0, FlowDir.Right, on: false); w.Pipe(3, 0);
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0); w.Sink(w.At(3, 0), FlowDir.Right, Big);
+            var r = w.Routes(); T.Check(r.Count == 1 && r[0].Pumps.Length == 1, "10 off pump passes liquid, only the ON pump counts");
+        }
+        // 11. Motor perpendicular to a pipe: no connection.
+        {
+            var w = new World(); w.Pipe(0, 0); w.Motor(1, 0, FlowDir.Up); w.Pipe(1, -1);
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0); w.Sink(w.At(1, -1), FlowDir.Up, Big);
+            T.Check(w.Routes().Count == 0, "11 pipe beside a motor's side is not connected");
+        }
+        // 12. Active type: A drains first, then B takes over; mixed sources never mix in one tick.
+        {
+            var w = new World(); w.Row(0, 1, 0); w.Motor(2, 0, FlowDir.Right); w.Row(3, 4, 0);
+            int a = w.Src(w.At(0, 0), FlowDir.Left, 0.2f, 1); int b = w.Src(w.At(1, 0), FlowDir.Up, 5f, 2);
+            w.Sink(w.At(4, 0), FlowDir.Right, Big);
+            var routes = w.Routes(); var solver = new FlowSolver();
+            var (l1, _) = w.Tick(solver, routes);
+            T.Check(solver.ActiveType == 1 && l1.All(t => t.Type == 1), "12 first type found is pumped alone");
+            w.Offer[a] = 0f;   // type 1 is drained
+            var (l2, _) = w.Tick(solver, routes);
+            T.Check(solver.ActiveType == 2 && l2.All(t => t.Type == 2) && Sum(l2) > 0, "12 next type takes over when the first is drained");
+            w.Offer[a] = 3f;   // type 1 comes back, but type 2 is still flowing: it stays active
+            var (l3, _) = w.Tick(solver, routes);
+            T.Check(solver.ActiveType == 2, "12 active type is sticky while it can still move");
+        }
+        // 13. A type nobody can accept does not stall the network.
+        {
+            var w = new World(); w.Row(0, 1, 0); w.Motor(2, 0, FlowDir.Right); w.Row(3, 4, 0);
+            w.Src(w.At(0, 0), FlowDir.Left, 5f, 1); w.Src(w.At(1, 0), FlowDir.Up, 5f, 2);
+            w.Sink(w.At(4, 0), FlowDir.Right, Big);
+            var routes = w.Routes(); var solver = new FlowSolver();
+            // sinkSpace refuses type 1
+            var budget = new float[w.Nodes.Count]; budget[2] = 5f; var list = new List<FlowTransfer>();
+            solver.Solve(routes, w.Offer.ToArray(), w.Type.ToArray(), 1, (k, t) => t == 1 ? 0f : Big, budget, list);
+            T.Check(solver.ActiveType == 2 && Sum(list) > 0, "13 skips a type no sink accepts");
+        }
+        // 14. Same owner never feeds itself.
+        {
+            var w = new World(); w.Row(0, 1, 0); w.Motor(2, 0, FlowDir.Right); w.Row(3, 4, 0);
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0, owner: 7); w.Sink(w.At(4, 0), FlowDir.Right, Big, owner: 7);
+            T.Check(w.Routes().Count == 0, "14 same machine: no self feed");
+        }
+        // 15. Cap: global bottleneck limits both route rate and pump budget.
+        {
+            var w = new World { Cap = 2 * 3600f }; w.Row(0, 1, 0); w.Motor(2, 0, FlowDir.Right); w.Row(3, 4, 0);
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0); w.Sink(w.At(4, 0), FlowDir.Right, Big);
+            var (l, _) = w.Tick(new FlowSolver(), w.Routes()); T.Near(Sum(l), 2f, "15 cap respected");
+        }
+        // 16. Machine between two pumps: receives from the first, feeds the second.
+        {
+            var w = new World(); w.Pipe(0, 0); w.Motor(1, 0, FlowDir.Right); w.Pipe(2, 0); w.Motor(3, 0, FlowDir.Right); w.Pipe(4, 0);
+            w.Src(w.At(0, 0), FlowDir.Left, Big, 0, owner: 1);                       // tank A
+            w.Sink(w.At(2, 0), FlowDir.Up, Big, owner: 2); w.Src(w.At(2, 0), FlowDir.Up, Big, 0, owner: 2);   // machine B: input and output at the same pipe
+            w.Sink(w.At(4, 0), FlowDir.Right, Big, owner: 3);                         // tank C
+            var r = w.Routes(); var (l, _) = w.Tick(new FlowSolver(), r);
+            T.Check(r.Any(x => x.Src == 0 && x.Dst == 0) && r.Any(x => x.Src == 1 && x.Dst == 1), "16 A->B and B->C routes exist");
+            T.Check(!r.Any(x => x.Src == 1 && x.Dst == 0), "16 B never feeds itself");
+        }
+        // 17. Loop terminates and conserves.
+        {
+            var w = new World();
+            w.Motor(0, 0, FlowDir.Right); w.Row(1, 3, 0); w.Pipe(3, 1); w.Pipe(3, 2); w.Row(0, 2, 2); w.Pipe(0, 1);   // ring back to the motor's back
+            w.Src(w.At(0, 1), FlowDir.Left, Big, 0); w.Sink(w.At(3, 1), FlowDir.Right, Big);
+            var r = w.Routes(); var (l, _) = w.Tick(new FlowSolver(), r);
+            T.Check(Sum(l) <= 5f + 1e-4f, "17 loop conserves");
+        }
+
+        RandomInvariants();
+        return T.Done();
+    }
+
+    // Random grids: invariants must hold on every tick: no source/sink/pump over-allocation, one type per tick, no NaN.
+    static void RandomInvariants()
+    {
+        var rng = new Random(12345);
+        for (int iter = 0; iter < 400; iter++)
+        {
+            var w = new World(); w.Cap = rng.Next(3) == 0 ? rng.Next(1, 8) * 3600f : float.MaxValue;
+            int size = rng.Next(4, 12);
+            var occupied = new HashSet<(int, int)>();
+            for (int i = 0; i < size * 3; i++)
+            {
+                int x = rng.Next(size), y = rng.Next(size);
+                if (!occupied.Add((x, y))) continue;
+                if (rng.Next(6) == 0) w.Motor(x, y, (FlowDir)rng.Next(4), on: rng.Next(4) != 0, strength: rng.Next(1, 9) * 3600f);
+                else w.Pipe(x, y);
+            }
+            int ports = rng.Next(2, 8);
+            for (int i = 0; i < ports; i++)
+            {
+                int node = rng.Next(w.Nodes.Count);
+                var mouth = (FlowDir)rng.Next(4); int owner = rng.Next(-1, 4);
+                if (rng.Next(2) == 0) w.Src(node, mouth, (float)rng.NextDouble() * 5f, rng.Next(0, 3), owner);
+                else w.Sink(node, mouth, (float)rng.NextDouble() * 5f, owner);
+            }
+            if (w.Sources.Count == 0 || w.Sinks.Count == 0) continue;
+
+            var routes = w.Routes(); var solver = new FlowSolver();
+            for (int tick = 0; tick < 5; tick++)
+            {
+                var budgetBefore = new float[w.Nodes.Count];
+                for (int i = 0; i < w.Nodes.Count; i++) if (w.Nodes[i].IsMotor && w.Nodes[i].MotorOn) budgetBefore[i] = Math.Min(w.Nodes[i].Strength, w.Cap) / 3600f;
+                var (l, _) = w.Tick(solver, routes);
+
+                var perSrc = new float[w.Sources.Count]; var perDst = new float[w.Sinks.Count]; var perPump = new float[w.Nodes.Count];
+                foreach (var t in l)
+                {
+                    T.Check(!float.IsNaN(t.Amount) && t.Amount > 0, "rand amount valid");
+                    T.Check(t.Type == solver.ActiveType, "rand one type per tick");
+                    perSrc[t.Src] += t.Amount; perDst[t.Dst] += t.Amount;
+                    foreach (int p in routes[t.Route].Pumps) perPump[p] += t.Amount;
+                    T.Check(t.Amount <= routes[t.Route].RatePerTick + 1e-4f, "rand route rate");
+                }
+                for (int s = 0; s < perSrc.Length; s++) T.Check(perSrc[s] <= w.Offer[s] + 1e-4f, "rand source not over-drawn");
+                for (int k = 0; k < perDst.Length; k++) T.Check(perDst[k] <= w.Space[k] + 1e-4f, "rand sink not over-filled");
+                for (int p = 0; p < perPump.Length; p++) T.Check(perPump[p] <= budgetBefore[p] + 1e-4f, "rand pump budget");
+
+                for (int s = 0; s < perSrc.Length; s++) w.Offer[s] = Math.Max(0, w.Offer[s] - perSrc[s]);
+                for (int k = 0; k < perDst.Length; k++) w.Space[k] = Math.Max(0, w.Space[k] - perDst[k]);
+            }
+        }
+    }
+}
