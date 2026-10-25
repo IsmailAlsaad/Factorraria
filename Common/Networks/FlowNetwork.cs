@@ -60,7 +60,7 @@ namespace Factorraria.Common.Networks
 
         // The bottleneck: the weakest pipe tier in the network, and every OFF motor counts as a pipe of its own tier.
         public float Cap = float.MaxValue;
-        public float DecayPerClimbPerMinute = 0.5f * 3600f;
+        public float DecayPerClimbPerMinute = 0.25f * 3600f;
 
         public double BuildMs;      // last full build, for /fflow
         public double RefreshMs;    // last route refresh
