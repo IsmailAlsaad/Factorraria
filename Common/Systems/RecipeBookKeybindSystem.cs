@@ -14,14 +14,20 @@ namespace Factorraria.Common.Systems
     public class RecipeBookKeybindSystem : ModSystem
     {
         public static ModKeybind ItemSearchKey { get; private set; }
+        public static ModKeybind ToggleKey { get; private set; }
 
         public override void Load()
         {
             if (Main.dedServ) return;
             ItemSearchKey = KeybindLoader.RegisterKeybind(Mod, "RecipeBookItemSearch", Keys.I);
+            ToggleKey = KeybindLoader.RegisterKeybind(Mod, "RecipeBookToggle", Keys.OemTilde);   // the ` key
         }
 
-        public override void Unload() => ItemSearchKey = null;
+        public override void Unload()
+        {
+            ItemSearchKey = null;
+            ToggleKey = null;
+        }
 
         /// <summary>The key the player currently has bound (first one), for tooltips.</summary>
         public static string ItemSearchKeyName()
@@ -37,7 +43,16 @@ namespace Factorraria.Common.Systems
     {
         public override void ProcessTriggers(TriggersSet triggersSet)
         {
-            if (Main.dedServ || RecipeBookKeybindSystem.ItemSearchKey == null) return;
+            if (Main.dedServ) return;
+
+            // Toggle the book. Opening it also opens the inventory (OpenInternal sets Main.playerInventory), so it works from anywhere.
+            if (RecipeBookKeybindSystem.ToggleKey != null && RecipeBookKeybindSystem.ToggleKey.JustPressed)
+            {
+                RecipeBookSystem.Toggle();
+                return;
+            }
+
+            if (RecipeBookKeybindSystem.ItemSearchKey == null) return;
             if (!RecipeBookKeybindSystem.ItemSearchKey.JustPressed) return;
             if (!Main.playerInventory) return;
 

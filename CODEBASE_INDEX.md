@@ -773,7 +773,7 @@ tModLoader/other bases -> project types:
     +AllMachines:HashSet<TileEntity>[s] +ActivePowerNetworks:List<PowerNetwork>[s] +gridNeedsRebuilding:bool[s] +PostUpdateWorld()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RegisterMachineToMasterList(TileEntity)[s]
 **RecipeBookKeybindSystem.cs** uses: RecipeBookLayout, RecipeBookSystem
   class RecipeBookKeybindSystem : ModSystem
-    +ItemSearchKey:ModKeybind[s] +Load()[ov] +Unload()[ov] +ItemSearchKeyName()[s]
+    +ItemSearchKey:ModKeybind[s] +ToggleKey:ModKeybind[s] +Load()[ov] +Unload()[ov] +ItemSearchKeyName()[s]
   class RecipeBookKeybindPlayer : ModPlayer
     +ProcessTriggers(TriggersSet)[ov]
 **RecipeBookSystem.cs** uses: CartChestUISystem, Factorraria, MachineUISystem, RecipeBookArt, RecipeBookButtonState, RecipeBookState, RecipeIcon

@@ -376,6 +376,7 @@ Configs: {
 }
 
 Keybinds.RecipeBookItemSearch.DisplayName: Recipe Book - Show Recipes Using Hovered Item
+Keybinds.RecipeBookToggle.DisplayName: Recipe Book - Open / Close
 
 Projectiles: {
 	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
