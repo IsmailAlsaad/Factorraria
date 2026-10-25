@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.Configs;
+﻿using Factorraria.Common.Machines;
+using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -26,9 +27,12 @@ namespace Factorraria.Common.UI.CustomUIElements
         Func<bool> IsDisabled; // optional: while this returns true (switched off by a wire) the icon shows the disabled background
         Asset<Texture2D> ElectricityDisabledBackground; // Lightning_Off_Background.png; null until the art exists
 
-        public ElectricityUIIcon(Func<float> getAmount, Func<bool> isVisible = null, Func<bool> isDisabled = null)
+        BaseMachine Machine; // optional: when set, hovering the icon shows the power readout next to the cursor
+
+        public ElectricityUIIcon(Func<float> getAmount, Func<bool> isVisible = null, Func<bool> isDisabled = null, BaseMachine machine = null)
         {
             FillAmount = getAmount;
+            Machine = machine;
             IsVisible = isVisible;
             IsDisabled = isDisabled;
 
@@ -43,6 +47,8 @@ namespace Factorraria.Common.UI.CustomUIElements
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
             if (IsVisible != null && !IsVisible()) return;
+
+            ShowHoverText();
 
             CalculatedStyle dimensions = GetDimensions();
             Vector2 drawPosition = dimensions.Position();
@@ -100,6 +106,41 @@ namespace Factorraria.Common.UI.CustomUIElements
             Vector2 overlayPosition = drawPosition + new Vector2(0, yOffset * scale);
 
             spriteBatch.Draw(ElectricityFullIcon.Value, overlayPosition, spriteSlice, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        }
+
+        // Hover readout, drawn at the cursor by ElectricityHoverTip: "{demand}/{supply}" coloured by load (green under 40%, yellow under 80%,
+        // red above), "Off" in red when a wire switched the machine off, "Off" in grey when it shares no grid with another machine,
+        // "No power" in red when the grid cannot cover its demand (or has no supply at all).
+        void ShowHoverText()
+        {
+            if (Machine == null || !IsMouseHovering) return;
+
+            Main.LocalPlayer.mouseInterface = true;
+
+            if (Machine.WireToggle)
+            {
+                ElectricityHoverTip.Show("Off", new Color(240, 70, 70));
+                return;
+            }
+
+            if (!Machine.PowerNetLinked)
+            {
+                ElectricityHoverTip.Show("Off", new Color(150, 150, 150));
+                return;
+            }
+
+            float demand = Machine.PowerNetDemand;
+            float supply = Machine.PowerNetSupply;
+
+            if (supply <= 0f || demand > supply)
+            {
+                ElectricityHoverTip.Show("No power", new Color(240, 70, 70));
+                return;
+            }
+
+            float ratio = demand / supply;
+            Color color = ratio < 0.4f ? new Color(80, 220, 80) : ratio < 0.8f ? new Color(255, 220, 60) : new Color(240, 70, 70);
+            ElectricityHoverTip.Show((int)MathF.Round(demand) + "/" + (int)MathF.Round(supply), color);
         }
 
         float Remap(float value, float fromLow, float fromHigh, float toLow, float toHigh)

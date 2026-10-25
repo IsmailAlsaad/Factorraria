@@ -26,7 +26,7 @@ namespace Factorraria.Content.Tiles.Machines.GelBurner
             list.Add(FuelSlotEntry(new Vector2(-70, -30)));
 
             list.Add(new MachineUIElementEntry(
-                new ElectricityUIIcon(Entity.GetUseFraction, null, () => Entity.WireToggle),
+                new ElectricityUIIcon(Entity.GetUseFraction, null, () => Entity.WireToggle, Entity),
                 new Vector2(8, -50), new Vector2(40, 40)));
 
             return list;

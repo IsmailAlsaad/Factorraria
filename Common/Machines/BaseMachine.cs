@@ -1233,12 +1233,17 @@ namespace Factorraria.Common.Machines
             if (isOn) flags |= 1;
             if (isWorking) flags |= 2;
             if (WireToggle) flags |= 4;
+            if (IsElectric && PowerNetLinked) flags |= 8;
             w.Write(flags);
 
             int step = Math.Max(1, progressStep);
             w.Write7BitEncodedInt(Math.Max(0, WorkProgress) / step * step);
             w.Write7BitEncodedInt(Math.Max(0, CraftsFinished));
-            if (IsElectric) w.Write(MachineLightSync.QuantizeUse(GetSnapshotUseFraction()));
+            if (IsElectric)
+            {
+                w.Write(MachineLightSync.QuantizeUse(GetSnapshotUseFraction()));
+                WritePowerNet(w);
+            }
             w.Write(recipeFingerprint);
 
             w.Write7BitEncodedInt(Fuels.Length);
@@ -1264,6 +1269,7 @@ namespace Factorraria.Common.Machines
             int progress = r.Read7BitEncodedInt();
             int crafts = r.Read7BitEncodedInt();
             byte use = IsElectric ? r.ReadByte() : (byte)0;
+            if (IsElectric) ReadPowerNet(r, flags);
             uint fingerprint = r.ReadUInt32();
 
             isOn = (flags & 1) != 0;
@@ -1312,10 +1318,15 @@ namespace Factorraria.Common.Machines
             if (isOn) flags |= 1;
             if (isWorking) flags |= 2;
             if (WireToggle) flags |= 4;
+            if (IsElectric && PowerNetLinked) flags |= 8;
             w.Write(flags);
             w.Write7BitEncodedInt(Math.Max(0, WorkProgress));
             w.Write7BitEncodedInt(Math.Max(0, CraftsFinished));
-            if (IsElectric) w.Write(GetSnapshotUseFraction());
+            if (IsElectric)
+            {
+                w.Write(GetSnapshotUseFraction());
+                WritePowerNet(w);
+            }
 
             MachineSnapshot.WriteRecipes(this, w);
             MachineSnapshot.WriteItems(InputSlots, w);
@@ -1346,7 +1357,11 @@ namespace Factorraria.Common.Machines
             WireToggle = (flags & 4) != 0;
             WorkProgress = r.Read7BitEncodedInt();
             CraftsFinished = r.Read7BitEncodedInt();
-            if (IsElectric) SetSnapshotUseFraction(r.ReadSingle());
+            if (IsElectric)
+            {
+                SetSnapshotUseFraction(r.ReadSingle());
+                ReadPowerNet(r, flags);
+            }
 
             MachineSnapshot.ReadRecipes(this, r);
             MachineSnapshot.ReadItems(InputSlots, r);
@@ -1362,6 +1377,26 @@ namespace Factorraria.Common.Machines
                 if (i < Fuels.Length)
                     Fuels[i].Restore(remaining, capacity);
             }
+        }
+
+        // Power readout for the hover text of ElectricityUIIcon. PowerNetwork.Tick writes these on the server / in single-player for every
+        // member of the grid (the network's total demand and supply, and whether the machine shares a grid with at least one other machine).
+        // A client replica gets them from the light state and the detail channel: flag bit 8 = linked, then demand and supply as ints.
+        public float PowerNetDemand;
+        public float PowerNetSupply;
+        public bool PowerNetLinked;
+
+        void WritePowerNet(BinaryWriter w)
+        {
+            w.Write7BitEncodedInt(Math.Max(0, (int)MathF.Round(PowerNetDemand)));
+            w.Write7BitEncodedInt(Math.Max(0, (int)MathF.Round(PowerNetSupply)));
+        }
+
+        void ReadPowerNet(BinaryReader r, byte flags)
+        {
+            PowerNetLinked = (flags & 8) != 0;
+            PowerNetDemand = r.Read7BitEncodedInt();
+            PowerNetSupply = r.Read7BitEncodedInt();
         }
 
         float GetSnapshotUseFraction() => this is IElectricConsumer consumer ? consumer.useFraction : this is IElectricProducer producer ? producer.useFraction : 0f;

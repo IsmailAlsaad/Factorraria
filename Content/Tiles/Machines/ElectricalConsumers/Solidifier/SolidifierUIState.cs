@@ -34,7 +34,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier
             list.Add(OutputSlotEntry(0, new Vector2(-4f, 57f)));
 
             list.Add(new MachineUIElementEntry(
-                new ElectricityUIIcon(Entity.GetUseFraction, null, () => Entity.WireToggle),
+                new ElectricityUIIcon(Entity.GetUseFraction, null, () => Entity.WireToggle, Entity),
                 new Vector2(8, -50), new Vector2(40, 40)));
 
             return list;

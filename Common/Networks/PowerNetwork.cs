@@ -38,16 +38,31 @@ namespace Factorraria.Common.PowerGrid
                 isGridStable = false;
             }
 
+            // Readout for the machine UI hover text: the grid totals, and whether this machine shares a grid with any other machine.
+            bool linked = electricConsumers.Count + electricProducers.Count > 1;
+
             foreach (var producer in electricProducers)
             {
                 producer.isOn = isGridStable;
                 producer.useFraction = UseFraction;
+                PublishReadout(producer, totalDemand, totalSupply, linked);
             }
 
             foreach (var consumer in electricConsumers)
             {
                 consumer.isOn = isGridStable;
                 consumer.useFraction = isGridStable ? 1f : 0f;
+                PublishReadout(consumer, totalDemand, totalSupply, linked);
+            }
+        }
+
+        static void PublishReadout(object member, float demand, float supply, bool linked)
+        {
+            if (member is BaseMachine machine)
+            {
+                machine.PowerNetDemand = demand;
+                machine.PowerNetSupply = supply;
+                machine.PowerNetLinked = linked;
             }
         }
 
