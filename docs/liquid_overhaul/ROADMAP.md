@@ -61,10 +61,12 @@ One line per step. `[ ]` not started, `[~]` applied untested, `[x]` tested and d
 
 - [x] 1 Pure core: route finder + solver (`patch_flow_core.ps1`; 40,547 sandbox checks; inert in game)
 - [x] 2 Topology build + `/fflow` (`patch_flow_topology.ps1`; tested in game, everything works, builds 0.03-0.05 ms)
-- [~] 3 New tick (`FlowNetwork.Tick`), `LiquidWorldBanks`, tanks forget type (`patch_flow_tick.ps1`; applied untested, no `UseNewFlow` switch by Ismail's decision)
-- [~] 4 Motors: `flowNeedsRecalculating`, `wasOn` and the old reset deleted; `FlowNetwork.Tick` detects power flips (`patch_flow_motors.ps1`; applied untested)
-- [~] 5 Visual debug overlay on `FlowNetworks`, `/fpipes` reads `FlowNetworks` (`patch_flow_debug.ps1`; applied untested)
-- [~] 6 Cleanup: old `LiquidNetwork`, `ResolveFlow`, saved network types removed (`patch_flow_cleanup.ps1`; applied untested; delete `Common\Networks\LiquidNetwork.cs` by hand afterwards)
+- [x] 3 New tick (`FlowNetwork.Tick`), `LiquidWorldBanks`, tanks forget type (`patch_flow_tick.ps1`; applied untested, no `UseNewFlow` switch by Ismail's decision)
+- [x] 4 Motors: `flowNeedsRecalculating`, `wasOn` and the old reset deleted; `FlowNetwork.Tick` detects power flips (`patch_flow_motors.ps1`; applied untested)
+- [x] 5 Visual debug overlay on `FlowNetworks`, `/fpipes` reads `FlowNetworks` (`patch_flow_debug.ps1`; applied untested)
+- [x] 6 Cleanup: old `LiquidNetwork`, `ResolveFlow`, saved network types removed (`patch_flow_cleanup.ps1`; applied untested; delete `Common\Networks\LiquidNetwork.cs` by hand afterwards)
+
+Steps 3-6 passed Ismail's single-player tests (flow, motors and power, world liquid, overlay, /fflow, /fpipes), 2026-10-25. Open: multiplayer R9 (a network a client builds on a dedicated server does not pump until a reload), see docs/multiplayer/ROADMAP.md verification item 25.
 
 ### Step 3 decisions (Ismail, 2026-10-25)
 - World banking: the per-cell `withdrawBank` / `depositBank` design of step 3 below, shared by all networks in one `LiquidWorldBanks` (`LiquidNetworkSystem.WorldBanks`), `FlushAll()` before every flow-network rebuild.

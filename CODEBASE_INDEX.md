@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-25 | 276 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-25 | 275 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -705,7 +705,6 @@ tModLoader/other bases -> project types:
     +Describe(FlowSource)[s] +Describe(FlowSink)[s] +Report(bool)[s]
   class FlowNetworkCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
-**LiquidNetwork.cs**
 **LiquidWorldBanks.cs** uses: Factorraria, LiquidBroadcastSystem, LiquidTypeRegistry
   sealed class LiquidWorldBanks
     +WithdrawBankCount:int +DepositBankCount:int +WorldSourceOffer(Point) +WorldSinkSpace(Point,int) +AddWithdraw(Point,float) +AddDeposit(Point,int,float) +FlushAll() +Clear()
