@@ -214,6 +214,20 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
                 .AddIngredient(ModContent.ItemType<TinWireItem>(), 8)
                 .AddTile(TileID.Anvils)
                 .Register();
+
+            // Wooden Power Pole
+            Recipe.Create(ModContent.ItemType<WoodenPowerPoleItem>(), 1)
+                .AddRecipeGroup(RecipeGroupID.Wood, 35)
+                .AddRecipeGroup(RecipeGroupID.IronBar, 8)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            // PlatinumPower Pole
+            Recipe.Create(ModContent.ItemType<PlatinumPowerPoleItem>(), 1)
+                .AddIngredient(ItemID.PlatinumBar, 15)
+                .AddIngredient(ModContent.ItemType<GoldWireItem>(), 5)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
     }
 }

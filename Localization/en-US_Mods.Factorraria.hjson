@@ -50,6 +50,20 @@ Items: {
 		Tooltip: ""
 	}
 
+	WoodenPowerPoleItem: {
+		DisplayName: Wooden Power Pole
+		Tooltip: "Used for long distance power transmission"
+	}
+
+	PlatinumPowerPoleItem: {
+		DisplayName: Platinum Power Pole
+		Tooltip: 
+		'''
+		Used for long distance power transmission
+		Has more connection points
+		'''
+	}
+
 	MeteorHeadStatueItem: {
 		DisplayName: Meteor Head Statue
 		Tooltip: ""
@@ -443,5 +457,7 @@ Tiles: {
 	CoalTile.MapEntry: Coal
 	MechanicalAssemblerTile.MapEntry: Mechanical Assembler
 	RoboticArmTile.MapEntry: Robotic Arm
+	WoodenPowerPoleTile.MapEntry: Wooden Power Pole
+	PlatinumPowerPoleTile.MapEntry: Platinum Power Pole
 	MeteorHeadStatueTile.MapEntry: Meteor Head Statue
 }

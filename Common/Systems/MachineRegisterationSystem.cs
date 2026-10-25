@@ -18,6 +18,7 @@ using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssembler;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles;
 
 namespace Factorraria.Common.Machines
 {
@@ -134,6 +135,22 @@ namespace Factorraria.Common.Machines
             MachineVisualRegistry.Register<RoboticArmTileEntity>(ModContent.TileType<RoboticArmTile>(),
                 basePath + "ElectricalConsumers/RoboticArm/RoboticArm_On",
                 basePath + "ElectricalConsumers/RoboticArm/RoboticArm_Off");
+
+            // Power poles: one shared UI (electric icon only). Canvas = 7 tiles wide, footprint in the middle column (originX 3), one frame each.
+            MachineUIRegistry.Register(ModContent.TileType<WoodenPowerPoleTile>(), new PowerPoleUIState());
+            MachineUIRegistry.Register(ModContent.TileType<PlatinumPowerPoleTile>(), new PowerPoleUIState());
+
+            MachineVisualRegistry.RegisterOverhang<WoodenPowerPoleTileEntity>(ModContent.TileType<WoodenPowerPoleTile>(),
+                basePath + "ElectricalConsumers/PowerPoles/WoodenPowerPole",
+                basePath + "ElectricalConsumers/PowerPoles/WoodenPowerPole",
+                footprintWidth: 1, footprintHeight: 14,
+                originX: 3, originY: 0);
+
+            MachineVisualRegistry.RegisterOverhang<PlatinumPowerPoleTileEntity>(ModContent.TileType<PlatinumPowerPoleTile>(),
+                basePath + "ElectricalConsumers/PowerPoles/PlatinumPowerPole",
+                basePath + "ElectricalConsumers/PowerPoles/PlatinumPowerPole",
+                footprintWidth: 1, footprintHeight: 16,
+                originX: 3, originY: 0);
         }
 
         public override void PostAddRecipes()

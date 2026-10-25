@@ -202,8 +202,8 @@ Client-only visual upgrade, no netcode.
 ## 10. Progress
 One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and done. Each patch marks itself `[~]`; a small follow-up patch records test results.
 
-- [~] P1 Gold wire (patch_pole_p1_gold_wire.ps1: P1 patch written; applied, untested)
-- [ ] P2 Pole tiles, entities, UI, visuals
+- [x] P1 Gold wire (patch_pole_p1_gold_wire.ps1; tested, reported result: "gold wire works". Individual checklist items were not itemised, so these are still unconfirmed: world reload persistence, mixed copper/tin/gold bridging, dedicated-server cut refund)
+- [~] P2 Pole tiles, entities, UI, visuals (patch_pole_p2_tiles.ps1: applied, untested. Needs the 4 sheets + 2 item icons or the game will not load. LinkPointOffsets are placeholders. UI and overhang registration sit in PostSetupContent, not Load, because tile types only exist there. Recipes are placeholders in the item classes)
 - [ ] P3 Link data layer
 - [ ] P4 Power across links
 - [ ] P5 Hanging wire drawing (straight line)
