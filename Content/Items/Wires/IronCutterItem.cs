@@ -36,6 +36,13 @@ namespace Factorraria.Content.Items.Wires
             int tileX = Player.tileTargetX;
             int tileY = Player.tileTargetY;
 
+            if (CustomWireSystem.HasWire(tileX, tileY, CustomWireType.Gold))
+            {
+                CustomWireNet.RequestEdit(false, tileX, tileY, CustomWireType.Gold);
+                SoundEngine.PlaySound(SoundID.Dig, new Vector2(tileX, tileY) * 16f);
+
+                return false;
+            }
             if (CustomWireSystem.HasWire(tileX, tileY, CustomWireType.Tin))
             {
                 CustomWireNet.RequestEdit(false, tileX, tileY, CustomWireType.Tin);

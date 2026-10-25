@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Systems;
+using Factorraria.Content.Items.Materials;
 using Factorraria.Content.Items.Wires;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -48,6 +49,9 @@ namespace Factorraria.Common.Net
 
         static int WireItemType(CustomWireType type)
         {
+            if (type == CustomWireType.Gold)
+                return ModContent.ItemType<GoldWireItem>();
+
             return type == CustomWireType.Tin ? ModContent.ItemType<TinWireItem>() : ModContent.ItemType<CopperWireItem>();
         }
 

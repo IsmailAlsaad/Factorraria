@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.Items.Wires;
+﻿using Factorraria.Content.Items.Materials;
+using Factorraria.Content.Items.Wires;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -16,7 +17,8 @@ namespace Factorraria.Common.Systems
     {
         None = 0,        // 0000 0000
         Copper = 1 << 0, // 0000 0001
-        Tin = 1 << 1     // 0000 0010
+        Tin = 1 << 1,    // 0000 0010
+        Gold = 1 << 2    // 0000 0100
     }
 
     public class CustomWireSystem : ModSystem
@@ -24,17 +26,19 @@ namespace Factorraria.Common.Systems
         public static readonly CustomWireType[] AllWireTypes = new CustomWireType[]
         {
             CustomWireType.Copper,
-            CustomWireType.Tin
+            CustomWireType.Tin,
+            CustomWireType.Gold
         };
 
         Asset<Texture2D> CopperWireTileTexture;
         Asset<Texture2D> TinWireTileTexture;
+        Asset<Texture2D> GoldWireTileTexture;
 
         public static Dictionary<Point16,CustomWireType> WireGrid = new Dictionary<Point16,CustomWireType>();
 
         // Sprite frame (0-15, the 4 neighbour bits) of every wire tile, per wire type. Kept in step with WireGrid by
         // AddWire / RemoveWire / LoadWorldData, so drawing never has to look at neighbours.
-        private static readonly Dictionary<Point16, (byte Copper, byte Tin)> frameCache = new Dictionary<Point16, (byte Copper, byte Tin)>();
+        private static readonly Dictionary<Point16, (byte Copper, byte Tin, byte Gold)> frameCache = new Dictionary<Point16, (byte Copper, byte Tin, byte Gold)>();
 
         private static void RefreshFrame(Point16 position)
         {
@@ -46,7 +50,8 @@ namespace Factorraria.Common.Systems
 
             byte copper = wireType.HasFlag(CustomWireType.Copper) ? (byte)GetFrameIndexFromNeighbors(position.X, position.Y, CustomWireType.Copper) : (byte)0;
             byte tin = wireType.HasFlag(CustomWireType.Tin) ? (byte)GetFrameIndexFromNeighbors(position.X, position.Y, CustomWireType.Tin) : (byte)0;
-            frameCache[position] = (copper, tin);
+            byte gold = wireType.HasFlag(CustomWireType.Gold) ? (byte)GetFrameIndexFromNeighbors(position.X, position.Y, CustomWireType.Gold) : (byte)0;
+            frameCache[position] = (copper, tin, gold);
         }
 
         /// <summary>A wire changed at (x, y): its own frame and its 4 neighbours' frames may change.</summary>
@@ -87,7 +92,7 @@ namespace Factorraria.Common.Systems
 
         private void DrawWireTile(Point16 position, CustomWireType wireType)
         {
-            if (!frameCache.TryGetValue(position, out (byte Copper, byte Tin) frames))
+            if (!frameCache.TryGetValue(position, out (byte Copper, byte Tin, byte Gold) frames))
             {
                 RefreshFrame(position); // should not happen, but never draw a wrong frame
                 frameCache.TryGetValue(position, out frames);
@@ -104,6 +109,11 @@ namespace Factorraria.Common.Systems
             if (wireType.HasFlag(CustomWireType.Tin))
             {
                 Main.spriteBatch.Draw(TinWireTileTexture.Value, drawPosition, new Rectangle(frames.Tin * 18, 0, 16, 16), lighting);
+            }
+
+            if (wireType.HasFlag(CustomWireType.Gold) && GoldWireTileTexture != null)
+            {
+                Main.spriteBatch.Draw(GoldWireTileTexture.Value, drawPosition, new Rectangle(frames.Gold * 18, 0, 16, 16), lighting);
             }
         }
 
@@ -152,6 +162,8 @@ namespace Factorraria.Common.Systems
 
             CopperWireTileTexture = ModContent.Request<Texture2D>("Factorraria/Content/Items/Wires/CopperWireTile");
             TinWireTileTexture = ModContent.Request<Texture2D>("Factorraria/Content/Items/Wires/TinWireTile");
+            // RequestIfExists: a missing GoldWireTile.png logs a warning and gold wire is just not drawn, instead of crashing the load.
+            ModContent.RequestIfExists<Texture2D>("Factorraria/Content/Items/Wires/GoldWireTile", out GoldWireTileTexture, AssetRequestMode.AsyncLoad);
         }
 
         public override void Unload()
@@ -339,6 +351,10 @@ namespace Factorraria.Common.Systems
                 return true;
             }
             if (heldItemType == ModContent.ItemType<CopperWireItem>())
+            {
+                return true;
+            }
+            if (heldItemType == ModContent.ItemType<GoldWireItem>())
             {
                 return true;
             }

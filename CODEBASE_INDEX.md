@@ -4,7 +4,7 @@ generated 2026-10-25 | 276 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(59) BaseMachine(42) LiquidTypeRegistry(31) FactorrariaPacket(31) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) LiquidStack(16) TileEntityHelper(15) MachineUIStateBase(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) LiquidNetworkSystem(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
+FactorrariaNet(60) BaseMachine(42) LiquidTypeRegistry(31) FactorrariaPacket(31) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) LiquidStack(16) TileEntityHelper(15) MachineUIStateBase(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) LiquidNetworkSystem(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
 
 ## Inheritance
 Project bases -> derived:
@@ -456,7 +456,7 @@ tModLoader/other bases -> project types:
     +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov]
   static class ConveyorFilterNet
     +ServerAccepted:int[s] +ServerRefused:int[s] +ServerBroadcasts:int[s] +ClientSent:int[s] +ClientSnapshots:int[s] +Reset()[s] +Describe()[s] +MarkDirty()[s] +RequestSet(int,int,int)[s] +HandleRequest(BinaryReader,int)[s] +ServerTick()[s] +WriteSnapshot(BinaryWriter)[s] +HandleSnapshot(BinaryReader,int)[s] +ReadSnapshot(BinaryReader)[s] +ClientTick()[s]
-**CustomWireNet.cs** uses: CopperWireItem, CustomWireSystem, CustomWireType, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, TinWireItem
+**CustomWireNet.cs** uses: CopperWireItem, CustomWireSystem, CustomWireType, FactorrariaNet, FactorrariaPacket, GoldWireItem, JoinSync, PacketDirection, TinWireItem
   class CustomWireNetSystem : ModSystem
     +Load()[ov]
   static class CustomWireNet
@@ -787,7 +787,7 @@ tModLoader/other bases -> project types:
 **ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet
   class ConveyorPhysicsSystem : ModSystem
     +ConveyorSpeed:float[c] +NpcSyncTicks:int[s] +ItemSyncTicks:int[s] +LogStats:bool[s] +PostUpdateNPCs()[ov]
-**CustomWireSystem.cs** uses: CopperWireItem, IronCutterItem, LeadCutterItem, PowerGridSystem, TinWireItem
+**CustomWireSystem.cs** uses: CopperWireItem, GoldWireItem, IronCutterItem, LeadCutterItem, PowerGridSystem, TinWireItem
   enum CustomWireType : byte
     {None, Copper}
   class CustomWireSystem : ModSystem
@@ -1052,8 +1052,9 @@ tModLoader/other bases -> project types:
   class DemoniteSheetItem : ModItem
 **GoldPlateItem.cs**
   class GoldPlateItem : ModItem
-**GoldWireItem.cs**
+**GoldWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
   class GoldWireItem : ModItem
+    +CanUseItem(Player)[ov] +UseItem(Player)[ov]
 **MeteoritePanelItem.cs**
   class MeteoritePanelItem : ModItem
 **PureSiliconItem.cs** uses: PureSiliconTile
@@ -1362,5 +1363,6 @@ tModLoader/other bases -> project types:
 - Properties/: launchSettings.json
 - docs/liquid_overhaul/: ROADMAP.md
 - docs/multiplayer/: ROADMAP.md, SURVEY_APPENDIX.md
+- docs/poles/: ROADMAP.md
 - tools/: patch_engine.ps1
 - tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt
