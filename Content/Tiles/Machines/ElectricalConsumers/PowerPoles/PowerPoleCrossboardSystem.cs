@@ -19,9 +19,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
     public class PowerPoleCrossboardSystem : ModSystem
     {
         // Tunables (plain instance fields, so hot reload can change them).
-        public float MaxSwayRadians = 0.08f;      // lean at full wind
-        public float WobbleRadians = 0.015f;      // gentle extra swing, scaled up by the wind
-        public float WobbleSpeed = 1.6f;          // radians per second
+        public float MphPerWindUnit = 50f;        // Main.windSpeedCurrent * 50 = the mph the weather radio shows
+        public float CalmMph = 20f;               // at or below this wind speed (either direction) the boards do not move at all
+        public float FullSwayMph = 60f;           // at this wind speed (the game's maximum) the sway is at 100%; it ramps up linearly from CalmMph
+        public float LeanRadians = 0.06f;         // steady lean in the wind's direction at 100% sway
+        public float SwingRadians = 0.04f;        // back-and-forth swing amplitude at 100% sway
+        public float SwingSpeed = 1.6f;           // swing speed, radians per second
 
         readonly Dictionary<string, Asset<Texture2D>> textures = new();
         readonly HashSet<string> sizeChecked = new();
@@ -32,14 +35,21 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
             sizeChecked.Clear();
         }
 
-        // The angle of board number 'boardIndex' on the pole whose entity sits at 'pole'. Every board gets its own phase, so a row of
-        // poles (and the two boards of one platinum pole) do not swing in lockstep.
-        public float GetSwayAngle(Point16 pole, int boardIndex)
+        // The angle of board number 'boardIndex' on the pole whose entity sits at 'pole'. swayScale is the pole's own factor
+        // (PowerPoleTileEntityBase.SwayScale: wooden 1, platinum 0.5). No sway at all at or below CalmMph, then it ramps up linearly
+        // with the wind speed to full at FullSwayMph. The swing phase comes from the pole's tile position (and the board index), so
+        // neighbouring poles, and the two boards of one platinum pole, do not move in lockstep.
+        public float GetSwayAngle(Point16 pole, int boardIndex, float swayScale)
         {
-            float wind = MathHelper.Clamp(Main.WindForVisuals, -1f, 1f);
-            float phase = pole.X * 0.37f + pole.Y * 0.11f + boardIndex * 1.9f;
-            float wobble = (float)Math.Sin(Main.GlobalTimeWrappedHourly * WobbleSpeed + phase) * WobbleRadians * (0.3f + Math.Abs(wind));
-            return wind * MaxSwayRadians + wobble;
+            float mph = Math.Abs(Main.windSpeedCurrent) * MphPerWindUnit;
+            float strength = MathHelper.Clamp((mph - CalmMph) / Math.Max(1f, FullSwayMph - CalmMph), 0f, 1f);
+            if (strength <= 0f)
+                return 0f;
+
+            float direction = Math.Sign(Main.windSpeedCurrent);
+            float phase = pole.X * 2.4f + pole.Y * 1.7f + boardIndex * 1.9f;
+            float swing = (float)Math.Sin(Main.GlobalTimeWrappedHourly * SwingSpeed + phase) * SwingRadians;
+            return strength * swayScale * (direction * LeanRadians + swing);
         }
 
         // null while the PNG does not exist (a warning is logged once, and that board is simply not drawn).
@@ -101,7 +111,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
                     }
 
                     Color color = Lighting.GetColor((int)(attach.X / 16f), (int)(attach.Y / 16f));
-                    spriteBatch.Draw(texture, attach - Main.screenPosition, null, color, GetSwayAngle(corner, b), board.Pivot, 1f, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(texture, attach - Main.screenPosition, null, color, GetSwayAngle(corner, b, pole.SwayScale), board.Pivot, 1f, SpriteEffects.None, 0f);
                 }
             }
 

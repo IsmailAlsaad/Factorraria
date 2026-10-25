@@ -1188,19 +1188,19 @@ tModLoader/other bases -> project types:
     #PoleHeight:int[ov] #ArtName:string[ov] +PlacementEntity:PowerPoleTileEntityBase[ov] #DropItemType:int[ov] #MapColor:Color[ov] #BreakDust:int[ov]
 **PlatinumPowerPoleTileEntity.cs** uses: PlatinumPowerPoleTile, PoleBoard, PowerPoleTileEntityBase
   class PlatinumPowerPoleTileEntity : PowerPoleTileEntityBase
-    +ValidTileType:int[ov] +PowerDemand:float[ov] +Boards:PoleBoard[ov]
+    +ValidTileType:int[ov] +PowerDemand:float[ov] +SwayScale:float[ov] +Boards:PoleBoard[ov]
 **PoleBoard.cs**
   class PoleBoard
     +TexturePath:string +Size:Vector2 +LinkPoints:Vector2 +AttachOffset:Vector2 +Pivot:Vector2
 **PowerPoleCrossboardSystem.cs** uses: BaseMachine, PoleBoard, PowerPoleTileBase, PowerPoleTileEntityBase
   class PowerPoleCrossboardSystem : ModSystem
-    +MaxSwayRadians:float +WobbleRadians:float +WobbleSpeed:float +Unload()[ov] +GetSwayAngle(Point16,int) +PostDrawTiles()[ov]
+    +MphPerWindUnit:float +CalmMph:float +FullSwayMph:float +LeanRadians:float +SwingRadians:float +SwingSpeed:float +Unload()[ov] +GetSwayAngle(Point16,int,float) +PostDrawTiles()[ov]
 **PowerPoleTileBase.cs** uses: PowerPoleTileEntityBase
   abstract class PowerPoleTileBase : ModTile
     #PoleHeight:int[ab] #ArtName:string[ab] +PlacementEntity:PowerPoleTileEntityBase[ab] #DropItemType:int[ab] #MapColor:Color[ab] #BreakDust:int[ab] +Texture:string[ov]
 **PowerPoleTileEntityBase.cs** uses: ElectricConsumerMachine, PoleBoard
   abstract class PowerPoleTileEntityBase : ElectricConsumerMachine
-    #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +Boards:PoleBoard[ab] +LinkPointCount:int +GetLinkPointBoardIndex(int,out int) +GetLinkPointWorld(int) +GetLinkPointWorldSwayed(int,float) +Update()[ov]
+    #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +Boards:PoleBoard[ab] +SwayScale:float[v] +LinkPointCount:int +GetLinkPointBoardIndex(int,out int) +GetLinkPointWorld(int) +GetLinkPointWorldSwayed(int,float) +Update()[ov]
 **PowerPoleUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, PowerPoleTileEntityBase
   class PowerPoleUIState : MachineUIStateBase
     #BuildElements()[ov]

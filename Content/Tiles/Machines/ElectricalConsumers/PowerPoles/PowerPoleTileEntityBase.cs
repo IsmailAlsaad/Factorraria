@@ -16,6 +16,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
         // top of the footprint. Link (connection) points live on the boards, as pixels inside each board's PNG.
         public abstract PoleBoard[] Boards { get; }
 
+        // How much of the full wind sway this pole's boards get (1 = full). Platinum overrides it with 0.5.
+        public virtual float SwayScale => 1f;
+
         // All link points of all boards, in board order, then point order inside the board. Used by the link patches (P3 onward).
         public int LinkPointCount
         {
@@ -55,7 +58,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
         }
 
         // Client only (drawing): the same point rotated around its board's centre by that board's current sway angle
-        // (PowerPoleCrossboardSystem.GetSwayAngle(Position, GetLinkPointBoardIndex(index, out _))).
+        // (PowerPoleCrossboardSystem.GetSwayAngle(Position, GetLinkPointBoardIndex(index, out _), SwayScale)).
         public Vector2 GetLinkPointWorldSwayed(int index, float swayAngle)
         {
             PoleBoard board = Boards[GetLinkPointBoardIndex(index, out int point)];

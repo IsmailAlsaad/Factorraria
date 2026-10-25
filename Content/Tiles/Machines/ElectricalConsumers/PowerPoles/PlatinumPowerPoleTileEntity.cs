@@ -7,6 +7,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
     {
         public override int ValidTileType => ModContent.TileType<PlatinumPowerPoleTile>();
         public override float PowerDemand => 5f;
+        public override float SwayScale => 0.5f;   // half the wooden pole's sway
 
         // Two boards on the 16-tall pole: upper on tile row 14, lower on row 12 (counted from the bottom). Link point order is upper board
         // (left, right) then lower board (left, right). Sizes and link points are the real art values (pixels inside each board's
