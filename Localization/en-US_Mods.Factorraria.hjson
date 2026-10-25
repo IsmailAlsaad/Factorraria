@@ -56,7 +56,7 @@ Items: {
 	}
 
 	MotorMK1Item: {
-		DisplayName: Motor MK1
+		DisplayName: Lead Motor
 		Tooltip: Right click to rotate the tile
 	}
 

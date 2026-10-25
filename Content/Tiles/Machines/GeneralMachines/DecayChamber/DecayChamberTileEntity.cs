@@ -34,7 +34,6 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.DecayChamber
             tooltips.RemoveAll(t => t.Mod == "Terraria" && t.Name.StartsWith("Tooltip"));
 
             int insertAt = tooltips.FindLastIndex(t => t.Mod == "Terraria" && t.Name == "ItemName") + 1;
-            tooltips.Insert(insertAt, new TooltipLine(Mod, "FactorrariaDecayChamber", "Can be placed"));
             tooltips.Insert(insertAt + 1, new TooltipLine(Mod, "FactorrariaDecayChamber", "Used to instill evil in metals"));
         }
     }
