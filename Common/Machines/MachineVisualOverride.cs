@@ -66,6 +66,7 @@ namespace Factorraria.Common.Machines
         public int OnFrames = 1;     // number of stacked frames in the On texture
         public int OffFrames = 1;    // number of stacked frames in the Off texture
         public int Padding = 0;      // px between tile cells in the texture
+        public int StyleCount = 1;   // looks (variants) side by side in the texture: the sheet is StyleCount * canvas width wide, style k is the k-th block of columns
         public int CanvasWidth;      // tiles, one frame (auto-detected)
         public int CanvasHeight;     // tiles, one frame (auto-detected)
         public float OriginX;        // tiles: where the footprint's top-left tile sits inside a frame (+x right, +y down)
@@ -78,6 +79,7 @@ namespace Factorraria.Common.Machines
         public int CellSize => 16 + Padding;
         public int FrameStride => CanvasHeight * CellSize;   // px from one frame to the next
         public int FrameCount(bool on) => on ? OnFrames : OffFrames;
+        public int ClampStyle(int style) => Math.Clamp(style, 0, Math.Max(1, StyleCount) - 1);
 
         // Works out the canvas size from the On texture (and its frame count) and checks that the Off texture matches. Runs once.
         // A trailing padding strip at the right/bottom edge of a texture is accepted but not required.
@@ -91,14 +93,15 @@ namespace Factorraria.Common.Machines
             OffFrames = Math.Max(1, OffFrames);
             int cell = CellSize;
 
-            CanvasWidth = (on.Width + Padding) / cell;
+            StyleCount = Math.Max(1, StyleCount);
+            CanvasWidth = (on.Width + Padding) / cell / StyleCount;   // one style's width; the sheet holds StyleCount of them side by side
             CanvasHeight = (on.Height + Padding) / (cell * OnFrames);
 
             if (CanvasWidth < 1 || CanvasHeight < 1
-                || (on.Width != CanvasWidth * cell && on.Width != CanvasWidth * cell - Padding)
+                || (on.Width != CanvasWidth * StyleCount * cell && on.Width != CanvasWidth * StyleCount * cell - Padding)
                 || (on.Height != CanvasHeight * cell * OnFrames && on.Height != CanvasHeight * cell * OnFrames - Padding))
             {
-                Error = $"On texture is {on.Width}x{on.Height}; with {cell}px tile cells and {OnFrames} frame(s) it doesn't divide into a whole canvas.";
+                Error = $"On texture is {on.Width}x{on.Height}; with {cell}px tile cells, {OnFrames} frame(s) and {StyleCount} style(s) it doesn't divide into a whole canvas.";
                 return false;
             }
 
@@ -339,6 +342,9 @@ namespace Factorraria.Common.Machines
 
         internal static void Warn(string message) => ModContent.GetInstance<global::Factorraria.Factorraria>().Logger.Warn(message);
 
+        // styleCount (default 1): the texture holds that many looks side by side (the sheet is styleCount * canvas width wide, every style
+        // block has the same canvas layout). BaseMachine rolls a random style when the machine is placed (0 to styleCount - 1), saves it and
+        // syncs it, so the same machine always draws the same look. Animation (startup / shutdown) and liquid textures use the same layout.
         // Use INSTEAD of Register<T> when the art is bigger than the tile footprint. BOTH the On and Off textures are
         // canvases of the SAME size (frames stacked vertically, each texture may have its own frame count), containing the
         // footprint tiles too. The footprint's top-left tile sits at (originX, originY) tiles inside the canvas
@@ -349,7 +355,7 @@ namespace Factorraria.Common.Machines
         // startupPath / shutdownPath are optional: the same canvas as On, stacked frames (the frame count is detected from the height).
         public static void RegisterOverhang<T>(int tileType, string onPath, string offPath,
             int footprintWidth, int footprintHeight, float originX, float originY, int onFrames = 1, int offFrames = 1, float yOffset = 0f,
-            string startupPath = null, string shutdownPath = null) where T : BaseMachine, new()
+            string startupPath = null, string shutdownPath = null, int styleCount = 1) where T : BaseMachine, new()
         {
             if (footprintWidth <= 0 || footprintHeight <= 0)
             {
@@ -371,7 +377,8 @@ namespace Factorraria.Common.Machines
                 OffFrames = offFrames,
                 YOffset = yOffset,
                 OriginX = originX,
-                OriginY = originY
+                OriginY = originY,
+                StyleCount = Math.Max(1, styleCount)
             };
         }
     }

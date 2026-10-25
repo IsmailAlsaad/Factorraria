@@ -108,7 +108,7 @@ Tests: place, cut and refund gold wire in single-player; gold wire powers a mach
 - UI: one `PowerPoleUIState` with one `ElectricityUIIcon` entry (copy of the Robotic Arm entry), registered for both tile types with `MachineUIRegistry.Register`.
 - `Common/Systems/MachineRegisterationSystem.cs`: UI registration in `Load()`, `RegisterOverhang<...>` in `PostSetupContent()` (wooden `footprintWidth: 1, footprintHeight: 14, originX: 3, originY: 0`; platinum `1, 16, 3, 0`; one frame each).
 - Items: `WoodenPowerPoleItem`, `PlatinumPowerPoleItem` in `Content/Items/Machines/` (`createTile`). Recipes per Open item 1.
-- Art (after P2b): `WoodenPowerPole.png` at 48x224 (overhang canvas 3x14, plain 16px cells, no padding) and `PlatinumPowerPole.png` at 16x256 (overhang canvas 1x16), one texture each (no On/Off look), plus the crossboard PNGs and both item icons. The wooden sprite keeps the footprint in the middle column and may poke out left and right; platinum is footprint only but still registered as an overhang.
+- Art (after P2b): `WoodenPowerPole.png` at 192x224 (4 styles side by side, each an overhang canvas 3x14, plain 16px cells, no padding; a random style 0 to 3 is rolled per placed pole) and `PlatinumPowerPole.png` at 16x256 (overhang canvas 1x16), one texture each (no On/Off look), plus the crossboard PNGs and both item icons. The wooden sprite keeps the footprint in the middle column and may poke out left and right; platinum is footprint only but still registered as an overhang.
 
 Multiplayer: placement and kill go through the existing Phase 4 paths, so no new code. The snapshot already carries `isOn`/`isWorking`.
 

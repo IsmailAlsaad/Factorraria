@@ -141,13 +141,13 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(ModContent.TileType<PlatinumPowerPoleTile>(), new PowerPoleUIState());
 
             // Both poles are drawn through the overhang system and have ONE texture each (no On/Off look), so the same path is passed for both.
-            // Wooden: overhang canvas 3x14 (48x224), the 1x14 footprint in the middle column, because a few pixels poke out left and right.
+            // Wooden: overhang canvas 3x14 per style, 4 styles side by side (192x224), the 1x14 footprint in the middle column, because a few pixels poke out left and right.
             // Platinum: also an overhang registration for consistency, but with no overhang (canvas 1x16 = the footprint, 16x256). The swaying crossboards are drawn by PowerPoleCrossboardSystem for both.
             MachineVisualRegistry.RegisterOverhang<WoodenPowerPoleTileEntity>(ModContent.TileType<WoodenPowerPoleTile>(),
                 basePath + "ElectricalConsumers/PowerPoles/WoodenPowerPole",
                 basePath + "ElectricalConsumers/PowerPoles/WoodenPowerPole",
                 footprintWidth: 1, footprintHeight: 14,
-                originX: 1, originY: 0);
+                originX: 1, originY: 0, styleCount: 4);   // WoodenPowerPole.png is 4 styles side by side (192x224), one is rolled per placed pole
 
             MachineVisualRegistry.RegisterOverhang<PlatinumPowerPoleTileEntity>(ModContent.TileType<PlatinumPowerPoleTile>(),
                 basePath + "ElectricalConsumers/PowerPoles/PlatinumPowerPole",

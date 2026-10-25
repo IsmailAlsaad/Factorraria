@@ -53,6 +53,19 @@ namespace Factorraria.Common.Machines
         public int OutputBufferMultiplier = 10;            // an output slot holds this many crafts' worth of the product
         public int IngredientBufferMultiplier = 2;         // an input slot holds this many crafts' worth (conveyor intake AND hand deposits)
         public MachineBiome InsideBiome { get; set; } = MachineBiome.Unknown;
+
+        // Which look of a multi-style overhang sheet this machine draws (see MachineVisualRegistry.RegisterOverhang styleCount). 0 for
+        // machines without styles and for machines placed before styles existed. Rolled once in OnPlaced (server / single-player only),
+        // saved with the world and sent in the machine snapshot, so every client draws the same look.
+        public byte VisualStyle { get; private set; }
+
+        void RollVisualStyle()
+        {
+            if (!MachineVisualRegistry.Definitions.TryGetValue(ValidTileType, out MachineVisualDefinition def) || def.Canvas == null || def.Canvas.StyleCount <= 1)
+                return;
+
+            VisualStyle = (byte)Main.rand.Next(def.Canvas.StyleCount);
+        }
         public Point16 cornerPosition;
         public Vector2 MachineCenter;
         public int MachineWidth;
@@ -921,6 +934,7 @@ namespace Factorraria.Common.Machines
         {
             InitializeGeometry();
             InsideBiome = DetermineBiomeAt(i, j);
+            RollVisualStyle();
             MachinePlacementInfo.OnServerPlaced(this);   // patch 4.3: on a dedicated server the placing client's biome arrives in a follow-up packet
             //Main.NewText(InsideBiome);
         }
@@ -1036,6 +1050,7 @@ namespace Factorraria.Common.Machines
             }
 
             tag["InsideBiome"] = (int)InsideBiome;
+            if (VisualStyle != 0) tag["VisualStyle"] = (int)VisualStyle;   // written only when set, so old and new saves both load
             if (WireToggle) tag["WireToggle"] = true;   // written only when switched off, so old and new saves both load
 
             for (int i = 0; i < Fuels.Length; i++)
@@ -1048,6 +1063,8 @@ namespace Factorraria.Common.Machines
         {
             if (tag.ContainsKey("InsideBiome"))
                 InsideBiome = (MachineBiome)tag.GetInt("InsideBiome");
+            if (tag.ContainsKey("VisualStyle"))
+                VisualStyle = (byte)Math.Clamp(tag.GetInt("VisualStyle"), 0, 255);
 
             for (int i = 0; i < InputSlots.Length; i++)
             {
@@ -1148,8 +1165,10 @@ namespace Factorraria.Common.Machines
             if (isOn) flags |= 1;
             if (isWorking) flags |= 2;
             if (WireToggle) flags |= 4;
+            if (VisualStyle != 0) flags |= 8;   // the style byte follows the biome byte only when set
             w.Write(flags);
             w.Write((byte)InsideBiome);
+            if (VisualStyle != 0) w.Write(VisualStyle);
             w.Write7BitEncodedInt(Math.Max(0, WorkProgress));
             w.Write7BitEncodedInt(Math.Max(0, CraftsFinished));
             if (IsElectric) w.Write(GetSnapshotUseFraction());
@@ -1186,6 +1205,7 @@ namespace Factorraria.Common.Machines
             int biome = r.ReadByte();
             if (Enum.IsDefined(typeof(MachineBiome), biome))
                 InsideBiome = (MachineBiome)biome;
+            VisualStyle = (flags & 8) != 0 ? r.ReadByte() : (byte)0;
 
             WorkProgress = r.Read7BitEncodedInt();
             CraftsFinished = r.Read7BitEncodedInt();

@@ -103,7 +103,7 @@ namespace Factorraria.Common.Machines
                     batchBegun = true;
                 }
 
-                DrawCanvasCells(spriteBatch, texture, canvas, worldTopLeft, frameY, color);
+                DrawCanvasCells(spriteBatch, texture, canvas, worldTopLeft, frameY, color, machine.VisualStyle);
                 if (drawLiquid)
                     DrawCanvasLiquidOverlays(spriteBatch, def.LiquidOverlays, transition, machine, canvas, worldTopLeft, frameY, color);
             }
@@ -139,18 +139,20 @@ namespace Factorraria.Common.Machines
 
                 LiquidTypeDefinition liquidDef = LiquidTypeRegistry.Get(stack.LiquidType);
                 Texture2D recolored = LiquidTextureCache.GetOrCreate(cacheKey, source, liquidDef);
-                DrawCanvasCells(spriteBatch, recolored, canvas, worldTopLeft, frameY, color);
+                DrawCanvasCells(spriteBatch, recolored, canvas, worldTopLeft, frameY, color, machine.VisualStyle);
             }
         }
 
         // One 16x16 source cell per tile of the canvas, so the padding between cells in the texture is never drawn.
-        private static void DrawCanvasCells(SpriteBatch spriteBatch, Texture2D texture, MachineCanvas canvas, Vector2 worldTopLeft, int frameY, Color color)
+        // style picks the block of columns in a multi-style sheet (0 = the first); the placement hologram always shows style 0.
+        private static void DrawCanvasCells(SpriteBatch spriteBatch, Texture2D texture, MachineCanvas canvas, Vector2 worldTopLeft, int frameY, Color color, int style = 0)
         {
+            int styleColumn = canvas.ClampStyle(style) * canvas.CanvasWidth;
             for (int cx = 0; cx < canvas.CanvasWidth; cx++)
             {
                 for (int cy = 0; cy < canvas.CanvasHeight; cy++)
                 {
-                    Rectangle source = new Rectangle(cx * canvas.CellSize, frameY + cy * canvas.CellSize, 16, 16);
+                    Rectangle source = new Rectangle((styleColumn + cx) * canvas.CellSize, frameY + cy * canvas.CellSize, 16, 16);
                     spriteBatch.Draw(texture, worldTopLeft + new Vector2(cx * 16, cy * 16) - Main.screenPosition, source, color, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
                 }
             }
