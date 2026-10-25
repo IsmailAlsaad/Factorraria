@@ -1,0 +1,222 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Factorraria.Common.Liquids;
+using Factorraria.Common.Machines;
+using Factorraria.Common.Networks;
+using Factorraria.Common.Networks.Flow;
+using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.DataStructures;
+
+static class T
+{
+    static int pass, fail;
+    public static void Check(bool ok, string name) { if (ok) pass++; else { fail++; Console.WriteLine("FAIL: " + name); } }
+    public static int Done() { Console.WriteLine($"{pass} passed, {fail} failed"); return fail; }
+}
+
+class W
+{
+    public HashSet<Point> Pipes = new();
+    public const int Fast = 10, Slow = 11, MotorTile = 100, MachineTile = 200;
+
+    public W()
+    {
+        Main.tile = new TerrariaGridReset().Make();
+        TileEntityHelper.Entities.Clear();
+        PipeTierRegistry.MaxFlowRateByTileType.Clear();
+        PipeTierRegistry.MaxFlowRateByTileType[Fast] = 20 * 3600f;
+        PipeTierRegistry.MaxFlowRateByTileType[Slow] = 10 * 3600f;
+    }
+    class TerrariaGridReset { public TileGrid Make() => new TileGrid(); }
+
+    public void Pipe(int x, int y, int type = Fast)
+    {
+        var t = Main.tile[x, y]; t.HasTile = true; t.TileType = (ushort)type; Main.tile[x, y] = t; Pipes.Add(new Point(x, y));
+    }
+    public void Row(int x0, int x1, int y, int type = Fast) { for (int x = x0; x <= x1; x++) Pipe(x, y, type); }
+    public MotorTileEntityBase Motor(int x, int y, Direction f, bool on = true, float strength = 5 * 3600f, float offRate = 20 * 3600f)
+    {
+        var t = Main.tile[x, y]; t.HasTile = true; t.TileType = MotorTile; Main.tile[x, y] = t;
+        var m = new MotorTileEntityBase { Facing = f, isOn = on, PumpStrength = strength, PipeEquivalentMaxFlowRate = offRate };
+        m.Position = new Point16 { X = (short)x, Y = (short)y };
+        TileEntityHelper.Entities[(x, y)] = m;
+        return m;
+    }
+    public BaseMachine Machine(int x, int y, int w = 1, int h = 1, int ins = 1, int outs = 1)
+    {
+        var m = new BaseMachine { InCount = ins, OutCount = outs };
+        m.Position = new Point16 { X = (short)x, Y = (short)y };
+        for (int i = 0; i < w; i++) for (int j = 0; j < h; j++)
+        {
+            var t = Main.tile[x + i, y + j]; t.HasTile = true; t.TileType = MachineTile; Main.tile[x + i, y + j] = t;
+            TileEntityHelper.Entities[(x + i, y + j)] = m;
+        }
+        return m;
+    }
+    public List<FlowNetwork> Build() => FlowNetworkBuilder.BuildAll(Pipes);
+}
+
+static class Program
+{
+    static int Main()
+    {
+        float Big = 5 * 3600f;
+
+        // 1. Line: A -> pipes -> pump(right) -> pipes -> B. Only A.out -> B.in is a route.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); var b = w.Machine(6, 50);
+            var nets = w.Build(); T.Check(nets.Count == 1, "1 one network");
+            var n = nets[0];
+            T.Check(n.Sources.Count == 2 && n.Sinks.Count == 2, "1 two machines give 2 sources and 2 sinks (got " + n.Sources.Count + "/" + n.Sinks.Count + ")");
+            T.Check(n.Routes.Count == 1, "1 exactly one route (got " + n.Routes.Count + ")");
+            var r = n.Routes[0];
+            T.Check(n.Sources[r.Src].Machine == a && n.Sinks[r.Dst].Machine == b, "1 route is A.out -> B.in");
+            T.Check(Math.Abs(r.RatePerMinute - Big) < 1, "1 rate = pump strength");
+            T.Check(r.Pumps.Length == 1 && n.Positions[r.Pumps[0]] == new Point(3, 50), "1 pump listed");
+            T.Check(n.Cap == 20 * 3600f, "1 cap = pipe tier");
+        }
+        // 2. Machine hanging off a pipe between two pumps: receives from pump 1, gives through pump 2. One attach point, both roles.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 1, 50); w.Motor(2, 50, Direction.Right); w.Row(3, 5, 50); w.Motor(6, 50, Direction.Right); w.Row(7, 7, 50); var b = w.Machine(8, 50);
+            var m = w.Machine(4, 48, 1, 2);   // above pipe (4,50)
+            var n = w.Build()[0];
+            bool AtoM = n.Routes.Any(r => n.Sources[r.Src].Machine == a && n.Sinks[r.Dst].Machine == m);
+            bool MtoB = n.Routes.Any(r => n.Sources[r.Src].Machine == m && n.Sinks[r.Dst].Machine == b);
+            bool AtoB = n.Routes.Any(r => n.Sources[r.Src].Machine == a && n.Sinks[r.Dst].Machine == b);
+            bool BtoM = n.Routes.Any(r => n.Sources[r.Src].Machine == b && n.Sinks[r.Dst].Machine == m);
+            T.Check(AtoM, "2 A feeds the middle machine");
+            T.Check(MtoB, "2 middle machine feeds B");
+            T.Check(AtoB, "2 A reaches B through both pumps");
+            T.Check(!BtoM, "2 nothing flows backwards");
+        }
+        // 3. A 2x2 machine touched by two pipe tiles of the same zone: one sink port, one source port, no duplicate routes.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 6, 50);
+            var big = w.Machine(5, 51, 2, 2, ins: 1, outs: 2);   // touches pipes (5,50) and (6,50) from below
+            var n = w.Build()[0];
+            T.Check(n.Sinks.Count(s => s.Machine == big) == 1, "3 big machine has ONE sink port");
+            T.Check(n.Sources.Count(s => s.Machine == big) == 2, "3 big machine has one source port per output tank");
+            var pairs = n.Routes.Select(r => (r.Src, r.Dst)).ToList();
+            T.Check(pairs.Distinct().Count() == pairs.Count, "3 no duplicated (source, sink) pair");
+            T.Check(n.Routes.Count(r => n.Sources[r.Src].Machine == a && n.Sinks[r.Dst].Machine == big) == 1, "3 A -> big appears once");
+            T.Check(n.SinkAttach.Length >= 2, "3 but both touching points were found as attach points");
+        }
+        // 4. A pipe touching the SIDE of a motor is not part of the network, and a machine at the motor's side is no attachment.
+        {
+            var w = new W(); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50);
+            w.Pipe(3, 51);                          // under the motor: perpendicular
+            var side = w.Machine(3, 48);            // above the motor: perpendicular machine
+            var nets = w.Build();
+            T.Check(nets.Count == 2, "4 side pipe is its own network (got " + nets.Count + ")");
+            var line = nets.First(x => x.Positions.Contains(new Point(1, 50)));
+            T.Check(!line.Positions.Contains(new Point(3, 51)), "4 side pipe not in the line network");
+            T.Check(!line.Sources.Any(s => s.Machine == side) && !line.Sinks.Any(s => s.Machine == side), "4 machine on the motor's side is not attached");
+        }
+        // 5. Cap: weakest pipe tier, and an OFF motor counts as a pipe of its own tier; an ON motor does not cap.
+        {
+            var w = new W(); w.Machine(0, 50); w.Row(1, 2, 50, W.Slow); w.Motor(3, 50, Direction.Right, strength: 50 * 3600f); w.Row(4, 5, 50); w.Machine(6, 50);
+            var n = w.Build()[0];
+            T.Check(n.Cap == 10 * 3600f, "5 cap = slowest pipe");
+            T.Check(n.Routes.Count == 1 && Math.Abs(n.Routes[0].RatePerMinute - 10 * 3600f) < 1, "5 route rate limited by the cap");
+        }
+        {
+            var w = new W(); w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 4, 50);
+            var off = w.Motor(5, 50, Direction.Right, on: false, offRate: 2 * 3600f); w.Row(6, 6, 50); w.Machine(7, 50);
+            var n = w.Build()[0];
+            T.Check(n.Cap == 2 * 3600f, "5b off motor caps the network at its pipe-equivalent rate");
+            off.isOn = true; n.RefreshRoutes();
+            T.Check(n.Cap == 20 * 3600f, "5c turning it on lifts the cap (no rebuild needed)");
+            off.isOn = false; n.RefreshRoutes();
+            T.Check(n.Cap == 2 * 3600f && n.Routes.Count == 1, "5d and off again");
+        }
+        // 6. World mouths: the open end in front of the last pump and the dangling start of the line, both as source AND sink of one cell.
+        {
+            var w = new W(); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right);
+            var n = w.Build()[0];
+            T.Check(n.Sources.Count(s => s.IsWorld) == 2 && n.Sinks.Count(s => s.IsWorld) == 2, "6 two world cells, each as source and sink (got " + n.Sources.Count + "/" + n.Sinks.Count + ")");
+            var left = new Point(0, 50); var right = new Point(4, 50);
+            T.Check(n.Routes.Count == 1, "6 only left cell -> right cell (got " + n.Routes.Count + ")");
+            var r = n.Routes[0];
+            T.Check(n.Sources[r.Src].WorldPos == left && n.Sinks[r.Dst].WorldPos == right, "6 water goes from the open start to the open end");
+        }
+        // 7. Machine directly against a motor's back and front (no pipe between).
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Motor(1, 50, Direction.Right); w.Row(2, 3, 50); var b = w.Machine(4, 50);
+            var n = w.Build()[0];
+            T.Check(n.Routes.Any(r => n.Sources[r.Src].Machine == a && n.Sinks[r.Dst].Machine == b), "7 machine on the motor's back feeds the line");
+        }
+        // 8. Same world, built twice: identical ports and routes.
+        {
+            var w = new W(); w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); w.Machine(6, 50); w.Pipe(5, 49); w.Pipe(5, 48);
+            string Sig(FlowNetwork n) => string.Join(";", n.Routes.Select(r => r.Src + ">" + r.Dst + ":" + r.RatePerMinute + ":" + r.Climbs)) + "|" + string.Join(",", n.Positions.Select(p => p.X + "." + p.Y));
+            T.Check(Sig(w.Build()[0]) == Sig(w.Build()[0]), "8 deterministic");
+        }
+        // 9. Two separate networks: independent; and a network whose pipes were never registered is not seeded.
+        {
+            var w = new W(); w.Row(1, 3, 50); w.Row(1, 3, 60);
+            T.Check(w.Build().Count == 2, "9 two networks");
+            w.Pipes.Remove(new Point(1, 60)); w.Pipes.Remove(new Point(2, 60)); w.Pipes.Remove(new Point(3, 60));
+            T.Check(w.Build().Count == 1, "9b unregistered pipes are not seeds");
+        }
+        // 10. Climb: source below the pump pays per tile; source above pays nothing (the step 1 physics, through the real builder).
+        {
+            var w = new W(); var low = w.Machine(0, 53);      // 3 tiles below the pump's row
+            w.Pipe(1, 53); w.Pipe(1, 52); w.Pipe(1, 51); w.Pipe(1, 50); w.Motor(2, 50, Direction.Right); w.Row(3, 4, 50); var b = w.Machine(5, 50);
+            var n = w.Build()[0];
+            var r = n.Routes.First(x => n.Sources[x.Src].Machine == low && n.Sinks[x.Dst].Machine == b);
+            T.Check(r.Climbs == 3, "10 lifting from 3 tiles below costs 3 climbs (got " + r.Climbs + ")");
+            T.Check(Math.Abs(r.RatePerMinute - (5 * 3600f - 3 * 0.5f * 3600f)) < 1, "10 rate loses 0.5/tick per climbed tile");
+        }
+        // 11. End to end with the solver: tick the built network with fake tanks.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); var b = w.Machine(6, 50);
+            a.OutputLiquids[0].LiquidType = 2; a.OutputLiquids[0].Amount = 500;
+            var n = w.Build()[0];
+            var offer = n.Sources.Select(s => s.IsWorld ? 0f : s.Tank.IsEmpty ? 0f : s.Tank.Amount).ToArray();
+            var type = n.Sources.Select(s => s.IsWorld || s.Tank.IsEmpty ? -1 : s.Tank.LiquidType).ToArray();
+            var budget = new float[n.Nodes.Length];
+            for (int i = 0; i < budget.Length; i++) if (n.Nodes[i].IsMotor && n.Nodes[i].MotorOn) budget[i] = Math.Min(n.Nodes[i].Strength, n.Cap) / 3600f;
+            var outList = new List<FlowTransfer>();
+            n.Solver.Solve(n.Routes, offer, type, n.Sinks.Count, (k, t) => 1000f, budget, outList);
+            T.Check(outList.Count == 1 && Math.Abs(outList[0].Amount - 5f) < 1e-3f && outList[0].Type == 2, "11 solver moves 5 units per tick from A to B");
+        }
+
+        // 13. A machine with no tanks at all makes no ports and breaks nothing.
+        {
+            var w = new W(); w.Machine(0, 50, ins: 0, outs: 0); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); w.Machine(6, 50, ins: 0, outs: 0);
+            var n = w.Build()[0];
+            T.Check(n.Sources.Count(s => !s.IsWorld) == 0 && n.Sinks.Count(s => !s.IsWorld) == 0, "13 tankless machines have no ports");
+        }
+        // 14. Solid rock at the end of a line is not a world mouth.
+        {
+            var w = new W(); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right);
+            Terraria.Main.tileSolid[1] = true; var t = Terraria.Main.tile[4, 50]; t.HasTile = true; t.TileType = 1; Terraria.Main.tile[4, 50] = t;
+            var n = w.Build()[0];
+            T.Check(!n.Sinks.Any(s => s.IsWorld && s.WorldPos == new Point(4, 50)), "14 solid tile in front is not a mouth");
+        }
+        // 15. A big network: 600 pipes, 60 machines hanging off it, two pumps. Prints the build time.
+        {
+            var w = new W(); w.Machine(0, 50); w.Row(1, 100, 50); w.Motor(101, 50, Direction.Right); w.Row(102, 600, 50);
+            for (int i = 0; i < 60; i++) w.Machine(5 + i * 8, 51, 1, 1, ins: 2, outs: 2);
+            w.Build();   // warm-up (JIT)
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var n = w.Build()[0];
+            sw.Stop();
+            var sw2 = System.Diagnostics.Stopwatch.StartNew(); n.RefreshRoutes(); sw2.Stop();
+            Console.WriteLine("   refresh only: " + sw2.Elapsed.TotalMilliseconds.ToString("0.0") + " ms");
+            Console.WriteLine("   big network: " + n.Nodes.Length + " nodes, " + n.Sources.Count + " sources, " + n.Sinks.Count + " sinks, " + n.Routes.Count + " routes, " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + " ms");
+            T.Check(n.Routes.Count > 0, "15 big network has routes");
+        }
+        // 12. Diagnostics report builds without throwing.
+        {
+            var w = new W(); w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); w.Machine(6, 50);
+            Factorraria.Common.Systems.LiquidNetworkSystem.FlowNetworks = w.Build();
+            var lines = FlowNetworkDiagnostics.Report(false);
+            T.Check(lines.Count >= 3 && lines[0].StartsWith("fflow: 1 network"), "12 report: " + (lines.Count > 0 ? lines[0] : "empty"));
+            foreach (var l in lines) Console.WriteLine("   " + l);
+        }
+        return T.Done();
+    }
+}

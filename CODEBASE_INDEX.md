@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-25 | 271 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-25 | 274 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(58) BaseMachine(39) FactorrariaPacket(31) LiquidTypeRegistry(29) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(18) CustomRecipe(17) TileEntityHelper(15) MachineUIStateBase(14) LiquidStack(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) LiquidNetworkSystem(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
+FactorrariaNet(59) BaseMachine(41) FactorrariaPacket(31) LiquidTypeRegistry(30) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) TileEntityHelper(16) LiquidStack(15) MachineUIStateBase(14) LiquidNetworkSystem(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
 
 ## Inheritance
 Project bases -> derived:
@@ -27,7 +27,7 @@ tModLoader/other bases -> project types:
 - ModSystem (74): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (33): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteorHeadStatueItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem
 - byte (18): CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, RequestCheck
-- ModCommand (13): ArmSendCommand, CartDiagnosticsCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
+- ModCommand (14): ArmSendCommand, CartDiagnosticsCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (10): ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MotorTileBase, PipeTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (9): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
@@ -686,6 +686,22 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 
 ### Common/Networks/
+**FlowNetwork.cs** uses: BaseMachine, Direction, FlowDir, FlowNode, FlowPort, FlowRoute, FlowRouteFinder, FlowRouteMerger, FlowSolver, LiquidStack, MotorTileEntityBase, PipeConnectionHelper, PipeTierRegistry, TileEntityHelper
+  sealed class FlowSource
+    +Machine:BaseMachine +Tank:LiquidStack +TankIndex:int +WorldPos:Point +Owner:int +IsWorld:bool
+  sealed class FlowSink
+    +Machine:BaseMachine +WorldPos:Point +Owner:int +IsWorld:bool
+  sealed class FlowNetwork
+    +Positions:Point +Nodes:FlowNode +Motors:MotorTileEntityBase +PassRate:float +Sources:List<FlowSource> +Sinks:List<FlowSink> +SourceAttach:FlowPort +SinkAttach:FlowPort +SourcePortsOfAttach:int +SinkPortsOfAttach:int +Routes:List<FlowRoute> +Solver:FlowSolver +Cap:float +DecayPerClimbPerMinute:float +BuildMs:double +RefreshMs:double +RefreshRoutes()
+  static class FlowNetworkBuilder
+    +BuildAll(HashSet<Point>)[s]
+    sealed class PortTables
+      +Sources:List<FlowSource> +Sinks:List<FlowSink> +SourceAttach:List<FlowPort> +SinkAttach:List<FlowPort> +SourcePortsOfAttach:List<int > +SinkPortsOfAttach:List<int > +AttachMachine(int,Direction,BaseMachine) +AttachWorld(int,Direction,Point)
+**FlowNetworkDiagnostics.cs** uses: BaseMachine, Factorraria, FactorrariaNet, FlowNetwork, FlowRoute, FlowSink, FlowSource, LiquidNetworkSystem, LiquidTypeRegistry
+  static class FlowNetworkDiagnostics
+    +Describe(FlowSource)[s] +Describe(FlowSink)[s] +Report(bool)[s]
+  class FlowNetworkCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **LiquidNetwork.cs** uses: BaseMachine, Direction, Factorraria, LiquidBroadcastSystem, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MotorTileEntityBase, WorldLiquidSources
   struct PipeAttachment
     +Position:Point +PipePosition:Point +MouthDirection:Direction +Machine:BaseMachine
@@ -706,6 +722,11 @@ tModLoader/other bases -> project types:
 **FlowRouteFinder.cs** uses: FlowDir, FlowDirs, FlowNode, FlowPort, FlowRoute
   static class FlowRouteFinder
     +Build(FlowNode,FlowPort,FlowPort,float,float)[s]
+**FlowRouteMerger.cs** uses: FlowDir, FlowDirs, FlowNode, FlowRoute
+  static class FlowLinks
+    +OnAxis(FlowNode,FlowDir)[s] +CanLink(FlowNode,FlowNode,FlowDir)[s]
+  static class FlowRouteMerger
+    +Merge(IReadOnlyList<FlowRoute>,int,int)[s]
 **FlowSolver.cs** uses: FlowRoute, FlowTransfer, Route
   sealed class FlowSolver
     +ActiveType:int +Solve(IReadOnlyList<FlowRoute>,float,int,int,Func<int, int, float>,float,List<FlowTransfer>)
@@ -775,9 +796,9 @@ tModLoader/other bases -> project types:
 **LiquidNetworkDebugSystem.cs** uses: FurnaceOffsetConfig, LiquidNetwork, LiquidNetworkSystem
   class LiquidNetworkDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
-**LiquidNetworkSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, Factorraria, LiquidNetwork, LiquidPipeDiagnostics, LiquidTextureCache, LiquidTypeRegistry, MotorAttachment, MotorTileEntityBase, PipeAttachment, PipeConnectionHelper, PipeTierRegistry, TileEntityHelper
+**LiquidNetworkSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, Factorraria, FlowNetwork, FlowNetworkBuilder, LiquidNetwork, LiquidPipeDiagnostics, LiquidTextureCache, LiquidTypeRegistry, MotorAttachment, MotorTileEntityBase, PipeAttachment, PipeConnectionHelper, PipeTierRegistry, TileEntityHelper
   class LiquidNetworkSystem : ModSystem
-    +AllPipeTiles:HashSet<Point>[s] +ActiveNetworks:List<LiquidNetwork>[s] +networkNeedsRebuilding:bool[s] +flowNeedsRecalculating:bool[s] +RebuildCount:int[s] +PostUpdateWorld()[ov] +RegisterPipeTile(Point)[s] +UnregisterPipeTile(Point)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov]
+    +AllPipeTiles:HashSet<Point>[s] +ActiveNetworks:List<LiquidNetwork>[s] +networkNeedsRebuilding:bool[s] +flowNeedsRecalculating:bool[s] +FlowNetworks:List<FlowNetwork>[s] +RebuildCount:int[s] +PostUpdateWorld()[ov] +RegisterPipeTile(Point)[s] +UnregisterPipeTile(Point)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov]
   class PriorityQueueLite<T>
     +Enqueue(T,float) +TryDequeue(out T,out float)
 **MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FuelGroup, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, LiquidBiomeVisits, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MagicMaterializerRegistry, MagicMaterializerTileEntity, MagicMaterializerUIState, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MotorMK1Tile, MotorMK1TileEntity, RecipeArtDefinitions, RecipeArtRegistry, RecipeBook, RecipeCatalog, RecipeVisibility, RoboticArmTile, RoboticArmTileEntity, RoboticArmUIState, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState
@@ -1341,4 +1362,4 @@ tModLoader/other bases -> project types:
 - Properties/: launchSettings.json
 - docs/multiplayer/: ROADMAP.md, SURVEY_APPENDIX.md
 - tools/: patch_engine.ps1
-- tools/flow_tests/: Program.cs.txt
+- tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TopologyTests.cs.txt

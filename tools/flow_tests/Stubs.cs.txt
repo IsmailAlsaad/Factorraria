@@ -1,0 +1,116 @@
+﻿// Minimal stand-ins for the Terraria/tModLoader/XNA types the new game-layer files touch, so they can be compiled and exercised here.
+using System;
+using System.Collections.Generic;
+
+namespace Microsoft.Xna.Framework
+{
+    public struct Point : IEquatable<Point>
+    {
+        public int X, Y;
+        public Point(int x, int y) { X = x; Y = y; }
+        public static Point Zero => new Point(0, 0);
+        public static Point operator +(Point a, Point b) => new Point(a.X + b.X, a.Y + b.Y);
+        public static Point operator -(Point a, Point b) => new Point(a.X - b.X, a.Y - b.Y);
+        public static bool operator ==(Point a, Point b) => a.X == b.X && a.Y == b.Y;
+        public static bool operator !=(Point a, Point b) => !(a == b);
+        public bool Equals(Point o) => this == o;
+        public override bool Equals(object o) => o is Point p && this == p;
+        public override int GetHashCode() => X * 73856093 ^ Y * 19349663;
+    }
+    public struct Color { public static Color Yellow, LightGreen; }
+}
+
+namespace Terraria
+{
+    public struct Tile
+    {
+        public bool HasTile; public ushort TileType; public byte LiquidAmount; public int LiquidType; public short TileFrameX;
+    }
+    public class TileGrid
+    {
+        public Tile[,] T = new Tile[1000, 200];
+        public Tile this[int x, int y] { get => T[x, y]; set => T[x, y] = value; }
+    }
+    public static class Main
+    {
+        public static TileGrid tile = new TileGrid();
+        public static bool[] tileSolid = new bool[1000];
+        public static int maxTilesX = 1000, maxTilesY = 200, netMode = 0;
+        public static uint GameUpdateCount;
+    }
+    public static class WorldGen { public static bool InWorld(int x, int y) => x >= 0 && y >= 0 && x < Main.maxTilesX && y < Main.maxTilesY; }
+}
+namespace Terraria.ID { public static class NetmodeID { public const int MultiplayerClient = 1; } }
+namespace Terraria.DataStructures
+{
+    public struct Point16 { public short X, Y; }
+    public abstract class TileEntity { public Point16 Position; }
+}
+namespace Terraria.ModLoader
+{
+    public enum CommandType { Chat = 1, Console = 2 }
+    public class CommandCaller { public void Reply(string s, Microsoft.Xna.Framework.Color c) { } }
+    public abstract class ModCommand
+    {
+        public abstract string Command { get; }
+        public abstract CommandType Type { get; }
+        public virtual string Usage => "";
+        public virtual string Description => "";
+        public abstract void Action(CommandCaller caller, string input, string[] args);
+    }
+}
+namespace Factorraria.Common.Net { public static class FactorrariaNet { public static void Log(string m) { } } }
+
+namespace Factorraria.Common.Liquids
+{
+    public static class PipeTierRegistry
+    {
+        public static Dictionary<int, float> MaxFlowRateByTileType = new();
+        public static bool IsPipeTile(int t) => MaxFlowRateByTileType.ContainsKey(t);
+    }
+    public class LiquidTypeDef { public string Name; }
+    public static class LiquidTypeRegistry { public static LiquidTypeDef Get(int t) => new LiquidTypeDef { Name = "L" + t }; }
+}
+
+namespace Factorraria.Common.Machines
+{
+    using Factorraria.Common.Liquids;
+    using Terraria;
+    using Terraria.DataStructures;
+
+    public class BaseMachine : TileEntity
+    {
+        public bool isOn;
+        public int InCount = 1, OutCount = 1;
+        LiquidStack[] ins, outs;
+        public LiquidStack[] InputLiquids => ins ??= Make(InCount);
+        public LiquidStack[] OutputLiquids => outs ??= Make(OutCount);
+        static LiquidStack[] Make(int n) { var a = new LiquidStack[n]; for (int i = 0; i < n; i++) a[i] = new LiquidStack(); return a; }
+    }
+    public class MotorTileEntityBase : BaseMachine
+    {
+        public float PumpStrength = 5 * 3600f;
+        public float PipeEquivalentMaxFlowRate = 20 * 3600f;
+        public Direction Facing = Direction.Right;
+        public MotorTileEntityBase() { InCount = 0; OutCount = 0; }
+    }
+    public static class TileEntityHelper
+    {
+        public static Dictionary<(int, int), TileEntity> Entities = new();
+        public static bool TryGetEntityFromTile(int i, int j, out TileEntity entity, out Point16 corner)
+        {
+            corner = default; entity = null;
+            if (!Main.tile[i, j].HasTile) return false;
+            return Entities.TryGetValue((i, j), out entity);
+        }
+    }
+}
+namespace Factorraria.Common.Systems
+{
+    public static class LiquidNetworkSystem
+    {
+        public static System.Collections.Generic.List<Factorraria.Common.Networks.FlowNetwork> FlowNetworks = new();
+        public static System.Collections.Generic.List<object> ActiveNetworks = new();
+        public static int RebuildCount;
+    }
+}

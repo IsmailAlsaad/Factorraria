@@ -20,6 +20,9 @@ namespace Factorraria.Common.Systems
         public static bool networkNeedsRebuilding = true;
         public static bool flowNeedsRecalculating = false;
 
+        // Liquid overhaul step 2: the NEW topology (nodes, ports, routes), built next to the old networks. Only /fflow reads it for now.
+        public static List<FlowNetwork> FlowNetworks = new();
+
         // TEMPORARY (patch 8.1b, remove in Phase 10): how many times the networks were rebuilt, for the [Pipes] log line and /fpipes.
         public static int RebuildCount;
 
@@ -36,6 +39,7 @@ namespace Factorraria.Common.Systems
                 HealPipeList();
                 RebuildNetworks();
                 RestoreSavedNetworkTypes();
+                RebuildFlowNetworks();
 
                 RebuildCount++;
                 if (Main.netMode == NetmodeID.Server)
@@ -45,6 +49,8 @@ namespace Factorraria.Common.Systems
             }
             else if (flowNeedsRecalculating)
             {
+                RefreshFlowNetworks();
+
                 foreach (var network in ActiveNetworks)
                 {
                     ResolveFlow(network);
@@ -105,6 +111,7 @@ namespace Factorraria.Common.Systems
         {
             AllPipeTiles.Clear();
             ActiveNetworks.Clear();
+            FlowNetworks = new();
             networkNeedsRebuilding = true;
             pipeListNeedsHeal = true;
         }
@@ -114,6 +121,7 @@ namespace Factorraria.Common.Systems
             pendingNetworkTypes.Clear();
             AllPipeTiles.Clear();
             ActiveNetworks.Clear();
+            FlowNetworks = new();
 
             LiquidTextureCache.Clear();
         }
@@ -180,6 +188,35 @@ namespace Factorraria.Common.Systems
                 }
             }
             pendingNetworkTypes.Clear();
+        }
+
+        // Liquid overhaul step 2. The new topology is built next to the old networks and nothing but /fflow reads it, so a bug in it
+        // can never stop the pipes from working: any exception is logged and the new list is left empty.
+        void RebuildFlowNetworks()
+        {
+            try
+            {
+                FlowNetworks = FlowNetworkBuilder.BuildAll(AllPipeTiles);
+            }
+            catch (Exception e)
+            {
+                FlowNetworks = new();
+                Mod.Logger.Error("[Pipes] new flow topology failed to build (the old networks are unaffected): " + e);
+            }
+        }
+
+        // A motor switched on or off: only the route table changes, no topology rebuild is needed.
+        void RefreshFlowNetworks()
+        {
+            try
+            {
+                foreach (FlowNetwork network in FlowNetworks)
+                    network.RefreshRoutes();
+            }
+            catch (Exception e)
+            {
+                Mod.Logger.Error("[Pipes] new flow routes failed to refresh (the old networks are unaffected): " + e);
+            }
         }
 
         void RebuildNetworks()
