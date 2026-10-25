@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-25 | 285 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-26 | 287 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(60) BaseMachine(45) LiquidTypeRegistry(31) FactorrariaPacket(31) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) LiquidStack(16) TileEntityHelper(15) MachineUIStateBase(15) MachineUIElementEntry(14) CartModule(14) VirtualItemSystem(13) LiquidNetworkSystem(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
+FactorrariaNet(60) BaseMachine(43) LiquidTypeRegistry(31) FactorrariaPacket(31) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) LiquidStack(16) TileEntityHelper(15) MachineUIStateBase(15) MachineUIElementEntry(14) CartModule(14) VirtualItemSystem(13) LiquidNetworkSystem(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
 
 ## Inheritance
 Project bases -> derived:
@@ -26,7 +26,7 @@ Project bases -> derived:
 - PowerPoleTileBase: PlatinumPowerPoleTile, WoodenPowerPoleTile
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 tModLoader/other bases -> project types:
-- ModSystem (75): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (76): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (35): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteorHeadStatueItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
 - byte (18): CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, RequestCheck
 - ModCommand (14): ArmSendCommand, CartDiagnosticsCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
@@ -1040,12 +1040,10 @@ tModLoader/other bases -> project types:
 ### Content/Items/Machines/
 **MechanicalAssemblerItem.cs** uses: MechanicalAssemblerTile
   class MechanicalAssemblerItem : ModItem
-**PlatinumPowerPoleItem.cs** uses: GoldWireItem, PlatinumPowerPoleTile
+**PlatinumPowerPoleItem.cs** uses: PlatinumPowerPoleTile
   class PlatinumPowerPoleItem : ModItem
-    +AddRecipes()[ov]
-**WoodenPowerPoleItem.cs** uses: CopperWireItem, WoodenPowerPoleTile
+**WoodenPowerPoleItem.cs** uses: WoodenPowerPoleTile
   class WoodenPowerPoleItem : ModItem
-    +AddRecipes()[ov]
 
 ### Content/Items/Materials/
 **ByriteAlloyItem.cs**
@@ -1142,7 +1140,7 @@ tModLoader/other bases -> project types:
     +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/
-**AutohammerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, RecipeBook, SimpleCircuitItem, TinWireItem
+**AutohammerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PlatinumPowerPoleItem, RecipeBook, SimpleCircuitItem, TinWireItem, WoodenPowerPoleItem
   class AutohammerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **AutohammerTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.Autohammer uses: AutohammerRecipeRegistry, ElectricConsumerMachine, RecipeBook
@@ -1185,27 +1183,33 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/PowerPoles/
-**PlatinumPowerPoleTile.cs** uses: BaseMachine, PlatinumPowerPoleItem, PlatinumPowerPoleTileEntity, PowerPoleTileBase
+**PlatinumPowerPoleTile.cs** uses: PlatinumPowerPoleItem, PlatinumPowerPoleTileEntity, PowerPoleTileBase, PowerPoleTileEntityBase
   class PlatinumPowerPoleTile : PowerPoleTileBase
-    #PoleHeight:int[ov] #ArtName:string[ov] #PlacementEntity:BaseMachine[ov] #DropItemType:int[ov] #MapColor:Color[ov] #BreakDust:int[ov]
-**PlatinumPowerPoleTileEntity.cs** uses: PlatinumPowerPoleTile, PowerPoleTileEntityBase
+    #PoleHeight:int[ov] #ArtName:string[ov] +PlacementEntity:PowerPoleTileEntityBase[ov] #DropItemType:int[ov] #MapColor:Color[ov] #BreakDust:int[ov]
+**PlatinumPowerPoleTileEntity.cs** uses: PlatinumPowerPoleTile, PoleBoard, PowerPoleTileEntityBase
   class PlatinumPowerPoleTileEntity : PowerPoleTileEntityBase
-    +ValidTileType:int[ov] +PowerDemand:float[ov] +LinkPointOffsets:Vector2[ov]
-**PowerPoleTileBase.cs** uses: BaseMachine
+    +ValidTileType:int[ov] +PowerDemand:float[ov] +Boards:PoleBoard[ov]
+**PoleBoard.cs**
+  class PoleBoard
+    +TexturePath:string +Size:Vector2 +LinkPoints:Vector2 +AttachOffset:Vector2 +Pivot:Vector2
+**PowerPoleCrossboardSystem.cs** uses: BaseMachine, PoleBoard, PowerPoleTileBase, PowerPoleTileEntityBase
+  class PowerPoleCrossboardSystem : ModSystem
+    +MaxSwayRadians:float +WobbleRadians:float +WobbleSpeed:float +Unload()[ov] +GetSwayAngle(Point16,int) +PostDrawTiles()[ov]
+**PowerPoleTileBase.cs** uses: PowerPoleTileEntityBase
   abstract class PowerPoleTileBase : ModTile
-    #PoleHeight:int[ab] #ArtName:string[ab] #PlacementEntity:BaseMachine[ab] #DropItemType:int[ab] #MapColor:Color[ab] #BreakDust:int[ab] +Texture:string[ov]
-**PowerPoleTileEntityBase.cs** uses: ElectricConsumerMachine
+    #PoleHeight:int[ab] #ArtName:string[ab] +PlacementEntity:PowerPoleTileEntityBase[ab] #DropItemType:int[ab] #MapColor:Color[ab] #BreakDust:int[ab] +Texture:string[ov]
+**PowerPoleTileEntityBase.cs** uses: ElectricConsumerMachine, PoleBoard
   abstract class PowerPoleTileEntityBase : ElectricConsumerMachine
-    #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +LinkPointOffsets:Vector2[ab] +LinkPointCount:int +GetLinkPointWorld(int) +Update()[ov]
+    #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +Boards:PoleBoard[ab] +LinkPointCount:int +GetLinkPointBoardIndex(int,out int) +GetLinkPointWorld(int) +GetLinkPointWorldSwayed(int,float) +Update()[ov]
 **PowerPoleUIState.cs** uses: ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase, PowerPoleTileEntityBase
   class PowerPoleUIState : MachineUIStateBase
     #BuildElements()[ov]
-**WoodenPowerPoleTile.cs** uses: BaseMachine, PowerPoleTileBase, WoodenPowerPoleItem, WoodenPowerPoleTileEntity
+**WoodenPowerPoleTile.cs** uses: PowerPoleTileBase, PowerPoleTileEntityBase, WoodenPowerPoleItem, WoodenPowerPoleTileEntity
   class WoodenPowerPoleTile : PowerPoleTileBase
-    #PoleHeight:int[ov] #ArtName:string[ov] #PlacementEntity:BaseMachine[ov] #DropItemType:int[ov] #MapColor:Color[ov] #BreakDust:int[ov]
-**WoodenPowerPoleTileEntity.cs** uses: PowerPoleTileEntityBase, WoodenPowerPoleTile
+    #PoleHeight:int[ov] #ArtName:string[ov] +PlacementEntity:PowerPoleTileEntityBase[ov] #DropItemType:int[ov] #MapColor:Color[ov] #BreakDust:int[ov]
+**WoodenPowerPoleTileEntity.cs** uses: PoleBoard, PowerPoleTileEntityBase, WoodenPowerPoleTile
   class WoodenPowerPoleTileEntity : PowerPoleTileEntityBase
-    +ValidTileType:int[ov] +PowerDemand:float[ov] +LinkPointOffsets:Vector2[ov]
+    +ValidTileType:int[ov] +PowerDemand:float[ov] +Boards:PoleBoard[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/RoboticArm/
 **RoboticArmAreaEditorSystem.cs** uses: MachineUISystem, RoboticArmAreaNet, RoboticArmTileEntity

@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Machines;
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
@@ -11,14 +12,55 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
         protected override int InputSlotCount => 0;
         protected override int OutputSlotCount => 0;
 
-        // Connection points (crossarm tips) in pixels, measured from the footprint's top-left corner (this entity's Position * 16).
-        // Canvas pixel (cx, cy) of the art becomes (cx - originX * 16, cy - originY * 16), and both poles use originX 3, originY 0, so (cx - 48, cy).
-        // Used by the link patches (P3 onward); nothing reads it in P2.
-        public abstract Vector2[] LinkPointOffsets { get; }
+        // The swaying crossboards (wooden 1, platinum 2: upper then lower). Each one is its own PNG, drawn by PowerPoleCrossboardSystem on
+        // top of the footprint. Link (connection) points live on the boards, as pixels inside each board's PNG.
+        public abstract PoleBoard[] Boards { get; }
 
-        public int LinkPointCount => LinkPointOffsets.Length;
+        // All link points of all boards, in board order, then point order inside the board. Used by the link patches (P3 onward).
+        public int LinkPointCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (PoleBoard board in Boards)
+                    count += board.LinkPoints.Length;
+                return count;
+            }
+        }
 
-        public Vector2 GetLinkPointWorld(int index) => Position.ToVector2() * 16f + LinkPointOffsets[index];
+        // Which board a flat link point index belongs to (returns the board index) and which point of that board it is.
+        public int GetLinkPointBoardIndex(int index, out int pointInBoard)
+        {
+            PoleBoard[] boards = Boards;
+            for (int b = 0; b < boards.Length; b++)
+            {
+                int count = boards[b].LinkPoints.Length;
+                if (index < count)
+                {
+                    pointInBoard = index;
+                    return b;
+                }
+
+                index -= count;
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+
+        // Resting world position of a link point (no sway). Deterministic on every process, so the server uses this one for span checks.
+        public Vector2 GetLinkPointWorld(int index)
+        {
+            PoleBoard board = Boards[GetLinkPointBoardIndex(index, out int point)];
+            return Position.ToVector2() * 16f + board.AttachOffset + (board.LinkPoints[point] - board.Pivot);
+        }
+
+        // Client only (drawing): the same point rotated around its board's centre by that board's current sway angle
+        // (PowerPoleCrossboardSystem.GetSwayAngle(Position, GetLinkPointBoardIndex(index, out _))).
+        public Vector2 GetLinkPointWorldSwayed(int index, float swayAngle)
+        {
+            PoleBoard board = Boards[GetLinkPointBoardIndex(index, out int point)];
+            return Position.ToVector2() * 16f + board.AttachOffset + (board.LinkPoints[point] - board.Pivot).RotatedBy(swayAngle);
+        }
 
         public override void Update()
         {

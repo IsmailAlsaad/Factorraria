@@ -10,7 +10,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
     {
         protected override int PoleHeight => 14;
         protected override string ArtName => "WoodenPowerPole";
-        protected override BaseMachine PlacementEntity => ModContent.GetInstance<WoodenPowerPoleTileEntity>();
+        public override PowerPoleTileEntityBase PlacementEntity => ModContent.GetInstance<WoodenPowerPoleTileEntity>();
         protected override int DropItemType => ModContent.ItemType<WoodenPowerPoleItem>();
         protected override Color MapColor => new Color(140, 100, 60);
         protected override int BreakDust => DustID.WoodFurniture;

@@ -5,9 +5,10 @@ Factorraria power poles: two electric pole machines (wooden and platinum) joined
 ## 1. Decisions
 
 ### Fixed by Ismail
-- Two variants. **Wooden**: 2 connection points, footprint 1x14, overhang canvas 7x14. **Platinum**: 4 connection points, footprint 1x16, overhang canvas 7x16. The footprint sits in the middle column of the canvas (`originX: 3, originY: 0`).
+- Two variants. **Wooden**: 1 swaying crossboard with 2 connection points, footprint 1x14, overhang canvas 3x14 (footprint in the middle column, `originX: 1, originY: 0`; the canvas only holds the pixels that poke out left and right). **Platinum**: 2 swaying crossboards (upper and lower) with 2 connection points each (4 total), footprint 1x16, drawn through the overhang system too for consistency (canvas 1x16, `originX: 0, originY: 0`, 16x256 art).
 - Custom `ModTile` machines, non-solid (walk-through), anchored on a solid tile below. Electric consumers with a small constant draw that models transport loss. No machine recipes. The only UI element is the electric icon.
-- Drawn through the overhang system. `_On` / `_Off` follow `isOn`, so a pole looks dead when its grid is underpowered.
+- Each pole has a single texture (no On/Off look).
+- **Crossboards (changed after P2).** Each board is its own PNG, drawn manually by `PowerPoleCrossboardSystem` (client only, after tiles and after the overhang canvases), rotated around the board's centre by a wind sway, and also drawn on the placement hologram. A board is `PoleBoard(texturePath, size, poleHeightTiles, rowFromBottom, linkPoints)`: its centre sits on the middle of the pole column at that tile row, counted from the bottom (wooden row 12 of 14; platinum upper row 14 and lower row 12 of 16). Link points are pixels inside the board PNG. Links use the resting position (`GetLinkPointWorld`); only drawing uses the swayed one (`GetLinkPointWorldSwayed`).
 - The footprint tiles accept ground wires (the existing `EnqueueMachineWires` already walks the footprint only). The overhang area accepts none.
 - Gold wire becomes placeable like copper and tin. Copper and tin hanging wires have a shorter span than gold.
 - Holding a wire (selected item or item on the cursor): click pole 1, a preview wire follows the cursor, click a different pole to connect. v1 draws a straight line. Later: Luminance pixelated trail, wind and player disturbance.
@@ -17,7 +18,7 @@ Factorraria power poles: two electric pole machines (wooden and platinum) joined
 - **A2. Span is set by the wire item.** The wire type decides the maximum span, measured between the two connection points in tiles. Placeholder tunables: copper 12, tin 14, gold 40. These are plain public fields on `PoleLinkSystem` (not `const` or `static`) so hot reload can tweak them.
 - **A3. Wire cost.** One link costs `ceil(span / WireTilesPerItem)` wire items of the held type (placeholder 4 tiles per item). The cost is stored in the link and refunded when it is cut.
 - **A4. Pole item recipes** are not decided yet (see Open items). The machines have no `CustomRecipe`s, but the pole *items* need some way to be obtained.
-- **A5. Draw.** Wooden 1 power, platinum 2 power (assembler 200, arm 100). Constant for v1. Optional length-scaled loss in P8.
+- **A5. Draw.** Wooden 15 power, platinum 5 power (assembler 200, arm 100). Constant for v1. Optional length-scaled loss in P8.
 - **A6. Vanilla wire toggling** (`MachineWireGlobalTile`) works on any `IElectricConsumer`, so a pole could be switched off by a vanilla wire. Left as is; it is a test item, and arguably a nice feature.
 
 ## 2. Codebase facts this plan relies on
@@ -76,9 +77,9 @@ PoleLinkSystem : ModSystem   (Common/Systems/PoleLinkSystem.cs)
   SaveWorldData / LoadWorldData   // parallel lists, like CustomWireSystem
 ```
 
-`PowerPoleTileEntityBase : ElectricConsumerMachine` (folder `Content/Tiles/Machines/ElectricalConsumers/PowerPoles/`) adds `abstract Vector2[] LinkPointOffsets` (pixels, from the footprint's top-left) and `LinkPointCount`. Wooden and platinum subclasses fill them in. Connection point world position = `Position * 16 + offset`.
+`PowerPoleTileEntityBase : ElectricConsumerMachine` (folder `Content/Tiles/Machines/ElectricalConsumers/PowerPoles/`) adds `abstract PoleBoard[] Boards`. Each `PoleBoard` holds its PNG path, size, attach point and link points (pixels inside the board PNG). `LinkPointCount` counts the points of all boards (platinum order: upper board's two points, then the lower board's). Connection point world position = `Position * 16 + board.AttachOffset + (point - board.Pivot)` (`GetLinkPointWorld`).
 
-**Connection point coordinates come from the art.** When the sprites exist, give the pixel position of each crossarm tip on the sprite (x, y from the canvas top-left). The conversion is `offset = (px - 48, py)` for both variants (3 tiles of padding on the left).
+**Connection point coordinates come from the art.** Give the pixel position of each crossarm tip inside its crossboard PNG (x, y from that PNG's top-left) and each PNG's size. The pivot is the PNG's centre, so nothing else needs converting.
 
 **Point choice.** The player does not choose a point. For each pole the server takes the free point closest to the other pole's footprint top. If a pole has no free point the link is refused.
 
@@ -107,7 +108,7 @@ Tests: place, cut and refund gold wire in single-player; gold wire powers a mach
 - UI: one `PowerPoleUIState` with one `ElectricityUIIcon` entry (copy of the Robotic Arm entry), registered for both tile types with `MachineUIRegistry.Register`.
 - `Common/Systems/MachineRegisterationSystem.cs`: UI registration in `Load()`, `RegisterOverhang<...>` in `PostSetupContent()` (wooden `footprintWidth: 1, footprintHeight: 14, originX: 3, originY: 0`; platinum `1, 16, 3, 0`; one frame each).
 - Items: `WoodenPowerPoleItem`, `PlatinumPowerPoleItem` in `Content/Items/Machines/` (`createTile`). Recipes per Open item 1.
-- Art: `WoodenPowerPole_On.png` / `_Off.png` at 112x224, `PlatinumPowerPole_On.png` / `_Off.png` at 112x256 (plain 16px cells, no padding, single frame), plus both item icons. The sprite must keep the footprint column clear and put the crossarms inside the canvas.
+- Art (after P2b): `WoodenPowerPole.png` at 48x224 (overhang canvas 3x14, plain 16px cells, no padding) and `PlatinumPowerPole.png` at 16x256 (overhang canvas 1x16), one texture each (no On/Off look), plus the crossboard PNGs and both item icons. The wooden sprite keeps the footprint in the middle column and may poke out left and right; platinum is footprint only but still registered as an overhang.
 
 Multiplayer: placement and kill go through the existing Phase 4 paths, so no new code. The snapshot already carries `isOn`/`isWorking`.
 
@@ -202,8 +203,9 @@ Client-only visual upgrade, no netcode.
 ## 10. Progress
 One line per patch. `[ ]` not started, `[~]` applied, untested, `[x]` tested and done. Each patch marks itself `[~]`; a small follow-up patch records test results.
 
-- [x] P1 Gold wire (patch_pole_p1_gold_wire.ps1; tested, reported result: "gold wire works". Individual checklist items were not itemised, so these are still unconfirmed: world reload persistence, mixed copper/tin/gold bridging, dedicated-server cut refund)
-- [~] P2 Pole tiles, entities, UI, visuals (patch_pole_p2_tiles.ps1: applied, untested. Needs the 4 sheets + 2 item icons or the game will not load. LinkPointOffsets are placeholders. UI and overhang registration sit in PostSetupContent, not Load, because tile types only exist there. Recipes are placeholders in the item classes)
+- [x] P1 Gold wire (patch_pole_p1_gold_wire.ps1; tested, all checklist items passed as reported)
+- [x] P2 Pole tiles, entities, UI, visuals (patch_pole_p2_tiles.ps1: tested, all checklist items passed as reported; the visuals part is superseded by P2b. Originally: applied, untested. Needs the 4 sheets + 2 item icons or the game will not load. LinkPointOffsets are placeholders. UI and overhang registration sit in PostSetupContent, not Load, because tile types only exist there. Recipes are placeholders in the item classes)
+- [~] P2b Swaying crossboards, footprint-only art, draw 15 / 5 (patch_pole_p2b_crossboard.ps1: applied, untested. Needs WoodenPowerPole.png 48x224 (3x14 canvas, replaces the old 112x224), PlatinumPowerPole.png 16x256 (replaces the old 112x256, overhang canvas 1x16), one texture each, WoodenPowerPole_Crossboard, PlatinumPowerPole_CrossboardUpper and _CrossboardLower, and 2 item icons. Board sizes and link points are the real art values)
 - [ ] P3 Link data layer
 - [ ] P4 Power across links
 - [ ] P5 Hanging wire drawing (straight line)

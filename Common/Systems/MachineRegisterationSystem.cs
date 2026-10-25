@@ -136,21 +136,24 @@ namespace Factorraria.Common.Machines
                 basePath + "ElectricalConsumers/RoboticArm/RoboticArm_On",
                 basePath + "ElectricalConsumers/RoboticArm/RoboticArm_Off");
 
-            // Power poles: one shared UI (electric icon only). Canvas = 7 tiles wide, footprint in the middle column (originX 3), one frame each.
+            // Power poles: the same UI class for both variants (electric icon only), one instance per tile type.
             MachineUIRegistry.Register(ModContent.TileType<WoodenPowerPoleTile>(), new PowerPoleUIState());
             MachineUIRegistry.Register(ModContent.TileType<PlatinumPowerPoleTile>(), new PowerPoleUIState());
 
+            // Both poles are drawn through the overhang system and have ONE texture each (no On/Off look), so the same path is passed for both.
+            // Wooden: overhang canvas 3x14 (48x224), the 1x14 footprint in the middle column, because a few pixels poke out left and right.
+            // Platinum: also an overhang registration for consistency, but with no overhang (canvas 1x16 = the footprint, 16x256). The swaying crossboards are drawn by PowerPoleCrossboardSystem for both.
             MachineVisualRegistry.RegisterOverhang<WoodenPowerPoleTileEntity>(ModContent.TileType<WoodenPowerPoleTile>(),
                 basePath + "ElectricalConsumers/PowerPoles/WoodenPowerPole",
                 basePath + "ElectricalConsumers/PowerPoles/WoodenPowerPole",
                 footprintWidth: 1, footprintHeight: 14,
-                originX: 3, originY: 0);
+                originX: 1, originY: 0);
 
             MachineVisualRegistry.RegisterOverhang<PlatinumPowerPoleTileEntity>(ModContent.TileType<PlatinumPowerPoleTile>(),
                 basePath + "ElectricalConsumers/PowerPoles/PlatinumPowerPole",
                 basePath + "ElectricalConsumers/PowerPoles/PlatinumPowerPole",
                 footprintWidth: 1, footprintHeight: 16,
-                originX: 3, originY: 0);
+                originX: 0, originY: 0);
         }
 
         public override void PostAddRecipes()
