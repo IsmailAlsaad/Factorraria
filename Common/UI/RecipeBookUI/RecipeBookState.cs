@@ -50,6 +50,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public string SelectedKey { get; private set; }
         public string SelectedMachine { get; private set; }
         public RecipeOutputGroup SelectedGroup { get; private set; }
+        /// <summary>The selected entry when it is an art entry (then SelectedGroup is null). The detail page draws its PNG.</summary>
+        public RecipeArtRegistry.Entry SelectedArt { get; private set; }
         public RecipeState SelectedState { get; private set; }
         public bool IsEmpty { get; private set; } = true;
         /// <summary>The book has entries but the search filter hides all of them.</summary>
@@ -147,7 +149,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             // A-Z order, and machines keep the order they first appear in.
             var machineOrder = new Dictionary<string, int>();
             var listed = new List<(RecipeCatalog.Entry e, RecipeState state)>();
-            foreach (RecipeCatalog.Entry cat in RecipeCatalog.Entries())
+            foreach (RecipeCatalog.Entry cat in RecipeCatalog.EntriesWithArt())
             {
                 RecipeState catState = RecipeVisibility.GetState(cat.Key);
                 if (!RecipeVisibility.InBook(catState)) continue;
@@ -157,7 +159,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             // Ingredient search: if some listed recipe takes an ingredient named exactly like the text ("Wood"), only exact
             // names match, so "#Wood" does not also pull in Boreal Wood. Otherwise it falls back to a partial match.
-            bool exactIngredient = byIngredient && filtering && listed.Any(x => UsesIngredient(x.e.Group, x.state, filter, true));
+            bool exactIngredient = byIngredient && filtering && listed.Any(x => x.e.Group != null && UsesIngredient(x.e.Group, x.state, filter, true));
 
             foreach (var (e, state) in listed.OrderBy(x => machineOrder[x.e.Machine]).ThenBy(x => favorites.IsFavorite(x.e.Key) ? 0 : x.state == RecipeState.Crafted ? 1 : 2))
             {
@@ -170,14 +172,16 @@ namespace Factorraria.Common.UI.RecipeBookUI
                     foundSelected = true;
                     SelectedMachine = e.Machine;
                     SelectedGroup = e.Group;
+                    SelectedArt = e.Art;
                     SelectedState = state;
                 }
 
                 if (filtering)
                 {
+                    string searchName = e.Art != null ? e.Art.Name : e.Group.Key.DisplayName;
                     bool matches = byIngredient
-                        ? UsesIngredient(e.Group, state, filter, exactIngredient)
-                        : e.Group.Key.DisplayName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+                        ? e.Group != null && UsesIngredient(e.Group, state, filter, exactIngredient)
+                        : searchName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
                     if (!matches) continue;
                 }
                 shown++;
@@ -192,7 +196,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 }
                 if (collapsed) continue;
 
-                var entry = new RecipeBookEntry(e.Key, e.Machine, e.Group, state, favorites.IsFavorite(e.Key));
+                RecipeBookEntry entry = e.Art != null
+                    ? new RecipeBookEntry(e.Key, e.Machine, e.Art, favorites.IsFavorite(e.Key))
+                    : new RecipeBookEntry(e.Key, e.Machine, e.Group, state, favorites.IsFavorite(e.Key));
                 entry.OnChosen = key => Select(key, false);
                 entry.Selected = isSelected;
                 entryTop[e.Key] = y;
@@ -367,6 +373,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             SelectedKey = null;
             SelectedMachine = null;
             SelectedGroup = null;
+            SelectedArt = null;
             SelectedState = RecipeState.Hidden;
         }
 
@@ -386,6 +393,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 {
                     SelectedMachine = entry.Machine;
                     SelectedGroup = entry.Group;
+                    SelectedArt = entry.Art;
                     SelectedState = entry.State;
                 }
             }

@@ -303,7 +303,7 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            if (!RecipeCatalog.TryResolve(key, out _, out _))
+            if (!RecipeCatalog.Exists(key))
             {
                 ReplyRead(sender, false, null, ParchmentFailure.Unresolved, pool);
                 return;

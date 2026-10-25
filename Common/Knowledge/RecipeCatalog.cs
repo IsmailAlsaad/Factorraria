@@ -18,6 +18,7 @@ namespace Factorraria.Common.Knowledge
             public string Machine;
             public RecipeOutputGroup Group;
             public string Key;
+            public RecipeArtRegistry.Entry Art;   // art entries only (Group is null then); returned by EntriesWithArt(), never by Entries()
         }
 
         static readonly List<KeyValuePair<string, RecipeBook>> machines = new List<KeyValuePair<string, RecipeBook>>();
@@ -27,7 +28,46 @@ namespace Factorraria.Common.Knowledge
             if (book != null) machines.Add(new KeyValuePair<string, RecipeBook>(machineName, book));
         }
 
-        public static void Clear() => machines.Clear();
+        public static void Clear()
+        {
+            machines.Clear();
+            fuelsByMachine.Clear();
+        }
+
+        // ---- fuels shown by the recipe book (read from each machine's registry tables, never from a CustomRecipe) ----
+        static readonly Dictionary<string, List<RecipeOutputKey>> fuelsByMachine = new Dictionary<string, List<RecipeOutputKey>>();
+
+        /// <summary>
+        /// Tells the book which fuels a machine burns. Pass the registry's own tables (null = that kind has none).
+        /// Call after BuildRecipes(), so the tables are already filled. Liquid ids must already exist (PostAddRecipes is fine).
+        /// </summary>
+        public static void RegisterFuels(string machineName, FuelTable itemFuels, LiquidFuelTable liquidFuels)
+        {
+            var list = new List<RecipeOutputKey>();
+            if (itemFuels != null)
+                foreach (int type in itemFuels.ItemTypes) list.Add(RecipeOutputKey.ForItem(type));
+            if (liquidFuels != null)
+                foreach (int liquid in liquidFuels.LiquidTypes) list.Add(RecipeOutputKey.ForLiquid(liquid));
+            fuelsByMachine[machineName] = list;
+        }
+
+        /// <summary>The machine's fuels (items first, then liquids), or null if none were registered.</summary>
+        public static List<RecipeOutputKey> FuelsOf(string machineName) =>
+            machineName != null && fuelsByMachine.TryGetValue(machineName, out List<RecipeOutputKey> list) ? list : null;
+
+        // ---- art entries (see RecipeArtRegistry) ----
+
+        /// <summary>Every recipe entry, then every art entry (Group == null, Art set). Only the recipe book list wants the art ones.</summary>
+        public static IEnumerable<Entry> EntriesWithArt()
+        {
+            foreach (Entry e in Entries()) yield return e;
+            foreach (RecipeArtRegistry.Entry art in RecipeArtRegistry.All)
+                yield return new Entry { Machine = RecipeArtRegistry.Machine, Group = null, Key = art.Key, Art = art };
+        }
+
+        /// <summary>True if the key names a real recipe OR a registered art entry. Use this where a key only has to be valid (unlock checks, pool validation).</summary>
+        public static bool Exists(string catalogKey) =>
+            TryResolve(catalogKey, out _, out _) || RecipeArtRegistry.Contains(catalogKey);
 
         public static string KeyFor(string machineName, RecipeOutputGroup group) => machineName + "|" + RecipeKey.For(group);
 

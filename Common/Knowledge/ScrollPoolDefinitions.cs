@@ -21,6 +21,7 @@ namespace Factorraria.Common.Knowledge
     ///       .Add("Furnace", ItemID.IronBar)                          machine name as registered in MachineRegisterationSystem
     ///       .Add("Hellforge", ModContent.ItemType&lt;SteelBarItem&gt;(), weight: 2f)
     ///       .AddLiquid("Solidifier", LiquidTypeRegistry.Oil);        liquid products use the LiquidTypeRegistry ids
+    ///       .AddArt("ExampleNote");                                  a recipe book art PNG (registered in RecipeArtDefinitions), by file name
     ///
     /// Machine names: Furnace, Hellforge, Solidifier, IceMachine, LiquidDistillator, Autohammer.
     /// Entries that match no recipe are logged as warnings at load (Logs\client.log, search "[ScrollPools]") and skipped.
@@ -48,6 +49,8 @@ namespace Factorraria.Common.Knowledge
         // ==========================================================================================
         static void DefaultPool()
         {
+            ScrollPools.Define("PlaceholderArt", "Placeholder art").AddArt("Placeholder", weight: 1f);
+
             ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a factory.")
                 // Hellforge
                 .Add("Hellforge", ItemID.Meteorite)                                   // meteorite ore

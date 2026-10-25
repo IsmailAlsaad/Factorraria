@@ -18,7 +18,8 @@ namespace Factorraria.Common.Knowledge
             public string Machine;          // catalog machine name, e.g. "Furnace"
             public RecipeOutputKey Output;  // the product (item or liquid)
             public float Weight;            // relative, default 1
-            public string CatalogKey => RecipeCatalog.KeyFor(Machine, Output);
+            public string ArtName;          // set for art entries (see RecipeArtRegistry); Machine and Output are unused then
+            public string CatalogKey => ArtName != null ? RecipeArtRegistry.KeyFor(ArtName) : RecipeCatalog.KeyFor(Machine, Output);
         }
 
         readonly List<Entry> entries = new List<Entry>();
@@ -47,6 +48,13 @@ namespace Factorraria.Common.Knowledge
         public ScrollPool AddLiquid(string machine, int liquidType, float weight = 1f)
         {
             entries.Add(new Entry { Machine = machine, Output = RecipeOutputKey.ForLiquid(liquidType), Weight = weight });
+            return this;
+        }
+
+        /// <summary>Adds a recipe book art entry (a PNG registered in RecipeArtDefinitions). artName = the PNG's file name without extension.</summary>
+        public ScrollPool AddArt(string artName, float weight = 1f)
+        {
+            entries.Add(new Entry { Machine = RecipeArtRegistry.Machine, ArtName = artName, Weight = weight });
             return this;
         }
     }
@@ -98,8 +106,23 @@ namespace Factorraria.Common.Knowledge
         {
             foreach (ScrollPool pool in ordered)
                 foreach (ScrollPool.Entry e in pool.Entries)
-                    if (!RecipeCatalog.TryResolve(e.CatalogKey, out _, out _))
-                        warn($"[ScrollPools] pool '{pool.Name}': no recipe '{e.CatalogKey}' in the catalog (typo, unknown machine name, or the recipe does not exist). Entry skipped.");
+                    if (!RecipeCatalog.Exists(e.CatalogKey))
+                        warn($"[ScrollPools] pool '{pool.Name}': no recipe or art '{e.CatalogKey}' in the catalog (typo, unknown machine name, or the recipe/art does not exist). Entry skipped.");
+
+            foreach (string problem in RecipeArtRegistry.Problems) warn("[ScrollPools] " + problem);
+
+            foreach (RecipeArtRegistry.Entry art in RecipeArtRegistry.All)
+            {
+                if (!Main.dedServ && !Terraria.ModLoader.ModContent.HasAsset(art.TexturePath))
+                    warn($"[ScrollPools] art '{art.Name}': no PNG at '{art.TexturePath}'. The book page will say the art is missing.");
+
+                bool pooled = false;
+                foreach (ScrollPool pool in ordered)
+                    foreach (ScrollPool.Entry e in pool.Entries)
+                        if (e.ArtName == art.Name) pooled = true;
+                if (!pooled)
+                    warn($"[ScrollPools] art '{art.Name}' is in no scroll pool, so no parchment can ever unlock it (add .AddArt(\"{art.Name}\") to a pool in ScrollPoolDefinitions).");
+            }
         }
 
         /// <summary>Pool entries that resolve and are neither unlocked nor crafted, with their weights.</summary>
@@ -110,7 +133,7 @@ namespace Factorraria.Common.Knowledge
             {
                 if (e.Weight <= 0f) continue;
                 string key = e.CatalogKey;
-                if (!RecipeCatalog.TryResolve(key, out _, out _)) continue;
+                if (!RecipeCatalog.Exists(key)) continue;
                 if (RecipeKnowledgeSystem.IsUnlocked(key) || RecipeKnowledgeSystem.IsCrafted(key)) continue;
                 if (result.Exists(r => r.Key == key)) continue;   // same recipe listed twice
                 result.Add(new KeyValuePair<string, float>(key, e.Weight));

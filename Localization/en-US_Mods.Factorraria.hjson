@@ -401,6 +401,7 @@ RecipeBook: {
 	AnyWater: Any Water
 	Time: Time: {0} s
 	Units: "{0} units"
+	Fuel: Fuel
 
 	Machines: {
 		Furnace: Furnace
@@ -411,6 +412,7 @@ RecipeBook: {
 		DecayChamber: Decay Chamber
 		Autohammer: Autohammer
 		MechanicalAssembler: Mechanical Assembler
+		Art: Notes
 	}
 }
 

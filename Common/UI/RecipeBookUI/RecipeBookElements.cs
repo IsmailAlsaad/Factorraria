@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Machines;
+﻿using Factorraria.Common.Knowledge;
+using Factorraria.Common.Machines;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
@@ -152,6 +153,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public readonly RecipeState State;
         public readonly string ProductName;
         public readonly bool Favorite;
+        public readonly RecipeArtRegistry.Entry Art;     // set for art entries (Group is null then)
         public bool Selected;
         public Action<string> OnChosen;
 
@@ -167,7 +169,20 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Height.Set(RecipeBookLayout.EntryRowHeight, 0f);
         }
 
-        public bool IsFaded => State != RecipeState.Crafted;
+        /// <summary>Art entry: no product icon, the PNG's file name is the label. Unlocked art is never faded (there is nothing to hide).</summary>
+        public RecipeBookEntry(string key, string machine, RecipeArtRegistry.Entry art, bool favorite)
+        {
+            Key = key;
+            Favorite = favorite;
+            Machine = machine;
+            Art = art;
+            State = RecipeState.FadedParchment;
+            ProductName = art.Name;
+            Width.Set(0f, 1f);
+            Height.Set(RecipeBookLayout.EntryRowHeight, 0f);
+        }
+
+        public bool IsFaded => Art == null && State != RecipeState.Crafted;
 
         public override void Update(GameTime gameTime)
         {
@@ -201,9 +216,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
             }
 
             int box = RecipeBookLayout.EntryIconBox;
-            RecipeIcon.Draw(sb, Group.Key, new Vector2(r.X + 6 + box / 2f, r.Center.Y), box, 1f, IsFaded);
+            if (Art == null) RecipeIcon.Draw(sb, Group.Key, new Vector2(r.X + 6 + box / 2f, r.Center.Y), box, 1f, IsFaded);
 
-            float textX = r.X + 6 + box + 8;
+            float textX = Art == null ? r.X + 6 + box + 8 : r.X + 10;
             float maxWidth = r.Right - textX - 4 - RecipeBookLayout.StarHitSize - RecipeBookLayout.StarRightPad;
             string shown = BookDraw.Fit(ProductName, maxWidth, 0.95f, out bool truncated);
             Vector2 size = FontAssets.MouseText.Value.MeasureString(shown) * 0.95f;

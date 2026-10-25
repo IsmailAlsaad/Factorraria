@@ -206,6 +206,8 @@ namespace Factorraria.Common.Machines
         public bool Contains(int itemType) => unitsByItem.ContainsKey(itemType);
         public int UnitsOf(int itemType) => unitsByItem[itemType];
         public int StackLimit(int itemType) => StackLimitRule(UnitsOf(itemType));
+        /// <summary>Every item type this table accepts, in the order they were added (the recipe book lists them as fuels).</summary>
+        public IEnumerable<int> ItemTypes => unitsByItem.Keys;
         public void Clear() => unitsByItem.Clear();
     }
 
@@ -296,6 +298,8 @@ namespace Factorraria.Common.Machines
 
         public bool Contains(int liquidType) => amountPerUnitByLiquid.ContainsKey(liquidType);
         public float AmountPerUnit(int liquidType) => amountPerUnitByLiquid[liquidType];
+        /// <summary>Every liquid type this table accepts, in the order they were added (the recipe book lists them as fuels).</summary>
+        public IEnumerable<int> LiquidTypes => amountPerUnitByLiquid.Keys;
         public void Clear() => amountPerUnitByLiquid.Clear();
     }
 

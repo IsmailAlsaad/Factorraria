@@ -162,6 +162,10 @@ namespace Factorraria.Common.Machines
             RecipeCatalog.Register("Autohammer", AutohammerRecipeRegistry.Book);
             RecipeCatalog.Register("MechanicalAssembler", MechanicalAssemblerRecipeRegistry.Book);
 
+            // Fuels the recipe book shows beside the arrow. Read from each machine's registry tables, not from CustomRecipe.
+            RecipeCatalog.RegisterFuels("Furnace", FurnaceRecipeRegistry.Fuels, null);
+            RecipeCatalog.RegisterFuels("Hellforge", null, HellforgeRecipeRegistry.LiquidFuels);
+
             // Auto-fill recipe times: any recipe without its own TakesTicks gets the time of the machine that owns its book,
             // so the recipe book always has a time to show. Runs on every load, nothing is saved. If two machines ever
             // share one book, the first machine found wins (none do today).
@@ -180,6 +184,10 @@ namespace Factorraria.Common.Machines
             // Reverse index itemType -> recipes, for the "holding an ingredient" state. Needs the catalog above.
             RecipeVisibility.BuildIngredientIndex();
 
+            // Recipe book art entries (configured in RecipeArtDefinitions). Before the pools, which may reference them.
+            RecipeArtRegistry.Clear();
+            RecipeArtDefinitions.Register();
+
             // Scroll pools (configured in ScrollPoolDefinitions). Needs the catalog above to validate entries.
             ScrollPools.Clear();
             ScrollPoolDefinitions.Register();
@@ -189,6 +197,7 @@ namespace Factorraria.Common.Machines
         public override void Unload()
         {
             RecipeCatalog.Clear();
+            RecipeArtRegistry.Clear();
             RecipeVisibility.ClearIndex();
             ScrollPools.Clear();
             MachineVisualRegistry.Definitions.Clear();

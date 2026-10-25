@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Liquids;
+﻿using Factorraria.Common.Knowledge;
+using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,6 +23,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
         readonly RecipeBookState book;
         RecipeOutputGroup shownGroup;
         int recipeIndex;
+
+        // Tweakables (instance fields on purpose, so hot reload can change them).
+        int arrowLength = 46;          // arrow height when the machine has fuels: room for one 42px fuel cell beside its middle
+        int shortArrowLength = 13;     // the original arrow, used when the machine has no fuels
+        int fuelCycleTicks = 60;       // the shown fuel changes this often (60 = once a second)
+        int fuelBoxOffsetX = 12;       // gap between the arrow's centre line and the fuel cell
 
         // Clickable ingredient boxes of the recipe drawn this frame (box, catalog key to jump to). Refilled every draw.
         readonly List<(Rectangle box, string key)> navHits = new List<(Rectangle box, string key)>();
@@ -82,6 +89,13 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Rectangle r = GetDimensions().ToRectangle();
             navHits.Clear();
 
+            // Art entries (RecipeArtRegistry) replace the whole page with their PNG.
+            if (book.SelectedArt != null)
+            {
+                DrawArt(sb, r, book.SelectedArt);
+                return;
+            }
+
             if (book.SelectedGroup == null)
             {
                 string msg = book.IsEmpty ? RecipeBookLayout.Text("Empty") : book.NoResults ? RecipeBookLayout.Text("NoResults") : RecipeBookLayout.Text("NothingSelected");
@@ -130,8 +144,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
             y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, book.SelectedState, book.SelectedKey), area, y, navHits);
 
             y += 4f;
-            DrawArrow(sb, new Vector2(area.Center.X, y));
-            y += 20f;
+            List<RecipeOutputKey> fuels = RecipeCatalog.FuelsOf(book.SelectedMachine);
+            bool hasFuel = fuels != null && fuels.Count > 0;
+            int length = hasFuel ? arrowLength : shortArrowLength;
+            DrawArrow(sb, new Vector2(area.Center.X, y), length);
+            if (hasFuel) DrawFuel(sb, area, y, fuels);
+            y += length + 7f;     // same 7px gap the short arrow always had
 
             y = DrawLabel(sb, RecipeBookLayout.Text("Outputs"), area, y);
             y = DrawCells(sb, BuildCells(recipe.Outputs, recipe.LiquidOutputs, outputsHidden), area, y);
@@ -259,15 +277,68 @@ namespace Factorraria.Common.UI.RecipeBookUI
             return y + rows * (size + gap);
         }
 
-        /// <summary>Small downward arrow made of rectangles (no art needed).</summary>
-        static void DrawArrow(SpriteBatch sb, Vector2 topCenter)
+        /// <summary>Small downward arrow made of rectangles (no art needed). length = total height: the stem plus a 5px head.</summary>
+        void DrawArrow(SpriteBatch sb, Vector2 topCenter, int length)
         {
             Color c = RecipeBookLayout.PageBorder;
             int x = (int)topCenter.X;
             int y = (int)topCenter.Y;
-            BookDraw.Rect(sb, new Rectangle(x - 1, y, 3, 8), c);                          // stem
+            int stem = Math.Max(1, length - 5);
+            BookDraw.Rect(sb, new Rectangle(x - 1, y, 3, stem), c);                       // stem
             for (int i = 0; i < 5; i++)                                                  // head
-                BookDraw.Rect(sb, new Rectangle(x - (4 - i), y + 8 + i, (4 - i) * 2 + 1, 1), c);
+                BookDraw.Rect(sb, new Rectangle(x - (4 - i), y + stem + i, (4 - i) * 2 + 1, 1), c);
+        }
+
+        /// <summary>
+        /// One of the machine's fuels (from RecipeCatalog.FuelsOf, i.e. the machine's registry) beside the middle of the arrow,
+        /// cycling through all of them. Same reveal rule, hover tooltip and click-to-jump as an ingredient cell.
+        /// </summary>
+        void DrawFuel(SpriteBatch sb, Rectangle area, float arrowTop, List<RecipeOutputKey> fuels)
+        {
+            int size = RecipeBookLayout.DetailCell;
+            int index = (int)((Main.GameUpdateCount / (uint)Math.Max(1, fuelCycleTicks)) % (uint)fuels.Count);
+            RecipeOutputKey fuel = fuels[index];
+
+            // Same reveal rule as the recipe's inputs (see BuildCells).
+            RecipeState state = book.SelectedState;
+            bool reveal = state != RecipeState.Crafted;
+            bool hidden = fuel.IsLiquid
+                ? state == RecipeState.FadedIngredient || (reveal && !RecipeVisibility.IsLiquidRevealed(fuel.Id))
+                : reveal && !RecipeVisibility.IsIngredientRevealed(fuel.Id);
+
+            var cell = new Cell
+            {
+                Icon = fuel,
+                ItemType = fuel.IsLiquid ? 0 : fuel.Id,
+                Stack = 1,
+                Name = fuel.IsLiquid ? (LiquidTypeRegistry.Get(fuel.Id)?.Name ?? "") : null,
+                Hidden = hidden,
+                NavKey = hidden ? null : RecipeVisibility.FindBookRecipeFor(fuel, book.SelectedKey),
+            };
+
+            // DrawCells with a one-cell area draws, highlights, shows the tooltip and records the click box.
+            var box = new Rectangle(area.Center.X + fuelBoxOffsetX, (int)(arrowTop + arrowLength / 2f - size / 2f), size, size);
+            DrawCells(sb, new List<Cell> { cell }, box, box.Y, navHits);
+
+            string label = RecipeBookLayout.Text("Fuel");
+            Vector2 labelSize = FontAssets.MouseText.Value.MeasureString(label) * 0.9f;
+            BookDraw.Text(sb, label, new Vector2(box.Right + 6, box.Center.Y - labelSize.Y / 2f + 2f), RecipeBookLayout.PageBorder, 0.9f);
+        }
+
+        /// <summary>Art entry page: the PNG centered in the detail area, shrunk to fit, never enlarged.</summary>
+        void DrawArt(SpriteBatch sb, Rectangle r, RecipeArtRegistry.Entry art)
+        {
+            Texture2D tex = art.Texture;
+            if (tex == null)
+            {
+                DrawWrapped(sb, "Missing art: " + art.TexturePath, new Vector2(r.X + 8, r.Center.Y - 30), r.Width - 16, RecipeBookLayout.TextFadedColor, 1f);
+                return;
+            }
+
+            float fit = Math.Min(1f, Math.Min(r.Width / (float)tex.Width, r.Height / (float)tex.Height));
+            int w = Math.Max(1, (int)(tex.Width * fit));
+            int h = Math.Max(1, (int)(tex.Height * fit));
+            sb.Draw(tex, new Rectangle(r.Center.X - w / 2, r.Center.Y - h / 2, w, h), Color.White);
         }
 
         void DrawPager(SpriteBatch sb, Rectangle r, int count)
