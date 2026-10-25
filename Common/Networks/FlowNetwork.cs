@@ -13,9 +13,8 @@ namespace Factorraria.Common.Networks
 {
     // Liquid overhaul: the game-side topology of one pipe network, built from the real tiles and machines (step 2) and handed to the
     // pure core in Common/Networks/Flow, plus the per-tick transfer of liquid through it (step 3, the Tick region below).
-    // The old LiquidNetwork is still built next to it but is no longer ticked (it goes away in step 6).
     //
-    // Multiplayer: server / single-player only, like the old networks (LiquidNetworkSystem.PostUpdateWorld returns on a client).
+    // Multiplayer: server / single-player only (LiquidNetworkSystem.PostUpdateWorld returns on a client).
     // It is derived data: rebuilt from tiles, never saved, never sent. A client never has one.
 
     // A place liquid can be taken from: ONE output tank of a machine, or ONE world liquid cell.
@@ -332,7 +331,7 @@ namespace Factorraria.Common.Networks
     public static class FlowNetworkBuilder
     {
         // Groups every pipe (and the motors joined to them) into networks and builds each one's nodes and ports.
-        // Same input as the old LiquidNetworkSystem.RebuildNetworks: the list of registered pipe tiles.
+        // Input: the list of registered pipe tiles (LiquidNetworkSystem.AllPipeTiles).
         public static List<FlowNetwork> BuildAll(HashSet<Point> allPipes)
         {
             var result = new List<FlowNetwork>();

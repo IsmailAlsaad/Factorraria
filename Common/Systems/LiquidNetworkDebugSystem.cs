@@ -110,7 +110,7 @@ namespace Factorraria.Common.Systems
             spriteBatch.End();
         }
 
-        // Liquid overhaul step 5: the overlay reads the FlowNetworks (the old LiquidNetwork.ResolvedFlow is no longer used).
+        // The overlay reads the FlowNetworks (liquid overhaul).
         void DrawNodes(SpriteBatch sb, FlowNetwork network, Color color)
         {
             Texture2D pixel = TextureAssets.MagicPixel.Value;

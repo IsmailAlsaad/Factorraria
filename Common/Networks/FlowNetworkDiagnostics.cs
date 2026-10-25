@@ -51,7 +51,7 @@ namespace Factorraria.Common.Networks
                 if (net.BuildMs > slowest) slowest = net.BuildMs;
             }
 
-            lines.Add("fflow: " + networks.Count + " network(s) (old system: " + LiquidNetworkSystem.ActiveNetworks.Count + "), " + motors + " motor(s), "
+            lines.Add("fflow: " + networks.Count + " network(s), " + motors + " motor(s), "
                 + sources + " source port(s), " + sinks + " sink port(s), " + routes + " route(s); slowest build " + slowest.ToString("0.00") + " ms; rebuild #" + LiquidNetworkSystem.RebuildCount);
 
             int shownNetworks = 0, hiddenNetworks = 0;

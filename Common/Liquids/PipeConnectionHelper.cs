@@ -6,7 +6,7 @@ namespace Factorraria.Common.Liquids
 {
     // Single source of truth for "does a pipe treat this neighbor as connectable" — used
     // both by the sprite mask (ReframeSelf, purely visual) and by the network topology
-    // scan (LiquidNetworkSystem.RecordAttachmentIfAny). One rule, so the pipe never LOOKS
+    // scan (FlowNetworkBuilder). One rule, so the pipe never LOOKS
     // connected to something it isn't actually hooked up to, or vice versa.
     public static class PipeConnectionHelper
     {

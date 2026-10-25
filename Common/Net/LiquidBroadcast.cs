@@ -8,8 +8,8 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Common.Net
 {
-    // Patch 8.1 (finding P2). The liquid networks edit tile.LiquidAmount / LiquidType directly (LiquidNetwork.WithdrawFromWorldTile and
-    // DepositToWorldTile) and nothing told the clients. Authority: the server (or single-player) is the only side that ticks the networks
+    // Patch 8.1 (finding P2). The liquid networks edit tile.LiquidAmount / LiquidType directly (LiquidWorldBanks, since the liquid overhaul;
+    // before it LiquidNetwork.WithdrawFromWorldTile and DepositToWorldTile) and nothing told the clients. Authority: the server (or single-player) is the only side that ticks the networks
     // (LiquidNetworkSystem.PostUpdateWorld returns on a client), so only the server marks tiles here. Mark() queues a position once
     // (a tile touched twice before it is sent goes out once, with its final state); every tick up to LiquidBroadcastsPerTick queued
     // positions are sent and the rest wait for the next tick. Single-player and clients never mark anything, so nothing changes there.

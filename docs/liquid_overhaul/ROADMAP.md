@@ -64,7 +64,7 @@ One line per step. `[ ]` not started, `[~]` applied untested, `[x]` tested and d
 - [~] 3 New tick (`FlowNetwork.Tick`), `LiquidWorldBanks`, tanks forget type (`patch_flow_tick.ps1`; applied untested, no `UseNewFlow` switch by Ismail's decision)
 - [~] 4 Motors: `flowNeedsRecalculating`, `wasOn` and the old reset deleted; `FlowNetwork.Tick` detects power flips (`patch_flow_motors.ps1`; applied untested)
 - [~] 5 Visual debug overlay on `FlowNetworks`, `/fpipes` reads `FlowNetworks` (`patch_flow_debug.ps1`; applied untested)
-- [ ] 6 Cleanup of the old system, docs
+- [~] 6 Cleanup: old `LiquidNetwork`, `ResolveFlow`, saved network types removed (`patch_flow_cleanup.ps1`; applied untested; delete `Common\Networks\LiquidNetwork.cs` by hand afterwards)
 
 ### Step 3 decisions (Ismail, 2026-10-25)
 - World banking: the per-cell `withdrawBank` / `depositBank` design of step 3 below, shared by all networks in one `LiquidWorldBanks` (`LiquidNetworkSystem.WorldBanks`), `FlushAll()` before every flow-network rebuild.
@@ -190,10 +190,11 @@ Only after steps 3-5 are `[x]`:
 - The game-layer files only compile for real inside tModLoader; the stubs catch type and logic errors but not API mismatches. Never claim the mod compiles.
 - Patch delivery follows `PROJECT_CONTEXT.md`: copy `patch_template.ps1`, `Edit` / `NewFile` only, UTF-8 with BOM, reply with changed list, "things to remember", "things to test", dry-run and apply commands, and a reminder to commit and push.
 
-## 8. Next chat (written by the step 5 patch)
+## 8. After step 6 (written by the step 6 patch)
 
-Paste Ismail's test results for steps 3, 4 and 5 first (he tests them together). If something failed, fix it in that chat with a small patch before step 6. Then:
+All six steps are applied. Once Ismail's combined test of steps 3-6 passes, mark 3-6 `[x]` in Progress (small patch). What is left:
+- Remove the file `Common/Networks/LiquidNetwork.cs` (it is only a comment now) if it is still in the repo.
+- Roadmap Phase 10 (multiplayer ROADMAP): the `TEMPORARY (8.1b)` diagnostics (`LiquidPipeDiagnostics`, `/fpipes`, `RebuildCount`) are to be removed as planned there.
+- Optional later: route highlight under the mouse in the overlay; a motor seeding networks by itself; performance work in `FlowRouteFinder` if `/fflow` ever shows slow builds.
 
-> Continue the liquid overhaul in Factorraria. Read `docs/liquid_overhaul/ROADMAP.md` from a fresh clone (sections 0, 1, 3 and Step 6). Results of steps 3-5: <paste>. Implement step 6 (cleanup: delete the old LiquidNetwork system, stop writing the saved network types, update PROJECT_CONTEXT.md's Liquids paragraph) as a patch script, following PROJECT_CONTEXT.md. Mark steps 3-5 `[x]` in Progress first if I reported them passing.
-
-Step 5 changed: `LiquidNetworkDebugSystem` (draws `FlowNetworks`: tinted pipes and motors with facing arrow and ON/OFF, every source/sink port at its attach tile with its tank or world-cell liquid, one readout per network with active liquid, cap, moved/tick and port counts, and per route the rate, climbs and rate lost to climbing); `LiquidPipeDiagnostics.Summary()` / `Report()` read `FlowNetworks` (the `[Pipes] networks rebuilt` log line and `MultiplayerBootProbeSystem` still work). Nothing reads the old `ActiveNetworks` / `ResolvedFlow` / `LiquidType` any more except `LiquidNetworkSystem` itself (`RebuildNetworks`, `ResolveFlow`, `RestoreSavedNetworkTypes`, `SaveWorldData`), which step 6 removes. Not done (optional): highlighting the route under the mouse.
+What step 6 removed: `LiquidNetwork` (+ `PipeAttachment`, `MotorAttachment`, `LiquidEndpoint`, `MinTankKeep`), `LiquidNetworkSystem.ActiveNetworks`, `RebuildNetworks`, `BuildNetworkFromPipe`, `NarrowCapacity`, `RecordAttachmentIfAny`, `ResolveFlow`, `PriorityQueueLite`, `RestoreSavedNetworkTypes`, and the `NetworkTypePipes` / `NetworkTypeNames` world-save keys (old worlds still load: unknown keys are ignored; `AllPipeTiles` is still saved). Stale comments were fixed. PROJECT_CONTEXT.md lives in the claude.ai Project files, not the repo: its Liquids paragraph has to be replaced by hand (text given in the chat).

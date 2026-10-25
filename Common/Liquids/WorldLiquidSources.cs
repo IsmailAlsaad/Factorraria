@@ -6,9 +6,9 @@ using Terraria.ModLoader;
 namespace Factorraria.Common.Liquids
 {
     /// <summary>
-    /// "Is this world liquid cell part of a bottomless source?" Same rule as the pipe network (LiquidNetwork.ComputeIsInfiniteSource):
+    /// "Is this world liquid cell part of a bottomless source?" The one rule for the pipe networks (FlowNetwork) and terrarium carts:
     /// flood-fill (4 directions) through connected cells holding the same liquid; if the body reaches InfiniteThreshold cells it is
-    /// treated as infinite. Used by terrarium carts so a big lake is not drained; the pipe code keeps its own copy.
+    /// treated as infinite. Used by the pipe networks and terrarium carts so a big lake is not drained.
     /// Results are cached per cell and re-checked every RecheckInterval ticks, like the pipes do.
     /// </summary>
     public class WorldLiquidSources : ModSystem

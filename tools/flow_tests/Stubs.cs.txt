@@ -134,7 +134,7 @@ namespace Factorraria.Common.Systems
     public static class LiquidNetworkSystem
     {
         public static System.Collections.Generic.List<Factorraria.Common.Networks.FlowNetwork> FlowNetworks = new();
-        public static System.Collections.Generic.List<object> ActiveNetworks = new();
+
         public static int RebuildCount;
     }
 }
