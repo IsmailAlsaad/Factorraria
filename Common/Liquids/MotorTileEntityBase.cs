@@ -15,20 +15,11 @@ namespace Factorraria.Common.Machines
 
         public Direction Facing = Direction.Right;
 
-        bool wasOn;
-
-        // Sealed so future motor tiers can't accidentally override Update() directly
-        // and silently break isOn-change detection — they override UpdateMotor() instead.
+        // Sealed so future motor tiers override UpdateMotor() instead. A power flip (grid, brownout, wire toggle) needs nothing here:
+        // FlowNetwork.Tick reads isOn and PumpStrength of every motor each tick and refreshes its routes when one changed.
         public sealed override void Update()
         {
             base.Update();
-
-            if (isOn != wasOn)
-            {
-                wasOn = isOn;
-                LiquidNetworkSystem.flowNeedsRecalculating = true;
-            }
-
             UpdateMotor();
         }
 

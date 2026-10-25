@@ -161,5 +161,30 @@ static class TickTests
             Fill(a.OutputLiquids[0], Water, 1000); var n = w.Build()[0]; Ticks(n, banks, 10);
             T.Check(Near(b.InputLiquids[0].Amount, 100), "t14 slow pipe caps the pump at 10/tick (" + b.InputLiquids[0].Amount + ")");
         }
+        // 15. Series pumps with the second one off: it acts as a pipe, the first pump still moves the liquid.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right, true, 5 * 3600f); w.Pipe(4, 50); var m2 = w.Motor(5, 50, Direction.Right, false); w.Row(6, 7, 50); var b = w.Machine(8, 50);
+            Fill(a.OutputLiquids[0], Water, 100);
+            var n = w.Build()[0]; Ticks(n, banks, 10);
+            T.Check(Near(b.InputLiquids[0].Amount, 50), "t15 an OFF motor passes liquid like a pipe (" + b.InputLiquids[0].Amount + ")");
+            m2.isOn = true; Ticks(n, banks, 10);
+            T.Check(Near(b.InputLiquids[0].Amount, 100), "t15 switching it on later needs no rebuild (" + b.InputLiquids[0].Amount + ")");
+        }
+        // 16. An OFF motor lowers the cap to its pipe-equivalent rate, so it throttles the pump in front of it.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right, true, 5 * 3600f); w.Pipe(4, 50); w.Motor(5, 50, Direction.Right, false, 5 * 3600f, 2 * 3600f); w.Row(6, 7, 50); var b = w.Machine(8, 50);
+            Fill(a.OutputLiquids[0], Water, 100);
+            var n = w.Build()[0]; Ticks(n, banks, 10);
+            T.Check(Near(b.InputLiquids[0].Amount, 20), "t16 OFF motor with a 2/tick pipe rate caps the line at 2/tick (" + b.InputLiquids[0].Amount + ")");
+        }
+        // 17. Brownout: every motor off at once freezes the liquid where it is, then it resumes.
+        {
+            var (w, a, b, m) = Line(); Fill(a.OutputLiquids[0], Water, 100);
+            var n = w.Build()[0]; Ticks(n, banks, 5);
+            m.isOn = false; Ticks(n, banks, 20);
+            T.Check(Near(b.InputLiquids[0].Amount, 25) && Near(a.OutputLiquids[0].Amount, 75), "t17 brownout freezes the tanks as they are");
+            m.isOn = true; Ticks(n, banks, 5);
+            T.Check(Near(b.InputLiquids[0].Amount, 50), "t17 power back, flow resumes");
+        }
     }
 }

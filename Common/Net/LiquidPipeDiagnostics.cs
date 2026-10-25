@@ -43,7 +43,7 @@ namespace Factorraria.Common.Net
         public static List<string> Report(bool scan)
         {
             var lines = new List<string>();
-            lines.Add("fpipes: " + Summary() + "; AllPipeTiles " + LiquidNetworkSystem.AllPipeTiles.Count + "; rebuild flag " + LiquidNetworkSystem.networkNeedsRebuilding + ", flow flag " + LiquidNetworkSystem.flowNeedsRecalculating);
+            lines.Add("fpipes: " + Summary() + "; AllPipeTiles " + LiquidNetworkSystem.AllPipeTiles.Count + "; rebuild flag " + LiquidNetworkSystem.networkNeedsRebuilding);
 
             // Every motor entity that exists, whether or not a network contains it. A motor missing from the networks below is the clue.
             var inNetworks = new HashSet<Point>();

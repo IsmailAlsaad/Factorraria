@@ -18,7 +18,6 @@ namespace Factorraria.Common.Systems
         public static HashSet<Point> AllPipeTiles = new();
         public static List<LiquidNetwork> ActiveNetworks = new();
         public static bool networkNeedsRebuilding = true;
-        public static bool flowNeedsRecalculating = false;
 
         // Liquid overhaul: the NEW networks (nodes, ports, routes). Since step 3 they move all the liquid; the old ActiveNetworks are
         // still built (the old debug overlay and /fpipes read them) but are never ticked.
@@ -49,19 +48,6 @@ namespace Factorraria.Common.Systems
                 if (Main.netMode == NetmodeID.Server)
                     Mod.Logger.Info("[MP-Net] [Pipes] networks rebuilt: " + ActiveNetworks.Count + " network(s), " + AllPipeTiles.Count + " pipe tile(s); " + global::Factorraria.Common.Net.LiquidPipeDiagnostics.Summary());
                 networkNeedsRebuilding = false;
-                flowNeedsRecalculating = false;
-            }
-            else if (flowNeedsRecalculating)
-            {
-                RefreshFlowNetworks();
-
-                foreach (var network in ActiveNetworks)
-                {
-                    ResolveFlow(network);
-                    network.LiquidType = -1;
-                }
-
-                flowNeedsRecalculating = false;
             }
 
             // Liquid overhaul step 3: the flow networks move the liquid; the old LiquidNetwork.Tick() is no longer called.
@@ -238,19 +224,6 @@ namespace Factorraria.Common.Systems
             }
         }
 
-        // A motor switched on or off: only the route table changes, no topology rebuild is needed.
-        void RefreshFlowNetworks()
-        {
-            try
-            {
-                foreach (FlowNetwork network in FlowNetworks)
-                    network.RefreshRoutes();
-            }
-            catch (Exception e)
-            {
-                Mod.Logger.Error("[Pipes] flow routes failed to refresh: " + e);
-            }
-        }
 
         void RebuildNetworks()
         {
