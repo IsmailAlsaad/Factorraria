@@ -217,6 +217,7 @@ static class Program
             T.Check(lines.Count >= 3 && lines[0].StartsWith("fflow: 1 network"), "12 report: " + (lines.Count > 0 ? lines[0] : "empty"));
             foreach (var l in lines) Console.WriteLine("   " + l);
         }
+        TickTests.Run();
         return T.Done();
     }
 }

@@ -77,7 +77,8 @@ namespace Factorraria.Common.Networks
 
                 lines.Add("fflow: network " + i + ": " + (net.Nodes.Length - motorCount) + " pipe(s), " + motorCount + " motor(s), cap "
                     + (net.Cap >= float.MaxValue ? "none" : Rate(net.Cap)) + ", " + net.Sources.Count + " source(s), " + net.Sinks.Count + " sink(s), "
-                    + net.Routes.Count + " route(s), build " + net.BuildMs.ToString("0.00") + " ms" + sb);
+                    + net.Routes.Count + " route(s), active liquid " + (net.Solver.ActiveType == -1 ? "none" : LiquidTypeRegistry.Get(net.Solver.ActiveType).Name)
+                    + ", build " + net.BuildMs.ToString("0.00") + " ms" + sb);
 
                 int shownRoutes = 0;
                 foreach (FlowRoute route in net.Routes)

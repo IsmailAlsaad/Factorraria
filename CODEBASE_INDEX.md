@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-25 | 274 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-25 | 276 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(59) BaseMachine(41) FactorrariaPacket(31) LiquidTypeRegistry(30) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) TileEntityHelper(16) LiquidStack(15) MachineUIStateBase(14) LiquidNetworkSystem(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
+FactorrariaNet(59) BaseMachine(41) LiquidTypeRegistry(32) FactorrariaPacket(31) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(20) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) MachineUIStateBase(14) LiquidNetworkSystem(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
 
 ## Inheritance
 Project bases -> derived:
@@ -246,6 +246,9 @@ tModLoader/other bases -> project types:
     {Up, Down, Left, Right}
   static class DirectionExtensions
     +ToOffset(Direction)[s] +Rotate90(Direction)[s] +Opposite(Direction)[s] +ToMaskBit(Direction)[s] +FromOffset(Point)[s] +IsPipeMouthOpen(int,int,Direction)[s]
+**LiquidTankRules.cs** uses: LiquidStack
+  static class LiquidTankRules
+    +FindSinkSlot(LiquidStack,int)[s]
 **LiquidTextureCache.cs** uses: LiquidTypeDefinition, LiquidTypeRegistry
   static class LiquidRecolorer
     +Recolor(GraphicsDevice,Texture2D,Color,Color,float)[s]
@@ -686,13 +689,13 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 
 ### Common/Networks/
-**FlowNetwork.cs** uses: BaseMachine, Direction, FlowDir, FlowNode, FlowPort, FlowRoute, FlowRouteFinder, FlowRouteMerger, FlowSolver, LiquidStack, MotorTileEntityBase, PipeConnectionHelper, PipeTierRegistry, TileEntityHelper
+**FlowNetwork.cs** uses: BaseMachine, Direction, FlowDir, FlowNode, FlowPort, FlowRoute, FlowRouteFinder, FlowRouteMerger, FlowSolver, FlowTransfer, LiquidStack, LiquidTankRules, LiquidTypeRegistry, LiquidWorldBanks, MotorTileEntityBase, PipeConnectionHelper, PipeTierRegistry, TileEntityHelper, WorldLiquidSources
   sealed class FlowSource
     +Machine:BaseMachine +Tank:LiquidStack +TankIndex:int +WorldPos:Point +Owner:int +IsWorld:bool
   sealed class FlowSink
     +Machine:BaseMachine +WorldPos:Point +Owner:int +IsWorld:bool
   sealed class FlowNetwork
-    +Positions:Point +Nodes:FlowNode +Motors:MotorTileEntityBase +PassRate:float +Sources:List<FlowSource> +Sinks:List<FlowSink> +SourceAttach:FlowPort +SinkAttach:FlowPort +SourcePortsOfAttach:int +SinkPortsOfAttach:int +Routes:List<FlowRoute> +Solver:FlowSolver +Cap:float +DecayPerClimbPerMinute:float +BuildMs:double +RefreshMs:double +RefreshRoutes()
+    +Positions:Point +Nodes:FlowNode +Motors:MotorTileEntityBase +PassRate:float +Sources:List<FlowSource> +Sinks:List<FlowSink> +SourceAttach:FlowPort +SinkAttach:FlowPort +SourcePortsOfAttach:int +SinkPortsOfAttach:int +Routes:List<FlowRoute> +Solver:FlowSolver +Cap:float +DecayPerClimbPerMinute:float +BuildMs:double +RefreshMs:double +RefreshRoutes() +TickFailed:bool +LastTransfers:IReadOnlyList<FlowTransfer> +Tick(LiquidWorldBanks)
   static class FlowNetworkBuilder
     +BuildAll(HashSet<Point>)[s]
     sealed class PortTables
@@ -702,7 +705,7 @@ tModLoader/other bases -> project types:
     +Describe(FlowSource)[s] +Describe(FlowSink)[s] +Report(bool)[s]
   class FlowNetworkCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
-**LiquidNetwork.cs** uses: BaseMachine, Direction, Factorraria, LiquidBroadcastSystem, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MotorTileEntityBase, WorldLiquidSources
+**LiquidNetwork.cs** uses: BaseMachine, Direction, Factorraria, LiquidBroadcastSystem, LiquidNetworkSystem, LiquidStack, LiquidTankRules, LiquidTypeRegistry, MotorTileEntityBase, WorldLiquidSources
   struct PipeAttachment
     +Position:Point +PipePosition:Point +MouthDirection:Direction +Machine:BaseMachine
   struct MotorAttachment
@@ -711,6 +714,11 @@ tModLoader/other bases -> project types:
     +PipeTiles:HashSet<Point> +MachineAttachments:List<PipeAttachment> +WorldLiquidAttachments:List<PipeAttachment> +Motors:List<MotorAttachment> +MaxFlowRate:float +LiquidType:int +Tick()
   struct LiquidEndpoint
     +IsWorld:bool +Machine:BaseMachine +MachineSlots:LiquidStack +WorldPos:Point +RateThisTick:float +ForMachine(BaseMachine,LiquidStack,float)[s] +ForWorld(Point,float)[s]
+**LiquidWorldBanks.cs** uses: Factorraria, LiquidBroadcastSystem, LiquidTypeRegistry
+  sealed class LiquidWorldBanks
+    +WithdrawBankCount:int +DepositBankCount:int +WorldSourceOffer(Point) +WorldSinkSpace(Point,int) +AddWithdraw(Point,float) +AddDeposit(Point,int,float) +FlushAll() +Clear()
+    struct DepositBank
+      +Amount:float +Type:int
 **PowerNetwork.cs** ns!=Factorraria.Common.PowerGrid uses: IElectricConsumer, IElectricProducer
   class PowerNetwork
     +electricConsumers:List<IElectricConsumer> +electricProducers:List<IElectricProducer> +Tick()
@@ -796,9 +804,9 @@ tModLoader/other bases -> project types:
 **LiquidNetworkDebugSystem.cs** uses: FurnaceOffsetConfig, LiquidNetwork, LiquidNetworkSystem
   class LiquidNetworkDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
-**LiquidNetworkSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, Factorraria, FlowNetwork, FlowNetworkBuilder, LiquidNetwork, LiquidPipeDiagnostics, LiquidTextureCache, LiquidTypeRegistry, MotorAttachment, MotorTileEntityBase, PipeAttachment, PipeConnectionHelper, PipeTierRegistry, TileEntityHelper
+**LiquidNetworkSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, Factorraria, FlowNetwork, FlowNetworkBuilder, LiquidNetwork, LiquidPipeDiagnostics, LiquidTextureCache, LiquidTypeRegistry, LiquidWorldBanks, MotorAttachment, MotorTileEntityBase, PipeAttachment, PipeConnectionHelper, PipeTierRegistry, TileEntityHelper
   class LiquidNetworkSystem : ModSystem
-    +AllPipeTiles:HashSet<Point>[s] +ActiveNetworks:List<LiquidNetwork>[s] +networkNeedsRebuilding:bool[s] +flowNeedsRecalculating:bool[s] +FlowNetworks:List<FlowNetwork>[s] +RebuildCount:int[s] +PostUpdateWorld()[ov] +RegisterPipeTile(Point)[s] +UnregisterPipeTile(Point)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov]
+    +AllPipeTiles:HashSet<Point>[s] +ActiveNetworks:List<LiquidNetwork>[s] +networkNeedsRebuilding:bool[s] +flowNeedsRecalculating:bool[s] +FlowNetworks:List<FlowNetwork>[s] +WorldBanks:LiquidWorldBanks[s] +RebuildCount:int[s] +PostUpdateWorld()[ov] +RegisterPipeTile(Point)[s] +UnregisterPipeTile(Point)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov]
   class PriorityQueueLite<T>
     +Enqueue(T,float) +TryDequeue(out T,out float)
 **MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FuelGroup, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, LiquidBiomeVisits, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MagicMaterializerRegistry, MagicMaterializerTileEntity, MagicMaterializerUIState, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MotorMK1Tile, MotorMK1TileEntity, RecipeArtDefinitions, RecipeArtRegistry, RecipeBook, RecipeCatalog, RecipeVisibility, RoboticArmTile, RoboticArmTileEntity, RoboticArmUIState, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState
@@ -1360,6 +1368,7 @@ tModLoader/other bases -> project types:
 - Assets/Atlases/: Particles_Atlas.json
 - Localization/: en-US.hjson, en-US_Mods.Factorraria.hjson
 - Properties/: launchSettings.json
+- docs/liquid_overhaul/: ROADMAP.md
 - docs/multiplayer/: ROADMAP.md, SURVEY_APPENDIX.md
 - tools/: patch_engine.ps1
-- tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TopologyTests.cs.txt
+- tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt

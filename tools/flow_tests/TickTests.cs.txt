@@ -1,0 +1,165 @@
+﻿// Step 3 tick tests: the real FlowNetwork.Tick / LiquidWorldBanks against the stand-in Terraria types (see README.txt).
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Factorraria.Common.Liquids;
+using Factorraria.Common.Machines;
+using Factorraria.Common.Networks;
+using Microsoft.Xna.Framework;
+using Terraria;
+
+static class TickTests
+{
+    static bool Near(float a, float b, float tol = 0.01f) => Math.Abs(a - b) <= tol;
+
+    static void Fill(LiquidStack tank, int type, float amount) { tank.LiquidType = type; tank.Amount = amount; }
+
+    static void Ticks(FlowNetwork n, LiquidWorldBanks banks, int count) { for (int i = 0; i < count; i++) n.Tick(banks); }
+
+    static void Cell(int x, int y, int tileLiquidId, int amount)
+    {
+        var t = Main.tile[x, y]; t.LiquidType = tileLiquidId; t.LiquidAmount = (byte)amount; Main.tile[x, y] = t;
+    }
+
+    // A -> row(1..2) -> pump(3, right) -> row(4..5) -> B, with A at x=0 and B at x=6, all on y=50.
+    static (W w, BaseMachine a, BaseMachine b, MotorTileEntityBase m) Line(float strength = 5 * 3600f)
+    {
+        var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); var m = w.Motor(3, 50, Direction.Right, true, strength); w.Row(4, 5, 50); var b = w.Machine(6, 50);
+        return (w, a, b, m);
+    }
+
+    public static void Run()
+    {
+        int Water = LiquidTypeRegistry.Water, Lava = LiquidTypeRegistry.Lava, Shimmer = LiquidTypeRegistry.Shimmer;
+        var banks = new LiquidWorldBanks();
+
+        // 1. A tank drains at the pump rate, the sink fills, and the emptied tank forgets its liquid.
+        {
+            var (w, a, b, _) = Line(); Fill(a.OutputLiquids[0], Water, 100);
+            var n = w.Build()[0];
+            Ticks(n, banks, 10);
+            T.Check(Near(a.OutputLiquids[0].Amount, 50) && Near(b.InputLiquids[0].Amount, 50), "t1 5/tick for 10 ticks (A " + a.OutputLiquids[0].Amount + ", B " + b.InputLiquids[0].Amount + ")");
+            Ticks(n, banks, 30);
+            T.Check(a.OutputLiquids[0].LiquidType == -1 && a.OutputLiquids[0].Amount == 0f, "t1 emptied tank forgets its type");
+            T.Check(Near(b.InputLiquids[0].Amount, 100) && b.InputLiquids[0].LiquidType == Water, "t1 everything arrived, nothing lost");
+            Fill(a.OutputLiquids[0], Lava, 10);
+            Ticks(n, banks, 5);
+            T.Check(Near(b.InputLiquids[0].Amount, 100) && Near(a.OutputLiquids[0].Amount, 10), "t1 lava does not enter the tank that holds water");
+        }
+        // 2. A sink never overfills.
+        {
+            var (w, a, b, _) = Line(); Fill(a.OutputLiquids[0], Water, 100); b.InputLiquids[0].Capacity = 20;
+            var n = w.Build()[0]; Ticks(n, banks, 30);
+            T.Check(Near(b.InputLiquids[0].Amount, 20) && Near(a.OutputLiquids[0].Amount, 80), "t2 sink stops at its capacity and the source keeps the rest");
+        }
+        // 3. Two sources into one sink share the pump fairly.
+        {
+            var w = new W(); var a1 = w.Machine(0, 50); w.Row(1, 2, 50); var a2 = w.Machine(1, 49); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); var b = w.Machine(6, 50);
+            Fill(a1.OutputLiquids[0], Water, 100); Fill(a2.OutputLiquids[0], Water, 100);
+            var n = w.Build()[0]; Ticks(n, banks, 10);
+            T.Check(Near(a1.OutputLiquids[0].Amount, 75) && Near(a2.OutputLiquids[0].Amount, 75) && Near(b.InputLiquids[0].Amount, 50), "t3 fair split (" + a1.OutputLiquids[0].Amount + "/" + a2.OutputLiquids[0].Amount + "/" + b.InputLiquids[0].Amount + ")");
+        }
+        // 4. One liquid at a time; a full sink hands over to the next liquid.
+        {
+            var w = new W(); var a1 = w.Machine(0, 50); w.Row(1, 2, 50); var a2 = w.Machine(1, 49); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50);
+            var b1 = w.Machine(6, 50); var b2 = w.Machine(4, 49); b1.InputLiquids[0].Filter = t => t == LiquidTypeRegistry.Water; b2.InputLiquids[0].Filter = t => t == LiquidTypeRegistry.Lava;
+            Fill(a1.OutputLiquids[0], Water, 100); Fill(a2.OutputLiquids[0], Lava, 100); b1.InputLiquids[0].Capacity = 20;
+            var n = w.Build()[0];
+            bool oneType = true;
+            for (int i = 0; i < 60; i++) { n.Tick(banks); if (n.LastTransfers.Select(t => t.Type).Distinct().Count() > 1) oneType = false; }
+            T.Check(oneType, "t4 never two liquids in one tick");
+            T.Check(Near(b1.InputLiquids[0].Amount, 20) && b1.InputLiquids[0].LiquidType == Water, "t4 water filled its sink (" + b1.InputLiquids[0].Amount + ")");
+            T.Check(b2.InputLiquids[0].LiquidType == Lava && b2.InputLiquids[0].Amount > 50, "t4 once water had nowhere to go, lava flowed (" + b2.InputLiquids[0].Amount + ")");
+            T.Check(Near(a1.OutputLiquids[0].Amount + a2.OutputLiquids[0].Amount + b1.InputLiquids[0].Amount + b2.InputLiquids[0].Amount, 200), "t4 nothing created or lost");
+        }
+        // 5. A pump that is off moves nothing; switching it on needs no rebuild.
+        {
+            var (w, a, b, m) = Line(); Fill(a.OutputLiquids[0], Water, 100); m.isOn = false;
+            var n = w.Build()[0]; Ticks(n, banks, 10);
+            T.Check(b.InputLiquids[0].Amount == 0f && a.OutputLiquids[0].Amount == 100f, "t5 pump off, no flow");
+            m.isOn = true; Ticks(n, banks, 10);
+            T.Check(Near(b.InputLiquids[0].Amount, 50), "t5 pump on again, flows (" + b.InputLiquids[0].Amount + ")");
+            m.isOn = false; Ticks(n, banks, 10);
+            T.Check(Near(b.InputLiquids[0].Amount, 50), "t5 off again, frozen");
+        }
+        // 6. Series pumps: the weakest one sets the rate.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right, true, 5 * 3600f); w.Pipe(4, 50); w.Motor(5, 50, Direction.Right, true, 3 * 3600f); w.Row(6, 7, 50); var b = w.Machine(8, 50);
+            Fill(a.OutputLiquids[0], Water, 100);
+            var n = w.Build()[0]; Ticks(n, banks, 10);
+            T.Check(Near(b.InputLiquids[0].Amount, 30), "t6 series pumps 5 and 3 deliver 3/tick (" + b.InputLiquids[0].Amount + ")");
+        }
+        // 7. A machine between two pumps passes liquid through: first pump fills its input, second drains its output.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); var mid = w.Machine(6, 50);
+            w.Row(7, 8, 50); w.Motor(9, 50, Direction.Right); w.Row(10, 11, 50); var b = w.Machine(12, 50);
+            Fill(a.OutputLiquids[0], Water, 100); Fill(mid.OutputLiquids[0], Water, 40);
+            foreach (var net in w.Build()) Ticks(net, banks, 10);   // the machine splits the pipes into two networks
+            T.Check(Near(mid.InputLiquids[0].Amount, 50) && Near(b.InputLiquids[0].Amount, 40) && mid.OutputLiquids[0].LiquidType == -1, "t7 machine in the middle (in " + mid.InputLiquids[0].Amount + ", B " + b.InputLiquids[0].Amount + ")");
+        }
+        // 8. A branch delivers the pump rate in total, not once per branch.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); var b1 = w.Machine(6, 50); var b2 = w.Machine(4, 49);
+            Fill(a.OutputLiquids[0], Water, 1000);
+            var n = w.Build()[0]; Ticks(n, banks, 20);
+            T.Check(Near(b1.InputLiquids[0].Amount + b2.InputLiquids[0].Amount, 100), "t8 branch total is 5/tick (" + (b1.InputLiquids[0].Amount + b2.InputLiquids[0].Amount) + ")");
+        }
+        // 9. World source: the tile only loses whole chunks, the total is conserved.
+        {
+            var w2 = new W(); w2.Row(1, 2, 50); w2.Motor(3, 50, Direction.Right); w2.Row(4, 5, 50); var sink = w2.Machine(6, 50);
+            Cell(0, 50, 0, 255);
+            var bk = new LiquidWorldBanks(); var n = w2.Build()[0];
+            T.Check(n.Sources.Any(s => s.IsWorld && s.WorldPos == new Point(0, 50)), "t9 world source attached");
+            Ticks(n, bk, 20);
+            T.Check(Main.tile[0, 50].LiquidAmount == 255 && Near(sink.InputLiquids[0].Amount, 100), "t9 tile untouched while banking (" + Main.tile[0, 50].LiquidAmount + ")");
+            Ticks(n, bk, 60);
+            T.Check(Main.tile[0, 50].LiquidAmount == 0 && Near(sink.InputLiquids[0].Amount, 255), "t9 whole cell moved, total conserved (tile " + Main.tile[0, 50].LiquidAmount + ", sink " + sink.InputLiquids[0].Amount + ")");
+        }
+        // 10. World sink: fills in whole chunks; a different liquid in the cell refuses.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50);
+            Fill(a.OutputLiquids[0], Water, 600); var bk = new LiquidWorldBanks(); var n = w.Build()[0];
+            Ticks(n, bk, 20);
+            T.Check(Main.tile[6, 50].LiquidAmount == 0 && Near(a.OutputLiquids[0].Amount, 500), "t10 deposit banks first (tile " + Main.tile[6, 50].LiquidAmount + ")");
+            Ticks(n, bk, 100);
+            T.Check(Main.tile[6, 50].LiquidAmount == 255 && Main.tile[6, 50].LiquidType == 0 && Near(a.OutputLiquids[0].Amount, 345), "t10 cell full, source keeps the rest (tile " + Main.tile[6, 50].LiquidAmount + ", A " + a.OutputLiquids[0].Amount + ")");
+        }
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50);
+            Fill(a.OutputLiquids[0], Water, 100); Cell(6, 50, 1, 100); var bk = new LiquidWorldBanks(); var n = w.Build()[0]; Ticks(n, bk, 20);
+            T.Check(Near(a.OutputLiquids[0].Amount, 100) && Main.tile[6, 50].LiquidAmount == 100, "t10 lava in the cell refuses water");
+        }
+        // 11. A bottomless lake is not drained.
+        {
+            var w = new W(); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); var sink = w.Machine(6, 50);
+            Cell(0, 50, 0, 255); WorldLiquidSources.Infinite.Add(new Point(0, 50)); var bk = new LiquidWorldBanks(); var n = w.Build()[0]; Ticks(n, bk, 100);
+            WorldLiquidSources.Infinite.Clear();
+            T.Check(Main.tile[0, 50].LiquidAmount == 255 && Near(sink.InputLiquids[0].Amount, 500), "t11 infinite source untouched (" + sink.InputLiquids[0].Amount + ")");
+        }
+        // 12. A machine that treats world shimmer as bottomless (Magic Materializer) gets it without draining the cell.
+        {
+            var w = new W(); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); var sink = w.Machine(6, 50); sink.TreatsShimmerInfinite = true;
+            Cell(0, 50, Shimmer, 10); var bk = new LiquidWorldBanks(); var n = w.Build()[0]; Ticks(n, bk, 20);
+            T.Check(Main.tile[0, 50].LiquidAmount == 10 && Near(sink.InputLiquids[0].Amount, 100), "t12 bottomless shimmer for the materializer (" + sink.InputLiquids[0].Amount + ")");
+        }
+        // 13. Rebuild flush: whole banked units are applied, then the banks are gone.
+        {
+            var w = new W(); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50); var sink = w.Machine(6, 50);
+            Cell(0, 50, 0, 255); var bk = new LiquidWorldBanks(); var n = w.Build()[0]; Ticks(n, bk, 20);
+            bk.FlushAll();
+            T.Check(Main.tile[0, 50].LiquidAmount == 155 && bk.WithdrawBankCount == 0, "t13 flush removes the 100 already delivered (tile " + Main.tile[0, 50].LiquidAmount + ")");
+        }
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right); w.Row(4, 5, 50);
+            Fill(a.OutputLiquids[0], Water, 600); var bk = new LiquidWorldBanks(); var n = w.Build()[0]; Ticks(n, bk, 20);
+            bk.FlushAll();
+            T.Check(Main.tile[6, 50].LiquidAmount == 100 && bk.DepositBankCount == 0, "t13 flush puts the 100 already taken into the cell (tile " + Main.tile[6, 50].LiquidAmount + ")");
+        }
+        // 14. The cap: a slow pipe in the line limits the pump.
+        {
+            var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right, true, 15 * 3600f); w.Pipe(4, 50, W.Slow); w.Row(5, 5, 50); var b = w.Machine(6, 50);
+            Fill(a.OutputLiquids[0], Water, 1000); var n = w.Build()[0]; Ticks(n, banks, 10);
+            T.Check(Near(b.InputLiquids[0].Amount, 100), "t14 slow pipe caps the pump at 10/tick (" + b.InputLiquids[0].Amount + ")");
+        }
+    }
+}

@@ -20,8 +20,12 @@ namespace Factorraria.Common.Systems
         public static bool networkNeedsRebuilding = true;
         public static bool flowNeedsRecalculating = false;
 
-        // Liquid overhaul step 2: the NEW topology (nodes, ports, routes), built next to the old networks. Only /fflow reads it for now.
+        // Liquid overhaul: the NEW networks (nodes, ports, routes). Since step 3 they move all the liquid; the old ActiveNetworks are
+        // still built (the old debug overlay and /fpipes read them) but are never ticked.
         public static List<FlowNetwork> FlowNetworks = new();
+
+        // Liquid overhaul step 3: the per-cell banks of world liquid, shared by every flow network (see LiquidWorldBanks).
+        public static LiquidWorldBanks WorldBanks = new();
 
         // TEMPORARY (patch 8.1b, remove in Phase 10): how many times the networks were rebuilt, for the [Pipes] log line and /fpipes.
         public static int RebuildCount;
@@ -60,9 +64,25 @@ namespace Factorraria.Common.Systems
                 flowNeedsRecalculating = false;
             }
 
-            for (int i = 0; i < ActiveNetworks.Count; i++)
+            // Liquid overhaul step 3: the flow networks move the liquid; the old LiquidNetwork.Tick() is no longer called.
+            for (int i = 0; i < FlowNetworks.Count; i++)
+                TickFlowNetwork(FlowNetworks[i]);
+        }
+
+        // A network whose tick throws is logged once and stays still until the next rebuild; it can never break the world update.
+        void TickFlowNetwork(FlowNetwork network)
+        {
+            if (network.TickFailed)
+                return;
+
+            try
             {
-                ActiveNetworks[i].Tick();
+                network.Tick(WorldBanks);
+            }
+            catch (Exception e)
+            {
+                network.TickFailed = true;
+                Mod.Logger.Error("[Pipes] a flow network failed to tick and is paused until the next rebuild: " + e);
             }
         }
 
@@ -112,6 +132,7 @@ namespace Factorraria.Common.Systems
             AllPipeTiles.Clear();
             ActiveNetworks.Clear();
             FlowNetworks = new();
+            WorldBanks.Clear();
             networkNeedsRebuilding = true;
             pipeListNeedsHeal = true;
         }
@@ -122,6 +143,7 @@ namespace Factorraria.Common.Systems
             AllPipeTiles.Clear();
             ActiveNetworks.Clear();
             FlowNetworks = new();
+            WorldBanks.Clear();
 
             LiquidTextureCache.Clear();
         }
@@ -190,10 +212,21 @@ namespace Factorraria.Common.Systems
             pendingNetworkTypes.Clear();
         }
 
-        // Liquid overhaul step 2. The new topology is built next to the old networks and nothing but /fflow reads it, so a bug in it
-        // can never stop the pipes from working: any exception is logged and the new list is left empty.
+        // Liquid overhaul. The flow networks are rebuilt from the registered pipes. First every whole unit still banked in a world cell
+        // is applied (the old networks are about to be replaced), then the new networks are built. An exception is logged and leaves
+        // the list empty (no liquid moves until the next successful rebuild).
         void RebuildFlowNetworks()
         {
+            try
+            {
+                WorldBanks.FlushAll();
+            }
+            catch (Exception e)
+            {
+                WorldBanks.Clear();
+                Mod.Logger.Error("[Pipes] world liquid banks failed to flush: " + e);
+            }
+
             try
             {
                 FlowNetworks = FlowNetworkBuilder.BuildAll(AllPipeTiles);
@@ -201,7 +234,7 @@ namespace Factorraria.Common.Systems
             catch (Exception e)
             {
                 FlowNetworks = new();
-                Mod.Logger.Error("[Pipes] new flow topology failed to build (the old networks are unaffected): " + e);
+                Mod.Logger.Error("[Pipes] flow topology failed to build (no liquid moves until the next rebuild): " + e);
             }
         }
 
@@ -215,7 +248,7 @@ namespace Factorraria.Common.Systems
             }
             catch (Exception e)
             {
-                Mod.Logger.Error("[Pipes] new flow routes failed to refresh (the old networks are unaffected): " + e);
+                Mod.Logger.Error("[Pipes] flow routes failed to refresh: " + e);
             }
         }
 

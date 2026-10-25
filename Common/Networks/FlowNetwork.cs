@@ -11,9 +11,9 @@ using Terraria.DataStructures;
 
 namespace Factorraria.Common.Networks
 {
-    // Liquid overhaul, step 2: the game-side topology of one pipe network, built from the real tiles and machines and handed to the
-    // pure core in Common/Networks/Flow. Nothing here moves liquid yet (step 3 does); the old LiquidNetwork still runs the pipes and
-    // this is built next to it so /fflow can show what the new system understands.
+    // Liquid overhaul: the game-side topology of one pipe network, built from the real tiles and machines (step 2) and handed to the
+    // pure core in Common/Networks/Flow, plus the per-tick transfer of liquid through it (step 3, the Tick region below).
+    // The old LiquidNetwork is still built next to it but is no longer ticked (it goes away in step 6).
     //
     // Multiplayer: server / single-player only, like the old networks (LiquidNetworkSystem.PostUpdateWorld returns on a client).
     // It is derived data: rebuilt from tiles, never saved, never sent. A client never has one.
@@ -84,9 +84,236 @@ namespace Factorraria.Common.Networks
             Cap = ComputeCap();
             List<FlowRoute> raw = FlowRouteFinder.Build(Nodes, SourceAttach, SinkAttach, DecayPerClimbPerMinute, Cap);
             Routes = FlowRouteMerger.Merge(raw, SourcePortsOfAttach, SinkPortsOfAttach);
+            MarkUsedPorts();
 
             timer.Stop();
             RefreshMs = timer.Elapsed.TotalMilliseconds;
+        }
+
+        // ---------------------------------------------------------------------------------------------------------- the tick (step 3)
+        // Server / single-player only (LiquidNetworkSystem.PostUpdateWorld returns on a client). Nothing here is saved or sent: clients
+        // learn the result through the machine tank light sync (5.2) and the world-liquid broadcast (8.1, LiquidBroadcastSystem.Mark).
+        // Pipes hold no liquid: every tick the solver moves liquid straight from source ports to sink ports, within the route rates
+        // and the pump budgets, and the transfers are applied right away.
+
+        public bool TickFailed;   // set by LiquidNetworkSystem when Tick threw: this network then stays still until the next rebuild
+        public IReadOnlyList<FlowTransfer> LastTransfers => transfers;
+
+        readonly List<FlowTransfer> transfers = new();
+        bool[] sourceUsed = Array.Empty<bool>();          // sources that appear in at least one route (filled by RefreshRoutes)
+        bool[] sourceBottomless = Array.Empty<bool>();
+        float[] sourceOffer = Array.Empty<float>();
+        int[] sourceType = Array.Empty<int>();
+        float[] pumpBudget = Array.Empty<float>();
+        Func<int, int, float> sinkSpaceFunc;
+        LiquidWorldBanks banks;
+
+        float bottomlessOffer = 1e9f;       // what a bottomless world source offers the solver per tick
+        float tankEmptyBelow = 0.0001f;     // a machine tank drained below this is empty and forgets its liquid type
+
+        public void Tick(LiquidWorldBanks worldBanks)
+        {
+            banks = worldBanks;
+
+            // A motor that was switched (power, wire toggle, brownout) or changed strength: only the route table changes.
+            if (MotorsChanged())
+                RefreshRoutes();
+
+            if (Routes.Count == 0)
+            {
+                Solver.ActiveType = -1;
+                transfers.Clear();
+                return;
+            }
+
+            EnsureTickBuffers();
+            FillSources();
+            FillPumpBudgets();
+
+            Solver.Solve(Routes, sourceOffer, sourceType, Sinks.Count, sinkSpaceFunc, pumpBudget, transfers);
+            ApplyTransfers();
+        }
+
+        bool MotorsChanged()
+        {
+            for (int i = 0; i < Motors.Length; i++)
+            {
+                MotorTileEntityBase motor = Motors[i];
+                if (motor == null) continue;
+                if (Nodes[i].MotorOn != motor.isOn || Nodes[i].Strength != motor.PumpStrength) return true;
+            }
+            return false;
+        }
+
+        void MarkUsedPorts()
+        {
+            if (sourceUsed.Length != Sources.Count) sourceUsed = new bool[Sources.Count];
+            else Array.Clear(sourceUsed, 0, sourceUsed.Length);
+
+            foreach (FlowRoute route in Routes)
+                sourceUsed[route.Src] = true;
+        }
+
+        void EnsureTickBuffers()
+        {
+            if (sourceOffer.Length != Sources.Count)
+            {
+                sourceOffer = new float[Sources.Count];
+                sourceType = new int[Sources.Count];
+                sourceBottomless = new bool[Sources.Count];
+            }
+            if (pumpBudget.Length != Nodes.Length) pumpBudget = new float[Nodes.Length];
+            sinkSpaceFunc ??= SinkSpace;
+        }
+
+        // The tank a machine source port reads from. Looked up fresh every tick, never cached from the build.
+        static LiquidStack TankOf(FlowSource source)
+        {
+            LiquidStack[] tanks = source.Machine.OutputLiquids;
+            return source.TankIndex < tanks.Length ? tanks[source.TankIndex] : null;
+        }
+
+        void FillSources()
+        {
+            for (int s = 0; s < Sources.Count; s++)
+            {
+                sourceOffer[s] = 0f;
+                sourceType[s] = -1;
+                sourceBottomless[s] = false;
+                if (!sourceUsed[s]) continue;
+
+                FlowSource source = Sources[s];
+                if (source.IsWorld)
+                {
+                    Tile tile = Main.tile[source.WorldPos.X, source.WorldPos.Y];
+                    if (tile.LiquidAmount <= 0) continue;
+
+                    int? worldType = LiquidTypeRegistry.FromTileLiquidId((byte)tile.LiquidType);
+                    if (worldType == null) continue;
+
+                    sourceType[s] = worldType.Value;
+                    sourceOffer[s] = banks.WorldSourceOffer(source.WorldPos);
+                }
+                else
+                {
+                    LiquidStack tank = TankOf(source);
+                    if (tank == null || tank.IsEmpty) continue;
+
+                    sourceType[s] = tank.LiquidType;
+                    sourceOffer[s] = tank.Amount;
+                }
+            }
+
+            // A machine that treats world liquid as bottomless (Magic Materializer + shimmer) makes the world sources routed to it bottomless.
+            foreach (FlowRoute route in Routes)
+            {
+                int s = route.Src;
+                if (!Sources[s].IsWorld || sourceType[s] == -1) continue;
+
+                FlowSink sink = Sinks[route.Dst];
+                if (!sink.IsWorld && sink.Machine.TreatsWorldLiquidAsInfinite(sourceType[s]))
+                    sourceBottomless[s] = true;
+            }
+
+            // A big enough body of liquid is never drained (same rule as before and as the terrarium carts).
+            for (int s = 0; s < Sources.Count; s++)
+            {
+                if (!Sources[s].IsWorld || sourceType[s] == -1) continue;
+
+                if (!sourceBottomless[s] && WorldLiquidSources.IsInfiniteSource(Sources[s].WorldPos))
+                    sourceBottomless[s] = true;
+                if (sourceBottomless[s])
+                    sourceOffer[s] = bottomlessOffer;
+            }
+        }
+
+        // Units per tick each ON motor can push: its strength, but never more than the network's weakest pipe.
+        void FillPumpBudgets()
+        {
+            for (int i = 0; i < Nodes.Length; i++)
+            {
+                pumpBudget[i] = Nodes[i].IsMotor && Nodes[i].MotorOn
+                    ? Math.Min(Nodes[i].Strength, Cap) / 3600f
+                    : 0f;
+            }
+        }
+
+        // Room for that liquid in a sink right now. Called by the solver and again while applying, so it is always live.
+        float SinkSpace(int sinkIndex, int liquidType)
+        {
+            FlowSink sink = Sinks[sinkIndex];
+            if (sink.IsWorld)
+                return banks.WorldSinkSpace(sink.WorldPos, liquidType);
+
+            BaseMachine machine = sink.Machine;
+            LiquidStack slot = LiquidTankRules.FindSinkSlot(machine.InputLiquids, machine.ResolveIncomingLiquid(liquidType));
+            return slot == null ? 0f : Math.Max(0f, slot.Capacity - slot.Amount);
+        }
+
+        void ApplyTransfers()
+        {
+            for (int i = 0; i < transfers.Count; i++)
+            {
+                FlowTransfer transfer = transfers[i];
+
+                // Never take anything the sink cannot hold, so nothing is withdrawn and lost.
+                float amount = Math.Min(transfer.Amount, SinkSpace(transfer.Dst, transfer.Type));
+                if (amount <= 0f) continue;
+
+                amount = Withdraw(transfer.Src, transfer.Type, amount);
+                if (amount <= 0f) continue;
+
+                Deposit(transfer.Dst, transfer.Type, amount);
+            }
+        }
+
+        float Withdraw(int sourceIndex, int liquidType, float amount)
+        {
+            FlowSource source = Sources[sourceIndex];
+
+            if (source.IsWorld)
+            {
+                Tile tile = Main.tile[source.WorldPos.X, source.WorldPos.Y];
+                if (tile.LiquidAmount <= 0) return 0f;
+
+                int? worldType = LiquidTypeRegistry.FromTileLiquidId((byte)tile.LiquidType);
+                if (worldType == null || worldType.Value != liquidType) return 0f;
+
+                if (!sourceBottomless[sourceIndex])
+                    banks.AddWithdraw(source.WorldPos, amount);   // the tile only loses whole chunks
+                return amount;
+            }
+
+            LiquidStack tank = TankOf(source);
+            if (tank == null || tank.IsEmpty || tank.LiquidType != liquidType) return 0f;
+
+            float taken = Math.Min(amount, tank.Amount);
+            tank.Amount -= taken;
+            if (tank.Amount <= tankEmptyBelow)
+            {
+                tank.Amount = 0f;
+                tank.LiquidType = -1;   // an empty tank forgets its liquid, so it can take another one
+            }
+            return taken;
+        }
+
+        void Deposit(int sinkIndex, int liquidType, float amount)
+        {
+            FlowSink sink = Sinks[sinkIndex];
+
+            if (sink.IsWorld)
+            {
+                banks.AddDeposit(sink.WorldPos, liquidType, amount);
+                return;
+            }
+
+            BaseMachine machine = sink.Machine;
+            int resolved = machine.ResolveIncomingLiquid(liquidType);
+            LiquidStack slot = LiquidTankRules.FindSinkSlot(machine.InputLiquids, resolved);
+            if (slot == null) return;
+
+            slot.LiquidType = resolved;
+            slot.Amount = Math.Min(slot.Capacity, slot.Amount + amount);
         }
 
         float ComputeCap()
