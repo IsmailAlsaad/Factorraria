@@ -14,7 +14,7 @@ Items: {
 		Tooltip:
 			'''
 			Can be placed
-			Used to connect machines together
+			Used to connect machines and power poles together
 			'''
 	}
 
@@ -23,7 +23,7 @@ Items: {
 		Tooltip:
 			'''
 			Can be placed
-			Used to connect machines together
+			Used to connect machines and power poles together
 			'''
 	}
 
@@ -52,16 +52,16 @@ Items: {
 
 	WoodenPowerPoleItem: {
 		DisplayName: Wooden Power Pole
-		Tooltip: "Used for long distance power transmission"
+		Tooltip: Used for long distance power transmission
 	}
 
 	PlatinumPowerPoleItem: {
 		DisplayName: Platinum Power Pole
-		Tooltip: 
-		'''
-		Used for long distance power transmission
-		Has more connection points
-		'''
+		Tooltip:
+			'''
+			Used for long distance power transmission
+			Reduced energy loss
+			'''
 	}
 
 	MeteorHeadStatueItem: {
@@ -202,7 +202,7 @@ Items: {
 		Tooltip:
 			'''
 			Can be placed
-			Used to connect machines together
+			Used to connect machines and power poles together
 			Has a longer range on power poles
 			'''
 	}

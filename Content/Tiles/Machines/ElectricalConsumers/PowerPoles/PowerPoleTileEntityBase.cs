@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Machines;
 using Microsoft.Xna.Framework;
+using Terraria;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
 {
