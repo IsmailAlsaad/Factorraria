@@ -75,12 +75,19 @@ namespace Factorraria.Common.Knowledge
 
         public static bool IsSeen(int itemType) => seenItems.Contains(itemType);
 
+        // Liquids cannot be held, so "seen" for a liquid means its biome was visited (see LiquidBiomeVisits). It lives in the SAME set
+        // as seen items, as a negative number, so it rides the existing save, SeenReport/SeenDelta and join sync with no new packets.
+        // Item types are always > 0; liquid ids are append-only, so -(id + 1) is a stable marker.
+        public static int LiquidMarker(int liquidType) => -(liquidType + 1);
+
+        public static bool IsLiquidSeen(int liquidType) => seenItems.Contains(LiquidMarker(liquidType));
+
         public static IReadOnlyCollection<int> SeenItems => seenItems;
 
         /// <summary>Marks an item type as seen. Returns true if it was newly marked.</summary>
         public static bool MarkSeen(int itemType)
         {
-            if (itemType <= 0 || !seenItems.Add(itemType)) return false;
+            if (itemType == 0 || !seenItems.Add(itemType)) return false;   // negative = a liquid marker (see LiquidMarker)
             SeenVersion++;
             return true;
         }
@@ -103,7 +110,7 @@ namespace Factorraria.Common.Knowledge
             seenItems.Clear();
             foreach (string key in newUnlocked) unlocked.Add(key);
             foreach (string key in newCrafted) crafted.Add(key);
-            foreach (int type in newSeen) if (type > 0) seenItems.Add(type);
+            foreach (int type in newSeen) if (type != 0) seenItems.Add(type);
             Version++;
             SeenVersion++;
         }
@@ -116,12 +123,20 @@ namespace Factorraria.Common.Knowledge
             tag["CraftedRecipeKeys"] = new List<string>(crafted);
 
             List<string> seenNames = new List<string>();
+            List<int> seenLiquidIds = new List<int>();   // liquid markers (negative in the set) are saved as plain liquid ids
             foreach (int type in seenItems)
             {
+                if (type < 0)
+                {
+                    seenLiquidIds.Add(-type - 1);
+                    continue;
+                }
+
                 string name = ItemID.Search.GetName(type);
                 if (!string.IsNullOrEmpty(name)) seenNames.Add(name);
             }
             tag["SeenItemKeys"] = seenNames;
+            tag["SeenLiquidIds"] = seenLiquidIds;
         }
 
         public override void LoadWorldData(TagCompound tag)
@@ -138,6 +153,8 @@ namespace Factorraria.Common.Knowledge
             if (tag.ContainsKey("SeenItemKeys"))
                 foreach (string name in tag.Get<List<string>>("SeenItemKeys"))
                     if (ItemID.Search.TryGetId(name, out int seenType)) seenItems.Add(seenType);   // item from a removed mod: silently dropped
+            if (tag.ContainsKey("SeenLiquidIds"))
+                foreach (int liquidId in tag.Get<List<int>>("SeenLiquidIds")) seenItems.Add(LiquidMarker(liquidId));
             // Legacy "KnownRecipeKeys" (the old show-everything system) is intentionally ignored.
         }
 

@@ -200,13 +200,18 @@ namespace Factorraria.Common.Machines
             IsItemHeld(itemType) || IsProductCrafted(RecipeOutputKey.ForItem(itemType));
 
         /// <summary>
-        /// Liquids cannot be held. A liquid some recipe makes stays hidden until it has been crafted; a liquid no recipe
-        /// makes (world water, lava, ...) is raw and always shown.
+        /// Liquids cannot be held, so they are revealed other ways: the player visited the liquid's biome (LiquidBiomeVisits, saved and
+        /// synced as a seen marker), or a recipe that makes it has been crafted. A liquid with no biome rule that no recipe makes is
+        /// raw and always shown; one WITH a biome rule stays hidden until its biome is visited.
         /// </summary>
         public static bool IsLiquidRevealed(int liquidType)
         {
+            if (RecipeKnowledgeSystem.IsLiquidSeen(liquidType)) return true;
+
             RecipeOutputKey k = RecipeOutputKey.ForLiquid(liquidType);
-            return !producerIndex.ContainsKey(k) || IsProductCrafted(k);
+            if (IsProductCrafted(k)) return true;
+            if (LiquidBiomeVisits.HasRule(liquidType)) return false;
+            return !producerIndex.ContainsKey(k);
         }
 
         /// <summary>True once at least one recipe of this machine (catalog name) has been crafted in this world.</summary>

@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Knowledge;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -30,6 +31,14 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (string.IsNullOrEmpty(catalogKey)) return;
             favoriteOverrides[catalogKey] = !IsFavorite(catalogKey);
             FavoritesVersion++;
+        }
+
+        /// <summary>Local player only: notes the biomes the player stands in, which reveals the liquids found there (see LiquidBiomeVisits).</summary>
+        public override void PostUpdate()
+        {
+            if (Main.dedServ || Player.whoAmI != Main.myPlayer) return;
+            if (Main.GameUpdateCount % (uint)System.Math.Max(1, LiquidBiomeVisits.PollTicks) != 0) return;
+            LiquidBiomeVisits.Poll(Player);
         }
 
         public override void SaveData(TagCompound tag)

@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-25 | 267 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-25 | 268 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(58) BaseMachine(39) FactorrariaPacket(31) LiquidTypeRegistry(28) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(18) CustomRecipe(17) TileEntityHelper(15) MachineUIStateBase(14) LiquidStack(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) LiquidNetworkSystem(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
+FactorrariaNet(58) BaseMachine(39) FactorrariaPacket(31) LiquidTypeRegistry(29) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(18) CustomRecipe(17) TileEntityHelper(15) MachineUIStateBase(14) LiquidStack(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) LiquidNetworkSystem(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
 
 ## Inheritance
 Project bases -> derived:
@@ -186,6 +186,9 @@ tModLoader/other bases -> project types:
     +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +MarkIfNextToPipe(int,int)[s]
 
 ### Common/Knowledge/
+**LiquidBiomeVisits.cs** uses: LiquidTypeRegistry, MachineBiome, RecipeKnowledgeNet, RecipeKnowledgeSystem
+  static class LiquidBiomeVisits
+    +PollTicks:int[s] +Register()[s] +Set(int,MachineBiome)[s] +Clear()[s] +HasRule(int)[s] +IsValidMarker(int)[s] +Poll(Player)[s]
 **RecipeArtDefinitions.cs** uses: RecipeArtRegistry
   static class RecipeArtDefinitions
     +Register()[s]
@@ -211,7 +214,7 @@ tModLoader/other bases -> project types:
     +For(RecipeOutputGroup)[s] +For(RecipeOutputKey)[s]
 **RecipeKnowledgeSystem.cs**
   class RecipeKnowledgeSystem : ModSystem
-    +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
+    +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
 **ScrollPoolDefinitions.cs** uses: ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, PipeMK1Item, ScrollPools, SimpleCircuitItem, SteelBarItem
   static class ScrollPoolDefinitions
     +Register()[s]
@@ -335,7 +338,7 @@ tModLoader/other bases -> project types:
 **MachineWireGlobalTile.cs** uses: BaseMachine, TileEntityHelper
   class MachineWireGlobalTile : GlobalTile
     +PreHitWire(int,int,int)[ov]
-**RecipeVisibility.cs** uses: CustomRecipe, Entry, FuelEntry, FurnaceOffsetConfig, RecipeCatalog, RecipeIngredient, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey
+**RecipeVisibility.cs** uses: CustomRecipe, Entry, FuelEntry, FurnaceOffsetConfig, LiquidBiomeVisits, RecipeCatalog, RecipeIngredient, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey
   enum RecipeState
     {Hidden, DebugRevealed, FadedIngredient, FadedParchment, Crafted}
   static class RecipeVisibility
@@ -611,7 +614,7 @@ tModLoader/other bases -> project types:
     +TryConsume(int,int)[s] +Reset(int)[s] +ResetAll()[s]
   class NetRateLimiterSystem : ModSystem
     +Load()[ov] +Unload()[ov]
-**RecipeKnowledgeNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, Pending, RecipeBookSystem, RecipeCatalog, RecipeKnowledgeSystem, RecipeParchmentItem, RecipeVisibility, ScrollPools
+**RecipeKnowledgeNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, LiquidBiomeVisits, PacketDirection, Pending, RecipeBookSystem, RecipeCatalog, RecipeKnowledgeSystem, RecipeParchmentItem, RecipeVisibility, ScrollPools
   class RecipeKnowledgeNetSystem : ModSystem
     +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov]
   enum ParchmentReadResult
@@ -619,7 +622,7 @@ tModLoader/other bases -> project types:
   enum ParchmentFailure : byte
     {None, NoParchment, Exhausted, Unresolved, CannotRead}
   static class RecipeKnowledgeNet
-    +SeenBatchTicks:int[s] +MaxSeenPerPacket:int[s] +ReadTimeoutTicks:int[s] +MaxPoolNameLength:int[s] +MaxJoinEntries:int[s] +ReadPending:bool[s] +ClearPending()[s] +ServerMarkCrafted(string)[s] +HandleKnowledgeDelta(BinaryReader,int)[s] +ReportSeen(int)[s] +Update()[s] +HandleSeenReport(BinaryReader,int)[s] +HandleSeenDelta(BinaryReader,int)[s] +RequestReadParchment(string)[s] +HandleReadRequest(BinaryReader,int)[s] +HandleReadResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
+    +SeenBatchTicks:int[s] +MaxSeenPerPacket:int[s] +ReadTimeoutTicks:int[s] +MaxPoolNameLength:int[s] +MaxJoinEntries:int[s] +ReadPending:bool[s] +ClearPending()[s] +ServerMarkCrafted(string)[s] +HandleKnowledgeDelta(BinaryReader,int)[s] +ReportSeen(int)[s] +ReportLiquidSeen(int)[s] +Update()[s] +HandleSeenReport(BinaryReader,int)[s] +HandleSeenDelta(BinaryReader,int)[s] +RequestReadParchment(string)[s] +HandleReadRequest(BinaryReader,int)[s] +HandleReadResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
     enum KnowledgeKind : byte
       {Unlocked, Crafted}
 **RoboticArmAreaNet.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineDetailSystem, MachineRequest, PacketDirection, RequestCheck, RoboticArmAreaEditorSystem, RoboticArmNet, RoboticArmTileEntity
@@ -756,7 +759,7 @@ tModLoader/other bases -> project types:
     +AllPipeTiles:HashSet<Point>[s] +ActiveNetworks:List<LiquidNetwork>[s] +networkNeedsRebuilding:bool[s] +flowNeedsRecalculating:bool[s] +RebuildCount:int[s] +PostUpdateWorld()[ov] +RegisterPipeTile(Point)[s] +UnregisterPipeTile(Point)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov]
   class PriorityQueueLite<T>
     +Enqueue(T,float) +TryDequeue(out T,out float)
-**MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FuelGroup, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MagicMaterializerRegistry, MagicMaterializerTileEntity, MagicMaterializerUIState, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MotorMK1Tile, MotorMK1TileEntity, RecipeArtDefinitions, RecipeArtRegistry, RecipeBook, RecipeCatalog, RecipeVisibility, RoboticArmTile, RoboticArmTileEntity, RoboticArmUIState, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState
+**MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FuelGroup, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, LiquidBiomeVisits, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MagicMaterializerRegistry, MagicMaterializerTileEntity, MagicMaterializerUIState, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MotorMK1Tile, MotorMK1TileEntity, RecipeArtDefinitions, RecipeArtRegistry, RecipeBook, RecipeCatalog, RecipeVisibility, RoboticArmTile, RoboticArmTileEntity, RoboticArmUIState, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState
   class MachineRegisterationSystem : ModSystem
     +Load()[ov] +PostSetupContent()[ov] +PostAddRecipes()[ov] +Unload()[ov]
 **MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, FactorrariaNet, MachineDetail, MachineDetailSystem, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem, TileEntityHelper
@@ -865,9 +868,9 @@ tModLoader/other bases -> project types:
     +ButtonX:int[c] +ButtonY:int[c] +ButtonSize:int[c] +ReferenceDefenseX:int[c] +ReferenceDefenseY:int[s] +ButtonOffsetX:int[c] +ButtonOffsetY:int[s] +PanelWidth:int[c] +PanelHeight:int[c] +BackgroundScale:float[s] +Margin:int[c] +Gutter:int[c] +TitleHeight:int[c] +UnknownName:string[c] +ScrollbarWidth:int[c] +HeaderRowHeight:int[c] +EntryRowHeight:int[c] +EntryIconBox:int[c] +StarHitSize:int[c] +StarRightPad:int[c] +StarRect(Rectangle)[s] +LeftPage:Rectangle[s] +RightPage:Rectangle[s] +ListArea:Rectangle[s] +ScrollbarArea:Rectangle[s] +DragBar:Rectangle[s] +DragKeepVisible:int[c] +SearchArea:Rectangle[s] +DetailArea:Rectangle[s] +DetailHeaderHeight:int[c] +DetailCell:int[c] +DetailCellGap:int[c] +DetailPagerHeight:int[c] +DetailRecipeArea:Rectangle[s] +Text(string)[s] +MachineName(string)[s] +PageColor:Color[s] +PageBorder:Color[s] +CoverColor:Color[s] +TextColor:Color[s] +TextFadedColor:Color[s] +FavoriteRowColor:Color[s] +SearchBackground:Color[s] +SearchIdleBorder:Color[s] +SearchFocusBorder:Color[s] +ScrollTrack:Color[s] +ScrollTrackOutline:Color[s] +ScrollThumb:Color[s] +ScrollThumbHover:Color[s] +ScrollThumbDrag:Color[s] +SearchTheme:SearchBarTheme[s]
   static class RecipeBookArt
     +ButtonPath:string[c] +ButtonHoverPath:string[c] +BackgroundPath:string[c] +StarOffPath:string[c] +StarOffHighlightedPath:string[c] +StarOnPath:string[c] +StarOnHighlightedPath:string[c] +Button:Asset<Texture2D>[s] +ButtonHover:Asset<Texture2D>[s] +Background:Asset<Texture2D>[s] +Star(bool,bool)[s] +Clear()[s]
-**RecipeBookPlayer.cs** uses: RecipeKnowledgeSystem
+**RecipeBookPlayer.cs** uses: LiquidBiomeVisits, RecipeKnowledgeSystem
   class RecipeBookPlayer : ModPlayer
-    +ButtonOffset:Vector2? +FavoritesVersion:int +IsFavorite(string) +ToggleFavorite(string) +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
+    +ButtonOffset:Vector2? +FavoritesVersion:int +IsFavorite(string) +ToggleFavorite(string) +PostUpdate()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
 **RecipeBookState.cs** uses: BookDraw, BookScrollbar, CustomRecipe, Entry, LiquidIngredient, LiquidTypeRegistry, RecipeArtRegistry, RecipeBookArt, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookKeybindSystem, RecipeBookLayout, RecipeBookPlayer, RecipeCatalog, RecipeIngredient, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeSearchBar, RecipeState, RecipeVisibility, State
   class RecipeBookState : UIState
     +SelectedKey:string +SelectedMachine:string +SelectedGroup:RecipeOutputGroup +SelectedArt:Entry +SelectedState:RecipeState +IsEmpty:bool +NoResults:bool +MouseInsidePanel:bool +OnInitialize()[ov] +OnActivate()[ov] +Update(GameTime)[ov] +ResetSearch() +SetSearch(string) +PanelOffset:Vector2 +SetPanelOffset(Vector2) +ResetPanelOffset() +ScrollBy(float) +Select(string,bool) +GoTo(string)

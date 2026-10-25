@@ -152,6 +152,9 @@ namespace Factorraria.Common.Net
                 pendingSeen.Add(itemType);
         }
 
+        /// <summary>Called by LiquidBiomeVisits when the local player stands in a liquid's biome. Same path as a held item: marked here at once, queued for the server.</summary>
+        public static void ReportLiquidSeen(int liquidType) => ReportSeen(RecipeKnowledgeSystem.LiquidMarker(liquidType));
+
         /// <summary>Per tick (ModSystem.PostUpdateEverything): a multiplayer client sends its queued seen types, a few times a second.</summary>
         public static void Update()
         {
@@ -205,7 +208,10 @@ namespace Factorraria.Common.Net
 
                 // Only real item types that some recipe takes as an input. (The server cannot see what the player really holds
                 // between two inventory syncs, so it trusts the report, like vanilla trusts a client's item use.)
-                if (type <= 0 || type >= ItemLoader.ItemCount || !RecipeVisibility.IsIngredient(type))
+                // A negative number is a liquid marker (a biome visit, see LiquidBiomeVisits); only liquids that have a biome rule count.
+                bool validItem = type > 0 && type < ItemLoader.ItemCount && RecipeVisibility.IsIngredient(type);
+                bool validLiquid = type < 0 && LiquidBiomeVisits.IsValidMarker(type);
+                if (!validItem && !validLiquid)
                     continue;
 
                 if (RecipeKnowledgeSystem.MarkSeen(type))

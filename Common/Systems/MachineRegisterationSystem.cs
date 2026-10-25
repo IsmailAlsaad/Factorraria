@@ -193,6 +193,9 @@ namespace Factorraria.Common.Machines
             RecipeArtRegistry.Clear();
             RecipeArtDefinitions.Register();
 
+            // Which biome reveals which liquid in the book (configured in LiquidBiomeVisits). Needs the liquid ids.
+            LiquidBiomeVisits.Register();
+
             // Scroll pools (configured in ScrollPoolDefinitions). Needs the catalog above to validate entries.
             ScrollPools.Clear();
             ScrollPoolDefinitions.Register();
@@ -203,6 +206,7 @@ namespace Factorraria.Common.Machines
         {
             RecipeCatalog.Clear();
             RecipeArtRegistry.Clear();
+            LiquidBiomeVisits.Clear();
             RecipeVisibility.ClearIndex();
             ScrollPools.Clear();
             MachineVisualRegistry.Definitions.Clear();
