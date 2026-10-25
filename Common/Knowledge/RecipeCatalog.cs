@@ -35,25 +35,80 @@ namespace Factorraria.Common.Knowledge
         }
 
         // ---- fuels shown by the recipe book (read from each machine's registry tables, never from a CustomRecipe) ----
-        static readonly Dictionary<string, List<RecipeOutputKey>> fuelsByMachine = new Dictionary<string, List<RecipeOutputKey>>();
+        /// <summary>One thing the book shows in the fuel slot: a single item or liquid, or a named group of items ("Any Wood").</summary>
+        public class FuelEntry
+        {
+            public RecipeOutputKey Icon;        // the sprite shown
+            public string LabelKey;             // null = the item/liquid's own name; else a Mods.Factorraria.RecipeBook.<LabelKey> text (a group)
+            public int[] Items = new int[0];    // item types that make this entry count as held: one for a single item, every member for a group. Empty for liquids.
+        }
+
+        /// <summary>Several fuel items shown as ONE entry (for example every wood). Members the machine does not actually burn are ignored.</summary>
+        public class FuelGroup
+        {
+            public readonly string LabelKey;    // RecipeBook.<LabelKey> in the hjson
+            public readonly int IconItem;       // the sprite shown
+            public readonly HashSet<int> Members;
+
+            public FuelGroup(string labelKey, int iconItem, IEnumerable<int> members)
+            {
+                LabelKey = labelKey;
+                IconItem = iconItem;
+                Members = new HashSet<int>(members);
+            }
+        }
+
+        static readonly Dictionary<string, List<FuelEntry>> fuelsByMachine = new Dictionary<string, List<FuelEntry>>();
 
         /// <summary>
         /// Tells the book which fuels a machine burns. Pass the registry's own tables (null = that kind has none).
+        /// groups = items to show as one entry; the group sits where its first member was in the table.
         /// Call after BuildRecipes(), so the tables are already filled. Liquid ids must already exist (PostAddRecipes is fine).
         /// </summary>
-        public static void RegisterFuels(string machineName, FuelTable itemFuels, LiquidFuelTable liquidFuels)
+        public static void RegisterFuels(string machineName, FuelTable itemFuels, LiquidFuelTable liquidFuels, params FuelGroup[] groups)
         {
-            var list = new List<RecipeOutputKey>();
+            var list = new List<FuelEntry>();
+            var emitted = new HashSet<FuelGroup>();
+
             if (itemFuels != null)
-                foreach (int type in itemFuels.ItemTypes) list.Add(RecipeOutputKey.ForItem(type));
+                foreach (int type in itemFuels.ItemTypes)
+                {
+                    FuelGroup group = null;
+                    if (groups != null)
+                        foreach (FuelGroup g in groups)
+                            if (g.Members.Contains(type)) { group = g; break; }
+
+                    if (group == null)
+                    {
+                        list.Add(new FuelEntry { Icon = RecipeOutputKey.ForItem(type), Items = new[] { type } });
+                        continue;
+                    }
+
+                    if (!emitted.Add(group)) continue;
+                    var members = new List<int>();
+                    foreach (int t in itemFuels.ItemTypes)
+                        if (group.Members.Contains(t)) members.Add(t);
+                    list.Add(new FuelEntry { Icon = RecipeOutputKey.ForItem(group.IconItem), LabelKey = group.LabelKey, Items = members.ToArray() });
+                }
+
             if (liquidFuels != null)
-                foreach (int liquid in liquidFuels.LiquidTypes) list.Add(RecipeOutputKey.ForLiquid(liquid));
+                foreach (int liquid in liquidFuels.LiquidTypes)
+                    list.Add(new FuelEntry { Icon = RecipeOutputKey.ForLiquid(liquid) });
+
             fuelsByMachine[machineName] = list;
         }
 
-        /// <summary>The machine's fuels (items first, then liquids), or null if none were registered.</summary>
-        public static List<RecipeOutputKey> FuelsOf(string machineName) =>
-            machineName != null && fuelsByMachine.TryGetValue(machineName, out List<RecipeOutputKey> list) ? list : null;
+        /// <summary>The machine's fuel entries (items first, then liquids), or null if none were registered.</summary>
+        public static List<FuelEntry> FuelsOf(string machineName) =>
+            machineName != null && fuelsByMachine.TryGetValue(machineName, out List<FuelEntry> list) ? list : null;
+
+        /// <summary>Every item type that is a fuel of some machine. RecipeVisibility tracks these as "seen" so a held fuel reveals.</summary>
+        public static IEnumerable<int> AllFuelItemTypes()
+        {
+            foreach (List<FuelEntry> list in fuelsByMachine.Values)
+                foreach (FuelEntry fuel in list)
+                    foreach (int type in fuel.Items) yield return type;
+        }
 
         // ---- art entries (see RecipeArtRegistry) ----
 

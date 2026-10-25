@@ -163,7 +163,12 @@ namespace Factorraria.Common.Machines
             RecipeCatalog.Register("MechanicalAssembler", MechanicalAssemblerRecipeRegistry.Book);
 
             // Fuels the recipe book shows beside the arrow. Read from each machine's registry tables, not from CustomRecipe.
-            RecipeCatalog.RegisterFuels("Furnace", FurnaceRecipeRegistry.Fuels, null);
+            // Every wood of the vanilla wood group is shown as ONE fuel entry ("Any Wood", Wood sprite). To change the list, edit woodItems.
+            var woodItems = new System.Collections.Generic.List<int>();
+            if (Terraria.RecipeGroup.recipeGroups.TryGetValue(RecipeGroupID.Wood, out Terraria.RecipeGroup woodGroup))
+                woodItems.AddRange(woodGroup.ValidItems);
+            RecipeCatalog.RegisterFuels("Furnace", FurnaceRecipeRegistry.Fuels, null,
+                new RecipeCatalog.FuelGroup("AnyWood", ItemID.Wood, woodItems));
             RecipeCatalog.RegisterFuels("Hellforge", null, HellforgeRecipeRegistry.LiquidFuels);
 
             // Auto-fill recipe times: any recipe without its own TakesTicks gets the time of the machine that owns its book,

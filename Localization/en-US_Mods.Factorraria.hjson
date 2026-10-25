@@ -402,6 +402,7 @@ RecipeBook: {
 	Time: Time: {0} s
 	Units: "{0} units"
 	Fuel: Fuel
+	AnyWood: Any Wood
 
 	Machines: {
 		Furnace: Furnace

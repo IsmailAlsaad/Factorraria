@@ -25,7 +25,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         int recipeIndex;
 
         // Tweakables (instance fields on purpose, so hot reload can change them).
-        int arrowLength = 46;          // arrow height when the machine has fuels: room for one 42px fuel cell beside its middle
+        int arrowLength = 54;          // arrow height when the machine has fuels: room for one 42px fuel cell beside its middle
         int shortArrowLength = 13;     // the original arrow, used when the machine has no fuels
         int fuelCycleTicks = 60;       // the shown fuel changes this often (60 = once a second)
         int fuelBoxOffsetX = 12;       // gap between the arrow's centre line and the fuel cell
@@ -144,7 +144,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, book.SelectedState, book.SelectedKey), area, y, navHits);
 
             y += 4f;
-            List<RecipeOutputKey> fuels = RecipeCatalog.FuelsOf(book.SelectedMachine);
+            List<RecipeCatalog.FuelEntry> fuels = RecipeCatalog.FuelsOf(book.SelectedMachine);
             bool hasFuel = fuels != null && fuels.Count > 0;
             int length = hasFuel ? arrowLength : shortArrowLength;
             DrawArrow(sb, new Vector2(area.Center.X, y), length);
@@ -293,27 +293,25 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// One of the machine's fuels (from RecipeCatalog.FuelsOf, i.e. the machine's registry) beside the middle of the arrow,
         /// cycling through all of them. Same reveal rule, hover tooltip and click-to-jump as an ingredient cell.
         /// </summary>
-        void DrawFuel(SpriteBatch sb, Rectangle area, float arrowTop, List<RecipeOutputKey> fuels)
+        void DrawFuel(SpriteBatch sb, Rectangle area, float arrowTop, List<RecipeCatalog.FuelEntry> fuels)
         {
             int size = RecipeBookLayout.DetailCell;
             int index = (int)((Main.GameUpdateCount / (uint)Math.Max(1, fuelCycleTicks)) % (uint)fuels.Count);
-            RecipeOutputKey fuel = fuels[index];
+            RecipeCatalog.FuelEntry fuel = fuels[index];
 
-            // Same reveal rule as the recipe's inputs (see BuildCells).
-            RecipeState state = book.SelectedState;
-            bool reveal = state != RecipeState.Crafted;
-            bool hidden = fuel.IsLiquid
-                ? state == RecipeState.FadedIngredient || (reveal && !RecipeVisibility.IsLiquidRevealed(fuel.Id))
-                : reveal && !RecipeVisibility.IsIngredientRevealed(fuel.Id);
+            // Not tied to the selected recipe: once any recipe of this machine was crafted, every fuel of the machine shows.
+            // Before that, a fuel shows once it was held (any member, for a group like Any Wood).
+            bool hidden = !RecipeVisibility.IsFuelRevealed(book.SelectedMachine, fuel);
+            bool single = fuel.LabelKey == null;
 
             var cell = new Cell
             {
-                Icon = fuel,
-                ItemType = fuel.IsLiquid ? 0 : fuel.Id,
+                Icon = fuel.Icon,
+                ItemType = single && !fuel.Icon.IsLiquid ? fuel.Icon.Id : 0,    // a group has no single item tooltip
                 Stack = 1,
-                Name = fuel.IsLiquid ? (LiquidTypeRegistry.Get(fuel.Id)?.Name ?? "") : null,
+                Name = !single ? RecipeBookLayout.Text(fuel.LabelKey) : fuel.Icon.IsLiquid ? (LiquidTypeRegistry.Get(fuel.Icon.Id)?.Name ?? "") : null,
                 Hidden = hidden,
-                NavKey = hidden ? null : RecipeVisibility.FindBookRecipeFor(fuel, book.SelectedKey),
+                NavKey = hidden || !single ? null : RecipeVisibility.FindBookRecipeFor(fuel.Icon, book.SelectedKey),
             };
 
             // DrawCells with a one-cell area draws, highlights, shows the tooltip and records the click box.

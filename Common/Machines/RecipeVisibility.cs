@@ -70,6 +70,11 @@ namespace Factorraria.Common.Machines
                             ingredientIndex[input.Type] = keys = new List<string>();
                         if (!keys.Contains(e.Key)) keys.Add(e.Key);
                     }
+
+            // Fuels are not recipe inputs, but the book shows them once held, so they must be tracked as seen items too
+            // (an empty key list: they unlock no recipe, they only count as held).
+            foreach (int fuelType in RecipeCatalog.AllFuelItemTypes())
+                if (!ingredientIndex.ContainsKey(fuelType)) ingredientIndex[fuelType] = new List<string>();
         }
 
         public static void ClearIndex()
@@ -202,6 +207,30 @@ namespace Factorraria.Common.Machines
         {
             RecipeOutputKey k = RecipeOutputKey.ForLiquid(liquidType);
             return !producerIndex.ContainsKey(k) || IsProductCrafted(k);
+        }
+
+        /// <summary>True once at least one recipe of this machine (catalog name) has been crafted in this world.</summary>
+        public static bool IsMachineCrafted(string machineName)
+        {
+            if (machineName == null) return false;
+            foreach (string key in RecipeKnowledgeSystem.CraftedKeys)
+                if (key.Length > machineName.Length && key[machineName.Length] == '|' && key.StartsWith(machineName, System.StringComparison.Ordinal))
+                    return true;
+            return false;
+        }
+
+        /// <summary>
+        /// May this fuel be shown on the book page of a recipe of this machine? Yes once the machine has crafted anything (so every
+        /// later recipe of it shows its fuel), or once the player has held the fuel (any member of a group) before. A liquid fuel
+        /// follows the liquid rule (raw liquids are always shown). Does not depend on which recipe is selected.
+        /// </summary>
+        public static bool IsFuelRevealed(string machineName, RecipeCatalog.FuelEntry fuel)
+        {
+            if (IsMachineCrafted(machineName)) return true;
+            if (fuel.Icon.IsLiquid) return IsLiquidRevealed(fuel.Icon.Id);
+            foreach (int type in fuel.Items)
+                if (IsIngredientRevealed(type)) return true;
+            return false;
         }
 
         /// <summary>
