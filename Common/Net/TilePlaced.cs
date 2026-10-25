@@ -115,11 +115,13 @@ namespace Factorraria.Common.Net
                 return;
             }
 
+            // R9 (2026-10-25): the reach check used to refuse the request here. The server's copy of a moving player lags behind the
+            // client, so a placement at the edge of reach was refused AFTER the tile had already arrived through vanilla's own message:
+            // the tile existed but was never registered (a pipe missing from AllPipeTiles, a machine or motor without an entity), and a
+            // liquid network built by a client did not work until a world reload. The tile matching the request (checked above) is the
+            // real validation, and the consumers only register a tile that exists and are idempotent, so a refusal protects nothing.
             if (!FactorrariaNet.InReach(Main.player[sender], x, y))
-            {
-                FactorrariaNet.Log("tile-placed request from " + who + " rejected: (" + x + ", " + y + ") is out of reach");
-                return;
-            }
+                FactorrariaNet.Log("tile-placed request from " + who + ": (" + x + ", " + y + ") was outside the server's reach estimate, registered anyway (the tile exists)");
 
             RunConsumers(x, y, tileType, sender);
         }
