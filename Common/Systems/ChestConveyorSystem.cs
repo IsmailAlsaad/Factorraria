@@ -447,13 +447,103 @@ namespace Factorraria.Common.Systems
                 return;
             }
 
+            // Coins merge up a tier inside the chest (100 copper -> 1 silver, ...), like the vanilla coin slots.
+            // Merging first frees slots when the chest is full of 100-stacks; merging after catches what was just added.
+            bool isCoin = IsMergeableCoin(vItem.itemType);
+
+            if (isCoin)
+            {
+                MergeCoins(chestIndex, chest);
+            }
+
             // Tops up compatible stacks first (same type, prefix and mod data), then fills empty slots.
             // Whatever does not fit stays on the vItem (and on the belt).
             VItemStacking.Insert(chest.item, 0, Chest.maxItems, vItem.Payload, null, slot => SyncSlot(chestIndex, slot));
 
+            if (isCoin)
+            {
+                MergeCoins(chestIndex, chest);
+            }
+
             if (vItem.stackSize <= 0)
             {
                 vItem.Remove(); // VirtualItemSystem drops it from its list on its next pass
+            }
+        }
+
+        private static bool IsMergeableCoin(int type)
+        {
+            return type == ItemID.CopperCoin || type == ItemID.SilverCoin || type == ItemID.GoldCoin;
+        }
+
+        /// <summary>
+        /// Converts every full 100 of copper/silver/gold coins in the chest into one coin of the next tier (copper -> silver ->
+        /// gold -> platinum, cascading). Runs where the input runs (server / single-player); changed slots are synced.
+        /// If the next tier cannot fit anywhere, the coins are put back untouched.
+        /// </summary>
+        private static void MergeCoins(int chestIndex, Chest chest)
+        {
+            for (int coinType = ItemID.CopperCoin; coinType <= ItemID.GoldCoin; coinType++)
+            {
+                int total = 0;
+
+                for (int slot = 0; slot < Chest.maxItems; slot++)
+                {
+                    Item item = chest.item[slot];
+
+                    if (item != null && !item.IsAir && item.type == coinType)
+                    {
+                        total += item.stack;
+                    }
+                }
+
+                int upgrades = total / 100;
+
+                if (upgrades <= 0)
+                {
+                    continue;
+                }
+
+                // Take the 100s out of the chest (frees their slots), then try to place the next-tier coins.
+                RemoveCoins(chestIndex, chest, coinType, upgrades * 100);
+
+                Item upgraded = new Item();
+                upgraded.SetDefaults(coinType + 1);
+                upgraded.stack = upgrades;
+                VItemStacking.Insert(chest.item, 0, Chest.maxItems, upgraded, null, slot => SyncSlot(chestIndex, slot));
+
+                if (!upgraded.IsAir && upgraded.stack > 0)
+                {
+                    // No room for the higher coins (practically only with a full chest of maxed platinum): give the lower ones back.
+                    Item leftover = new Item();
+                    leftover.SetDefaults(coinType);
+                    leftover.stack = upgraded.stack * 100;
+                    VItemStacking.Insert(chest.item, 0, Chest.maxItems, leftover, null, slot => SyncSlot(chestIndex, slot));
+                }
+            }
+        }
+
+        private static void RemoveCoins(int chestIndex, Chest chest, int coinType, int amount)
+        {
+            for (int slot = 0; slot < Chest.maxItems && amount > 0; slot++)
+            {
+                Item item = chest.item[slot];
+
+                if (item == null || item.IsAir || item.type != coinType)
+                {
+                    continue;
+                }
+
+                int taken = Math.Min(item.stack, amount);
+                item.stack -= taken;
+                amount -= taken;
+
+                if (item.stack <= 0)
+                {
+                    item.TurnToAir();
+                }
+
+                SyncSlot(chestIndex, slot);
             }
         }
 
