@@ -22,8 +22,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
         public float MphPerWindUnit = 50f;        // Main.windSpeedCurrent * 50 = the mph the weather radio shows
         public float CalmMph = 20f;               // at or below this wind speed (either direction) the boards do not move at all
         public float FullSwayMph = 60f;           // at this wind speed (the game's maximum) the sway is at 100%; it ramps up linearly from CalmMph
-        public float LeanRadians = 0.06f;         // steady lean in the wind's direction at 100% sway
-        public float SwingRadians = 0.04f;        // back-and-forth swing amplitude at 100% sway
+        public float LeanRadians = 0.12f;         // steady lean in the wind's direction at 100% sway
+        public float SwingRadians = 0.08f;        // back-and-forth swing amplitude at 100% sway
         public float SwingSpeed = 1.6f;           // swing speed, radians per second
 
         readonly Dictionary<string, Asset<Texture2D>> textures = new();
