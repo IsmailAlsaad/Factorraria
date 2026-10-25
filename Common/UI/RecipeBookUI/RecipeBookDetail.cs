@@ -99,7 +99,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (book.SelectedGroup == null)
             {
                 string msg = book.IsEmpty ? RecipeBookLayout.Text("Empty") : book.NoResults ? RecipeBookLayout.Text("NoResults") : RecipeBookLayout.Text("NothingSelected");
-                DrawWrapped(sb, msg, new Vector2(r.X + 8, r.Center.Y - 30), r.Width - 16, RecipeBookLayout.TextFadedColor, 1f);
+                DrawCenteredMessage(sb, msg, r, RecipeBookLayout.TextFadedColor, 1f);
                 return;
             }
 
@@ -358,12 +358,48 @@ namespace Factorraria.Common.UI.RecipeBookUI
             BookDraw.Text(sb, glyph, new Vector2(box.Center.X - size.X / 2f, box.Center.Y - size.Y / 2f + 3f), RecipeBookLayout.TextColor, 1f);
         }
 
-        static void DrawWrapped(SpriteBatch sb, string text, Vector2 pos, float width, Color color, float scale)
+        /// <summary>
+        /// Wraps text into lines at the given pixel width and honours \n. Utils.WordwrapString's lineAmount is the INDEX of the
+        /// last line, not the number of lines, so it is bumped by one here (that is why the last line used to be cut off).
+        /// </summary>
+        static List<string> WrapLines(string text, float width, float scale)
         {
             var font = FontAssets.MouseText.Value;
-            string[] lines = Utils.WordwrapString(text, font, (int)(width / scale), 8, out int count);
-            for (int i = 0; i < count; i++)
-                if (lines[i] != null) BookDraw.Text(sb, lines[i], pos + new Vector2(0, i * 24f * scale), color, scale);
+            var result = new List<string>();
+            foreach (string paragraph in text.Split('\n'))
+            {
+                if (paragraph.Length == 0)
+                {
+                    result.Add("");
+                    continue;
+                }
+
+                string[] lines = Utils.WordwrapString(paragraph, font, (int)(width / scale), 8, out int count);
+                count++;
+                for (int i = 0; i < count && i < lines.Length; i++)
+                    if (lines[i] != null) result.Add(lines[i]);
+            }
+            return result;
+        }
+
+        static void DrawWrapped(SpriteBatch sb, string text, Vector2 pos, float width, Color color, float scale)
+        {
+            List<string> lines = WrapLines(text, width, scale);
+            for (int i = 0; i < lines.Count; i++)
+                BookDraw.Text(sb, lines[i], pos + new Vector2(0, i * 24f * scale), color, scale);
+        }
+
+        /// <summary>A message block centered in the area both ways, with every line centered on its own. \n in the text starts a new line.</summary>
+        static void DrawCenteredMessage(SpriteBatch sb, string text, Rectangle area, Color color, float scale)
+        {
+            List<string> lines = WrapLines(text, area.Width - 16, scale);
+            float lineHeight = 24f * scale;
+            float top = area.Center.Y - lines.Count * lineHeight / 2f;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                Vector2 size = FontAssets.MouseText.Value.MeasureString(lines[i]) * scale;
+                BookDraw.Text(sb, lines[i], new Vector2(area.Center.X - size.X / 2f, top + i * lineHeight), color, scale);
+            }
         }
     }
 }

@@ -390,7 +390,11 @@ RecipeBook: {
 	FavoriteAdd: Add to favorites
 	FavoriteRemove: Remove from favorites
 	Title: Recipe Book
-	Empty: The pages are blank. Read recipe parchments or craft in machines to fill them.
+	Empty:
+		'''
+		The pages are blank
+		Try crafting something!
+		'''
 	NothingSelected: Select a recipe on the left page.
 	NoResults: No recipes match your search.
 	StatusCrafted: Crafted
