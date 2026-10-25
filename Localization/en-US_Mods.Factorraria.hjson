@@ -67,7 +67,11 @@ Items: {
 
 	OilBucket: {
 		DisplayName: Oil Bucket
-		Tooltip: ""
+		Tooltip: 
+		'''
+		Contains a small amount of oil
+		Can be poured into machines
+		'''
 	}
 
 	IronCutter: {
@@ -117,7 +121,11 @@ Items: {
 
 	FuelBucket: {
 		DisplayName: Fuel Bucket
-		Tooltip: ""
+		Tooltip: 
+		'''
+		Contains a small amount of fuel
+		Can be poured into machines
+		'''
 	}
 
 	SteelBarItem: {
@@ -375,8 +383,10 @@ Configs: {
 	}
 }
 
-Keybinds.RecipeBookItemSearch.DisplayName: Recipe Book - Show Recipes Using Hovered Item
-Keybinds.RecipeBookToggle.DisplayName: Recipe Book - Open / Close
+Keybinds: {
+	RecipeBookItemSearch.DisplayName: Recipe Book - Show Recipes Using Hovered Item
+	RecipeBookToggle.DisplayName: Recipe Book - Open / Close
+}
 
 Projectiles: {
 	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
