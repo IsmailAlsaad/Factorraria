@@ -162,7 +162,6 @@ namespace Factorraria.Common.Systems
 
             CopperWireTileTexture = ModContent.Request<Texture2D>("Factorraria/Content/Items/Wires/CopperWireTile");
             TinWireTileTexture = ModContent.Request<Texture2D>("Factorraria/Content/Items/Wires/TinWireTile");
-            // RequestIfExists: a missing GoldWireTile.png logs a warning and gold wire is just not drawn, instead of crashing the load.
             ModContent.RequestIfExists<Texture2D>("Factorraria/Content/Items/Wires/GoldWireTile", out GoldWireTileTexture, AssetRequestMode.AsyncLoad);
         }
 

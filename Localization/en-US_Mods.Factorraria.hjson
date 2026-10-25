@@ -185,7 +185,12 @@ Items: {
 
 	GoldWireItem: {
 		DisplayName: Gold Wire
-		Tooltip: ""
+		Tooltip:
+			'''
+			Can be placed
+			Used to connect machines together
+			Has a longer range on power poles
+			'''
 	}
 
 	SimpleCircuitItem: {
