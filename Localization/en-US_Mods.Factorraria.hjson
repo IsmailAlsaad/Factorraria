@@ -14,7 +14,8 @@ Items: {
 		Tooltip:
 			'''
 			Can be placed
-			Used to connect machines and power poles together
+			Used to transmit power to machines
+			Right click to connect power poles together
 			'''
 	}
 
@@ -23,7 +24,8 @@ Items: {
 		Tooltip:
 			'''
 			Can be placed
-			Used to connect machines and power poles together
+			Used to transmit power to machines
+			Right click to connect power poles together
 			'''
 	}
 
@@ -202,8 +204,9 @@ Items: {
 		Tooltip:
 			'''
 			Can be placed
-			Used to connect machines and power poles together
-			Has a longer range on power poles
+			Used to transmit power to machines
+			Right click to connect power poles together
+			Has a longer range
 			'''
 	}
 
