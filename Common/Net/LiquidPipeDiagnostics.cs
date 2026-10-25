@@ -23,19 +23,20 @@ namespace Factorraria.Common.Net
         /// <summary>One short line for the "[Pipes] networks rebuilt" log line.</summary>
         public static string Summary()
         {
-            int pipes = 0, motors = 0, machines = 0, world = 0, typed = 0, flowing = 0;
-            foreach (LiquidNetwork net in LiquidNetworkSystem.ActiveNetworks)
+            int pipes = 0, motors = 0, sources = 0, sinks = 0, routes = 0, active = 0;
+            foreach (FlowNetwork net in LiquidNetworkSystem.FlowNetworks)
             {
-                pipes += net.PipeTiles.Count;
-                motors += net.Motors.Count;
-                machines += net.MachineAttachments.Count;
-                world += net.WorldLiquidAttachments.Count;
-                if (net.LiquidType != -1) typed++;
-                if (net.ResolvedFlow.Count > 0) flowing++;
+                int netMotors = net.Motors.Count(m => m != null);
+                motors += netMotors;
+                pipes += net.Nodes.Length - netMotors;
+                sources += net.Sources.Count;
+                sinks += net.Sinks.Count;
+                routes += net.Routes.Count;
+                if (net.Solver.ActiveType != -1) active++;
             }
 
-            return "rebuild #" + LiquidNetworkSystem.RebuildCount + ": " + pipes + " pipes in networks, " + motors + " motor(s), " + machines + " machine attachment(s), "
-                + world + " world-liquid attachment(s), " + typed + " typed network(s), " + flowing + " with flow";
+            return "rebuild #" + LiquidNetworkSystem.RebuildCount + ": " + LiquidNetworkSystem.FlowNetworks.Count + " network(s), " + pipes + " pipes, " + motors + " motor(s), "
+                + sources + " source port(s), " + sinks + " sink port(s), " + routes + " route(s), " + active + " network(s) with an active liquid";
         }
 
         static string P(Point p) => "(" + p.X + "," + p.Y + ")";
@@ -47,9 +48,9 @@ namespace Factorraria.Common.Net
 
             // Every motor entity that exists, whether or not a network contains it. A motor missing from the networks below is the clue.
             var inNetworks = new HashSet<Point>();
-            foreach (LiquidNetwork net in LiquidNetworkSystem.ActiveNetworks)
-                foreach (MotorAttachment m in net.Motors)
-                    inNetworks.Add(m.Position);
+            foreach (FlowNetwork net in LiquidNetworkSystem.FlowNetworks)
+                for (int n = 0; n < net.Nodes.Length; n++)
+                    if (net.Motors[n] != null) inNetworks.Add(net.Positions[n]);
 
             foreach (TileEntity te in TileEntity.ByID.Values)
             {
@@ -61,10 +62,11 @@ namespace Factorraria.Common.Net
             }
 
             int shown = 0, hidden = 0;
-            for (int i = 0; i < LiquidNetworkSystem.ActiveNetworks.Count; i++)
+            for (int i = 0; i < LiquidNetworkSystem.FlowNetworks.Count; i++)
             {
-                LiquidNetwork net = LiquidNetworkSystem.ActiveNetworks[i];
-                bool interesting = net.Motors.Count > 0 || net.MachineAttachments.Count > 0 || net.WorldLiquidAttachments.Count > 0;
+                FlowNetwork net = LiquidNetworkSystem.FlowNetworks[i];
+                int motorCount = net.Motors.Count(m => m != null);
+                bool interesting = motorCount > 0 || net.Sources.Count > 0 || net.Sinks.Count > 0;
                 if (!interesting || shown >= 12)
                 {
                     if (interesting) hidden++;
@@ -73,21 +75,29 @@ namespace Factorraria.Common.Net
                 shown++;
 
                 var sb = new StringBuilder();
-                sb.Append("fpipes: network ").Append(i).Append(": ").Append(net.PipeTiles.Count).Append(" pipe(s), liquid ")
-                  .Append(net.LiquidType == -1 ? "none yet" : LiquidTypeRegistry.Get(net.LiquidType).Name)
-                  .Append(", max flow ").Append(net.MaxFlowRate >= float.MaxValue ? "none" : net.MaxFlowRate.ToString("0")).Append(", flow tiles ").Append(net.ResolvedFlow.Count);
+                sb.Append("fpipes: network ").Append(i).Append(": ").Append(net.Nodes.Length - motorCount).Append(" pipe(s), liquid ")
+                  .Append(net.Solver.ActiveType == -1 ? "none yet" : LiquidTypeRegistry.Get(net.Solver.ActiveType).Name)
+                  .Append(", cap ").Append(net.Cap >= float.MaxValue ? "none" : (net.Cap / 3600f).ToString("0.##") + "/tick").Append(", routes ").Append(net.Routes.Count);
 
-                foreach (MotorAttachment m in net.Motors)
-                    sb.Append(" | motor ").Append(P(m.Position)).Append(" ").Append(m.Motor.Facing).Append(m.Motor.isOn ? " on" : " OFF");
-
-                foreach (PipeAttachment a in net.MachineAttachments)
-                    sb.Append(" | machine ").Append(a.Machine.GetType().Name).Append(" ").Append(P(a.Position)).Append(" via pipe ").Append(P(a.PipePosition)).Append(" ").Append(a.MouthDirection);
-
-                foreach (PipeAttachment a in net.WorldLiquidAttachments)
+                for (int n = 0; n < net.Nodes.Length; n++)
                 {
-                    Tile t = Main.tile[a.Position.X, a.Position.Y];
-                    sb.Append(" | world ").Append(P(a.Position)).Append(" via pipe ").Append(P(a.PipePosition)).Append(" ").Append(a.MouthDirection)
-                      .Append(" liquid ").Append(t.LiquidAmount).Append("/255 type ").Append(t.LiquidType);
+                    if (net.Motors[n] == null) continue;
+                    sb.Append(" | motor ").Append(P(net.Positions[n])).Append(" ").Append(net.Motors[n].Facing).Append(net.Nodes[n].MotorOn ? " on" : " OFF");
+                }
+
+                foreach (FlowSource source in net.Sources)
+                {
+                    sb.Append(" | source ").Append(FlowNetworkDiagnostics.Describe(source));
+                    if (source.IsWorld)
+                    {
+                        Tile t = Main.tile[source.WorldPos.X, source.WorldPos.Y];
+                        sb.Append(" liquid ").Append(t.LiquidAmount).Append("/255 type ").Append(t.LiquidType);
+                    }
+                }
+
+                foreach (FlowSink sink in net.Sinks)
+                {
+                    if (!sink.IsWorld) sb.Append(" | sink ").Append(FlowNetworkDiagnostics.Describe(sink));
                 }
 
                 lines.Add(sb.ToString());

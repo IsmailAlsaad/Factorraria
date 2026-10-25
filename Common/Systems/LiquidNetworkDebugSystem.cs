@@ -1,6 +1,8 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Content.Configs;
+using Factorraria.Common.Machines;
 using Factorraria.Common.Networks;
+using Factorraria.Common.Networks.Flow;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -62,41 +64,45 @@ namespace Factorraria.Common.Systems
                 Main.GameViewMatrix.TransformationMatrix
             );
 
-            if (LiquidNetworkSystem.ActiveNetworks != null)
+            List<FlowNetwork> networks = LiquidNetworkSystem.FlowNetworks;
+            if (networks != null)
             {
-                for (int i = 0; i < LiquidNetworkSystem.ActiveNetworks.Count; i++)
+                for (int i = 0; i < networks.Count; i++)
                 {
-                    LiquidNetwork network = LiquidNetworkSystem.ActiveNetworks[i];
+                    FlowNetwork network = networks[i];
                     Color networkColor = NetworkColors[i % NetworkColors.Length];
 
-                    // 1. Draw every pipe tile belonging to this network, tinted its color —
-                    //    this is the main "which pipes are actually one connected network" view.
-                    DrawPipeTiles(spriteBatch, network, networkColor);
+                    // 1. Every pipe and motor tile tinted with its network's colour; a motor also shows its facing arrow and ON / OFF.
+                    DrawNodes(spriteBatch, network, networkColor);
 
-                    // 2. Draw a box around every machine this network is attached to.
-                    foreach (var attachment in network.MachineAttachments)
-                        DrawAttachmentOverlay(spriteBatch, attachment.Position, networkColor * 0.35f, networkColor);
+                    // 2. Every source and sink port at its attach tile, with the liquid it holds (machine tanks, world cells).
+                    DrawPorts(spriteBatch, network);
 
-                    // 3. Draw a box around every world-liquid tile this network is attached to —
-                    //    a slightly different border color so it's visually distinct from machines.
-                    foreach (var attachment in network.WorldLiquidAttachments)
-                        { DrawAttachmentOverlay(spriteBatch, attachment.Position, Color.SkyBlue * 0.35f, Color.SkyBlue); Tile wt = Main.tile[attachment.Position.X, attachment.Position.Y]; bool hasFlow = network.ResolvedFlow.TryGetValue(attachment.PipePosition, out var wf); Utils.DrawBorderString(spriteBatch, $"amt {wt.LiquidAmount} type {wt.LiquidType} flow {(hasFlow ? wf.Direction.ToString() : "none")} mouth {attachment.MouthDirection}", new Vector2(attachment.Position.X, attachment.Position.Y) * 16f - Main.screenPosition + new Vector2(0, 16), Color.White, 0.6f); }
+                    // 3. At the end of every route: the rate it carries, how many tiles it climbs and how much that costs.
+                    DrawRouteLabels(spriteBatch, network);
 
-                    // 4. One text readout per network, anchored at its first pipe tile —
-                    //    "first" is arbitrary (HashSet has no order), just needs SOME anchor point.
-                    if (network.PipeTiles.Count > 0)
+                    // 4. One readout per network, anchored at its first tile.
+                    if (network.Positions.Length > 0)
                     {
-                        Point anchor = default;
-                        foreach (var p in network.PipeTiles) { anchor = p; break; }
+                        int motorCount = 0, motorsOn = 0;
+                        for (int n = 0; n < network.Nodes.Length; n++)
+                        {
+                            if (network.Motors[n] == null) continue;
+                            motorCount++;
+                            if (network.Nodes[n].MotorOn) motorsOn++;
+                        }
 
-                        string text = $"[Liquid Net #{i + 1}]\n" +
-                                      $"Pipes: {network.PipeTiles.Count}\n" +
-                                      $"Max Rate: {network.MaxFlowRate}\n" +
-                                      $"Liquid: {(network.LiquidType == -1 ? "unset" : LiquidTypeRegistry.Get(network.LiquidType).Name)}\n" +
-                                      $"Machines: {network.MachineAttachments.Count}\n" +
-                                      $"World Sources: {network.WorldLiquidAttachments.Count}";
+                        float moved = 0f;
+                        foreach (FlowTransfer transfer in network.LastTransfers)
+                            moved += transfer.Amount;
 
-                        DrawWorldText(spriteBatch, anchor, text, networkColor);
+                        string text = $"[Flow Net #{i + 1}]\n" +
+                                      $"Pipes: {network.Nodes.Length - motorCount}  Pumps: {motorCount} ({motorsOn} on)\n" +
+                                      $"Liquid: {(network.Solver.ActiveType == -1 ? "none" : LiquidTypeRegistry.Get(network.Solver.ActiveType).Name)}\n" +
+                                      $"Cap: {(network.Cap >= float.MaxValue ? "none" : (network.Cap / 3600f).ToString("0.##") + "/tick")}  Moving: {moved:0.##}/tick\n" +
+                                      $"Routes: {network.Routes.Count}  Sources: {network.Sources.Count}  Sinks: {network.Sinks.Count}";
+
+                        DrawWorldText(spriteBatch, network.Positions[0], text, networkColor);
                     }
                 }
             }
@@ -104,25 +110,148 @@ namespace Factorraria.Common.Systems
             spriteBatch.End();
         }
 
-        void DrawPipeTiles(SpriteBatch sb, LiquidNetwork network, Color color)
+        // Liquid overhaul step 5: the overlay reads the FlowNetworks (the old LiquidNetwork.ResolvedFlow is no longer used).
+        void DrawNodes(SpriteBatch sb, FlowNetwork network, Color color)
         {
             Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Color fill = color * 0.35f;
 
-            foreach (Point pos in network.PipeTiles)
+            for (int n = 0; n < network.Positions.Length; n++)
             {
-                Vector2 screenPos = new Vector2(pos.X, pos.Y) * 16f - Main.screenPosition;
-                Rectangle rect = new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16);
+                Point pos = network.Positions[n];
+                Vector2 worldPos = new Vector2(pos.X, pos.Y) * 16f;
+                if (!BaseMachine.IsOnScreen(worldPos)) continue;
 
-                sb.Draw(pixel, rect, fill);
+                Vector2 screenPos = worldPos - Main.screenPosition;
+                Rectangle rect = new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16);
+                bool isMotor = network.Motors[n] != null;
+
+                sb.Draw(pixel, rect, new Rectangle(0, 0, 1, 1), color * (isMotor ? 0.6f : 0.35f));
                 Utils.DrawRect(sb, rect, color);
 
-                if (network.ResolvedFlow.TryGetValue(pos, out var flow))
+                if (!isMotor) continue;
+
+                string arrow = network.Nodes[n].Facing switch
                 {
-                    string label = $"{flow.Magnitude:F0}";
-                    Vector2 labelPos = screenPos + new Vector2(8, -8); // tweak to taste
-                    Utils.DrawBorderString(sb, label, labelPos, Color.White, 0.6f);
+                    FlowDir.Up => "^",
+                    FlowDir.Down => "v",
+                    FlowDir.Left => "<",
+                    _ => ">"
+                };
+                bool on = network.Nodes[n].MotorOn;
+                Utils.DrawBorderString(sb, arrow, screenPos + new Vector2(4f, 0f), Color.White, 0.9f);
+                Utils.DrawBorderString(sb, on ? "ON" : "OFF", screenPos + new Vector2(0f, -12f), on ? Color.LightGreen : Color.Red, 0.5f);
+            }
+        }
+
+        // The tile a port is attached to: the machine tile or world cell on the other side of the pipe mouth.
+        static Point AttachTile(FlowNetwork network, FlowPort port)
+        {
+            Point node = network.Positions[port.Node];
+            return node + ((Direction)(int)port.Mouth).ToOffset();
+        }
+
+        static string TankText(LiquidStack tank)
+        {
+            return tank == null || tank.IsEmpty ? "empty" : $"{LiquidTypeRegistry.Get(tank.LiquidType).Name} {tank.Amount:0}/{tank.Capacity:0}";
+        }
+
+        static string WorldCellText(Point cell)
+        {
+            Tile tile = Main.tile[cell.X, cell.Y];
+            if (tile.LiquidAmount <= 0) return "cell: dry";
+
+            int? type = LiquidTypeRegistry.FromTileLiquidId((byte)tile.LiquidType);
+            return $"cell: {(type == null ? "type " + tile.LiquidType : LiquidTypeRegistry.Get(type.Value).Name)} {tile.LiquidAmount}/255";
+        }
+
+        // One box per attach tile (green = machine output, orange = machine input, gold = both, sky blue = world cell) with a text
+        // line per port: the tank it reads from or fills, or the world cell's liquid.
+        void DrawPorts(SpriteBatch sb, FlowNetwork network)
+        {
+            var sourcesAt = new Dictionary<Point, List<int>>();
+            var sinksAt = new Dictionary<Point, List<int>>();
+
+            for (int a = 0; a < network.SourceAttach.Length; a++)
+            {
+                Point tile = AttachTile(network, network.SourceAttach[a]);
+                if (!sourcesAt.TryGetValue(tile, out List<int> list)) sourcesAt[tile] = list = new List<int>();
+                foreach (int s in network.SourcePortsOfAttach[a]) if (!list.Contains(s)) list.Add(s);
+            }
+            for (int a = 0; a < network.SinkAttach.Length; a++)
+            {
+                Point tile = AttachTile(network, network.SinkAttach[a]);
+                if (!sinksAt.TryGetValue(tile, out List<int> list)) sinksAt[tile] = list = new List<int>();
+                foreach (int k in network.SinkPortsOfAttach[a]) if (!list.Contains(k)) list.Add(k);
+            }
+
+            var tiles = new HashSet<Point>(sourcesAt.Keys);
+            tiles.UnionWith(sinksAt.Keys);
+
+            foreach (Point tile in tiles)
+            {
+                Vector2 worldPos = new Vector2(tile.X, tile.Y) * 16f;
+                if (!BaseMachine.IsOnScreen(worldPos)) continue;
+
+                bool world = false, machineSource = false, machineSink = false;
+                var lines = new List<string>();
+
+                if (sourcesAt.TryGetValue(tile, out List<int> sources))
+                {
+                    foreach (int s in sources)
+                    {
+                        FlowSource source = network.Sources[s];
+                        if (source.IsWorld) { world = true; lines.Add(WorldCellText(source.WorldPos)); continue; }
+
+                        machineSource = true;
+                        LiquidStack[] tanks = source.Machine.OutputLiquids;
+                        lines.Add("out#" + source.TankIndex + ": " + TankText(source.TankIndex < tanks.Length ? tanks[source.TankIndex] : null));
+                    }
                 }
+
+                if (sinksAt.TryGetValue(tile, out List<int> sinks))
+                {
+                    foreach (int k in sinks)
+                    {
+                        FlowSink sink = network.Sinks[k];
+                        if (sink.IsWorld) { world = true; continue; }   // a world cell is both source and sink: its text is above
+
+                        machineSink = true;
+                        LiquidStack[] tanks = sink.Machine.InputLiquids;
+                        for (int t = 0; t < tanks.Length; t++)
+                            lines.Add("in#" + t + ": " + TankText(tanks[t]));
+                    }
+                }
+
+                Color border = world ? Color.SkyBlue : machineSource && machineSink ? Color.Gold : machineSource ? Color.LightGreen : Color.Orange;
+                DrawAttachmentOverlay(sb, tile, border * 0.3f, border);
+
+                if (lines.Count > 0)
+                    Utils.DrawBorderString(sb, string.Join("\n", lines), worldPos - Main.screenPosition + new Vector2(0f, 16f), Color.White, 0.5f);
+            }
+        }
+
+        // Next to the sink end of every route: "<- rate/tick, climbs N, lost X/tick". Lost = what the climb cost against the weakest pump.
+        void DrawRouteLabels(SpriteBatch sb, FlowNetwork network)
+        {
+            var sinkTile = new Dictionary<int, Point>();
+            for (int a = 0; a < network.SinkAttach.Length; a++)
+                foreach (int k in network.SinkPortsOfAttach[a])
+                    sinkTile.TryAdd(k, AttachTile(network, network.SinkAttach[a]));
+
+            foreach (FlowRoute route in network.Routes)
+            {
+                if (!sinkTile.TryGetValue(route.Dst, out Point tile)) continue;
+
+                Vector2 worldPos = new Vector2(tile.X, tile.Y) * 16f;
+                if (!BaseMachine.IsOnScreen(worldPos)) continue;
+
+                float weakest = float.MaxValue;
+                foreach (int pump in route.Pumps)
+                    weakest = System.Math.Min(weakest, network.Nodes[pump].Strength);
+                float lost = System.Math.Max(0f, System.Math.Min(weakest, network.Cap) - route.RatePerMinute) / 3600f;
+
+                string text = $"<- {route.RatePerMinute / 3600f:0.##}/tick, climbs {route.Climbs}, lost {lost:0.##}/tick";
+                Utils.DrawBorderString(sb, text, worldPos - Main.screenPosition + new Vector2(0f, -22f), Color.LightGray, 0.5f);
             }
         }
 

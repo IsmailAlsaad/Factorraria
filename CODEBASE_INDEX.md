@@ -4,7 +4,7 @@ generated 2026-10-25 | 276 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(59) BaseMachine(41) LiquidTypeRegistry(32) FactorrariaPacket(31) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(20) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) MachineUIStateBase(14) LiquidNetworkSystem(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
+FactorrariaNet(59) BaseMachine(42) LiquidTypeRegistry(33) FactorrariaPacket(31) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(20) LiquidStack(17) CustomRecipe(17) TileEntityHelper(16) MachineUIStateBase(14) LiquidNetworkSystem(14) CartModule(14) VirtualItemSystem(13) MachineUIElementEntry(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
 
 ## Inheritance
 Project bases -> derived:
@@ -502,7 +502,7 @@ tModLoader/other bases -> project types:
     +Marked:int[s] +SentWater:int[s] +SentSquares:int[s] +PeakQueue:int[s] +TicksOverCap:int[s] +Mark(int,int)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +Describe()[s]
   class LiquidBroadcastCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
-**LiquidPipeDiagnostics.cs** uses: FactorrariaNet, LiquidNetwork, LiquidNetworkSystem, LiquidTypeRegistry, MachineVisualRegistry, MotorAttachment, MotorTileEntityBase, PipeAttachment, PipeTierRegistry, TileEntityHelper
+**LiquidPipeDiagnostics.cs** uses: FactorrariaNet, FlowNetwork, FlowNetworkDiagnostics, FlowSink, FlowSource, LiquidNetworkSystem, LiquidTypeRegistry, MachineVisualRegistry, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
   static class LiquidPipeDiagnostics
     +Summary()[s] +Report(bool)[s]
   class LiquidPipeCommand : ModCommand
@@ -801,7 +801,7 @@ tModLoader/other bases -> project types:
     {None, Copper}
   class CustomWireSystem : ModSystem
     +AllWireTypes:CustomWireType[s] +WireGrid:Dictionary<Point16,CustomWireType>[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +HasWire(int,int,CustomWireType)[s] +AddWire(int,int,CustomWireType)[s] +RemoveWire(int,int,CustomWireType)[s] +WireAt(int,int)[s] +SetWireAt(int,int,CustomWireType)[s] +ReplaceAll(List<KeyValuePair<Point16, CustomWireType>>)[s] +PostDrawTiles()[ov]
-**LiquidNetworkDebugSystem.cs** uses: FurnaceOffsetConfig, LiquidNetwork, LiquidNetworkSystem
+**LiquidNetworkDebugSystem.cs** uses: BaseMachine, Direction, FlowDir, FlowNetwork, FlowPort, FlowRoute, FlowSink, FlowSource, FlowTransfer, FurnaceOffsetConfig, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry
   class LiquidNetworkDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
 **LiquidNetworkSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, Factorraria, FlowNetwork, FlowNetworkBuilder, LiquidNetwork, LiquidPipeDiagnostics, LiquidTextureCache, LiquidTypeRegistry, LiquidWorldBanks, MotorAttachment, MotorTileEntityBase, PipeAttachment, PipeConnectionHelper, PipeTierRegistry, TileEntityHelper

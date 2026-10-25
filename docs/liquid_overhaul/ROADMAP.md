@@ -63,7 +63,7 @@ One line per step. `[ ]` not started, `[~]` applied untested, `[x]` tested and d
 - [x] 2 Topology build + `/fflow` (`patch_flow_topology.ps1`; tested in game, everything works, builds 0.03-0.05 ms)
 - [~] 3 New tick (`FlowNetwork.Tick`), `LiquidWorldBanks`, tanks forget type (`patch_flow_tick.ps1`; applied untested, no `UseNewFlow` switch by Ismail's decision)
 - [~] 4 Motors: `flowNeedsRecalculating`, `wasOn` and the old reset deleted; `FlowNetwork.Tick` detects power flips (`patch_flow_motors.ps1`; applied untested)
-- [ ] 5 Visual debug overlay, `/fpipes`, `/fflow` polish
+- [~] 5 Visual debug overlay on `FlowNetworks`, `/fpipes` reads `FlowNetworks` (`patch_flow_debug.ps1`; applied untested)
 - [ ] 6 Cleanup of the old system, docs
 
 ### Step 3 decisions (Ismail, 2026-10-25)
@@ -190,10 +190,10 @@ Only after steps 3-5 are `[x]`:
 - The game-layer files only compile for real inside tModLoader; the stubs catch type and logic errors but not API mismatches. Never claim the mod compiles.
 - Patch delivery follows `PROJECT_CONTEXT.md`: copy `patch_template.ps1`, `Edit` / `NewFile` only, UTF-8 with BOM, reply with changed list, "things to remember", "things to test", dry-run and apply commands, and a reminder to commit and push.
 
-## 8. Next chat (written by the step 4 patch)
+## 8. Next chat (written by the step 5 patch)
 
-Paste Ismail's step 3 AND step 4 test results first (he tests them together). If something failed, fix it in that chat with a small patch before step 5. Then:
+Paste Ismail's test results for steps 3, 4 and 5 first (he tests them together). If something failed, fix it in that chat with a small patch before step 6. Then:
 
-> Continue the liquid overhaul in Factorraria. Read `docs/liquid_overhaul/ROADMAP.md` from a fresh clone (sections 0, 1, 3 and Step 5). Results of steps 3 and 4: <paste>. Implement step 5 (visual debug overlay on `FlowNetworks`, `/fpipes` reading `FlowNetworks`, `/fflow` polish) as a patch script, following PROJECT_CONTEXT.md.
+> Continue the liquid overhaul in Factorraria. Read `docs/liquid_overhaul/ROADMAP.md` from a fresh clone (sections 0, 1, 3 and Step 6). Results of steps 3-5: <paste>. Implement step 6 (cleanup: delete the old LiquidNetwork system, stop writing the saved network types, update PROJECT_CONTEXT.md's Liquids paragraph) as a patch script, following PROJECT_CONTEXT.md. Mark steps 3-5 `[x]` in Progress first if I reported them passing.
 
-Step 4 removed: `LiquidNetworkSystem.flowNeedsRecalculating`, `RefreshFlowNetworks`, the `wasOn` tracking in `MotorTileEntityBase.Update()` (it is now just `base.Update(); UpdateMotor();`), the old network `LiquidType = -1` reset, and the flow flag in `/fpipes`. Motor changes are detected inside `FlowNetwork.Tick` (`MotorsChanged` then `RefreshRoutes`). Rebuild triggers (placing/breaking a motor, `Facing` change) are untouched. Known leftover: the old `ResolvedFlow` is no longer refreshed on power flips (only on rebuilds), so the old debug overlay is stale until step 5 rewrites it.
+Step 5 changed: `LiquidNetworkDebugSystem` (draws `FlowNetworks`: tinted pipes and motors with facing arrow and ON/OFF, every source/sink port at its attach tile with its tank or world-cell liquid, one readout per network with active liquid, cap, moved/tick and port counts, and per route the rate, climbs and rate lost to climbing); `LiquidPipeDiagnostics.Summary()` / `Report()` read `FlowNetworks` (the `[Pipes] networks rebuilt` log line and `MultiplayerBootProbeSystem` still work). Nothing reads the old `ActiveNetworks` / `ResolvedFlow` / `LiquidType` any more except `LiquidNetworkSystem` itself (`RebuildNetworks`, `ResolveFlow`, `RestoreSavedNetworkTypes`, `SaveWorldData`), which step 6 removes. Not done (optional): highlighting the route under the mouse.
