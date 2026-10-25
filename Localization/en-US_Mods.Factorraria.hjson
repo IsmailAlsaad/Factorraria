@@ -67,11 +67,11 @@ Items: {
 
 	OilBucket: {
 		DisplayName: Oil Bucket
-		Tooltip: 
-		'''
-		Contains a small amount of oil
-		Can be poured into machines
-		'''
+		Tooltip:
+			'''
+			Contains a small amount of oil
+			Can be poured into machines
+			'''
 	}
 
 	IronCutter: {
@@ -121,11 +121,11 @@ Items: {
 
 	FuelBucket: {
 		DisplayName: Fuel Bucket
-		Tooltip: 
-		'''
-		Contains a small amount of fuel
-		Can be poured into machines
-		'''
+		Tooltip:
+			'''
+			Contains a small amount of fuel
+			Can be poured into machines
+			'''
 	}
 
 	SteelBarItem: {
