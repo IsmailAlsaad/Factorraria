@@ -632,7 +632,7 @@ tModLoader/other bases -> project types:
   class PoleLinkNetSystem : ModSystem
     +Load()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
   static class PoleLinkNet
-    +MaxJoinLinks:int[s] +MaxPolesPerPacket:int[s] +Trace(string)[s] +AutoSlot:byte[s] +ResetClient()[s] +RequestLink(int,int,int,int,CustomWireType,int,int,int,int)[s] +RequestCut(int,int,int,int,int)[s] +HandleRequest(BinaryReader,int)[s] +OnMachineKilled(BaseMachine,Point16)[s] +HandleChanged(BinaryReader,int)[s] +ClientTick()[s] +CountWire(Player,int)[s] +ConsumeWire(Player,int,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
+    +MaxJoinLinks:int[s] +MaxPolesPerPacket:int[s] +RefusalRepeatTicks:int[s] +Trace(string)[s] +AutoSlot:byte[s] +ResetClient()[s] +RequestLink(int,int,int,int,CustomWireType,int,int,int,int)[s] +RequestCut(int,int,int,int,int)[s] +HandleRequest(BinaryReader,int)[s] +OnMachineKilled(BaseMachine,Point16)[s] +HandleChanged(BinaryReader,int)[s] +ClientTick()[s] +CountWire(Player,int)[s] +ConsumeWire(Player,int,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
     sealed class Incoming
       +Result:PoleLinkResult +ItemType:int +Count:int +States:List<KeyValuePair<Point16, List<SlotState>>> +ReplaceAll:List<PoleLink>
 **RecipeKnowledgeNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, LiquidBiomeVisits, PacketDirection, Pending, RecipeBookSystem, RecipeCatalog, RecipeKnowledgeSystem, RecipeParchmentItem, RecipeVisibility, ScrollPools
@@ -822,11 +822,11 @@ tModLoader/other bases -> project types:
 **MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, FactorrariaNet, MachineDetail, MachineDetailSystem, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem, TileEntityHelper
   class MachineUISystem : ModSystem
     +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +RequestOpenWhenReplicaArrives(int,int) +NotifyMachineKilled(BaseMachine) +RequestCloseFromServer(int,int,bool) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
-**PoleLinkInputSystem.cs** uses: CartSystem, CustomWireNet, CustomWireSystem, CustomWireType, Pending, PoleLinkNet, PoleLinkSystem, PoleWireDrawSystem, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
+**PoleLinkInputSystem.cs** uses: CartSystem, CustomWireNet, CustomWireSystem, CustomWireType, Pending, PoleLink, PoleLinkNet, PoleLinkSystem, PoleWireDrawSystem, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
   class PoleLinkInputSystem : ModSystem
-    +NoticeTicks:int +Pending:bool +ConsumeThisTick:bool +Load()[ov] +Unload()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +TryGetHeldWire(Player,out CustomWireType,out Item)[s] +TryFindPoleAtTile(int,int,out PowerPoleTileEntityBase)[s] +GetPointHighlight(PowerPoleTileEntityBase,int) +PostUpdateInput()[ov] +DrawWorld(SpriteBatch) +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +CutLinePixels:float +CutPointPixels:float +CutRepeatTicks:int +Pending:bool +ConsumeThisTick:bool +Load()[ov] +Unload()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +TryGetHeldWire(Player,out CustomWireType,out Item)[s] +TryFindPoleAtTile(int,int,out PowerPoleTileEntityBase)[s] +GetPointHighlight(PowerPoleTileEntityBase,int) +PostUpdateInput()[ov] +DrawWorld(SpriteBatch) +TryRequestCutAtCursor(Player)[s]
     struct Preview
-      +Active:bool +From:Vector2 +To:Vector2 +Wire:CustomWireType +Invalid:bool +CanCommit:bool +EndSlot:int +Span:float +MaxSpan:float +Cost:int +Have:int +Reason:string
+      +Active:bool +From:Vector2 +To:Vector2 +Wire:CustomWireType +Invalid:bool +CanCommit:bool +EndSlot:int
     enum PointHighlight
       {None, Valid, Invalid}
 **PoleLinkSystem.cs** uses: CustomWireNet, CustomWireType, PoleBoard, PoleLinkNet, PowerGridSystem, PowerPoleTileEntityBase, TileEntityHelper
@@ -1129,10 +1129,10 @@ tModLoader/other bases -> project types:
 **CopperWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
   class CopperWireItem : ModItem
     +CanUseItem(Player)[ov] +UseItem(Player)[ov]
-**IronCutterItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
+**IronCutterItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet, PoleLinkInputSystem
   class IronCutterItem : ModItem
     +UseItem(Player)[ov]
-**LeadCutterItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
+**LeadCutterItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet, PoleLinkInputSystem
   class LeadCutterItem : ModItem
     +UseItem(Player)[ov]
 **TinWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet

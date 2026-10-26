@@ -25,8 +25,8 @@ namespace Factorraria.Common.Systems
         public float WireThickness = 2f;
         public float CullMarginPixels = 4f;
         public Color CopperColor = new Color(183, 88, 25);     // sampled from CopperWireTile.png
-        public Color TinColor = new Color(187, 165, 124);      // sampled from TinWireTile.png
-        public Color GoldColor = new Color(255, 232, 101);     // sampled from GoldWireTile.png
+        public Color TinColor = new Color(85, 91, 75);      // sampled from TinWireTile.png
+        public Color GoldColor = new Color(203, 179, 73);     // sampled from GoldWireTile.png
         public Color InvalidColor = new Color(255, 70, 70);    // same red as the pole placement hologram
 
         // Per-link data that only changes when the link graph changes (PoleLinkSystem.Version): a pixel rectangle that contains the wire

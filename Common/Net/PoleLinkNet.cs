@@ -79,6 +79,9 @@ namespace Factorraria.Common.Net
         // Sanity limits on what a packet may claim (a bad packet must not make the client allocate without end).
         public static int MaxJoinLinks = 200000;
         public static int MaxPolesPerPacket = 32;
+        public static int RefusalRepeatTicks = 90;       // the same refusal line is shown at most once per this many ticks (a held autoReuse cutter can be refused every few ticks)
+        static PoleLinkResult lastRefusal;
+        static uint lastRefusalTick;
 
         sealed class Incoming
         {
@@ -523,7 +526,14 @@ namespace Factorraria.Common.Net
             if (result == PoleLinkResult.Linked)
                 ConsumeWire(Main.LocalPlayer, itemType, count);
             else if ((byte)result >= (byte)PoleLinkResult.NotAPole)
+            {
+                if (result == lastRefusal && Main.GameUpdateCount - lastRefusalTick < (uint)RefusalRepeatTicks)
+                    return;
+
+                lastRefusal = result;
+                lastRefusalTick = Main.GameUpdateCount;
                 Main.NewText(RefusalText(result), Color.OrangeRed);
+            }
         }
 
         static string RefusalText(PoleLinkResult result)

@@ -34,9 +34,9 @@ namespace Factorraria.Common.Systems
     public class PoleLinkSystem : ModSystem
     {
         // ---- Tunables. Plain instance fields (not const or static) so hot reload can tweak them; patch P8 retunes them.
-        public float CopperSpan = 20f;             // longest link in tiles, measured between the two connection points
-        public float TinSpan = 20f;
-        public float GoldSpan = 40f;
+        public float CopperSpan = 30f;             // longest link in tiles, measured between the two connection points
+        public float TinSpan = 30f;
+        public float GoldSpan = 60f;
         public float CopperTilesPerItem = 5f;      // a link costs ceil(span / tilesPerItem) wire items
         public float TinTilesPerItem = 5f;
         public float GoldTilesPerItem = 8f;

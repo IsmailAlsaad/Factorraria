@@ -8,8 +8,10 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
 
@@ -21,9 +23,12 @@ namespace Factorraria.Common.Systems
     // validates it in full.
     //
     // Input: a RIGHT click while a wire item is held (the cursor item first, otherwise the selected item). Left click still places ground wire.
-    //   - first right click on a pole's footprint or on a crossboard's hitbox: Pending = (that pole, its free point closest to the player)
-    //   - while pending, a hologram runs from the start point to the cursor, or to the hovered second pole's free point closest to the start
+    //   - hovering a pole (its footprint or a crossboard's hitbox) selects the connection point closest to the MOUSE, and only that one is highlighted
+    //   - first right click on a pole: Pending = (that pole, that point). A taken point does nothing (its highlight is already red)
+    //   - while pending, a hologram runs from the start point to the cursor, or to the hovered second pole's point closest to the mouse
     //   - second right click on a different pole: RequestLink (only when the hologram is not red). The wire is taken when the server answers.
+    // There is no hover or cursor text for any of this (removed after the P6 test); the server's refusals still show as chat lines (PoleLinkNet).
+    // P7 (cutting links with the Iron and Lead cutters) lives here too: see TryRequestCutAtCursor at the end of the class.
     // The click is consumed (On_Player.TileInteractionsUse is skipped for it), so the pole's own UI does not open while wire is held.
     //
     // The checks run in PostUpdateInput, before the players update, once per tick. Press edge = the button is down now and was not down on the
@@ -31,7 +36,9 @@ namespace Factorraria.Common.Systems
     public class PoleLinkInputSystem : ModSystem
     {
         // Tunables (plain instance fields so hot reload can change them).
-        public int NoticeTicks = 150;               // how long a client-side message stays next to the cursor
+        public float CutLinePixels = 6f;            // P7: how close (world pixels) the cursor must be to a hanging wire to cut it
+        public float CutPointPixels = 8f;           // P7: radius of a connection point's cut zone (a point that carries a link)
+        public int CutRepeatTicks = 20;             // P7: the same link is not requested again for this many ticks (the request is still in flight)
 
         // ---- pending link (owner client only, never saved)
         public bool Pending;
@@ -45,8 +52,6 @@ namespace Factorraria.Common.Systems
         Item heldItem;
         bool rightWasDown;
         bool escapeWasDown;
-        string noticeText;
-        int noticeLeft;
 
         struct Preview
         {
@@ -57,11 +62,6 @@ namespace Factorraria.Common.Systems
             public bool Invalid;
             public bool CanCommit;
             public int EndSlot;
-            public float Span;
-            public float MaxSpan;
-            public int Cost;
-            public int Have;
-            public string Reason;
         }
 
         Preview preview;
@@ -69,6 +69,7 @@ namespace Factorraria.Common.Systems
         // ---- hover (P6b): which pole the cursor is on while wire is held, read by PowerPoleCrossboardSystem for the highlight cells
         bool hoverActive;
         Point16 hoverPole;
+        int hoverSlot;                               // that pole's connection point closest to the mouse (free or not): the only one highlighted, and the one a click uses
         int heldCount;                               // how many of the held wire's item the player has (only while hoverActive)
 
         public enum PointHighlight { None, Valid, Invalid }
@@ -100,8 +101,6 @@ namespace Factorraria.Common.Systems
             holdingWire = false;
             hoverActive = false;
             preview = default;
-            noticeText = null;
-            noticeLeft = 0;
             rightWasDown = false;
             escapeWasDown = false;
         }
@@ -185,7 +184,9 @@ namespace Factorraria.Common.Systems
 
         static float FootprintMid(PowerPoleTileEntityBase pole) => PoleLinkSystem.FootprintHeight(pole) * 0.5f;
 
-        // The connection point closest to a position whether it is free or not (used only to show where a link WOULD attach to a full pole).
+        // The connection point of a pole closest to a world position (resting positions), whether it is free or not. Since P6c this is THE point
+        // choice of the client: hover highlight, start of a link and end of a link all use the point closest to the MOUSE, and a taken point is
+        // simply invalid. Nothing is chosen for the player.
         static int ClosestPoint(PoleLinkSystem links, PowerPoleTileEntityBase pole, Vector2 target)
         {
             int best = 0;
@@ -206,14 +207,14 @@ namespace Factorraria.Common.Systems
         }
 
         // What the board's highlight layer shows for one connection point of a pole right now (the slot is the pole's flat link point index).
-        // None unless wire is held and the cursor is on THIS pole. Valid = the point is free and the link would be possible. Invalid = the point is
-        // already used by a wire, or the link cannot be made. With no pending link the span is not known yet, so only free or used counts. With a
-        // pending link, hovering a SECOND pole checks the same things the hologram does (span within the held wire's range, enough wire items), per
-        // point, so the point the hologram attaches to is green exactly when the hologram is; hovering the pole the link started on is invalid
-        // (a pole cannot link to itself).
+        // None unless wire is held, the cursor is on THIS pole, and this is the point closest to the mouse (hoverSlot): only that one is lit.
+        // Valid = the point is free and the link would be possible. Invalid = the point is already used by a wire, or the link cannot be made.
+        // With no pending link the span is not known yet, so only free or used counts. With a pending link, hovering a SECOND pole checks the
+        // same things the hologram does (span within the held wire's range, enough wire items), so the point is green exactly when the hologram
+        // is; hovering the pole the link started on is invalid (a pole cannot link to itself).
         public PointHighlight GetPointHighlight(PowerPoleTileEntityBase pole, int slot)
         {
-            if (!holdingWire || !hoverActive || pole.Position != hoverPole)
+            if (!holdingWire || !hoverActive || pole.Position != hoverPole || slot != hoverSlot)
                 return PointHighlight.None;
 
             PoleLinkSystem links = PoleLinkSystem.Instance;
@@ -247,8 +248,6 @@ namespace Factorraria.Common.Systems
             ConsumeThisTick = false;
             preview = default;
             hoverActive = false;
-            if (noticeLeft > 0)
-                noticeLeft--;
 
             bool right = Main.mouseRight;
             bool pressed = right && !rightWasDown;
@@ -262,7 +261,7 @@ namespace Factorraria.Common.Systems
 
             if (player.dead)
             {
-                Cancel(null);
+                Cancel();
                 return;
             }
 
@@ -276,20 +275,21 @@ namespace Factorraria.Common.Systems
             {
                 hoverActive = true;
                 hoverPole = hoverCandidate.Position;
+                hoverSlot = ClosestPoint(links, hoverCandidate, mouse);
                 heldCount = PoleLinkNet.CountWire(player, heldItem.type);
             }
 
             if (Pending)
             {
                 if (!holdingWire)
-                    Cancel("Pole link cancelled.");
+                    Cancel();
                 else if (escapePressed)
-                    Cancel("Pole link cancelled.");
+                    Cancel();
                 else if (!PoleLinkSystem.TryGetPole(pendingPole, out PowerPoleTileEntityBase startPole) || !Framing.GetTileSafely(pendingPole.X, pendingPole.Y).HasTile
                     || Framing.GetTileSafely(pendingPole.X, pendingPole.Y).TileType != startPole.ValidTileType)
-                    Cancel("Pole link cancelled: the first pole is gone.");
+                    Cancel();   // the first pole is gone
                 else if (pendingSlot >= links.SlotCount(startPole) || !links.IsSlotFree(pendingPole, pendingSlot))
-                    Cancel("Pole link cancelled: that connection point was just used.");
+                    Cancel();   // that connection point was just used
                 else
                     BuildPreview(player, startPole, links, mouse, tileX, tileY);
             }
@@ -298,23 +298,13 @@ namespace Factorraria.Common.Systems
             if (!pressed || overUi || !holdingWire)
                 return;
 
-            HandlePress(player, links, tileX, tileY);
+            HandlePress(player, links, mouse, tileX, tileY);
         }
 
-        void Cancel(string message)
+        void Cancel()
         {
-            bool wasPending = Pending;
             Pending = false;
             preview = default;
-
-            if (wasPending && message != null)
-                Notify(message);
-        }
-
-        void Notify(string message)
-        {
-            noticeText = message;
-            noticeLeft = NoticeTicks;
         }
 
         // Fills the hologram: start point to the cursor, or to the hovered second pole's free point closest to the start point.
@@ -326,17 +316,15 @@ namespace Factorraria.Common.Systems
 
             PowerPoleTileEntityBase endPole = null;
             int endSlot = -1;
-            bool noFreePoint = false;
+            bool endTaken = false;
 
+            // The end is the second pole's connection point closest to the MOUSE (free or not). A taken point is drawn red and cannot be
+            // committed; nothing else is chosen for the player.
             if (TryFindPoleAtTile(tileX, tileY, out PowerPoleTileEntityBase hovered) && hovered.Position != pendingPole)
             {
                 endPole = hovered;
-                endSlot = links.ChooseFreePoint(hovered, startRest);
-                if (endSlot < 0)
-                {
-                    noFreePoint = true;
-                    endSlot = ClosestPoint(links, hovered, startRest);   // still attaches to the closest point, drawn red
-                }
+                endSlot = ClosestPoint(links, hovered, mouse);
+                endTaken = !links.IsSlotFree(hovered.Position, endSlot);
             }
 
             Vector2 endRest = endPole != null ? endPole.GetLinkPointWorld(endSlot) : mouse;
@@ -347,20 +335,13 @@ namespace Factorraria.Common.Systems
 
             if (span >= max * links.BreakSpanMultiplier)
             {
-                Cancel("Pole link cancelled: the wire would be too long.");
+                Cancel();   // the wire would be too long
                 return;
             }
 
             int cost = links.CostFor(heldWire, span);
             int have = PoleLinkNet.CountWire(player, heldItem.type);
-
-            string reason = null;
-            if (noFreePoint)
-                reason = "That pole has no free connection point.";
-            else if (span > max)
-                reason = "Too long: " + span.ToString("0.0") + " tiles, this wire reaches " + max.ToString("0") + ".";
-            else if (have < cost)
-                reason = "Not enough wire: needs " + cost + ", you have " + have + ".";
+            bool invalid = endTaken || span > max || have < cost;
 
             preview = new Preview
             {
@@ -368,19 +349,14 @@ namespace Factorraria.Common.Systems
                 From = from,
                 To = to,
                 Wire = heldWire,
-                Invalid = reason != null,
-                CanCommit = endPole != null && reason == null,
-                EndSlot = endSlot,
-                Span = span,
-                MaxSpan = max,
-                Cost = cost,
-                Have = have,
-                Reason = reason
+                Invalid = invalid,
+                CanCommit = endPole != null && !invalid,
+                EndSlot = endSlot
             };
         }
 
         // The right-click press edge, with wire held and the cursor not on a UI element.
-        void HandlePress(Player player, PoleLinkSystem links, int tileX, int tileY)
+        void HandlePress(Player player, PoleLinkSystem links, Vector2 mouse, int tileX, int tileY)
         {
             if (!TryFindPoleAtTile(tileX, tileY, out PowerPoleTileEntityBase pole))
                 return;   // not on a pole: does nothing (a pending link stays, and vanilla handles the click as usual)
@@ -389,12 +365,10 @@ namespace Factorraria.Common.Systems
 
             if (!Pending)
             {
-                int slot = links.ChooseFreePoint(pole, player.Center);
-                if (slot < 0)
-                {
-                    Notify("That pole has no free connection point.");
+                // The start is the connection point closest to the mouse. A taken point does nothing (its highlight is already red).
+                int slot = ClosestPoint(links, pole, mouse);
+                if (!links.IsSlotFree(pole.Position, slot))
                     return;
-                }
 
                 Pending = true;
                 pendingPole = pole.Position;
@@ -402,17 +376,9 @@ namespace Factorraria.Common.Systems
                 return;
             }
 
-            if (pole.Position == pendingPole)
-            {
-                Notify("Pick a different pole.");
+            // The pole the link started on, or a red hologram (taken point, too long, not enough wire): nothing happens.
+            if (pole.Position == pendingPole || !preview.Active || !preview.CanCommit)
                 return;
-            }
-
-            if (!preview.Active || !preview.CanCommit)
-            {
-                Notify(preview.Reason ?? "That link is not possible.");
-                return;
-            }
 
             PoleLinkNet.RequestLink(pendingPole.X, pendingPole.Y, pole.Position.X, pole.Position.Y, heldWire, pendingSlot, preview.EndSlot, tileX, tileY);
             Pending = false;
@@ -432,47 +398,119 @@ namespace Factorraria.Common.Systems
             spriteBatch.End();
         }
 
-        // ---------------------------------------------------------------- drawing: text next to the cursor (an interface layer)
+        // ---------------------------------------------------------------- cutting links (P7)
+        // The Iron and Lead cutters call TryRequestCutAtCursor from UseItem (owner only, right after their IsOwner check), BEFORE their tile-wire
+        // branch. It finds the link under the mouse on this client's replica and sends PoleLinkNet.RequestCut; the server validates, removes the
+        // link, drops the refund once and tells everyone (P3). Nothing is predicted here: the wire vanishes when the server's answer arrives.
+        // Reach is the server's call (FactorrariaNet.InReach on the clicked tile): the cutters have no client reach check, tile wires included.
 
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+        Point16 lastCutPole;
+        int lastCutSlot = -1;
+        uint lastCutTick;
+
+        /// <summary>Owner only. True when the click was a pole link cut (a request was sent, or one for the same link is still in flight), so the cutter must not also cut a ground wire.</summary>
+        public static bool TryRequestCutAtCursor(Player player)
         {
-            int index = layers.FindIndex(layer => layer.Name == "Vanilla: Mouse Text");
-            if (index < 0)
-                return;
-
-            layers.Insert(index, new LegacyGameInterfaceLayer("Factorraria: Pole Link Text", () =>
-            {
-                DrawCursorText(Main.spriteBatch);
-                return true;
-            }, InterfaceScaleType.UI));
+            return ModContent.GetInstance<PoleLinkInputSystem>().RequestCutAtCursor(player);
         }
 
-        void DrawCursorText(SpriteBatch spriteBatch)
+        bool RequestCutAtCursor(Player player)
         {
-            if (Main.dedServ || Main.gameMenu)
-                return;
+            if (Main.dedServ || Main.gameMenu || player.dead)
+                return false;
 
-            Vector2 pos = Main.MouseScreen + new Vector2(18f, 18f);
+            PoleLinkSystem links = PoleLinkSystem.Instance;
+            if (links.Links.Count == 0)
+                return false;
 
-            if (preview.Active)
+            Vector2 mouse = CartSystem.GetZoomCorrectedMouseWorld();
+            int tileX = Math.Clamp((int)(mouse.X / 16f), 0, Main.maxTilesX - 1);
+            int tileY = Math.Clamp((int)(mouse.Y / 16f), 0, Main.maxTilesY - 1);
+
+            if (!TryFindLinkAtMouse(links, mouse, out Point16 pole, out int slot, out float distance))
+                return false;
+
+            // A ground wire on the tile under the cursor wins, unless the cursor is closer to the line (or point) than to that tile's centre.
+            if (CustomWireSystem.WireAt(tileX, tileY) != CustomWireType.None)
             {
-                string line = preview.Span.ToString("0.0") + " / " + preview.MaxSpan.ToString("0") + " tiles, " + preview.Cost + " wire";
-                Utils.DrawBorderString(spriteBatch, line, pos, preview.Invalid ? new Color(255, 120, 120) : Color.White, 0.9f);
-                pos.Y += 22f;
+                float tileDistance = Vector2.Distance(mouse, new Vector2(tileX * 16f + 8f, tileY * 16f + 8f));
+                if (distance >= tileDistance)
+                    return false;
+            }
 
-                if (preview.Reason != null)
+            // autoReuse fires every few ticks and the answer takes a round trip: the same link is not requested again until it has had time to arrive.
+            if (pole == lastCutPole && slot == lastCutSlot && Main.GameUpdateCount - lastCutTick < (uint)CutRepeatTicks)
+                return true;
+
+            lastCutPole = pole;
+            lastCutSlot = slot;
+            lastCutTick = Main.GameUpdateCount;
+
+            PoleLinkNet.RequestCut(pole.X, pole.Y, slot, tileX, tileY);
+            SoundEngine.PlaySound(SoundID.Dig, new Vector2(tileX * 16f, tileY * 16f));
+            return true;
+        }
+
+        // The link whose line (resting points, so every process agrees) passes within CutLinePixels of the mouse, or one of whose connection points
+        // is within CutPointPixels of it; the nearest wins. pole/slot name the end the request is sent for: the hit end for a point, end A for a line.
+        // A link whose pole entities are missing on this client is skipped. The straight line is the hit-test until P9 gives the wire a sag.
+        bool TryFindLinkAtMouse(PoleLinkSystem links, Vector2 mouse, out Point16 pole, out int slot, out float distance)
+        {
+            pole = default;
+            slot = -1;
+            distance = float.MaxValue;
+            float reach = Math.Max(CutLinePixels, CutPointPixels);
+
+            foreach (PoleLink link in links.Links)
+            {
+                if (!PoleLinkSystem.TryGetPole(link.A, out PowerPoleTileEntityBase poleA) || !PoleLinkSystem.TryGetPole(link.B, out PowerPoleTileEntityBase poleB)
+                    || link.SlotA >= poleA.LinkPointCount || link.SlotB >= poleB.LinkPointCount)
+                    continue;
+
+                Vector2 a = poleA.GetLinkPointWorld(link.SlotA);
+                Vector2 b = poleB.GetLinkPointWorld(link.SlotB);
+
+                if (mouse.X < Math.Min(a.X, b.X) - reach || mouse.X > Math.Max(a.X, b.X) + reach
+                    || mouse.Y < Math.Min(a.Y, b.Y) - reach || mouse.Y > Math.Max(a.Y, b.Y) + reach)
+                    continue;
+
+                float line = DistanceToSegment(mouse, a, b);
+                if (line <= CutLinePixels && line < distance)
                 {
-                    Utils.DrawBorderString(spriteBatch, preview.Reason, pos, new Color(255, 120, 120), 0.8f);
-                    pos.Y += 20f;
+                    distance = line;
+                    pole = link.A;
+                    slot = link.SlotA;
+                }
+
+                float toA = Vector2.Distance(mouse, a);
+                if (toA <= CutPointPixels && toA < distance)
+                {
+                    distance = toA;
+                    pole = link.A;
+                    slot = link.SlotA;
+                }
+
+                float toB = Vector2.Distance(mouse, b);
+                if (toB <= CutPointPixels && toB < distance)
+                {
+                    distance = toB;
+                    pole = link.B;
+                    slot = link.SlotB;
                 }
             }
 
-            if (noticeLeft > 0 && noticeText != null)
-            {
-                float fade = Math.Min(1f, noticeLeft / 30f);
-                Utils.DrawBorderString(spriteBatch, noticeText, pos, Color.Orange * fade, 0.85f);
-                pos.Y += 22f;
-            }
+            return slot >= 0;
+        }
+
+        static float DistanceToSegment(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 edge = b - a;
+            float lengthSquared = edge.LengthSquared();
+            if (lengthSquared < 0.0001f)
+                return Vector2.Distance(p, a);
+
+            float t = MathHelper.Clamp(Vector2.Dot(p - a, edge) / lengthSquared, 0f, 1f);
+            return Vector2.Distance(p, a + edge * t);
         }
     }
 }

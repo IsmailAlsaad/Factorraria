@@ -33,6 +33,11 @@ namespace Factorraria.Content.Items.Wires
             if (!FactorrariaNet.IsOwner(player))
                 return null;
 
+            // Pole links first (P7): the cursor on a hanging wire, or on a connection point that carries one, cuts that link (the server refunds it
+            // and answers; reach is the server's call, same as for tile wires). A ground wire under the cursor still wins when it is closer.
+            if (PoleLinkInputSystem.TryRequestCutAtCursor(player))
+                return false;
+
             int tileX = Player.tileTargetX;
             int tileY = Player.tileTargetY;
 
