@@ -466,8 +466,7 @@ namespace Factorraria.Common.Systems
 
         // The link whose line (resting points, so every process agrees) passes within CutLinePixels of the mouse, or one of whose connection points
         // is within CutPointPixels of it; the nearest wins. pole/slot name the end the request is sent for: the hit end for a point, end A for a line.
-        // A link whose pole entities are missing on this client is skipped. P9 keeps this straight resting-point hit-test by decision:
-        // the swayed rope is visual only, so cutting, span checks and the server all keep the same geometry.
+        // A link whose pole entities are missing on this client is skipped. The straight line is the hit-test until P9 gives the wire a sag.
         bool TryFindLinkAtMouse(PoleLinkSystem links, Vector2 mouse, out Point16 pole, out int slot, out float distance)
         {
             pole = default;
