@@ -39,7 +39,7 @@ namespace Factorraria.Common.Net
     // Pole links (power poles patch P3). The server owns the link graph (PoleLinkSystem): it validates, changes and saves it.
     //  - the owner client sends PoleLinkRequest: Link (pole A tile, pole B tile, wire type, optional connection point hints, the tile clicked on
     //    pole B) or Cut (pole tile, slot, clicked tile). Any tile of a pole's footprint names the pole; the server finds its entity.
-    //  - the server checks the sender, both poles, the wire, the click (on pole B and within the sender's reach), the connection points (the
+    //  - the server checks the sender, both poles, the wire, the click (on pole B; there is NO reach check since P7c), the connection points (the
     //    hints when they are free, else the closest free ones), the span, and that the sender holds enough wire; then it changes the graph
     //    (which flags the power grid), answers the sender with PoleLinkChanged (Linked + the wire to take, or a refusal) and broadcasts
     //    PoleLinkChanged (Update) to everyone else
@@ -109,7 +109,7 @@ namespace Factorraria.Common.Net
         /// <summary>
         /// Owner side: ask for a link between two poles. ax/ay and bx/by are any footprint tile of each pole. hintSlotA / hintSlotB are the
         /// connection points the player saw in the preview (AutoSlot lets the server choose). clickX/clickY is the tile that was clicked on
-        /// pole B; the server checks that it is on that pole and within the sender's reach.
+        /// pole B; the server checks that it is on that pole (no reach check since P7c).
         /// </summary>
         public static void RequestLink(int ax, int ay, int bx, int by, CustomWireType wire, int hintSlotA, int hintSlotB, int clickX, int clickY)
         {
@@ -215,12 +215,6 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            if (!FactorrariaNet.InReach(player, clickX, clickY))
-            {
-                Refuse(sender, player, PoleLinkResult.OutOfReach, "the click (" + clickX + ", " + clickY + ") is out of reach", cornerA, cornerB);
-                return;
-            }
-
             int slotA;
             if (hintA != AutoSlot)
             {
@@ -320,12 +314,6 @@ namespace Factorraria.Common.Net
             if (!WorldGen.InWorld(clickX, clickY, 1) || !links.IsClickNearLink(link, clickX, clickY))
             {
                 Refuse(sender, player, PoleLinkResult.OutOfReach, "the click (" + clickX + ", " + clickY + ") is not on that wire", link.A, link.B);
-                return;
-            }
-
-            if (!FactorrariaNet.InReach(player, clickX, clickY))
-            {
-                Refuse(sender, player, PoleLinkResult.OutOfReach, "the click (" + clickX + ", " + clickY + ") is out of reach", link.A, link.B);
                 return;
             }
 
@@ -527,12 +515,16 @@ namespace Factorraria.Common.Net
                 ConsumeWire(Main.LocalPlayer, itemType, count);
             else if ((byte)result >= (byte)PoleLinkResult.NotAPole)
             {
+                string text = RefusalText(result);
+                if (text == null)
+                    return;   // no chat line for this refusal (OutOfReach: since P7c it only means 'the click was not on that pole or wire')
+
                 if (result == lastRefusal && Main.GameUpdateCount - lastRefusalTick < (uint)RefusalRepeatTicks)
                     return;
 
                 lastRefusal = result;
                 lastRefusalTick = Main.GameUpdateCount;
-                Main.NewText(RefusalText(result), Color.OrangeRed);
+                Main.NewText(text, Color.OrangeRed);
             }
         }
 
@@ -546,7 +538,7 @@ namespace Factorraria.Common.Net
                 PoleLinkResult.NoFreePoint => "Pole link: a pole has no free connection point.",
                 PoleLinkResult.SlotTaken => "Pole link: that connection point is already used.",
                 PoleLinkResult.TooLong => "Pole link: the wire is too long.",
-                PoleLinkResult.OutOfReach => "Pole link: out of reach.",
+                PoleLinkResult.OutOfReach => null,
                 PoleLinkResult.NotEnoughWire => "Pole link: not enough wire.",
                 PoleLinkResult.NoLink => "Pole link: there is no wire there.",
                 _ => "Pole link: refused."

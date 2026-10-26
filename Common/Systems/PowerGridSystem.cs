@@ -176,7 +176,9 @@ namespace Factorraria.Common.Systems
         // DrainLinkedPoles looks each one up and skips what is missing (verification V8).
         void EnqueueLinkedPoles(TileEntity machine, Queue<Point16> linkedPoleQueue)
         {
-            if (machine is not PowerPoleTileEntityBase)
+            // A pole switched off by a vanilla wire pulse (WireToggle, the electricity icon) does not conduct through its hanging wires. Its
+            // ground wires on the footprint still connect, like any other machine's.
+            if (machine is not PowerPoleTileEntityBase pole || pole.WireToggle)
                 return;
 
             foreach (Point16 other in PoleLinkSystem.Instance.GetLinkedPoles(machine.Position))
@@ -204,6 +206,10 @@ namespace Factorraria.Common.Systems
                 }
 
                 if (!remainingMachines.Contains(linkedPole))
+                    continue;
+
+                // The far end is switched off too: the hanging wire does not conduct into it (it can still join a grid through its ground wires).
+                if (linkedPole is PowerPoleTileEntityBase { WireToggle: true })
                     continue;
 
                 RegisterMachineToNetwork(linkedPole, network, remainingMachines);

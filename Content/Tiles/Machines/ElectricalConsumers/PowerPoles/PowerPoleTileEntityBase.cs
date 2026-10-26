@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Systems;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -63,6 +64,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
         {
             PoleBoard board = Boards[GetLinkPointBoardIndex(index, out int point)];
             return Position.ToVector2() * 16f + board.AttachOffset + (board.LinkPoints[point] - board.Pivot).RotatedBy(swayAngle);
+        }
+
+        // A vanilla wire pulse that switches the pole off (the electricity icon) cuts its hanging wires out of the grid: the flood fill
+        // (PowerGridSystem.EnqueueLinkedPoles / DrainLinkedPoles) skips a pole with WireToggle set, so the grid has to be rebuilt when it flips.
+        protected override void OnWireToggled()
+        {
+            PowerGridSystem.gridNeedsRebuilding = true;
         }
 
         public override void Update()

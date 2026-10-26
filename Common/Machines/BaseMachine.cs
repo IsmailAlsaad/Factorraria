@@ -412,8 +412,13 @@ namespace Factorraria.Common.Machines
 
             lastWireTick = Main.GameUpdateCount;
             WireToggle = !WireToggle;
+            OnWireToggled();
             return true;
         }
+
+        // Called on the server (and in single-player) right after a wire pulse flipped WireToggle. Machines whose switch changes what the power
+        // grid connects (the power poles) flag a rebuild here.
+        protected virtual void OnWireToggled() { }
 
         #endregion
 
