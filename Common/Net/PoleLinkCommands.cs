@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Systems;
+﻿using Factorraria.Common.PowerGrid;
+using Factorraria.Common.Systems;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles;
 using Microsoft.Xna.Framework;
 using System;
@@ -113,7 +114,7 @@ namespace Factorraria.Common.Net
         // Server and single-player only (a client builds no grids): do both poles sit in the same PowerNetwork right now?
         static bool SharesGrid(PowerPoleTileEntityBase a, PowerPoleTileEntityBase b)
         {
-            foreach (Factorraria.Common.PowerGrid.PowerNetwork network in PowerGridSystem.ActivePowerNetworks)
+            foreach (PowerNetwork network in PowerGridSystem.ActivePowerNetworks)
             {
                 if (network.electricConsumers.Contains(a))
                     return network.electricConsumers.Contains(b);
