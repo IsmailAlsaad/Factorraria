@@ -37,8 +37,8 @@ namespace Factorraria.Common.Systems
         public int MaxNodes = 64;
         public float Gravity = 0.1f;               // pixels per tick squared (low on purpose: a Verlet rope stretches more under strong gravity, and a stretched wire sags too far)
         public float Damping = 0.985f;             // velocity kept per tick
-        public float WindForce = 0.015f;            // sideways pixels per tick squared at Main.windSpeedCurrent = 1
-        public float GustAmount = 0.4f;            // how much the wind strength ripples along the wire (0 = steady)
+        public float WindForce = 0.01f;            // sideways pixels per tick squared at Main.windSpeedCurrent = 1
+        public float GustAmount = 0.3f;            // how much the wind strength ripples along the wire (0 = steady)
         public float GustSpeed = 2.2f;             // radians per second
         public float FlutterAmount = 8f;           // vertical ripple, as a multiple of the wind push (0 = the wind only pushes sideways)
         public int ConstraintIterations = 20;      // each iteration is a forward and a backward sweep
