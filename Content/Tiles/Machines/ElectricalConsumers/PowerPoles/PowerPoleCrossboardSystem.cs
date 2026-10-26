@@ -27,13 +27,30 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
         public float SwingRadians = 0.08f;        // back-and-forth swing amplitude at 100% sway
         public float SwingSpeed = 1.6f;           // swing speed, radians per second
 
+        // Sheet layout (0-indexed column and row, see PoleBoard). Plain instance fields so hot reload can change them.
+        public int BaseColumn = 0;                // row 0: the base board, always drawn
+        public int BaseRow = 0;
+        public int HighlightRow = 0;              // row 0: the hover highlights
+        public int ValidRightColumn = 1;
+        public int ValidLeftColumn = 2;
+        public int InvalidRightColumn = 3;
+        public int InvalidLeftColumn = 4;
+        public int WireBothColumn = 0;            // rows 1 to 3: wire on both points / only the right point / only the left point
+        public int WireRightColumn = 1;
+        public int WireLeftColumn = 2;
+        public int CopperRow = 1;
+        public int TinRow = 2;
+        public int GoldRow = 3;
+
         readonly Dictionary<string, Asset<Texture2D>> textures = new();
         readonly HashSet<string> sizeChecked = new();
+        readonly HashSet<string> badSheets = new();     // sheets whose size does not fit their PoleBoard: not drawn (a source rectangle outside the texture would draw garbage)
 
         public override void Unload()
         {
             textures.Clear();
             sizeChecked.Clear();
+            badSheets.Clear();
         }
 
         // The angle of board number 'boardIndex' on the pole whose entity sits at 'pole'. swayScale is the pole's own factor
@@ -53,26 +70,41 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
             return strength * swayScale * (direction * LeanRadians + swing);
         }
 
-        // null while the PNG does not exist (a warning is logged once, and that board is simply not drawn).
+        // The board's sheet. null while the PNG does not exist (a warning is logged once, and that board is simply not drawn), and also null
+        // when the sheet is not the size its PoleBoard says (wrong width, or fewer rows than the PoleBoard has): logged once, not drawn.
         Texture2D GetTexture(PoleBoard board)
         {
             string path = board.TexturePath;
+            if (badSheets.Contains(path))
+                return null;
+
             if (!textures.TryGetValue(path, out Asset<Texture2D> asset))
             {
                 if (!ModContent.RequestIfExists<Texture2D>(path, out asset, AssetRequestMode.ImmediateLoad))
                 {
                     asset = null;
-                    Mod.Logger.Warn("Power pole crossboard texture '" + path + "' not found, that board is not drawn.");
+                    Mod.Logger.Warn("Power pole crossboard sheet '" + path + "' not found, that board is not drawn.");
                 }
 
                 textures[path] = asset;
             }
 
             Texture2D texture = asset?.Value;
-            if (texture != null && sizeChecked.Add(path) && (texture.Width != (int)board.Size.X || texture.Height != (int)board.Size.Y))
-                Mod.Logger.Warn("Power pole crossboard '" + path + "' is " + texture.Width + "x" + texture.Height + " but its PoleBoard says " + board.Size.X + "x" + board.Size.Y + ". Update the Size (it sets the pivot and the link point math).");
+            if (texture != null && sizeChecked.Add(path))
+            {
+                int wantWidth = (int)board.SheetSize.X;
+                int wantHeight = (int)board.SheetSize.Y;
+                if (texture.Width != wantWidth || texture.Height != wantHeight)
+                    Mod.Logger.Warn("Power pole crossboard sheet '" + path + "' is " + texture.Width + "x" + texture.Height + " but its PoleBoard says " + wantWidth + "x" + wantHeight + " (" + board.SheetColumns + " x " + board.SheetRows + " cells of " + board.Size.X + "x" + board.Size.Y + "). Update the PoleBoard (cell size, rows) or the PNG.");
 
-            return texture;
+                if (texture.Width != wantWidth || texture.Height < wantHeight)
+                {
+                    badSheets.Add(path);
+                    Mod.Logger.Warn("Power pole crossboard sheet '" + path + "' is too small or has the wrong width, that board is not drawn.");
+                }
+            }
+
+            return badSheets.Contains(path) ? null : texture;
         }
 
         public override void PostDrawTiles()
@@ -82,6 +114,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
 
             SpriteBatch spriteBatch = Main.spriteBatch;
             bool batchBegun = false;
+            PoleLinkSystem links = PoleLinkSystem.Instance;
+            PoleLinkInputSystem input = ModContent.GetInstance<PoleLinkInputSystem>();
+
+            // Hanging wires FIRST (own batch, only when a wire is on screen), so they hang BEHIND the crossboards drawn below and the
+            // crossarm tips cover the wire ends. They still land on top of the overhang canvases (MachineOverhangSystem sorts before this).
+            ModContent.GetInstance<PoleWireDrawSystem>().DrawLinks(spriteBatch);
 
             foreach (TileEntity entity in TileEntity.ByPosition.Values)
             {
@@ -112,7 +150,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
                     }
 
                     Color color = Lighting.GetColor((int)(attach.X / 16f), (int)(attach.Y / 16f));
-                    spriteBatch.Draw(texture, attach - Main.screenPosition, null, color, GetSwayAngle(corner, b, pole.SwayScale), board.Pivot, 1f, SpriteEffects.None, 0f);
+                    DrawBoardLayers(spriteBatch, texture, pole, b, links, input, attach - Main.screenPosition, color, GetSwayAngle(corner, b, pole.SwayScale));
                 }
             }
 
@@ -131,18 +169,87 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
                         batchBegun = true;
                     }
 
-                    spriteBatch.Draw(texture, holoTopLeft + board.AttachOffset - Main.screenPosition, null, tint, 0f, board.Pivot, 1f, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(texture, holoTopLeft + board.AttachOffset - Main.screenPosition, board.Cell(BaseColumn, BaseRow), tint, 0f, board.Pivot, 1f, SpriteEffects.None, 0f);
                 }
             }
 
             if (batchBegun)
                 spriteBatch.End();
 
-            // Hanging wires last, so they end on top of the crossarm tips (P5). Its own batch, only when a wire is on screen.
-            ModContent.GetInstance<PoleWireDrawSystem>().DrawLinks(spriteBatch);
-
             // Pending-link hologram and connection point markers (P6), on top of the finished wires.
             ModContent.GetInstance<PoleLinkInputSystem>().DrawWorld(spriteBatch);
+        }
+
+        // One board, up to three layers, each its own Draw call of a different cell of the SAME sheet at the SAME position, rotation and light, so the
+        // layers stay aligned while the board sways. Order: 1 the base board, 2 the hover highlights on top of it, 3 the wire connection cells on top.
+        // The hanging wire itself is drawn earlier (PoleWireDrawSystem.DrawLinks), behind all of this.
+        void DrawBoardLayers(SpriteBatch spriteBatch, Texture2D texture, PowerPoleTileEntityBase pole, int boardIndex, PoleLinkSystem links, PoleLinkInputSystem input, Vector2 position, Color color, float angle)
+        {
+            PoleBoard board = pole.Boards[boardIndex];
+            int slotBase = 0;
+            for (int i = 0; i < boardIndex; i++)
+                slotBase += pole.Boards[i].LinkPoints.Length;
+
+            // 1. base board
+            spriteBatch.Draw(texture, position, board.Cell(BaseColumn, BaseRow), color, angle, board.Pivot, 1f, SpriteEffects.None, 0f);
+
+            // 2. hover highlights: one cell per highlighted point, valid or invalid, right or left (the point's slot is slotBase + its index in the board)
+            for (int i = 0; i < board.LinkPoints.Length; i++)
+            {
+                PoleLinkInputSystem.PointHighlight highlight = input.GetPointHighlight(pole, slotBase + i);
+                if (highlight == PoleLinkInputSystem.PointHighlight.None)
+                    continue;
+
+                bool right = board.IsRightPoint(i);
+                int column = highlight == PoleLinkInputSystem.PointHighlight.Valid
+                    ? (right ? ValidRightColumn : ValidLeftColumn)
+                    : (right ? InvalidRightColumn : InvalidLeftColumn);
+                spriteBatch.Draw(texture, position, board.Cell(column, HighlightRow), color, angle, board.Pivot, 1f, SpriteEffects.None, 0f);
+            }
+
+            // 3. wire connection cells: which points of this board carry a link, and of which wire type
+            bool rightUsed = false;
+            bool leftUsed = false;
+            CustomWireType rightWire = default;
+            CustomWireType leftWire = default;
+            for (int i = 0; i < board.LinkPoints.Length; i++)
+            {
+                PoleLink link = links.GetLink(pole.Position, slotBase + i);
+                if (link == null)
+                    continue;
+
+                if (board.IsRightPoint(i))
+                {
+                    rightUsed = true;
+                    rightWire = link.Wire;
+                }
+                else
+                {
+                    leftUsed = true;
+                    leftWire = link.Wire;
+                }
+            }
+
+            if (rightUsed && leftUsed && rightWire == leftWire)
+            {
+                DrawWireCell(spriteBatch, texture, board, rightWire, WireBothColumn, position, color, angle);
+                return;
+            }
+
+            // Two different wire types (or one point only): the right point's cell with its type's right variant, the left point's with its type's left variant.
+            if (rightUsed)
+                DrawWireCell(spriteBatch, texture, board, rightWire, WireRightColumn, position, color, angle);
+            if (leftUsed)
+                DrawWireCell(spriteBatch, texture, board, leftWire, WireLeftColumn, position, color, angle);
+        }
+
+        void DrawWireCell(SpriteBatch spriteBatch, Texture2D texture, PoleBoard board, CustomWireType wire, int column, Vector2 position, Color color, float angle)
+        {
+            int row = wire.HasFlag(CustomWireType.Gold) ? GoldRow : wire.HasFlag(CustomWireType.Tin) ? TinRow : wire.HasFlag(CustomWireType.Copper) ? CopperRow : -1;
+            if (row < 0)
+                return;
+
+            spriteBatch.Draw(texture, position, board.Cell(column, row), color, angle, board.Pivot, 1f, SpriteEffects.None, 0f);
         }
 
         static void BeginBatch(SpriteBatch spriteBatch)

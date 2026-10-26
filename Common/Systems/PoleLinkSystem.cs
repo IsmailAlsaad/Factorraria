@@ -337,7 +337,8 @@ namespace Factorraria.Common.Systems
             foreach (PoleBoard board in pole.Boards)
             {
                 Vector2 center = pole.Position.ToVector2() * 16f + board.AttachOffset;
-                var rect = new Rectangle((int)(center.X - board.Size.X / 2f), (int)(center.Y - board.Size.Y / 2f), (int)board.Size.X, (int)board.Size.Y);
+                Vector2 boardTopLeft = center - board.Pivot;
+                var rect = new Rectangle((int)boardTopLeft.X, (int)boardTopLeft.Y, (int)board.Size.X, (int)board.Size.Y);
                 rect.Inflate(slack, slack);
                 if (rect.Intersects(tile))
                     return true;

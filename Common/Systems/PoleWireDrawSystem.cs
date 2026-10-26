@@ -14,9 +14,9 @@ namespace Factorraria.Common.Systems
     // so the wire follows the swaying crossboards. Nothing here is saved or sent: it only reads the link replica (PoleLinkSystem) and the
     // pole entities, and the server never draws.
     //
-    // Draw order: there is no PostDrawTiles of its own. PowerPoleCrossboardSystem.PostDrawTiles calls DrawLinks as its very last step, so
-    // the wires always land on top of the overhang canvases (MachineOverhangSystem, which sorts before it) and the crossboards, and the
-    // crossarm tips are covered. That does not depend on the load order of ModSystems.
+    // Draw order: there is no PostDrawTiles of its own. PowerPoleCrossboardSystem.PostDrawTiles calls DrawLinks as its FIRST step (changed
+    // after the P3-P6 test), so the wires land on top of the overhang canvases (MachineOverhangSystem, which sorts before it) but BEHIND the
+    // crossboards, which cover the wire ends. That does not depend on the load order of ModSystems.
     //
     // Links and span checks use the RESTING points (PowerPoleTileEntityBase.GetLinkPointWorld); only the drawing uses the swayed ones.
     public class PoleWireDrawSystem : ModSystem
@@ -99,7 +99,7 @@ namespace Factorraria.Common.Systems
 
         // ---------------------------------------------------------------- finished links
 
-        // Called by PowerPoleCrossboardSystem.PostDrawTiles after the crossboards are drawn. Begins and ends its own batch, and only when
+        // Called by PowerPoleCrossboardSystem.PostDrawTiles before the crossboards are drawn. Begins and ends its own batch, and only when
         // at least one wire is on screen.
         public void DrawLinks(SpriteBatch spriteBatch)
         {

@@ -31,15 +31,7 @@ namespace Factorraria.Common.Systems
     public class PoleLinkInputSystem : ModSystem
     {
         // Tunables (plain instance fields so hot reload can change them).
-        public float HighlightRangeTiles = 24f;     // connection points of poles this close to the player are marked while wire is held
-        public float MarkerSize = 6f;               // pixels
         public int NoticeTicks = 150;               // how long a client-side message stays next to the cursor
-        public Color FreePointColor = new Color(120, 255, 120);
-        public Color TakenPointColor = new Color(255, 90, 90);
-        public Color StartPointColor = new Color(90, 220, 255);
-
-        // TEMPORARY (patch P6, remove in Phase 10): draws the tile coordinates under the cursor. Toggle with /ptiles.
-        public bool ShowTileDebug = true;
 
         // ---- pending link (owner client only, never saved)
         public bool Pending;
@@ -74,6 +66,13 @@ namespace Factorraria.Common.Systems
 
         Preview preview;
 
+        // ---- hover (P6b): which pole the cursor is on while wire is held, read by PowerPoleCrossboardSystem for the highlight cells
+        bool hoverActive;
+        Point16 hoverPole;
+        int heldCount;                               // how many of the held wire's item the player has (only while hoverActive)
+
+        public enum PointHighlight { None, Valid, Invalid }
+
         public override void Load()
         {
             On_Player.TileInteractionsUse += SkipConsumedClick;
@@ -99,6 +98,7 @@ namespace Factorraria.Common.Systems
             Pending = false;
             ConsumeThisTick = false;
             holdingWire = false;
+            hoverActive = false;
             preview = default;
             noticeText = null;
             noticeLeft = 0;
@@ -205,6 +205,34 @@ namespace Factorraria.Common.Systems
             return best;
         }
 
+        // What the board's highlight layer shows for one connection point of a pole right now (the slot is the pole's flat link point index).
+        // None unless wire is held and the cursor is on THIS pole. Valid = the point is free and the link would be possible. Invalid = the point is
+        // already used by a wire, or the link cannot be made. With no pending link the span is not known yet, so only free or used counts. With a
+        // pending link, hovering a SECOND pole checks the same things the hologram does (span within the held wire's range, enough wire items), per
+        // point, so the point the hologram attaches to is green exactly when the hologram is; hovering the pole the link started on is invalid
+        // (a pole cannot link to itself).
+        public PointHighlight GetPointHighlight(PowerPoleTileEntityBase pole, int slot)
+        {
+            if (!holdingWire || !hoverActive || pole.Position != hoverPole)
+                return PointHighlight.None;
+
+            PoleLinkSystem links = PoleLinkSystem.Instance;
+            if (!links.IsSlotFree(pole.Position, slot))
+                return PointHighlight.Invalid;
+
+            if (!Pending)
+                return PointHighlight.Valid;
+
+            if (pole.Position == pendingPole || !PoleLinkSystem.TryGetPole(pendingPole, out PowerPoleTileEntityBase startPole) || pendingSlot >= startPole.LinkPointCount)
+                return PointHighlight.Invalid;
+
+            float span = PoleLinkSystem.SpanTiles(startPole, pendingSlot, pole, slot);
+            if (span > links.MaxSpan(heldWire) || heldCount < links.CostFor(heldWire, span))
+                return PointHighlight.Invalid;
+
+            return PointHighlight.Valid;
+        }
+
         // ---------------------------------------------------------------- the per-tick update
 
         public override void PostUpdateInput()
@@ -218,6 +246,7 @@ namespace Factorraria.Common.Systems
 
             ConsumeThisTick = false;
             preview = default;
+            hoverActive = false;
             if (noticeLeft > 0)
                 noticeLeft--;
 
@@ -241,6 +270,14 @@ namespace Factorraria.Common.Systems
             Vector2 mouse = CartSystem.GetZoomCorrectedMouseWorld();
             int tileX = Math.Clamp((int)(mouse.X / 16f), 0, Main.maxTilesX - 1);
             int tileY = Math.Clamp((int)(mouse.Y / 16f), 0, Main.maxTilesY - 1);
+
+            // The pole under the cursor (the same hit-test as the click), only while wire is held and the cursor is not on a UI element.
+            if (holdingWire && !player.mouseInterface && !player.lastMouseInterface && TryFindPoleAtTile(tileX, tileY, out PowerPoleTileEntityBase hoverCandidate))
+            {
+                hoverActive = true;
+                hoverPole = hoverCandidate.Position;
+                heldCount = PoleLinkNet.CountWire(player, heldItem.type);
+            }
 
             if (Pending)
             {
@@ -352,12 +389,6 @@ namespace Factorraria.Common.Systems
 
             if (!Pending)
             {
-                if (!player.IsTargetTileInItemRange(heldItem))
-                {
-                    Notify("Out of reach.");
-                    return;
-                }
-
                 int slot = links.ChooseFreePoint(pole, player.Center);
                 if (slot < 0)
                 {
@@ -383,74 +414,22 @@ namespace Factorraria.Common.Systems
                 return;
             }
 
-            if (!player.IsTargetTileInItemRange(heldItem))
-            {
-                Notify("Out of reach.");
-                return;
-            }
-
             PoleLinkNet.RequestLink(pendingPole.X, pendingPole.Y, pole.Position.X, pole.Position.Y, heldWire, pendingSlot, preview.EndSlot, tileX, tileY);
             Pending = false;
             preview = default;
         }
 
-        // ---------------------------------------------------------------- drawing: world (called by PowerPoleCrossboardSystem.PostDrawTiles, after the links)
+        // ---------------------------------------------------------------- drawing: world (called by PowerPoleCrossboardSystem.PostDrawTiles, after the boards)
+        // Only the pending-link hologram. The connection point highlights are cells of the board sheets, drawn with the boards (GetPointHighlight).
 
         public void DrawWorld(SpriteBatch spriteBatch)
         {
-            if (Main.dedServ || Main.gameMenu || !holdingWire)
+            if (Main.dedServ || Main.gameMenu || !holdingWire || !preview.Active)
                 return;
 
-            Player player = Main.LocalPlayer;
-            PoleLinkSystem links = PoleLinkSystem.Instance;
-            PowerPoleCrossboardSystem sway = ModContent.GetInstance<PowerPoleCrossboardSystem>();
-            float range = HighlightRangeTiles * 16f;
-            bool begun = false;
-
-            foreach (TileEntity entity in TileEntity.ByPosition.Values)
-            {
-                if (entity is not PowerPoleTileEntityBase pole)
-                    continue;
-
-                Point16 corner = pole.Position;
-                Vector2 middle = new Vector2(corner.X * 16f + 8f, (corner.Y + FootprintMid(pole)) * 16f);
-                if (Vector2.Distance(middle, player.Center) > range + FootprintMid(pole) * 16f || !BaseMachine.IsOnScreen(middle, FootprintMid(pole) * 16f + 64f))
-                    continue;
-
-                Tile tile = Framing.GetTileSafely(corner.X, corner.Y);
-                if (!tile.HasTile || tile.TileType != pole.ValidTileType)
-                    continue;
-
-                int count = links.SlotCount(pole);
-                for (int i = 0; i < count; i++)
-                {
-                    if (!begun)
-                    {
-                        PoleWireDrawSystem.BeginBatch(spriteBatch);
-                        begun = true;
-                    }
-
-                    bool isStart = Pending && corner == pendingPole && i == pendingSlot;
-                    Color color = isStart ? StartPointColor : links.IsSlotFree(corner, i) ? FreePointColor : TakenPointColor;
-                    Vector2 point = PoleWireDrawSystem.GetSwayedPoint(sway, pole, i);
-                    float size = isStart ? MarkerSize + 2f : MarkerSize;
-                    spriteBatch.Draw(TextureAssets.MagicPixel.Value, point - Main.screenPosition, new Rectangle(0, 0, 1, 1), color * 0.85f, 0f, new Vector2(0.5f, 0.5f), size, SpriteEffects.None, 0f);
-                }
-            }
-
-            if (preview.Active)
-            {
-                if (!begun)
-                {
-                    PoleWireDrawSystem.BeginBatch(spriteBatch);
-                    begun = true;
-                }
-
-                ModContent.GetInstance<PoleWireDrawSystem>().DrawWire(spriteBatch, preview.From, preview.To, preview.Wire, preview.Invalid);
-            }
-
-            if (begun)
-                spriteBatch.End();
+            PoleWireDrawSystem.BeginBatch(spriteBatch);
+            ModContent.GetInstance<PoleWireDrawSystem>().DrawWire(spriteBatch, preview.From, preview.To, preview.Wire, preview.Invalid);
+            spriteBatch.End();
         }
 
         // ---------------------------------------------------------------- drawing: text next to the cursor (an interface layer)
@@ -494,43 +473,6 @@ namespace Factorraria.Common.Systems
                 Utils.DrawBorderString(spriteBatch, noticeText, pos, Color.Orange * fade, 0.85f);
                 pos.Y += 22f;
             }
-
-            if (ShowTileDebug)
-                DrawTileDebug(spriteBatch, pos);
-        }
-
-        // TEMPORARY (patch P6, remove in Phase 10 with ShowTileDebug and the /ptiles command): the tile coordinates under the cursor.
-        //   tile   = the tile under the zoom-corrected mouse (what the hit-testing uses)
-        //   target = Player.tileTargetX/Y (what vanilla and the wire items use). The two should always be the same; if not, say so.
-        //   pole   = the pole whose click zone contains the tile (its entity top-left), and whether the tile is in its footprint column
-        //   reach  = IsTargetTileInItemRange for the held wire (only shown while wire is held)
-        void DrawTileDebug(SpriteBatch spriteBatch, Vector2 pos)
-        {
-            Vector2 mouse = CartSystem.GetZoomCorrectedMouseWorld();
-            int tx = (int)(mouse.X / 16f);
-            int ty = (int)(mouse.Y / 16f);
-
-            string line1 = "tile (" + tx + ", " + ty + ")  target (" + Player.tileTargetX + ", " + Player.tileTargetY + ")" + (tx != Player.tileTargetX || ty != Player.tileTargetY ? "  MISMATCH" : "");
-            Utils.DrawBorderString(spriteBatch, line1, pos, Color.Yellow, 0.8f);
-            pos.Y += 20f;
-
-            string line2;
-            if (TryFindPoleAtTile(tx, ty, out PowerPoleTileEntityBase pole))
-            {
-                bool inFootprint = tx == pole.Position.X && ty >= pole.Position.Y && ty < pole.Position.Y + PoleLinkSystem.FootprintHeight(pole);
-                line2 = "pole (" + pole.Position.X + ", " + pole.Position.Y + ")  " + (inFootprint ? "footprint" : "crossboard/slack") + "  links " + PoleLinkSystem.Instance.LinksOf(pole.Position).Count + "/" + PoleLinkSystem.Instance.SlotCount(pole);
-            }
-            else
-                line2 = "no pole here";
-
-            if (Pending)
-                line2 += "  pending from (" + pendingPole.X + ", " + pendingPole.Y + ")#" + pendingSlot;
-
-            Utils.DrawBorderString(spriteBatch, line2, pos, Color.Yellow, 0.8f);
-            pos.Y += 20f;
-
-            if (holdingWire)
-                Utils.DrawBorderString(spriteBatch, "wire " + heldWire + " x" + PoleLinkNet.CountWire(Main.LocalPlayer, heldItem.type) + "  reach " + (Main.LocalPlayer.IsTargetTileInItemRange(heldItem) ? "ok" : "OUT"), pos, Color.Yellow, 0.8f);
         }
     }
 }
