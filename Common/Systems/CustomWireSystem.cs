@@ -75,7 +75,7 @@ namespace Factorraria.Common.Systems
         }
 
         /// <summary>The tile rectangle the camera can currently see (a little generous), zoom included.</summary>
-        private static void GetVisibleTileRect(out int minX, out int minY, out int maxX, out int maxY)
+        public static void GetVisibleTileRect(out int minX, out int minY, out int maxX, out int maxY)
         {
             // The zoom matrix scales around the screen centre: zoomed in shows less than the screen, zoomed out more.
             float zoom = Math.Max(0.1f, Math.Min(1f, Main.GameViewMatrix.ZoomMatrix.M11));

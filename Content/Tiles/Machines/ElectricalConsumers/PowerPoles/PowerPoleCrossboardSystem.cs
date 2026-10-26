@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -136,6 +137,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
 
             if (batchBegun)
                 spriteBatch.End();
+
+            // Hanging wires last, so they end on top of the crossarm tips (P5). Its own batch, only when a wire is on screen.
+            ModContent.GetInstance<PoleWireDrawSystem>().DrawLinks(spriteBatch);
         }
 
         static void BeginBatch(SpriteBatch spriteBatch)
