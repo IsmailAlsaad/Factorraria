@@ -36,7 +36,7 @@ namespace Factorraria.Common.Net
         // Sanity limit on how many wire tiles a join packet may claim (a bad packet must not make the client allocate without end).
         public static int MaxJoinWires = 5000000;
 
-        static bool IsSingleKnownType(CustomWireType type)
+        public static bool IsSingleKnownType(CustomWireType type)
         {
             foreach (CustomWireType known in CustomWireSystem.AllWireTypes)
             {
@@ -47,7 +47,7 @@ namespace Factorraria.Common.Net
             return false;
         }
 
-        static int WireItemType(CustomWireType type)
+        public static int WireItemType(CustomWireType type)
         {
             if (type == CustomWireType.Gold)
                 return ModContent.ItemType<GoldWireItem>();

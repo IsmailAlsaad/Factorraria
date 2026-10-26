@@ -59,6 +59,8 @@ namespace Factorraria.Common.Net
         BucketPourRequest = 50,       // client -> server: "pour my liquid bucket into the machine at tile (x, y) / the liquid motor cart with this id" (kind byte first; side feature bucket pouring)
         BucketPourResult = 51,        // server -> client: "your pour was accepted / refused; on accepted, swap the bucket of this item type for an empty one" (side feature bucket pouring)
         CartMapSnapshot = 52,         // server -> client: "every player-placed cart in the world (id, tile, module, skin key, module item key) for the map icons"; only on change (side feature cart map)
+        PoleLinkRequest = 53,         // client -> server: "link the pole at (ax, ay) to the pole at (bx, by) with this wire (optional point hints, the tile I clicked), or cut the link on point <slot> of a pole" (kind byte first; power poles patch P3)
+        PoleLinkChanged = 54,         // server -> client: "these poles now have exactly these links" (complete slot list per pole) plus a result for the sender: made (take this wire) or refused and why (power poles patch P3)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

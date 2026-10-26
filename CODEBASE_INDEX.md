@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-26 | 287 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-26 | 290 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(60) BaseMachine(43) LiquidTypeRegistry(31) FactorrariaPacket(31) PacketDirection(27) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) LiquidStack(16) TileEntityHelper(15) MachineUIStateBase(15) MachineUIElementEntry(14) CartModule(14) VirtualItemSystem(13) LiquidNetworkSystem(13) JoinSync(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
+FactorrariaNet(61) BaseMachine(44) FactorrariaPacket(32) LiquidTypeRegistry(31) PacketDirection(28) RecipeBook(25) Cart(21) Factorraria(20) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) MachineUIStateBase(15) MachineUIElementEntry(14) JoinSync(14) CartModule(14) VirtualItemSystem(13) LiquidNetworkSystem(13) CartSystem(13) RecipeOutputGroup(11) RecipeCatalog(11)
 
 ## Inheritance
 Project bases -> derived:
@@ -26,10 +26,10 @@ Project bases -> derived:
 - PowerPoleTileBase: PlatinumPowerPoleTile, WoodenPowerPoleTile
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 tModLoader/other bases -> project types:
-- ModSystem (76): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (78): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PoleLinkNetSystem, PoleLinkSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (35): BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteorHeadStatueItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
-- byte (18): CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, RequestCheck
-- ModCommand (14): ArmSendCommand, CartDiagnosticsCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
+- byte (20): CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck
+- ModCommand (16): ArmSendCommand, CartDiagnosticsCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, PoleLinkCommand, PoleLinksCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModTile (11): ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - ModPlayer (9): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
@@ -462,7 +462,7 @@ tModLoader/other bases -> project types:
   class CustomWireNetSystem : ModSystem
     +Load()[ov]
   static class CustomWireNet
-    +MaxJoinWires:int[s] +RequestEdit(bool,int,int,CustomWireType)[s] +HandleEdit(BinaryReader,int)[s] +HandleChanged(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
+    +MaxJoinWires:int[s] +IsSingleKnownType(CustomWireType)[s] +WireItemType(CustomWireType)[s] +RequestEdit(bool,int,int,CustomWireType)[s] +HandleEdit(BinaryReader,int)[s] +HandleChanged(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
   class WireCountCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **FactorrariaNet.cs** uses: Direction, Factorraria, FactorrariaPacket, Handle, NetRateLimiter, NetworkConfig, PacketDirection
@@ -551,7 +551,7 @@ tModLoader/other bases -> project types:
       +Corner:Point16 +Seq:int +Accepted:bool +HasKey:bool +Key:string
   class MachineRecipeSelectSystem : ModSystem
     +AnswerTimeoutTicks:int +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov] +Unload()[ov]
-**MachineRemoval.cs** uses: BaseMachine, FactorrariaNet, TileEntityHelper
+**MachineRemoval.cs** uses: BaseMachine, FactorrariaNet, PoleLinkNet, TileEntityHelper
   static class MachineRemoval
     +OnTileKilled(int,int)[s]
 **MachineRequest.cs** uses: BaseMachine, MachineDetailSystem, MachinePlacement
@@ -619,6 +619,22 @@ tModLoader/other bases -> project types:
     +TryConsume(int,int)[s] +Reset(int)[s] +ResetAll()[s]
   class NetRateLimiterSystem : ModSystem
     +Load()[ov] +Unload()[ov]
+**PoleLinkCommands.cs** uses: CustomWireType, Factorraria, PoleLink, PoleLinkNet, PoleLinkSystem, PowerGridSystem, PowerNetwork, PowerPoleTileEntityBase
+  class PoleLinkCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
+  class PoleLinksCommand : ModCommand
+    +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
+**PoleLinkNet.cs** uses: BaseMachine, CustomWireNet, CustomWireType, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, PoleLink, PoleLinkSystem, PowerPoleTileEntityBase, Result, SlotState
+  enum PoleLinkRequestKind : byte
+    {Link, Cut}
+  enum PoleLinkResult : byte
+    {Update, Linked, Cut, NotAPole, SamePole, BadWire, NoFreePoint, SlotTaken, TooLong, OutOfReach, NotEnoughWire, NoLink}
+  class PoleLinkNetSystem : ModSystem
+    +Load()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
+  static class PoleLinkNet
+    +MaxJoinLinks:int[s] +MaxPolesPerPacket:int[s] +Trace(string)[s] +AutoSlot:byte[s] +ResetClient()[s] +RequestLink(int,int,int,int,CustomWireType,int,int,int,int)[s] +RequestCut(int,int,int,int,int)[s] +HandleRequest(BinaryReader,int)[s] +OnMachineKilled(BaseMachine,Point16)[s] +HandleChanged(BinaryReader,int)[s] +ClientTick()[s] +ConsumeWire(Player,int,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
+    sealed class Incoming
+      +Result:PoleLinkResult +ItemType:int +Count:int +States:List<KeyValuePair<Point16, List<SlotState>>> +ReplaceAll:List<PoleLink>
 **RecipeKnowledgeNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, LiquidBiomeVisits, PacketDirection, Pending, RecipeBookSystem, RecipeCatalog, RecipeKnowledgeSystem, RecipeParchmentItem, RecipeVisibility, ScrollPools
   class RecipeKnowledgeNetSystem : ModSystem
     +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov]
@@ -806,12 +822,19 @@ tModLoader/other bases -> project types:
 **MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, FactorrariaNet, MachineDetail, MachineDetailSystem, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem, TileEntityHelper
   class MachineUISystem : ModSystem
     +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +RequestOpenWhenReplicaArrives(int,int) +NotifyMachineKilled(BaseMachine) +RequestCloseFromServer(int,int,bool) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+**PoleLinkSystem.cs** uses: CustomWireNet, CustomWireType, PoleBoard, PoleLinkNet, PowerGridSystem, PowerPoleTileEntityBase, TileEntityHelper
+  class PoleLink
+    +A:Point16 +B:Point16 +SlotA:byte +SlotB:byte +Wire:CustomWireType +Cost:ushort +Touches(Point16) +Other(Point16) +SlotOn(Point16)
+  class PoleLinkSystem : ModSystem
+    +CopperSpan:float +TinSpan:float +GoldSpan:float +CopperTilesPerItem:float +TinTilesPerItem:float +GoldTilesPerItem:float +BreakSpanMultiplier:float +ClickSlackPixels:float +MaxSlotsPerPole:int +Version:int +Instance:PoleLinkSystem[s] +Links:IReadOnlyList<PoleLink> +GetLink(Point16,int) +IsSlotFree(Point16,int) +LinksOf(Point16) +GetLinkedPoles(Point16) +GetPoleState(Point16) +TryAdd(PoleLink) +Remove(PoleLink) +RemoveAllFor(Point16) +Clear() +ReplaceAll(List<PoleLink>) +ApplyPoleStates(List<KeyValuePair<Point16, List<SlotState>>>) +TryGetPole(Point16,out PowerPoleTileEntityBase)[s] +TryGetPoleAtTile(int,int,out PowerPoleTileEntityBase,out Point16)[s] +FootprintHeight(PowerPoleTileEntityBase)[s] +FootprintTopWorld(Point16)[s] +IsClickZone(PowerPoleTileEntityBase,int,int) +IsClickNearLink(PoleLink,int,int) +MaxSpan(CustomWireType) +TilesPerItem(CustomWireType) +CostFor(CustomWireType,float) +SpanTiles(PowerPoleTileEntityBase,int,PowerPoleTileEntityBase,int)[s] +SlotCount(PowerPoleTileEntityBase) +ChooseFreePoint(PowerPoleTileEntityBase,Vector2) +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
+    struct SlotState
+      +Slot:byte +Other:Point16 +OtherSlot:byte +Wire:CustomWireType +Cost:ushort
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
-**PowerGridSystem.cs** uses: CustomWireSystem, CustomWireType, FactorrariaNet, IElectricConsumer, IElectricProducer, PowerNetwork, TileEntityHelper
+**PowerGridSystem.cs** uses: CustomWireSystem, CustomWireType, FactorrariaNet, IElectricConsumer, IElectricProducer, PoleLinkNet, PoleLinkSystem, PowerNetwork, PowerPoleTileEntityBase, TileEntityHelper
   class PowerGridSystem : ModSystem
-    +AllMachines:HashSet<TileEntity>[s] +ActivePowerNetworks:List<PowerNetwork>[s] +gridNeedsRebuilding:bool[s] +PostUpdateWorld()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RegisterMachineToMasterList(TileEntity)[s]
+    +AllMachines:HashSet<TileEntity>[s] +ActivePowerNetworks:List<PowerNetwork>[s] +gridNeedsRebuilding:bool[s] +PoleBridgesLastBuild:int +PoleLinkEndsMissingLastBuild:int +PostUpdateWorld()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RegisterMachineToMasterList(TileEntity)[s]
 **RecipeBookKeybindSystem.cs** uses: RecipeBookLayout, RecipeBookSystem
   class RecipeBookKeybindSystem : ModSystem
     +ItemSearchKey:ModKeybind[s] +ToggleKey:ModKeybind[s] +Load()[ov] +Unload()[ov] +ItemSearchKeyName()[s]

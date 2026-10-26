@@ -27,6 +27,7 @@ namespace Factorraria.Common.Net
 
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
+                PoleLinkNet.OnMachineKilled(machine, corner);   // power poles patch P3: the replica of the pole's links goes with the pole
                 machine.Kill(corner.X, corner.Y);
                 return;
             }
@@ -44,6 +45,7 @@ namespace Factorraria.Common.Net
                 stacks++;
             }
 
+            PoleLinkNet.OnMachineKilled(machine, corner);   // power poles patch P3: removes the pole's links, drops their wire, tells the clients
             machine.Kill(corner.X, corner.Y);
 
             if (Main.netMode == NetmodeID.Server)

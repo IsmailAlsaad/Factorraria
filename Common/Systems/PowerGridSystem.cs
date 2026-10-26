@@ -2,6 +2,7 @@
 using Factorraria.Common.Machines;
 using Factorraria.Common.Net;
 using Factorraria.Common.PowerGrid;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,10 @@ namespace Factorraria.Common.Systems
         public static HashSet<TileEntity> AllMachines = new HashSet<TileEntity>();
         public static List<PowerNetwork> ActivePowerNetworks = new List<PowerNetwork>();
         public static bool gridNeedsRebuilding = true;
+
+        // Power poles patch P4: what the last rebuild did with pole links. Read by /plinks and the [PoleLinks] grid log line (temporary, Phase 10).
+        public int PoleBridgesLastBuild;            // poles that joined a grid only because a link led to them
+        public int PoleLinkEndsMissingLastBuild;    // link ends skipped because that position holds no pole entity on this process
 
         // Patch 5.4: saved machines are indexed once per world. The old check ("when the machine list is empty") was skipped whenever a
         // machine had registered itself first (the 4.5 bootstrap scan, an early client placement), which left every saved machine out of the grids.
@@ -74,6 +79,8 @@ namespace Factorraria.Common.Systems
         void RebuildNetworks()
         {
             ActivePowerNetworks.Clear();
+            PoleBridgesLastBuild = 0;
+            PoleLinkEndsMissingLastBuild = 0;
 
             HashSet<TileEntity> remainingMachines = new HashSet<TileEntity>(AllMachines);
 
@@ -87,6 +94,11 @@ namespace Factorraria.Common.Systems
                     ActivePowerNetworks.Add(network);
                 }
             }
+
+            // Test aid (temporary, power poles patch P4, remove in Phase 10): what the pole links did in this rebuild.
+            if (PoleLinkSystem.Instance.Links.Count > 0)
+                PoleLinkNet.Trace("grid rebuilt: " + PoleLinkSystem.Instance.Links.Count + " link(s), " + PoleBridgesLastBuild + " pole(s) joined a grid through a link, "
+                    + PoleLinkEndsMissingLastBuild + " link end(s) skipped (no pole entity here), " + ActivePowerNetworks.Count + " grid(s)");
 
             // Test aid (temporary, patch 5.4): the server's view of the grids after every rebuild.
             if (Main.netMode == Terraria.ID.NetmodeID.Server)
@@ -108,18 +120,26 @@ namespace Factorraria.Common.Systems
             PowerNetwork network = new PowerNetwork();
             Queue<(Point pos, CustomWireType type)> wireQueue = new Queue<(Point, CustomWireType)>();
             HashSet<(Point pos, CustomWireType type)> visitedWiresInThisNetwork = new HashSet<(Point, CustomWireType)>();
+            Queue<Point16> linkedPoleQueue = new Queue<Point16>();   // power poles patch P4: poles that a registered pole's links lead to
 
             // 1. Register startMachine to this network
             RegisterMachineToNetwork(startMachine, network, remainingMachines);
 
             // 2. Enqueue ALL wire types touching this machine's footprint
             EnqueueMachineWires(startMachine, wireQueue, visitedWiresInThisNetwork);
+            EnqueueLinkedPoles(startMachine, linkedPoleQueue);
 
             Point[] offsets = new Point[] { new Point(0, -1), new Point(0, 1), new Point(-1, 0), new Point(1, 0) };
 
-            // 3. Flood fill outward through wires
-            while (wireQueue.Count > 0)
+            // 3. Flood fill outward through wires. A registered pole also pulls in the poles it is linked to (power poles patch P4):
+            //    each of those registers, enqueues its own footprint wires and its own links, so wire networks at both ends merge
+            //    and a chain of poles works.
+            while (wireQueue.Count > 0 || linkedPoleQueue.Count > 0)
             {
+                DrainLinkedPoles(linkedPoleQueue, network, remainingMachines, wireQueue, visitedWiresInThisNetwork);
+                if (wireQueue.Count == 0)
+                    continue;   // nothing left to walk: the loop ends (the linked pole queue was just emptied)
+
                 var (currentPos, currentType) = wireQueue.Dequeue();
 
                 foreach (Point offset in offsets)
@@ -141,6 +161,7 @@ namespace Factorraria.Common.Systems
 
                                 // Bridge: Machine enqueues ALL wire types touching its footprint
                                 EnqueueMachineWires(foundMachine, wireQueue, visitedWiresInThisNetwork);
+                                EnqueueLinkedPoles(foundMachine, linkedPoleQueue);
                             }
                         }
                     }
@@ -148,6 +169,48 @@ namespace Factorraria.Common.Systems
             }
 
             return network;
+        }
+
+        // Power poles patch P4. If this machine is a pole, queue the position of every pole its links lead to. Positions only: the
+        // entity at a position may not exist on this process (a pole the bootstrap scan has not created yet, or a stale link), so
+        // DrainLinkedPoles looks each one up and skips what is missing (verification V8).
+        void EnqueueLinkedPoles(TileEntity machine, Queue<Point16> linkedPoleQueue)
+        {
+            if (machine is not PowerPoleTileEntityBase)
+                return;
+
+            foreach (Point16 other in PoleLinkSystem.Instance.GetLinkedPoles(machine.Position))
+                linkedPoleQueue.Enqueue(other);
+        }
+
+        // Registers every queued linked pole that is still unassigned, with its footprint wires and its own links. A position that holds no
+        // pole entity is skipped on purpose: a link must never bridge power into some other machine that was built where a pole used to be.
+        // A pole that is not in remainingMachines is already in a grid (this one, since links are two-way), so it is skipped too.
+        void DrainLinkedPoles(
+            Queue<Point16> linkedPoleQueue,
+            PowerNetwork network,
+            HashSet<TileEntity> remainingMachines,
+            Queue<(Point pos, CustomWireType type)> wireQueue,
+            HashSet<(Point pos, CustomWireType type)> visitedWires)
+        {
+            while (linkedPoleQueue.Count > 0)
+            {
+                Point16 polePosition = linkedPoleQueue.Dequeue();
+
+                if (!TileEntity.ByPosition.TryGetValue(polePosition, out TileEntity linkedPole) || linkedPole is not PowerPoleTileEntityBase)
+                {
+                    PoleLinkEndsMissingLastBuild++;
+                    continue;
+                }
+
+                if (!remainingMachines.Contains(linkedPole))
+                    continue;
+
+                RegisterMachineToNetwork(linkedPole, network, remainingMachines);
+                EnqueueMachineWires(linkedPole, wireQueue, visitedWires);
+                EnqueueLinkedPoles(linkedPole, linkedPoleQueue);
+                PoleBridgesLastBuild++;
+            }
         }
 
         void RegisterMachineToNetwork(TileEntity machine, PowerNetwork network, HashSet<TileEntity> remainingMachines)
