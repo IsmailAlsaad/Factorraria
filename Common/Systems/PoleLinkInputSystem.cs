@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Carts;
 using Factorraria.Common.Machines;
 using Factorraria.Common.Net;
+using Factorraria.Content.Items.Wires;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -27,6 +28,7 @@ namespace Factorraria.Common.Systems
     //   - first right click on a pole: Pending = (that pole, that point). A taken point does nothing (its highlight is already red)
     //   - while pending, a hologram runs from the start point to the cursor, or to the hovered second pole's point closest to the mouse
     //   - second right click on a different pole: RequestLink (only when the hologram is not red). The wire is taken when the server answers.
+    //   - a right click that is not on a pole (mid air) while pending cancels the pending link (P7b)
     // There is no hover or cursor text for any of this (removed after the P6 test); the server's refusals still show as chat lines (PoleLinkNet).
     // P7 (cutting links with the Iron and Lead cutters) lives here too: see TryRequestCutAtCursor at the end of the class.
     // The click is consumed (On_Player.TileInteractionsUse is skipped for it), so the pole's own UI does not open while wire is held.
@@ -69,6 +71,7 @@ namespace Factorraria.Common.Systems
         // ---- hover (P6b): which pole the cursor is on while wire is held, read by PowerPoleCrossboardSystem for the highlight cells
         bool hoverActive;
         Point16 hoverPole;
+        public PoleLink CutHoverLink;                // P7b: with a cutter in hand, the link under the cursor (drawn in the invalid colour); null otherwise
         int hoverSlot;                               // that pole's connection point closest to the mouse (free or not): the only one highlighted, and the one a click uses
         int heldCount;                               // how many of the held wire's item the player has (only while hoverActive)
 
@@ -100,6 +103,7 @@ namespace Factorraria.Common.Systems
             ConsumeThisTick = false;
             holdingWire = false;
             hoverActive = false;
+            CutHoverLink = null;
             preview = default;
             rightWasDown = false;
             escapeWasDown = false;
@@ -248,6 +252,7 @@ namespace Factorraria.Common.Systems
             ConsumeThisTick = false;
             preview = default;
             hoverActive = false;
+            CutHoverLink = null;
 
             bool right = Main.mouseRight;
             bool pressed = right && !rightWasDown;
@@ -278,6 +283,13 @@ namespace Factorraria.Common.Systems
                 hoverSlot = ClosestPoint(links, hoverCandidate, mouse);
                 heldCount = PoleLinkNet.CountWire(player, heldItem.type);
             }
+
+            // A cutter in hand and the cursor on a link or a link's connection point: that wire is drawn in the invalid colour (PoleWireDrawSystem), so
+            // the player sees it can be cut. Same target rule as the cut itself (TryFindCutTarget). PostUpdateInput sees the unscaled mouse, so the
+            // zoom matrix helper is right here (the cut itself runs inside the player update, see RequestCutAtCursor).
+            if (!player.mouseInterface && !player.lastMouseInterface && Main.mouseItem.IsAir && IsCutter(player.HeldItem)
+                && TryFindCutTarget(links, mouse, tileX, tileY, out _, out _, out PoleLink cutLink))
+                CutHoverLink = cutLink;
 
             if (Pending)
             {
@@ -359,7 +371,13 @@ namespace Factorraria.Common.Systems
         void HandlePress(Player player, PoleLinkSystem links, Vector2 mouse, int tileX, int tileY)
         {
             if (!TryFindPoleAtTile(tileX, tileY, out PowerPoleTileEntityBase pole))
-                return;   // not on a pole: does nothing (a pending link stays, and vanilla handles the click as usual)
+            {
+                // Not on a pole (mid air): a pending link is cancelled. The click is not consumed, vanilla handles it as usual.
+                if (Pending)
+                    Cancel();
+
+                return;
+            }
 
             ConsumeThisTick = true;   // the pole's UI must not open
 
@@ -423,20 +441,14 @@ namespace Factorraria.Common.Systems
             if (links.Links.Count == 0)
                 return false;
 
-            Vector2 mouse = CartSystem.GetZoomCorrectedMouseWorld();
-            int tileX = Math.Clamp((int)(mouse.X / 16f), 0, Main.maxTilesX - 1);
-            int tileY = Math.Clamp((int)(mouse.Y / 16f), 0, Main.maxTilesY - 1);
+            // UseItem runs INSIDE the player update, where vanilla has already zoom-corrected Main.mouseX/Y (the values Player.tileTargetX comes from),
+            // so the mouse is Main.MouseWorld here. The zoom matrix helper used by PostUpdateInput would correct it a second time (P7b zoom fix).
+            Vector2 mouse = Main.MouseWorld;
+            int tileX = Player.tileTargetX;
+            int tileY = Player.tileTargetY;
 
-            if (!TryFindLinkAtMouse(links, mouse, out Point16 pole, out int slot, out float distance))
+            if (!TryFindCutTarget(links, mouse, tileX, tileY, out Point16 pole, out int slot, out _))
                 return false;
-
-            // A ground wire on the tile under the cursor wins, unless the cursor is closer to the line (or point) than to that tile's centre.
-            if (CustomWireSystem.WireAt(tileX, tileY) != CustomWireType.None)
-            {
-                float tileDistance = Vector2.Distance(mouse, new Vector2(tileX * 16f + 8f, tileY * 16f + 8f));
-                if (distance >= tileDistance)
-                    return false;
-            }
 
             // autoReuse fires every few ticks and the answer takes a round trip: the same link is not requested again until it has had time to arrive.
             if (pole == lastCutPole && slot == lastCutSlot && Main.GameUpdateCount - lastCutTick < (uint)CutRepeatTicks)
@@ -446,6 +458,7 @@ namespace Factorraria.Common.Systems
             lastCutSlot = slot;
             lastCutTick = Main.GameUpdateCount;
 
+            PoleLinkNet.Trace("cut click: mouse " + mouse + ", tile (" + tileX + ", " + tileY + "), zoom " + Main.GameZoomTarget + ", matrix-helper mouse " + CartSystem.GetZoomCorrectedMouseWorld() + ", link (" + pole.X + ", " + pole.Y + ")#" + slot);
             PoleLinkNet.RequestCut(pole.X, pole.Y, slot, tileX, tileY);
             SoundEngine.PlaySound(SoundID.Dig, new Vector2(tileX * 16f, tileY * 16f));
             return true;
@@ -500,6 +513,30 @@ namespace Factorraria.Common.Systems
             }
 
             return slot >= 0;
+        }
+
+        // What a cutter would cut with the mouse here: TryFindLinkAtMouse plus the ground-wire rule (a ground wire on the cursor's tile wins unless
+        // the cursor is closer to the line or point than to that tile's centre). Used by the cut itself and by the cut hover colour, so they agree.
+        bool TryFindCutTarget(PoleLinkSystem links, Vector2 mouse, int tileX, int tileY, out Point16 pole, out int slot, out PoleLink link)
+        {
+            link = null;
+            if (!TryFindLinkAtMouse(links, mouse, out pole, out slot, out float distance))
+                return false;
+
+            if (CustomWireSystem.WireAt(tileX, tileY) != CustomWireType.None)
+            {
+                float tileDistance = Vector2.Distance(mouse, new Vector2(tileX * 16f + 8f, tileY * 16f + 8f));
+                if (distance >= tileDistance)
+                    return false;
+            }
+
+            link = links.GetLink(pole, slot);
+            return link != null;
+        }
+
+        static bool IsCutter(Item item)
+        {
+            return item != null && !item.IsAir && (item.type == ModContent.ItemType<IronCutterItem>() || item.type == ModContent.ItemType<LeadCutterItem>());
         }
 
         static float DistanceToSegment(Vector2 p, Vector2 a, Vector2 b)

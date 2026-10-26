@@ -822,9 +822,9 @@ tModLoader/other bases -> project types:
 **MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, FactorrariaNet, MachineDetail, MachineDetailSystem, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem, TileEntityHelper
   class MachineUISystem : ModSystem
     +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +RequestOpenWhenReplicaArrives(int,int) +NotifyMachineKilled(BaseMachine) +RequestCloseFromServer(int,int,bool) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
-**PoleLinkInputSystem.cs** uses: CartSystem, CustomWireNet, CustomWireSystem, CustomWireType, Pending, PoleLink, PoleLinkNet, PoleLinkSystem, PoleWireDrawSystem, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
+**PoleLinkInputSystem.cs** uses: CartSystem, CustomWireNet, CustomWireSystem, CustomWireType, IronCutterItem, LeadCutterItem, Pending, PoleLink, PoleLinkNet, PoleLinkSystem, PoleWireDrawSystem, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
   class PoleLinkInputSystem : ModSystem
-    +CutLinePixels:float +CutPointPixels:float +CutRepeatTicks:int +Pending:bool +ConsumeThisTick:bool +Load()[ov] +Unload()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +TryGetHeldWire(Player,out CustomWireType,out Item)[s] +TryFindPoleAtTile(int,int,out PowerPoleTileEntityBase)[s] +GetPointHighlight(PowerPoleTileEntityBase,int) +PostUpdateInput()[ov] +DrawWorld(SpriteBatch) +TryRequestCutAtCursor(Player)[s]
+    +CutLinePixels:float +CutPointPixels:float +CutRepeatTicks:int +Pending:bool +ConsumeThisTick:bool +CutHoverLink:PoleLink +Load()[ov] +Unload()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +TryGetHeldWire(Player,out CustomWireType,out Item)[s] +TryFindPoleAtTile(int,int,out PowerPoleTileEntityBase)[s] +GetPointHighlight(PowerPoleTileEntityBase,int) +PostUpdateInput()[ov] +DrawWorld(SpriteBatch) +TryRequestCutAtCursor(Player)[s]
     struct Preview
       +Active:bool +From:Vector2 +To:Vector2 +Wire:CustomWireType +Invalid:bool +CanCommit:bool +EndSlot:int
     enum PointHighlight
@@ -836,7 +836,7 @@ tModLoader/other bases -> project types:
     +CopperSpan:float +TinSpan:float +GoldSpan:float +CopperTilesPerItem:float +TinTilesPerItem:float +GoldTilesPerItem:float +BreakSpanMultiplier:float +ClickSlackPixels:float +MaxSlotsPerPole:int +Version:int +Instance:PoleLinkSystem[s] +Links:IReadOnlyList<PoleLink> +GetLink(Point16,int) +IsSlotFree(Point16,int) +LinksOf(Point16) +GetLinkedPoles(Point16) +GetPoleState(Point16) +TryAdd(PoleLink) +Remove(PoleLink) +RemoveAllFor(Point16) +Clear() +ReplaceAll(List<PoleLink>) +ApplyPoleStates(List<KeyValuePair<Point16, List<SlotState>>>) +TryGetPole(Point16,out PowerPoleTileEntityBase)[s] +TryGetPoleAtTile(int,int,out PowerPoleTileEntityBase,out Point16)[s] +FootprintHeight(PowerPoleTileEntityBase)[s] +FootprintTopWorld(Point16)[s] +IsClickZone(PowerPoleTileEntityBase,int,int) +IsClickNearLink(PoleLink,int,int) +MaxSpan(CustomWireType) +TilesPerItem(CustomWireType) +CostFor(CustomWireType,float) +SpanTiles(PowerPoleTileEntityBase,int,PowerPoleTileEntityBase,int)[s] +SlotCount(PowerPoleTileEntityBase) +ChooseFreePoint(PowerPoleTileEntityBase,Vector2) +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
     struct SlotState
       +Slot:byte +Other:Point16 +OtherSlot:byte +Wire:CustomWireType +Cost:ushort
-**PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleLink, PoleLinkSystem, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
+**PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleLink, PoleLinkInputSystem, PoleLinkSystem, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
   class PoleWireDrawSystem : ModSystem
     +WireThickness:float +CullMarginPixels:float +CopperColor:Color +TinColor:Color +GoldColor:Color +InvalidColor:Color +Unload()[ov] +OnWorldUnload()[ov] +DrawWire(SpriteBatch,Vector2,Vector2,CustomWireType,bool) +GetWireColor(CustomWireType) +BeginBatch(SpriteBatch)[s] +DrawLinks(SpriteBatch) +GetSwayedPoint(PowerPoleCrossboardSystem,PowerPoleTileEntityBase,int)[s]
     class CachedLink

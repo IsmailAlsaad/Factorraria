@@ -117,6 +117,7 @@ namespace Factorraria.Common.Systems
             var visible = new Rectangle(minX * 16, minY * 16, (maxX - minX + 1) * 16, (maxY - minY + 1) * 16);
 
             PowerPoleCrossboardSystem sway = ModContent.GetInstance<PowerPoleCrossboardSystem>();
+            PoleLink cutHover = ModContent.GetInstance<PoleLinkInputSystem>().CutHoverLink;   // P7b: the link a held cutter would cut, drawn in the invalid colour
             bool batchBegun = false;
 
             foreach (CachedLink entry in cache)
@@ -140,7 +141,7 @@ namespace Factorraria.Common.Systems
                     batchBegun = true;
                 }
 
-                DrawWire(spriteBatch, from, to, link.Wire);
+                DrawWire(spriteBatch, from, to, link.Wire, cutHover != null && ReferenceEquals(link, cutHover));
             }
 
             if (batchBegun)
