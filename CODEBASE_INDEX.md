@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-26 | 292 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-27 | 293 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -836,11 +836,16 @@ tModLoader/other bases -> project types:
     +CopperSpan:float +TinSpan:float +GoldSpan:float +CopperTilesPerItem:float +TinTilesPerItem:float +GoldTilesPerItem:float +BreakSpanMultiplier:float +ClickSlackPixels:float +MaxSlotsPerPole:int +Version:int +Instance:PoleLinkSystem[s] +Links:IReadOnlyList<PoleLink> +GetLink(Point16,int) +IsSlotFree(Point16,int) +LinksOf(Point16) +GetLinkedPoles(Point16) +GetPoleState(Point16) +TryAdd(PoleLink) +Remove(PoleLink) +RemoveAllFor(Point16) +Clear() +ReplaceAll(List<PoleLink>) +ApplyPoleStates(List<KeyValuePair<Point16, List<SlotState>>>) +TryGetPole(Point16,out PowerPoleTileEntityBase)[s] +TryGetPoleAtTile(int,int,out PowerPoleTileEntityBase,out Point16)[s] +FootprintHeight(PowerPoleTileEntityBase)[s] +FootprintTopWorld(Point16)[s] +IsClickZone(PowerPoleTileEntityBase,int,int) +IsClickNearLink(PoleLink,int,int) +MaxSpan(CustomWireType) +TilesPerItem(CustomWireType) +CostFor(CustomWireType,float) +SpanTiles(PowerPoleTileEntityBase,int,PowerPoleTileEntityBase,int)[s] +SlotCount(PowerPoleTileEntityBase) +ChooseFreePoint(PowerPoleTileEntityBase,Vector2) +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
     struct SlotState
       +Slot:byte +Other:Point16 +OtherSlot:byte +Wire:CustomWireType +Cost:ushort
-**PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleLink, PoleLinkInputSystem, PoleLinkSystem, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
+**PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleLink, PoleLinkInputSystem, PoleLinkSystem, PoleWireActorPush, PoleWireRope, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
   class PoleWireDrawSystem : ModSystem
-    +WireThickness:float +CullMarginPixels:float +CopperColor:Color +TinColor:Color +GoldColor:Color +InvalidColor:Color +Unload()[ov] +OnWorldUnload()[ov] +DrawWire(SpriteBatch,Vector2,Vector2,CustomWireType,bool) +GetWireColor(CustomWireType) +BeginBatch(SpriteBatch)[s] +DrawLinks(SpriteBatch) +GetSwayedPoint(PowerPoleCrossboardSystem,PowerPoleTileEntityBase,int)[s]
+    +PixelSize:float +CullMarginPixels:float +PixelsPerNode:float +MinNodes:int +MaxNodes:int +MinSagPixels:float +MaxSagPixels:float +SagFraction:float +RopeSlack:float +MaxNodeOffsetPixels:float +RopeDamping:float +GravityPixelsPerSecondSquared:float +WindPixelsPerSecondSquared:float +GustStrength:float +GustSpeed:float +ConstraintIterations:int +ActorPushRadiusPixels:float +ActorPushStrength:float +MaxActorSpeedPixelsPerTick:float +CopperColor:Color +TinColor:Color +GoldColor:Color +InvalidColor:Color +Unload()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +DrawWire(SpriteBatch,Vector2,Vector2,CustomWireType,bool) +GetWireColor(CustomWireType) +BeginBatch(SpriteBatch)[s] +DrawLinks(SpriteBatch) +GetSwayedPoint(PowerPoleCrossboardSystem,PowerPoleTileEntityBase,int)[s]
     class CachedLink
-      +Link:PoleLink +Bounds:Rectangle +Resolved:bool
+      +Link:PoleLink +RestA:Vector2 +RestB:Vector2 +RadiusA:float +RadiusB:float +Sag:float +Resolved:bool +Rope:PoleWireRope
+**PoleWireRope.cs**
+  struct PoleWireActorPush
+    +Center:Vector2 +Velocity:Vector2
+  sealed class PoleWireRope
+    +Nodes:Vector2 +NodeCount:int +Reset(Vector2,Vector2,float,float) +PinEndpoints(Vector2,Vector2) +Step(Vector2,Vector2,float,float,float,float,float,float,int,IReadOnlyList<PoleWireActorPush>,float,float) +RestPosition(Vector2,Vector2,float,int,int)[s]
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
