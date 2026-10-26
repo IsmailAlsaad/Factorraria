@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-26 | 292 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-27 | 293 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -833,14 +833,19 @@ tModLoader/other bases -> project types:
   class PoleLink
     +A:Point16 +B:Point16 +SlotA:byte +SlotB:byte +Wire:CustomWireType +Cost:ushort +Touches(Point16) +Other(Point16) +SlotOn(Point16)
   class PoleLinkSystem : ModSystem
-    +CopperSpan:float +TinSpan:float +GoldSpan:float +CopperTilesPerItem:float +TinTilesPerItem:float +GoldTilesPerItem:float +BreakSpanMultiplier:float +ClickSlackPixels:float +MaxSlotsPerPole:int +Version:int +Instance:PoleLinkSystem[s] +Links:IReadOnlyList<PoleLink> +GetLink(Point16,int) +IsSlotFree(Point16,int) +LinksOf(Point16) +GetLinkedPoles(Point16) +GetPoleState(Point16) +TryAdd(PoleLink) +Remove(PoleLink) +RemoveAllFor(Point16) +Clear() +ReplaceAll(List<PoleLink>) +ApplyPoleStates(List<KeyValuePair<Point16, List<SlotState>>>) +TryGetPole(Point16,out PowerPoleTileEntityBase)[s] +TryGetPoleAtTile(int,int,out PowerPoleTileEntityBase,out Point16)[s] +FootprintHeight(PowerPoleTileEntityBase)[s] +FootprintTopWorld(Point16)[s] +IsClickZone(PowerPoleTileEntityBase,int,int) +IsClickNearLink(PoleLink,int,int) +MaxSpan(CustomWireType) +TilesPerItem(CustomWireType) +CostFor(CustomWireType,float) +SpanTiles(PowerPoleTileEntityBase,int,PowerPoleTileEntityBase,int)[s] +SlotCount(PowerPoleTileEntityBase) +ChooseFreePoint(PowerPoleTileEntityBase,Vector2) +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
+    +CopperSpan:float +TinSpan:float +GoldSpan:float +CopperTilesPerItem:float +TinTilesPerItem:float +GoldTilesPerItem:float +BreakSpanMultiplier:float +ClickSlackPixels:float +MaxSlotsPerPole:int +SlackFraction:float +MinSlackPixels:float +SagReachMultiplier:float +SagReachExtraPixels:float +SlackExtra(float) +RestSag(float) +SagReach(float) +Version:int +Instance:PoleLinkSystem[s] +Links:IReadOnlyList<PoleLink> +GetLink(Point16,int) +IsSlotFree(Point16,int) +LinksOf(Point16) +GetLinkedPoles(Point16) +GetPoleState(Point16) +TryAdd(PoleLink) +Remove(PoleLink) +RemoveAllFor(Point16) +Clear() +ReplaceAll(List<PoleLink>) +ApplyPoleStates(List<KeyValuePair<Point16, List<SlotState>>>) +TryGetPole(Point16,out PowerPoleTileEntityBase)[s] +TryGetPoleAtTile(int,int,out PowerPoleTileEntityBase,out Point16)[s] +FootprintHeight(PowerPoleTileEntityBase)[s] +FootprintTopWorld(Point16)[s] +IsClickZone(PowerPoleTileEntityBase,int,int) +IsClickNearLink(PoleLink,int,int) +MaxSpan(CustomWireType) +TilesPerItem(CustomWireType) +CostFor(CustomWireType,float) +SpanTiles(PowerPoleTileEntityBase,int,PowerPoleTileEntityBase,int)[s] +SlotCount(PowerPoleTileEntityBase) +ChooseFreePoint(PowerPoleTileEntityBase,Vector2) +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
     struct SlotState
       +Slot:byte +Other:Point16 +OtherSlot:byte +Wire:CustomWireType +Cost:ushort
-**PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleLink, PoleLinkInputSystem, PoleLinkSystem, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
+**PoleRope.cs** uses: PoleWireDrawSystem
+  struct PoleDisturber
+    +Box:Rectangle +Velocity:Vector2
+  class PoleRope
+    +Pos:Vector2 +Old:Vector2 +Count:int +Length:float +SegmentLength:float +NodeCount(float,float,int)[s] +FillRestCurve(Vector2,int,Vector2,Vector2,float)[s] +Rest(Vector2,Vector2) +Pin(Vector2,Vector2) +Step(PoleWireDrawSystem,Vector2,Vector2,List<PoleDisturber>) +DistanceToPolyline(Vector2,int,Vector2)[s]
+**PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleDisturber, PoleLink, PoleLinkInputSystem, PoleLinkSystem, PoleRope, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
   class PoleWireDrawSystem : ModSystem
-    +WireThickness:float +CullMarginPixels:float +CopperColor:Color +TinColor:Color +GoldColor:Color +InvalidColor:Color +Unload()[ov] +OnWorldUnload()[ov] +DrawWire(SpriteBatch,Vector2,Vector2,CustomWireType,bool) +GetWireColor(CustomWireType) +BeginBatch(SpriteBatch)[s] +DrawLinks(SpriteBatch) +GetSwayedPoint(PowerPoleCrossboardSystem,PowerPoleTileEntityBase,int)[s]
+    +WireThickness:float +CullMarginPixels:float +CopperColor:Color +TinColor:Color +GoldColor:Color +InvalidColor:Color +Simulate:bool +Disturbance:bool +NodeSpacing:float +MaxNodes:int +Gravity:float +Damping:float +WindForce:float +GustAmount:float +GustSpeed:float +FlutterAmount:float +ConstraintIterations:int +DisturbRadius:float +DisturbStrength:float +MaxNodeSpeed:float +Unload()[ov] +OnWorldUnload()[ov] +DrawWire(SpriteBatch,Vector2,Vector2,CustomWireType,bool) +GetWireColor(CustomWireType) +BeginBatch(SpriteBatch)[s] +DrawLinks(SpriteBatch) +PostUpdateEverything()[ov] +SegmentIntersectsRect(Vector2,Vector2,Rectangle)[s] +DistanceToWire(PoleLink,Vector2,Vector2,Vector2) +GetSwayedPoint(PowerPoleCrossboardSystem,PowerPoleTileEntityBase,int)[s]
     class CachedLink
-      +Link:PoleLink +Bounds:Rectangle +Resolved:bool
+      +Link:PoleLink +Bounds:Rectangle +Resolved:bool +RestA:Vector2 +RestB:Vector2 +RestChord:float +Reach:float +Rope:PoleRope
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]

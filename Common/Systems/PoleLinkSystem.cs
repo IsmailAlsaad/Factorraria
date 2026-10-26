@@ -44,6 +44,17 @@ namespace Factorraria.Common.Systems
         public float ClickSlackPixels = 16f;       // how far outside a pole's footprint or crossboard a click still counts as "on the pole"
         public int MaxSlotsPerPole = 8;            // sanity bound for save and network data (the real count is PowerPoleTileEntityBase.LinkPointCount)
 
+        // P9: how the hanging wire sags. Pure geometry, no state: the client drawing, the cutter's hit-test and the server's click plausibility
+        // box all read the same numbers (the server only to size its box, never to decide power or links).
+        public float SlackFraction = 0.02f;        // the wire is this much longer than the straight distance between its connection points...
+        public float MinSlackPixels = 8f;          // ...but at least this many pixels longer
+        public float SagReachMultiplier = 1.6f;    // room (x the resting sag) for the wire swinging in wind or being pushed
+        public float SagReachExtraPixels = 24f;
+
+        public float SlackExtra(float chord) => Math.Max(MinSlackPixels, chord * SlackFraction);
+        public float RestSag(float chord) => (float)Math.Sqrt(0.375f * chord * SlackExtra(chord));
+        public float SagReach(float chord) => RestSag(chord) * SagReachMultiplier + SagReachExtraPixels;
+
         // Raised on every change, so drawing code (patch P5) can cache.
         public int Version;
 
@@ -365,7 +376,7 @@ namespace Factorraria.Common.Systems
 
             Vector2 p = poleA.GetLinkPointWorld(link.SlotA);
             Vector2 q = poleB.GetLinkPointWorld(link.SlotB);
-            float slack = ClickSlackPixels;
+            float slack = ClickSlackPixels + SagReach(Vector2.Distance(p, q));   // P9: the wire hangs below its chord and swings, so the box grows by the sag allowance
             float x = tileX * 16f + 8f;
             float y = tileY * 16f + 8f;
 

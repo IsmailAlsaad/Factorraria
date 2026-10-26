@@ -466,7 +466,7 @@ namespace Factorraria.Common.Systems
 
         // The link whose line (resting points, so every process agrees) passes within CutLinePixels of the mouse, or one of whose connection points
         // is within CutPointPixels of it; the nearest wins. pole/slot name the end the request is sent for: the hit end for a point, end A for a line.
-        // A link whose pole entities are missing on this client is skipped. The straight line is the hit-test until P9 gives the wire a sag.
+        // A link whose pole entities are missing on this client is skipped. The hit-test is the wire as drawn (P9: the live rope when the link is on screen, else its resting hang).
         bool TryFindLinkAtMouse(PoleLinkSystem links, Vector2 mouse, out Point16 pole, out int slot, out float distance)
         {
             pole = default;
@@ -483,11 +483,13 @@ namespace Factorraria.Common.Systems
                 Vector2 a = poleA.GetLinkPointWorld(link.SlotA);
                 Vector2 b = poleB.GetLinkPointWorld(link.SlotB);
 
-                if (mouse.X < Math.Min(a.X, b.X) - reach || mouse.X > Math.Max(a.X, b.X) + reach
-                    || mouse.Y < Math.Min(a.Y, b.Y) - reach || mouse.Y > Math.Max(a.Y, b.Y) + reach)
+                // P9: the wire hangs in a curve, so the early-out box grows by the sag allowance and the distance is to the drawn curve.
+                float boxReach = reach + links.SagReach(Vector2.Distance(a, b));
+                if (mouse.X < Math.Min(a.X, b.X) - boxReach || mouse.X > Math.Max(a.X, b.X) + boxReach
+                    || mouse.Y < Math.Min(a.Y, b.Y) - boxReach || mouse.Y > Math.Max(a.Y, b.Y) + boxReach)
                     continue;
 
-                float line = DistanceToSegment(mouse, a, b);
+                float line = ModContent.GetInstance<PoleWireDrawSystem>().DistanceToWire(link, mouse, a, b);
                 if (line <= CutLinePixels && line < distance)
                 {
                     distance = line;
