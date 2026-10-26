@@ -20,7 +20,7 @@ namespace Factorraria.Common.Systems
     // crossboards, which cover the wire ends. That does not depend on the load order of ModSystems.
     //
     // Links and span checks use the RESTING points (PowerPoleTileEntityBase.GetLinkPointWorld); only the drawing uses the swayed ones.
-    public class PoleWireDrawSystem : ModSystem
+    public partial class PoleWireDrawSystem : ModSystem
     {
         // Tunables (plain instance fields, so hot reload can change them).
         public float WireThickness = 2f;
@@ -37,8 +37,8 @@ namespace Factorraria.Common.Systems
         public int MaxNodes = 64;
         public float Gravity = 0.1f;               // pixels per tick squared (low on purpose: a Verlet rope stretches more under strong gravity, and a stretched wire sags too far)
         public float Damping = 0.985f;             // velocity kept per tick
-        public float WindForce = 0.03f;            // sideways pixels per tick squared at Main.windSpeedCurrent = 1
-        public float GustAmount = 0.6f;            // how much the wind strength ripples along the wire (0 = steady)
+        public float WindForce = 0.015f;            // sideways pixels per tick squared at Main.windSpeedCurrent = 1
+        public float GustAmount = 0.4f;            // how much the wind strength ripples along the wire (0 = steady)
         public float GustSpeed = 2.2f;             // radians per second
         public float FlutterAmount = 8f;           // vertical ripple, as a multiple of the wind push (0 = the wind only pushes sideways)
         public int ConstraintIterations = 20;      // each iteration is a forward and a backward sweep
@@ -60,6 +60,7 @@ namespace Factorraria.Common.Systems
             public float RestChord;
             public float Reach;             // radius of the wider board + cull margin + SagReach: how far the wire can be from its chord
             public PoleRope Rope;           // P9: null while the link is off screen (nothing is simulated or kept for it)
+            public bool BothOn;             // P9b: both poles were on at the last tick (the sparks start when this turns true)
         }
 
         readonly List<CachedLink> cache = new List<CachedLink>();
@@ -252,7 +253,12 @@ namespace Factorraria.Common.Systems
 
         public override void PostUpdateEverything()
         {
-            if (Main.dedServ || Main.gameMenu || Main.gamePaused || !Simulate)
+            if (Main.dedServ || Main.gameMenu || Main.gamePaused)
+                return;
+
+            UpdateSparks();   // P9b: sparks and the zap sound, they do not depend on Simulate
+
+            if (!Simulate)
                 return;
 
             PoleLinkSystem links = PoleLinkSystem.Instance;
@@ -439,10 +445,14 @@ namespace Factorraria.Common.Systems
         {
             // P9: ropes survive a rebuild (matched by the link object), so cutting or adding one link does not make every other wire snap back.
             var previous = new Dictionary<PoleLink, PoleRope>();
+            var wasOn = new HashSet<(Point16, byte, Point16, byte)>();   // P9b: matched by value, so a resynced link object does not spark again
             foreach (CachedLink old in cache)
             {
                 if (old.Rope != null)
                     previous[old.Link] = old.Rope;
+
+                if (old.BothOn)
+                    wasOn.Add((old.Link.A, old.Link.SlotA, old.Link.B, old.Link.SlotB));
             }
 
             cache.Clear();
@@ -452,6 +462,8 @@ namespace Factorraria.Common.Systems
                 var entry = new CachedLink { Link = link };
                 if (previous.TryGetValue(link, out PoleRope rope))
                     entry.Rope = rope;
+
+                entry.BothOn = wasOn.Contains((link.A, link.SlotA, link.B, link.SlotB));
 
                 Resolve(entry);
                 cache.Add(entry);

@@ -391,6 +391,7 @@ namespace Factorraria.Common.Systems
                 Pending = true;
                 pendingPole = pole.Position;
                 pendingSlot = slot;
+                ModContent.GetInstance<PoleWireDrawSystem>().PlayFirstPointSound(pole.GetLinkPointWorld(slot));   // P9b
                 return;
             }
 
@@ -399,6 +400,7 @@ namespace Factorraria.Common.Systems
                 return;
 
             PoleLinkNet.RequestLink(pendingPole.X, pendingPole.Y, pole.Position.X, pole.Position.Y, heldWire, pendingSlot, preview.EndSlot, tileX, tileY);
+            ModContent.GetInstance<PoleWireDrawSystem>().PlayConnectSound(pole.GetLinkPointWorld(preview.EndSlot));   // P9b
             Pending = false;
             preview = default;
         }

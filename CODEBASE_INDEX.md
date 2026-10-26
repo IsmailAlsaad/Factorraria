@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-27 | 293 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-27 | 294 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(61) BaseMachine(44) FactorrariaPacket(32) LiquidTypeRegistry(31) PacketDirection(28) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) MachineUIStateBase(15) MachineUIElementEntry(14) JoinSync(14) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) CustomWireType(13)
+FactorrariaNet(61) BaseMachine(44) FactorrariaPacket(32) LiquidTypeRegistry(31) PacketDirection(28) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) MachineUIStateBase(15) PowerPoleTileEntityBase(14) MachineUIElementEntry(14) JoinSync(14) CartSystem(14) CartModule(14) VirtualItemSystem(13) LiquidNetworkSystem(13) CustomWireType(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -841,11 +841,16 @@ tModLoader/other bases -> project types:
     +Box:Rectangle +Velocity:Vector2
   class PoleRope
     +Pos:Vector2 +Old:Vector2 +Count:int +Length:float +SegmentLength:float +NodeCount(float,float,int)[s] +FillRestCurve(Vector2,int,Vector2,Vector2,float)[s] +Rest(Vector2,Vector2) +Pin(Vector2,Vector2) +Step(PoleWireDrawSystem,Vector2,Vector2,List<PoleDisturber>) +DistanceToPolyline(Vector2,int,Vector2)[s]
+**PoleWireDrawSystem.Sparks.cs** uses: CachedLink, PoleLink, PoleLinkSystem, PoleRope, PowerPoleTileEntityBase
+  partial class PoleWireDrawSystem
+    +Sparks:bool +StartupQuietTicks:int +SparkTicks:int +SparksPerTick:int +StraySparksPerTick:int +SparkDustType:int +SparkScale:float +MaxPulses:int +MaxZapSoundsPerTick:int +FirstPointSound:SoundStyle +ConnectSound:SoundStyle +ZapSound:SoundStyle +OnWorldLoad()[ov] +PlayFirstPointSound(Vector2) +PlayConnectSound(Vector2)
+    class Pulse
+      +Link:PoleLink +Age:int
 **PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleDisturber, PoleLink, PoleLinkInputSystem, PoleLinkSystem, PoleRope, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
-  class PoleWireDrawSystem : ModSystem
+  partial class PoleWireDrawSystem : ModSystem
     +WireThickness:float +CullMarginPixels:float +CopperColor:Color +TinColor:Color +GoldColor:Color +InvalidColor:Color +Simulate:bool +Disturbance:bool +NodeSpacing:float +MaxNodes:int +Gravity:float +Damping:float +WindForce:float +GustAmount:float +GustSpeed:float +FlutterAmount:float +ConstraintIterations:int +DisturbRadius:float +DisturbStrength:float +MaxNodeSpeed:float +Unload()[ov] +OnWorldUnload()[ov] +DrawWire(SpriteBatch,Vector2,Vector2,CustomWireType,bool) +GetWireColor(CustomWireType) +BeginBatch(SpriteBatch)[s] +DrawLinks(SpriteBatch) +PostUpdateEverything()[ov] +SegmentIntersectsRect(Vector2,Vector2,Rectangle)[s] +DistanceToWire(PoleLink,Vector2,Vector2,Vector2) +GetSwayedPoint(PowerPoleCrossboardSystem,PowerPoleTileEntityBase,int)[s]
     class CachedLink
-      +Link:PoleLink +Bounds:Rectangle +Resolved:bool +RestA:Vector2 +RestB:Vector2 +RestChord:float +Reach:float +Rope:PoleRope
+      +Link:PoleLink +Bounds:Rectangle +Resolved:bool +RestA:Vector2 +RestB:Vector2 +RestChord:float +Reach:float +Rope:PoleRope +BothOn:bool
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]

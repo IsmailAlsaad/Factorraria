@@ -46,8 +46,8 @@ namespace Factorraria.Common.Systems
 
         // P9: how the hanging wire sags. Pure geometry, no state: the client drawing, the cutter's hit-test and the server's click plausibility
         // box all read the same numbers (the server only to size its box, never to decide power or links).
-        public float SlackFraction = 0.02f;        // the wire is this much longer than the straight distance between its connection points...
-        public float MinSlackPixels = 8f;          // ...but at least this many pixels longer
+        public float SlackFraction = 0.01f;        // the wire is this much longer than the straight distance between its connection points...
+        public float MinSlackPixels = 6f;          // ...but at least this many pixels longer
         public float SagReachMultiplier = 1.6f;    // room (x the resting sag) for the wire swinging in wind or being pushed
         public float SagReachExtraPixels = 24f;
 
