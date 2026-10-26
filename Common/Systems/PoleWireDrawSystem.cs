@@ -147,7 +147,7 @@ namespace Factorraria.Common.Systems
                 spriteBatch.End();
         }
 
-        static Vector2 GetSwayedPoint(PowerPoleCrossboardSystem sway, PowerPoleTileEntityBase pole, int slot)
+        public static Vector2 GetSwayedPoint(PowerPoleCrossboardSystem sway, PowerPoleTileEntityBase pole, int slot)
         {
             int boardIndex = pole.GetLinkPointBoardIndex(slot, out _);
             return pole.GetLinkPointWorldSwayed(slot, sway.GetSwayAngle(pole.Position, boardIndex, pole.SwayScale));

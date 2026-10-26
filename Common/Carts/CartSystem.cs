@@ -736,7 +736,7 @@ namespace Factorraria.Common.Carts
             }
         }
 
-        private static Vector2 GetZoomCorrectedMouseWorld()
+        public static Vector2 GetZoomCorrectedMouseWorld()
         {
             Vector2 mouseScreen = new Vector2(Main.mouseX, Main.mouseY);
             Vector2 transformed = Vector2.Transform(mouseScreen, Matrix.Invert(Main.GameViewMatrix.TransformationMatrix));

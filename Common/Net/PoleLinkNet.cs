@@ -547,7 +547,7 @@ namespace Factorraria.Common.Net
 
         // How much of one wire item the player holds, from this process' copy of the inventory: the cursor item, then slots 0-57. On the
         // server the cursor item is slot 58 of the mirrored inventory; where the player is local it is Main.mouseItem.
-        static int CountWire(Player player, int itemType)
+        public static int CountWire(Player player, int itemType)
         {
             int total = 0;
 

@@ -140,6 +140,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
 
             // Hanging wires last, so they end on top of the crossarm tips (P5). Its own batch, only when a wire is on screen.
             ModContent.GetInstance<PoleWireDrawSystem>().DrawLinks(spriteBatch);
+
+            // Pending-link hologram and connection point markers (P6), on top of the finished wires.
+            ModContent.GetInstance<PoleLinkInputSystem>().DrawWorld(spriteBatch);
         }
 
         static void BeginBatch(SpriteBatch spriteBatch)

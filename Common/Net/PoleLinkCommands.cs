@@ -167,4 +167,27 @@ namespace Factorraria.Common.Net
             }
         }
     }
+
+    // TEMPORARY (patch P6, remove in Phase 10 with the rest of this file): toggles the tile coordinates drawn next to the cursor.
+    public class PoleTilesCommand : ModCommand
+    {
+        public override string Command => "ptiles";
+        public override CommandType Type => CommandType.Chat;
+        public override string Usage => "/ptiles [on|off]";
+        public override string Description => "Power pole test (P6): shows or hides the tile coordinates under the cursor.";
+
+        public override void Action(CommandCaller caller, string input, string[] args)
+        {
+            PoleLinkInputSystem system = ModContent.GetInstance<PoleLinkInputSystem>();
+
+            if (args.Length > 0 && args[0].Equals("on", StringComparison.OrdinalIgnoreCase))
+                system.ShowTileDebug = true;
+            else if (args.Length > 0 && args[0].Equals("off", StringComparison.OrdinalIgnoreCase))
+                system.ShowTileDebug = false;
+            else
+                system.ShowTileDebug = !system.ShowTileDebug;
+
+            caller.Reply("ptiles: tile coordinate debug " + (system.ShowTileDebug ? "on" : "off"), Color.LightGreen);
+        }
+    }
 }
