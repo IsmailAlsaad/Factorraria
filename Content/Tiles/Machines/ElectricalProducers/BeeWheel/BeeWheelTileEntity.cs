@@ -29,8 +29,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
         public int SafetyRescanTicks => 120;            // scan again at least this often even when no change was reported
 
         public float MinWheelSpeed => 0.001f;           // radians per tick with the fewest hives
-        public float MaxWheelSpeed => 0.12f;           // radians per tick at HivesForMaxSpeed hives or more
-        public int HivesForMaxSpeed => 200;
+        public float MaxWheelSpeed => 0.3f;           // radians per tick at HivesForMaxSpeed hives or more
+        public int HivesForMaxSpeed => 300;
         public float WheelSpeedEase => 0.03f;          // 0..1, how fast the wheel speeds up and slows down
 
         public float BigBeeWeight => 1f;               // relative frequency of the big bee ...
@@ -389,7 +389,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
 
         void UpdateBees(bool running)
         {
-            Vector2 target = WheelCenter;
+            Vector2 target = WheelCenter + new Vector2(0f,0f);
 
             for (int i = bees.Count - 1; i >= 0; i--)
             {
