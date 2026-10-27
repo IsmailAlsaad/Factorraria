@@ -118,6 +118,7 @@ namespace Factorraria.Common.Machines
 
                 Color tint = holoValid ? Color.White * 0.55f : new Color(255, 70, 70) * 0.6f;
                 DrawCanvasCells(spriteBatch, holoDef.OffTexture.Value, holoDef.Canvas, holoTopLeft, 0, tint);
+                holoDef.HologramExtra?.Invoke(spriteBatch, holoTopLeft + new Vector2(holoDef.Canvas.OriginX * 16f, holoDef.Canvas.OriginY * 16f - holoDef.Canvas.YOffset), tint);
             }
 
             if (batchBegun)

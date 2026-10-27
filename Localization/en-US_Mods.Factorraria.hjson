@@ -229,6 +229,11 @@ Items: {
 		DisplayName: Lead Cutter
 		Tooltip: ""
 	}
+
+	BeeWheelItem: {
+		DisplayName: Bee Wheel
+		Tooltip: "Attracts bees from nearby hives to generate power"
+	}
 }
 
 Configs: {
@@ -463,4 +468,5 @@ Tiles: {
 	WoodenPowerPoleTile.MapEntry: Wooden Power Pole
 	PlatinumPowerPoleTile.MapEntry: Platinum Power Pole
 	MeteorHeadStatueTile.MapEntry: Meteor Head Statue
+	BeeWheelTile.MapEntry: Bee Wheel Tile
 }

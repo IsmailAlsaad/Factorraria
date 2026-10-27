@@ -4,6 +4,7 @@ using Factorraria.Content.Tiles.Machines.GeneralMachines.Motors;
 using Factorraria.Content.Tiles.Machines.Autohammer;
 using Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace;
 using Factorraria.Content.Tiles.Machines.GelBurner;
+using Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel;
 using Factorraria.Content.Tiles.Machines.Solidifier;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -135,6 +136,16 @@ namespace Factorraria.Common.Machines
             MachineVisualRegistry.Register<RoboticArmTileEntity>(ModContent.TileType<RoboticArmTile>(),
                 basePath + "ElectricalConsumers/RoboticArm/RoboticArm_On",
                 basePath + "ElectricalConsumers/RoboticArm/RoboticArm_Off");
+
+            // Bee Wheel: ONE base texture (no On/Off look), so the same path goes in both slots. 5x5 canvas = the footprint (no overhang).
+            // The wheel itself (BeeWheel.png) is drawn by BeeWheelTileEntity; HologramExtra adds it to the placement preview.
+            MachineUIRegistry.Register(ModContent.TileType<BeeWheelTile>(), new BeeWheelUIState());
+            MachineVisualRegistry.RegisterOverhang<BeeWheelTileEntity>(ModContent.TileType<BeeWheelTile>(),
+                basePath + "ElectricalProducers/BeeWheel/BeeWheel_Base",
+                basePath + "ElectricalProducers/BeeWheel/BeeWheel_Base",
+                footprintWidth: 5, footprintHeight: 5,
+                originX: 0, originY: 0);
+            MachineVisualRegistry.Definitions[ModContent.TileType<BeeWheelTile>()].HologramExtra = BeeWheelVisual.DrawHologram;
 
             // Power poles: the same UI class for both variants (electric icon only), one instance per tile type.
             MachineUIRegistry.Register(ModContent.TileType<WoodenPowerPoleTile>(), new PowerPoleUIState());

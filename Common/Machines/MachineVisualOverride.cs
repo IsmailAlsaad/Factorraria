@@ -138,6 +138,10 @@ namespace Factorraria.Common.Machines
         public List<LiquidOverlayLayer> LiquidOverlays = new();
         public MachineCanvas Canvas;   // null = On and Off are normal footprint-sized sheets
 
+        // Optional extra drawn inside the placement hologram, on top of the canvas (for parts the machine's entity draws itself, like the Bee Wheel's wheel).
+        // Arguments: the sprite batch (already begun, world space), the footprint's top-left in world pixels, and the hologram tint (faded, or red when invalid).
+        public Action<SpriteBatch, Vector2, Color> HologramExtra;
+
         // ---- Startup / shutdown animations (optional last two parameters of MachineVisualRegistry.Register / RegisterOverhang) ----
         // Frame count is detected from the texture height and the speed is the config's animation speed, same as the On texture.
         public int TileType;
