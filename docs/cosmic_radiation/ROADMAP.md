@@ -18,6 +18,8 @@ Factorraria cosmic radiation power source: energetic particles fall from space, 
 - **Off-screen logic is statistical** and gives the same result as simulating the particles while the player watches. Visuals are cosmetic.
 - **Particle visual for now:** a small colored circle with a straight trail that fades out gradually. Custom absorb and re-emit audio comes later (Phase C7 only leaves hooks).
 - **Multiplayer:** server authoritative, clients only draw (agreed).
+- **Balancing parameters must be exposed (added 2026-10-28):** the last phase (C9) puts every tunable in one known place with a description, so during gameplay and testing Ismail knows where each variable is and what it does. From C1 on, every tunable is a public field on `CosmicRadiationSystem` marked `[CosmicParam(description, unit)]`, and `/fcosmic params` lists them all with their current values.
+- **Open items (section 8) resolved with the defaults (2026-10-28).**
 
 ### Assumptions (change any of these before the patch that uses them)
 - **A1. Thunder energy formula.** `Energy = (sum of BaseEnergy of every particle absorbed into the cluster) x (product of the multipliers of every ionized block in the cluster)`. Checks: one white hit = 64 x 3 = 192; one red hit on 11 blocks = 1 x 1.1^11 = 2.85; a white cluster touching that red cluster = (64 + 1) x 3 x 1.1^11 = 556. Base energy adds, multipliers multiply.
@@ -102,6 +104,7 @@ This has the same expected arrivals at every receiver as simulating all the worl
 |---|---|
 | `Common/Cosmic/CosmicColor.cs` | enum, per-color table (base energy, multiplier, cluster range, gemspark tile, draw color), `Next()` |
 | `Common/Cosmic/CosmicHeatmap.cs` | color order, weights, lookup table, save/load, join provider |
+| `Common/Cosmic/CosmicParamAttribute.cs` | `[CosmicParam(description, unit)]` marker for balancing fields, read by `/fcosmic params` (and by the C9 config) |
 | `Common/Cosmic/CosmicRayTracer.cs` | pure code: DDA walk against `ITileProbe`, returns first outcome and distance |
 | `Common/Cosmic/CosmicClusterMath.cs` | pure code: flood fill, A1 energy |
 | `Common/Cosmic/CosmicReceiverIndex.cs` + `CosmicReceiverGlobalTile.cs` | gemspark and cloud tiles, rig grouping, sampling areas |
@@ -120,7 +123,7 @@ Each phase is one chat and one patch script (`patch_cosmic_c<n>_<name>.ps1`). Ev
 Authority: server saves and generates; clients receive on join.
 - `CosmicColor` and the table (A2 values). `CosmicRadiationSystem` shell with the public tunables listed in section 7.
 - `CosmicHeatmap`: shuffle on first load of a world that has none (and after world generation), `SaveWorldData` / `LoadWorldData`, the lookup table, `JoinSync` provider `"cosmic-heatmap"`.
-- `/fcosmic heat` prints the color order, section width and the 7 weights at the player's column.
+- `/fcosmic heat [tileX]` prints the color order by section and each color's share of new particles at a column. `/fcosmic params` lists every `[CosmicParam]` field with value, unit and description (grows into the C9 exposure step).
 Tests: the order is stable after save and reload; weights add up and show a peak in each section with a floor of about 0.08 elsewhere; a second client sees the same order.
 
 ### C2. Receiver index, ray tracer, event heap (no gameplay)
@@ -169,6 +172,15 @@ Tests: space looks alive but a decor particle never changes any counter; sparkle
 - Profile with a big sky farm (budget: average server cost under 0.2 ms per tick for 5 rigs, client under 1500 draws), tune the section 7 numbers with Ismail, check join and leave mid-cascade, world reload, hot reload of the tunables, remove the temporary commands that should not ship (section 10).
 - Update this file and `docs/multiplayer/ROADMAP.md`.
 
+### C9. Expose all balancing parameters (the last step, requested by Ismail 2026-10-28)
+Goal: during gameplay and testing, every variable he may want to change is in one known place, and says what it does.
+- A `CosmicBalanceConfig : ModConfig` (server side, so in multiplayer every player gets the host's values; shown in the in-game Mod Config screen; applied live) holding every `[CosmicParam]` field: the per-color tables (base energy, multiplier, cluster min and max), heatmap shape, spawning and flight, cascade angles, cloud and ionization, strike and grid, limits, client visuals. Grouped under headers in that order, each with a plain-English tooltip, its unit and its default.
+- `CosmicRadiationSystem` reads the config values (the config writes into the system fields when it changes, so no code path reads two copies). Changing one in game re-applies what depends on it (heatmap table, rig sampling, particle pool size).
+- `/fcosmic params` shows default and current value next to each description; `/fcosmic set <name> <value>` changes one for quick testing without the config screen (temporary, removed with the other debug commands).
+- Section 7 of this file becomes the master list: name, default, unit, what it does, what raising it does, and the file where code reads it, so each variable can be found in the code.
+- Safety: every field has a minimum and a maximum, invalid values are refused with a message, and a config change mid-cascade cannot crash the event heap.
+Tests: change each parameter in game and see the effect named in its description; the values persist across restarts; in multiplayer the host's values win and a client cannot change them.
+
 ### Not scheduled (after the phases above)
 Battery (stores a surge), custom audio, lightning damage to players, a lightning rod tile, a surge readout in the machine UI, per-color gemspark visual glow while absorbing.
 
@@ -193,7 +205,7 @@ Battery (stores a surge), custom audio, lightning damage to players, a lightning
 
 These are starting guesses, tuned in C8.
 
-## 8. Open items needing a decision (defaults are used if you say nothing)
+## 8. Open items (RESOLVED 2026-10-28: Ismail accepted every default listed below)
 1. Which tiles are clouds (A3: all three types).
 2. Other-color gemsparks transparent or blocking (A5: transparent).
 3. Refractory period after a discharge (A9: off).
@@ -204,7 +216,7 @@ These are starting guesses, tuned in C8.
 8. Surge delivery shape until batteries exist (A8: power for 30 ticks).
 
 ## 9. Verification list (checked in code or API before the patch that needs it)
-- **V1.** `TileID` names of the 7 gemsparks, `Cloud`, `RainCloud`, `SnowCloud` (tModLoader 2026.08.3.0 sources). Before C1.
+- **V1. RESOLVED in C1.** `TileID.Sets.Clouds` is vanilla's cloud set (Cloud 189, Rain Cloud 196, Snow Cloud 460; checked in the tModLoader 1.4.4 `TileID` patch) and is what the code uses. Gemspark tile ids are 255 to 261 (lit) and 262 to 268 (offline variants); the code uses only the lit ones, through the names `TileID.AmethystGemspark`, `TopazGemspark`, `SapphireGemspark`, `EmeraldGemspark`, `RubyGemspark`, `DiamondGemspark` and `AmberGemspark` (names written from memory, in item order 1970 to 1976, so the first compile is the check). Offline gemsparks are not receivers.
 - **V2.** Vanilla boundary of the space and sky layers (`Main.worldSurface x 0.35` is used by `ZoneSkyHeight`) and where floating islands sit relative to it, so particles can reach natural cloud islands with `ParticleRange`. Before C1.
 - **V3.** Placing a gemspark or cloud on a client reaches the server through `TilePlaced`; confirm the consumer pattern before C2.
 - **V4.** `Main.tileSolid` for gemspark blocks and clouds, and platforms, for the solid-stop rule. Before C2.
@@ -225,7 +237,7 @@ These are starting guesses, tuned in C8.
 
 One line per patch: `[ ]` not started, `[~]` applied untested, `[x]` tested done.
 
-- [ ] C1 Types, tables, heatmap
+- [~] C1 Types, tables, heatmap (patch_cosmic_c1_heatmap.ps1, applied, untested). BUILT: `CosmicColor` and `CosmicColors` (gemspark tile per color, `Next`, cloud test through `TileID.Sets.Clouds`, draw colors); `CosmicHeatmap` (pure code, tested in `tools/cosmic_tests`: shuffled order, floor plus Gaussian bump weights, 16-tile lookup table, validated read and write); `CosmicRadiationSystem` (every tunable as a `[CosmicParam]` field, heatmap generated on the first world tick on the server or single-player and saved in world data as `CosmicHeatmapOrder`); `CosmicNet` (join provider `cosmic-heatmap`); `/fcosmic heat [tileX]` and `/fcosmic params`. Only `HeatSigmaFraction` and `HeatFloor` are read by code so far. No packet ids are used yet (55 and 56 stay reserved for C6).
 - [ ] C2 Receiver index, ray tracer, event heap
 - [ ] C3 Gemspark absorption and cascade
 - [ ] C4 Cloud ionization and discharge
@@ -233,7 +245,8 @@ One line per patch: `[ ]` not started, `[~]` applied untested, `[x]` tested done
 - [ ] C6 Client particles and network events
 - [ ] C7 Ambient decor, polish, audio hooks
 - [ ] C8 Hardening and balance
+- [ ] C9 Expose all balancing parameters (the last step, requested by Ismail 2026-10-28)
 
 Starting a patch: "Implement cosmic patch C<n>." The patch reads this file from the fresh clone (sections 1, 2, 4, the phase, 7, 9 and Progress) and `docs/multiplayer/ROADMAP.md` section 3, checks that its prerequisites are marked done, states the authority and sync design first, and ends with a next-chat prompt.
 
-Next chat prompt (after the roadmap is committed): "Implement cosmic patch C1 for Factorraria. Clone the repo, read docs/cosmic_radiation/ROADMAP.md (sections 1, 2, 4, 6 C1, 7, 9 and Progress) and docs/multiplayer/ROADMAP.md section 3. Resolve V1 and V2 first, then deliver the patch script. My answers to the open items in section 8: <your answers, or 'use defaults'>."
+Next chat prompt (after C1 applied and tested): "Implement cosmic patch C2 for Factorraria (receiver index, ray tracer, event heap). Clone the repo, read docs/cosmic_radiation/ROADMAP.md (sections 1, 2, 3, 4, 6 C2, 7, 9 and Progress, including the C1 line) and docs/multiplayer/ROADMAP.md section 3. Check that C1 is marked tested, resolve V3 and V4 first, then deliver the patch script. All section 8 open items use their defaults (accepted 2026-10-28)."

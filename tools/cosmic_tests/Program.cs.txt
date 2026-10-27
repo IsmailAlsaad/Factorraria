@@ -1,0 +1,26 @@
+﻿using System; using System.IO; using Factorraria.Common.Cosmic;
+namespace Factorraria.Common.Cosmic { public enum CosmicColor : byte { White, Violet, Blue, Green, Yellow, Orange, Red } }
+class P { static int fail=0; static void Check(bool ok,string m){ Console.WriteLine((ok?"pass ":"FAIL ")+m); if(!ok)fail++; }
+static void Main(){
+ var rng=new Random(1); var h=new CosmicHeatmap();
+ Check(!h.Ready,"not ready at start"); Check(h.Weight((CosmicColor)0,10,8400,0.08f,0.35f)==0,"weight 0 when not ready");
+ h.Generate(rng); Check(h.Ready,"ready after generate");
+ var seen=new bool[7]; foreach(var b in h.Order) seen[b]=true; Check(Array.TrueForAll(seen,x=>x),"order is a permutation");
+ int W=8400; float sw=W/7f;
+ for(int c=0;c<7;c++){ int sec=h.SectionOfColor((CosmicColor)c); int center=(int)((sec+0.5f)*sw); float peak=h.Weight((CosmicColor)c,center,W,0.08f,0.35f);
+   Check(Math.Abs(peak-1f)<0.02f,"peak ~1 for color "+c+" at its section center ("+peak+")");
+   int far=sec<3? W-1 : 0; float low=h.Weight((CosmicColor)c,far,W,0.08f,0.35f); Check(low>=0.08f && low<0.2f,"floor-ish far away for color "+c+" ("+low+")"); }
+ // neighbor bleed
+ var col=h.HotColorOfSection(3); int edge=(int)(3*sw); float bleedIn=h.Weight(h.HotColorOfSection(2),edge+100,W,0.08f,0.35f); Check(bleedIn>0.3f,"neighbor bleeds across the border ("+bleedIn+")");
+ // table == exact within a column
+ float ex=h.WeightExact((CosmicColor)2,1234,W,0.08f,0.35f); float tb=h.Weight((CosmicColor)2,1234,W,0.08f,0.35f); Check(Math.Abs(ex-tb)<0.03f,"table close to exact ("+ex+" vs "+tb+")");
+ // pick frequencies: hot color most common at its center
+ var counts=new int[7]; int cx=(int)((h.SectionOfColor(CosmicColor.Red)+0.5f)*sw); for(int i=0;i<20000;i++) counts[(int)h.Pick(cx,W,0.08f,0.35f,rng)]++;
+ int best=0; for(int i=1;i<7;i++) if(counts[i]>counts[best]) best=i; Check(best==6,"red is the most common at the red hot spot"); bool all=true; for(int i=0;i<7;i++) if(counts[i]==0) all=false; Check(all,"every color still appears (floor)");
+ // save/read round trip and rejection
+ var ms=new MemoryStream(); h.Write(new BinaryWriter(ms)); ms.Position=0; var h2=new CosmicHeatmap(); Check(h2.Read(new BinaryReader(ms)) && h2.Ready,"read ok"); Check(Array.Equals(h.Order.Length,h2.Order.Length)&&System.Linq.Enumerable.SequenceEqual(h.Order,h2.Order),"order round trips");
+ Check(!h2.SetOrder(new byte[]{0,0,1,2,3,4,5}),"duplicate order refused"); Check(!h2.SetOrder(new byte[]{0,1,2}),"short order refused"); Check(System.Linq.Enumerable.SequenceEqual(h.Order,h2.Order),"refused order keeps old state");
+ var ms2=new MemoryStream(); new CosmicHeatmap().Write(new BinaryWriter(ms2)); ms2.Position=0; Check(h2.Read(new BinaryReader(ms2)) && !h2.Ready,"not-ready state round trips as not ready");
+ // other world sizes
+ foreach(int w in new[]{4200,6400,8400}){ var hh=new CosmicHeatmap(); hh.Generate(new Random(5)); float s=hh.Weight((CosmicColor)0,w-1,w,0.08f,0.35f); Check(s>0,"world "+w+" last column fine"); }
+ Console.WriteLine(fail==0?"ALL PASSED":"FAILURES: "+fail); } }
