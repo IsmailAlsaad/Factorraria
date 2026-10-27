@@ -176,7 +176,7 @@ namespace Factorraria.Common.Cosmic
 
             caller.Reply("  sampling: " + sim.Rigs + " rigs in " + sim.SamplingStrips + " strips, area " + Inv(sim.SamplingAreaTiles, "0") + " tiles^2, expecting about " + Inv(system.RateDensity * sim.DensitySum, "0.##") + " new rays per second.", Color.White);
 
-            caller.Reply("  rays: sampled " + sim.RaysSampled + ", traced " + sim.RaysTraced + " (" + Inv(sim.RaysPerSecond, "0.#") + "/s over the last second); died on solid " + sim.DeadSolid + ", out of range " + sim.DeadRange + "; test rays fired " + sim.DebugRays + ".", Color.White);
+            caller.Reply("  rays: sampled " + sim.RaysSampled + ", traced " + sim.RaysTraced + " (" + Inv(sim.RaysPerSecond, "0.#") + "/s over the last second); blocked by lead bricks or the world edge " + sim.DeadSolid + ", out of range " + sim.DeadRange + "; test rays fired " + sim.DebugRays + ".", Color.White);
             caller.Reply("  absorbed by gemsparks: " + PerColor(sim.Absorbed), Color.White);
             caller.Reply("  hit clouds: " + PerColor(sim.Ionized), Color.White);
             caller.Reply("  queue: " + sim.Heap.Count + " now, peak " + sim.PeakQueue + ", dropped " + sim.Dropped + " (cap " + system.MaxQueuedEvents + ").", Color.White);

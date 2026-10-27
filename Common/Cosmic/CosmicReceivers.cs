@@ -66,8 +66,9 @@ namespace Factorraria.Common.Cosmic
             if (code == CosmicReceiverIndex.CloudCode)
                 return CosmicTileKind.Cloud;
 
-            // Platforms are solid AND solid-top; they let rays through (same test as Common/Carts/CartCargo.cs).
-            return Main.tileSolid[type] && !Main.tileSolidTop[type] ? CosmicTileKind.Solid : CosmicTileKind.Empty;
+            // Cosmic particles pass through everything except gemsparks, clouds and Lead Bricks (an actuated-off brick was
+            // already skipped above). Lead Brick is the only blocker.
+            return type == TileID.LeadBrick ? CosmicTileKind.Solid : CosmicTileKind.Empty;
         }
     }
 

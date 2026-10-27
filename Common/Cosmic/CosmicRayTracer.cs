@@ -5,10 +5,10 @@ namespace Factorraria.Common.Cosmic
     // What a ray sees in one tile. Pure code (no Terraria types) so it can be tested in tools/cosmic_tests.
     public enum CosmicTileKind : byte
     {
-        Empty = 0,      // air, walk-through tiles, platforms, actuated tiles: the ray flies on
+        Empty = 0,      // every tile that is not a gemspark, a cloud or a Lead Brick (terrain, platforms, actuated tiles): the ray flies on
         Gemspark = 1,   // a lit gemspark block; gemsparkColor says which color it absorbs
         Cloud = 2,      // Cloud, Rain Cloud or Snow Cloud
-        Solid = 3       // any other solid block, and everything outside the world: the ray dies here
+        Solid = 3       // a blocker: a Lead Brick tile, and everything outside the world; the ray dies here
     }
 
     // The ray tracer asks the world through this. The Terraria implementation is CosmicTileProbe (Main.tile); the tests use a grid.
@@ -21,7 +21,7 @@ namespace Factorraria.Common.Cosmic
     public enum CosmicRayEnd : byte
     {
         Range = 0,      // flew the whole range without hitting anything that matters
-        Solid = 1,      // stopped by a solid block (or the world edge)
+        Solid = 1,      // stopped by a Lead Brick (or the world edge)
         Absorb = 2,     // absorbed by a gemspark of its own color
         Ionize = 3      // absorbed by a cloud block (the roll succeeded)
     }
@@ -40,7 +40,7 @@ namespace Factorraria.Common.Cosmic
     //   gemspark of the ray's color absorbed (Absorb)
     //   gemspark of another color   continue (A5)
     //   cloud                       roll cloudAbsorbChance, success = Ionize, otherwise continue (A4)
-    //   any other solid tile        the ray dies (Solid)
+    //   Lead Brick (or world edge)  the ray dies (Solid); every other tile is transparent
     //   range exhausted             the ray dies (Range)
     public static class CosmicRayTracer
     {

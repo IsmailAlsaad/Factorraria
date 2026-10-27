@@ -437,7 +437,7 @@ namespace Factorraria.Common.Cosmic
                 case CosmicRayEnd.Ionize:
                     return head + "hit a cloud block at (" + r.TileX + ", " + r.TileY + ")" + tail + ", arrives in " + ticks + " ticks" + (queued ? "" : " (the queue is full, the outcome was dropped)");
                 case CosmicRayEnd.Solid:
-                    return head + "stopped by a solid block at (" + r.TileX + ", " + r.TileY + ")" + tail;
+                    return head + "blocked by a lead brick (or the world edge) at (" + r.TileX + ", " + r.TileY + ")" + tail;
                 default:
                     return head + "flew the full range of " + s.ParticleRange.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " tiles without hitting a receiver";
             }
