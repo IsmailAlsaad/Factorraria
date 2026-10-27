@@ -23,6 +23,9 @@ namespace Factorraria.Common.Cosmic
 
         public CosmicHeatmap Heatmap = new CosmicHeatmap();
 
+        // The receiver index, ray sampler and event queue (patch C2). Server and single-player only; never saved.
+        public CosmicSimulation Sim = new CosmicSimulation();
+
         // ------------------------------------------------------------ per-color tables (index = CosmicColor value)
         // Order in every table: White, Violet, Blue, Green, Yellow, Orange, Red.
 
@@ -62,6 +65,15 @@ namespace Factorraria.Common.Cosmic
 
         [CosmicParam("How often the server samples new particles for each sky rig (used from C2).", "ticks")]
         public int SampleStepTicks = 10;
+
+        [CosmicParam("Where the particle band ends, as a fraction of the world surface depth (vanilla's space layer ends at 0.35). Particles start between the top of the world and this depth, and get rarer the lower they start (used from C2).", "fraction of worldSurface")]
+        public float SpaceBottomFraction = 0.35f;
+
+        [CosmicParam("How many 8-tile-wide strips of the sky the receiver scan reads per tick while the world is first indexed (used from C2).", "strips/tick")]
+        public int ScanStripsPerTick = 10;
+
+        [CosmicParam("How many strips the slow re-check reads per tick afterwards. It repairs the receiver index when a tile changes without a hook (gemspark wire toggles, other mods). 0 = off (used from C2).", "strips/tick")]
+        public int ResyncStripsPerTick = 1;
 
         // ------------------------------------------------------------ cascade (C3)
 
@@ -113,16 +125,23 @@ namespace Factorraria.Common.Cosmic
         {
             // Server and single-player only. A client waits for the join provider. Generating here (not in OnWorldLoad) is safe
             // whatever order tModLoader calls LoadWorldData and OnWorldLoad in: it only runs once the world is fully loaded.
-            if (Main.netMode == NetmodeID.MultiplayerClient || Heatmap.Ready)
+            if (Main.netMode == NetmodeID.MultiplayerClient)
                 return;
 
-            Heatmap.Generate(new Random());
-            FactorrariaNet.Log("[Cosmic] generated a new heatmap for this world, order by section: " + OrderText());
+            if (!Heatmap.Ready)
+            {
+                Heatmap.Generate(new Random());
+                FactorrariaNet.Log("[Cosmic] generated a new heatmap for this world, order by section: " + OrderText());
+            }
+
+            // Patch C2: receiver index, particle sampling and the event queue (server and single-player only).
+            Sim.Update(this);
         }
 
         public override void OnWorldUnload()
         {
             Heatmap.Clear();
+            Sim.Reset();
         }
 
         public override void SaveWorldData(TagCompound tag)

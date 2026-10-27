@@ -1,0 +1,291 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Factorraria.Common.Cosmic;
+
+namespace Factorraria.Common.Cosmic { public enum CosmicColor : byte { White, Violet, Blue, Green, Yellow, Orange, Red } }
+
+// A grid world for the tests: Empty by default, Solid outside.
+class GridProbe : ITileProbe
+{
+    public readonly int W, H;
+    public readonly CosmicTileKind[,] Kind;
+    public readonly CosmicColor[,] Gem;
+    public GridProbe(int w, int h) { W = w; H = h; Kind = new CosmicTileKind[w, h]; Gem = new CosmicColor[w, h]; }
+    public CosmicTileKind Probe(int x, int y, out CosmicColor c)
+    {
+        c = CosmicColor.White;
+        if (x < 0 || y < 0 || x >= W || y >= H) return CosmicTileKind.Solid;
+        c = Gem[x, y];
+        return Kind[x, y];
+    }
+    public void Set(int x, int y, CosmicTileKind k, CosmicColor c = CosmicColor.White) { Kind[x, y] = k; Gem[x, y] = c; }
+}
+
+class P
+{
+    static int fail = 0;
+    static void Check(bool ok, string m) { Console.WriteLine((ok ? "pass " : "FAIL ") + m); if (!ok) fail++; }
+
+    static void Main()
+    {
+        var rng = new Random(7);
+
+        // ------------------------------------------------------------ ray tracer
+        var g = new GridProbe(300, 300);
+        CosmicRayResult r;
+
+        r = CosmicRayTracer.Trace(g, 50.5f, 0.5f, 0, 1, CosmicColor.Red, 100, 0.5f, rng);
+        Check(r.End == CosmicRayEnd.Range, "straight down through air: range end");
+
+        g.Set(50, 40, CosmicTileKind.Gemspark, CosmicColor.Red);
+        r = CosmicRayTracer.Trace(g, 50.5f, 0.5f, 0, 1, CosmicColor.Red, 100, 0.5f, rng);
+        Check(r.End == CosmicRayEnd.Absorb && r.TileX == 50 && r.TileY == 40 && Math.Abs(r.Distance - 39.5f) < 0.01f, "straight down: same color absorbed at (50,40), distance " + r.Distance);
+
+        r = CosmicRayTracer.Trace(g, 50.5f, 0.5f, 0, 1, CosmicColor.Blue, 100, 0.5f, rng);
+        Check(r.End == CosmicRayEnd.Range, "other color gemspark is transparent");
+
+        g.Set(50, 60, CosmicTileKind.Solid);
+        r = CosmicRayTracer.Trace(g, 50.5f, 0.5f, 0, 1, CosmicColor.Blue, 100, 0.5f, rng);
+        Check(r.End == CosmicRayEnd.Solid && r.TileY == 60, "other color passes the gemspark and stops at solid (50,60)");
+
+        r = CosmicRayTracer.Trace(g, 50.5f, 0.5f, 0, 1, CosmicColor.Red, 100, 0.5f, rng);
+        Check(r.End == CosmicRayEnd.Absorb && r.TileY == 40, "same color is absorbed before the solid behind it");
+
+        g.Set(50, 40, CosmicTileKind.Empty);
+        g.Set(50, 60, CosmicTileKind.Empty);
+
+        g.Set(60, 45, CosmicTileKind.Gemspark, CosmicColor.Green);
+        CosmicRayTracer.DirectionFromTilt(5f, out float dx, out float dy);
+        // a ray tilted 5 degrees to the right from (51.0, 0.0) moves 45 * tan(5) = 3.94 tiles sideways by row 45: hits x = 54, not 60
+        r = CosmicRayTracer.Trace(g, 51.0f, 0.0f, dx, dy, CosmicColor.Green, 100, 0, rng);
+        Check(r.End == CosmicRayEnd.Range, "tilted ray misses a gemspark outside its cone");
+        float sx = 60.5f - 45.5f * MathF.Tan(5f * MathF.PI / 180f);
+        r = CosmicRayTracer.Trace(g, sx, 0.0f, dx, dy, CosmicColor.Green, 100, 0, rng);
+        Check(r.End == CosmicRayEnd.Absorb && r.TileX == 60 && r.TileY == 45, "tilted ray aimed at (60,45) absorbs there (" + r.End + " " + r.TileX + "," + r.TileY + ")");
+        g.Set(60, 45, CosmicTileKind.Empty);
+
+        // range: gemspark at distance 30.5: range 30 misses, range 31 hits
+        g.Set(80, 30, CosmicTileKind.Gemspark, CosmicColor.White);
+        r = CosmicRayTracer.Trace(g, 80.5f, 0.0f, 0, 1, CosmicColor.White, 29.9f, 0, rng);
+        Check(r.End == CosmicRayEnd.Range, "gemspark just beyond range is not reached");
+        r = CosmicRayTracer.Trace(g, 80.5f, 0.0f, 0, 1, CosmicColor.White, 30.1f, 0, rng);
+        Check(r.End == CosmicRayEnd.Absorb, "gemspark just inside range is reached");
+        g.Set(80, 30, CosmicTileKind.Empty);
+
+        // clouds
+        g.Set(100, 20, CosmicTileKind.Cloud);
+        r = CosmicRayTracer.Trace(g, 100.5f, 0.0f, 0, 1, CosmicColor.Orange, 100, 1f, rng);
+        Check(r.End == CosmicRayEnd.Ionize && r.TileY == 20, "cloud chance 1: ionize");
+        r = CosmicRayTracer.Trace(g, 100.5f, 0.0f, 0, 1, CosmicColor.Orange, 100, 0f, rng);
+        Check(r.End == CosmicRayEnd.Range, "cloud chance 0: passes");
+        int hits = 0; int n = 40000;
+        for (int i = 0; i < n; i++) if (CosmicRayTracer.Trace(g, 100.5f, 0.0f, 0, 1, CosmicColor.Orange, 100, 0.5f, rng).End == CosmicRayEnd.Ionize) hits++;
+        Check(Math.Abs(hits / (double)n - 0.5) < 0.01, "cloud chance 0.5 over one tile ~ 50% (" + hits / (double)n + ")");
+        g.Set(100, 21, CosmicTileKind.Cloud);
+        hits = 0;
+        for (int i = 0; i < n; i++) if (CosmicRayTracer.Trace(g, 100.5f, 0.0f, 0, 1, CosmicColor.Orange, 100, 0.5f, rng).End == CosmicRayEnd.Ionize) hits++;
+        Check(Math.Abs(hits / (double)n - 0.75) < 0.01, "two cloud tiles in a column ~ 75% (" + hits / (double)n + ")");
+        g.Set(100, 20, CosmicTileKind.Empty); g.Set(100, 21, CosmicTileKind.Empty);
+
+        // starting inside a tile of another color: transparent (a child ray leaves the gemspark that absorbed its parent)
+        g.Set(120, 10, CosmicTileKind.Gemspark, CosmicColor.White);
+        g.Set(120, 30, CosmicTileKind.Gemspark, CosmicColor.Violet);
+        r = CosmicRayTracer.Trace(g, 120.5f, 10.5f, 0, 1, CosmicColor.Violet, 100, 0, rng);
+        Check(r.End == CosmicRayEnd.Absorb && r.TileY == 30, "child ray starting inside a white gemspark leaves it and hits violet at (120,30)");
+        g.Set(120, 10, CosmicTileKind.Empty); g.Set(120, 30, CosmicTileKind.Empty);
+
+        // horizontal and vertical (zero components), edges
+        g.Set(140, 50, CosmicTileKind.Gemspark, CosmicColor.Blue);
+        r = CosmicRayTracer.Trace(g, 130.5f, 50.5f, 1, 0, CosmicColor.Blue, 100, 0, rng);
+        Check(r.End == CosmicRayEnd.Absorb && r.TileX == 140 && Math.Abs(r.Distance - 9.5f) < 0.01f, "horizontal ray hits (140,50)");
+        r = CosmicRayTracer.Trace(g, 150.5f, 50.5f, -1, 0, CosmicColor.Blue, 100, 0, rng);
+        Check(r.End == CosmicRayEnd.Absorb && r.TileX == 140, "ray flying left hits (140,50)");
+        r = CosmicRayTracer.Trace(g, 5.5f, 5.5f, -1, 0, CosmicColor.Blue, 100, 0, rng);
+        Check(r.End == CosmicRayEnd.Solid, "world edge stops the ray (Solid)");
+        r = CosmicRayTracer.Trace(g, 5.5f, 5.5f, 0, 0, CosmicColor.Blue, 100, 0, rng);
+        Check(r.End == CosmicRayEnd.Range && r.Distance == 0, "zero direction: no ray");
+        g.Set(140, 50, CosmicTileKind.Empty);
+
+        // brute force comparison on a random world: the tile walk must find the same first tile as a very fine march
+        var rw = new GridProbe(200, 200);
+        for (int x = 0; x < 200; x++) for (int y = 0; y < 200; y++)
+        {
+            double roll = rng.NextDouble();
+            if (roll < 0.04) rw.Set(x, y, CosmicTileKind.Solid);
+            else if (roll < 0.07) rw.Set(x, y, CosmicTileKind.Gemspark, (CosmicColor)rng.Next(7));
+            else if (roll < 0.09) rw.Set(x, y, CosmicTileKind.Cloud);
+        }
+        int mismatch = 0, total = 20000;
+        for (int i = 0; i < total; i++)
+        {
+            float px = 20f + (float)rng.NextDouble() * 160f, py = 20f + (float)rng.NextDouble() * 160f;
+            float tilt = (float)(rng.NextDouble() * 360.0);
+            float ddx = MathF.Sin(tilt * MathF.PI / 180f), ddy = MathF.Cos(tilt * MathF.PI / 180f);
+            CosmicColor col = (CosmicColor)rng.Next(7);
+            var a = CosmicRayTracer.Trace(rw, px, py, ddx, ddy, col, 40f, 1f, rng);
+            // brute force march (cloud chance 1, so any cloud ionizes)
+            CosmicRayEnd end = CosmicRayEnd.Range; int bx = 0, by = 0;
+            for (double t = 0; t <= 40.0; t += 0.002)
+            {
+                int tx = (int)Math.Floor(px + ddx * t), ty = (int)Math.Floor(py + ddy * t);
+                var k = rw.Probe(tx, ty, out CosmicColor gc);
+                if (k == CosmicTileKind.Solid) { end = CosmicRayEnd.Solid; bx = tx; by = ty; break; }
+                if (k == CosmicTileKind.Gemspark && gc == col) { end = CosmicRayEnd.Absorb; bx = tx; by = ty; break; }
+                if (k == CosmicTileKind.Cloud) { end = CosmicRayEnd.Ionize; bx = tx; by = ty; break; }
+            }
+            bool same = a.End == end && (end == CosmicRayEnd.Range || (a.TileX == bx && a.TileY == by));
+            if (!same) mismatch++;
+        }
+        Check(mismatch <= total * 0.003, "tile walk agrees with a fine march on " + total + " random rays (" + mismatch + " differ, corner cases only)");
+
+        // ------------------------------------------------------------ event heap
+        var heap = new CosmicEventHeap();
+        var order = new List<long>();
+        for (int i = 0; i < 5000; i++) { long t = rng.Next(0, 300); order.Add(t); heap.Push(new CosmicQueuedEvent { Tick = t, TileX = i }); }
+        Check(heap.Count == 5000, "heap holds 5000 events");
+        long prevT = -1; int prevSeq = -1; bool sorted = true; bool fifo = true;
+        while (heap.Count > 0)
+        {
+            var e = heap.Pop();
+            if (e.Tick < prevT) sorted = false;
+            if (e.Tick == prevT && e.TileX < prevSeq) fifo = false;
+            prevT = e.Tick; prevSeq = e.TileX;
+        }
+        Check(sorted, "heap pops in tick order");
+        Check(fifo, "events with the same tick keep their push order");
+        Check(!heap.TryPeek(out _), "empty heap peeks nothing");
+        heap.Push(new CosmicQueuedEvent { Tick = 5 }); heap.Clear(); Check(heap.Count == 0, "clear empties the heap");
+
+        // ------------------------------------------------------------ receiver index
+        var idx = new CosmicReceiverIndex();
+        Check(idx.Add(10, 20, 3) && !idx.Add(10, 20, 3), "add is idempotent");
+        Check(idx.Add(11, 25, CosmicReceiverIndex.CloudCode) && idx.Total == 2 && idx.CloudCount == 1 && idx.GemsparkCount(3) == 1, "counts per kind");
+        Check(idx.Add(10, 20, 4) && idx.GemsparkCount(3) == 0 && idx.GemsparkCount(4) == 1 && idx.Total == 2, "changing the code of a tile moves the count");
+        Check(idx.TryGetYRange(1, out int mn, out int mx) && mn == 20 && mx == 25, "y range of strip 1 is 20..25");
+        Check(idx.Remove(11, 25) && !idx.Remove(11, 25) && idx.Total == 1, "remove is idempotent");
+        Check(idx.TryGetYRange(1, out mn, out mx) && mn == 20 && mx == 20, "y range recomputed after a removal");
+        Check(idx.Remove(10, 20) && idx.StripCount == 0 && !idx.TryGetYRange(1, out _, out _), "empty strip disappears");
+        idx.MaxY = 100;
+        Check(!idx.Add(5, 101, 0) && idx.Add(5, 100, 0), "rows below MaxY are not indexed");
+        idx.Clear();
+        idx.Add(8, 10, 1); idx.Add(9, 11, 1);
+        int ver = idx.Version;
+        idx.ReplaceStrip(1, new List<(int, int, byte)> { (8, 10, 1), (9, 11, 1) });
+        Check(idx.Version == ver, "replacing a strip with identical content changes nothing");
+        idx.ReplaceStrip(1, new List<(int, int, byte)> { (8, 10, 1), (12, 40, CosmicReceiverIndex.CloudCode) });
+        Check(idx.Total == 2 && idx.CloudCount == 1 && idx.GemsparkCount(1) == 1 && idx.Version != ver, "replacing a strip fixes counts");
+        idx.ReplaceStrip(1, new List<(int, int, byte)>());
+        Check(idx.Total == 0 && idx.StripCount == 0, "replacing with nothing empties the strip");
+
+        // ------------------------------------------------------------ sampling maths
+        Check(Math.Abs(CosmicSampling.AltitudeIntegral(0, 100, 100) - 50f) < 1e-3, "altitude integral over the whole band = B/2");
+        Check(Math.Abs(CosmicSampling.AltitudeIntegral(0, 50, 100) - 37.5f) < 1e-3, "altitude integral over the top half = 37.5");
+        Check(CosmicSampling.AltitudeIntegral(120, 150, 100) == 0f, "no altitude below the band");
+        {
+            double sum = 0; int m = 200000; float y0 = 10, y1 = 70, B = 100;
+            for (int i = 0; i < m; i++) { float y = CosmicSampling.SampleY(y0, y1, B, rng.NextDouble()); sum += y; if (y < y0 - 1e-3 || y > y1 + 1e-3) { Check(false, "SampleY out of range"); break; } }
+            // expected mean of y with density (1 - y/B) on [y0, y1]
+            double num = 0, den = 0; for (int i = 0; i < 100000; i++) { double y = y0 + (y1 - y0) * (i + 0.5) / 100000.0; double w = 1 - y / B; num += y * w; den += w; }
+            Check(Math.Abs(sum / m - num / den) < 0.1, "SampleY mean matches the altitude weighted mean (" + sum / m + " vs " + num / den + ")");
+            int top = 0; for (int i = 0; i < m; i++) if (CosmicSampling.SampleY(0, 100, 100, rng.NextDouble()) < 29.289f) top++;
+            Check(Math.Abs(top / (double)m - 0.5) < 0.01, "half of the particles start in the upper 29.3% of the band (" + top / (double)m + ")");
+        }
+        foreach (double lam in new[] { 0.3, 4.0, 25.0, 100.0 })
+        {
+            double s1 = 0, s2 = 0; int m = 60000;
+            for (int i = 0; i < m; i++) { int k = CosmicSampling.Poisson(lam, rng); s1 += k; s2 += (double)k * k; }
+            double mean = s1 / m, var = s2 / m - mean * mean;
+            Check(Math.Abs(mean - lam) < lam * 0.03 + 0.01 && Math.Abs(var - lam) < lam * 0.08 + 0.02, "Poisson(" + lam + "): mean " + mean.ToString("0.###") + " variance " + var.ToString("0.###"));
+        }
+        Check(CosmicSampling.Poisson(0, rng) == 0 && CosmicSampling.Poisson(-1, rng) == 0, "Poisson of 0 or less is 0");
+
+        // sampling strips for one receiver
+        var list = new List<CosmicSamplingStrip>();
+        var one = new CosmicReceiverIndex(); one.Add(100, 50, 2);   // strip 12
+        CosmicSampling.Build(one, 160f, 5f, 200f, 1000, x => 1f, list);
+        // reach = ceil((160 * tan 5 + 1) / 8) = ceil(15.0/8) = 2 -> strips 10..14, rows [0, 51]
+        Check(list.Count == 5 && list[0].Strip == 10 && list[4].Strip == 14, "one receiver: 5 sampling strips around strip 12");
+        Check(list.All(s => s.Y0 == 0f && Math.Abs(s.Y1 - 51f) < 1e-3), "rows from the world top down to just below the receiver");
+        Check(CosmicSampling.CountRigs(list) == 1, "neighboring strips are one rig");
+        var deep = new CosmicReceiverIndex(); deep.Add(100, 500, 2);
+        CosmicSampling.Build(deep, 160f, 5f, 200f, 1000, x => 1f, list);
+        Check(list.Count == 0, "a receiver deeper than band + range gets no particles");
+        var two = new CosmicReceiverIndex(); two.Add(100, 50, 2); two.Add(600, 60, 2);
+        CosmicSampling.Build(two, 160f, 5f, 200f, 1000, x => 1f, list);
+        Check(list.Count == 10 && CosmicSampling.CountRigs(list) == 2, "two far apart receivers are two rigs");
+        var near = new CosmicReceiverIndex(); near.Add(100, 50, 2); near.Add(118, 60, 2);
+        CosmicSampling.Build(near, 160f, 5f, 200f, 1000, x => 1f, list);
+        Check(CosmicSampling.CountRigs(list) == 1 && list.Select(s => s.Strip).Distinct().Count() == list.Count, "overlapping areas merge into one rig with no strip twice");
+        CosmicSampling.Build(one, 160f, 5f, 200f, 1000, x => 0f, list);
+        Check(list.Count == 0, "zero heat weight: nothing to sample");
+
+        // THE KEY TEST. (a) no ray that can hit a receiver starts outside the sampling strips, (b) the expected number of hits is the
+        // same as simulating every particle in the band.
+        {
+            int W = 400, H = 300; float B = 90f, range = 70f, spread = 5f;
+            var world = new GridProbe(W, H);
+            var index = new CosmicReceiverIndex();
+            // a few floating "islands" of clouds with a gemspark pad, plus some solid ground below
+            void Island(int cx, int cy, int w, int h)
+            {
+                for (int x = cx; x < cx + w; x++) for (int y = cy; y < cy + h; y++)
+                {
+                    bool gem = rng.NextDouble() < 0.4;
+                    if (gem) { var c = (CosmicColor)rng.Next(7); world.Set(x, y, CosmicTileKind.Gemspark, c); index.Add(x, y, (byte)c); }
+                    else { world.Set(x, y, CosmicTileKind.Cloud); index.Add(x, y, CosmicReceiverIndex.CloudCode); }
+                }
+            }
+            Island(40, 30, 12, 3); Island(200, 60, 20, 4); Island(205, 100, 6, 2); Island(330, 20, 3, 3);
+            for (int x = 0; x < W; x++) for (int y = 250; y < H; y++) world.Set(x, y, CosmicTileKind.Solid);
+            for (int x = 120; x < 140; x++) world.Set(x, 80, CosmicTileKind.Solid);   // a roof that blocks some rays
+
+            var strips = new List<CosmicSamplingStrip>();
+            CosmicSampling.Build(index, range, spread, B, W, x => 1f, strips);
+            var byStrip = strips.ToDictionary(s => s.Strip);
+
+            int outside = 0, hitsTotal = 0; int N = 600000;
+            double bruteWeighted = 0;
+            for (int i = 0; i < N; i++)
+            {
+                float px = (float)rng.NextDouble() * W, py = (float)rng.NextDouble() * B;
+                float tilt = ((float)rng.NextDouble() * 2f - 1f) * spread;
+                CosmicRayTracer.DirectionFromTilt(tilt, out float ddx, out float ddy);
+                CosmicColor col = (CosmicColor)rng.Next(7);
+                var res = CosmicRayTracer.Trace(world, px, py, ddx, ddy, col, range, 0.5f, rng);
+                if (res.End == CosmicRayEnd.Absorb || res.End == CosmicRayEnd.Ionize)
+                {
+                    hitsTotal++;
+                    bruteWeighted += 1.0 - py / B;
+                    int s = CosmicReceiverIndex.StripOf((int)px);
+                    if (!byStrip.TryGetValue(s, out CosmicSamplingStrip area) || py < area.Y0 - 1e-3f || py > area.Y1 + 1e-3f) outside++;
+                }
+            }
+            Check(hitsTotal > 1000, "key test: the random world produces plenty of hits (" + hitsTotal + ")");
+            Check(outside == 0, "key test (a): every ray that hits a receiver starts inside a sampling strip (" + outside + " outside of " + hitsTotal + ")");
+
+            // (b) estimate of the expected hits per unit density, two ways. Brute force: uniform starts over the whole band, weighted by altitude.
+            double bruteEstimate = bruteWeighted / N * (W * B);
+            // Sampled: every strip, starts drawn exactly as the server does (SampleY inside the strip's rows, uniform x), weighted by its Density.
+            double sampledEstimate = 0; int per = 40000;
+            foreach (var s in strips)
+            {
+                int h = 0;
+                for (int i = 0; i < per; i++)
+                {
+                    float px = (s.Strip + (float)rng.NextDouble()) * CosmicReceiverIndex.StripWidth;
+                    float py = CosmicSampling.SampleY(s.Y0, s.Y1, B, rng.NextDouble());
+                    float tilt = ((float)rng.NextDouble() * 2f - 1f) * spread;
+                    CosmicRayTracer.DirectionFromTilt(tilt, out float ddx, out float ddy);
+                    var res = CosmicRayTracer.Trace(world, px, py, ddx, ddy, (CosmicColor)rng.Next(7), range, 0.5f, rng);
+                    if (res.End == CosmicRayEnd.Absorb || res.End == CosmicRayEnd.Ionize) h++;
+                }
+                sampledEstimate += s.Density * h / per;
+            }
+            double rel = Math.Abs(bruteEstimate - sampledEstimate) / bruteEstimate;
+            Check(rel < 0.04, "key test (b): expected hits, whole band " + bruteEstimate.ToString("0.0") + " vs sampling strips " + sampledEstimate.ToString("0.0") + " (" + (rel * 100).ToString("0.0") + "% apart)");
+        }
+
+        Console.WriteLine(fail == 0 ? "ALL PASSED" : "FAILURES: " + fail);
+    }
+}

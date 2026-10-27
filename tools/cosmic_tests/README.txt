@@ -6,4 +6,9 @@ Patch C1 (heatmap, pure code):
 
 Copy the .txt file to .cs in a scratch folder next to a console project (any C# 10+ compiler, dotnet SDK or csc), compile and run.
 Every check should print "pass", and the last line should be ALL PASSED.
-Later phases add their pure-code files (ray tracer, cluster math) to this folder.
+Patch C2 (ray tracer, receiver index, sampling maths, event heap, all pure code):
+   Program_C2.cs.txt + Common/Cosmic/CosmicRayTracer.cs, CosmicReceiverIndex.cs, CosmicSampling.cs, CosmicEventHeap.cs
+   Program_C2.cs.txt has its own CosmicColor stand-in too. It is a separate program from Program.cs.txt (both have a Main), so compile one at a time.
+   It includes a brute-force check: every ray that can hit a receiver must start inside a sampling strip, and the expected number of hits must match simulating every particle in the band.
+
+Later phases add their pure-code files (cluster math) to this folder.

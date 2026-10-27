@@ -11,12 +11,16 @@ namespace Factorraria.Common.Cosmic
     // /fcosmic: debug and tuning command for the cosmic radiation source. Stays (heat and params) after Phase C8; see the roadmap.
     //   /fcosmic heat [tileX]   the color order by section and each color's share of the particles at a column
     //   /fcosmic params         every balancing parameter with its value, unit and what it does
+    //   /fcosmic stats [reset]  (C2) receivers, sampling areas, rays, hits per color, queue, cost per tick; "reset" zeroes the counters
+    //   /fcosmic spawn <color> [tx ty]   (C2, temporary) fires one ray straight down at the cursor (single-player) or at a tile
+    //   /fcosmic rescan         (C2) re-reads the sky for gemspark and cloud blocks from the start
+    // stats, spawn and rescan only work where the simulation runs: single-player and the server console, not on a multiplayer client.
     public class CosmicCommand : ModCommand
     {
         public override string Command => "fcosmic";
         public override CommandType Type => CommandType.Chat | CommandType.Console;
-        public override string Usage => "/fcosmic heat [tileX] | params";
-        public override string Description => "Cosmic radiation (C1): show the world's color heatmap, or list every balancing parameter.";
+        public override string Usage => "/fcosmic heat [tileX] | params | stats [reset] | spawn <color> [tx ty] | rescan";
+        public override string Description => "Cosmic radiation: the color heatmap, every balancing parameter, and (C2) simulation stats and a test ray.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -26,6 +30,12 @@ namespace Factorraria.Common.Cosmic
                 Heat(caller, args);
             else if (sub == "params")
                 Params(caller);
+            else if (sub == "stats")
+                Stats(caller, args);
+            else if (sub == "spawn")
+                Spawn(caller, args);
+            else if (sub == "rescan")
+                Rescan(caller);
             else
                 caller.Reply("Usage: " + Usage, Color.OrangeRed);
         }
@@ -103,6 +113,144 @@ namespace Factorraria.Common.Cosmic
                 string unit = string.IsNullOrEmpty(info.Unit) ? "" : " " + info.Unit;
                 caller.Reply(field.Name + " = " + Format(field.GetValue(system)) + unit + "  -  " + info.Description, Color.White);
             }
+        }
+
+        // ------------------------------------------------------------ C2: stats, spawn, rescan
+
+        static bool NeedSimulation(CommandCaller caller, string what)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+                return true;
+
+            caller.Reply("fcosmic " + what + ": the simulation runs on the server. Use it in single-player or in the server console.", Color.OrangeRed);
+            return false;
+        }
+
+        static string Inv(float value, string format = "0.##") => value.ToString(format, CultureInfo.InvariantCulture);
+
+        static string PerColor(long[] counts)
+        {
+            string text = "";
+            for (int c = 0; c < CosmicColors.Count; c++)
+                text += (c > 0 ? ", " : "") + (CosmicColor)c + " " + counts[c];
+            return text;
+        }
+
+        static void Stats(CommandCaller caller, string[] args)
+        {
+            if (!NeedSimulation(caller, "stats"))
+                return;
+
+            CosmicRadiationSystem system = CosmicRadiationSystem.Instance;
+            CosmicSimulation sim = system.Sim;
+
+            if (args.Length > 1 && args[1].ToLowerInvariant() == "reset")
+            {
+                sim.ResetCounters();
+                caller.Reply("fcosmic stats [" + Side() + "]: counters reset (the receiver index and the queue are untouched).", Color.LightGreen);
+                return;
+            }
+
+            if (sim.Fault != null)
+            {
+                caller.Reply("fcosmic stats [" + Side() + "]: the simulation stopped after an error: " + sim.Fault + " (see the log; leave and re-enter the world to restart it)", Color.OrangeRed);
+                return;
+            }
+
+            if (sim.Now == 0)
+            {
+                caller.Reply("fcosmic stats [" + Side() + "]: the simulation has not started yet (it starts on the first world tick, after the heatmap exists).", Color.OrangeRed);
+                return;
+            }
+
+            CosmicReceiverIndex index = sim.Index;
+
+            caller.Reply("fcosmic stats [" + Side() + "]: simulation tick " + sim.Now + ". Particle band: rows 0 to " + Inv(sim.BandBottom, "0") + " (world surface x " + Inv(system.SpaceBottomFraction) + "), receivers are indexed down to row " + Math.Min(index.MaxY, Main.maxTilesY - 1) + ".", Color.LightGreen);
+
+            string gems = "";
+            for (int c = 0; c < CosmicColors.Count; c++)
+                gems += (c > 0 ? ", " : "") + (CosmicColor)c + " " + index.GemsparkCount(c);
+
+            string scan = sim.InitialScanDone ? "first pass done, slow re-check pass " + sim.ScanPasses : "first pass " + sim.ScanPercent + "%";
+            caller.Reply("  receivers: " + index.Total + " in " + index.StripCount + " strips. Cloud blocks " + index.CloudCount + ". Gemsparks: " + gems + ". Scan: " + scan + ".", Color.White);
+
+            caller.Reply("  sampling: " + sim.Rigs + " rigs in " + sim.SamplingStrips + " strips, area " + Inv(sim.SamplingAreaTiles, "0") + " tiles^2, expecting about " + Inv(system.RateDensity * sim.DensitySum, "0.##") + " new rays per second.", Color.White);
+
+            caller.Reply("  rays: sampled " + sim.RaysSampled + ", traced " + sim.RaysTraced + " (" + Inv(sim.RaysPerSecond, "0.#") + "/s over the last second); died on solid " + sim.DeadSolid + ", out of range " + sim.DeadRange + "; test rays fired " + sim.DebugRays + ".", Color.White);
+            caller.Reply("  absorbed by gemsparks: " + PerColor(sim.Absorbed), Color.White);
+            caller.Reply("  hit clouds: " + PerColor(sim.Ionized), Color.White);
+            caller.Reply("  queue: " + sim.Heap.Count + " now, peak " + sim.PeakQueue + ", dropped " + sim.Dropped + " (cap " + system.MaxQueuedEvents + ").", Color.White);
+            caller.Reply("  cost: " + Inv((float)sim.AvgMsPerTick, "0.000") + " ms per tick on average over the last second, worst tick " + Inv((float)sim.MaxMsPerTick, "0.000") + " ms.", Color.White);
+
+            int shown = Math.Min(5, sim.RecentCount);
+            if (shown > 0)
+            {
+                string last = "";
+                for (int i = 0; i < shown; i++)
+                {
+                    CosmicQueuedEvent e = sim.Recent[(sim.RecentCount - 1 - i) % sim.Recent.Length];
+                    last += (i > 0 ? "; " : "") + e.Kind + " " + e.Color + " at (" + e.TileX + ", " + e.TileY + ") tick " + e.Tick;
+                }
+                caller.Reply("  latest arrivals: " + last, Color.White);
+            }
+
+            string ids = "";
+            for (int c = 0; c < CosmicColors.Count; c++)
+                ids += (c > 0 ? ", " : "") + (CosmicColor)c + " " + CosmicColors.GemsparkTile((CosmicColor)c);
+            caller.Reply("  gemspark tile ids used: " + ids + ". If placing a gemspark does not raise its count above, these may be the offline variants.", Color.Gray);
+        }
+
+        static bool TryParseColor(string text, out CosmicColor color)
+        {
+            color = CosmicColor.White;
+            if (!Enum.TryParse(text, true, out CosmicColor parsed) || !Enum.IsDefined(typeof(CosmicColor), parsed))
+                return false;
+
+            color = parsed;
+            return true;
+        }
+
+        static void Spawn(CommandCaller caller, string[] args)
+        {
+            if (!NeedSimulation(caller, "spawn"))
+                return;
+
+            if (args.Length < 2 || !TryParseColor(args[1], out CosmicColor color))
+            {
+                caller.Reply("Usage: /fcosmic spawn <white|violet|blue|green|yellow|orange|red> [tileX tileY]  (without a tile it uses the cursor, single-player only)", Color.OrangeRed);
+                return;
+            }
+
+            int tx;
+            int ty;
+            if (args.Length >= 4 && int.TryParse(args[2], out tx) && int.TryParse(args[3], out ty))
+            {
+            }
+            else if (Main.netMode == NetmodeID.SinglePlayer && !Main.dedServ)
+            {
+                Vector2 mouse = Main.MouseWorld;
+                tx = (int)(mouse.X / 16f);
+                ty = (int)(mouse.Y / 16f);
+            }
+            else
+            {
+                caller.Reply("fcosmic spawn: give the target tile: /fcosmic spawn <color> <tileX> <tileY>", Color.OrangeRed);
+                return;
+            }
+
+            tx = Math.Clamp(tx, 0, Main.maxTilesX - 1);
+            ty = Math.Clamp(ty, 0, Main.maxTilesY - 1);
+
+            caller.Reply("fcosmic spawn [" + Side() + "]: target tile (" + tx + ", " + ty + "). " + CosmicRadiationSystem.Instance.Sim.FireDebugRay(CosmicRadiationSystem.Instance, color, tx, ty), CosmicColors.DrawColor(color));
+        }
+
+        static void Rescan(CommandCaller caller)
+        {
+            if (!NeedSimulation(caller, "rescan"))
+                return;
+
+            CosmicRadiationSystem.Instance.Sim.RequestRescan();
+            caller.Reply("fcosmic rescan [" + Side() + "]: re-reading the sky from the first strip (watch /fcosmic stats for the progress).", Color.LightGreen);
         }
 
         static string Format(object value)

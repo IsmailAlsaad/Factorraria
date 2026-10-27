@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-28 | 309 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-28 | 315 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(63) BaseMachine(45) FactorrariaPacket(32) LiquidTypeRegistry(31) PacketDirection(28) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) TileEntityHelper(16) MachineUIStateBase(16) LiquidStack(16) MachineUIElementEntry(15) JoinSync(15) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) CustomWireType(12)
+FactorrariaNet(64) BaseMachine(45) FactorrariaPacket(32) LiquidTypeRegistry(31) PacketDirection(28) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) TileEntityHelper(16) MachineUIStateBase(16) LiquidStack(16) MachineUIElementEntry(15) JoinSync(15) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) CustomWireType(12)
 
 ## Inheritance
 Project bases -> derived:
@@ -17,7 +17,8 @@ Project bases -> derived:
 - IMachineDynamicDraw: BeeWheelTileEntity, ExtractinatorTileEntity, RoboticArmTileEntity
 - IMotorTile: MotorTileBase
 - IStatueAwakener: MagicMaterializerTileEntity
-- ITilePlacedConsumer: AwakenedStatuePlacedConsumer, BeeWheelPlacedConsumer, ChestConveyorPlacedConsumer, LiquidTopologyPlacedConsumer, MachinePlacedConsumer, MotorPlacedConsumer, PipePlacedConsumer, PlacementLogConsumer, PriorityConveyorPlacedConsumer
+- ITilePlacedConsumer: AwakenedStatuePlacedConsumer, BeeWheelPlacedConsumer, ChestConveyorPlacedConsumer, CosmicReceiverPlacedConsumer, LiquidTopologyPlacedConsumer, MachinePlacedConsumer, MotorPlacedConsumer, PipePlacedConsumer, PlacementLogConsumer, PriorityConveyorPlacedConsumer
+- ITileProbe: CosmicTileProbe
 - IZoomScalable: RecipeBrowserPanel
 - MachineUIStateBase: AutohammerUIState, BeeWheelUIState, DecayChamberUIState, ExtractinatorUIState, FurnaceUIState, GelBurnerUIState, HellforgeUIState, IceMachineUIState, LiquidDistillatorUIState, MagicMaterializerUIState, MechanicalAssemblerUIState, PowerPoleUIState, RoboticArmUIState, SolidifierUIState
 - MotorTileBase: MotorMK1Tile
@@ -26,13 +27,13 @@ Project bases -> derived:
 - PowerPoleTileBase: PlatinumPowerPoleTile, WoodenPowerPoleTile
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 tModLoader/other bases -> project types:
-- ModSystem (84): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicRadiationSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
+- ModSystem (85): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
 - ModItem (37): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteorHeadStatueItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
-- byte (21): CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck
+- byte (24): CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicQueuedKind, CosmicRayEnd, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck
 - ModCommand (15): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - ModTile (12): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
-- GlobalTile (9): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, TilePlacedGlobalTile
+- GlobalTile (10): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, TilePlacedGlobalTile
 - ModPlayer (9): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (8): BucketPourGlobalItem, CartModuleItemGlobal, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalNPC (4): AwakenedSpawnGlobalNPC, BossLootGlobal, CartPassengerGlobalNPC, MeteorHeadStatueGlobalNPC
@@ -169,18 +170,60 @@ tModLoader/other bases -> project types:
     {White, Violet, Blue, Green, Yellow, Orange, Red}
   static class CosmicColors
     +Count:int[s] +HasNext(CosmicColor)[s] +Next(CosmicColor)[s] +GemsparkTile(CosmicColor)[s] +TryFromGemspark(int,out CosmicColor)[s] +IsCloudTile(int)[s] +DrawColor(CosmicColor)[s]
-**CosmicDebug.cs** uses: CosmicColor, CosmicColors, CosmicHeatmap, CosmicParamAttribute, CosmicRadiationSystem
+**CosmicDebug.cs** uses: CosmicColor, CosmicColors, CosmicHeatmap, CosmicParamAttribute, CosmicQueuedEvent, CosmicRadiationSystem, CosmicReceiverIndex, CosmicSimulation
   class CosmicCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
+**CosmicEventHeap.cs** uses: CosmicColor
+  enum CosmicQueuedKind : byte
+    {RayStart, Absorb, Ionize}
+  struct CosmicQueuedEvent
+    +Tick:long +Kind:CosmicQueuedKind +Color:CosmicColor +X:float +Y:float +DirX:float +DirY:float +TileX:int +TileY:int ~Seq:long
+  sealed class CosmicEventHeap
+    +Count:int +Clear() +Push(CosmicQueuedEvent) +TryPeek(out CosmicQueuedEvent) +Pop()
 **CosmicHeatmap.cs** uses: CosmicColor
   class CosmicHeatmap
     +FormatVersion:int +TableStep:int +Ready:bool +Order:byte +Clear() +Generate(Random) +SetOrder(byte) +SectionWidth(int) +SectionAt(int,int) +HotColorOfSection(int) +SectionOfColor(CosmicColor) +WeightExact(CosmicColor,int,int,float,float) +Weight(CosmicColor,int,int,float,float) +Pick(int,int,float,float,Random) +Write(BinaryWriter) +Read(BinaryReader)
 **CosmicParamAttribute.cs**
   sealed class CosmicParamAttribute : Attribute
     +Description:string +Unit:string
-**CosmicRadiationSystem.cs** uses: CosmicHeatmap, FactorrariaNet
+**CosmicRadiationSystem.cs** uses: CosmicHeatmap, CosmicSimulation, FactorrariaNet
   class CosmicRadiationSystem : ModSystem
-    +Instance:CosmicRadiationSystem[s] +Heatmap:CosmicHeatmap +BaseEnergy:float +Multiplier:float +ClusterMin:int +ClusterMax:int +HeatSigmaFraction:float +HeatFloor:float +RateDensity:float +SpawnSpreadDeg:float +ParticleSpeed:float +ParticleRange:float +SampleStepTicks:int +ReemitAngleMinDeg:float +ReemitAngleMaxDeg:float +CloudAbsorbChance:float +IonizedLifetimeTicks:int +RefractoryTicks:int +StrikeRadiusTiles:float +SurgePowerPerEnergy:float +SurgeDurationTicks:int +MaxRaysPerTick:int +MaxQueuedEvents:int +ClientParticlePool:int +NetInterestRadiusTiles:int +PostUpdateWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OrderText()
+    +Instance:CosmicRadiationSystem[s] +Heatmap:CosmicHeatmap +Sim:CosmicSimulation +BaseEnergy:float +Multiplier:float +ClusterMin:int +ClusterMax:int +HeatSigmaFraction:float +HeatFloor:float +RateDensity:float +SpawnSpreadDeg:float +ParticleSpeed:float +ParticleRange:float +SampleStepTicks:int +SpaceBottomFraction:float +ScanStripsPerTick:int +ResyncStripsPerTick:int +ReemitAngleMinDeg:float +ReemitAngleMaxDeg:float +CloudAbsorbChance:float +IonizedLifetimeTicks:int +RefractoryTicks:int +StrikeRadiusTiles:float +SurgePowerPerEnergy:float +SurgeDurationTicks:int +MaxRaysPerTick:int +MaxQueuedEvents:int +ClientParticlePool:int +NetInterestRadiusTiles:int +PostUpdateWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OrderText()
+**CosmicRayTracer.cs** uses: CosmicColor, Probe
+  enum CosmicTileKind : byte
+    {Empty, Gemspark, Cloud, Solid}
+  interface ITileProbe
+    +Probe(int,int,out CosmicColor)
+  enum CosmicRayEnd : byte
+    {Range, Solid, Absorb, Ionize}
+  struct CosmicRayResult
+    +End:CosmicRayEnd +TileX:int +TileY:int +Distance:float
+  static class CosmicRayTracer
+    +DirectionFromTilt(float,out float,out float)[s] +Trace(ITileProbe,float,float,float,float,CosmicColor,float,float,Random)[s]
+**CosmicReceiverIndex.cs**
+  sealed class CosmicReceiverIndex
+    +StripWidth:int[c] +CloudCode:byte[c] +MaxY:int +Version:int +Total:int +StripCount:int +CloudCount:int +GemsparkCount(int) +StripOf(int)[s] +Clear() +Contains(int,int,out byte) +Add(int,int,byte) +Remove(int,int) +ReplaceStrip(int,List<(int x, int y, byte code)>) +StripIds:IEnumerable<int> +TryGetYRange(int,out int,out int)
+    sealed class Strip
+      +Tiles:Dictionary<long, byte> +MinY:int +MaxY:int +Dirty:bool
+**CosmicReceivers.cs** uses: CosmicColor, CosmicColors, CosmicRadiationSystem, CosmicReceiverIndex, CosmicTileKind, ITilePlacedConsumer, ITileProbe, Probe, TilePlaced
+  static class CosmicTileCodes
+    +None:byte[c] +CodeOf(int)[s]
+  sealed class CosmicTileProbe : ITileProbe
+    +Probe(int,int,out CosmicColor)
+  class CosmicReceiverGlobalTile : GlobalTile
+    +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov]
+  sealed class CosmicReceiverPlacedConsumer : ITilePlacedConsumer
+    +AppliesTo(int) +OnTilePlaced(int,int,int,int)
+  class CosmicReceiverSystem : ModSystem
+    +Load()[ov]
+**CosmicSampling.cs** uses: CosmicReceiverIndex, Strip
+  struct CosmicSamplingStrip
+    +Strip:int +Y0:float +Y1:float +Density:float
+  static class CosmicSampling
+    +AltitudeIntegral(float,float,float)[s] +SampleY(float,float,float,double)[s] +Poisson(double,Random)[s] +Build(CosmicReceiverIndex,float,float,float,int,Func<float, float>,List<CosmicSamplingStrip>)[s] +CountRigs(List<CosmicSamplingStrip>)[s]
+**CosmicSimulation.cs** uses: CosmicColor, CosmicColors, CosmicEventHeap, CosmicHeatmap, CosmicQueuedEvent, CosmicQueuedKind, CosmicRadiationSystem, CosmicRayEnd, CosmicRayResult, CosmicRayTracer, CosmicReceiverIndex, CosmicSampling, CosmicSamplingStrip, CosmicTileCodes, CosmicTileProbe, FactorrariaNet, Strip
+  class CosmicSimulation
+    +DebugRayHeight:float[c] +Index:CosmicReceiverIndex +Heap:CosmicEventHeap +Now:long +Fault:string +InitialScanDone:bool +ScanPasses:int +BandBottom:float +SamplingStrips:int +Rigs:int +SamplingAreaTiles:float +DensitySum:float +DebugRays:long RaysSampled, RaysTraced, DeadSolid, DeadRange, Dropped, +Absorbed:long +Ionized:long +PeakQueue:int +RaysPerSecond:float +MaxMsPerTick:double AvgMsPerTick, +Recent:CosmicQueuedEvent +RecentCount:int +Reset() +ResetCounters() +RequestRescan() +StripsInWorld:int +ScanPercent:int +OnReceiverPlaced(int,int,byte) +OnReceiverRemoved(int,int) +Update(CosmicRadiationSystem) +FireDebugRay(CosmicRadiationSystem,CosmicColor,int,int)
 
 ### Common/Crafting/
 **TimedCraftingPlayer.cs** uses: TimedCraftingSystem
@@ -1502,5 +1545,5 @@ tModLoader/other bases -> project types:
 - docs/multiplayer/: ROADMAP.md, SURVEY_APPENDIX.md
 - docs/poles/: ROADMAP.md
 - tools/: patch_engine.ps1
-- tools/cosmic_tests/: Program.cs.txt, README.txt
+- tools/cosmic_tests/: Program.cs.txt, Program_C2.cs.txt, README.txt
 - tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt
