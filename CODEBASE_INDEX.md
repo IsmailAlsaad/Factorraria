@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-27 | 302 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-28 | 303 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -27,14 +27,14 @@ Project bases -> derived:
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 tModLoader/other bases -> project types:
 - ModSystem (82): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WorldLiquidSources
-- ModItem (36): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteorHeadStatueItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
+- ModItem (37): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteorHeadStatueItem, MeteoritePanelItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
 - byte (20): CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck
 - ModCommand (14): ArmSendCommand, CartDiagnosticsCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - ModTile (12): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
+- GlobalTile (9): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, TilePlacedGlobalTile
 - ModPlayer (9): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (8): BucketPourGlobalItem, CartModuleItemGlobal, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
-- GlobalTile (8): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, TilePlacedGlobalTile
 - GlobalNPC (4): AwakenedSpawnGlobalNPC, BossLootGlobal, CartPassengerGlobalNPC, MeteorHeadStatueGlobalNPC
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - ModConfig (3): CartMapConfig, FurnaceOffsetConfig, NetworkConfig
@@ -217,7 +217,7 @@ tModLoader/other bases -> project types:
 **RecipeKnowledgeSystem.cs**
   class RecipeKnowledgeSystem : ModSystem
     +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
-**ScrollPoolDefinitions.cs** uses: ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, PipeMK1Item, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, WoodenPowerPoleItem
+**ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, PipeMK1Item, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, WoodenPowerPoleItem
   static class ScrollPoolDefinitions
     +Register()[s]
 **ScrollPools.cs** uses: RecipeArtRegistry, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey
@@ -1107,6 +1107,8 @@ tModLoader/other bases -> project types:
   class MeteoritePanelItem : ModItem
 **PureSiliconItem.cs** uses: PureSiliconTile
   class PureSiliconItem : ModItem
+**RoyalHoneyItem.cs**
+  class RoyalHoneyItem : ModItem
 **SiliconOreItem.cs** uses: SiliconOreTile
   class SiliconOreItem : ModItem
 **SimpleCircuitItem.cs**
@@ -1182,7 +1184,7 @@ tModLoader/other bases -> project types:
     +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/
-**AutohammerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PlatinumPowerPoleItem, RecipeBook, SimpleCircuitItem, TinWireItem, WoodenPowerPoleItem
+**AutohammerRecipeRegistry.cs** uses: BeeWheelItem, ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PlatinumPowerPoleItem, RecipeBook, RoyalHoneyItem, SimpleCircuitItem, TinWireItem, WoodenPowerPoleItem
   class AutohammerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **AutohammerTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.Autohammer uses: AutohammerRecipeRegistry, ElectricConsumerMachine, RecipeBook
@@ -1328,11 +1330,13 @@ tModLoader/other bases -> project types:
     +ValidTileType:int[ov] +PowerSupply:float[ov] +PowerPerHive:float +HiveScanRadius:int +RescanDelayTicks:int +SafetyRescanTicks:int +MinWheelSpeed:float +MaxWheelSpeed:float +HivesForMaxSpeed:int +WheelSpeedEase:float +BigBeeWeight:float +SmallBeeWeight:float +BeeSpawnPerHive:float +MaxBees:int +BeeSpeed:float +BeeWobble:float +BeeScale:float +BeeFullOpacityAt:float +BeeFadeOutTiles:float +BeeFrameTicks:int +CustomBeeFrames:int +BeeSheetFacesLeft:bool +DyingSlowdownMin:float +DyingSlowdownMax:float +DyingStopSpeed:float +DyingHoverMinTicks:int +DyingHoverMaxTicks:int +DyingFadeMinTicks:int +DyingFadeMaxTicks:int +DyingBrightenPerTick:float +HoneyTilesPerTry:int +MaxHoneyTries:int +HoneyDustChance:float +VisualRange:float +HiveCount:int +ExposedSolidCount:int +Update()[ov] +NotifyTileChanged(int,int)[s] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DrawFront(SpriteBatch) +HasOrphanBees:bool[s] +ResetOrphans()[s] +UpdateOrphans()[s] +DrawOrphanBees(SpriteBatch)[s]
     sealed class Bee
       +Start:Vector2 +Pos:Vector2 +Progress:float +Step:float +Length:float +Phase:float +Wobble:float +Big:bool +Age:int +MovingRight:bool +Dying:bool +Base:Vector2 +Velocity:Vector2 +Side:Vector2 +SwayAmount:float +Speed:float +Slow:float +ApproachAlpha:float +StoppedFor:int +HoverTicks:int +FadeTicks:int
-**BeeWheelTileHooks.cs** uses: BeeWheelTileEntity, ITilePlacedConsumer
+**BeeWheelTileHooks.cs** uses: BeeWheelTileEntity, ITilePlacedConsumer, RoyalHoneyItem
   class BeeWheelTileHooks : GlobalTile
     +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +PlaceInWorld(int,int,int,Item)[ov]
   sealed class BeeWheelPlacedConsumer : ITilePlacedConsumer
     +AppliesTo(int) +OnTilePlaced(int,int,int,int)
+  class LarvaDropGlobalTile : GlobalTile
+    +Drop(int,int,int)[ov]
 **BeeWheelUIState.cs** uses: BeeWheelTileEntity, ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase
   class BeeWheelUIState : MachineUIStateBase
     #BuildElements()[ov]
@@ -1468,6 +1472,7 @@ tModLoader/other bases -> project types:
 - Assets/Atlases/: Particles_Atlas.json
 - Localization/: en-US.hjson, en-US_Mods.Factorraria.hjson
 - Properties/: launchSettings.json
+- docs/cosmic_radiation/: ROADMAP.md
 - docs/liquid_overhaul/: ROADMAP.md
 - docs/multiplayer/: ROADMAP.md, SURVEY_APPENDIX.md
 - docs/poles/: ROADMAP.md
