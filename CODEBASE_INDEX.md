@@ -895,7 +895,7 @@ tModLoader/other bases -> project types:
 **ElectricityHoverTip.cs**
   class ElectricityHoverTip : ModSystem
     +Show(string,Color)[s] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +Unload()[ov]
-**ElectricityUIIcon.cs** uses: BaseMachine, ElectricityHoverTip
+**ElectricityUIIcon.cs** uses: BaseMachine, ElectricityHoverTip, IElectricProducer
   class ElectricityUIIcon : UIElement
     #DrawSelf(SpriteBatch)[ov]
 **FireUIElement.cs** uses: FurnaceOffsetConfig
@@ -1313,7 +1313,7 @@ tModLoader/other bases -> project types:
 ### Content/Tiles/Machines/ElectricalProducers/BeeWheel/
 **BeeWheelDrawSystem.cs** uses: BaseMachine, BeeWheelTileEntity
   class BeeWheelDrawSystem : ModSystem
-    +PostDrawTiles()[ov]
+    +PostUpdateEverything()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Unload()[ov] +PostDrawTiles()[ov]
 **BeeWheelScanner.cs**
   sealed class BeeWheelScanner
     +HiveCount:int +ExposedSolidCount:int +ExposedHives:List<Point> +Scan(int,int,int,int,int,bool)
@@ -1325,9 +1325,9 @@ tModLoader/other bases -> project types:
     +Texture:string[ov]
 **BeeWheelTileEntity.cs** uses: BeeWheelScanner, BeeWheelTile, BeeWheelVisual, ElectricProducerMachine, IMachineDynamicDraw, Phase
   class BeeWheelTileEntity : ElectricProducerMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] +PowerSupply:float[ov] +PowerPerHive:float +HiveScanRadius:int +RescanDelayTicks:int +SafetyRescanTicks:int +MinWheelSpeed:float +MaxWheelSpeed:float +HivesForMaxSpeed:int +WheelSpeedEase:float +BigBeeWeight:float +SmallBeeWeight:float +BeeSpawnPerHive:float +MaxBees:int +BeeSpeed:float +BeeWobble:float +BeeScale:float +BeeFullOpacityAt:float +BeeFadeOutTiles:float +BeeFrameTicks:int +CustomBeeFrames:int +BeeSheetFacesLeft:bool +HoneyTilesPerTry:int +MaxHoneyTries:int +HoneyDustChance:float +VisualRange:float +HiveCount:int +ExposedSolidCount:int +Update()[ov] +NotifyTileChanged(int,int)[s] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DrawFront(SpriteBatch)
+    +ValidTileType:int[ov] +PowerSupply:float[ov] +PowerPerHive:float +HiveScanRadius:int +RescanDelayTicks:int +SafetyRescanTicks:int +MinWheelSpeed:float +MaxWheelSpeed:float +HivesForMaxSpeed:int +WheelSpeedEase:float +BigBeeWeight:float +SmallBeeWeight:float +BeeSpawnPerHive:float +MaxBees:int +BeeSpeed:float +BeeWobble:float +BeeScale:float +BeeFullOpacityAt:float +BeeFadeOutTiles:float +BeeFrameTicks:int +CustomBeeFrames:int +BeeSheetFacesLeft:bool +DyingSlowdownMin:float +DyingSlowdownMax:float +DyingStopSpeed:float +DyingHoverMinTicks:int +DyingHoverMaxTicks:int +DyingFadeMinTicks:int +DyingFadeMaxTicks:int +DyingBrightenPerTick:float +HoneyTilesPerTry:int +MaxHoneyTries:int +HoneyDustChance:float +VisualRange:float +HiveCount:int +ExposedSolidCount:int +Update()[ov] +NotifyTileChanged(int,int)[s] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DrawFront(SpriteBatch) +HasOrphanBees:bool[s] +ResetOrphans()[s] +UpdateOrphans()[s] +DrawOrphanBees(SpriteBatch)[s]
     sealed class Bee
-      +Start:Vector2 +Pos:Vector2 +Progress:float +Step:float +Length:float +Phase:float +Wobble:float +Big:bool +Age:int +MovingRight:bool
+      +Start:Vector2 +Pos:Vector2 +Progress:float +Step:float +Length:float +Phase:float +Wobble:float +Big:bool +Age:int +MovingRight:bool +Dying:bool +Base:Vector2 +Velocity:Vector2 +Side:Vector2 +SwayAmount:float +Speed:float +Slow:float +ApproachAlpha:float +StoppedFor:int +HoverTicks:int +FadeTicks:int
 **BeeWheelTileHooks.cs** uses: BeeWheelTileEntity, ITilePlacedConsumer
   class BeeWheelTileHooks : GlobalTile
     +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +PlaceInWorld(int,int,int,Item)[ov]

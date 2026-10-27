@@ -13,6 +13,18 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
     // namespace, so it runs after both.
     public class BeeWheelDrawSystem : ModSystem
     {
+        // Keeps the bees of a just-broken wheel flying (slowing down, then fading out); see BeeWheelTileEntity "Bees of a removed wheel".
+        public override void PostUpdateEverything()
+        {
+            BeeWheelTileEntity.UpdateOrphans();
+        }
+
+        public override void OnWorldLoad() => BeeWheelTileEntity.ResetOrphans();
+
+        public override void OnWorldUnload() => BeeWheelTileEntity.ResetOrphans();
+
+        public override void Unload() => BeeWheelTileEntity.ResetOrphans();
+
         public override void PostDrawTiles()
         {
             if (Main.dedServ)
@@ -36,6 +48,17 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
                 }
 
                 wheel.DrawFront(spriteBatch);
+            }
+
+            if (BeeWheelTileEntity.HasOrphanBees)
+            {
+                if (!batchBegun)
+                {
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                    batchBegun = true;
+                }
+
+                BeeWheelTileEntity.DrawOrphanBees(spriteBatch);
             }
 
             if (batchBegun)

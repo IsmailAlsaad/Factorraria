@@ -109,8 +109,9 @@ namespace Factorraria.Common.UI.CustomUIElements
         }
 
         // Hover readout, drawn at the cursor by ElectricityHoverTip: "{demand}/{supply}" coloured by load (green under 40%, yellow under 80%,
-        // red above), "Off" in red when a wire switched the machine off, "Off" in grey when it shares no grid with another machine,
-        // "No power" in red when the grid cannot cover its demand (or has no supply at all).
+        // red above), "Off" in red when a wire switched the machine off, "No power" in red when the grid's demand is above its supply.
+        // Consumers only: "Off" in grey when the machine shares no grid with another machine, and "No power" when the grid has no supply at all.
+        // Producers always show their readout (a lone producer or an empty grid reads 0/0).
         void ShowHoverText()
         {
             if (Machine == null || !IsMouseHovering) return;
@@ -123,7 +124,9 @@ namespace Factorraria.Common.UI.CustomUIElements
                 return;
             }
 
-            if (!Machine.PowerNetLinked)
+            bool producer = Machine is IElectricProducer;
+
+            if (!producer && !Machine.PowerNetLinked)
             {
                 ElectricityHoverTip.Show("Off", new Color(150, 150, 150));
                 return;
@@ -132,13 +135,13 @@ namespace Factorraria.Common.UI.CustomUIElements
             float demand = Machine.PowerNetDemand;
             float supply = Machine.PowerNetSupply;
 
-            if (supply <= 0f || demand > supply)
+            if (demand > supply || (!producer && supply <= 0f) || (demand == 0 && supply == 0))
             {
                 ElectricityHoverTip.Show("No power", new Color(240, 70, 70));
                 return;
             }
 
-            float ratio = demand / supply;
+            float ratio = supply > 0f ? demand / supply : 0f;
             Color color = ratio < 0.4f ? new Color(80, 220, 80) : ratio < 0.8f ? new Color(255, 220, 60) : new Color(240, 70, 70);
             ElectricityHoverTip.Show((int)MathF.Round(demand) + "/" + (int)MathF.Round(supply), color);
         }
