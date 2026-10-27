@@ -94,9 +94,6 @@ namespace Factorraria.Common.Net
 
         static readonly ConcurrentQueue<Incoming> incoming = new ConcurrentQueue<Incoming>();
 
-        // TEMPORARY (patch P3, remove in Phase 10 together with every call): the pole link log lines.
-        public static void Trace(string message) => FactorrariaNet.Log("[PoleLinks] " + message);
-
         public static byte AutoSlot => byte.MaxValue;
 
         public static void ResetClient()
@@ -164,7 +161,6 @@ namespace Factorraria.Common.Net
 
         static void Refuse(int sender, Player player, PoleLinkResult result, string reason, params Point16[] poles)
         {
-            Trace("refused " + player.name + ": " + reason);
             Answer(sender, result, 0, 0, poles);
         }
 
@@ -281,9 +277,6 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            Trace(player.name + " linked (" + cornerA.X + ", " + cornerA.Y + ")#" + slotA + " to (" + cornerB.X + ", " + cornerB.Y + ")#" + slotB + " with " + wire + " wire, span "
-                + span.ToString("0.0") + ", cost " + cost + "; links now " + links.Links.Count);
-
             Answer(sender, PoleLinkResult.Linked, itemType, cost, cornerA, cornerB);
             BroadcastUpdate(sender, cornerA, cornerB);
         }
@@ -324,8 +317,6 @@ namespace Factorraria.Common.Net
             // The refund is spawned here, once. NewItem on a server tells every client about the item itself.
             Item.NewItem(player.GetSource_Misc("FactorrariaPoleLinkCut"), clickX * 16, clickY * 16, 16, 16, CustomWireNet.WireItemType(link.Wire), link.Cost);
 
-            Trace(player.name + " cut (" + a.X + ", " + a.Y + ")#" + link.SlotA + " to (" + b.X + ", " + b.Y + ")#" + link.SlotB + ", refunded " + link.Cost + " " + link.Wire + " wire; links now " + links.Links.Count);
-
             Answer(sender, PoleLinkResult.Cut, 0, 0, a, b);
             BroadcastUpdate(sender, a, b);
         }
@@ -355,7 +346,6 @@ namespace Factorraria.Common.Net
                 return;
 
             var affected = new List<Point16> { corner };
-            int refunded = 0;
             int dropX = corner.X * 16 + 8;
             int dropY = (corner.Y + PoleLinkSystem.FootprintHeight(pole) - 1) * 16;
 
@@ -366,10 +356,7 @@ namespace Factorraria.Common.Net
                     affected.Add(other);
 
                 Item.NewItem(new EntitySource_TileEntity(pole), dropX, dropY, 16, 16, CustomWireNet.WireItemType(link.Wire), link.Cost);
-                refunded += link.Cost;
             }
-
-            Trace("pole at (" + corner.X + ", " + corner.Y + ") was killed: removed " + removed.Count + " link(s), dropped " + refunded + " wire item(s); links now " + links.Links.Count);
 
             BroadcastUpdate(-1, affected.ToArray());
         }
@@ -499,7 +486,6 @@ namespace Factorraria.Common.Net
                 if (packet.ReplaceAll != null)
                 {
                     links.ReplaceAll(packet.ReplaceAll);
-                    Trace("join provider pole-links applied: " + packet.ReplaceAll.Count + " link(s)");
                     continue;
                 }
 
@@ -584,9 +570,6 @@ namespace Factorraria.Common.Net
                 if (i != player.selectedItem)
                     left = TakeFrom(player, player.inventory[i], i, itemType, left, sync);
             }
-
-            if (left > 0)
-                Trace("the link cost " + count + " wire item(s) but this inventory was short by " + left);
         }
 
         static int TakeFrom(Player player, Item item, int slot, int itemType, int left, bool sync)

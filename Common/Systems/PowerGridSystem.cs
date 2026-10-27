@@ -20,10 +20,6 @@ namespace Factorraria.Common.Systems
         public static List<PowerNetwork> ActivePowerNetworks = new List<PowerNetwork>();
         public static bool gridNeedsRebuilding = true;
 
-        // Power poles patch P4: what the last rebuild did with pole links. Read by /plinks and the [PoleLinks] grid log line (temporary, Phase 10).
-        public int PoleBridgesLastBuild;            // poles that joined a grid only because a link led to them
-        public int PoleLinkEndsMissingLastBuild;    // link ends skipped because that position holds no pole entity on this process
-
         // Patch 5.4: saved machines are indexed once per world. The old check ("when the machine list is empty") was skipped whenever a
         // machine had registered itself first (the 4.5 bootstrap scan, an early client placement), which left every saved machine out of the grids.
         bool machinesIndexed;
@@ -79,8 +75,6 @@ namespace Factorraria.Common.Systems
         void RebuildNetworks()
         {
             ActivePowerNetworks.Clear();
-            PoleBridgesLastBuild = 0;
-            PoleLinkEndsMissingLastBuild = 0;
 
             HashSet<TileEntity> remainingMachines = new HashSet<TileEntity>(AllMachines);
 
@@ -94,11 +88,6 @@ namespace Factorraria.Common.Systems
                     ActivePowerNetworks.Add(network);
                 }
             }
-
-            // Test aid (temporary, power poles patch P4, remove in Phase 10): what the pole links did in this rebuild.
-            if (PoleLinkSystem.Instance.Links.Count > 0)
-                PoleLinkNet.Trace("grid rebuilt: " + PoleLinkSystem.Instance.Links.Count + " link(s), " + PoleBridgesLastBuild + " pole(s) joined a grid through a link, "
-                    + PoleLinkEndsMissingLastBuild + " link end(s) skipped (no pole entity here), " + ActivePowerNetworks.Count + " grid(s)");
 
             // Test aid (temporary, patch 5.4): the server's view of the grids after every rebuild.
             if (Main.netMode == Terraria.ID.NetmodeID.Server)
@@ -200,10 +189,7 @@ namespace Factorraria.Common.Systems
                 Point16 polePosition = linkedPoleQueue.Dequeue();
 
                 if (!TileEntity.ByPosition.TryGetValue(polePosition, out TileEntity linkedPole) || linkedPole is not PowerPoleTileEntityBase)
-                {
-                    PoleLinkEndsMissingLastBuild++;
                     continue;
-                }
 
                 if (!remainingMachines.Contains(linkedPole))
                     continue;
@@ -215,7 +201,6 @@ namespace Factorraria.Common.Systems
                 RegisterMachineToNetwork(linkedPole, network, remainingMachines);
                 EnqueueMachineWires(linkedPole, wireQueue, visitedWires);
                 EnqueueLinkedPoles(linkedPole, linkedPoleQueue);
-                PoleBridgesLastBuild++;
             }
         }
 

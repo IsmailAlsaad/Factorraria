@@ -460,7 +460,6 @@ namespace Factorraria.Common.Systems
             lastCutSlot = slot;
             lastCutTick = Main.GameUpdateCount;
 
-            PoleLinkNet.Trace("cut click: mouse " + mouse + ", tile (" + tileX + ", " + tileY + "), zoom " + Main.GameZoomTarget + ", matrix-helper mouse " + CartSystem.GetZoomCorrectedMouseWorld() + ", link (" + pole.X + ", " + pole.Y + ")#" + slot);
             PoleLinkNet.RequestCut(pole.X, pole.Y, slot, tileX, tileY);
             SoundEngine.PlaySound(SoundID.Dig, new Vector2(tileX * 16f, tileY * 16f));
             return true;

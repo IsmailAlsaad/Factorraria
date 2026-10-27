@@ -507,7 +507,6 @@ namespace Factorraria.Common.Systems
             }
 
             Changed();
-            PoleLinkNet.Trace("loaded " + links.Count + " pole link(s) from the world file");
         }
 
         public override void OnWorldUnload()

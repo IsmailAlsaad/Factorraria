@@ -632,7 +632,7 @@ tModLoader/other bases -> project types:
   class PoleLinkNetSystem : ModSystem
     +Load()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
   static class PoleLinkNet
-    +MaxJoinLinks:int[s] +MaxPolesPerPacket:int[s] +RefusalRepeatTicks:int[s] +Trace(string)[s] +AutoSlot:byte[s] +ResetClient()[s] +RequestLink(int,int,int,int,CustomWireType,int,int,int,int)[s] +RequestCut(int,int,int,int,int)[s] +HandleRequest(BinaryReader,int)[s] +OnMachineKilled(BaseMachine,Point16)[s] +HandleChanged(BinaryReader,int)[s] +ClientTick()[s] +CountWire(Player,int)[s] +ConsumeWire(Player,int,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
+    +MaxJoinLinks:int[s] +MaxPolesPerPacket:int[s] +RefusalRepeatTicks:int[s] +AutoSlot:byte[s] +ResetClient()[s] +RequestLink(int,int,int,int,CustomWireType,int,int,int,int)[s] +RequestCut(int,int,int,int,int)[s] +HandleRequest(BinaryReader,int)[s] +OnMachineKilled(BaseMachine,Point16)[s] +HandleChanged(BinaryReader,int)[s] +ClientTick()[s] +CountWire(Player,int)[s] +ConsumeWire(Player,int,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
     sealed class Incoming
       +Result:PoleLinkResult +ItemType:int +Count:int +States:List<KeyValuePair<Point16, List<SlotState>>> +ReplaceAll:List<PoleLink>
 **RecipeKnowledgeNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, LiquidBiomeVisits, PacketDirection, Pending, RecipeBookSystem, RecipeCatalog, RecipeKnowledgeSystem, RecipeParchmentItem, RecipeVisibility, ScrollPools
@@ -829,7 +829,7 @@ tModLoader/other bases -> project types:
       +Active:bool +From:Vector2 +To:Vector2 +Wire:CustomWireType +Invalid:bool +CanCommit:bool +EndSlot:int
     enum PointHighlight
       {None, Valid, Invalid}
-**PoleLinkSystem.cs** uses: CustomWireNet, CustomWireType, PoleBoard, PoleLinkNet, PowerGridSystem, PowerPoleTileEntityBase, TileEntityHelper
+**PoleLinkSystem.cs** uses: CustomWireNet, CustomWireType, PoleBoard, PowerGridSystem, PowerPoleTileEntityBase, TileEntityHelper
   class PoleLink
     +A:Point16 +B:Point16 +SlotA:byte +SlotB:byte +Wire:CustomWireType +Cost:ushort +Touches(Point16) +Other(Point16) +SlotOn(Point16)
   class PoleLinkSystem : ModSystem
@@ -854,9 +854,9 @@ tModLoader/other bases -> project types:
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
-**PowerGridSystem.cs** uses: CustomWireSystem, CustomWireType, FactorrariaNet, IElectricConsumer, IElectricProducer, PoleLinkNet, PoleLinkSystem, PowerNetwork, PowerPoleTileEntityBase, TileEntityHelper
+**PowerGridSystem.cs** uses: CustomWireSystem, CustomWireType, FactorrariaNet, IElectricConsumer, IElectricProducer, PoleLinkSystem, PowerNetwork, PowerPoleTileEntityBase, TileEntityHelper
   class PowerGridSystem : ModSystem
-    +AllMachines:HashSet<TileEntity>[s] +ActivePowerNetworks:List<PowerNetwork>[s] +gridNeedsRebuilding:bool[s] +PoleBridgesLastBuild:int +PoleLinkEndsMissingLastBuild:int +PostUpdateWorld()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RegisterMachineToMasterList(TileEntity)[s]
+    +AllMachines:HashSet<TileEntity>[s] +ActivePowerNetworks:List<PowerNetwork>[s] +gridNeedsRebuilding:bool[s] +PostUpdateWorld()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RegisterMachineToMasterList(TileEntity)[s]
 **RecipeBookKeybindSystem.cs** uses: RecipeBookLayout, RecipeBookSystem
   class RecipeBookKeybindSystem : ModSystem
     +ItemSearchKey:ModKeybind[s] +ToggleKey:ModKeybind[s] +Load()[ov] +Unload()[ov] +ItemSearchKeyName()[s]
