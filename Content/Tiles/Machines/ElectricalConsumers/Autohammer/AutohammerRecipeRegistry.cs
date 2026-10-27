@@ -228,6 +228,14 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
                 .AddIngredient(ModContent.ItemType<GoldWireItem>(), 5)
                 .AddTile(TileID.Anvils)
                 .Register();
+
+            // Bee Wheel
+            Recipe.Create(ModContent.ItemType<BeeWheelItem>(), 1)
+                .AddIngredient(ModContent.ItemType<RoyalHoneyItem>(), 1)
+                .AddIngredient(ItemID.BeeWax, 8)
+                .AddIngredient(ItemID.Hive, 20)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
     }
 }

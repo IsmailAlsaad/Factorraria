@@ -234,6 +234,11 @@ Items: {
 		DisplayName: Bee Wheel
 		Tooltip: Attracts bees from nearby hives to generate power
 	}
+
+	RoyalHoneyItem: {
+		DisplayName: Royal Honey
+		Tooltip: A sweet, golden honey irresistible to bees
+	}
 }
 
 Configs: {

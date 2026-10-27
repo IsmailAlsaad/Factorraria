@@ -1,5 +1,7 @@
 ﻿using Factorraria.Common.Net;
+using Factorraria.Content.Items.Materials;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
@@ -31,6 +33,18 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
         public void OnTilePlaced(int x, int y, int tileType, int placer)
         {
             BeeWheelTileEntity.NotifyTileChanged(x, y);
+        }
+    }
+
+    // Royal honey drop from queen bee larva
+    public class LarvaDropGlobalTile : GlobalTile
+    {
+        public override void Drop(int i, int j, int type)
+        {
+            if (type != TileID.Larva) return;
+
+            Item.NewItem(WorldGen.GetItemSource_FromTileBreak(i, j), i * 16, j * 16, 16, 16,
+                ModContent.ItemType<RoyalHoneyItem>());
         }
     }
 }

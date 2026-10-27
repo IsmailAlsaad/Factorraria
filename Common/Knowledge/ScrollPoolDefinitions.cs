@@ -71,6 +71,7 @@ namespace Factorraria.Common.Knowledge
                 .Add("Autohammer", ItemID.SteampunkBoiler)
                 .Add("Autohammer", ModContent.ItemType<WoodenPowerPoleItem>())
                 .Add("Autohammer", ModContent.ItemType<PlatinumPowerPoleItem>())
+                .Add("Autohammer", ModContent.ItemType<BeeWheelItem>())
 
                 // Mechanical Assembler
                 .Add("MechanicalAssembler", ModContent.ItemType<SimpleCircuitItem>())
