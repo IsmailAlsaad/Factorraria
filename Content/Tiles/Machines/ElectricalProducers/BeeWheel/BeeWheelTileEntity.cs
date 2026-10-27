@@ -178,7 +178,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
             return InitializeGeometry();
         }
 
-        public void DynamicDraw(SpriteBatch spriteBatch)
+        // Empty on purpose: BeeWheelDrawSystem draws the wheel and bees (DrawFront) after the base, so they end up in front of it.
+        public void DynamicDraw(SpriteBatch spriteBatch) { }
+
+        public void DrawFront(SpriteBatch spriteBatch)
         {
             if (!InitializeGeometry())
                 return;

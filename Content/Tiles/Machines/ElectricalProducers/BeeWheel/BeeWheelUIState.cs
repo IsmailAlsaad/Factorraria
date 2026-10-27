@@ -16,7 +16,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
 
             list.Add(new MachineUIElementEntry(
                 new ElectricityUIIcon(Entity.GetUseFraction, null, () => Entity.WireToggle, Entity),
-                new Vector2(-12, -60), new Vector2(40, 40)));
+                new Vector2(20, -100), new Vector2(40, 40)));
 
             return list;
         }

@@ -32,7 +32,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
 
             AddMapEntry(new Color(205, 160, 50), CreateMapEntryName());
 
-            DustType = DustID.Honey;
+            DustType = DustID.Hive;
             RegisterItemDrop(ModContent.ItemType<BeeWheelItem>());
         }
     }

@@ -232,7 +232,7 @@ Items: {
 
 	BeeWheelItem: {
 		DisplayName: Bee Wheel
-		Tooltip: "Attracts bees from nearby hives to generate power"
+		Tooltip: Attracts bees from nearby hives to generate power
 	}
 }
 
