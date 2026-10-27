@@ -26,7 +26,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
         public float PowerPerHive => 5f;               // power points per exposed Hive tile
         public int HiveScanRadius => 50;               // path length of the flood fill, in tiles
         public int RescanDelayTicks => 10;             // a nearby tile change schedules the next scan this many ticks later at the earliest (debounce)
-        public int SafetyRescanTicks => 60;            // scan again at least this often even when no change was reported
+        public int SafetyRescanTicks => 120;            // scan again at least this often even when no change was reported
 
         public float MinWheelSpeed => 0.01f;           // radians per tick with the fewest hives
         public float MaxWheelSpeed => 0.12f;           // radians per tick at HivesForMaxSpeed hives or more
@@ -35,12 +35,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
 
         public float BigBeeWeight => 1f;               // relative frequency of the big bee ...
         public float SmallBeeWeight => 3f;             // ... and of the small bee
-        public float BeeSpawnPerHive => 0.003f;        // bees per tick per exposed Hive tile
+        public float BeeSpawnPerHive => 0.001f;        // bees per tick per exposed Hive tile
         public int MaxBees => 60;
         public float BeeSpeed => 2.2f;                 // pixels per tick along the path
         public float BeeWobble => 10f;                 // sideways sway in pixels
         public float BeeScale => 1f;
         public float BeeFullOpacityAt => 1f;           // fraction of the flight at which a bee is fully opaque (opacity rises from 0 at the hive)
+        public float BeeFadeOutTiles => 2f;            // a bee fades out over its last this many tiles before the wheel
         public int BeeFrameTicks => 4;
         public int CustomBeeFrames => 4;              // frames in BeeWheel_BeeBig.png / BeeWheel_BeeSmall.png when you add them
         public bool BeeSheetFacesLeft => true;         // the vanilla bee faces left
@@ -71,6 +72,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
             public Vector2 Pos;
             public float Progress;   // 0 at the hive, 1 at the wheel
             public float Step;       // progress per tick
+            public float Length;     // pixels from the hive to the wheel (to know how far from the wheel it is)
             public float Phase;
             public float Wobble;
             public bool Big;
@@ -281,6 +283,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
                 Pos = start,
                 Progress = 0f,
                 Step = BeeSpeed / length,
+                Length = length,
                 Phase = Main.rand.NextFloat(MathHelper.TwoPi),
                 Wobble = BeeWobble * Main.rand.NextFloat(0.5f, 1f),
                 Big = big,
@@ -298,6 +301,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
             Rectangle source = new Rectangle(0, frame * frameHeight, texture.Width, frameHeight);
 
             float alpha = MathHelper.Clamp(bee.Progress / Math.Max(0.01f, BeeFullOpacityAt), 0f, 1f);
+            float pixelsLeft = (1f - bee.Progress) * bee.Length;
+            alpha *= MathHelper.Clamp(pixelsLeft / Math.Max(1f, BeeFadeOutTiles * 16f), 0f, 1f);
             Color color = Lighting.GetColor(bee.Pos.ToTileCoordinates()) * alpha;
             SpriteEffects effects = bee.MovingRight == BeeSheetFacesLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 

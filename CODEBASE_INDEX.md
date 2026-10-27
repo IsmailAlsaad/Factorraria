@@ -1322,9 +1322,9 @@ tModLoader/other bases -> project types:
     +Texture:string[ov]
 **BeeWheelTileEntity.cs** uses: BeeWheelScanner, BeeWheelTile, BeeWheelVisual, ElectricProducerMachine, IMachineDynamicDraw, Phase
   class BeeWheelTileEntity : ElectricProducerMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] +PowerSupply:float[ov] +PowerPerHive:float +HiveScanRadius:int +RescanDelayTicks:int +SafetyRescanTicks:int +MinWheelSpeed:float +MaxWheelSpeed:float +HivesForMaxSpeed:int +WheelSpeedEase:float +BigBeeWeight:float +SmallBeeWeight:float +BeeSpawnPerHive:float +MaxBees:int +BeeSpeed:float +BeeWobble:float +BeeScale:float +BeeFullOpacityAt:float +BeeFrameTicks:int +CustomBeeFrames:int +BeeSheetFacesLeft:bool +HoneyTilesPerTry:int +MaxHoneyTries:int +HoneyDustChance:float +VisualRange:float +HiveCount:int +ExposedSolidCount:int +Update()[ov] +NotifyTileChanged(int,int)[s] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch)
+    +ValidTileType:int[ov] +PowerSupply:float[ov] +PowerPerHive:float +HiveScanRadius:int +RescanDelayTicks:int +SafetyRescanTicks:int +MinWheelSpeed:float +MaxWheelSpeed:float +HivesForMaxSpeed:int +WheelSpeedEase:float +BigBeeWeight:float +SmallBeeWeight:float +BeeSpawnPerHive:float +MaxBees:int +BeeSpeed:float +BeeWobble:float +BeeScale:float +BeeFullOpacityAt:float +BeeFadeOutTiles:float +BeeFrameTicks:int +CustomBeeFrames:int +BeeSheetFacesLeft:bool +HoneyTilesPerTry:int +MaxHoneyTries:int +HoneyDustChance:float +VisualRange:float +HiveCount:int +ExposedSolidCount:int +Update()[ov] +NotifyTileChanged(int,int)[s] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch)
     sealed class Bee
-      +Start:Vector2 +Pos:Vector2 +Progress:float +Step:float +Phase:float +Wobble:float +Big:bool +Age:int +MovingRight:bool
+      +Start:Vector2 +Pos:Vector2 +Progress:float +Step:float +Length:float +Phase:float +Wobble:float +Big:bool +Age:int +MovingRight:bool
 **BeeWheelTileHooks.cs** uses: BeeWheelTileEntity, ITilePlacedConsumer
   class BeeWheelTileHooks : GlobalTile
     +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +PlaceInWorld(int,int,int,Item)[ov]
