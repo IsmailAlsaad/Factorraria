@@ -54,6 +54,10 @@ namespace Factorraria.Common.Cosmic
 
         public int Count => blocks.Count;
 
+        // C6: the tiles of the last Hit that ionized something, or of the last cluster PopDischarge returned. Valid until the next call
+        // to Hit or PopDischarge; the caller must copy what it keeps.
+        public IReadOnlyList<(int x, int y)> LastTiles => scratch;
+
         public void Clear()
         {
             blocks.Clear();

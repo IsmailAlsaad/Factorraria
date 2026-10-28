@@ -17,12 +17,13 @@ namespace Factorraria.Common.Cosmic
     //   /fcosmic log [on|off]   (C4, temporary) prints a chat line for every discharge; with no argument it toggles. Natural sky clouds discharge about once a second
     //   /fcosmic strike <energy> [tx ty]   (C5, temporary) a thunder of that energy at a tile (default: where the player stands) goes through the real
     //                           strike path: the nearest machine within the strike radius gets the surge, otherwise it spits into the sky
+    //   /fcosmic fx             (C6) what this process draws: client particles, pool, ionized glow, bolts, what the server sent (works on every side)
     // stats, spawn, rescan, log and strike only work where the simulation runs: single-player and the server console, not on a multiplayer client.
     public class CosmicCommand : ModCommand
     {
         public override string Command => "fcosmic";
         public override CommandType Type => CommandType.Chat | CommandType.Console;
-        public override string Usage => "/fcosmic heat [tileX] | params | stats [reset] | spawn <color> [tx ty] | rescan | log [on|off] | strike <energy> [tx ty]";
+        public override string Usage => "/fcosmic heat [tileX] | params | stats [reset] | spawn <color> [tx ty] | rescan | log [on|off] | strike <energy> [tx ty] | fx";
         public override string Description => "Cosmic radiation: the color heatmap, every balancing parameter, and (C2) simulation stats and a test ray.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -43,6 +44,8 @@ namespace Factorraria.Common.Cosmic
                 LogToggle(caller, args);
             else if (sub == "strike")
                 StrikeNow(caller, args);
+            else if (sub == "fx")
+                Fx(caller);
             else
                 caller.Reply("Usage: " + Usage, Color.OrangeRed);
         }
@@ -120,6 +123,20 @@ namespace Factorraria.Common.Cosmic
                 string unit = string.IsNullOrEmpty(info.Unit) ? "" : " " + info.Unit;
                 caller.Reply(field.Name + " = " + Format(field.GetValue(system)) + unit + "  -  " + info.Description, Color.White);
             }
+        }
+
+        // ------------------------------------------------------------ C6: what is drawn and sent
+        static void Fx(CommandCaller caller)
+        {
+            Factorraria.Common.Net.CosmicEventRouter router = Main.netMode != NetmodeID.MultiplayerClient ? CosmicRadiationSystem.Instance.Sim.Sink as Factorraria.Common.Net.CosmicEventRouter : null;
+
+            if (!Main.dedServ)
+                caller.Reply("fcosmic fx [" + Side() + "]: " + CosmicParticleSystem.Instance.StatsText() + ".", Color.LightGreen);
+
+            if (router != null)
+                caller.Reply("fcosmic fx [" + Side() + "] events out: " + router.StatsText() + ".", Color.White);
+            else if (Main.dedServ)
+                caller.Reply("fcosmic fx [server]: no event router.", Color.OrangeRed);
         }
 
         // ------------------------------------------------------------ C2: stats, spawn, rescan
@@ -209,6 +226,8 @@ namespace Factorraria.Common.Cosmic
                 caller.Reply("  last strike: " + sim.LastStrikeMachine + " at (" + sim.LastStrikeX + ", " + sim.LastStrikeY + "), " + Inv(sim.LastStrikeDistance, "0.#") + " tiles from the thunder, energy " + CosmicSimulation.EnergyText(sim.LastStrikeEnergy) + ", surge " + CosmicSimulation.EnergyText(sim.LastStrikePower) + " for " + system.SurgeDurationTicks + " ticks, tick " + sim.LastStrikeTick + ".", Color.White);
             caller.Reply("  queue: " + sim.Heap.Count + " now, peak " + sim.PeakQueue + ", dropped " + sim.Dropped + " (cap " + system.MaxQueuedEvents + ").", Color.White);
             caller.Reply("  cost: " + Inv((float)sim.AvgMsPerTick, "0.000") + " ms per tick on average over the last second, worst tick " + Inv((float)sim.MaxMsPerTick, "0.000") + " ms.", Color.White);
+            if (sim.Sink is Factorraria.Common.Net.CosmicEventRouter router)
+                caller.Reply("  events out (C6): " + router.StatsText() + ".", Color.White);
 
             int shown = Math.Min(5, sim.RecentCount);
             if (shown > 0)

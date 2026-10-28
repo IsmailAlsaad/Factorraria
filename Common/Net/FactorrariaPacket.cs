@@ -61,6 +61,8 @@ namespace Factorraria.Common.Net
         CartMapSnapshot = 52,         // server -> client: "every player-placed cart in the world (id, tile, module, skin key, module item key) for the map icons"; only on change (side feature cart map)
         PoleLinkRequest = 53,         // client -> server: "link the pole at (ax, ay) to the pole at (bx, by) with this wire (optional point hints, the tile I clicked), or cut the link on point <slot> of a pole" (kind byte first; power poles patch P3)
         PoleLinkChanged = 54,         // server -> client: "these poles now have exactly these links" (complete slot list per pole) plus a result for the sender: made (take this wire) or refused and why (power poles patch P3)
+        CosmicRays = 55,              // server -> nearby clients: "these cosmic particles fly now": color, start, direction, length, how the path ends (cosmetic only; cosmic radiation patch C6)
+        CosmicEvent = 56,             // server -> nearby clients: "these cosmic events happened": absorb, ionize, discharge, strike, spit (cosmetic only; cosmic radiation patch C6)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

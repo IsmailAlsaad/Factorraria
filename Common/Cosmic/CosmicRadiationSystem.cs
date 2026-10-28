@@ -122,6 +122,24 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Players farther than this from an event get no packet for it (used from C6).", "tiles")]
         public int NetInterestRadiusTiles = 120;
 
+        [CosmicParam("Most rays one player is sent per server tick; beyond this they are dropped (cosmetic only, used from C6).", "rays")]
+        public int NetMaxRaysPerTick = 300;
+
+        [CosmicParam("Most events (absorb, ionize, discharge, strike, spit) one player is sent per server tick; beyond this they are dropped (cosmetic only, used from C6).", "events")]
+        public int NetMaxEventsPerTick = 150;
+
+        [CosmicParam("Length of the fading trail behind a particle on screen (client only, used from C6).", "tiles")]
+        public float ClientTrailTiles = 5f;
+
+        [CosmicParam("Diameter of a particle's head on screen. The optional Content/Particles/CosmicParticle.png is scaled to it (client only, used from C6).", "pixels")]
+        public float ClientParticleSizePx = 3f;
+
+        [CosmicParam("Brightness multiplier of the particles and their trails (client only, used from C6).", "x")]
+        public float ClientBrightness = 1f;
+
+        [CosmicParam("How long a lightning bolt (strike or spit) stays on screen (client only, used from C6).", "ticks")]
+        public int BoltLifeTicks = 14;
+
         // ------------------------------------------------------------ lifecycle
 
         public override void PostUpdateWorld()

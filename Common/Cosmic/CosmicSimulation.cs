@@ -89,7 +89,8 @@ namespace Factorraria.Common.Cosmic
         public bool LogDischarges;
 
         // C5: strikes. The sink gets every Strike and Spit event (C6 swaps in the real sinks); the counters are what /fcosmic stats shows.
-        public ICosmicEventSink Sink = new CosmicNullSink();
+        // C6: the router feeds the local screen (single-player, a host that plays) and/or the network (server); see Common/Net/CosmicEventSink.cs.
+        public ICosmicEventSink Sink = new CosmicEventRouter();
         public long Strikes, Spits, SurgesClamped;
         public double BiggestSurge;
         public bool HasLastStrike;
@@ -113,6 +114,7 @@ namespace Factorraria.Common.Cosmic
             Index.Clear();
             Heap.Clear();
             IonField.Clear();
+            (Sink as CosmicEventRouter)?.Clear();
             sampling.Clear();
             Now = 0;
             nextSampleTick = 0;
@@ -200,6 +202,9 @@ namespace Factorraria.Common.Cosmic
                 }
 
                 ProcessQueue(s);
+
+                // C6: a network sink sends what the tick produced (one packet of each kind per nearby player).
+                Sink?.EndTick();
             }
             catch (Exception e)
             {
@@ -412,6 +417,19 @@ namespace Factorraria.Common.Cosmic
 
             CosmicRayResult r = CosmicRayTracer.Trace(probe, ev.X, ev.Y, ev.DirX, ev.DirY, ev.Color, s.ParticleRange, s.CloudAbsorbChance, rng);
 
+            // C6: every traced ray is drawn from start to end, whatever its outcome (a Range end has Distance 0, it flies the full range).
+            Sink?.Ray(new CosmicRayEvent
+            {
+                Tick = Now,
+                Color = ev.Color,
+                StartX = ev.X,
+                StartY = ev.Y,
+                DirX = ev.DirX,
+                DirY = ev.DirY,
+                Length = r.End == CosmicRayEnd.Range ? s.ParticleRange : r.Distance,
+                End = r.End == CosmicRayEnd.Absorb ? CosmicRayEndKind.Absorb : r.End == CosmicRayEnd.Ionize ? CosmicRayEndKind.Ionize : CosmicRayEndKind.None
+            });
+
             if (r.End == CosmicRayEnd.Solid)
             {
                 DeadSolid++;
@@ -478,6 +496,7 @@ namespace Factorraria.Common.Cosmic
             }
 
             Absorbed[(int)ev.Color]++;
+            Sink?.Absorb(new CosmicAbsorbEvent { Tick = Now, Color = ev.Color, TileX = ev.TileX, TileY = ev.TileY });
 
             if (!CosmicColors.HasNext(ev.Color))
             {
@@ -531,7 +550,10 @@ namespace Factorraria.Common.Cosmic
                 s.IonizedLifetimeTicks, cloudTest, rng, out int made);
 
             if (result == CosmicHitResult.Ionized)
+            {
                 BlocksIonized += made;
+                Sink?.Ionize(new CosmicIonizeEvent { Tick = Now, Color = ev.Color, LifeTicks = s.IonizedLifetimeTicks, Tiles = IonField.LastTiles });
+            }
             else if (result == CosmicHitResult.Added)
                 HitsAdded++;
             else if (result == CosmicHitResult.Refractory)
@@ -552,6 +574,9 @@ namespace Factorraria.Common.Cosmic
 
             RecentDischarges[RecentDischargeCount % RecentDischarges.Length] = d;
             RecentDischargeCount++;
+
+            // C6: IonField.LastTiles still holds the blocks of this cluster (nothing has touched the field since PopDischarge).
+            Sink?.Discharge(new CosmicDischargeEvent { Tick = Now, CenterX = d.CenterX, CenterY = d.CenterY, Energy = d.Energy, Tiles = IonField.LastTiles });
 
             StrikeResult strike = Strike(s, d.Energy, d.CenterX, d.CenterY);
 
