@@ -106,6 +106,11 @@ namespace Factorraria.Common.Cosmic
         Texture2D circle;
         bool circleLooked;
 
+        // C8: the draw budget. Every trail segment and particle head counts as one quad. quadsThisFrame is reset at the start of the
+        // frame's draw; the particle drawing simplifies itself once it passes ClientDrawBudget (see DrawParticleSet). What /fcosmic fx shows.
+        int quadsThisFrame;
+        public int QuadsLastFrame, PeakQuads;
+
         // What /fcosmic fx prints.
         public int ActiveCount, PeakActive;
         public long Spawned, Overwritten, ReceivedRays, ReceivedEvents;
@@ -129,6 +134,7 @@ namespace Factorraria.Common.Cosmic
             boltsActive = sparksActive = 0;
             ActiveCount = PeakActive = 0;
             Spawned = Overwritten = ReceivedRays = ReceivedEvents = 0;
+            QuadsLastFrame = PeakQuads = quadsThisFrame = 0;
             ClearAmbient();
         }
 
@@ -136,6 +142,7 @@ namespace Factorraria.Common.Cosmic
         {
             return "particles " + ActiveCount + " of " + pool.Length + " (peak " + PeakActive + ", pool full and overwrote " + Overwritten + ", spawned " + Spawned
                 + "), ionized glow blocks " + glows.Count + ", bolts " + boltsActive + ", sparks " + sparksActive
+                + ", particle quads drawn last frame " + QuadsLastFrame + " (peak " + PeakQuads + ", budget " + CosmicRadiationSystem.Instance.ClientDrawBudget + ")"
                 + ", received from the server: " + ReceivedRays + " rays and " + ReceivedEvents + " events, queued " + IncomingRays.Count + " + " + IncomingEvents.Count + ". " + AmbientText();
         }
 
@@ -441,7 +448,10 @@ namespace Factorraria.Common.Cosmic
                 return;
 
             if (ActiveCount == 0 && glows.Count == 0 && boltsActive == 0 && sparksActive == 0 && ambientActive == 0 && !DebugOn)
+            {
+                QuadsLastFrame = 0;
                 return;
+            }
 
             if (!circleLooked)
             {
@@ -458,15 +468,21 @@ namespace Factorraria.Common.Cosmic
 
             sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
+            quadsThisFrame = 0;
+
             DrawDischargeFlash(sb, pixel, now);
+            DrawParticles(sb, pixel, now, system);   // C8: the real particles first, so they get the draw budget before the ambient ones (additive, so the order does not change the picture)
             DrawAmbient(sb, pixel, now, system);
-            DrawParticles(sb, pixel, now, system);
             DrawBolts(sb, pixel, now);
             DrawSparks(sb, pixel, now);
             DrawStrikeFlash(sb, pixel, now, system);
 
             if (DebugOn)
                 DrawDebugWorld(sb, pixel, system);
+
+            QuadsLastFrame = quadsThisFrame;
+            if (quadsThisFrame > PeakQuads)
+                PeakQuads = quadsThisFrame;
 
             sb.End();
         }
@@ -537,6 +553,7 @@ namespace Factorraria.Common.Cosmic
             float trail = Math.Max(0.5f, system.ClientTrailTiles);
             float size = Math.Max(1f, system.ClientParticleSizePx);
             float bright = Math.Max(0f, system.ClientBrightness) * brightScale;
+            int budget = Math.Max(100, system.ClientDrawBudget);
 
             for (int i = 0; i < set.Length; i++)
             {
@@ -562,10 +579,11 @@ namespace Factorraria.Common.Cosmic
                 Color color = CosmicColors.DrawColor((CosmicColor)p.Color) * bright;
                 float rotation = (float)Math.Atan2(p.DirY, p.DirX);
 
-                // 8 straight segments, each brighter than the one behind it
-                const int segments = 8;
-                float step = (head - tail) / segments;
-                if (step > 0.001f)
+                // 8 straight segments, each brighter than the one behind it. C8: past the draw budget a trail shrinks to 3 segments, past twice
+                // the budget only the head is drawn, so a huge sky farm costs a bounded number of quads.
+                int segments = quadsThisFrame < budget ? 8 : quadsThisFrame < budget * 2 ? 3 : 0;
+                float step = (head - tail) / Math.Max(1, segments);
+                if (segments > 0 && step > 0.001f)
                 {
                     for (int s = 0; s < segments; s++)
                     {
@@ -574,12 +592,15 @@ namespace Factorraria.Common.Cosmic
                         Vector2 from = new Vector2((p.X + p.DirX * a) * 16f - Main.screenPosition.X, (p.Y + p.DirY * a) * 16f - Main.screenPosition.Y);
                         sb.Draw(pixel, from, new Rectangle(0, 0, 1, 1), color * (fade * fade), rotation, new Vector2(0f, 0.5f), new Vector2(step * 16f + 0.5f, Math.Max(1f, size * 0.6f)), SpriteEffects.None, 0f);
                     }
+
+                    quadsThisFrame += segments;
                 }
 
                 // the head only while it is still flying
                 if (travelled <= p.Length)
                 {
                     Vector2 pos = new Vector2(hx * 16f - Main.screenPosition.X, hy * 16f - Main.screenPosition.Y);
+                    quadsThisFrame += circle != null ? 1 : 2;
 
                     if (circle != null)
                         sb.Draw(circle, pos, null, color, 0f, new Vector2(circle.Width, circle.Height) * 0.5f, size / circle.Width, SpriteEffects.None, 0f);
@@ -704,8 +725,12 @@ namespace Factorraria.Common.Cosmic
 
                 float fade = Math.Max(0f, 1f - age / 8f);
                 float size = 6f + age * 1.5f;
-                sb.Draw(pixel, new Vector2(px - Main.screenPosition.X, py - Main.screenPosition.Y), new Rectangle(0, 0, 1, 1), CosmicColors.DrawColor((CosmicColor)s.Color) * (fade * 0.8f),
-                    0f, new Vector2(0.5f, 0.5f), new Vector2(size, size), SpriteEffects.None, 0f);
+
+                // A round flash (the same soft-rim disc as the lightning flashes); 1.15 x the old square's side so it carries the same weight.
+                Texture2D disc = FlashDisc();
+                sb.Draw(disc, new Vector2(px - Main.screenPosition.X, py - Main.screenPosition.Y), null, CosmicColors.DrawColor((CosmicColor)s.Color) * (fade * 0.8f),
+                    0f, new Vector2(disc.Width / 2f, disc.Height / 2f), size * 1.15f / disc.Width, SpriteEffects.None, 0f);
+                quadsThisFrame++;
             }
         }
     }

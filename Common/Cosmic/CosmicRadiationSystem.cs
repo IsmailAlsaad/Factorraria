@@ -119,6 +119,9 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Most particles the client draws at once (used from C6).", "particles")]
         public int ClientParticlePool = 1500;
 
+        [CosmicParam("Particle quads (trail segments and heads) the client draws per frame before it simplifies: past this a trail shrinks to 3 segments, past twice this only heads are drawn. Real particles are drawn before the ambient ones, so the ambient ones simplify first. /fcosmic fx shows the quads drawn (client only, C8).", "quads")]
+        public int ClientDrawBudget = 1500;
+
         [CosmicParam("Players farther than this from an event get no packet for it (used from C6).", "tiles")]
         public int NetInterestRadiusTiles = 120;
 
@@ -187,6 +190,83 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Thunder at or above this energy tier (log10 of the energy x 4, the number that also sets the bolt width) plays the big SoundID.Thunder, weaker thunder plays the small bug zap. 8 is roughly an even split with the default tables (client only, C7b).", "tier")]
         public float ThunderBigTier = 20f;
 
+        // ------------------------------------------------------------ C8: hot reload and bad values
+        // Runs every tick on the server and in single-player, right before the simulation. A tunable that is edited to something the simulation
+        // cannot work with (a per-color table with the wrong length after a hot reload, a negative chance, NaN) is put back inside a safe range
+        // here, instead of throwing an exception in the middle of a tick and stopping the whole simulation. Values that are fine are not touched.
+        public void Sanitize()
+        {
+            BaseEnergy = FitTable(BaseEnergy, 1f);
+            Multiplier = FitTable(Multiplier, 1f);
+            ClusterMin = FitTable(ClusterMin, 1);
+            ClusterMax = FitTable(ClusterMax, 1);
+
+            for (int c = 0; c < CosmicColors.Count; c++)
+            {
+                ClusterMin[c] = Math.Clamp(ClusterMin[c], 1, 4096);
+                ClusterMax[c] = Math.Clamp(ClusterMax[c], ClusterMin[c], 4096);
+            }
+
+            HeatSigmaFraction = Fix(HeatSigmaFraction, 0.01f, 10f);
+            HeatFloor = Fix(HeatFloor, 0f, 1f);
+            RateDensity = Fix(RateDensity, 0f, 1000f);
+            SpawnSpreadDeg = Fix(SpawnSpreadDeg, 0f, 89f);
+            ParticleSpeed = Fix(ParticleSpeed, 0.01f, 100f);
+            ParticleRange = Fix(ParticleRange, 1f, 4000f);
+            SampleStepTicks = Math.Clamp(SampleStepTicks, 1, 600);
+            SpaceBottomFraction = Fix(SpaceBottomFraction, 0.01f, 1f);
+            ScanStripsPerTick = Math.Clamp(ScanStripsPerTick, 1, 1000);
+            ResyncStripsPerTick = Math.Clamp(ResyncStripsPerTick, 0, 1000);
+            ReemitAngleMinDeg = Fix(ReemitAngleMinDeg, 0f, 89f);
+            ReemitAngleMaxDeg = Fix(ReemitAngleMaxDeg, 0f, 89f);
+            CloudAbsorbChance = Fix(CloudAbsorbChance, 0f, 1f);
+            IonizedLifetimeTicks = Math.Clamp(IonizedLifetimeTicks, 1, 36000);
+            RefractoryTicks = Math.Clamp(RefractoryTicks, 0, 36000);
+            StrikeRadiusTiles = Fix(StrikeRadiusTiles, 0f, 5000f);
+            SurgePowerPerDecade = Fix(SurgePowerPerDecade, 0f, 1000000f);
+            SurgeDurationTicks = Math.Clamp(SurgeDurationTicks, 1, 36000);
+            MaxSurgePower = Fix(MaxSurgePower, 0f, 1000000000f);
+            MaxRaysPerTick = Math.Clamp(MaxRaysPerTick, 1, 100000);
+            MaxQueuedEvents = Math.Clamp(MaxQueuedEvents, 100, 1000000);
+        }
+
+        // NaN becomes the minimum; everything else is clamped into the range.
+        static float Fix(float value, float min, float max) => float.IsNaN(value) ? min : Math.Clamp(value, min, max);
+
+        // A per-color table needs exactly one entry per color and no NaN, negative or infinite entry. A too-short table keeps its entries and is
+        // padded with its last one; a too-long one is cut; a null one becomes the fallback in every slot.
+        static float[] FitTable(float[] table, float fallback)
+        {
+            if (table == null || table.Length != CosmicColors.Count)
+            {
+                float[] fitted = new float[CosmicColors.Count];
+                for (int i = 0; i < fitted.Length; i++)
+                    fitted[i] = table != null && table.Length > 0 ? table[Math.Min(i, table.Length - 1)] : fallback;
+                table = fitted;
+            }
+
+            for (int i = 0; i < table.Length; i++)
+            {
+                if (float.IsNaN(table[i]) || float.IsInfinity(table[i]) || table[i] < 0f)
+                    table[i] = fallback;
+            }
+
+            return table;
+        }
+
+        static int[] FitTable(int[] table, int fallback)
+        {
+            if (table == null || table.Length != CosmicColors.Count)
+            {
+                int[] fitted = new int[CosmicColors.Count];
+                for (int i = 0; i < fitted.Length; i++)
+                    fitted[i] = table != null && table.Length > 0 ? table[Math.Min(i, table.Length - 1)] : fallback;
+                table = fitted;
+            }
+
+            return table;
+        }
+
         // ------------------------------------------------------------ lifecycle
 
         public override void PostUpdateWorld()
@@ -203,6 +283,7 @@ namespace Factorraria.Common.Cosmic
             }
 
             // Patch C2: receiver index, particle sampling and the event queue (server and single-player only).
+            Sanitize();
             Sim.Update(this);
         }
 

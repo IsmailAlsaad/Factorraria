@@ -51,6 +51,10 @@ namespace Factorraria.Common.Cosmic
         // ------------------------------------------------------------ state
         public long Now { get; private set; }
         public string Fault { get; private set; }
+
+        // C8: how many times the simulation restarted itself after an error (it tries up to 5 times, 5 seconds apart), and the wait in between.
+        public int FaultCount;
+        int faultWait;
         long nextSampleTick;
 
         // scan
@@ -73,6 +77,9 @@ namespace Factorraria.Common.Cosmic
 
         // ------------------------------------------------------------ counters (what /fcosmic stats shows)
         public long RaysSampled, RaysTraced, DeadSolid, DeadRange, Dropped, DebugRays;
+
+        // C8: ticks in which MaxRaysPerTick was reached and the rest of the rays had to wait (a sign the budget is too low for the farm).
+        public long RayBacklogTicks;
         public readonly long[] Absorbed = new long[CosmicColors.Count];
         public readonly long[] Ionized = new long[CosmicColors.Count];
 
@@ -129,12 +136,15 @@ namespace Factorraria.Common.Cosmic
             SamplingAreaTiles = 0f;
             DensitySum = 0f;
             Fault = null;
+            FaultCount = 0;
+            faultWait = 0;
             ResetCounters();
         }
 
         public void ResetCounters()
         {
             RaysSampled = RaysTraced = DeadSolid = DeadRange = Dropped = DebugRays = 0;
+            RayBacklogTicks = 0;
             Array.Clear(Absorbed, 0, Absorbed.Length);
             Array.Clear(Ionized, 0, Ionized.Length);
             Array.Clear(Reemitted, 0, Reemitted.Length);
@@ -183,7 +193,13 @@ namespace Factorraria.Common.Cosmic
         // ------------------------------------------------------------ the tick
         public void Update(CosmicRadiationSystem s)
         {
-            if (Fault != null || !s.Heatmap.Ready || Main.maxTilesX <= 0 || Main.maxTilesY <= 0)
+            if (Fault != null)
+            {
+                TryRecover();
+                return;
+            }
+
+            if (!s.Heatmap.Ready || Main.maxTilesX <= 0 || Main.maxTilesY <= 0)
                 return;
 
             long start = Stopwatch.GetTimestamp();
@@ -232,6 +248,34 @@ namespace Factorraria.Common.Cosmic
                 windowMs = 0.0;
                 windowTicks = 0;
             }
+        }
+
+        // C8: after an error the simulation waits 5 seconds (300 ticks), throws away the queue, the ionized blocks and the receiver index, scans the
+        // sky again and starts over. It does this up to 5 times; after that it stays stopped so /fcosmic stats can still show the message
+        // (leaving and re-entering the world resets the count). Nothing is saved, so a restart loses only a second or two of ionized clouds.
+        void TryRecover()
+        {
+            if (FaultCount >= 5)
+                return;
+
+            faultWait++;
+            if (faultWait < 300)
+                return;
+
+            faultWait = 0;
+            FaultCount++;
+            string old = Fault;
+
+            Heap.Clear();
+            IonField.Clear();
+            Index.Clear();
+            (Sink as CosmicEventRouter)?.Clear();
+            sampling.Clear();
+            cacheVersion = -1;
+            RequestRescan();
+            Fault = null;
+
+            FactorrariaNet.Log("[Cosmic] restarting the simulation after an error (" + old + "), restart " + FaultCount + " of 5");
         }
 
         // ------------------------------------------------------------ 1. the receiver scan
@@ -391,7 +435,10 @@ namespace Factorraria.Common.Cosmic
                 if (next.Kind == CosmicQueuedKind.RayStart)
                 {
                     if (rayBudget <= 0)
+                    {
+                        RayBacklogTicks++;
                         break;   // the rest wait for the next tick
+                    }
 
                     rayBudget--;
                     Heap.Pop();

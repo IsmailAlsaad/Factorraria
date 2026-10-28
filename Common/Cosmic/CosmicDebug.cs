@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Net;
+using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using System;
 using System.Globalization;
@@ -9,7 +10,8 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Common.Cosmic
 {
-    // /fcosmic: debug and tuning command for the cosmic radiation source. Stays (heat and params) after Phase C8; see the roadmap.
+    // /fcosmic: debug and tuning command for the cosmic radiation source. C8: spawn, log and strike are test commands that only work while
+    // EnableDebugs is on in the mod config (they are hidden from normal players but kept for balancing); heat, params, stats, rescan and fx always work.
     //   /fcosmic heat [tileX]   the color order by section and each color's share of the particles at a column
     //   /fcosmic params         every balancing parameter with its value, unit and what it does
     //   /fcosmic stats [reset]  (C2) receivers, sampling areas, rays, hits per color, queue, cost per tick; "reset" zeroes the counters
@@ -38,17 +40,37 @@ namespace Factorraria.Common.Cosmic
             else if (sub == "stats")
                 Stats(caller, args);
             else if (sub == "spawn")
-                Spawn(caller, args);
+            {
+                if (TestCommandsOn(caller, sub))
+                    Spawn(caller, args);
+            }
             else if (sub == "rescan")
                 Rescan(caller);
             else if (sub == "log")
-                LogToggle(caller, args);
+            {
+                if (TestCommandsOn(caller, sub))
+                    LogToggle(caller, args);
+            }
             else if (sub == "strike")
-                StrikeNow(caller, args);
+            {
+                if (TestCommandsOn(caller, sub))
+                    StrikeNow(caller, args);
+            }
             else if (sub == "fx")
                 Fx(caller);
             else
                 caller.Reply("Usage: " + Usage, Color.OrangeRed);
+        }
+
+        // C8: the test commands only work while EnableDebugs is on in the Factorraria mod config.
+        static bool TestCommandsOn(CommandCaller caller, string what)
+        {
+            FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            if (config != null && config.EnableDebugs)
+                return true;
+
+            caller.Reply("fcosmic " + what + " is a test command: turn on EnableDebugs in the Factorraria mod config first.", Color.OrangeRed);
+            return false;
         }
 
         static string Side()
@@ -178,7 +200,7 @@ namespace Factorraria.Common.Cosmic
 
             if (sim.Fault != null)
             {
-                caller.Reply("fcosmic stats [" + Side() + "]: the simulation stopped after an error: " + sim.Fault + " (see the log; leave and re-enter the world to restart it)", Color.OrangeRed);
+                caller.Reply("fcosmic stats [" + Side() + "]: the simulation stopped after an error: " + sim.Fault + " (see the log; it restarts itself after 5 seconds, up to 5 times, restarts so far " + sim.FaultCount + ")", Color.OrangeRed);
                 return;
             }
 
@@ -226,6 +248,7 @@ namespace Factorraria.Common.Cosmic
             if (sim.HasLastStrike)
                 caller.Reply("  last strike: " + sim.LastStrikeMachine + " at (" + sim.LastStrikeX + ", " + sim.LastStrikeY + "), " + Inv(sim.LastStrikeDistance, "0.#") + " tiles from the thunder, energy " + CosmicSimulation.EnergyText(sim.LastStrikeEnergy) + ", surge " + CosmicSimulation.EnergyText(sim.LastStrikePower) + " for " + system.SurgeDurationTicks + " ticks, tick " + sim.LastStrikeTick + ".", Color.White);
             caller.Reply("  queue: " + sim.Heap.Count + " now, peak " + sim.PeakQueue + ", dropped " + sim.Dropped + " (cap " + system.MaxQueuedEvents + ").", Color.White);
+            caller.Reply("  limits (C8): ticks where MaxRaysPerTick (" + system.MaxRaysPerTick + ") held rays back " + sim.RayBacklogTicks + ", restarts after an error " + sim.FaultCount + " of 5.", Color.White);
             caller.Reply("  cost: " + Inv((float)sim.AvgMsPerTick, "0.000") + " ms per tick on average over the last second, worst tick " + Inv((float)sim.MaxMsPerTick, "0.000") + " ms.", Color.White);
             if (sim.Sink is CosmicEventRouter router)
                 caller.Reply("  events out (C6): " + router.StatsText() + ".", Color.White);

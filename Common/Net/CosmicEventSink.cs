@@ -230,21 +230,39 @@ namespace Factorraria.Common.Net
                         pickedRays.Add(i);
                 }
 
+                // C8: absorb events are many and the least important ones; strikes, spits, discharges and ionizations are rare and must not be
+                // lost behind them. Pass 1 counts the important events near this player; pass 2 picks everything in order, but an absorb only
+                // while the cap still has room left over for the important ones.
+                int important = 0;
+                for (int i = 0; i < events.Count; i++)
+                {
+                    if (events[i].Kind != CosmicEventKind.Absorb && EventNear(events[i], cx, cy, radius))
+                        important++;
+                }
+
+                int absorbRoom = Math.Max(0, eventCap - important);
+
                 pickedEvents.Clear();
                 for (int i = 0; i < events.Count; i++)
                 {
                     CosmicPendingEvent p = events[i];
-                    bool near = p.Kind == CosmicEventKind.Strike
-                        ? SegmentNear(p.AX, p.AY, p.BX, p.BY, cx, cy, radius)
-                        : SegmentNear(p.AX, p.AY, p.AX, p.AY, cx, cy, radius);
-
-                    if (!near)
+                    if (!EventNear(p, cx, cy, radius))
                         continue;
 
-                    if (pickedEvents.Count >= eventCap)
-                        EventsDropped++;
-                    else
+                    if (p.Kind == CosmicEventKind.Absorb)
+                    {
+                        if (absorbRoom > 0)
+                        {
+                            absorbRoom--;
+                            pickedEvents.Add(i);
+                        }
+                        else
+                            EventsDropped++;
+                    }
+                    else if (pickedEvents.Count < eventCap)
                         pickedEvents.Add(i);
+                    else
+                        EventsDropped++;
                 }
 
                 if (pickedRays.Count > 0)
@@ -261,6 +279,14 @@ namespace Factorraria.Common.Net
                     FactorrariaNet.SendToClient(player, FactorrariaPacket.CosmicEvent, writer => CosmicWire.WriteEvents(writer, events, tileBuf, pickedEvents));
                 }
             }
+        }
+
+        // Is this event within `radius` tiles of the point? A strike is a segment, everything else a point.
+        static bool EventNear(CosmicPendingEvent p, float cx, float cy, float radius)
+        {
+            return p.Kind == CosmicEventKind.Strike
+                ? SegmentNear(p.AX, p.AY, p.BX, p.BY, cx, cy, radius)
+                : SegmentNear(p.AX, p.AY, p.AX, p.AY, cx, cy, radius);
         }
 
         // Is the segment (ax, ay) to (bx, by) within `radius` tiles of the point (cx, cy)?
@@ -335,6 +361,11 @@ namespace Factorraria.Common.Net
                 float length = reader.ReadUInt16() / 16f;
 
                 if (float.IsNaN(x) || float.IsNaN(y))
+                    continue;
+
+                // C8: if the main thread has not drained the queue (a long stall), new rays are dropped instead of piling up without limit.
+                int queueLimit = 16384;
+                if (target.IncomingRays.Count > queueLimit)
                     continue;
 
                 target.IncomingRays.Enqueue(new CosmicClientRay
@@ -447,7 +478,9 @@ namespace Factorraria.Common.Net
                 if (e.Color >= CosmicColors.Count)
                     e.Color = (byte)(CosmicColors.Count - 1);
 
-                target.IncomingEvents.Enqueue(e);
+                int eventQueueLimit = 8192;   // C8: same protection as for rays
+                if (target.IncomingEvents.Count <= eventQueueLimit)
+                    target.IncomingEvents.Enqueue(e);
             }
         }
 

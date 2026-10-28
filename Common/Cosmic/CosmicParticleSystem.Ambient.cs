@@ -529,6 +529,7 @@ namespace Factorraria.Common.Cosmic
             List<string> lines = new List<string>();
             lines.Add("Cosmic [debug]: " + ActiveCount + " of " + pool.Length + " real particles, glow blocks " + glows.Count + ", bolts " + boltsActive + ", sparks " + sparksActive);
             lines.Add("Cosmic [debug]: " + AmbientText());
+            lines.Add("Cosmic [debug]: particle quads last frame " + QuadsLastFrame + " (peak " + PeakQuads + ", budget " + system.ClientDrawBudget + ")");
 
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
