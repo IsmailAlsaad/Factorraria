@@ -410,7 +410,7 @@ namespace Factorraria.Common.Cosmic
             if (Main.dedServ || Main.gameMenu)
                 return;
 
-            if (ActiveCount == 0 && boltsActive == 0 && sparksActive == 0)
+            if (ActiveCount == 0 && glows.Count == 0 && boltsActive == 0 && sparksActive == 0)
                 return;
 
             if (!circleLooked)
@@ -428,6 +428,7 @@ namespace Factorraria.Common.Cosmic
 
             sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
+            DrawDischargeFlash(sb, pixel, now);
             DrawParticles(sb, pixel, now, system);
             DrawBolts(sb, pixel, now);
             DrawSparks(sb, pixel, now);
@@ -461,6 +462,33 @@ namespace Factorraria.Common.Cosmic
             float frac = Math.Min(1f, age / g.Life);
             float pulse = 0.5f + 0.5f * (float)Math.Sin(age * (0.35f + 0.6f * frac));
             return 0.22f + 0.3f * pulse + 0.25f * frac;
+        }
+
+        // C6f: the white flash at the end of the discharge, as before C6b: ONLY the blocks that are fading out (the cluster just discharged)
+        // get an additive white quad, 0.9 strong at first and gone after the fade (10 ticks). The tile tint and light are separate (C6b to C6e).
+        void DrawDischargeFlash(SpriteBatch sb, Texture2D pixel, uint now)
+        {
+            if (glows.Count == 0)
+                return;
+
+            foreach (KeyValuePair<long, Glow> pair in glows)
+            {
+                Glow g = pair.Value;
+                if (!g.Fading)
+                    continue;
+
+                float px = (int)(pair.Key >> 32) * 16f;
+                float py = (int)(uint)pair.Key * 16f;
+                if (!BoxVisible(px, py, px + 16f, py + 16f))
+                    continue;
+
+                float age = (int)(now - g.Born);
+                float alpha = Math.Max(0f, 1f - age / g.Life) * 0.9f;
+                if (alpha <= 0f)
+                    continue;
+
+                sb.Draw(pixel, new Vector2(px - Main.screenPosition.X, py - Main.screenPosition.Y), new Rectangle(0, 0, 1, 1), Color.White * alpha, 0f, Vector2.Zero, new Vector2(16f, 16f), SpriteEffects.None, 0f);
+            }
         }
 
         void DrawParticles(SpriteBatch sb, Texture2D pixel, uint now, CosmicRadiationSystem system)
