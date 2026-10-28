@@ -572,8 +572,14 @@ namespace Factorraria.Common.Cosmic
                         py += perpY * jitter;
                     }
 
-                    Line(sb, pixel, prevX, prevY, px, py, widthGlow, new Color(110, 150, 255) * (fade * 0.4f));
-                    Line(sb, pixel, prevX, prevY, px, py, widthCore, new Color(235, 240, 255) * fade);
+                    // C6c: transparent at the start, fully opaque 15% along the bolt, then thinner and a little fainter all the way to the end.
+                    float tm = (s - 0.5f) / segments;
+                    float fadeIn = Math.Min(1f, tm / 0.15f);
+                    float taper = tm <= 0.15f ? 1f : 1f - 0.8f * ((tm - 0.15f) / 0.85f);
+                    float alpha = fade * fadeIn * (0.4f + 0.6f * taper);
+
+                    Line(sb, pixel, prevX, prevY, px, py, widthGlow * taper, new Color(110, 150, 255) * (alpha * 0.4f));
+                    Line(sb, pixel, prevX, prevY, px, py, widthCore * taper, new Color(235, 240, 255) * alpha);
 
                     prevX = px;
                     prevY = py;

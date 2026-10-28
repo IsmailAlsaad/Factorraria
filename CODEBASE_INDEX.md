@@ -198,7 +198,7 @@ tModLoader/other bases -> project types:
     +Count:int +Clear() +TryGet(int,int,out CosmicIonizedBlock) +Remove(int,int) +Hit(long,int,int,CosmicColor,float,float,int,int,int,Func<int, int, bool>,Random,out int) +PopDischarge(long,int,Func<int, int, bool>,out CosmicDischarge)
 **CosmicIonizedTileDraw.cs** uses: CosmicParticleSystem
   class CosmicIonizedTileDraw : GlobalTile
-    +DrawEffects(int,int,int,SpriteBatch,ref TileDrawInfo)[ov]
+    +DrawEffects(int,int,int,SpriteBatch,ref TileDrawInfo)[ov] +PostDraw(int,int,int,SpriteBatch)[ov]
 **CosmicParamAttribute.cs**
   sealed class CosmicParamAttribute : Attribute
     +Description:string +Unit:string
