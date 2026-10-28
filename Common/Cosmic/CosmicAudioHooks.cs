@@ -24,7 +24,7 @@ namespace Factorraria.Common.Cosmic
         public static void OnReemitted(CosmicColor childColor, float tileX, float tileY)
         {
             int soundIndex = Main.rand.Next(1, 11);
-            string soundPath = $"Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";
+            string soundPath = $"Factorraria/Assets/Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";
             SoundEngine.PlaySound(new SoundStyle(soundPath) with { Volume = 0.4f , PitchVariance = 0.2f, MaxInstances = 0}, new Vector2(tileX, tileY) * 16f);
         }
 

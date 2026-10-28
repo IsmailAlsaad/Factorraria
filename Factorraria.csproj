@@ -20,6 +20,7 @@
 	<ItemGroup>
 	  <Folder Include="Assets\Atlases\" />
 	  <Folder Include="Common\Liquids\LiquidIcons\" />
+	  <Folder Include="Common\Sounds\GeigerCounterClick\" />
 	  <Folder Include="Common\UI\CartMap\" />
 	  <Folder Include="Content\Items\Weapons\" />
 	  <Folder Include="Content\Projectiles\Weapons\" />
