@@ -133,10 +133,16 @@ namespace Factorraria.Common.Machines
                 onFrames: 5, offFrames: 1,
                 yOffset: 2f);
 
-            // Sun Capsule (battery): On = idle, then charging, then discharging. SunCapsuleTileEntity.VisualState picks the entry.
-            MachineVisualRegistry.Register<SunCapsuleTileEntity>(ModContent.TileType<SunCapsuleTile>(),
+            // Sun Capsule (battery), 4x4 canvas around a 2x3 footprint (middle, bottom). On = idle, then charging, then discharging; SunCapsuleTileEntity.VisualState picks the entry.
+            // Startup / shutdown follow SunCapsuleTileEntity.IsRunning (has energy), not the grid.
+            MachineVisualRegistry.RegisterOverhang<SunCapsuleTileEntity>(ModContent.TileType<SunCapsuleTile>(),
                 basePath + "ElectricalProducers/SunCapsule/SunCapsule_On",
-                basePath + "ElectricalProducers/SunCapsule/SunCapsule_Off");
+                basePath + "ElectricalProducers/SunCapsule/SunCapsule_Off",
+                footprintWidth: 2, footprintHeight: 3,
+                originX: 1, originY: 1,
+                onFrames: 8, offFrames: 1,
+                startupPath: basePath + "ElectricalProducers/SunCapsule/SunCapsule_Startup",
+                shutdownPath: basePath + "ElectricalProducers/SunCapsule/SunCapsule_Shutdown");
             MachineVisualRegistry.RegisterOnStates(ModContent.TileType<SunCapsuleTile>(),
                 basePath + "ElectricalProducers/SunCapsule/SunCapsule_On_Charging",
                 basePath + "ElectricalProducers/SunCapsule/SunCapsule_On_Discharging");

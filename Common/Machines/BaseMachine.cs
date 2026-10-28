@@ -987,7 +987,7 @@ namespace Factorraria.Common.Machines
         // a machine placed while off) only records its state, so nothing plays for a machine that was already running.
         internal void UpdateVisualTransition(MachineVisualDefinition def)
         {
-            bool running = isOn && isWorking;
+            bool running = IsRunning;
 
             if (!transitionSeeded)
             {
@@ -1246,6 +1246,11 @@ namespace Factorraria.Common.Machines
         // uses the last one). Runs on every process that draws, so it must be computed from state the client already has (synced flags,
         // or something the machine sends in WriteLightExtra). Not saved.
         public virtual int VisualState => 0;
+
+        // Whether the machine LOOKS like it is running: the On art (instead of Off), and the startup / shutdown animations fire when it changes.
+        // Default isOn && isWorking. A machine whose look follows something else (a battery: has energy stored) overrides it, and must compute
+        // it from state the client already has.
+        public virtual bool IsRunning => isOn && isWorking;
 
         /// <summary>Extra state a subclass wants in the frequent light updates. Keep it small and QUANTIZED: the payload is only re-sent when its bytes change. Call base first.</summary>
         protected virtual void WriteLightExtra(BinaryWriter writer) { }

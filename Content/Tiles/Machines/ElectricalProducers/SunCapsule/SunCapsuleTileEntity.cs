@@ -28,6 +28,11 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule
         public byte FlowState;
         public override int VisualState => FlowState;
 
+        // The battery looks "running" (On art) while it has energy in it, whatever the grid is doing. Going from empty to charging plays
+        // the startup animation, going from some energy to empty plays the shutdown. Exact, not rounded: clients get it as its own flag.
+        bool hasEnergy;
+        public override bool IsRunning => hasEnergy;
+
         public float AvailableCharge() => Math.Min(MaxChargeRate, (EnergyCapacity - storedEnergy) * 60f);
         public float AvailableDischarge() => Math.Min(MaxDischargeRate, storedEnergy * 60f);
 
@@ -37,11 +42,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule
             if (power > 0f)
             {
                 storedEnergy = Math.Min(EnergyCapacity, storedEnergy + power / 60f);
+                hasEnergy = storedEnergy > 0f;
                 FlowState = 1;
             }
             else if (power < 0f)
             {
                 storedEnergy = Math.Max(0f, storedEnergy + power / 60f);
+                hasEnergy = storedEnergy > 0f;
                 FlowState = 2;
             }
             else
@@ -66,6 +73,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule
             base.WriteLightExtra(writer);
             writer.Write(FlowState);
             writer.Write((byte)QuantizedCharge(storedEnergy));
+            writer.Write(hasEnergy);
         }
 
         protected override void ReadLightExtra(BinaryReader reader)
@@ -73,6 +81,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule
             base.ReadLightExtra(reader);
             FlowState = reader.ReadByte();
             int steps = reader.ReadByte();
+            hasEnergy = reader.ReadBoolean();
 
             // Keep the exact value from the snapshot while it still rounds to what the server sent.
             if (QuantizedCharge(storedEnergy) != steps)
@@ -91,6 +100,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule
             base.ReadSnapshotExtra(reader);
             FlowState = reader.ReadByte();
             storedEnergy = reader.ReadSingle();
+            hasEnergy = storedEnergy > 0f;
         }
 
         protected override string DescribeSnapshotExtra() => base.DescribeSnapshotExtra() + " charge=" + storedEnergy.ToString("0.0") + "/" + EnergyCapacity + " flow=" + FlowState;
@@ -107,6 +117,8 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule
             base.LoadData(tag);
             if (tag.ContainsKey("SunCharge"))
                 storedEnergy = Math.Clamp(tag.GetFloat("SunCharge"), 0f, EnergyCapacity);
+
+            hasEnergy = storedEnergy > 0f;
         }
     }
 }

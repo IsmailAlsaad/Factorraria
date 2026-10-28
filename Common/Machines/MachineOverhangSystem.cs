@@ -75,15 +75,15 @@ namespace Factorraria.Common.Machines
                     continue;
                 }
 
-                bool working = machine.isOn && machine.isWorking;
+                bool working = machine.IsRunning;
                 Texture2D texture;
                 int frame;
                 MachineTransition transition;
                 bool drawLiquid = true;
                 if (!def.TryGetActiveTransition(machine, out texture, out frame, out transition))
                 {
-                    texture = working ? def.OnTexture.Value : def.OffTexture.Value;
-                    frame = TileEntityHelper.GetAnimationFrame(corner, canvas.FrameCount(working));
+                    texture = def.GetCanvasTexture(machine, working, out int stateFrames);
+                    frame = TileEntityHelper.GetAnimationFrame(corner, stateFrames);
                     drawLiquid = working;   // the On liquid layers only draw while running
                 }
                 int canvasWidth = canvas.CanvasWidth * 16;

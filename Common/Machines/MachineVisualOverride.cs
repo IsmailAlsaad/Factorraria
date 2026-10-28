@@ -150,6 +150,43 @@ namespace Factorraria.Common.Machines
 
             return OnTexture;
         }
+
+        readonly HashSet<Texture2D> badCanvasStates = new();
+
+        // Overhang machines: the texture to draw for the current state and how many frames it has. Off is the Off sheet (Canvas.OffFrames).
+        // While running it is GetOnAsset: the On sheet uses Canvas.OnFrames, any other On state (extra or alternate) must be the same canvas
+        // width and a whole number of canvas frames tall, its frame count is detected from the height. A state texture that doesn't fit
+        // falls back to the On sheet and logs once.
+        public Texture2D GetCanvasTexture(BaseMachine machine, bool running, out int frameCount)
+        {
+            if (!running)
+            {
+                frameCount = Canvas.OffFrames;
+                return OffTexture.Value;
+            }
+
+            Texture2D on = OnTexture.Value;
+            Texture2D state = GetOnAsset(machine)?.Value;
+            if (state == null || ReferenceEquals(state, on))
+            {
+                frameCount = Canvas.OnFrames;
+                return on;
+            }
+
+            int stride = Canvas.FrameStride;
+            int frames = stride > 0 ? (state.Height + Canvas.Padding) / stride : 0;
+            if (state.Width != on.Width || frames < 1 || (state.Height != frames * stride && state.Height != frames * stride - Canvas.Padding))
+            {
+                if (badCanvasStates.Add(state))
+                    MachineVisualRegistry.Warn($"An On state texture of tile {TileType} is ignored: it is {state.Width}x{state.Height} but must be {on.Width}px wide and a whole number of {stride}px canvas frames tall.");
+
+                frameCount = Canvas.OnFrames;
+                return on;
+            }
+
+            frameCount = frames;
+            return state;
+        }
         public List<LiquidOverlayLayer> LiquidOverlays = new();
         public MachineCanvas Canvas;   // null = On and Off are normal footprint-sized sheets
 
@@ -323,7 +360,7 @@ namespace Factorraria.Common.Machines
         // Extra On animations picked by BaseMachine.VisualState. Call after Register<T>: the On texture given there is state 0, the paths here
         // are states 1, 2, 3... in order. Each is a normal On sheet (frames stacked vertically, any frame count, the footprint's tile layout).
         // The machine only reports a number, e.g. a battery: 0 idle, 1 charging, 2 discharging. A PNG that doesn't exist yet only logs a
-        // warning and that state draws state 0 instead. Not supported on overhang machines (RegisterOverhang) yet.
+        // warning and that state draws state 0 instead. Works for overhang machines too: every state texture must be the same canvas as On (same width, whole canvas frames tall; the frame count of each state is detected).
         public static void RegisterOnStates(int tileType, params string[] extraOnPaths)
         {
             if (!Definitions.TryGetValue(tileType, out var def))
@@ -443,7 +480,8 @@ namespace Factorraria.Common.Machines
                 if (def.Canvas.Resolve(def.OnTexture.Value, def.OffTexture.Value) && !def.TryGetActiveTransition(entity, out _, out _, out _))
                 {
                     TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
-                    entity.NotifyAnimationFrame(TileEntityHelper.GetAnimationFrame(topLeft, def.Canvas.FrameCount(entity.isOn && entity.isWorking)));
+                    def.GetCanvasTexture(entity, entity.IsRunning, out int canvasFrames);
+                    entity.NotifyAnimationFrame(TileEntityHelper.GetAnimationFrame(topLeft, canvasFrames));
                 }
                 return false;
             }
@@ -459,13 +497,13 @@ namespace Factorraria.Common.Machines
                 return false;
             }
 
-            var texture = entity.isOn && entity.isWorking
+            var texture = entity.IsRunning
                 ? def.GetOnAsset(entity)
                 : def.OffTexture;
 
             int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j, rotation);
 
-            if (entity.isOn && entity.isWorking)
+            if (entity.IsRunning)
                 DrawLiquidOverlays(spriteBatch, def.LiquidOverlays, MachineTransition.None, entity, i, j, rotation, -1);
 
             entity.NotifyAnimationFrame(frame);
@@ -557,7 +595,7 @@ namespace Factorraria.Common.Machines
                 return; 
             }
 
-            if (!machine.isOn || !machine.isWorking)
+            if (!machine.IsRunning)
             {
                 r = 0f;
                 g = 0f;

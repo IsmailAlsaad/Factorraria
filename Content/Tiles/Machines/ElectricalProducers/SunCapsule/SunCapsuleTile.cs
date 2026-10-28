@@ -9,7 +9,7 @@ using Terraria.ObjectData;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule
 {
-    // 2 wide, 3 tall. Drawn through MachineVisualOverride (see the registration in MachineRegisterationSystem), so the Off sheet
+    // 2 wide, 3 tall. Drawn as an overhang canvas by MachineOverhangSystem (see the registration in MachineRegisterationSystem), so the Off sheet
     // only has to exist as the tile's own texture.
     public class SunCapsuleTile : ModTile
     {
