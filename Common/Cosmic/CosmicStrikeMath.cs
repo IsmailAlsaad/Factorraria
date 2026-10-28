@@ -40,6 +40,19 @@ namespace Factorraria.Common.Cosmic
             return (float)power;
         }
 
+        // Lightning hitting an enemy: damage = the thunder's energy, rounded down, at least 1 (NaN, negative and below 1 give 1) and never above
+        // int.MaxValue (NPC damage is an int; the energy itself is a double and stays uncapped everywhere else).
+        public static int EnergyDamage(double energy)
+        {
+            if (double.IsNaN(energy) || energy < 1.0)
+                return 1;
+
+            if (energy >= int.MaxValue)
+                return int.MaxValue;
+
+            return (int)energy;
+        }
+
         // Two strikes on the same machine inside the same window stack: the powers add (never above maxPower) and the window restarts
         // at the longer of the time left and the new duration. A strike with no power or no duration changes nothing.
         public static void Stack(ref float power, ref int ticksLeft, float addPower, int durationTicks, float maxPower)

@@ -101,7 +101,7 @@ namespace Factorraria.Common.Cosmic
         // C5: strikes. The sink gets every Strike and Spit event (C6 swaps in the real sinks); the counters are what /fcosmic stats shows.
         // C6: the router feeds the local screen (single-player, a host that plays) and/or the network (server); see Common/Net/CosmicEventSink.cs.
         public ICosmicEventSink Sink = new CosmicEventRouter();
-        public long Strikes, Spits, SurgesClamped;
+        public long Strikes, Spits, SurgesClamped, EnemyStrikes;
         public double BiggestSurge;
         public bool HasLastStrike;
         public string LastStrikeMachine;
@@ -153,7 +153,7 @@ namespace Factorraria.Common.Cosmic
             BlocksIonized = HitsAdded = HitsRefractory = CloudGone = Discharges = DischargedBlocks = 0;
             BiggestEnergy = 0.0;
             RecentDischargeCount = 0;
-            Strikes = Spits = SurgesClamped = 0;
+            Strikes = Spits = SurgesClamped = EnemyStrikes = 0;
             BiggestSurge = 0.0;
             HasLastStrike = false;
             PeakQueue = Heap.Count;
@@ -646,7 +646,10 @@ namespace Factorraria.Common.Cosmic
         // The outcome of one strike attempt (what the log line and /fcosmic strike print).
         public struct StrikeResult
         {
-            public bool Struck;          // false = no machine in range, the thunder spat into the sky
+            public bool Struck;          // false = no machine in range (see HitEnemy, otherwise the thunder spat into the sky)
+            public bool HitEnemy;        // no machine in range, but a non-boss enemy was: it took Damage
+            public NPC Enemy;
+            public int Damage;
             public BaseMachine Target;
             public float Distance;       // tiles from the thunder to the machine's center
             public float Power;          // surge power added to the machine (after clamping)
@@ -666,6 +669,11 @@ namespace Factorraria.Common.Cosmic
 
             if (target == null)
             {
+                NPC enemy = FindStrikeEnemy(centerX, centerY, s.StrikeRadiusTiles, out float enemyDistance);
+
+                if (enemy != null)
+                    return StrikeEnemy(enemy, enemyDistance, energy, centerX, centerY);
+
                 Spits++;
 
                 double angle = rng.NextDouble() * Math.PI * 2.0;
@@ -708,6 +716,88 @@ namespace Factorraria.Common.Cosmic
             result.Power = power;
             result.Clamped = clamped;
             return result;
+        }
+
+        // No machine in range: the thunder hits the nearest non-boss enemy instead. Server and single-player only (like the rest of the simulation).
+        // Damage = the thunder's energy (CosmicStrikeMath.EnergyDamage), dealt as a raw hit so defense does not reduce it. StrikeNPC never reads or sets
+        // NPC.immune (that is only done by the player and projectile code), so consecutive thunders always land. In multiplayer the hit is sent to the
+        // clients with NetMessage.SendStrikeNPC. The Strike event draws the bolt from the thunder to the enemy (SurgePower 0: nothing goes to a grid).
+        StrikeResult StrikeEnemy(NPC enemy, float distance, double energy, float centerX, float centerY)
+        {
+            int damage = CosmicStrikeMath.EnergyDamage(energy);
+            float toX = enemy.Center.X / 16f;
+            float toY = enemy.Center.Y / 16f;
+
+            NPC.HitInfo hit = new NPC.HitInfo
+            {
+                Damage = damage,
+                SourceDamage = damage,
+                DamageType = Terraria.ModLoader.DamageClass.Default,
+                HitDirection = toX >= centerX ? 1 : -1,
+                Knockback = 0f,
+                Crit = false
+            };
+
+            enemy.StrikeNPC(hit, false, true);
+
+            if (Main.netMode != Terraria.ID.NetmodeID.SinglePlayer)
+                NetMessage.SendStrikeNPC(enemy, hit);
+
+            EnemyStrikes++;
+
+            Sink?.Strike(new CosmicStrikeEvent { Tick = Now, FromX = centerX, FromY = centerY, ToX = toX, ToY = toY, Energy = energy, SurgePower = 0f });
+
+            StrikeResult result = default;
+            result.HitEnemy = true;
+            result.Enemy = enemy;
+            result.Distance = distance;
+            result.Damage = damage;
+            return result;
+        }
+
+        // The nearest hostile, damageable, non-boss NPC whose center is within `radius` tiles of the point, or null. CanBeChasedBy skips town NPCs,
+        // critters (5 life or less), friendly and invulnerable NPCs.
+        NPC FindStrikeEnemy(float centerX, float centerY, float radius, out float distance)
+        {
+            distance = 0f;
+
+            if (radius <= 0f)
+                return null;
+
+            NPC best = null;
+            float limitSq = radius * radius;
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+
+                if (!npc.active || !npc.CanBeChasedBy() || IsBossNpc(npc))
+                    continue;
+
+                if (CosmicStrikeMath.IsCloser(centerX, centerY, npc.Center.X / 16f, npc.Center.Y / 16f, limitSq, out float distanceSq))
+                {
+                    best = npc;
+                    limitSq = distanceSq;
+                    distance = (float)Math.Sqrt(distanceSq);
+                }
+            }
+
+            return best;
+        }
+
+        // A boss, a boss body part (Eater of Worlds, Destroyer, Wall of Flesh parts... via the vanilla boss set), or a part whose real head is a boss.
+        static bool IsBossNpc(NPC npc)
+        {
+            if (npc.boss || Terraria.ID.NPCID.Sets.ShouldBeCountedAsBoss[npc.type])
+                return true;
+
+            if (npc.realLife >= 0 && npc.realLife < Main.maxNPCs)
+            {
+                NPC head = Main.npc[npc.realLife];
+                return head.active && (head.boss || Terraria.ID.NPCID.Sets.ShouldBeCountedAsBoss[head.type]);
+            }
+
+            return false;
         }
 
         // The nearest electric machine whose center is within `radius` tiles of the point, or null. Walks PowerGridSystem.AllMachines, which holds
@@ -756,8 +846,11 @@ namespace Factorraria.Common.Cosmic
         // The end of a discharge log line: what the thunder did.
         public static string StrikeLogText(CosmicRadiationSystem s, in StrikeResult r)
         {
+            if (r.HitEnemy)
+                return " -> no machine in range, hit " + r.Enemy.TypeName + " " + r.Distance.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + " tiles away for " + r.Damage + " damage";
+
             if (!r.Struck)
-                return " -> no machine within " + s.StrikeRadiusTiles.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " tiles: spit";
+                return " -> no machine or enemy within " + s.StrikeRadiusTiles.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " tiles: spit";
 
             return " -> struck " + r.Target.GetType().Name + " at (" + r.Target.Position.X + ", " + r.Target.Position.Y + "), "
                 + r.Distance.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + " tiles away, surge " + EnergyText(r.Power) + " for " + s.SurgeDurationTicks + " ticks"

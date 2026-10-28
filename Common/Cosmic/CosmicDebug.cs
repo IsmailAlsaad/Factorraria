@@ -244,7 +244,7 @@ namespace Factorraria.Common.Cosmic
                 }
                 caller.Reply("  latest discharges: " + latestDischarges, Color.White);
             }
-            caller.Reply("  strikes: " + sim.Strikes + " on machines (biggest surge " + CosmicSimulation.EnergyText(sim.BiggestSurge) + ", clamped " + sim.SurgesClamped + "), " + sim.Spits + " spat into the sky (no machine within " + Inv(system.StrikeRadiusTiles) + " tiles). Surging machines now: " + sim.ActiveSurges() + ".", Color.White);
+            caller.Reply("  strikes: " + sim.Strikes + " on machines (biggest surge " + CosmicSimulation.EnergyText(sim.BiggestSurge) + ", clamped " + sim.SurgesClamped + "), " + sim.EnemyStrikes + " hit an enemy (no machine in range), " + sim.Spits + " spat into the sky (no machine or enemy within " + Inv(system.StrikeRadiusTiles) + " tiles). Surging machines now: " + sim.ActiveSurges() + ".", Color.White);
             if (sim.HasLastStrike)
                 caller.Reply("  last strike: " + sim.LastStrikeMachine + " at (" + sim.LastStrikeX + ", " + sim.LastStrikeY + "), " + Inv(sim.LastStrikeDistance, "0.#") + " tiles from the thunder, energy " + CosmicSimulation.EnergyText(sim.LastStrikeEnergy) + ", surge " + CosmicSimulation.EnergyText(sim.LastStrikePower) + " for " + system.SurgeDurationTicks + " ticks, tick " + sim.LastStrikeTick + ".", Color.White);
             caller.Reply("  queue: " + sim.Heap.Count + " now, peak " + sim.PeakQueue + ", dropped " + sim.Dropped + " (cap " + system.MaxQueuedEvents + ").", Color.White);
@@ -357,7 +357,9 @@ namespace Factorraria.Common.Cosmic
             CosmicSimulation.StrikeResult result = system.Sim.Strike(system, energy, cx, cy);
             string where = "(" + Inv(cx, "0.#") + ", " + Inv(cy, "0.#") + ")";
 
-            if (result.Struck)
+            if (result.HitEnemy)
+                caller.Reply("fcosmic strike [" + Side() + "]: energy " + CosmicSimulation.EnergyText(energy) + " at " + where + CosmicSimulation.StrikeLogText(system, result) + ".", Color.Yellow);
+            else if (result.Struck)
                 caller.Reply("fcosmic strike [" + Side() + "]: energy " + CosmicSimulation.EnergyText(energy) + " at " + where + CosmicSimulation.StrikeLogText(system, result) + ". The grid gets the surge on its next power tick.", Color.Yellow);
             else
                 caller.Reply("fcosmic strike [" + Side() + "]: energy " + CosmicSimulation.EnergyText(energy) + " at " + where + CosmicSimulation.StrikeLogText(system, result) + " (counted as a spit).", Color.OrangeRed);
