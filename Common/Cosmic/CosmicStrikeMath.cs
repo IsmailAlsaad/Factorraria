@@ -44,6 +44,7 @@ namespace Factorraria.Common.Cosmic
         // int.MaxValue (NPC damage is an int; the energy itself is a double and stays uncapped everywhere else).
         public static int EnergyDamage(double energy)
         {
+            energy = Math.Log(energy,1.05);
             if (double.IsNaN(energy) || energy < 1.0)
                 return 1;
 

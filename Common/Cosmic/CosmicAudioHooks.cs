@@ -43,13 +43,13 @@ namespace Factorraria.Common.Cosmic
             // LATER MAKE STRONG THUNDER SOUND USE SoundID.Thunder
             // C7b: two sizes. Energy tier at or above ThunderBigTier is a big thunder, anything below it is the small zap.
             bool big = tier >= CosmicRadiationSystem.Instance.ThunderBigTier;
-            SoundStyle style = SoundID.DD2_LightningBugZap with { Volume = 0.6f};
+            SoundStyle style = SoundID.DD2_LightningBugZap with { Volume = 0.8f};
 
             if (big)
             {
                 int soundIndex = Main.rand.Next(1, 4);
                 string soundPath = $"Factorraria/Assets/Sounds/InstantThunder/InstantThunder{soundIndex}";
-                style = new SoundStyle(soundPath) with { Volume = 0.8f};
+                style = new SoundStyle(soundPath) with { Volume = 0.4f };
             }
 
             SoundEngine.PlaySound(style with { PitchVariance = 0.15f, MaxInstances = 0 }, new Vector2(ax, ay) * 16f);
