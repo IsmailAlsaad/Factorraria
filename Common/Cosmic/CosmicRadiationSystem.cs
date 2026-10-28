@@ -52,7 +52,7 @@ namespace Factorraria.Common.Cosmic
         // ------------------------------------------------------------ spawning and flight (C2)
 
         [CosmicParam("Particles per tile^2 per second at the very top of the world, before heat and altitude (used from C2).", "particles/tile^2/s")]
-        public float RateDensity = 0.0001f;
+        public float RateDensity = 0.00025f;
 
         [CosmicParam("Random tilt of a new particle away from straight down (used from C2).", "degrees")]
         public float SpawnSpreadDeg = 15f;
@@ -185,7 +185,7 @@ namespace Factorraria.Common.Cosmic
         public float LocalSimFadeSeconds = 2f;
 
         [CosmicParam("Thunder at or above this energy tier (log10 of the energy x 4, the number that also sets the bolt width) plays the big SoundID.Thunder, weaker thunder plays the small bug zap. 8 is roughly an even split with the default tables (client only, C7b).", "tier")]
-        public float ThunderBigTier = 16f;
+        public float ThunderBigTier = 8f;
 
         // ------------------------------------------------------------ lifecycle
 
