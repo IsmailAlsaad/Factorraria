@@ -236,6 +236,14 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
                 .AddIngredient(ItemID.Hive, 20)
                 .AddTile(TileID.Anvils)
                 .Register();
+
+            // Sun Capsule
+            Recipe.Create(ModContent.ItemType<SunCapsuleItem>(), 1)
+                .AddIngredient(ModContent.ItemType<MeteoritePanelItem>(), 20)
+                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 8)
+                .AddIngredient(ItemID.FallenStar, 3)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
     }
 }

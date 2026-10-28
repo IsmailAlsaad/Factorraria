@@ -1241,6 +1241,18 @@ namespace Factorraria.Common.Machines
         /// <summary>Reads what WriteSnapshotExtra wrote, in the same order. Call base first.</summary>
         protected virtual void ReadSnapshotExtra(BinaryReader reader) { }
 
+        // Which of the machine's registered On animations to draw while it is running (isOn && isWorking). 0 = the On texture given to
+        // MachineVisualRegistry.Register, 1.. = the extra textures from MachineVisualRegistry.RegisterOnStates, in order (out of range
+        // uses the last one). Runs on every process that draws, so it must be computed from state the client already has (synced flags,
+        // or something the machine sends in WriteLightExtra). Not saved.
+        public virtual int VisualState => 0;
+
+        /// <summary>Extra state a subclass wants in the frequent light updates. Keep it small and QUANTIZED: the payload is only re-sent when its bytes change. Call base first.</summary>
+        protected virtual void WriteLightExtra(BinaryWriter writer) { }
+
+        /// <summary>Reads what WriteLightExtra wrote, in the same order. Call base first.</summary>
+        protected virtual void ReadLightExtra(BinaryReader reader) { }
+
         /// <summary>Test aid for /fsnap (temporary): what a subclass adds to the one-line description.</summary>
         protected virtual string DescribeSnapshotExtra() => "";
 
@@ -1281,6 +1293,7 @@ namespace Factorraria.Common.Machines
 
             MachineLightSync.WriteTanks(InputLiquids, w);
             MachineLightSync.WriteTanks(OutputLiquids, w);
+            WriteLightExtra(w);
             w.Flush();
             return stream.ToArray();
         }
@@ -1323,6 +1336,7 @@ namespace Factorraria.Common.Machines
 
             MachineLightSync.ReadTanks(InputLiquids, r);
             MachineLightSync.ReadTanks(OutputLiquids, r);
+            ReadLightExtra(r);
         }
 
         // ---- Detail channel (patch 5.3) ----

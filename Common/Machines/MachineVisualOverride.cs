@@ -135,6 +135,21 @@ namespace Factorraria.Common.Machines
         public Asset<Texture2D> OffTexture;
         public Asset<Texture2D> AltOnTexture;          // optional second On look, see MachineVisualRegistry.RegisterAlternateOn
         public Func<BaseMachine, bool> UseAltOn;
+        public List<Asset<Texture2D>> ExtraOnTextures = new();   // On states 1.., see MachineVisualRegistry.RegisterOnStates (a null entry = that PNG is missing, state 0 is drawn)
+
+        // The On texture to draw right now: the alternate one if its condition holds, else the one picked by BaseMachine.VisualState
+        // (0 = OnTexture, n = the n-th extra), else OnTexture. A state past the end uses the last extra texture.
+        public Asset<Texture2D> GetOnAsset(BaseMachine machine)
+        {
+            if (UseAltOn != null && UseAltOn(machine))
+                return AltOnTexture;
+
+            int state = machine.VisualState;
+            if (state > 0 && ExtraOnTextures.Count > 0)
+                return ExtraOnTextures[Math.Min(state, ExtraOnTextures.Count) - 1] ?? OnTexture;
+
+            return OnTexture;
+        }
         public List<LiquidOverlayLayer> LiquidOverlays = new();
         public MachineCanvas Canvas;   // null = On and Off are normal footprint-sized sheets
 
@@ -305,6 +320,25 @@ namespace Factorraria.Common.Machines
             def.AltOnTexture = ModContent.Request<Texture2D>(altOnPath);
             def.UseAltOn = useAlt;
         }
+        // Extra On animations picked by BaseMachine.VisualState. Call after Register<T>: the On texture given there is state 0, the paths here
+        // are states 1, 2, 3... in order. Each is a normal On sheet (frames stacked vertically, any frame count, the footprint's tile layout).
+        // The machine only reports a number, e.g. a battery: 0 idle, 1 charging, 2 discharging. A PNG that doesn't exist yet only logs a
+        // warning and that state draws state 0 instead. Not supported on overhang machines (RegisterOverhang) yet.
+        public static void RegisterOnStates(int tileType, params string[] extraOnPaths)
+        {
+            if (!Definitions.TryGetValue(tileType, out var def))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(tileType),
+                    $"RegisterOnStates failed for tile type {tileType}: call MachineVisualRegistry.Register (base On/Off textures) first."
+                );
+            }
+
+            def.ExtraOnTextures.Clear();
+            for (int i = 0; i < extraOnPaths.Length; i++)
+                def.ExtraOnTextures.Add(RequestOptional(extraOnPaths[i], tileType, "on state " + (i + 1)));
+        }
+
         // startupPath / shutdownPath are optional liquid layers for the startup / shutdown animation (same frame layout as that animation's
         // texture). Leave them out and this layer is simply not drawn while that animation plays. Each PNG is its own cache key.
         public static void RegisterLiquidOverlay(int tileType, string texturePath, Func<BaseMachine, LiquidStack> getLiquidStack, string startupPath = null, string shutdownPath = null)
@@ -426,7 +460,7 @@ namespace Factorraria.Common.Machines
             }
 
             var texture = entity.isOn && entity.isWorking
-                ? (def.UseAltOn != null && def.UseAltOn(entity) ? def.AltOnTexture : def.OnTexture)
+                ? def.GetOnAsset(entity)
                 : def.OffTexture;
 
             int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j, rotation);

@@ -18,6 +18,7 @@ using Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.Extractinator;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssembler;
+using Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles;
 
@@ -131,6 +132,14 @@ namespace Factorraria.Common.Machines
                 originX: 3, originY: 2,
                 onFrames: 5, offFrames: 1,
                 yOffset: 2f);
+
+            // Sun Capsule (battery): On = idle, then charging, then discharging. SunCapsuleTileEntity.VisualState picks the entry.
+            MachineVisualRegistry.Register<SunCapsuleTileEntity>(ModContent.TileType<SunCapsuleTile>(),
+                basePath + "ElectricalProducers/SunCapsule/SunCapsule_On",
+                basePath + "ElectricalProducers/SunCapsule/SunCapsule_Off");
+            MachineVisualRegistry.RegisterOnStates(ModContent.TileType<SunCapsuleTile>(),
+                basePath + "ElectricalProducers/SunCapsule/SunCapsule_On_Charging",
+                basePath + "ElectricalProducers/SunCapsule/SunCapsule_On_Discharging");
 
             MachineUIRegistry.Register(ModContent.TileType<RoboticArmTile>(), new RoboticArmUIState());
             MachineVisualRegistry.Register<RoboticArmTileEntity>(ModContent.TileType<RoboticArmTile>(),

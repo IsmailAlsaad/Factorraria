@@ -44,6 +44,47 @@ namespace Factorraria.Common.PowerGrid
                 totalSupply += TakeSurge(producer, producer is IElectricConsumer);
             }
 
+            // Batteries (IElectricStorage) are settled after the normal supply / demand. Deficit: they discharge to cover it (up to their rate).
+            // Surplus: they charge from it (up to their rate). A battery switched off by a wire (isWorking false) does neither.
+            // The totals below then include the battery flow, so the stability check, the use fraction and the UI readout all see it.
+            float storageEpsilon = 0.0001f;
+            float shortfall = totalDemand - totalSupply;
+            float surplus = totalSupply - totalDemand;
+            float storageCharged = 0f;
+            float storageDischarged = 0f;
+
+            foreach (var producer in electricProducers)
+            {
+                if (producer is not IElectricStorage storage)
+                    continue;
+
+                float flow = 0f;
+                if (storage.isWorking)
+                {
+                    if (shortfall > storageEpsilon)
+                    {
+                        flow = -Math.Min(storage.AvailableDischarge(), shortfall);
+                        shortfall += flow;
+                        storageDischarged -= flow;
+                    }
+                    else if (surplus > storageEpsilon)
+                    {
+                        flow = Math.Min(storage.AvailableCharge(), surplus);
+                        surplus -= flow;
+                        storageCharged += flow;
+                    }
+                }
+
+                storage.ApplyFlow(flow);
+            }
+
+            totalSupply += storageDischarged;
+            if (shortfall <= storageEpsilon && storageDischarged > 0f)
+                totalSupply = Math.Max(totalSupply, totalDemand);   // the battery covered the whole deficit: absorb float rounding
+
+            if (storageCharged > 0f)
+                totalDemand = Math.Min(totalDemand + storageCharged, totalSupply);   // charge never exceeds the surplus: absorb float rounding
+
             bool isGridStable = true;
             float UseFraction = totalSupply > 0f ? Math.Clamp(1f - totalDemand / totalSupply, 0f, 1f) : 0f;
             if (totalSupply < totalDemand || totalSupply == 0) 
