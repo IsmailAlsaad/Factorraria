@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Factorraria.Common.Net;
+using Microsoft.Xna.Framework;
 using System;
 using System.Globalization;
 using System.Reflection;
@@ -128,7 +129,7 @@ namespace Factorraria.Common.Cosmic
         // ------------------------------------------------------------ C6: what is drawn and sent
         static void Fx(CommandCaller caller)
         {
-            Factorraria.Common.Net.CosmicEventRouter router = Main.netMode != NetmodeID.MultiplayerClient ? CosmicRadiationSystem.Instance.Sim.Sink as Factorraria.Common.Net.CosmicEventRouter : null;
+            CosmicEventRouter router = Main.netMode != NetmodeID.MultiplayerClient ? CosmicRadiationSystem.Instance.Sim.Sink as CosmicEventRouter : null;
 
             if (!Main.dedServ)
                 caller.Reply("fcosmic fx [" + Side() + "]: " + CosmicParticleSystem.Instance.StatsText() + ".", Color.LightGreen);
@@ -226,7 +227,7 @@ namespace Factorraria.Common.Cosmic
                 caller.Reply("  last strike: " + sim.LastStrikeMachine + " at (" + sim.LastStrikeX + ", " + sim.LastStrikeY + "), " + Inv(sim.LastStrikeDistance, "0.#") + " tiles from the thunder, energy " + CosmicSimulation.EnergyText(sim.LastStrikeEnergy) + ", surge " + CosmicSimulation.EnergyText(sim.LastStrikePower) + " for " + system.SurgeDurationTicks + " ticks, tick " + sim.LastStrikeTick + ".", Color.White);
             caller.Reply("  queue: " + sim.Heap.Count + " now, peak " + sim.PeakQueue + ", dropped " + sim.Dropped + " (cap " + system.MaxQueuedEvents + ").", Color.White);
             caller.Reply("  cost: " + Inv((float)sim.AvgMsPerTick, "0.000") + " ms per tick on average over the last second, worst tick " + Inv((float)sim.MaxMsPerTick, "0.000") + " ms.", Color.White);
-            if (sim.Sink is Factorraria.Common.Net.CosmicEventRouter router)
+            if (sim.Sink is CosmicEventRouter router)
                 caller.Reply("  events out (C6): " + router.StatsText() + ".", Color.White);
 
             int shown = Math.Min(5, sim.RecentCount);
