@@ -37,23 +37,23 @@ namespace Factorraria.Common.Cosmic
         public static void OnThunder(float ax, float ay, float bx, float by, byte tier, bool strike)
         {
             bool big = tier >= CosmicRadiationSystem.Instance.ThunderBigTier;
-            SoundStyle style = SoundID.DD2_LightningBugZap with { Volume = 0.8f};
+            SoundStyle style = SoundID.DD2_LightningBugZap with { Volume = 0.6f};
 
             if (big)
             {
                 int soundIndex = Main.rand.Next(1, 4);
                 string soundPath = $"Factorraria/Assets/Sounds/InstantThunder/InstantThunder{soundIndex}";
-                style = new SoundStyle(soundPath) with { Volume = 0.4f };
+                style = new SoundStyle(soundPath) with { Volume = 0.2f };
             }
 
-            SoundEngine.PlaySound(style with { PitchVariance = 0.15f, MaxInstances = 0 }, new Vector2(ax, ay) * 16f);
+            SoundEngine.PlaySound(style with { PitchVariance = 0.15f, MaxInstances = 3 }, new Vector2(ax, ay) * 16f);
         }
 
         static void PlayGeigerCounterClick(float tileX, float tileY)
         {
             int soundIndex = Main.rand.Next(1, 11);
             string soundPath = $"Factorraria/Assets/Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";
-            SoundEngine.PlaySound(new SoundStyle(soundPath) with { Volume = 0.4f, PitchVariance = 0.1f, MaxInstances = 8 }, new Vector2(tileX, tileY) * 16f);
+            SoundEngine.PlaySound(new SoundStyle(soundPath) with { Volume = 0.3f, PitchVariance = 0.2f, MaxInstances = 4 }, new Vector2(tileX, tileY) * 16f);
         }
     }
 }
