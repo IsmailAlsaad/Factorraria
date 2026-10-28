@@ -11,4 +11,6 @@ Patch C2 (ray tracer, receiver index, sampling maths, event heap, all pure code)
    Program_C2.cs.txt has its own CosmicColor stand-in too. It is a separate program from Program.cs.txt (both have a Main), so compile one at a time.
    It includes a brute-force check: every ray that can hit a receiver must start inside a sampling strip, and the expected number of hits must match simulating every particle in the band.
 
+Patch C3 added CosmicRayTracer.Rotate (the child ray directions); its checks are at the end of Program_C2.cs.txt, same compile line as C2.
+
 Later phases add their pure-code files (cluster math) to this folder.

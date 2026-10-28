@@ -52,6 +52,17 @@ namespace Factorraria.Common.Cosmic
             dirY = MathF.Cos(radians);
         }
 
+        // Rotates a direction by an angle in degrees, the same way DirectionFromTilt tilts "straight down": Rotate(0, 1, a) equals
+        // DirectionFromTilt(a), so a positive angle turns a downward ray towards +X. The length is kept. Used by C3 for the child rays.
+        public static void Rotate(float dirX, float dirY, float deg, out float outX, out float outY)
+        {
+            float radians = deg * (MathF.PI / 180f);
+            float cos = MathF.Cos(radians);
+            float sin = MathF.Sin(radians);
+            outX = dirX * cos + dirY * sin;
+            outY = dirY * cos - dirX * sin;
+        }
+
         // Start position in tile units (tile (i, j) covers [i, i+1) x [j, j+1)). The direction does not need to be normalized.
         // rng is only used for cloud rolls (it may be null when cloudAbsorbChance is 0 or 1).
         public static CosmicRayResult Trace(ITileProbe probe, float startX, float startY, float dirX, float dirY,

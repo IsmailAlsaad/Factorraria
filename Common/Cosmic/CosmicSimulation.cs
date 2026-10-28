@@ -7,7 +7,7 @@ using Terraria;
 namespace Factorraria.Common.Cosmic
 {
     // The cosmic radiation simulation (roadmap section 2). Patch C2: receiver index, sampling, ray tracing and the event queue.
-    // Outcomes (a ray reaching a gemspark or a cloud block) are only COUNTED for now; C3 and C4 act on them in Complete().
+    // Outcomes (a ray reaching a gemspark or a cloud block) arrive in Complete(): C3 (gemspark absorb and re-emit) is in OnAbsorbed(); C4 (cloud ionize) is still only counted.
     //
     // Authority: server and single-player only. CosmicRadiationSystem calls Update() from PostUpdateWorld on those two and never on
     // a multiplayer client. Nothing here is saved; everything is rebuilt after a world load. Nothing here touches client-only code.
@@ -56,6 +56,14 @@ namespace Factorraria.Common.Cosmic
         public long RaysSampled, RaysTraced, DeadSolid, DeadRange, Dropped, DebugRays;
         public readonly long[] Absorbed = new long[7];
         public readonly long[] Ionized = new long[7];
+
+        // C3: child rays created per color, absorptions that ended the chain at Red, absorptions whose gemspark was broken while the
+        // particle was flying, and the angles of the last cascade (what /fcosmic stats prints).
+        public readonly long[] Reemitted = new long[7];
+        public long ChainEnds, Vanished;
+        public bool HasLastCascade;
+        public CosmicColor LastCascadeFrom;
+        public float LastChildDegA, LastChildDegB;
         public int PeakQueue;
         public float RaysPerSecond;
         public double AvgMsPerTick, MaxMsPerTick;
@@ -89,6 +97,9 @@ namespace Factorraria.Common.Cosmic
             RaysSampled = RaysTraced = DeadSolid = DeadRange = Dropped = DebugRays = 0;
             Array.Clear(Absorbed, 0, Absorbed.Length);
             Array.Clear(Ionized, 0, Ionized.Length);
+            Array.Clear(Reemitted, 0, Reemitted.Length);
+            ChainEnds = Vanished = 0;
+            HasLastCascade = false;
             PeakQueue = Heap.Count;
             RaysPerSecond = 0f;
             AvgMsPerTick = MaxMsPerTick = 0.0;
@@ -339,7 +350,7 @@ namespace Factorraria.Common.Cosmic
                 else
                 {
                     Heap.Pop();
-                    Complete(next);
+                    Complete(s, next);
                 }
             }
 
@@ -381,22 +392,83 @@ namespace Factorraria.Common.Cosmic
                 Kind = r.End == CosmicRayEnd.Absorb ? CosmicQueuedKind.Absorb : CosmicQueuedKind.Ionize,
                 Color = ev.Color,
                 TileX = r.TileX,
-                TileY = r.TileY
+                TileY = r.TileY,
+                DirX = ev.DirX,   // C3 rotates this one for the child rays
+                DirY = ev.DirY
             });
             queued = true;
             return r;
         }
 
-        // A ray has arrived. C2 only counts it. C3 (gemspark: absorb and re-emit) and C4 (cloud: ionize) act here.
-        void Complete(in CosmicQueuedEvent ev)
+        // A ray has arrived. C3 (gemspark: absorb and re-emit) acts in OnAbsorbed; C4 (cloud: ionize) will act in the Ionize branch.
+        void Complete(CosmicRadiationSystem s, in CosmicQueuedEvent ev)
         {
             if (ev.Kind == CosmicQueuedKind.Absorb)
-                Absorbed[(int)ev.Color]++;
+                OnAbsorbed(s, ev);
             else if (ev.Kind == CosmicQueuedKind.Ionize)
                 Ionized[(int)ev.Color]++;
 
             Recent[RecentCount % Recent.Length] = ev;
             RecentCount++;
+        }
+
+        // C3. A ray reached a gemspark of its own color. The gemspark has to still be there (the player may have broken it while the
+        // particle was flying). It absorbs the particle and, unless the color is Red, re-emits two rays of the next color from the
+        // middle of the tile at the arrival tick: the incoming direction rotated by +a and by -b degrees, a and b random between
+        // ReemitAngleMinDeg and ReemitAngleMaxDeg. The children are pushed into the heap as RayStart events, so a cascade runs through
+        // the queue and never recurses (the chain ends at Red, so one White ray makes at most 127 rays). The caps are MaxRaysPerTick
+        // (the rest wait a tick, see ProcessQueue) and MaxQueuedEvents (children beyond it are dropped and counted in Dropped).
+        // Children are never sampled: they are only created here.
+        void OnAbsorbed(CosmicRadiationSystem s, in CosmicQueuedEvent ev)
+        {
+            CosmicTileKind kind = probe.Probe(ev.TileX, ev.TileY, out CosmicColor tileColor);
+            if (kind != CosmicTileKind.Gemspark || tileColor != ev.Color)
+            {
+                Vanished++;
+                return;
+            }
+
+            Absorbed[(int)ev.Color]++;
+
+            if (!CosmicColors.HasNext(ev.Color))
+            {
+                ChainEnds++;
+                return;
+            }
+
+            CosmicColor next = CosmicColors.Next(ev.Color);
+            float low = Math.Max(0f, Math.Min(s.ReemitAngleMinDeg, s.ReemitAngleMaxDeg));
+            float high = Math.Max(low, Math.Max(s.ReemitAngleMinDeg, s.ReemitAngleMaxDeg));
+            float degA = low + (float)rng.NextDouble() * (high - low);
+            float degB = low + (float)rng.NextDouble() * (high - low);
+
+            for (int child = 0; child < 2; child++)
+            {
+                if (Heap.Count >= s.MaxQueuedEvents)
+                {
+                    Dropped++;
+                    continue;
+                }
+
+                CosmicRayTracer.Rotate(ev.DirX, ev.DirY, child == 0 ? degA : -degB, out float dirX, out float dirY);
+
+                Heap.Push(new CosmicQueuedEvent
+                {
+                    Tick = ev.Tick,
+                    Kind = CosmicQueuedKind.RayStart,
+                    Color = next,
+                    X = ev.TileX + 0.5f,
+                    Y = ev.TileY + 0.5f,
+                    DirX = dirX,
+                    DirY = dirY
+                });
+                Reemitted[(int)next]++;
+            }
+
+            HasLastCascade = true;
+            LastCascadeFrom = ev.Color;
+            LastChildDegA = degA;
+            LastChildDegB = degB;
         }
 
         // ------------------------------------------------------------ debug

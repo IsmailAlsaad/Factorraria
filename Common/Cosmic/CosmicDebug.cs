@@ -178,6 +178,10 @@ namespace Factorraria.Common.Cosmic
 
             caller.Reply("  rays: sampled " + sim.RaysSampled + ", traced " + sim.RaysTraced + " (" + Inv(sim.RaysPerSecond, "0.#") + "/s over the last second); blocked by lead bricks or the world edge " + sim.DeadSolid + ", out of range " + sim.DeadRange + "; test rays fired " + sim.DebugRays + ".", Color.White);
             caller.Reply("  absorbed by gemsparks: " + PerColor(sim.Absorbed), Color.White);
+            caller.Reply("  child rays made by gemsparks (re-emitted, per color of the child): " + PerColor(sim.Reemitted) + ". Chain ended in Red " + sim.ChainEnds + ", gemspark broken before arrival " + sim.Vanished + ".", Color.White);
+
+            if (sim.HasLastCascade)
+                caller.Reply("  last cascade: a " + sim.LastCascadeFrom + " ray was absorbed and made two " + CosmicColors.Next(sim.LastCascadeFrom) + " rays at +" + Inv(sim.LastChildDegA, "0.0") + " and -" + Inv(sim.LastChildDegB, "0.0") + " degrees from its path.", Color.White);
             caller.Reply("  hit clouds: " + PerColor(sim.Ionized), Color.White);
             caller.Reply("  queue: " + sim.Heap.Count + " now, peak " + sim.PeakQueue + ", dropped " + sim.Dropped + " (cap " + system.MaxQueuedEvents + ").", Color.White);
             caller.Reply("  cost: " + Inv((float)sim.AvgMsPerTick, "0.000") + " ms per tick on average over the last second, worst tick " + Inv((float)sim.MaxMsPerTick, "0.000") + " ms.", Color.White);

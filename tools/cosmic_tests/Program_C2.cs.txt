@@ -286,6 +286,32 @@ class P
             Check(rel < 0.04, "key test (b): expected hits, whole band " + bruteEstimate.ToString("0.0") + " vs sampling strips " + sampledEstimate.ToString("0.0") + " (" + (rel * 100).ToString("0.0") + "% apart)");
         }
 
+        // ------------------------------------------------------------ C3: rotating a direction
+        {
+            CosmicRayTracer.Rotate(0f, 1f, 0f, out float c3x, out float c3y);
+            Check(Math.Abs(c3x) < 1e-6f && Math.Abs(c3y - 1f) < 1e-6f, "rotate by 0 keeps the direction");
+
+            CosmicRayTracer.Rotate(0f, 1f, 7.5f, out c3x, out c3y);
+            CosmicRayTracer.DirectionFromTilt(7.5f, out float t3x, out float t3y);
+            Check(Math.Abs(c3x - t3x) < 1e-6f && Math.Abs(c3y - t3y) < 1e-6f, "rotating straight down by a equals tilting by a");
+
+            CosmicRayTracer.Rotate(t3x, t3y, -7.5f, out c3x, out c3y);
+            Check(Math.Abs(c3x) < 1e-5f && Math.Abs(c3y - 1f) < 1e-5f, "rotating by +a and then -a gives the start back");
+
+            bool lengthKept = true, angleRight = true;
+            for (int i = 0; i < 2000; i++)
+            {
+                float tilt = ((float)rng.NextDouble() * 2f - 1f) * 40f, deg = ((float)rng.NextDouble() * 2f - 1f) * 10f;
+                CosmicRayTracer.DirectionFromTilt(tilt, out float ax, out float ay);
+                CosmicRayTracer.Rotate(ax, ay, deg, out float bx, out float by);
+                if (Math.Abs(Math.Sqrt(bx * bx + by * by) - 1.0) > 1e-4) lengthKept = false;
+                double turned = Math.Atan2(bx, by) - Math.Atan2(ax, ay);   // angle measured from straight down, towards +X
+                if (Math.Abs(turned * 180.0 / Math.PI - deg) > 1e-2) angleRight = false;
+            }
+            Check(lengthKept, "rotation keeps the length");
+            Check(angleRight, "a ray tilted by t and rotated by d ends up tilted by t + d");
+        }
+
         Console.WriteLine(fail == 0 ? "ALL PASSED" : "FAILURES: " + fail);
     }
 }

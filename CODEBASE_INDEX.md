@@ -199,7 +199,7 @@ tModLoader/other bases -> project types:
   struct CosmicRayResult
     +End:CosmicRayEnd +TileX:int +TileY:int +Distance:float
   static class CosmicRayTracer
-    +DirectionFromTilt(float,out float,out float)[s] +Trace(ITileProbe,float,float,float,float,CosmicColor,float,float,Random)[s]
+    +DirectionFromTilt(float,out float,out float)[s] +Rotate(float,float,float,out float,out float)[s] +Trace(ITileProbe,float,float,float,float,CosmicColor,float,float,Random)[s]
 **CosmicReceiverIndex.cs**
   sealed class CosmicReceiverIndex
     +StripWidth:int[c] +CloudCode:byte[c] +MaxY:int +Version:int +Total:int +StripCount:int +CloudCount:int +GemsparkCount(int) +StripOf(int)[s] +Clear() +Contains(int,int,out byte) +Add(int,int,byte) +Remove(int,int) +ReplaceStrip(int,List<(int x, int y, byte code)>) +StripIds:IEnumerable<int> +TryGetYRange(int,out int,out int)
@@ -221,9 +221,9 @@ tModLoader/other bases -> project types:
     +Strip:int +Y0:float +Y1:float +Density:float
   static class CosmicSampling
     +AltitudeIntegral(float,float,float)[s] +SampleY(float,float,float,double)[s] +Poisson(double,Random)[s] +Build(CosmicReceiverIndex,float,float,float,int,Func<float, float>,List<CosmicSamplingStrip>)[s] +CountRigs(List<CosmicSamplingStrip>)[s]
-**CosmicSimulation.cs** uses: CosmicColor, CosmicColors, CosmicEventHeap, CosmicHeatmap, CosmicQueuedEvent, CosmicQueuedKind, CosmicRadiationSystem, CosmicRayEnd, CosmicRayResult, CosmicRayTracer, CosmicReceiverIndex, CosmicSampling, CosmicSamplingStrip, CosmicTileCodes, CosmicTileProbe, FactorrariaNet, Strip
+**CosmicSimulation.cs** uses: CosmicColor, CosmicColors, CosmicEventHeap, CosmicHeatmap, CosmicQueuedEvent, CosmicQueuedKind, CosmicRadiationSystem, CosmicRayEnd, CosmicRayResult, CosmicRayTracer, CosmicReceiverIndex, CosmicSampling, CosmicSamplingStrip, CosmicTileCodes, CosmicTileKind, CosmicTileProbe, FactorrariaNet, Probe, Strip
   class CosmicSimulation
-    +DebugRayHeight:float[c] +Index:CosmicReceiverIndex +Heap:CosmicEventHeap +Now:long +Fault:string +InitialScanDone:bool +ScanPasses:int +BandBottom:float +SamplingStrips:int +Rigs:int +SamplingAreaTiles:float +DensitySum:float +DebugRays:long RaysSampled, RaysTraced, DeadSolid, DeadRange, Dropped, +Absorbed:long +Ionized:long +PeakQueue:int +RaysPerSecond:float +MaxMsPerTick:double AvgMsPerTick, +Recent:CosmicQueuedEvent +RecentCount:int +Reset() +ResetCounters() +RequestRescan() +StripsInWorld:int +ScanPercent:int +OnReceiverPlaced(int,int,byte) +OnReceiverRemoved(int,int) +Update(CosmicRadiationSystem) +FireDebugRay(CosmicRadiationSystem,CosmicColor,int,int)
+    +DebugRayHeight:float[c] +Index:CosmicReceiverIndex +Heap:CosmicEventHeap +Now:long +Fault:string +InitialScanDone:bool +ScanPasses:int +BandBottom:float +SamplingStrips:int +Rigs:int +SamplingAreaTiles:float +DensitySum:float +DebugRays:long RaysSampled, RaysTraced, DeadSolid, DeadRange, Dropped, +Absorbed:long +Ionized:long +Reemitted:long +Vanished:long ChainEnds, +HasLastCascade:bool +LastCascadeFrom:CosmicColor +LastChildDegB:float LastChildDegA, +PeakQueue:int +RaysPerSecond:float +MaxMsPerTick:double AvgMsPerTick, +Recent:CosmicQueuedEvent +RecentCount:int +Reset() +ResetCounters() +RequestRescan() +StripsInWorld:int +ScanPercent:int +OnReceiverPlaced(int,int,byte) +OnReceiverRemoved(int,int) +Update(CosmicRadiationSystem) +FireDebugRay(CosmicRadiationSystem,CosmicColor,int,int)
 
 ### Common/Crafting/
 **TimedCraftingPlayer.cs** uses: TimedCraftingSystem
