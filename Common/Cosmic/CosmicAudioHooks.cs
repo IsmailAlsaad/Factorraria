@@ -18,19 +18,22 @@ namespace Factorraria.Common.Cosmic
         // A gemspark absorbed a particle of this color (an Absorb event arrived).
         public static void OnAbsorbed(CosmicColor color, float tileX, float tileY)
         {
+            int soundIndex = Main.rand.Next(1, 11);
+            string soundPath = $"Factorraria/Assets/Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";
+            SoundEngine.PlaySound(new SoundStyle(soundPath) with { Volume = 0.4f, PitchVariance = 0.1f, MaxInstances = 0 }, new Vector2(tileX, tileY) * 16f);
         }
 
         // The gemspark re-emitted two particles of the next color (called together with OnAbsorbed when the color has a next step).
         public static void OnReemitted(CosmicColor childColor, float tileX, float tileY)
         {
-            int soundIndex = Main.rand.Next(1, 11);
-            string soundPath = $"Factorraria/Assets/Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";
-            SoundEngine.PlaySound(new SoundStyle(soundPath) with { Volume = 0.4f , PitchVariance = 0.2f, MaxInstances = 0}, new Vector2(tileX, tileY) * 16f);
         }
 
         // A cloud cluster was ionized. (tileX, tileY) is the first block of the cluster, blocks how many blocks it has.
         public static void OnIonized(CosmicColor color, float tileX, float tileY, int blocks)
         {
+            int soundIndex = Main.rand.Next(1, 11);
+            string soundPath = $"Factorraria/Assets/Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";
+            SoundEngine.PlaySound(new SoundStyle(soundPath) with { Volume = 0.4f, PitchVariance = 0.1f, MaxInstances = 0 }, new Vector2(tileX, tileY) * 16f);
         }
 
         // Thunder: a strike (strike = true, the bolt goes from (ax, ay) to the machine at (bx, by)) or a spit (strike = false, no machine in range).
