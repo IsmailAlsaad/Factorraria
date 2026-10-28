@@ -149,6 +149,9 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("The thickest a bolt core can get (client only, C6b). The glow around it is 3 times as wide.", "px")]
         public float BoltMaxWidthPx = 30f;
 
+        [CosmicParam("How much light a flashing (ionized) cloud block gives off, in its own color, as a multiple of its tint strength (client only, C6e). 0 = no light.", "x")]
+        public float IonizedLightIntensity = 0.9f;
+
         // ------------------------------------------------------------ lifecycle
 
         public override void PostUpdateWorld()

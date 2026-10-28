@@ -332,8 +332,19 @@ namespace Factorraria.Common.Cosmic
 
             if (glows.Count > 0)
             {
+                float lightScale = CosmicRadiationSystem.Instance.IonizedLightIntensity;
+
                 foreach (KeyValuePair<long, Glow> pair in glows)
                 {
+                    // C6e: the flashing block gives off light in its color, as strong as its tint. Lighting.AddLight is called on the main thread
+                    // here (not from a tile light hook, which can run on the lighting thread while this table changes).
+                    if (lightScale > 0f)
+                    {
+                        float strength = GlowStrength(pair.Value, (int)(now - pair.Value.Born)) * lightScale;
+                        Color lc = CosmicColors.DrawColor((CosmicColor)pair.Value.Color);
+                        Lighting.AddLight((int)(pair.Key >> 32), (int)(uint)pair.Key, lc.R / 255f * strength, lc.G / 255f * strength, lc.B / 255f * strength);
+                    }
+
                     int age = (int)(now - pair.Value.Born);
                     int life = pair.Value.Fading ? pair.Value.Life : pair.Value.Life + 30;   // 30 ticks of grace if the discharge never reaches us
                     if (age >= life)
@@ -434,20 +445,22 @@ namespace Factorraria.Common.Cosmic
             if (glows.Count == 0 || !glows.TryGetValue(((long)x << 32) | (uint)y, out Glow g))
                 return false;
 
-            float age = (int)(Main.GameUpdateCount - g.Born);
-            float strength;
-
-            if (g.Fading)
-                strength = Math.Max(0f, 1f - age / g.Life);
-            else
-            {
-                float frac = Math.Min(1f, age / g.Life);
-                float pulse = 0.5f + 0.5f * (float)Math.Sin(age * (0.35f + 0.6f * frac));
-                strength = 0.55f + 0.3f * pulse + 0.15f * frac;
-            }
+            float strength = GlowStrength(g, (int)(Main.GameUpdateCount - g.Born));
 
             tint = Color.Lerp(Color.White, CosmicColors.TileTint((CosmicColor)g.Color), Math.Min(1f, strength));
             return true;
+        }
+
+        // How strongly an ionized block shows right now (0 to 1): the exact alpha of the old glow overlay, so the flashing is the one from before C6b.
+        // Used for both the tile tint and the light the block gives off.
+        static float GlowStrength(Glow g, float age)
+        {
+            if (g.Fading)
+                return Math.Max(0f, 1f - age / g.Life) * 0.9f;   // same fade and 0.9 start as the old white flash
+
+            float frac = Math.Min(1f, age / g.Life);
+            float pulse = 0.5f + 0.5f * (float)Math.Sin(age * (0.35f + 0.6f * frac));
+            return 0.22f + 0.3f * pulse + 0.25f * frac;
         }
 
         void DrawParticles(SpriteBatch sb, Texture2D pixel, uint now, CosmicRadiationSystem system)
