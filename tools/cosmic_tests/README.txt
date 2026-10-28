@@ -19,4 +19,6 @@ Tip for a scratch project: a NuGet.Config with <packageSources><clear /></packag
 Patch C5 (strike distance, surge power, stacking, the countdown): the checks are at the end of Program_C2.cs.txt, so compile it with Common/Cosmic/CosmicStrikeMath.cs and ICosmicEventSink.cs added to the C4 file list (the C5 block adds 25 checks, 119 in all).
 Patch C6b changed CosmicStrikeMath.SurgePower to power per decade x log10(energy): the C5 surge checks were rewritten (13 checks instead of 9, so 123 in all); same compile line.
 
+Patch C7 / N2 (Grey color, ambient maths): Program.cs.txt (heatmap, now 8 sections) has its own CosmicColor stand-in again; Program_C2.cs.txt gained a C7 block at the end (Grey passes every gemspark, ambient start rows and density) and needs the updated Common/Cosmic/CosmicSampling.cs.
+
 Later phases add their pure-code files to this folder.

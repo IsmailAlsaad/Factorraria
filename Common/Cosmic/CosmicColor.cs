@@ -3,7 +3,7 @@ using Terraria.ID;
 
 namespace Factorraria.Common.Cosmic
 {
-    // The seven particle colors, ordered from the highest frequency (white, treated as UV) to the lowest (red).
+    // The eight particle colors, ordered from the highest frequency (white, treated as UV) to the lowest (grey, N2: below red, no gemspark).
     // The byte value is the index into every per-color table (CosmicRadiationSystem.BaseEnergy, Multiplier, ClusterMin, ClusterMax)
     // and the id on the wire, so never reorder or insert: append only.
     public enum CosmicColor : byte
@@ -14,19 +14,27 @@ namespace Factorraria.Common.Cosmic
         Green = 3,
         Yellow = 4,
         Orange = 5,
-        Red = 6
+        Red = 6,
+        Grey = 7   // N2: the lowest frequency. No gemspark block absorbs it; the ruby gemspark (red) re-emits it.
     }
 
     // Fixed facts about the colors (which gemspark absorbs which color, what comes next in the cascade, how it is drawn).
     // Balance numbers (energy, multiplier, cluster size) are NOT here: they are tunables on CosmicRadiationSystem.
     public static class CosmicColors
     {
-        public static int Count => 7;
+        public static int Count => 8;
 
-        public static bool HasNext(CosmicColor color) => color != CosmicColor.Red;
+        // The last color in the order has no next step (it was Red until N2 added Grey below it).
+        public static CosmicColor Lowest => CosmicColor.Grey;
 
-        // The color a gemspark of this color re-emits. Red has no next color (it returns Red; check HasNext first).
-        public static CosmicColor Next(CosmicColor color) => color == CosmicColor.Red ? CosmicColor.Red : (CosmicColor)((byte)color + 1);
+        public static bool HasNext(CosmicColor color) => color != Lowest;
+
+        // The color a gemspark of this color re-emits. The lowest color has no next color (it returns itself; check HasNext first).
+        public static CosmicColor Next(CosmicColor color) => color == Lowest ? Lowest : (CosmicColor)((byte)color + 1);
+
+        // Does a gemspark block exist that absorbs this color? A color without one (Grey) is never absorbed by any gemspark. Everything
+        // that asks "which gemspark absorbs this color" goes through GemsparkTile, so such a color needs no special case anywhere else.
+        public static bool HasGemspark(CosmicColor color) => GemsparkTile(color) >= 0;
 
         // The lit vanilla gemspark block that absorbs this color. The offline (unpowered) gemspark variants are not receivers.
         public static int GemsparkTile(CosmicColor color)
@@ -39,7 +47,8 @@ namespace Factorraria.Common.Cosmic
                 case CosmicColor.Green: return TileID.EmeraldGemspark;
                 case CosmicColor.Yellow: return TileID.TopazGemspark;
                 case CosmicColor.Orange: return TileID.AmberGemspark;
-                default: return TileID.RubyGemspark;
+                case CosmicColor.Red: return TileID.RubyGemspark;
+                default: return -1;   // no gemspark block absorbs this color (Grey, N2)
             }
         }
 
@@ -47,7 +56,8 @@ namespace Factorraria.Common.Cosmic
         {
             for (int i = 0; i < Count; i++)
             {
-                if (GemsparkTile((CosmicColor)i) == tileType)
+                int tile = GemsparkTile((CosmicColor)i);
+                if (tile >= 0 && tile == tileType)   // a color with no gemspark (Grey, -1) never matches
                 {
                     color = (CosmicColor)i;
                     return true;
@@ -71,7 +81,8 @@ namespace Factorraria.Common.Cosmic
                 case CosmicColor.Green: return new Color(70, 225, 100);
                 case CosmicColor.Yellow: return new Color(255, 230, 70);
                 case CosmicColor.Orange: return new Color(255, 150, 45);
-                default: return new Color(255, 65, 55);
+                case CosmicColor.Red: return new Color(255, 65, 55);
+                default: return new Color(150, 150, 168);   // Grey (N2): a pale grey, it is drawn additively so a darker one would vanish
             }
         }
 
@@ -79,6 +90,9 @@ namespace Factorraria.Common.Cosmic
         // grey that the pulse swings to and from the normal cloud color.
         public static Color TileTint(CosmicColor color)
         {
+            if (color == CosmicColor.Grey)
+                return new Color(100, 100, 122);   // N2: a dark storm grey, a cloud hit by grey goes dark
+
             return color == CosmicColor.White ? new Color(120, 135, 170) : DrawColor(color);
         }
     }

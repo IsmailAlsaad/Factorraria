@@ -64,18 +64,21 @@ namespace Factorraria.Common.Cosmic
         int cacheWorld, cacheHeatKey;
         public float BandBottom { get; private set; }
         public int SamplingStrips => sampling.Count;
+
+        // C7: read only, for the EnableDebugs overlay (rig boxes).
+        public IReadOnlyList<CosmicSamplingStrip> SamplingList => sampling;
         public int Rigs { get; private set; }
         public float SamplingAreaTiles { get; private set; }
         public float DensitySum { get; private set; }
 
         // ------------------------------------------------------------ counters (what /fcosmic stats shows)
         public long RaysSampled, RaysTraced, DeadSolid, DeadRange, Dropped, DebugRays;
-        public readonly long[] Absorbed = new long[7];
-        public readonly long[] Ionized = new long[7];
+        public readonly long[] Absorbed = new long[CosmicColors.Count];
+        public readonly long[] Ionized = new long[CosmicColors.Count];
 
         // C3: child rays created per color, absorptions that ended the chain at Red, absorptions whose gemspark was broken while the
         // particle was flying, and the angles of the last cascade (what /fcosmic stats prints).
-        public readonly long[] Reemitted = new long[7];
+        public readonly long[] Reemitted = new long[CosmicColors.Count];
         public long ChainEnds, Vanished;
         public bool HasLastCascade;
         public CosmicColor LastCascadeFrom;
@@ -292,7 +295,7 @@ namespace Factorraria.Common.Cosmic
         static int HeatKey(CosmicHeatmap heat)
         {
             int key = 0;
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < CosmicHeatmap.Sections; i++)
                 key = key * 8 + heat.Order[i];
             return key;
         }

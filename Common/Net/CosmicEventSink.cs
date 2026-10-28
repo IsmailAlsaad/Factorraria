@@ -444,8 +444,8 @@ namespace Factorraria.Common.Net
                         return;   // an unknown kind: the rest of this packet cannot be read, drop it
                 }
 
-                if (e.Color > 6)
-                    e.Color = 6;
+                if (e.Color >= CosmicColors.Count)
+                    e.Color = (byte)(CosmicColors.Count - 1);
 
                 target.IncomingEvents.Enqueue(e);
             }

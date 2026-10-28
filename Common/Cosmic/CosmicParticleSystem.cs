@@ -49,7 +49,7 @@ namespace Factorraria.Common.Cosmic
     // length, birth tick. Its position is worked out from its age when it is drawn, nothing is moved per tick. A particle that is off screen
     // costs one rectangle test. Everything is drawn with one additive SpriteBatch pass from PostDrawTiles, with TextureAssets.MagicPixel
     // (source rectangle 1x1, see PROJECT_CONTEXT gotchas) or, if the file exists, the optional circle texture.
-    public class CosmicParticleSystem : ModSystem
+    public partial class CosmicParticleSystem : ModSystem
     {
         public static CosmicParticleSystem Instance => ModContent.GetInstance<CosmicParticleSystem>();
 
@@ -129,13 +129,14 @@ namespace Factorraria.Common.Cosmic
             boltsActive = sparksActive = 0;
             ActiveCount = PeakActive = 0;
             Spawned = Overwritten = ReceivedRays = ReceivedEvents = 0;
+            ClearAmbient();
         }
 
         public string StatsText()
         {
             return "particles " + ActiveCount + " of " + pool.Length + " (peak " + PeakActive + ", pool full and overwrote " + Overwritten + ", spawned " + Spawned
                 + "), ionized glow blocks " + glows.Count + ", bolts " + boltsActive + ", sparks " + sparksActive
-                + ", received from the server: " + ReceivedRays + " rays and " + ReceivedEvents + " events, queued " + IncomingRays.Count + " + " + IncomingEvents.Count;
+                + ", received from the server: " + ReceivedRays + " rays and " + ReceivedEvents + " events, queued " + IncomingRays.Count + " + " + IncomingEvents.Count + ". " + AmbientText();
         }
 
         // ------------------------------------------------------------ adding things (main thread)
@@ -192,13 +193,30 @@ namespace Factorraria.Common.Cosmic
             if (Main.dedServ)
                 return;
 
+            AddSpark(color, tileX + 0.5f, tileY + 0.5f, 0);
+
+            // C7: the gemspark re-emits two particles of the next color, shown as a second, slightly later sparkle in that color.
+            CosmicColor absorbed = (CosmicColor)Math.Min(color, (byte)(CosmicColors.Count - 1));
+            CosmicAudioHooks.OnAbsorbed(absorbed, tileX + 0.5f, tileY + 0.5f);
+
+            if (CosmicColors.HasNext(absorbed))
+            {
+                CosmicColor child = CosmicColors.Next(absorbed);
+                AddSpark((byte)child, tileX + 0.5f, tileY + 0.5f, 3);
+                CosmicAudioHooks.OnReemitted(child, tileX + 0.5f, tileY + 0.5f);
+            }
+        }
+
+        // delayTicks > 0 makes the spark appear that many ticks from now (its Born is in the future and the draw skips it until then).
+        void AddSpark(byte color, float x, float y, int delayTicks)
+        {
             ref Spark s = ref sparks[nextSpark];
             nextSpark = (nextSpark + 1) % sparks.Length;
             s.Active = true;
             s.Color = color;
-            s.Born = Main.GameUpdateCount;
-            s.X = tileX + 0.5f;
-            s.Y = tileY + 0.5f;
+            s.Born = Main.GameUpdateCount + (uint)Math.Max(0, delayTicks);
+            s.X = x;
+            s.Y = y;
         }
 
         // Single-player path: the tile list belongs to the simulation and is only valid during the call.
@@ -209,6 +227,9 @@ namespace Factorraria.Common.Cosmic
 
             for (int i = 0; i < tiles.Count; i++)
                 SetGlow(tiles[i].x, tiles[i].y, (byte)color, lifeTicks);
+
+            if (tiles.Count > 0)
+                CosmicAudioHooks.OnIonized(color, tiles[0].x + 0.5f, tiles[0].y + 0.5f, tiles.Count);
         }
 
         void AddIonize(byte color, int lifeTicks, short[] tiles)
@@ -218,6 +239,9 @@ namespace Factorraria.Common.Cosmic
 
             for (int i = 0; i + 1 < tiles.Length; i += 2)
                 SetGlow(tiles[i], tiles[i + 1], color, lifeTicks);
+
+            if (tiles.Length >= 2)
+                CosmicAudioHooks.OnIonized((CosmicColor)Math.Min(color, (byte)(CosmicColors.Count - 1)), tiles[0] + 0.5f, tiles[1] + 0.5f, tiles.Length / 2);
         }
 
         void SetGlow(int x, int y, byte color, int lifeTicks)
@@ -268,6 +292,8 @@ namespace Factorraria.Common.Cosmic
         {
             if (Main.dedServ)
                 return;
+
+            CosmicAudioHooks.OnThunder(ax, ay, bx, by, tier, !thin);
 
             ref Bolt b = ref bolts[nextBolt];
             nextBolt = (nextBolt + 1) % bolts.Length;
@@ -382,6 +408,10 @@ namespace Factorraria.Common.Cosmic
                     spark++;
             }
             sparksActive = spark;
+
+            // C7: the ambient local simulation and the light of lightning bolts (both client only, nothing here touches a counter)
+            UpdateAmbient(now);
+            UpdateBoltLight(now);
         }
 
         // ------------------------------------------------------------ draw (client only)
@@ -410,7 +440,7 @@ namespace Factorraria.Common.Cosmic
             if (Main.dedServ || Main.gameMenu)
                 return;
 
-            if (ActiveCount == 0 && glows.Count == 0 && boltsActive == 0 && sparksActive == 0)
+            if (ActiveCount == 0 && glows.Count == 0 && boltsActive == 0 && sparksActive == 0 && ambientActive == 0 && !DebugOn)
                 return;
 
             if (!circleLooked)
@@ -429,9 +459,14 @@ namespace Factorraria.Common.Cosmic
             sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             DrawDischargeFlash(sb, pixel, now);
+            DrawAmbient(sb, pixel, now, system);
             DrawParticles(sb, pixel, now, system);
             DrawBolts(sb, pixel, now);
             DrawSparks(sb, pixel, now);
+            DrawStrikeFlash(sb, pixel, now, system);
+
+            if (DebugOn)
+                DrawDebugWorld(sb, pixel, system);
 
             sb.End();
         }
@@ -493,13 +528,19 @@ namespace Factorraria.Common.Cosmic
 
         void DrawParticles(SpriteBatch sb, Texture2D pixel, uint now, CosmicRadiationSystem system)
         {
+            DrawParticleSet(sb, pixel, now, system, pool, 1f);
+        }
+
+        // C7: the same drawing for any particle array (the ambient local simulation has its own, dimmer set).
+        void DrawParticleSet(SpriteBatch sb, Texture2D pixel, uint now, CosmicRadiationSystem system, Particle[] set, float brightScale)
+        {
             float trail = Math.Max(0.5f, system.ClientTrailTiles);
             float size = Math.Max(1f, system.ClientParticleSizePx);
-            float bright = Math.Max(0f, system.ClientBrightness);
+            float bright = Math.Max(0f, system.ClientBrightness) * brightScale;
 
-            for (int i = 0; i < pool.Length; i++)
+            for (int i = 0; i < set.Length; i++)
             {
-                ref Particle p = ref pool[i];
+                ref Particle p = ref set[i];
                 if (!p.Active)
                     continue;
 
@@ -658,6 +699,9 @@ namespace Factorraria.Common.Cosmic
                     continue;
 
                 float age = (int)(now - s.Born);
+                if (age < 0f)
+                    continue;   // a delayed spark (the re-emit sparkle) that has not started yet
+
                 float fade = Math.Max(0f, 1f - age / 8f);
                 float size = 6f + age * 1.5f;
                 sb.Draw(pixel, new Vector2(px - Main.screenPosition.X, py - Main.screenPosition.Y), new Rectangle(0, 0, 1, 1), CosmicColors.DrawColor((CosmicColor)s.Color) * (fade * 0.8f),

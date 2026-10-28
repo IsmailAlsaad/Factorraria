@@ -10,7 +10,7 @@ namespace Factorraria.Common.Cosmic
         public int Strip;       // strip index; x covers [Strip * 8, Strip * 8 + 8)
         public float Y0;        // start rows [Y0, Y1)
         public float Y1;
-        public float Density;   // heat weight (sum over the 7 colors) x integral of altitude over [Y0, Y1) x strip width.
+        public float Density;   // heat weight (sum over all colors) x integral of altitude over [Y0, Y1) x strip width.
                                 // Expected particles per step = RateDensity x (step ticks / 60) x Density.
     }
 
@@ -128,6 +128,27 @@ namespace Factorraria.Common.Cosmic
             }
 
             result.Sort((a, b) => a.Strip.CompareTo(b.Strip));
+        }
+
+        // C7 (client ambient simulation): the rows a local particle may start at so that it can pass through the view rows
+        // [viewTop, viewBottom] during its flight: from `range` tiles above the view down to the view's bottom, cut to the particle band.
+        // False when nothing that starts in the band can reach the view (the player is too deep or too high).
+        public static bool TryAmbientStartRows(float viewTop, float viewBottom, float range, float bandBottom, out float y0, out float y1)
+        {
+            y0 = Math.Max(0f, viewTop - range);
+            y1 = Math.Min(bandBottom, viewBottom);
+            return bandBottom > 0f && y1 > y0;
+        }
+
+        // C7: expected ambient particles per TICK in a window widthTiles wide, with the same density as the real sky. The server expects
+        // rateDensity x (stepTicks / 60) x weight x AltitudeIntegral x stripWidth per sampling strip, so per tick it is the same without
+        // stepTicks. boost multiplies it (1 = the same as the real sky).
+        public static double AmbientExpectedPerTick(float rateDensity, float boost, float weightSum, float y0, float y1, float bandBottom, float widthTiles)
+        {
+            if (rateDensity <= 0f || boost <= 0f || widthTiles <= 0f || weightSum <= 0f)
+                return 0.0;
+
+            return rateDensity * (double)boost / 60.0 * weightSum * AltitudeIntegral(y0, y1, bandBottom) * widthTiles;
         }
 
         // A "rig" for the stats: a run of neighboring sampling strips (the strips are sorted by Strip).

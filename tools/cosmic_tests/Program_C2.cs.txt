@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Factorraria.Common.Cosmic;
 
-namespace Factorraria.Common.Cosmic { public enum CosmicColor : byte { White, Violet, Blue, Green, Yellow, Orange, Red } }
+namespace Factorraria.Common.Cosmic { public enum CosmicColor : byte { White, Violet, Blue, Green, Yellow, Orange, Red, Grey } }
 
 // A grid world for the tests: Empty by default, Solid outside.
 class GridProbe : ITileProbe
@@ -518,6 +518,45 @@ class P
             CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 0f, 30, 1e9f);
             CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 10f, 0, 1e9f);
             Check(c5power == 0f && c5ticks == 0, "a strike with no power or no duration does nothing");
+        }
+
+        // ------------------------------------------------------------ C7 / N2: Grey has no gemspark, the ambient maths
+        {
+            var gg = new GridProbe(200, 300);
+            for (int c = 0; c < 7; c++)
+                gg.Set(100, 20 + c, CosmicTileKind.Gemspark, (CosmicColor)c);
+
+            CosmicRayResult rg = CosmicRayTracer.Trace(gg, 100.5f, 0.5f, 0, 1, CosmicColor.Grey, 100, 0.5f, rng);
+            Check(rg.End == CosmicRayEnd.Range, "a Grey ray passes a column holding all seven gemspark colors untouched");
+
+            gg.Set(100, 50, CosmicTileKind.Solid);
+            rg = CosmicRayTracer.Trace(gg, 100.5f, 0.5f, 0, 1, CosmicColor.Grey, 100, 0.5f, rng);
+            Check(rg.End == CosmicRayEnd.Solid && rg.TileY == 50, "a Grey ray is stopped by a lead brick like any other color");
+
+            gg.Set(100, 40, CosmicTileKind.Cloud);
+            rg = CosmicRayTracer.Trace(gg, 100.5f, 0.5f, 0, 1, CosmicColor.Grey, 100, 1f, rng);
+            Check(rg.End == CosmicRayEnd.Ionize && rg.TileY == 40, "a Grey ray is absorbed by a cloud block (chance 1) like every color");
+
+            for (int c = 0; c < 7; c++)
+            {
+                var single = new GridProbe(200, 300);
+                single.Set(100, 30, CosmicTileKind.Gemspark, (CosmicColor)c);
+                rg = CosmicRayTracer.Trace(single, 100.5f, 0.5f, 0, 1, (CosmicColor)c, 100, 0.5f, rng);
+                Check(rg.End == CosmicRayEnd.Absorb && rg.TileY == 30, "color " + c + " is absorbed by its own gemspark");
+            }
+
+            Check(CosmicSampling.TryAmbientStartRows(300f, 400f, 160f, 350f, out float a0, out float a1) && a0 == 140f && a1 == 350f, "ambient start rows run from range above the view down to the band bottom");
+            Check(!CosmicSampling.TryAmbientStartRows(700f, 800f, 160f, 350f, out _, out _), "a view too far below the band has no ambient particles");
+            Check(!CosmicSampling.TryAmbientStartRows(-200f, -100f, 160f, 350f, out _, out _), "a view above the world has no ambient particles");
+
+            double server = 0.0004 * (10.0 / 60.0) * 2.5 * CosmicSampling.AltitudeIntegral(20f, 300f, 350f) * 8.0;
+            double ambient10 = 10.0 * CosmicSampling.AmbientExpectedPerTick(0.0004f, 1f, 2.5f, 20f, 300f, 350f, 8f);
+            Check(Math.Abs(server - ambient10) < server * 1e-5, "ambient density per tile equals the real sky's sampler density (" + server + " vs " + ambient10 + ")");
+
+            double one1 = CosmicSampling.AmbientExpectedPerTick(0.0004f, 1f, 2.5f, 20f, 300f, 350f, 100f);
+            double two2 = CosmicSampling.AmbientExpectedPerTick(0.0004f, 2f, 2.5f, 20f, 300f, 350f, 100f);
+            Check(Math.Abs(two2 - 2.0 * one1) < one1 * 1e-5, "the density boost multiplies the ambient count");
+            Check(CosmicSampling.AmbientExpectedPerTick(0f, 1f, 2.5f, 20f, 300f, 350f, 100f) == 0.0 && CosmicSampling.AmbientExpectedPerTick(0.0004f, 1f, 0f, 20f, 300f, 350f, 100f) == 0.0, "no rate or no weight means no ambient particles");
         }
 
         Console.WriteLine(fail == 0 ? "ALL PASSED" : "FAILURES: " + fail);

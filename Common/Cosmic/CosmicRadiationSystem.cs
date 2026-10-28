@@ -27,19 +27,19 @@ namespace Factorraria.Common.Cosmic
         public CosmicSimulation Sim = new CosmicSimulation();
 
         // ------------------------------------------------------------ per-color tables (index = CosmicColor value)
-        // Order in every table: White, Violet, Blue, Green, Yellow, Orange, Red.
+        // Order in every table: White, Violet, Blue, Green, Yellow, Orange, Red, Grey (Grey added by N2 in patch C7).
 
         [CosmicParam("Base energy of one particle per color. Halves per step down, so the cascade keeps the total (used from C4).", "energy")]
-        public float[] BaseEnergy = { 64f, 32f, 16f, 8f, 4f, 2f, 1f };
+        public float[] BaseEnergy = { 128f, 64f, 32f, 16f, 8f, 4f, 2f, 1f };
 
         [CosmicParam("Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this (used from C4).", "x")]
-        public float[] Multiplier = { 3f, 2.54f, 2.15f, 1.82f, 1.54f, 1.3f, 1.1f };
+        public float[] Multiplier = { 3f, 2.54f, 2.15f, 1.82f, 1.54f, 1.3f, 1.1f, 1.05f };
 
         [CosmicParam("Smallest cluster of cloud blocks one hit ionizes, per color (used from C4).", "blocks")]
-        public int[] ClusterMin = { 1, 1, 2, 3, 5, 7, 10 };
+        public int[] ClusterMin = { 1, 1, 2, 3, 5, 7, 10, 14 };
 
         [CosmicParam("Largest cluster of cloud blocks one hit ionizes, per color (used from C4).", "blocks")]
-        public int[] ClusterMax = { 1, 2, 3, 4, 5, 8, 12 };
+        public int[] ClusterMax = { 1, 2, 3, 4, 5, 8, 12, 16 };
 
         // ------------------------------------------------------------ heatmap (used now, C1)
 
@@ -152,6 +152,35 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("How much light a flashing (ionized) cloud block gives off, in its own color, as a multiple of its tint strength (client only, C6e). 0 = no light.", "x")]
         public float IonizedLightIntensity = 0.9f;
 
+        // ------------------------------------------------------------ C7: ambient local simulation, strike polish (client only)
+
+        [CosmicParam("Ambient local simulation (C7): simulate the cosmic particles that fall through empty sky around the local player, client only, never counted or sent. It switches itself off near any receiver (cloud or lit gemspark), where the real particles are. false = no ambient particles at all.", "on/off")]
+        public bool LocalSimEnabled = true;
+
+        [CosmicParam("Ambient density relative to the real sky (it uses the same RateDensity, heatmap and altitude). 1 = the same as the real sky, 2 = twice as many (client only, C7).", "x")]
+        public float LocalSimDensityBoost = 1f;
+
+        [CosmicParam("Half the width of the area around the player where ambient particles start (client only, C7).", "tiles")]
+        public float LocalSimHalfWidthTiles = 100f;
+
+        [CosmicParam("Half the height of the area around the player that ambient particles must pass through (client only, C7). Particles start up to ParticleRange above it.", "tiles")]
+        public float LocalSimHalfHeightTiles = 60f;
+
+        [CosmicParam("The most ambient particles alive at once. When the pool is full new ones are skipped (client only, C7).", "particles")]
+        public int LocalSimMaxParticles = 400;
+
+        [CosmicParam("The ambient simulation switches off when a receiver (cloud block or lit gemspark) is within this many tiles of the player in both directions. The server only simulates near receivers, so there the real particles fill the sky (client only, C7).", "tiles")]
+        public float LocalSimOffRadiusTiles = 120f;
+
+        [CosmicParam("Brightness of the ambient particles relative to the real ones (client only, C7).", "x")]
+        public float LocalSimBrightness = 0.7f;
+
+        [CosmicParam("How much light a lightning bolt gives off at both ends while it is on screen. 0 = no light (client only, C7).", "x")]
+        public float BoltLightIntensity = 1.2f;
+
+        [CosmicParam("Size of the short flash where lightning starts and lands, in its first 6 ticks. 0 = no flash (client only, C7).", "pixels")]
+        public float StrikeFlashSizePx = 40f;
+
         // ------------------------------------------------------------ lifecycle
 
         public override void PostUpdateWorld()
@@ -200,7 +229,7 @@ namespace Factorraria.Common.Cosmic
         public string OrderText()
         {
             string text = "";
-            for (int s = 0; s < 7; s++)
+            for (int s = 0; s < CosmicHeatmap.Sections; s++)
                 text += (s > 0 ? ", " : "") + Heatmap.HotColorOfSection(s);
             return text;
         }

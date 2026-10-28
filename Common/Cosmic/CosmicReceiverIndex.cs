@@ -4,12 +4,13 @@ namespace Factorraria.Common.Cosmic
 {
     // Every tile that can take a particle (lit gemspark blocks and cloud blocks) in the rows a ray can reach, grouped into vertical
     // strips 8 tiles wide. The sampler only creates particles above strips that have receivers. Pure code (no Terraria types), tested
-    // in tools/cosmic_tests. A receiver is stored as a code: 0 to 6 = the gemspark of that CosmicColor, 7 = a cloud block.
+    // in tools/cosmic_tests. A receiver is stored as a code: 0 to 7 = the gemspark of that CosmicColor (a color without a gemspark, Grey, never has one), 15 = a cloud block.
     // Server and single-player only; never saved (rebuilt by scanning the world).
     public sealed class CosmicReceiverIndex
     {
         public const int StripWidth = 8;
-        public const byte CloudCode = 7;
+        // Not a color index, so adding colors never collides with it (it was 7 before N2 made Grey color 7).
+        public const byte CloudCode = 15;
 
         public sealed class Strip
         {
@@ -20,7 +21,7 @@ namespace Factorraria.Common.Cosmic
         }
 
         readonly Dictionary<int, Strip> strips = new Dictionary<int, Strip>();
-        readonly int[] counts = new int[8];
+        readonly int[] counts = new int[16];
 
         // Rows deeper than this are not indexed (a ray cannot reach them). The system sets it from the band and the range.
         public int MaxY = int.MaxValue;

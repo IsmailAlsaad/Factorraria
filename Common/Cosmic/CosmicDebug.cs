@@ -71,9 +71,9 @@ namespace Factorraria.Common.Cosmic
             int worldTiles = Main.maxTilesX;
             float width = map.SectionWidth(worldTiles);
 
-            caller.Reply("fcosmic heat [" + Side() + "]: world " + worldTiles + " tiles wide, 7 sections of " + width.ToString("0.#", CultureInfo.InvariantCulture) + " tiles", Color.LightGreen);
+            caller.Reply("fcosmic heat [" + Side() + "]: world " + worldTiles + " tiles wide, " + CosmicHeatmap.Sections + " sections of " + width.ToString("0.#", CultureInfo.InvariantCulture) + " tiles", Color.LightGreen);
 
-            for (int s = 0; s < 7; s++)
+            for (int s = 0; s < CosmicHeatmap.Sections; s++)
             {
                 int from = (int)(s * width);
                 int to = (int)((s + 1) * width) - 1;
@@ -94,15 +94,15 @@ namespace Factorraria.Common.Cosmic
             x = Math.Clamp(x, 0, worldTiles - 1);
 
             float total = 0f;
-            float[] weights = new float[7];
-            for (int c = 0; c < 7; c++)
+            float[] weights = new float[CosmicColors.Count];
+            for (int c = 0; c < CosmicColors.Count; c++)
             {
                 weights[c] = map.Weight((CosmicColor)c, x, worldTiles, system.HeatFloor, system.HeatSigmaFraction);
                 total += weights[c];
             }
 
             caller.Reply("  share of new particles at tile X " + x + " (section " + map.SectionAt(x, worldTiles) + "):", Color.LightGreen);
-            for (int c = 0; c < 7; c++)
+            for (int c = 0; c < CosmicColors.Count; c++)
             {
                 CosmicColor color = (CosmicColor)c;
                 float share = total > 0f ? weights[c] / total * 100f : 0f;
@@ -113,7 +113,7 @@ namespace Factorraria.Common.Cosmic
         static void Params(CommandCaller caller)
         {
             CosmicRadiationSystem system = CosmicRadiationSystem.Instance;
-            caller.Reply("fcosmic params [" + Side() + "]: values on this side (they live as public fields on CosmicRadiationSystem). Per-color lists are in the order White, Violet, Blue, Green, Yellow, Orange, Red.", Color.LightGreen);
+            caller.Reply("fcosmic params [" + Side() + "]: values on this side (they live as public fields on CosmicRadiationSystem). Per-color lists are in the order White, Violet, Blue, Green, Yellow, Orange, Red, Grey.", Color.LightGreen);
 
             foreach (FieldInfo field in typeof(CosmicRadiationSystem).GetFields(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -203,7 +203,7 @@ namespace Factorraria.Common.Cosmic
 
             caller.Reply("  rays: sampled " + sim.RaysSampled + ", traced " + sim.RaysTraced + " (" + Inv(sim.RaysPerSecond, "0.#") + "/s over the last second); blocked by lead bricks or the world edge " + sim.DeadSolid + ", out of range " + sim.DeadRange + "; test rays fired " + sim.DebugRays + ".", Color.White);
             caller.Reply("  absorbed by gemsparks: " + PerColor(sim.Absorbed), Color.White);
-            caller.Reply("  child rays made by gemsparks (re-emitted, per color of the child): " + PerColor(sim.Reemitted) + ". Chain ended in Red " + sim.ChainEnds + ", gemspark broken before arrival " + sim.Vanished + ".", Color.White);
+            caller.Reply("  child rays made by gemsparks (re-emitted, per color of the child): " + PerColor(sim.Reemitted) + ". Chain ended at the lowest color (no next step) " + sim.ChainEnds + ", gemspark broken before arrival " + sim.Vanished + ".", Color.White);
 
             if (sim.HasLastCascade)
                 caller.Reply("  last cascade: a " + sim.LastCascadeFrom + " ray was absorbed and made two " + CosmicColors.Next(sim.LastCascadeFrom) + " rays at +" + Inv(sim.LastChildDegA, "0.0") + " and -" + Inv(sim.LastChildDegB, "0.0") + " degrees from its path.", Color.White);
@@ -245,7 +245,7 @@ namespace Factorraria.Common.Cosmic
             string ids = "";
             for (int c = 0; c < CosmicColors.Count; c++)
                 ids += (c > 0 ? ", " : "") + (CosmicColor)c + " " + CosmicColors.GemsparkTile((CosmicColor)c);
-            caller.Reply("  gemspark tile ids used: " + ids + ". If placing a gemspark does not raise its count above, these may be the offline variants.", Color.Gray);
+            caller.Reply("  gemspark tile ids used: " + ids + ". -1 means no gemspark absorbs that color (Grey). If placing a gemspark does not raise its count above, these may be the offline variants.", Color.Gray);
         }
 
         static bool TryParseColor(string text, out CosmicColor color)
@@ -265,7 +265,7 @@ namespace Factorraria.Common.Cosmic
 
             if (args.Length < 2 || !TryParseColor(args[1], out CosmicColor color))
             {
-                caller.Reply("Usage: /fcosmic spawn <white|violet|blue|green|yellow|orange|red> [tileX tileY]  (without a tile it uses the cursor, single-player only)", Color.OrangeRed);
+                caller.Reply("Usage: /fcosmic spawn <white|violet|blue|green|yellow|orange|red|grey> [tileX tileY]  (without a tile it uses the cursor, single-player only)", Color.OrangeRed);
                 return;
             }
 

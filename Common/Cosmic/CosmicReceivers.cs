@@ -6,7 +6,7 @@ using Terraria.ModLoader;
 namespace Factorraria.Common.Cosmic
 {
     // Which tile types are cosmic receivers: a lookup by tile type, built from the registries (never from tile id numbers).
-    //   0 to 6 = the lit gemspark block of that CosmicColor, 7 = a cloud block (CosmicReceiverIndex.CloudCode), 255 = not a receiver.
+    //   0 to 7 = the lit gemspark block of that CosmicColor (a color with no gemspark, Grey, has no code), 15 = a cloud block (CosmicReceiverIndex.CloudCode), 255 = not a receiver.
     public static class CosmicTileCodes
     {
         public const byte None = 255;
@@ -57,14 +57,14 @@ namespace Factorraria.Common.Cosmic
             int type = tile.TileType;
             byte code = CosmicTileCodes.CodeOf(type);
 
+            if (code == CosmicReceiverIndex.CloudCode)
+                return CosmicTileKind.Cloud;
+
             if (code < CosmicColors.Count)
             {
                 gemsparkColor = (CosmicColor)code;
                 return CosmicTileKind.Gemspark;
             }
-
-            if (code == CosmicReceiverIndex.CloudCode)
-                return CosmicTileKind.Cloud;
 
             // Cosmic particles pass through everything except gemsparks, clouds and Lead Bricks (an actuated-off brick was
             // already skipped above). Lead Brick is the only blocker.
