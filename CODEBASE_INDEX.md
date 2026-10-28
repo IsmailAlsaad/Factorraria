@@ -166,7 +166,7 @@ tModLoader/other bases -> project types:
     +PostSetupContent()[ov] +PostWorldGen()[ov] +Unload()[ov]
 
 ### Common/Cosmic/
-**CosmicAudioHooks.cs** uses: CosmicColor
+**CosmicAudioHooks.cs** uses: CosmicColor, CosmicRadiationSystem
   static class CosmicAudioHooks
     +OnAbsorbed(CosmicColor,float,float)[s] +OnReemitted(CosmicColor,float,float)[s] +OnIonized(CosmicColor,float,float,int)[s] +OnThunder(float,float,float,float,byte,bool)[s]
 **CosmicClusterMath.cs**
@@ -207,7 +207,7 @@ tModLoader/other bases -> project types:
     +Description:string +Unit:string
 **CosmicParticleSystem.Ambient.cs** uses: Bolt, CosmicColor, CosmicColors, CosmicHeatmap, CosmicRadiationSystem, CosmicRayEnd, CosmicRayResult, CosmicRayTracer, CosmicReceiverIndex, CosmicSampling, CosmicSamplingStrip, CosmicSimulation, CosmicTileCodes, CosmicTileProbe, FurnaceOffsetConfig, Particle, Strip
   partial class CosmicParticleSystem : ModSystem
-    +AmbientOn:bool +AmbientOffReason:string +AmbientSkippedFull:long AmbientSpawned, AmbientDropped, +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +AmbientOn:bool +AmbientOffReason:string +AmbientSkippedFull:long AmbientSpawned, AmbientDropped, +Unload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **CosmicParticleSystem.cs** uses: CosmicAudioHooks, CosmicColor, CosmicColors, CosmicRadiationSystem
   struct CosmicClientRay
     +Color:byte +End:byte +Speed:float X, Y, DirX, DirY, Length,
@@ -227,7 +227,7 @@ tModLoader/other bases -> project types:
       +Active:bool +Color:byte +Born:uint +Y:float X,
 **CosmicRadiationSystem.cs** uses: CosmicHeatmap, CosmicSimulation, FactorrariaNet
   class CosmicRadiationSystem : ModSystem
-    +Instance:CosmicRadiationSystem[s] +Heatmap:CosmicHeatmap +Sim:CosmicSimulation +BaseEnergy:float +Multiplier:float +ClusterMin:int +ClusterMax:int +HeatSigmaFraction:float +HeatFloor:float +RateDensity:float +SpawnSpreadDeg:float +ParticleSpeed:float +ParticleRange:float +SampleStepTicks:int +SpaceBottomFraction:float +ScanStripsPerTick:int +ResyncStripsPerTick:int +ReemitAngleMinDeg:float +ReemitAngleMaxDeg:float +CloudAbsorbChance:float +IonizedLifetimeTicks:int +RefractoryTicks:int +StrikeRadiusTiles:float +SurgePowerPerDecade:float +SurgeDurationTicks:int +MaxSurgePower:float +MaxRaysPerTick:int +MaxQueuedEvents:int +ClientParticlePool:int +NetInterestRadiusTiles:int +NetMaxRaysPerTick:int +NetMaxEventsPerTick:int +ClientTrailTiles:float +ClientParticleSizePx:float +ClientBrightness:float +BoltLifeTicks:int +BoltBaseWidthPx:float +BoltWidthPerDecadePx:float +BoltMaxWidthPx:float +IonizedLightIntensity:float +LocalSimEnabled:bool +LocalSimDensityBoost:float +LocalSimHalfWidthTiles:float +LocalSimHalfHeightTiles:float +LocalSimMaxParticles:int +LocalSimOffRadiusTiles:float +LocalSimBrightness:float +BoltLightIntensity:float +StrikeFlashSizePx:float +PostUpdateWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OrderText()
+    +Instance:CosmicRadiationSystem[s] +Heatmap:CosmicHeatmap +Sim:CosmicSimulation +BaseEnergy:float +Multiplier:float +ClusterMin:int +ClusterMax:int +HeatSigmaFraction:float +HeatFloor:float +RateDensity:float +SpawnSpreadDeg:float +ParticleSpeed:float +ParticleRange:float +SampleStepTicks:int +SpaceBottomFraction:float +ScanStripsPerTick:int +ResyncStripsPerTick:int +ReemitAngleMinDeg:float +ReemitAngleMaxDeg:float +CloudAbsorbChance:float +IonizedLifetimeTicks:int +RefractoryTicks:int +StrikeRadiusTiles:float +SurgePowerPerDecade:float +SurgeDurationTicks:int +MaxSurgePower:float +MaxRaysPerTick:int +MaxQueuedEvents:int +ClientParticlePool:int +NetInterestRadiusTiles:int +NetMaxRaysPerTick:int +NetMaxEventsPerTick:int +ClientTrailTiles:float +ClientParticleSizePx:float +ClientBrightness:float +BoltLifeTicks:int +BoltBaseWidthPx:float +BoltWidthPerDecadePx:float +BoltMaxWidthPx:float +IonizedLightIntensity:float +LocalSimEnabled:bool +LocalSimDensityBoost:float +LocalSimHalfWidthTiles:float +LocalSimHalfHeightTiles:float +LocalSimMaxParticles:int +LocalSimOffRadiusTiles:float +LocalSimBrightness:float +BoltLightIntensity:float +StrikeFlashSizePx:float +LocalSimFadeSeconds:float +ThunderBigTier:float +PostUpdateWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OrderText()
 **CosmicRayTracer.cs** uses: CosmicColor, Probe
   enum CosmicTileKind : byte
     {Empty, Gemspark, Cloud, Solid}
@@ -1608,6 +1608,7 @@ tModLoader/other bases -> project types:
 - .cursor/rules/: factorraria.mdc, liquids-networks.mdc, machines.mdc, tml-api.mdc
 - .cursor/tml/: EXAMPLEMOD_INDEX.md, TML_API_INDEX.md, TML_MAP.md
 - Assets/Atlases/: Particles_Atlas.json
+- Assets/Sounds/GeigerCounterClick/: GeigerCounterClick1.wav, GeigerCounterClick10.wav, GeigerCounterClick2.wav, GeigerCounterClick3.wav, GeigerCounterClick4.wav, GeigerCounterClick5.wav, GeigerCounterClick6.wav, GeigerCounterClick7.wav, GeigerCounterClick8.wav, GeigerCounterClick9.wav
 - Localization/: en-US.hjson, en-US_Mods.Factorraria.hjson
 - Properties/: launchSettings.json
 - docs/cosmic_radiation/: ROADMAP.md

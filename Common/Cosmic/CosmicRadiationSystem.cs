@@ -33,7 +33,7 @@ namespace Factorraria.Common.Cosmic
         public float[] BaseEnergy = { 128f, 64f, 32f, 16f, 8f, 4f, 2f, 1f };
 
         [CosmicParam("Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this (used from C4).", "x")]
-        public float[] Multiplier = { 3f, 2.54f, 2.15f, 1.82f, 1.54f, 1.3f, 1.1f, 1.05f };
+        public float[] Multiplier = { 3f, 2.6f, 2.25f, 1.95f, 1.69f, 1.47f, 1.27f, 1.1f };
 
         [CosmicParam("Smallest cluster of cloud blocks one hit ionizes, per color (used from C4).", "blocks")]
         public int[] ClusterMin = { 1, 1, 2, 3, 5, 7, 10, 14 };
@@ -47,15 +47,15 @@ namespace Factorraria.Common.Cosmic
         public float HeatSigmaFraction = 0.35f;
 
         [CosmicParam("Constant chance every color keeps everywhere, relative to its hot spot peak of 1. 0 = a color never appears outside its bump.", "relative weight")]
-        public float HeatFloor = 0.08f;
+        public float HeatFloor = 0.04f;
 
         // ------------------------------------------------------------ spawning and flight (C2)
 
         [CosmicParam("Particles per tile^2 per second at the very top of the world, before heat and altitude (used from C2).", "particles/tile^2/s")]
-        public float RateDensity = 0.0004f;
+        public float RateDensity = 0.0001f;
 
         [CosmicParam("Random tilt of a new particle away from straight down (used from C2).", "degrees")]
-        public float SpawnSpreadDeg = 5f;
+        public float SpawnSpreadDeg = 15f;
 
         [CosmicParam("How fast a particle flies (used from C2).", "tiles/tick")]
         public float ParticleSpeed = 0.8f;
@@ -180,6 +180,12 @@ namespace Factorraria.Common.Cosmic
 
         [CosmicParam("Size of the short flash where lightning starts and lands, in its first 6 ticks. 0 = no flash (client only, C7).", "pixels")]
         public float StrikeFlashSizePx = 40f;
+
+        [CosmicParam("How long the ambient local simulation takes to fade all the way in or out when it switches (near a receiver, off or on, after a teleport). 0 = switch at once (client only, C7b).", "seconds")]
+        public float LocalSimFadeSeconds = 2f;
+
+        [CosmicParam("Thunder at or above this energy tier (log10 of the energy x 4, the number that also sets the bolt width) plays the big SoundID.Thunder, weaker thunder plays the small bug zap. 8 is roughly an even split with the default tables (client only, C7b).", "tier")]
+        public float ThunderBigTier = 16f;
 
         // ------------------------------------------------------------ lifecycle
 

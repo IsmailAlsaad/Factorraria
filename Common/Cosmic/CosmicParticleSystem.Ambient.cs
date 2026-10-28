@@ -52,6 +52,11 @@ namespace Factorraria.Common.Cosmic
         int ambientLastX, ambientLastY;
         int scanRadiusUsed = 120;
 
+        // C7b: how visible the ambient sky is right now, 0 to 1. It eases toward 1 while the simulation is allowed and toward 0 while it is
+        // not (LocalSimFadeSeconds for the whole way), so it fades in and out instead of switching. It scales both how many particles are
+        // spawned and how bright they are drawn.
+        float ambientFade;
+
         // What /fcosmic fx and the debug overlay show.
         public bool AmbientOn { get; private set; }
         public string AmbientOffReason = "not started";
@@ -67,6 +72,7 @@ namespace Factorraria.Common.Cosmic
             ambientNear = false;
             ambientClearCycles = 0;
             ambientWasOn = false;
+            ambientFade = 0f;
             AmbientOn = false;
             AmbientOffReason = "not started";
             AmbientSpawned = AmbientDropped = AmbientSkippedFull = 0;
@@ -74,15 +80,32 @@ namespace Factorraria.Common.Cosmic
 
         string AmbientText()
         {
-            return "ambient " + ambientActive + " of " + ambient.Length + " " + (AmbientOn ? "ON" : "OFF (" + AmbientOffReason + ")")
+            return "ambient " + ambientActive + " of " + ambient.Length + " " + (AmbientOn ? "ON" : "OFF (" + AmbientOffReason + ")") + ", fade " + (int)(ambientFade * 100f) + "%"
                 + ", spawned " + AmbientSpawned + ", dropped because they would hit a receiver " + AmbientDropped + ", skipped because the pool was full " + AmbientSkippedFull;
         }
 
+        // The simulation is not allowed right now: ease the sky out. Once it is fully faded the particles still in the pool are dropped, so
+        // the next switch-on starts from an empty pool and pre-fills the sky (which then fades in).
         void AmbientOff(string reason)
         {
             AmbientOn = false;
             AmbientOffReason = reason;
             ambientWasOn = false;
+            StepFade(false);
+
+            if (ambientFade <= 0f && ambientActive > 0)
+            {
+                Array.Clear(ambient, 0, ambient.Length);
+                ambientActive = 0;
+            }
+        }
+
+        // One tick of the fade toward on (true) or off (false). LocalSimFadeSeconds <= 0 switches at once.
+        void StepFade(bool on)
+        {
+            float seconds = CosmicRadiationSystem.Instance.LocalSimFadeSeconds;
+            float step = seconds <= 0.01f ? 1f : 1f / (60f * seconds);
+            ambientFade = on ? Math.Min(1f, ambientFade + step) : Math.Max(0f, ambientFade - step);
         }
 
         // ------------------------------------------------------------ update (main thread, client only)
@@ -161,9 +184,15 @@ namespace Factorraria.Common.Cosmic
             AmbientOn = true;
             AmbientOffReason = "";
 
-            // Just switched on, or the player jumped (teleport): fill the area with particles that are already part of the way down, so
-            // the sky does not start empty. Otherwise only the new arrivals are drawn.
-            bool fresh = !ambientWasOn || Math.Abs(px - ambientLastX) > 40 || Math.Abs(py - ambientLastY) > 40;
+            // Just switched on from nothing, or the player jumped (teleport): fill the area with particles that are already part of the way
+            // down, so the sky does not start empty. They are drawn at the current fade, so they fade in instead of popping. A brief off
+            // (some particles still alive) is not fresh: the density just ramps back up with the fade.
+            bool jumped = ambientWasOn && (Math.Abs(px - ambientLastX) > 40 || Math.Abs(py - ambientLastY) > 40);
+            bool fresh = (!ambientWasOn && ambientActive == 0) || jumped;
+            if (jumped)
+                ambientFade = 0f;   // a teleport: the new sky fades in from nothing
+
+            StepFade(true);
             ambientWasOn = true;
             ambientLastX = px;
             ambientLastY = py;
@@ -176,7 +205,7 @@ namespace Factorraria.Common.Cosmic
 
             double perTick = CosmicSampling.AmbientExpectedPerTick(s.RateDensity, s.LocalSimDensityBoost, weight, y0, y1, band, halfW * 2f);
             double flightTicks = (s.ParticleRange + Math.Max(0.5f, s.ClientTrailTiles)) / Math.Max(0.01f, s.ParticleSpeed);
-            int count = CosmicSampling.Poisson(fresh ? perTick * flightTicks : perTick, ambientRng);
+            int count = CosmicSampling.Poisson(fresh ? perTick * flightTicks : perTick * ambientFade, ambientRng);
             count = Math.Min(count, fresh ? ambient.Length : 24);
 
             for (int k = 0; k < count; k++)
@@ -323,10 +352,11 @@ namespace Factorraria.Common.Cosmic
         // ------------------------------------------------------------ draw (client only, inside the additive batch of PostDrawTiles)
         void DrawAmbient(SpriteBatch sb, Texture2D pixel, uint now, CosmicRadiationSystem system)
         {
-            if (ambientActive == 0)
+            if (ambientActive == 0 || ambientFade <= 0f)
                 return;
 
-            DrawParticleSet(sb, pixel, now, system, ambient, Math.Max(0f, system.LocalSimBrightness));
+            float eased = ambientFade * ambientFade * (3f - 2f * ambientFade);   // smoothstep, so the ends of the fade are gentle too
+            DrawParticleSet(sb, pixel, now, system, ambient, Math.Max(0f, system.LocalSimBrightness) * eased);
         }
 
         // A short flash where the lightning starts and where it lands (the first 6 ticks of a bolt).
@@ -361,9 +391,54 @@ namespace Factorraria.Common.Cosmic
             if (!BoxVisible(px - sizePx, py - sizePx, px + sizePx, py + sizePx))
                 return;
 
+            // Two round discs (a wide blue one and a small white core), same extents as the old squares.
+            Texture2D disc = FlashDisc();
             Vector2 pos = new Vector2(px - Main.screenPosition.X, py - Main.screenPosition.Y);
-            sb.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), new Color(110, 150, 255) * (fade * 0.35f), 0f, new Vector2(0.5f, 0.5f), new Vector2(sizePx * 2f, sizePx * 2f), SpriteEffects.None, 0f);
-            sb.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), new Color(235, 240, 255) * (fade * 0.8f), 0f, new Vector2(0.5f, 0.5f), new Vector2(sizePx * 0.8f, sizePx * 0.8f), SpriteEffects.None, 0f);
+            Vector2 middle = new Vector2(disc.Width / 2f, disc.Height / 2f);
+            float outer = sizePx * 2f / disc.Width;
+            float core = sizePx * 0.8f / disc.Width;
+            sb.Draw(disc, pos, null, new Color(110, 150, 255) * (fade * 0.35f), 0f, middle, outer, SpriteEffects.None, 0f);
+            sb.Draw(disc, pos, null, new Color(235, 240, 255) * (fade * 0.8f), 0f, middle, core, SpriteEffects.None, 0f);
+        }
+
+        // A solid round disc with a soft rim, made once on the main thread (the first time a flash is drawn). The colors are premultiplied,
+        // like every texture the game draws, so it also works inside the additive batch.
+        Texture2D flashDisc;
+
+        Texture2D FlashDisc()
+        {
+            if (flashDisc != null && !flashDisc.IsDisposed)
+                return flashDisc;
+
+            int size = 64;
+            Color[] data = new Color[size * size];
+            float radius = size / 2f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x + 0.5f - radius;
+                    float dy = y + 0.5f - radius;
+                    float d = MathF.Sqrt(dx * dx + dy * dy) / radius;
+                    float t = Math.Clamp((d - 0.55f) / 0.45f, 0f, 1f);
+                    float a = 1f - t * t * (3f - 2f * t);
+                    data[y * size + x] = new Color(a, a, a, a);
+                }
+            }
+
+            flashDisc = new Texture2D(Main.instance.GraphicsDevice, size, size);
+            flashDisc.SetData(data);
+            return flashDisc;
+        }
+
+        public override void Unload()
+        {
+            Texture2D disc = flashDisc;
+            flashDisc = null;
+
+            if (disc != null)
+                Main.QueueMainThreadAction(() => disc.Dispose());
         }
 
         // ------------------------------------------------------------ EnableDebugs overlay

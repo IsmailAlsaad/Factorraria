@@ -41,7 +41,10 @@ namespace Factorraria.Common.Cosmic
         public static void OnThunder(float ax, float ay, float bx, float by, byte tier, bool strike)
         {
             // LATER MAKE STRONG THUNDER SOUND USE SoundID.Thunder
-            SoundEngine.PlaySound(SoundID.DD2_LightningBugZap with { Volume = 0.6f }, new Vector2(ax, ay) * 16f);
+            // C7b: two sizes. Energy tier at or above ThunderBigTier is a big thunder, anything below it is the small zap.
+            bool big = tier >= CosmicRadiationSystem.Instance.ThunderBigTier;
+            SoundStyle style = big ? SoundID.Thunder with { Volume = 0.8f } : SoundID.DD2_LightningBugZap with { Volume = 0.6f };
+            SoundEngine.PlaySound(style, new Vector2(ax, ay) * 16f);
         }
     }
 }
