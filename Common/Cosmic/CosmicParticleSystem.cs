@@ -399,7 +399,7 @@ namespace Factorraria.Common.Cosmic
             if (Main.dedServ || Main.gameMenu)
                 return;
 
-            if (ActiveCount == 0 && glows.Count == 0 && boltsActive == 0 && sparksActive == 0)
+            if (ActiveCount == 0 && boltsActive == 0 && sparksActive == 0)
                 return;
 
             if (!circleLooked)
@@ -417,7 +417,6 @@ namespace Factorraria.Common.Cosmic
 
             sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            DrawGlows(sb, pixel, now);
             DrawParticles(sb, pixel, now, system);
             DrawBolts(sb, pixel, now);
             DrawSparks(sb, pixel, now);
@@ -425,40 +424,30 @@ namespace Factorraria.Common.Cosmic
             sb.End();
         }
 
-        void DrawGlows(SpriteBatch sb, Texture2D pixel, uint now)
+        // C6b: an ionized cloud is no longer drawn with an overlay (clouds are already bright, so a glow on top was hard to read). Instead the
+        // tile itself is drawn in the color: CosmicIonizedTileDraw (a GlobalTile) asks for the tint of the tile it is drawing and multiplies the
+        // tile's own draw color by it. The tint pulses faster until the discharge, then fades back to the normal cloud color. Returns false
+        // (and White) when the tile is not ionized. Main thread, client only.
+        public bool TryGetTileTint(int x, int y, out Color tint)
         {
-            if (glows.Count == 0)
-                return;
+            tint = Color.White;
+            if (glows.Count == 0 || !glows.TryGetValue(((long)x << 32) | (uint)y, out Glow g))
+                return false;
 
-            foreach (KeyValuePair<long, Glow> pair in glows)
+            float age = (int)(Main.GameUpdateCount - g.Born);
+            float strength;
+
+            if (g.Fading)
+                strength = Math.Max(0f, 1f - age / g.Life);
+            else
             {
-                int x = (int)(pair.Key >> 32);
-                int y = (int)(uint)pair.Key;
-                float px = x * 16f;
-                float py = y * 16f;
-                if (!BoxVisible(px, py, px + 16f, py + 16f))
-                    continue;
-
-                Glow g = pair.Value;
-                float age = (int)(now - g.Born);
-                Color color;
-                float alpha;
-
-                if (g.Fading)
-                {
-                    color = Color.White;
-                    alpha = Math.Max(0f, 1f - age / g.Life) * 0.9f;
-                }
-                else
-                {
-                    float frac = Math.Min(1f, age / g.Life);
-                    float pulse = 0.5f + 0.5f * (float)Math.Sin(age * (0.35f + 0.6f * frac));
-                    color = CosmicColors.DrawColor((CosmicColor)g.Color);
-                    alpha = 0.22f + 0.3f * pulse + 0.25f * frac;
-                }
-
-                sb.Draw(pixel, new Vector2(px - Main.screenPosition.X, py - Main.screenPosition.Y), new Rectangle(0, 0, 1, 1), color * alpha, 0f, Vector2.Zero, new Vector2(16f, 16f), SpriteEffects.None, 0f);
+                float frac = Math.Min(1f, age / g.Life);
+                float pulse = 0.5f + 0.5f * (float)Math.Sin(age * (0.35f + 0.6f * frac));
+                strength = 0.55f + 0.3f * pulse + 0.15f * frac;
             }
+
+            tint = Color.Lerp(Color.White, CosmicColors.TileTint((CosmicColor)g.Color), Math.Min(1f, strength));
+            return true;
         }
 
         void DrawParticles(SpriteBatch sb, Texture2D pixel, uint now, CosmicRadiationSystem system)
@@ -562,7 +551,10 @@ namespace Factorraria.Common.Cosmic
                 float perpY = dx / length;
                 float amplitude = Math.Min(1.4f, length * 0.1f);
                 int segments = Math.Max(4, Math.Min(24, (int)(length * 1.2f)));
-                float widthCore = (b.Thin ? 1.5f : 2f) + Math.Min(b.Tier, (byte)40) * 0.06f;
+                // C6b: thickness grows with the energy. Tier is log10(energy) x 4, so tier / 4 is the number of decades.
+                CosmicRadiationSystem cosmic = CosmicRadiationSystem.Instance;
+                float decades = b.Tier * 0.25f;
+                float widthCore = Math.Min(Math.Max(1f, cosmic.BoltMaxWidthPx), Math.Max(0.5f, cosmic.BoltBaseWidthPx) + decades * Math.Max(0f, cosmic.BoltWidthPerDecadePx)) * (b.Thin ? 0.6f : 1f);
                 float widthGlow = widthCore * 3f;
 
                 float prevX = b.AX;

@@ -459,14 +459,19 @@ class P
             Check(c5best == -1, "no machine within 30 tiles: nothing is chosen (the thunder spits)");
 
             // surge power (A8) and the overflow guard
-            Check(CosmicStrikeMath.SurgePower(192.0, 1.0, 1e30f, out bool c5clamped) == 192f && !c5clamped, "one white hit (192 energy) gives a surge of 192 at 1 power per energy");
-            Check(CosmicStrikeMath.SurgePower(192.0, 2.5, 1e30f, out c5clamped) == 480f && !c5clamped, "power per energy scales the surge (192 x 2.5 = 480)");
-            Check(CosmicStrikeMath.SurgePower(double.MaxValue, 1.0, 1e30f, out c5clamped) == 1e30f && c5clamped, "an astronomical energy is clamped to the maximum surge, flagged as clamped");
-            Check(CosmicStrikeMath.SurgePower(double.PositiveInfinity, 1.0, 1e30f, out c5clamped) == 1e30f && c5clamped, "infinite energy gives the maximum surge, never infinity");
-            Check(CosmicStrikeMath.SurgePower(double.PositiveInfinity, 0.0, 1e30f, out c5clamped) == 0f && !c5clamped, "infinity x 0 power per energy gives 0, not NaN");
-            Check(CosmicStrikeMath.SurgePower(double.NaN, 1.0, 1e30f, out c5clamped) == 0f, "NaN energy gives 0");
-            Check(CosmicStrikeMath.SurgePower(-5.0, 1.0, 1e30f, out c5clamped) == 0f, "negative energy gives 0");
-            Check(CosmicStrikeMath.SurgePower(10.0, 1.0, 0f, out c5clamped) == 0f, "a maximum of 0 means no surge at all");
+            Check(Math.Abs(CosmicStrikeMath.SurgePower(192.0, 100.0, 1e6f, out bool c5clamped) - 228.33f) < 0.05f && !c5clamped, "one white hit (192 energy = 2.283 decades) gives a surge of about 228 at 100 power per decade");
+            Check(Math.Abs(CosmicStrikeMath.SurgePower(1000.0, 2.5, 1e6f, out c5clamped) - 7.5f) < 0.001f && !c5clamped, "power per decade scales the surge (3 decades x 2.5 = 7.5)");
+            Check(Math.Abs(CosmicStrikeMath.SurgePower(1e10, 100.0, 1e6f, out c5clamped) - 1000f) < 0.01f && !c5clamped, "ten billion energy is only 10 decades: a surge of 1000, not ten billion");
+            float c5huge = CosmicStrikeMath.SurgePower(double.MaxValue, 100.0, 1e6f, out c5clamped);
+            Check(Math.Abs(c5huge - 30825.5f) < 1f && !c5clamped, "the largest finite energy (about 308 decades) is a readable surge of about 30825");
+            Check(CosmicStrikeMath.SurgePower(double.MaxValue, 100.0, 1000f, out c5clamped) == 1000f && c5clamped, "a surge above the maximum is clamped to it and flagged as clamped");
+            Check(CosmicStrikeMath.SurgePower(double.PositiveInfinity, 100.0, 1e6f, out c5clamped) == 1e6f && c5clamped, "infinite energy gives the maximum surge, never infinity");
+            Check(CosmicStrikeMath.SurgePower(double.PositiveInfinity, 0.0, 1e6f, out c5clamped) == 0f && !c5clamped, "infinity x 0 power per decade gives 0, not NaN");
+            Check(CosmicStrikeMath.SurgePower(1.0, 100.0, 1e6f, out c5clamped) == 0f && !c5clamped, "energy 1 is zero decades: no surge");
+            Check(CosmicStrikeMath.SurgePower(0.5, 100.0, 1e6f, out c5clamped) == 0f, "energy below 1 gives 0 (no negative power)");
+            Check(CosmicStrikeMath.SurgePower(double.NaN, 100.0, 1e6f, out c5clamped) == 0f, "NaN energy gives 0");
+            Check(CosmicStrikeMath.SurgePower(-5.0, 100.0, 1e6f, out c5clamped) == 0f, "negative energy gives 0");
+            Check(CosmicStrikeMath.SurgePower(10.0, 100.0, 0f, out c5clamped) == 0f, "a maximum of 0 means no surge at all");
             Check(float.IsFinite(CosmicStrikeMath.SurgePower(1e300, 1e300, float.MaxValue, out c5clamped)), "even a float.MaxValue maximum stays finite");
 
             // stacking and the window

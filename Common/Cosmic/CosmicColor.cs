@@ -74,5 +74,12 @@ namespace Factorraria.Common.Cosmic
                 default: return new Color(255, 65, 55);
             }
         }
+
+        // The color an ionized cloud TILE is multiplied by (C6b). A multiply by white changes nothing, so the white (UV) particle uses a steel
+        // grey that the pulse swings to and from the normal cloud color.
+        public static Color TileTint(CosmicColor color)
+        {
+            return color == CosmicColor.White ? new Color(120, 135, 170) : DrawColor(color);
+        }
     }
 }

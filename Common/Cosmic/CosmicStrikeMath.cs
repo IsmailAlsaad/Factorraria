@@ -15,15 +15,20 @@ namespace Factorraria.Common.Cosmic
             return distanceSq <= limitSq;
         }
 
-        // A8: surge power = thunder energy x power per energy. The energy is a double and can be astronomically large (A1), so the result
-        // is clamped to maxPower before it becomes a float: the physics is never capped, only the number that reaches the grid.
-        // A negative, NaN or zero result gives 0. Infinity (or anything above maxPower) gives maxPower, never infinity.
-        public static float SurgePower(double energy, double powerPerEnergy, float maxPower, out bool clamped)
+        // A8 (changed in C6b): surge power = powerPerDecade x log10(thunder energy). The energy is a double and can be astronomically large (A1),
+        // but its logarithm never is (about 308 at most for a finite double), so the number that reaches the grid stays small and readable.
+        // The physics is never capped, only this number. Energy at or below 1 (zero decades), NaN or a negative gives 0. Infinity, or anything
+        // above maxPower, gives maxPower, never infinity.
+        public static float SurgePower(double energy, double powerPerDecade, float maxPower, out bool clamped)
         {
             clamped = false;
-            double power = energy * powerPerEnergy;
 
-            if (maxPower <= 0f || double.IsNaN(power) || power <= 0.0)
+            if (maxPower <= 0f || double.IsNaN(energy) || energy <= 1.0)
+                return 0f;
+
+            double power = Math.Log10(energy) * powerPerDecade;   // log10(+infinity) is +infinity, and infinity x 0 is NaN (gives 0 below)
+
+            if (double.IsNaN(power) || power <= 0.0)
                 return 0f;
 
             if (power > maxPower)

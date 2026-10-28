@@ -605,7 +605,7 @@ namespace Factorraria.Common.Cosmic
 
         // C5. A discharge of `energy` happened at (centerX, centerY), in tile units. Roadmap section 2 "Strike" and assumptions A7 and A8:
         // - the nearest electric machine (consumer or producer, poles included, they are consumers) within StrikeRadiusTiles of the center is struck:
-        //   a surge of energy x SurgePowerPerEnergy (clamped to MaxSurgePower) is added to that machine for SurgeDurationTicks, and PowerNetwork.Tick
+        //   a surge of log10(energy) x SurgePowerPerDecade (clamped to MaxSurgePower) is added to that machine for SurgeDurationTicks, and PowerNetwork.Tick
         //   adds it to the supply of the machine's grid; a Strike event goes to the sink;
         // - no machine in range: a Spit event with a random direction goes to the sink and nothing else happens.
         // Authority: server and single-player only (the simulation never runs on a client). Nothing here is saved.
@@ -623,7 +623,7 @@ namespace Factorraria.Common.Cosmic
                 return result;
             }
 
-            float power = CosmicStrikeMath.SurgePower(energy, s.SurgePowerPerEnergy, s.MaxSurgePower, out bool clamped);
+            float power = CosmicStrikeMath.SurgePower(energy, s.SurgePowerPerDecade, s.MaxSurgePower, out bool clamped);
             target.AddSurge(power, s.SurgeDurationTicks, s.MaxSurgePower);
 
             Strikes++;

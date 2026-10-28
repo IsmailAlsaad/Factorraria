@@ -72,6 +72,7 @@ namespace Factorraria.Common.Knowledge
                 .Add("Autohammer", ModContent.ItemType<WoodenPowerPoleItem>())
                 .Add("Autohammer", ModContent.ItemType<PlatinumPowerPoleItem>())
                 .Add("Autohammer", ModContent.ItemType<BeeWheelItem>())
+                .Add("Autohammer", ModContent.ItemType<MeteoritePanelItem>())
 
                 // Mechanical Assembler
                 .Add("MechanicalAssembler", ModContent.ItemType<SimpleCircuitItem>())

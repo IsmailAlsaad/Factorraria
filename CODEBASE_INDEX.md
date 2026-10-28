@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-28 | 321 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-28 | 322 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(65) BaseMachine(46) FactorrariaPacket(34) LiquidTypeRegistry(31) PacketDirection(29) RecipeBook(25) Cart(21) Factorraria(20) CustomRecipe(17) TileEntityHelper(16) MachineUIStateBase(16) LiquidStack(16) MachineUIElementEntry(15) JoinSync(15) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) CustomWireType(12)
+FactorrariaNet(65) BaseMachine(46) FactorrariaPacket(34) LiquidTypeRegistry(31) PacketDirection(29) RecipeBook(25) Cart(21) Factorraria(19) CustomRecipe(17) TileEntityHelper(16) MachineUIStateBase(16) LiquidStack(16) MachineUIElementEntry(15) JoinSync(15) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) CustomWireType(12)
 
 ## Inheritance
 Project bases -> derived:
@@ -35,7 +35,7 @@ tModLoader/other bases -> project types:
 - ModCommand (15): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WireCountCommand
 - ModTile (12): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
-- GlobalTile (10): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, TilePlacedGlobalTile
+- GlobalTile (11): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, TilePlacedGlobalTile
 - ModPlayer (9): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (8): BucketPourGlobalItem, CartModuleItemGlobal, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalNPC (4): AwakenedSpawnGlobalNPC, BossLootGlobal, CartPassengerGlobalNPC, MeteorHeadStatueGlobalNPC
@@ -173,8 +173,8 @@ tModLoader/other bases -> project types:
   enum CosmicColor : byte
     {White, Violet, Blue, Green, Yellow, Orange, Red}
   static class CosmicColors
-    +Count:int[s] +HasNext(CosmicColor)[s] +Next(CosmicColor)[s] +GemsparkTile(CosmicColor)[s] +TryFromGemspark(int,out CosmicColor)[s] +IsCloudTile(int)[s] +DrawColor(CosmicColor)[s]
-**CosmicDebug.cs** uses: CosmicColor, CosmicColors, CosmicDischarge, CosmicEventRouter, CosmicHeatmap, CosmicParamAttribute, CosmicParticleSystem, CosmicQueuedEvent, CosmicRadiationSystem, CosmicReceiverIndex, CosmicSimulation, Factorraria, StrikeResult
+    +Count:int[s] +HasNext(CosmicColor)[s] +Next(CosmicColor)[s] +GemsparkTile(CosmicColor)[s] +TryFromGemspark(int,out CosmicColor)[s] +IsCloudTile(int)[s] +DrawColor(CosmicColor)[s] +TileTint(CosmicColor)[s]
+**CosmicDebug.cs** uses: CosmicColor, CosmicColors, CosmicDischarge, CosmicEventRouter, CosmicHeatmap, CosmicParamAttribute, CosmicParticleSystem, CosmicQueuedEvent, CosmicRadiationSystem, CosmicReceiverIndex, CosmicSimulation, StrikeResult
   class CosmicCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **CosmicEventHeap.cs** uses: CosmicColor
@@ -196,6 +196,9 @@ tModLoader/other bases -> project types:
     {Ionized, Added, Refractory, NotCloud}
   sealed class CosmicIonizedField
     +Count:int +Clear() +TryGet(int,int,out CosmicIonizedBlock) +Remove(int,int) +Hit(long,int,int,CosmicColor,float,float,int,int,int,Func<int, int, bool>,Random,out int) +PopDischarge(long,int,Func<int, int, bool>,out CosmicDischarge)
+**CosmicIonizedTileDraw.cs** uses: CosmicParticleSystem
+  class CosmicIonizedTileDraw : GlobalTile
+    +DrawEffects(int,int,int,SpriteBatch,ref TileDrawInfo)[ov]
 **CosmicParamAttribute.cs**
   sealed class CosmicParamAttribute : Attribute
     +Description:string +Unit:string
@@ -207,7 +210,7 @@ tModLoader/other bases -> project types:
   struct CosmicClientEvent
     +Kind:byte +Color:byte +Tier:byte +Life:ushort +BY:float AX, AY, BX, +Tiles:short
   class CosmicParticleSystem : ModSystem
-    +Instance:CosmicParticleSystem[s] +IncomingRays:ConcurrentQueue<CosmicClientRay> +IncomingEvents:ConcurrentQueue<CosmicClientEvent> +PeakActive:int ActiveCount, +ReceivedEvents:long Spawned, Overwritten, ReceivedRays, +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Clear() +StatsText() +AddRay(CosmicColor,byte,float,float,float,float,float,float) +AddRay(byte,byte,float,float,float,float,float,float) +AddAbsorb(CosmicColor,int,int) +AddIonize(CosmicColor,int,IReadOnlyList<(int x, int y)>) +AddDischarge(IReadOnlyList<(int x, int y)>) +AddStrike(float,float,float,float,byte) +AddSpit(float,float,float,float,byte) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+    +Instance:CosmicParticleSystem[s] +IncomingRays:ConcurrentQueue<CosmicClientRay> +IncomingEvents:ConcurrentQueue<CosmicClientEvent> +PeakActive:int ActiveCount, +ReceivedEvents:long Spawned, Overwritten, ReceivedRays, +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Clear() +StatsText() +AddRay(CosmicColor,byte,float,float,float,float,float,float) +AddRay(byte,byte,float,float,float,float,float,float) +AddAbsorb(CosmicColor,int,int) +AddIonize(CosmicColor,int,IReadOnlyList<(int x, int y)>) +AddDischarge(IReadOnlyList<(int x, int y)>) +AddStrike(float,float,float,float,byte) +AddSpit(float,float,float,float,byte) +PostUpdateEverything()[ov] +PostDrawTiles()[ov] +TryGetTileTint(int,int,out Color)
     struct Particle
       +Active:bool +Color:byte +End:byte +Born:uint +Life:float X, Y, DirX, DirY, Length, Speed,
     struct Glow
@@ -218,7 +221,7 @@ tModLoader/other bases -> project types:
       +Active:bool +Color:byte +Born:uint +Y:float X,
 **CosmicRadiationSystem.cs** uses: CosmicHeatmap, CosmicSimulation, FactorrariaNet
   class CosmicRadiationSystem : ModSystem
-    +Instance:CosmicRadiationSystem[s] +Heatmap:CosmicHeatmap +Sim:CosmicSimulation +BaseEnergy:float +Multiplier:float +ClusterMin:int +ClusterMax:int +HeatSigmaFraction:float +HeatFloor:float +RateDensity:float +SpawnSpreadDeg:float +ParticleSpeed:float +ParticleRange:float +SampleStepTicks:int +SpaceBottomFraction:float +ScanStripsPerTick:int +ResyncStripsPerTick:int +ReemitAngleMinDeg:float +ReemitAngleMaxDeg:float +CloudAbsorbChance:float +IonizedLifetimeTicks:int +RefractoryTicks:int +StrikeRadiusTiles:float +SurgePowerPerEnergy:float +SurgeDurationTicks:int +MaxSurgePower:float +MaxRaysPerTick:int +MaxQueuedEvents:int +ClientParticlePool:int +NetInterestRadiusTiles:int +NetMaxRaysPerTick:int +NetMaxEventsPerTick:int +ClientTrailTiles:float +ClientParticleSizePx:float +ClientBrightness:float +BoltLifeTicks:int +PostUpdateWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OrderText()
+    +Instance:CosmicRadiationSystem[s] +Heatmap:CosmicHeatmap +Sim:CosmicSimulation +BaseEnergy:float +Multiplier:float +ClusterMin:int +ClusterMax:int +HeatSigmaFraction:float +HeatFloor:float +RateDensity:float +SpawnSpreadDeg:float +ParticleSpeed:float +ParticleRange:float +SampleStepTicks:int +SpaceBottomFraction:float +ScanStripsPerTick:int +ResyncStripsPerTick:int +ReemitAngleMinDeg:float +ReemitAngleMaxDeg:float +CloudAbsorbChance:float +IonizedLifetimeTicks:int +RefractoryTicks:int +StrikeRadiusTiles:float +SurgePowerPerDecade:float +SurgeDurationTicks:int +MaxSurgePower:float +MaxRaysPerTick:int +MaxQueuedEvents:int +ClientParticlePool:int +NetInterestRadiusTiles:int +NetMaxRaysPerTick:int +NetMaxEventsPerTick:int +ClientTrailTiles:float +ClientParticleSizePx:float +ClientBrightness:float +BoltLifeTicks:int +BoltBaseWidthPx:float +BoltWidthPerDecadePx:float +BoltMaxWidthPx:float +PostUpdateWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OrderText()
 **CosmicRayTracer.cs** uses: CosmicColor, Probe
   enum CosmicTileKind : byte
     {Empty, Gemspark, Cloud, Solid}
@@ -334,7 +337,7 @@ tModLoader/other bases -> project types:
 **RecipeKnowledgeSystem.cs**
   class RecipeKnowledgeSystem : ModSystem
     +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
-**ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, PipeMK1Item, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, WoodenPowerPoleItem
+**ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PipeMK1Item, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, WoodenPowerPoleItem
   static class ScrollPoolDefinitions
     +Register()[s]
 **ScrollPools.cs** uses: RecipeArtRegistry, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey

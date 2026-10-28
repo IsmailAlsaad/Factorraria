@@ -99,14 +99,14 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("How far from the thunder a machine can be and still be struck. The nearest electric machine (poles count) inside this radius takes the strike.", "tiles")]
         public float StrikeRadiusTiles = 30f;
 
-        [CosmicParam("Grid power added per point of thunder energy during a surge. One white hit is 192 energy, a power pole draws 5 to 15, an Autohammer 100.", "power/energy")]
-        public float SurgePowerPerEnergy = 1f;
+        [CosmicParam("Grid power added per decade (power of ten) of thunder energy during a surge: surge power = this x log10(energy). One white hit is 192 energy (2.3 decades), a power pole draws 5 to 15, an Autohammer 100. The thunder energy itself stays unbounded; only the number sent to the grid is logarithmic, so it never gets astronomical.", "power/decade")]
+        public float SurgePowerPerDecade = 100f;
 
         [CosmicParam("How long one strike's power spike lasts on the grid. Strikes on the same machine inside this window stack their power and restart it.", "ticks")]
         public int SurgeDurationTicks = 30;
 
-        [CosmicParam("Overflow guard only: the most surge power one machine can hold. The thunder energy itself is never capped (a huge merged cluster really is astronomical); lower this for a gameplay cap.", "power")]
-        public float MaxSurgePower = 1e30f;
+        [CosmicParam("The most surge power one machine can hold (stacked strikes add up to this). With the logarithmic surge one strike is at most about 308 decades x SurgePowerPerDecade, so this only matters for many stacked strikes; lower it for a gameplay cap.", "power")]
+        public float MaxSurgePower = 1000000f;
 
         // ------------------------------------------------------------ safety limits and client (C3, C6)
 
@@ -139,6 +139,15 @@ namespace Factorraria.Common.Cosmic
 
         [CosmicParam("How long a lightning bolt (strike or spit) stays on screen (client only, used from C6).", "ticks")]
         public int BoltLifeTicks = 14;
+
+        [CosmicParam("Width of a lightning bolt's core at the lowest energy (client only, C6b).", "px")]
+        public float BoltBaseWidthPx = 1.5f;
+
+        [CosmicParam("Extra bolt core width per decade (power of ten) of thunder energy, so a stronger strike is a thicker bolt (client only, C6b). 192 energy is 2.3 decades, 1e10 is 10.", "px/decade")]
+        public float BoltWidthPerDecadePx = 1.2f;
+
+        [CosmicParam("The thickest a bolt core can get (client only, C6b). The glow around it is 3 times as wide.", "px")]
+        public float BoltMaxWidthPx = 30f;
 
         // ------------------------------------------------------------ lifecycle
 

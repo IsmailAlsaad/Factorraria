@@ -146,12 +146,11 @@ namespace Factorraria.Common.UI.CustomUIElements
             ElectricityHoverTip.Show(PowerText(demand) + "/" + PowerText(supply), color);
         }
 
-        // A lightning surge can make the supply huge (cosmic radiation C5): plain numbers up to a million, scientific notation above.
+        // Plain whole numbers. A lightning surge is logarithmic now (cosmic patch C6b), so the supply never gets astronomical and no
+        // scientific notation is needed; the clamp only keeps a stacked, hand-raised MaxSurgePower from overflowing the int.
         static string PowerText(float value)
         {
-            return value < 1e6f
-                ? ((int)MathF.Round(value)).ToString()
-                : value.ToString("0.##e+0", System.Globalization.CultureInfo.InvariantCulture);
+            return ((int)MathF.Round(MathF.Min(value, int.MaxValue))).ToString();
         }
 
         float Remap(float value, float fromLow, float fromHigh, float toLow, float toHigh)
