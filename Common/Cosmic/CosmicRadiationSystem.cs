@@ -185,7 +185,7 @@ namespace Factorraria.Common.Cosmic
         public float LocalSimFadeSeconds = 2f;
 
         [CosmicParam("Thunder at or above this energy tier (log10 of the energy x 4, the number that also sets the bolt width) plays the big SoundID.Thunder, weaker thunder plays the small bug zap. 8 is roughly an even split with the default tables (client only, C7b).", "tier")]
-        public float ThunderBigTier = 8f;
+        public float ThunderBigTier = 20f;
 
         // ------------------------------------------------------------ lifecycle
 
