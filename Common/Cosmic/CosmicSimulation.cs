@@ -1,13 +1,16 @@
-﻿using Factorraria.Common.Net;
+﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Net;
+using Factorraria.Common.Systems;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Terraria;
+using Terraria.DataStructures;
 
 namespace Factorraria.Common.Cosmic
 {
     // The cosmic radiation simulation (roadmap section 2). Patch C2: receiver index, sampling, ray tracing and the event queue.
-    // Outcomes (a ray reaching a gemspark or a cloud block) arrive in Complete(): C3 (gemspark absorb and re-emit) is in OnAbsorbed(); C4 (cloud ionize and discharge) is in OnIonized() and OnDischarge().
+    // Outcomes (a ray reaching a gemspark or a cloud block) arrive in Complete(): C3 (gemspark absorb and re-emit) is in OnAbsorbed(); C4 (cloud ionize and discharge) is in OnIonized() and OnDischarge(); C5 (strike and grid surge) is in Strike().
     //
     // Authority: server and single-player only. CosmicRadiationSystem calls Update() from PostUpdateWorld on those two and never on
     // a multiplayer client. Nothing here is saved; everything is rebuilt after a world load. Nothing here touches client-only code.
@@ -84,6 +87,17 @@ namespace Factorraria.Common.Cosmic
         public readonly CosmicDischarge[] RecentDischarges = new CosmicDischarge[5];
         public int RecentDischargeCount;
         public bool LogDischarges;
+
+        // C5: strikes. The sink gets every Strike and Spit event (C6 swaps in the real sinks); the counters are what /fcosmic stats shows.
+        public ICosmicEventSink Sink = new CosmicNullSink();
+        public long Strikes, Spits, SurgesClamped;
+        public double BiggestSurge;
+        public bool HasLastStrike;
+        public string LastStrikeMachine;
+        public int LastStrikeX, LastStrikeY;
+        public long LastStrikeTick;
+        public double LastStrikeEnergy;
+        public float LastStrikePower, LastStrikeDistance;
         public int PeakQueue;
         public float RaysPerSecond;
         public double AvgMsPerTick, MaxMsPerTick;
@@ -124,6 +138,9 @@ namespace Factorraria.Common.Cosmic
             BlocksIonized = HitsAdded = HitsRefractory = CloudGone = Discharges = DischargedBlocks = 0;
             BiggestEnergy = 0.0;
             RecentDischargeCount = 0;
+            Strikes = Spits = SurgesClamped = 0;
+            BiggestSurge = 0.0;
+            HasLastStrike = false;
             PeakQueue = Heap.Count;
             RaysPerSecond = 0f;
             AvgMsPerTick = MaxMsPerTick = 0.0;
@@ -381,7 +398,7 @@ namespace Factorraria.Common.Cosmic
 
             // C4: ionized blocks whose time is up discharge now, each merged cluster once.
             while (IonField.PopDischarge(Now, s.RefractoryTicks, cloudTest, out CosmicDischarge discharge))
-                OnDischarge(discharge);
+                OnDischarge(s, discharge);
 
             if (Heap.Count > PeakQueue)
                 PeakQueue = Heap.Count;
@@ -523,9 +540,9 @@ namespace Factorraria.Common.Cosmic
                 CloudGone++;
         }
 
-        // C4. A merged cluster discharged. For now the energy is only counted and logged; C5 turns it into a strike on the power grid.
-        // The energy is a double and is never capped here (roadmap risk "merged-cluster explosion"); C5 clamps what it sends to the grid.
-        void OnDischarge(in CosmicDischarge d)
+        // C4. A merged cluster discharged: it is counted and logged, then (C5) the thunder looks for a machine to strike.
+        // The energy is a double and is never capped here (roadmap risk "merged-cluster explosion"); Strike() clamps what it sends to the grid.
+        void OnDischarge(CosmicRadiationSystem s, in CosmicDischarge d)
         {
             Discharges++;
             DischargedBlocks += d.Blocks;
@@ -536,16 +553,140 @@ namespace Factorraria.Common.Cosmic
             RecentDischarges[RecentDischargeCount % RecentDischarges.Length] = d;
             RecentDischargeCount++;
 
+            StrikeResult strike = Strike(s, d.Energy, d.CenterX, d.CenterY);
+
             if (!LogDischarges)
                 return;
 
             string text = "[Cosmic] discharge: energy " + EnergyText(d.Energy) + ", " + d.Blocks + " blocks, base energy " + EnergyText(d.BaseSum) + ", center ("
-                + (int)d.CenterX + ", " + (int)d.CenterY + "), tick " + d.Tick;
+                + (int)d.CenterX + ", " + (int)d.CenterY + "), tick " + d.Tick + StrikeLogText(s, strike);
 
             if (Main.dedServ)
                 FactorrariaNet.Log(text);
             else
                 Main.NewText(text, 255, 225, 90);
+        }
+
+        // ------------------------------------------------------------ C5: strike and grid surge
+        // The outcome of one strike attempt (what the log line and /fcosmic strike print).
+        public struct StrikeResult
+        {
+            public bool Struck;          // false = no machine in range, the thunder spat into the sky
+            public BaseMachine Target;
+            public float Distance;       // tiles from the thunder to the machine's center
+            public float Power;          // surge power added to the machine (after clamping)
+            public bool Clamped;
+        }
+
+        // C5. A discharge of `energy` happened at (centerX, centerY), in tile units. Roadmap section 2 "Strike" and assumptions A7 and A8:
+        // - the nearest electric machine (consumer or producer, poles included, they are consumers) within StrikeRadiusTiles of the center is struck:
+        //   a surge of energy x SurgePowerPerEnergy (clamped to MaxSurgePower) is added to that machine for SurgeDurationTicks, and PowerNetwork.Tick
+        //   adds it to the supply of the machine's grid; a Strike event goes to the sink;
+        // - no machine in range: a Spit event with a random direction goes to the sink and nothing else happens.
+        // Authority: server and single-player only (the simulation never runs on a client). Nothing here is saved.
+        public StrikeResult Strike(CosmicRadiationSystem s, double energy, float centerX, float centerY)
+        {
+            StrikeResult result = default;
+            BaseMachine target = FindStrikeTarget(centerX, centerY, s.StrikeRadiusTiles, out float distance);
+
+            if (target == null)
+            {
+                Spits++;
+
+                double angle = rng.NextDouble() * Math.PI * 2.0;
+                Sink?.Spit(new CosmicSpitEvent { Tick = Now, FromX = centerX, FromY = centerY, DirX = (float)Math.Cos(angle), DirY = (float)Math.Sin(angle), Energy = energy });
+                return result;
+            }
+
+            float power = CosmicStrikeMath.SurgePower(energy, s.SurgePowerPerEnergy, s.MaxSurgePower, out bool clamped);
+            target.AddSurge(power, s.SurgeDurationTicks, s.MaxSurgePower);
+
+            Strikes++;
+            if (clamped)
+                SurgesClamped++;
+            if (power > BiggestSurge)
+                BiggestSurge = power;
+
+            HasLastStrike = true;
+            LastStrikeMachine = target.GetType().Name;
+            LastStrikeX = target.Position.X;
+            LastStrikeY = target.Position.Y;
+            LastStrikeTick = Now;
+            LastStrikeEnergy = energy;
+            LastStrikePower = power;
+            LastStrikeDistance = distance;
+
+            Sink?.Strike(new CosmicStrikeEvent
+            {
+                Tick = Now,
+                FromX = centerX,
+                FromY = centerY,
+                ToX = target.MachineCenter.X / 16f,
+                ToY = target.MachineCenter.Y / 16f,
+                Energy = energy,
+                SurgePower = power
+            });
+
+            result.Struck = true;
+            result.Target = target;
+            result.Distance = distance;
+            result.Power = power;
+            result.Clamped = clamped;
+            return result;
+        }
+
+        // The nearest electric machine whose center is within `radius` tiles of the point, or null. Walks PowerGridSystem.AllMachines, which holds
+        // every IElectricConsumer and IElectricProducer entity, poles included (roadmap V6). Cheap: one squared distance per machine per discharge.
+        BaseMachine FindStrikeTarget(float centerX, float centerY, float radius, out float distance)
+        {
+            distance = 0f;
+            HashSet<TileEntity> machines = PowerGridSystem.AllMachines;
+
+            if (machines.Count == 0 || radius <= 0f)
+                return null;
+
+            BaseMachine best = null;
+            float limitSq = radius * radius;
+
+            foreach (TileEntity entity in machines)
+            {
+                if (entity is not BaseMachine machine || !(machine is IElectricConsumer || machine is IElectricProducer) || !machine.InitializeGeometry())
+                    continue;
+
+                if (CosmicStrikeMath.IsCloser(centerX, centerY, machine.MachineCenter.X / 16f, machine.MachineCenter.Y / 16f, limitSq, out float distanceSq))
+                {
+                    best = machine;
+                    limitSq = distanceSq;
+                    distance = (float)Math.Sqrt(distanceSq);
+                }
+            }
+
+            return best;
+        }
+
+        // How many machines have a surge running right now (what /fcosmic stats shows).
+        public int ActiveSurges()
+        {
+            int count = 0;
+
+            foreach (TileEntity entity in PowerGridSystem.AllMachines)
+            {
+                if (entity is BaseMachine machine && machine.SurgeTicksLeft > 0)
+                    count++;
+            }
+
+            return count;
+        }
+
+        // The end of a discharge log line: what the thunder did.
+        public static string StrikeLogText(CosmicRadiationSystem s, in StrikeResult r)
+        {
+            if (!r.Struck)
+                return " -> no machine within " + s.StrikeRadiusTiles.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " tiles: spit";
+
+            return " -> struck " + r.Target.GetType().Name + " at (" + r.Target.Position.X + ", " + r.Target.Position.Y + "), "
+                + r.Distance.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + " tiles away, surge " + EnergyText(r.Power) + " for " + s.SurgeDurationTicks + " ticks"
+                + (r.Clamped ? " (clamped)" : "");
         }
 
         // Energy numbers can be tiny or astronomically large, so big ones are written in scientific notation.

@@ -96,14 +96,17 @@ namespace Factorraria.Common.Cosmic
 
         // ------------------------------------------------------------ strike and grid (C5)
 
-        [CosmicParam("How far from the thunder a machine can be and still be struck (used from C5).", "tiles")]
+        [CosmicParam("How far from the thunder a machine can be and still be struck. The nearest electric machine (poles count) inside this radius takes the strike.", "tiles")]
         public float StrikeRadiusTiles = 30f;
 
-        [CosmicParam("Grid power added per point of thunder energy during a surge (used from C5).", "power/energy")]
+        [CosmicParam("Grid power added per point of thunder energy during a surge. One white hit is 192 energy, a power pole draws 5 to 15, an Autohammer 100.", "power/energy")]
         public float SurgePowerPerEnergy = 1f;
 
-        [CosmicParam("How long one strike's power spike lasts on the grid (used from C5).", "ticks")]
+        [CosmicParam("How long one strike's power spike lasts on the grid. Strikes on the same machine inside this window stack their power and restart it.", "ticks")]
         public int SurgeDurationTicks = 30;
+
+        [CosmicParam("Overflow guard only: the most surge power one machine can hold. The thunder energy itself is never capped (a huge merged cluster really is astronomical); lower this for a gameplay cap.", "power")]
+        public float MaxSurgePower = 1e30f;
 
         // ------------------------------------------------------------ safety limits and client (C3, C6)
 

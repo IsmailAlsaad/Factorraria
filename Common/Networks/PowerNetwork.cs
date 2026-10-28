@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Machines;
+﻿using Factorraria.Common.Cosmic;
+using Factorraria.Common.Machines;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -31,6 +32,18 @@ namespace Factorraria.Common.PowerGrid
                 }
             }
 
+            // Cosmic radiation (patch C5): a lightning surge on any member adds to the supply for its few ticks (A8). The grid rule below is unchanged.
+            // A machine that is both a consumer and a producer sits in both lists, so only the consumer pass counts it.
+            foreach (var consumer in electricConsumers)
+            {
+                totalSupply += TakeSurge(consumer, false);
+            }
+
+            foreach (var producer in electricProducers)
+            {
+                totalSupply += TakeSurge(producer, producer is IElectricConsumer);
+            }
+
             bool isGridStable = true;
             float UseFraction = totalSupply > 0f ? Math.Clamp(1f - totalDemand / totalSupply, 0f, 1f) : 0f;
             if (totalSupply < totalDemand || totalSupply == 0) 
@@ -54,6 +67,15 @@ namespace Factorraria.Common.PowerGrid
                 consumer.useFraction = isGridStable ? 1f : 0f;
                 PublishReadout(consumer, totalDemand, totalSupply, linked);
             }
+        }
+
+        // The surge power this member adds to the grid this tick; also counts its window down (Factorraria.Common.Cosmic.CosmicStrikeMath.Tick).
+        static float TakeSurge(object member, bool countedAsConsumer)
+        {
+            if (countedAsConsumer || member is not BaseMachine machine || machine.SurgeTicksLeft <= 0)
+                return 0f;
+
+            return CosmicStrikeMath.Tick(ref machine.SurgePower, ref machine.SurgeTicksLeft);
         }
 
         static void PublishReadout(object member, float demand, float supply, bool linked)

@@ -1,3 +1,4 @@
+using Factorraria.Common.Cosmic;
 using Factorraria.Common.Knowledge;
 using Factorraria.Common.Liquids;
 using Factorraria.Common.Net;
@@ -1411,10 +1412,30 @@ namespace Factorraria.Common.Machines
         public float PowerNetSupply;
         public bool PowerNetLinked;
 
+        // Cosmic radiation (patch C5): a lightning strike puts a power surge on the struck machine. PowerNetwork.Tick adds SurgePower to
+        // its grid's supply while SurgeTicksLeft counts down. Server and single-player only, never saved and never sent (clients only see
+        // the resulting isOn and the supply readout), so a world reload always starts without a surge. Stacking rules: CosmicStrikeMath.Stack.
+        public float SurgePower;
+        public int SurgeTicksLeft;
+
+        public void AddSurge(float power, int durationTicks, float maxPower)
+        {
+            CosmicStrikeMath.Stack(ref SurgePower, ref SurgeTicksLeft, power, durationTicks, maxPower);
+        }
+
         void WritePowerNet(BinaryWriter w)
         {
-            w.Write7BitEncodedInt(Math.Max(0, (int)MathF.Round(PowerNetDemand)));
-            w.Write7BitEncodedInt(Math.Max(0, (int)MathF.Round(PowerNetSupply)));
+            w.Write7BitEncodedInt(ReadoutInt(PowerNetDemand));
+            w.Write7BitEncodedInt(ReadoutInt(PowerNetSupply));
+        }
+
+        // A lightning surge can be astronomically large (cosmic radiation C5), so the readout saturates instead of overflowing the int.
+        static int ReadoutInt(float value)
+        {
+            if (float.IsNaN(value) || value <= 0f)
+                return 0;
+
+            return value >= int.MaxValue ? int.MaxValue : (int)MathF.Round(value);
         }
 
         void ReadPowerNet(BinaryReader r, byte flags)

@@ -15,12 +15,14 @@ namespace Factorraria.Common.Cosmic
     //   /fcosmic spawn <color> [tx ty]   (C2, temporary) fires one ray straight down at the cursor (single-player) or at a tile
     //   /fcosmic rescan         (C2) re-reads the sky for gemspark and cloud blocks from the start
     //   /fcosmic log [on|off]   (C4, temporary) prints a chat line for every discharge; with no argument it toggles. Natural sky clouds discharge about once a second
-    // stats, spawn and rescan only work where the simulation runs: single-player and the server console, not on a multiplayer client.
+    //   /fcosmic strike <energy> [tx ty]   (C5, temporary) a thunder of that energy at a tile (default: where the player stands) goes through the real
+    //                           strike path: the nearest machine within the strike radius gets the surge, otherwise it spits into the sky
+    // stats, spawn, rescan, log and strike only work where the simulation runs: single-player and the server console, not on a multiplayer client.
     public class CosmicCommand : ModCommand
     {
         public override string Command => "fcosmic";
         public override CommandType Type => CommandType.Chat | CommandType.Console;
-        public override string Usage => "/fcosmic heat [tileX] | params | stats [reset] | spawn <color> [tx ty] | rescan | log [on|off]";
+        public override string Usage => "/fcosmic heat [tileX] | params | stats [reset] | spawn <color> [tx ty] | rescan | log [on|off] | strike <energy> [tx ty]";
         public override string Description => "Cosmic radiation: the color heatmap, every balancing parameter, and (C2) simulation stats and a test ray.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -39,6 +41,8 @@ namespace Factorraria.Common.Cosmic
                 Rescan(caller);
             else if (sub == "log")
                 LogToggle(caller, args);
+            else if (sub == "strike")
+                StrikeNow(caller, args);
             else
                 caller.Reply("Usage: " + Usage, Color.OrangeRed);
         }
@@ -200,6 +204,9 @@ namespace Factorraria.Common.Cosmic
                 }
                 caller.Reply("  latest discharges: " + latestDischarges, Color.White);
             }
+            caller.Reply("  strikes: " + sim.Strikes + " on machines (biggest surge " + CosmicSimulation.EnergyText(sim.BiggestSurge) + ", clamped " + sim.SurgesClamped + "), " + sim.Spits + " spat into the sky (no machine within " + Inv(system.StrikeRadiusTiles) + " tiles). Surging machines now: " + sim.ActiveSurges() + ".", Color.White);
+            if (sim.HasLastStrike)
+                caller.Reply("  last strike: " + sim.LastStrikeMachine + " at (" + sim.LastStrikeX + ", " + sim.LastStrikeY + "), " + Inv(sim.LastStrikeDistance, "0.#") + " tiles from the thunder, energy " + CosmicSimulation.EnergyText(sim.LastStrikeEnergy) + ", surge " + CosmicSimulation.EnergyText(sim.LastStrikePower) + " for " + system.SurgeDurationTicks + " ticks, tick " + sim.LastStrikeTick + ".", Color.White);
             caller.Reply("  queue: " + sim.Heap.Count + " now, peak " + sim.PeakQueue + ", dropped " + sim.Dropped + " (cap " + system.MaxQueuedEvents + ").", Color.White);
             caller.Reply("  cost: " + Inv((float)sim.AvgMsPerTick, "0.000") + " ms per tick on average over the last second, worst tick " + Inv((float)sim.MaxMsPerTick, "0.000") + " ms.", Color.White);
 
@@ -272,6 +279,45 @@ namespace Factorraria.Common.Cosmic
 
             CosmicRadiationSystem.Instance.Sim.RequestRescan();
             caller.Reply("fcosmic rescan [" + Side() + "]: re-reading the sky from the first strip (watch /fcosmic stats for the progress).", Color.LightGreen);
+        }
+
+        static void StrikeNow(CommandCaller caller, string[] args)
+        {
+            if (!NeedSimulation(caller, "strike"))
+                return;
+
+            if (args.Length < 2 || !double.TryParse(args[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double energy) || double.IsNaN(energy) || double.IsInfinity(energy) || energy < 0.0)
+            {
+                caller.Reply("Usage: /fcosmic strike <energy> [tileX tileY]  (energy is a number, 1e30 works; without a tile it uses where the player stands, single-player only). A white hit is 192.", Color.OrangeRed);
+                return;
+            }
+
+            float cx;
+            float cy;
+            if (args.Length >= 4 && float.TryParse(args[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float tx) && float.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out float ty))
+            {
+                cx = tx + 0.5f;
+                cy = ty + 0.5f;
+            }
+            else if (Main.netMode == NetmodeID.SinglePlayer && !Main.dedServ && caller.Player != null)
+            {
+                cx = caller.Player.Center.X / 16f;
+                cy = caller.Player.Center.Y / 16f;
+            }
+            else
+            {
+                caller.Reply("fcosmic strike: give the tile: /fcosmic strike <energy> <tileX> <tileY>", Color.OrangeRed);
+                return;
+            }
+
+            CosmicRadiationSystem system = CosmicRadiationSystem.Instance;
+            CosmicSimulation.StrikeResult result = system.Sim.Strike(system, energy, cx, cy);
+            string where = "(" + Inv(cx, "0.#") + ", " + Inv(cy, "0.#") + ")";
+
+            if (result.Struck)
+                caller.Reply("fcosmic strike [" + Side() + "]: energy " + CosmicSimulation.EnergyText(energy) + " at " + where + CosmicSimulation.StrikeLogText(system, result) + ". The grid gets the surge on its next power tick.", Color.Yellow);
+            else
+                caller.Reply("fcosmic strike [" + Side() + "]: energy " + CosmicSimulation.EnergyText(energy) + " at " + where + CosmicSimulation.StrikeLogText(system, result) + " (counted as a spit).", Color.OrangeRed);
         }
 
         static void LogToggle(CommandCaller caller, string[] args)

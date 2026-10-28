@@ -143,7 +143,15 @@ namespace Factorraria.Common.UI.CustomUIElements
 
             float ratio = supply > 0f ? demand / supply : 0f;
             Color color = ratio < 0.4f ? new Color(80, 220, 80) : ratio < 0.8f ? new Color(255, 220, 60) : new Color(240, 70, 70);
-            ElectricityHoverTip.Show((int)MathF.Round(demand) + "/" + (int)MathF.Round(supply), color);
+            ElectricityHoverTip.Show(PowerText(demand) + "/" + PowerText(supply), color);
+        }
+
+        // A lightning surge can make the supply huge (cosmic radiation C5): plain numbers up to a million, scientific notation above.
+        static string PowerText(float value)
+        {
+            return value < 1e6f
+                ? ((int)MathF.Round(value)).ToString()
+                : value.ToString("0.##e+0", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         float Remap(float value, float fromLow, float fromHigh, float toLow, float toHigh)

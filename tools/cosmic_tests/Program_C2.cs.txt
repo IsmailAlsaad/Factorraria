@@ -427,6 +427,94 @@ class P
             Check(f7.Count == 800 && f7.PopDischarge(60, 0, isCloud, out d) && d.Blocks == 800 && d.Energy == double.MaxValue && !double.IsInfinity(d.Energy), "800 touching white blocks discharge once with a clamped (not infinite) energy");
         }
 
+        // ------------------------------------------------------------ C5: strike target distance, surge power, stacking and the countdown
+        {
+            // nearest machine within the radius (A7)
+            Check(CosmicStrikeMath.IsCloser(0f, 0f, 3f, 4f, 25f, out float c5dsq) && Math.Abs(c5dsq - 25f) < 1e-5f, "a machine exactly at the strike radius (5 tiles) is struck");
+            Check(!CosmicStrikeMath.IsCloser(0f, 0f, 3f, 4.1f, 25f, out c5dsq) && c5dsq > 25f, "a machine just outside the radius is not struck");
+
+            var c5pts = new[] { (20f, 0f), (5f, 5f), (-3f, 1f), (40f, 40f) };
+            float c5limit = 30f * 30f;
+            int c5best = -1;
+            for (int i = 0; i < c5pts.Length; i++)
+            {
+                if (CosmicStrikeMath.IsCloser(0f, 0f, c5pts[i].Item1, c5pts[i].Item2, c5limit, out float c5d2))
+                {
+                    c5best = i;
+                    c5limit = c5d2;
+                }
+            }
+            Check(c5best == 2, "the nearest of several machines in range is the one chosen (index " + c5best + ")");
+
+            c5limit = 30f * 30f;
+            c5best = -1;
+            for (int i = 0; i < c5pts.Length; i++)
+            {
+                if (CosmicStrikeMath.IsCloser(100f, 100f, c5pts[i].Item1, c5pts[i].Item2, c5limit, out float c5d3))
+                {
+                    c5best = i;
+                    c5limit = c5d3;
+                }
+            }
+            Check(c5best == -1, "no machine within 30 tiles: nothing is chosen (the thunder spits)");
+
+            // surge power (A8) and the overflow guard
+            Check(CosmicStrikeMath.SurgePower(192.0, 1.0, 1e30f, out bool c5clamped) == 192f && !c5clamped, "one white hit (192 energy) gives a surge of 192 at 1 power per energy");
+            Check(CosmicStrikeMath.SurgePower(192.0, 2.5, 1e30f, out c5clamped) == 480f && !c5clamped, "power per energy scales the surge (192 x 2.5 = 480)");
+            Check(CosmicStrikeMath.SurgePower(double.MaxValue, 1.0, 1e30f, out c5clamped) == 1e30f && c5clamped, "an astronomical energy is clamped to the maximum surge, flagged as clamped");
+            Check(CosmicStrikeMath.SurgePower(double.PositiveInfinity, 1.0, 1e30f, out c5clamped) == 1e30f && c5clamped, "infinite energy gives the maximum surge, never infinity");
+            Check(CosmicStrikeMath.SurgePower(double.PositiveInfinity, 0.0, 1e30f, out c5clamped) == 0f && !c5clamped, "infinity x 0 power per energy gives 0, not NaN");
+            Check(CosmicStrikeMath.SurgePower(double.NaN, 1.0, 1e30f, out c5clamped) == 0f, "NaN energy gives 0");
+            Check(CosmicStrikeMath.SurgePower(-5.0, 1.0, 1e30f, out c5clamped) == 0f, "negative energy gives 0");
+            Check(CosmicStrikeMath.SurgePower(10.0, 1.0, 0f, out c5clamped) == 0f, "a maximum of 0 means no surge at all");
+            Check(float.IsFinite(CosmicStrikeMath.SurgePower(1e300, 1e300, float.MaxValue, out c5clamped)), "even a float.MaxValue maximum stays finite");
+
+            // stacking and the window
+            float c5power = 0f;
+            int c5ticks = 0;
+            CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 192f, 30, 1e30f);
+            Check(c5power == 192f && c5ticks == 30, "a first strike sets the power and a 30 tick window");
+            for (int i = 0; i < 10; i++)
+                CosmicStrikeMath.Tick(ref c5power, ref c5ticks);
+            Check(c5ticks == 20 && c5power == 192f, "10 ticks later 20 are left and the power is unchanged");
+            CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 100f, 30, 1e30f);
+            Check(c5power == 292f && c5ticks == 30, "a second strike in the window stacks the power and restarts the window");
+            CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 10f, 5, 1e30f);
+            Check(c5power == 302f && c5ticks == 30, "a strike with a shorter window never shortens the one running");
+            CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 1e30f, 30, 1e30f);
+            CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 1e30f, 30, 1e30f);
+            Check(c5power == 1e30f && float.IsFinite(c5power), "stacked strikes never go above the maximum surge");
+
+            // the countdown: exactly the duration, then nothing
+            c5power = 0f;
+            c5ticks = 0;
+            CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 10f, 30, 1e9f);
+            int c5counted = 0;
+            float c5sum = 0f;
+            for (int i = 0; i < 100; i++)
+            {
+                float got = CosmicStrikeMath.Tick(ref c5power, ref c5ticks);
+                if (got > 0f)
+                    c5counted++;
+                c5sum += got;
+            }
+            Check(c5counted == 30 && c5sum == 300f, "a surge counts on exactly 30 ticks (10 power each), then stops");
+            Check(c5power == 0f && c5ticks == 0, "after the window the power is cleared (nothing left over)");
+
+            c5power = 50f;
+            c5ticks = 3;
+            Check(CosmicStrikeMath.Tick(ref c5power, ref c5ticks) == 50f && c5ticks == 2 && c5power == 50f, "tick 1 of 3 counts 50");
+            Check(CosmicStrikeMath.Tick(ref c5power, ref c5ticks) == 50f && c5ticks == 1, "tick 2 of 3 counts 50");
+            Check(CosmicStrikeMath.Tick(ref c5power, ref c5ticks) == 50f && c5ticks == 0 && c5power == 0f, "tick 3 of 3 counts 50 and clears the power");
+            Check(CosmicStrikeMath.Tick(ref c5power, ref c5ticks) == 0f, "tick 4 counts nothing");
+
+            c5power = 0f;
+            c5ticks = 0;
+            CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 0f, 30, 1e9f);
+            CosmicStrikeMath.Stack(ref c5power, ref c5ticks, 10f, 0, 1e9f);
+            Check(c5power == 0f && c5ticks == 0, "a strike with no power or no duration does nothing");
+        }
+
         Console.WriteLine(fail == 0 ? "ALL PASSED" : "FAILURES: " + fail);
     }
 }
