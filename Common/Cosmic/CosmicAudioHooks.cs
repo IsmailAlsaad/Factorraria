@@ -18,9 +18,7 @@ namespace Factorraria.Common.Cosmic
         // A gemspark absorbed a particle of this color (an Absorb event arrived).
         public static void OnAbsorbed(CosmicColor color, float tileX, float tileY)
         {
-            int soundIndex = Main.rand.Next(1, 11);
-            string soundPath = $"Factorraria/Assets/Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";
-            SoundEngine.PlaySound(new SoundStyle(soundPath) with { Volume = 0.4f, PitchVariance = 0.1f, MaxInstances = 0 }, new Vector2(tileX, tileY) * 16f);
+            PlayGeigerCounterClick(tileX, tileY);
         }
 
         // The gemspark re-emitted two particles of the next color (called together with OnAbsorbed when the color has a next step).
@@ -31,17 +29,13 @@ namespace Factorraria.Common.Cosmic
         // A cloud cluster was ionized. (tileX, tileY) is the first block of the cluster, blocks how many blocks it has.
         public static void OnIonized(CosmicColor color, float tileX, float tileY, int blocks)
         {
-            int soundIndex = Main.rand.Next(1, 11);
-            string soundPath = $"Factorraria/Assets/Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";
-            SoundEngine.PlaySound(new SoundStyle(soundPath) with { Volume = 0.4f, PitchVariance = 0.1f, MaxInstances = 0 }, new Vector2(tileX, tileY) * 16f);
+            PlayGeigerCounterClick(tileX, tileY);
         }
 
         // Thunder: a strike (strike = true, the bolt goes from (ax, ay) to the machine at (bx, by)) or a spit (strike = false, no machine in range).
         // tier is log10(energy) x 4 (0 for energy 1 or less), the same number that sets the bolt width.
         public static void OnThunder(float ax, float ay, float bx, float by, byte tier, bool strike)
         {
-            // LATER MAKE STRONG THUNDER SOUND USE SoundID.Thunder
-            // C7b: two sizes. Energy tier at or above ThunderBigTier is a big thunder, anything below it is the small zap.
             bool big = tier >= CosmicRadiationSystem.Instance.ThunderBigTier;
             SoundStyle style = SoundID.DD2_LightningBugZap with { Volume = 0.8f};
 
@@ -53,6 +47,13 @@ namespace Factorraria.Common.Cosmic
             }
 
             SoundEngine.PlaySound(style with { PitchVariance = 0.15f, MaxInstances = 0 }, new Vector2(ax, ay) * 16f);
+        }
+
+        static void PlayGeigerCounterClick(float tileX, float tileY)
+        {
+            int soundIndex = Main.rand.Next(1, 11);
+            string soundPath = $"Factorraria/Assets/Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";
+            SoundEngine.PlaySound(new SoundStyle(soundPath) with { Volume = 0.4f, PitchVariance = 0.1f, MaxInstances = 8 }, new Vector2(tileX, tileY) * 16f);
         }
     }
 }
