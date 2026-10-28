@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Cosmic;
 using Terraria;
+using Terraria.ID;
 using Terraria.Localization;
 using System.ComponentModel;
 using Terraria.ModLoader;
@@ -20,13 +21,30 @@ namespace Factorraria.Content.Configs
         // Only the owner of the server (the host of a Host & Play game, or the player at a local server) may change the balance while a game is running.
         public override bool AcceptClientChanges(ModConfig pendingConfig, int whoAmI, ref NetworkText message)
         {
-            if (!IsPlayerLocalServerOwner(Main.player[whoAmI]))
+            if (!IsServerOwner(Main.player[whoAmI]))
             {
                 message = NetworkText.FromLiteral("Only the server owner can change the cosmic balance.");
                 return false;
             }
 
             return true;
+        }
+
+        // True for the player who owns the server: the one connected from the same machine (a local address). tModLoader has no ready-made check
+        // for this, so it is written out here. On the server it looks the player up among the connected clients; on a client it asks about its own connection.
+        static bool IsServerOwner(Player player)
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return Netplay.Connection.Socket.GetRemoteAddress().IsLocalHost();
+
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                RemoteClient client = Netplay.Clients[i];
+                if (client.State == 10 && Main.player[i] == player && client.Socket.GetRemoteAddress().IsLocalHost())
+                    return true;
+            }
+
+            return false;
         }
 
         public override void OnChanged()
