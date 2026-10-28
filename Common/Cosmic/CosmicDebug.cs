@@ -14,12 +14,13 @@ namespace Factorraria.Common.Cosmic
     //   /fcosmic stats [reset]  (C2) receivers, sampling areas, rays, hits per color, queue, cost per tick; "reset" zeroes the counters
     //   /fcosmic spawn <color> [tx ty]   (C2, temporary) fires one ray straight down at the cursor (single-player) or at a tile
     //   /fcosmic rescan         (C2) re-reads the sky for gemspark and cloud blocks from the start
+    //   /fcosmic log [on|off]   (C4, temporary) prints a chat line for every discharge; with no argument it toggles. Natural sky clouds discharge about once a second
     // stats, spawn and rescan only work where the simulation runs: single-player and the server console, not on a multiplayer client.
     public class CosmicCommand : ModCommand
     {
         public override string Command => "fcosmic";
         public override CommandType Type => CommandType.Chat | CommandType.Console;
-        public override string Usage => "/fcosmic heat [tileX] | params | stats [reset] | spawn <color> [tx ty] | rescan";
+        public override string Usage => "/fcosmic heat [tileX] | params | stats [reset] | spawn <color> [tx ty] | rescan | log [on|off]";
         public override string Description => "Cosmic radiation: the color heatmap, every balancing parameter, and (C2) simulation stats and a test ray.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -36,6 +37,8 @@ namespace Factorraria.Common.Cosmic
                 Spawn(caller, args);
             else if (sub == "rescan")
                 Rescan(caller);
+            else if (sub == "log")
+                LogToggle(caller, args);
             else
                 caller.Reply("Usage: " + Usage, Color.OrangeRed);
         }
@@ -183,6 +186,20 @@ namespace Factorraria.Common.Cosmic
             if (sim.HasLastCascade)
                 caller.Reply("  last cascade: a " + sim.LastCascadeFrom + " ray was absorbed and made two " + CosmicColors.Next(sim.LastCascadeFrom) + " rays at +" + Inv(sim.LastChildDegA, "0.0") + " and -" + Inv(sim.LastChildDegB, "0.0") + " degrees from its path.", Color.White);
             caller.Reply("  hit clouds: " + PerColor(sim.Ionized), Color.White);
+            caller.Reply("  ionized blocks: " + sim.IonField.Count + " now, " + sim.BlocksIonized + " made; hits added to an already ionized block " + sim.HitsAdded + ", hits on a cooling block " + sim.HitsRefractory + ", cloud broken before arrival " + sim.CloudGone + ".", Color.White);
+            caller.Reply("  discharges: " + sim.Discharges + " (" + sim.DischargedBlocks + " blocks), biggest energy " + CosmicSimulation.EnergyText(sim.BiggestEnergy) + ".", Color.White);
+
+            int shownDischarges = Math.Min(3, sim.RecentDischargeCount);
+            if (shownDischarges > 0)
+            {
+                string latestDischarges = "";
+                for (int k = 0; k < shownDischarges; k++)
+                {
+                    CosmicDischarge dc = sim.RecentDischarges[(sim.RecentDischargeCount - 1 - k) % sim.RecentDischarges.Length];
+                    latestDischarges += (k > 0 ? "; " : "") + "energy " + CosmicSimulation.EnergyText(dc.Energy) + " (" + dc.Blocks + " blocks, base " + CosmicSimulation.EnergyText(dc.BaseSum) + ", at (" + (int)dc.CenterX + ", " + (int)dc.CenterY + "), tick " + dc.Tick + ")";
+                }
+                caller.Reply("  latest discharges: " + latestDischarges, Color.White);
+            }
             caller.Reply("  queue: " + sim.Heap.Count + " now, peak " + sim.PeakQueue + ", dropped " + sim.Dropped + " (cap " + system.MaxQueuedEvents + ").", Color.White);
             caller.Reply("  cost: " + Inv((float)sim.AvgMsPerTick, "0.000") + " ms per tick on average over the last second, worst tick " + Inv((float)sim.MaxMsPerTick, "0.000") + " ms.", Color.White);
 
@@ -255,6 +272,19 @@ namespace Factorraria.Common.Cosmic
 
             CosmicRadiationSystem.Instance.Sim.RequestRescan();
             caller.Reply("fcosmic rescan [" + Side() + "]: re-reading the sky from the first strip (watch /fcosmic stats for the progress).", Color.LightGreen);
+        }
+
+        static void LogToggle(CommandCaller caller, string[] args)
+        {
+            if (!NeedSimulation(caller, "log"))
+                return;
+
+            CosmicSimulation sim = CosmicRadiationSystem.Instance.Sim;
+            sim.LogDischarges = args.Length > 1 ? args[1].ToLowerInvariant() != "off" : !sim.LogDischarges;
+
+            caller.Reply("fcosmic log [" + Side() + "]: " + (sim.LogDischarges
+                ? "every discharge now prints a line. Natural sky clouds discharge about once a second, so expect a lot of lines; /fcosmic stats shows the latest three without this."
+                : "discharge lines are off.") , Color.LightGreen);
         }
 
         static string Format(object value)

@@ -7,7 +7,7 @@ using Terraria;
 namespace Factorraria.Common.Cosmic
 {
     // The cosmic radiation simulation (roadmap section 2). Patch C2: receiver index, sampling, ray tracing and the event queue.
-    // Outcomes (a ray reaching a gemspark or a cloud block) arrive in Complete(): C3 (gemspark absorb and re-emit) is in OnAbsorbed(); C4 (cloud ionize) is still only counted.
+    // Outcomes (a ray reaching a gemspark or a cloud block) arrive in Complete(): C3 (gemspark absorb and re-emit) is in OnAbsorbed(); C4 (cloud ionize and discharge) is in OnIonized() and OnDischarge().
     //
     // Authority: server and single-player only. CosmicRadiationSystem calls Update() from PostUpdateWorld on those two and never on
     // a multiplayer client. Nothing here is saved; everything is rebuilt after a world load. Nothing here touches client-only code.
@@ -26,6 +26,19 @@ namespace Factorraria.Common.Cosmic
 
         public readonly CosmicReceiverIndex Index = new CosmicReceiverIndex();
         public readonly CosmicEventHeap Heap = new CosmicEventHeap();
+
+        // C4: the ionized cloud blocks, their expiry queue and the merged-cluster discharge rules (pure code in CosmicIonizedField).
+        // Server and single-player only, never saved (an ionized block only lives about a second).
+        public readonly CosmicIonizedField IonField = new CosmicIonizedField();
+        readonly Func<int, int, bool> cloudTest;
+
+        public CosmicSimulation()
+        {
+            cloudTest = IsCloudAt;
+        }
+
+        // Is there an unactuated cloud tile here right now?
+        bool IsCloudAt(int x, int y) => probe.Probe(x, y, out _) == CosmicTileKind.Cloud;
 
         readonly List<CosmicSamplingStrip> sampling = new List<CosmicSamplingStrip>();
         readonly CosmicTileProbe probe = new CosmicTileProbe();
@@ -64,6 +77,13 @@ namespace Factorraria.Common.Cosmic
         public bool HasLastCascade;
         public CosmicColor LastCascadeFrom;
         public float LastChildDegA, LastChildDegB;
+
+        // C4: ionization and discharge. LogDischarges prints a line per discharge (/fcosmic log); it survives a counter reset.
+        public long BlocksIonized, HitsAdded, HitsRefractory, CloudGone, Discharges, DischargedBlocks;
+        public double BiggestEnergy;
+        public readonly CosmicDischarge[] RecentDischarges = new CosmicDischarge[5];
+        public int RecentDischargeCount;
+        public bool LogDischarges;
         public int PeakQueue;
         public float RaysPerSecond;
         public double AvgMsPerTick, MaxMsPerTick;
@@ -78,6 +98,7 @@ namespace Factorraria.Common.Cosmic
             Index.MaxY = int.MaxValue;
             Index.Clear();
             Heap.Clear();
+            IonField.Clear();
             sampling.Clear();
             Now = 0;
             nextSampleTick = 0;
@@ -100,6 +121,9 @@ namespace Factorraria.Common.Cosmic
             Array.Clear(Reemitted, 0, Reemitted.Length);
             ChainEnds = Vanished = 0;
             HasLastCascade = false;
+            BlocksIonized = HitsAdded = HitsRefractory = CloudGone = Discharges = DischargedBlocks = 0;
+            BiggestEnergy = 0.0;
+            RecentDischargeCount = 0;
             PeakQueue = Heap.Count;
             RaysPerSecond = 0f;
             AvgMsPerTick = MaxMsPerTick = 0.0;
@@ -131,6 +155,7 @@ namespace Factorraria.Common.Cosmic
         public void OnReceiverRemoved(int x, int y)
         {
             Index.Remove(x, y);
+            IonField.Remove(x, y);
         }
 
         // ------------------------------------------------------------ the tick
@@ -354,6 +379,10 @@ namespace Factorraria.Common.Cosmic
                 }
             }
 
+            // C4: ionized blocks whose time is up discharge now, each merged cluster once.
+            while (IonField.PopDischarge(Now, s.RefractoryTicks, cloudTest, out CosmicDischarge discharge))
+                OnDischarge(discharge);
+
             if (Heap.Count > PeakQueue)
                 PeakQueue = Heap.Count;
         }
@@ -400,13 +429,16 @@ namespace Factorraria.Common.Cosmic
             return r;
         }
 
-        // A ray has arrived. C3 (gemspark: absorb and re-emit) acts in OnAbsorbed; C4 (cloud: ionize) will act in the Ionize branch.
+        // A ray has arrived. C3 (gemspark: absorb and re-emit) acts in OnAbsorbed; C4 (cloud: ionize) acts in OnIonized.
         void Complete(CosmicRadiationSystem s, in CosmicQueuedEvent ev)
         {
             if (ev.Kind == CosmicQueuedKind.Absorb)
                 OnAbsorbed(s, ev);
             else if (ev.Kind == CosmicQueuedKind.Ionize)
+            {
                 Ionized[(int)ev.Color]++;
+                OnIonized(s, ev);
+            }
 
             Recent[RecentCount % Recent.Length] = ev;
             RecentCount++;
@@ -469,6 +501,59 @@ namespace Factorraria.Common.Cosmic
             LastCascadeFrom = ev.Color;
             LastChildDegA = degA;
             LastChildDegB = degB;
+        }
+
+        // C4. A ray reached a cloud block (the absorb roll already succeeded when it was traced). CosmicIonizedField has the rules:
+        // a block that is already ionized takes the particle's base energy (A4); otherwise a flood fill ionizes N connected cloud
+        // blocks that are not ionized yet (N random in the color's range) and they share the base energy; a cloud broken while the
+        // particle flew does nothing. The ionized blocks live IonizedLifetimeTicks, then the whole connected cluster discharges once.
+        void OnIonized(CosmicRadiationSystem s, in CosmicQueuedEvent ev)
+        {
+            int c = (int)ev.Color;
+            CosmicHitResult result = IonField.Hit(Now, ev.TileX, ev.TileY, ev.Color, s.BaseEnergy[c], s.Multiplier[c], s.ClusterMin[c], s.ClusterMax[c],
+                s.IonizedLifetimeTicks, cloudTest, rng, out int made);
+
+            if (result == CosmicHitResult.Ionized)
+                BlocksIonized += made;
+            else if (result == CosmicHitResult.Added)
+                HitsAdded++;
+            else if (result == CosmicHitResult.Refractory)
+                HitsRefractory++;
+            else
+                CloudGone++;
+        }
+
+        // C4. A merged cluster discharged. For now the energy is only counted and logged; C5 turns it into a strike on the power grid.
+        // The energy is a double and is never capped here (roadmap risk "merged-cluster explosion"); C5 clamps what it sends to the grid.
+        void OnDischarge(in CosmicDischarge d)
+        {
+            Discharges++;
+            DischargedBlocks += d.Blocks;
+
+            if (d.Energy > BiggestEnergy)
+                BiggestEnergy = d.Energy;
+
+            RecentDischarges[RecentDischargeCount % RecentDischarges.Length] = d;
+            RecentDischargeCount++;
+
+            if (!LogDischarges)
+                return;
+
+            string text = "[Cosmic] discharge: energy " + EnergyText(d.Energy) + ", " + d.Blocks + " blocks, base energy " + EnergyText(d.BaseSum) + ", center ("
+                + (int)d.CenterX + ", " + (int)d.CenterY + "), tick " + d.Tick;
+
+            if (Main.dedServ)
+                FactorrariaNet.Log(text);
+            else
+                Main.NewText(text, 255, 225, 90);
+        }
+
+        // Energy numbers can be tiny or astronomically large, so big ones are written in scientific notation.
+        public static string EnergyText(double energy)
+        {
+            return energy < 1e6
+                ? energy.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)
+                : energy.ToString("0.###e+0", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         // ------------------------------------------------------------ debug

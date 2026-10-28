@@ -6,7 +6,8 @@ namespace Factorraria.Common.Cosmic
     {
         RayStart = 0,   // a ray that begins flying at Tick; the server traces it then (X, Y, DirX, DirY, Color)
         Absorb = 1,     // a ray reaches a gemspark of its own color at Tick (TileX, TileY, Color)
-        Ionize = 2      // a ray reaches a cloud block at Tick (TileX, TileY, Color)
+        Ionize = 2,     // a ray reaches a cloud block at Tick (TileX, TileY, Color)
+        Expire = 3      // C4: an ionized cloud block's time is up at Tick (TileX, TileY); only used by the queue inside CosmicIonizedField
     }
 
     // One entry of the server's event queue. Plain data so the queue is cheap and allocation free.

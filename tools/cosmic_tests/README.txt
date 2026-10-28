@@ -13,4 +13,7 @@ Patch C2 (ray tracer, receiver index, sampling maths, event heap, all pure code)
 
 Patch C3 added CosmicRayTracer.Rotate (the child ray directions); its checks are at the end of Program_C2.cs.txt, same compile line as C2.
 
-Later phases add their pure-code files (cluster math) to this folder.
+Patch C4 (flood fill, cluster energy, the ionized block field): the checks are at the end of Program_C2.cs.txt, so compile it with Common/Cosmic/CosmicClusterMath.cs and CosmicIonizedField.cs added to the C2 file list (CosmicEventHeap.cs now has the Expire kind that CosmicIonizedField uses).
+Tip for a scratch project: a NuGet.Config with <packageSources><clear /></packageSources> lets `dotnet build` work offline.
+
+Later phases add their pure-code files to this folder.

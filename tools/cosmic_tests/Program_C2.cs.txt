@@ -312,6 +312,121 @@ class P
             Check(angleRight, "a ray tilted by t and rotated by d ends up tilted by t + d");
         }
 
+        // ------------------------------------------------------------ C4: flood fill, cluster energy, the ionized field
+        {
+            var c4rng = new Random(11);
+            var tiles = new HashSet<(int, int)>();
+            Func<int, int, bool> isCloud = (x, y) => tiles.Contains((x, y));
+            var fill = new List<(int x, int y)>();
+
+            // flood fill
+            for (int x = 0; x < 5; x++) tiles.Add((x, 0));
+            tiles.Add((5, 1)); tiles.Add((20, 0));   // a diagonal neighbor and a far tile: neither joins
+            Check(CosmicClusterMath.Fill(0, 0, 100, isCloud, fill) == 5, "flood fill joins only the 4 neighbors and nothing far away");
+            Check(CosmicClusterMath.Fill(0, 0, 3, isCloud, fill) == 3 && fill[0] == (0, 0) && fill[2] == (2, 0), "flood fill stops at the limit and starts with the start tile");
+            Check(CosmicClusterMath.Fill(10, 10, 5, isCloud, fill) == 0, "flood fill from a tile that cannot join gives nothing");
+            tiles.Add((2, 1)); tiles.Add((2, 2));
+            Check(CosmicClusterMath.Fill(0, 0, 100, isCloud, fill) == 7, "flood fill goes up and down as well");
+            Check(CosmicClusterMath.Fill(0, 0, int.MaxValue, isCloud, fill) == 7, "a limit of int.MaxValue means the whole group");
+
+            // energy helper
+            Check(CosmicClusterMath.Energy(64.0, 3.0) == 192.0, "energy = base sum x multiplier product (64 x 3 = 192)");
+            Check(CosmicClusterMath.Energy(1e200, 1e200) == double.MaxValue, "an overflowing energy is clamped to double.MaxValue, never infinity");
+            Check(CosmicClusterMath.Energy(0.0, double.PositiveInfinity) == 0.0, "0 x infinity gives 0, not NaN");
+            var tl = new List<(int x, int y)> { (0, 0), (2, 0) };
+            CosmicClusterMath.Center(tl, out float cxm, out float cym);
+            Check(Math.Abs(cxm - 1.5f) < 1e-6f && Math.Abs(cym - 0.5f) < 1e-6f, "the center is the mean of the tile centers");
+
+            // a white hit: 1 block, 192 after 60 ticks
+            tiles.Clear();
+            for (int x = 0; x < 30; x++) tiles.Add((x, 0));
+            var field = new CosmicIonizedField();
+            var hit = field.Hit(0, 0, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out int made);
+            Check(hit == CosmicHitResult.Ionized && made == 1 && field.Count == 1, "a white hit ionizes exactly 1 block");
+            Check(!field.PopDischarge(59, 0, isCloud, out CosmicDischarge d), "nothing discharges before the lifetime is over");
+            Check(field.PopDischarge(60, 0, isCloud, out d) && Math.Abs(d.Energy - 192.0) < 1e-6 && d.Blocks == 1 && d.Tick == 60, "after 60 ticks the block discharges with energy 192");
+            Check(field.Count == 0 && !field.PopDischarge(1000, 0, isCloud, out d), "the block is de-ionized afterwards and nothing discharges twice");
+            Check(field.Hit(100, 0, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made) == CosmicHitResult.Ionized && made == 1, "a cloud block can be ionized again after a discharge");
+            Check(field.PopDischarge(160, 0, isCloud, out d) && Math.Abs(d.Energy - 192.0) < 1e-6, "...and discharges again");
+
+            // red hits: 10 to 12 blocks, 1 x 1.1^n
+            float redMul = 1.1f;
+            var sizes = new HashSet<int>();
+            bool energyOk = true;
+            for (int k = 0; k < 300; k++)
+            {
+                var f2 = new CosmicIonizedField();
+                f2.Hit(0, 10, 0, CosmicColor.Red, 1f, redMul, 10, 12, 60, isCloud, c4rng, out int m);
+                sizes.Add(m);
+                double expect = Math.Pow(redMul, m);
+                if (!f2.PopDischarge(60, 0, isCloud, out CosmicDischarge d2) || d2.Blocks != m || Math.Abs(d2.Energy - expect) > 1e-4 * expect) energyOk = false;
+            }
+            Check(sizes.Min() >= 10 && sizes.Max() <= 12 && sizes.Count == 3, "a red hit ionizes 10, 11 or 12 blocks (all three seen)");
+            Check(energyOk, "a red hit's discharge energy is 1 x 1.1^n for its n blocks (2.59 to 3.14)");
+
+            // a cluster smaller than wanted when the clouds run out
+            tiles.Clear();
+            for (int x = 0; x < 4; x++) tiles.Add((x, 0));
+            var f3s = new CosmicIonizedField();
+            f3s.Hit(0, 0, 0, CosmicColor.Red, 1f, redMul, 10, 12, 60, isCloud, c4rng, out made);
+            Check(made == 4 && f3s.Count == 4, "when there are fewer cloud blocks than wanted, all of them are ionized");
+            Check(f3s.PopDischarge(60, 0, isCloud, out d) && Math.Abs(d.BaseSum - 1.0) < 1e-5, "the base energy is split over the blocks that were really ionized");
+
+            // two touching clusters discharge together, once
+            tiles.Clear();
+            for (int x = 0; x < 30; x++) tiles.Add((x, 0));
+            var f3 = new CosmicIonizedField();
+            f3.Hit(0, 0, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made);
+            f3.Hit(30, 2, 0, CosmicColor.Red, 1f, redMul, 10, 10, 60, isCloud, c4rng, out int made3);
+            Check(made3 == 10 && f3.Count == 11, "a red hit next to a white block ionizes its own 10 blocks (the white one is not taken over)");
+            Check(!f3.PopDischarge(59, 0, isCloud, out d), "...nothing is due at tick 59");
+            double merged = 65.0 * 3.0 * Math.Pow(redMul, 10);
+            Check(f3.PopDischarge(60, 0, isCloud, out d) && d.Blocks == 11 && Math.Abs(d.Energy - merged) < 1e-5 * merged, "touching clusters discharge together: (64 + 1) x 3 x 1.1^10 = " + merged.ToString("0.0"));
+            Check(f3.Count == 0 && !f3.PopDischarge(200, 0, isCloud, out d), "the merged cluster discharged once; the red blocks' own expiry entries do nothing");
+
+            // stale entries: a block that is ionized again later is not discharged by its old entry
+            f3 = new CosmicIonizedField();
+            f3.Hit(0, 0, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made);
+            f3.Hit(30, 2, 0, CosmicColor.Red, 1f, redMul, 10, 10, 60, isCloud, c4rng, out made3);
+            f3.PopDischarge(60, 0, isCloud, out d);
+            f3.Hit(70, 3, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made);
+            Check(!f3.PopDischarge(100, 0, isCloud, out d), "an old expiry entry (tick 90) does not discharge a block that was ionized again at tick 70");
+            Check(f3.PopDischarge(130, 0, isCloud, out d) && Math.Abs(d.Energy - 192.0) < 1e-6, "...it discharges at its own time (130)");
+
+            // a particle hitting an ionized block adds its base energy
+            var f4 = new CosmicIonizedField();
+            f4.Hit(0, 0, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made);
+            Check(f4.Hit(10, 0, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made) == CosmicHitResult.Added && made == 0 && f4.Count == 1, "a hit on an ionized block adds to it and ionizes nothing new");
+            Check(!f4.PopDischarge(59, 0, isCloud, out d) && f4.PopDischarge(60, 0, isCloud, out d) && Math.Abs(d.Energy - 384.0) < 1e-6, "its discharge has the added energy: (64 + 64) x 3 = 384, at the original time");
+
+            // refractory
+            var f5 = new CosmicIonizedField();
+            f5.Hit(0, 0, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made);
+            f5.PopDischarge(60, 100, isCloud, out d);
+            Check(f5.Hit(100, 0, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made) == CosmicHitResult.Refractory && f5.Count == 0, "a block cooling down cannot be ionized (refractory)");
+            Check(f5.Hit(100, 1, 0, CosmicColor.Red, 1f, redMul, 10, 10, 60, isCloud, c4rng, out made) == CosmicHitResult.Ionized && made == 10 && f5.TryGet(0, 0, out _) == false, "a fill next to a cooling block skips it");
+            f5.Clear();
+            Check(f5.Hit(160, 0, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made) == CosmicHitResult.Ionized, "after Clear() everything can be ionized again");
+
+            // clouds broken
+            tiles.Remove((5, 0));
+            var f6 = new CosmicIonizedField();
+            Check(f6.Hit(0, 5, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made) == CosmicHitResult.NotCloud && f6.Count == 0, "a cloud broken while the particle flew does nothing");
+            f6.Hit(0, 7, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made);
+            tiles.Remove((7, 0));
+            Check(!f6.PopDischarge(60, 0, isCloud, out d) && f6.Count == 0, "an ionized block whose cloud was broken is dropped without a discharge");
+            f6.Hit(100, 8, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made);
+            f6.Remove(8, 0);
+            Check(f6.Count == 0 && !f6.PopDischarge(200, 0, isCloud, out d), "Remove() takes a block out and its expiry entry is skipped");
+
+            // a huge merged cluster: no infinity
+            tiles.Clear();
+            for (int x = 0; x < 800; x++) tiles.Add((x, 0));
+            var f7 = new CosmicIonizedField();
+            for (int x = 0; x < 800; x++) f7.Hit(0, x, 0, CosmicColor.White, 64f, 3f, 1, 1, 60, isCloud, c4rng, out made);
+            Check(f7.Count == 800 && f7.PopDischarge(60, 0, isCloud, out d) && d.Blocks == 800 && d.Energy == double.MaxValue && !double.IsInfinity(d.Energy), "800 touching white blocks discharge once with a clamped (not infinite) energy");
+        }
+
         Console.WriteLine(fail == 0 ? "ALL PASSED" : "FAILURES: " + fail);
     }
 }
