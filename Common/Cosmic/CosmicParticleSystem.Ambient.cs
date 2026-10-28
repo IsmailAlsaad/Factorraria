@@ -432,13 +432,48 @@ namespace Factorraria.Common.Cosmic
             return flashDisc;
         }
 
+        // C9b: the soft round glow behind a particle's head: brightest in the middle and fading smoothly to nothing at the edge (a radial
+        // falloff, unlike FlashDisc which is solid with only a soft rim). Made once on the main thread, premultiplied.
+        Texture2D haloDisc;
+
+        Texture2D HaloDisc()
+        {
+            if (haloDisc != null && !haloDisc.IsDisposed)
+                return haloDisc;
+
+            int size = 64;
+            Color[] data = new Color[size * size];
+            float radius = size / 2f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x + 0.5f - radius;
+                    float dy = y + 0.5f - radius;
+                    float d = Math.Min(1f, MathF.Sqrt(dx * dx + dy * dy) / radius);
+                    float a = (1f - d) * (1f - d);
+                    data[y * size + x] = new Color(a, a, a, a);
+                }
+            }
+
+            haloDisc = new Texture2D(Main.instance.GraphicsDevice, size, size);
+            haloDisc.SetData(data);
+            return haloDisc;
+        }
+
         public override void Unload()
         {
             Texture2D disc = flashDisc;
+            Texture2D halo = haloDisc;
             flashDisc = null;
+            haloDisc = null;
 
             if (disc != null)
                 Main.QueueMainThreadAction(() => disc.Dispose());
+
+            if (halo != null)
+                Main.QueueMainThreadAction(() => halo.Dispose());
         }
 
         // ------------------------------------------------------------ EnableDebugs overlay

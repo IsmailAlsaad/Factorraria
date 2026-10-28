@@ -2,6 +2,7 @@
 using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using Terraria;
@@ -26,7 +27,7 @@ namespace Factorraria.Common.Cosmic
     {
         public override string Command => "fcosmic";
         public override CommandType Type => CommandType.Chat | CommandType.Console;
-        public override string Usage => "/fcosmic heat [tileX] | params | stats [reset] | spawn <color> [tx ty] | rescan | log [on|off] | strike <energy> [tx ty] | fx";
+        public override string Usage => "/fcosmic heat [tileX] | params | stats [reset] | spawn <color> [tx ty] | rescan | log [on|off] | strike <energy> [tx ty] | fx | set <name> [color] <value>";
         public override string Description => "Cosmic radiation: the color heatmap, every balancing parameter, and (C2) simulation stats and a test ray.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -58,6 +59,11 @@ namespace Factorraria.Common.Cosmic
             }
             else if (sub == "fx")
                 Fx(caller);
+            else if (sub == "set")
+            {
+                if (TestCommandsOn(caller, sub))
+                    SetParam(caller, args);
+            }
             else
                 caller.Reply("Usage: " + Usage, Color.OrangeRed);
         }
@@ -144,8 +150,121 @@ namespace Factorraria.Common.Cosmic
                     continue;
 
                 string unit = string.IsNullOrEmpty(info.Unit) ? "" : " " + info.Unit;
-                caller.Reply(field.Name + " = " + Format(field.GetValue(system)) + unit + "  -  " + info.Description, Color.White);
+                caller.Reply(field.Name + " = " + Format(field.GetValue(system)) + unit + "  (default " + DefaultText(field) + ")  -  " + info.Description, Color.White);
             }
+        }
+
+        // ------------------------------------------------------------ C9: defaults and /fcosmic set
+        // The default of a parameter is the [DefaultValue] of the matching field in CosmicBalanceConfig or CosmicVisualConfig (a per-color table
+        // has one field per color there, named after the color: WhiteBaseEnergy ...). Returns null when there is none.
+        static object DefaultOf(string name)
+        {
+            foreach (Type type in new[] { typeof(CosmicBalanceConfig), typeof(CosmicVisualConfig) })
+            {
+                FieldInfo config = type.GetField(name, BindingFlags.Public | BindingFlags.Instance);
+                DefaultValueAttribute attribute = config?.GetCustomAttribute<DefaultValueAttribute>();
+                if (attribute != null)
+                    return attribute.Value;
+            }
+
+            return null;
+        }
+
+        static string DefaultText(FieldInfo field)
+        {
+            if (!field.FieldType.IsArray)
+                return Format(DefaultOf(field.Name));
+
+            object[] values = new object[CosmicColors.Count];
+            for (int c = 0; c < values.Length; c++)
+                values[c] = DefaultOf(((CosmicColor)c).ToString() + field.Name);
+
+            return Format(values);
+        }
+
+        // /fcosmic set <name> <value>, or for a per-color table /fcosmic set <name> <color> <value>. Changes the live value on THIS side only,
+        // for quick testing; it is not saved and the next config change or world load puts the config's value back. Sanitize clamps it right away.
+        static void SetParam(CommandCaller caller, string[] args)
+        {
+            CosmicRadiationSystem system = CosmicRadiationSystem.Instance;
+            string usage = "Usage: /fcosmic set <name> <value>  or, for a per-color list,  /fcosmic set <name> <color> <value>  (names: /fcosmic params)";
+
+            if (args.Length < 3)
+            {
+                caller.Reply(usage, Color.OrangeRed);
+                return;
+            }
+
+            FieldInfo field = typeof(CosmicRadiationSystem).GetField(args[1], BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+            if (field == null || field.GetCustomAttribute<CosmicParamAttribute>() == null)
+            {
+                caller.Reply("fcosmic set: no parameter called " + args[1] + ". " + usage, Color.OrangeRed);
+                return;
+            }
+
+            int color = -1;
+            string text = args[2];
+            if (field.FieldType.IsArray)
+            {
+                if (args.Length < 4 || !TryParseColor(args[2], out CosmicColor parsedColor))
+                {
+                    caller.Reply("fcosmic set: " + field.Name + " is a per-color list: /fcosmic set " + field.Name + " <white|violet|blue|green|yellow|orange|red|grey> <value>", Color.OrangeRed);
+                    return;
+                }
+
+                color = (int)parsedColor;
+                text = args[3];
+            }
+
+            string before = Format(field.GetValue(system));
+            bool ok;
+
+            if (field.FieldType == typeof(float[]))
+            {
+                ok = float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out float value) && !float.IsNaN(value) && !float.IsInfinity(value);
+                if (ok)
+                    ((float[])field.GetValue(system))[color] = value;
+            }
+            else if (field.FieldType == typeof(int[]))
+            {
+                ok = int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value);
+                if (ok)
+                    ((int[])field.GetValue(system))[color] = value;
+            }
+            else if (field.FieldType == typeof(float))
+            {
+                ok = float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out float value) && !float.IsNaN(value) && !float.IsInfinity(value);
+                if (ok)
+                    field.SetValue(system, value);
+            }
+            else if (field.FieldType == typeof(int))
+            {
+                ok = int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value);
+                if (ok)
+                    field.SetValue(system, value);
+            }
+            else if (field.FieldType == typeof(bool))
+            {
+                string lower = text.ToLowerInvariant();
+                ok = lower == "true" || lower == "false" || lower == "on" || lower == "off" || lower == "1" || lower == "0";
+                if (ok)
+                    field.SetValue(system, lower == "true" || lower == "on" || lower == "1");
+            }
+            else
+            {
+                caller.Reply("fcosmic set: " + field.Name + " has a type this command cannot set.", Color.OrangeRed);
+                return;
+            }
+
+            if (!ok)
+            {
+                caller.Reply("fcosmic set: " + text + " is not a valid value for " + field.Name + " (" + field.FieldType.Name.Replace("[]", " list") + ").", Color.OrangeRed);
+                return;
+            }
+
+            system.Sanitize();
+            caller.Reply("fcosmic set [" + Side() + "]: " + field.Name + (color >= 0 ? " (" + (CosmicColor)color + ")" : "") + " is now " + Format(field.GetValue(system))
+                + " (was " + before + "). Temporary: this side only, not saved, the Mod Config value returns on the next config change or world load.", Color.LightGreen);
         }
 
         // ------------------------------------------------------------ C6: what is drawn and sent

@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Net;
+using Factorraria.Content.Configs;
 using System;
 using Terraria;
 using Terraria.ID;
@@ -43,7 +44,7 @@ namespace Factorraria.Common.Cosmic
 
         // ------------------------------------------------------------ heatmap (used now, C1)
 
-        [CosmicParam("How wide each color's hot spot is, as a fraction of its section (1/7 of the world). Bigger = more bleed into neighbors.", "fraction of section")]
+        [CosmicParam("How wide each color's hot spot is, as a fraction of its section (1/8 of the world). Bigger = more bleed into neighbors.", "fraction of section")]
         public float HeatSigmaFraction = 0.35f;
 
         [CosmicParam("Constant chance every color keeps everywhere, relative to its hot spot peak of 1. 0 = a color never appears outside its bump.", "relative weight")]
@@ -119,8 +120,8 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Most particles the client draws at once (used from C6).", "particles")]
         public int ClientParticlePool = 1500;
 
-        [CosmicParam("Particle quads (trail segments and heads) the client draws per frame before it simplifies: past this a trail shrinks to 3 segments, past twice this only heads are drawn. Real particles are drawn before the ambient ones, so the ambient ones simplify first. /fcosmic fx shows the quads drawn (client only, C8).", "quads")]
-        public int ClientDrawBudget = 1500;
+        [CosmicParam("Pixel quads (trail cells, halos and heads) the client draws per frame before it simplifies: past this a trail loses its sine wave and is drawn as a plain pixel line with no halos, past twice this only the heads are drawn. Real particles are drawn before the ambient ones, so the ambient ones simplify first. /fcosmic fx shows the quads drawn (client only, C8, C9b).", "quads")]
+        public int ClientDrawBudget = 6000;
 
         [CosmicParam("Players farther than this from an event get no packet for it (used from C6).", "tiles")]
         public int NetInterestRadiusTiles = 120;
@@ -135,7 +136,7 @@ namespace Factorraria.Common.Cosmic
         public float ClientTrailTiles = 5f;
 
         [CosmicParam("Diameter of a particle's head on screen. The optional Content/Particles/CosmicParticle.png is scaled to it (client only, used from C6).", "pixels")]
-        public float ClientParticleSizePx = 3f;
+        public float ClientParticleSizePx = 4f;
 
         [CosmicParam("Brightness multiplier of the particles and their trails (client only, used from C6).", "x")]
         public float ClientBrightness = 1f;
@@ -187,8 +188,31 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("How long the ambient local simulation takes to fade all the way in or out when it switches (near a receiver, off or on, after a teleport). 0 = switch at once (client only, C7b).", "seconds")]
         public float LocalSimFadeSeconds = 2f;
 
-        [CosmicParam("Thunder at or above this energy tier (log10 of the energy x 4, the number that also sets the bolt width) plays the big SoundID.Thunder, weaker thunder plays the small bug zap. 8 is roughly an even split with the default tables (client only, C7b).", "tier")]
+        [CosmicParam("Thunder at or above this energy tier (log10 of the energy x 4, the number that also sets the bolt width) plays the big SoundID.Thunder, weaker thunder plays the small bug zap. Tiers are whole numbers; /fcosmic stats shows the biggest energy, tier = log10(energy) x 4 (client only, C7b).", "tier")]
         public float ThunderBigTier = 20f;
+
+        // ------------------------------------------------------------ C9b: the look of an energetic particle (client only)
+
+        [CosmicParam("Size of one pixel of a particle's trail, in world pixels. The trail is drawn on this grid, snapped like the power pole wire (client only, C9b).", "pixels")]
+        public float ClientTrailPixelPx = 2f;
+
+        [CosmicParam("How far the trail's sine wave swings to each side at its widest. 0 = a straight trail (client only, C9b).", "pixels")]
+        public float ClientWaveAmplitudePx = 4f;
+
+        [CosmicParam("Distance between two peaks of the trail's sine wave. The wave stands still in the world while the particle flies through it, so the peaks seem to slide back along the trail at exactly the particle's speed (client only, C9b).", "tiles")]
+        public float ClientWaveLengthTiles = 1.25f;
+
+        [CosmicParam("A new pulse of the halo around a particle's head starts this often (client only, C9b).", "ticks")]
+        public float ClientHaloPeriodTicks = 14f;
+
+        [CosmicParam("How long one halo pulse takes to expand and fade out (client only, C9b).", "ticks")]
+        public float ClientHaloLifeTicks = 28f;
+
+        [CosmicParam("How wide a halo pulse is when it has fully expanded, as a multiple of the particle head's size (client only, C9b).", "x")]
+        public float ClientHaloScale = 3.5f;
+
+        [CosmicParam("Brightness of a halo pulse at its start, relative to the particle (client only, C9b). 0 = no halo.", "x")]
+        public float ClientHaloBrightness = 0.45f;
 
         // ------------------------------------------------------------ C8: hot reload and bad values
         // Runs every tick on the server and in single-player, right before the simulation. A tunable that is edited to something the simulation
@@ -266,6 +290,20 @@ namespace Factorraria.Common.Cosmic
 
             return table;
         }
+
+        // ------------------------------------------------------------ C9: the configs
+        // The two mod configs (Cosmic Balance, server side; Cosmic Visuals, client side) hold the values you edit in the Mod Config screen; this copies
+        // them into the fields above, which are the only values the rest of the code reads. Called when a config changes (OnChanged), when the mod
+        // finishes loading and when a world loads (so a config that was read before this system existed is still applied).
+        public void ApplyConfigs()
+        {
+            ModContent.GetInstance<CosmicBalanceConfig>()?.Apply(this);
+            ModContent.GetInstance<CosmicVisualConfig>()?.Apply(this);
+        }
+
+        public override void PostSetupContent() => ApplyConfigs();
+
+        public override void OnWorldLoad() => ApplyConfigs();
 
         // ------------------------------------------------------------ lifecycle
 

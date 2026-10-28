@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-28 | 328 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-29 | 331 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -37,11 +37,11 @@ tModLoader/other bases -> project types:
 - ModTile (13): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - GlobalTile (11): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, TilePlacedGlobalTile
+- GlobalItem (9): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModPlayer (9): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
-- GlobalItem (8): BucketPourGlobalItem, CartModuleItemGlobal, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
+- ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
 - GlobalNPC (4): AwakenedSpawnGlobalNPC, BossLootGlobal, CartPassengerGlobalNPC, MeteorHeadStatueGlobalNPC
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
-- ModConfig (3): CartMapConfig, FurnaceOffsetConfig, NetworkConfig
 - ModLiquid (2): FuelLiquid, OilLiquid
 - ModLiquidFall (2): FuelLiquidFall, OilLiquidFall
 - ModProjectile (2): MechSuitArmProjectile, MechanicalArmProjectile
@@ -178,7 +178,7 @@ tModLoader/other bases -> project types:
     {White, Violet, Blue, Green, Yellow, Orange, Red, Grey}
   static class CosmicColors
     +Count:int[s] +Lowest:CosmicColor[s] +HasNext(CosmicColor)[s] +Next(CosmicColor)[s] +HasGemspark(CosmicColor)[s] +GemsparkTile(CosmicColor)[s] +TryFromGemspark(int,out CosmicColor)[s] +IsCloudTile(int)[s] +DrawColor(CosmicColor)[s] +TileTint(CosmicColor)[s]
-**CosmicDebug.cs** uses: CosmicColor, CosmicColors, CosmicDischarge, CosmicEventRouter, CosmicHeatmap, CosmicParamAttribute, CosmicParticleSystem, CosmicQueuedEvent, CosmicRadiationSystem, CosmicReceiverIndex, CosmicSimulation, FurnaceOffsetConfig, StrikeResult
+**CosmicDebug.cs** uses: CosmicBalanceConfig, CosmicColor, CosmicColors, CosmicDischarge, CosmicEventRouter, CosmicHeatmap, CosmicParamAttribute, CosmicParticleSystem, CosmicQueuedEvent, CosmicRadiationSystem, CosmicReceiverIndex, CosmicSimulation, CosmicVisualConfig, FurnaceOffsetConfig, StrikeResult
   class CosmicCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **CosmicEventHeap.cs** uses: CosmicColor
@@ -188,6 +188,9 @@ tModLoader/other bases -> project types:
     +Tick:long +Kind:CosmicQueuedKind +Color:CosmicColor +X:float +Y:float +DirX:float +DirY:float +TileX:int +TileY:int ~Seq:long
   sealed class CosmicEventHeap
     +Count:int +Clear() +Push(CosmicQueuedEvent) +TryPeek(out CosmicQueuedEvent) +Pop()
+**CosmicGemsparkTooltip.cs** uses: CosmicColor, CosmicColors
+  class CosmicGemsparkTooltip : GlobalItem
+    +AppliesToEntity(Item,bool)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
 **CosmicHeatmap.cs** uses: CosmicColor
   class CosmicHeatmap
     +Sections:int[c] +FormatVersion:int +TableStep:int +Ready:bool +Order:byte +Clear() +Generate(Random) +SetOrder(byte) +SectionWidth(int) +SectionAt(int,int) +HotColorOfSection(int) +SectionOfColor(CosmicColor) +WeightExact(CosmicColor,int,int,float,float) +Weight(CosmicColor,int,int,float,float) +Pick(int,int,float,float,Random) +Write(BinaryWriter) +Read(BinaryReader)
@@ -226,9 +229,9 @@ tModLoader/other bases -> project types:
       +Active:bool +Thin:bool +Born:uint +Life:int +BY:float AX, AY, BX, +Tier:byte +Seed:int
     struct Spark
       +Active:bool +Color:byte +Born:uint +Y:float X,
-**CosmicRadiationSystem.cs** uses: CosmicColors, CosmicHeatmap, CosmicSimulation, FactorrariaNet
+**CosmicRadiationSystem.cs** uses: CosmicBalanceConfig, CosmicColors, CosmicHeatmap, CosmicSimulation, CosmicVisualConfig, FactorrariaNet
   class CosmicRadiationSystem : ModSystem
-    +Instance:CosmicRadiationSystem[s] +Heatmap:CosmicHeatmap +Sim:CosmicSimulation +BaseEnergy:float +Multiplier:float +ClusterMin:int +ClusterMax:int +HeatSigmaFraction:float +HeatFloor:float +RateDensity:float +SpawnSpreadDeg:float +ParticleSpeed:float +ParticleRange:float +SampleStepTicks:int +SpaceBottomFraction:float +ScanStripsPerTick:int +ResyncStripsPerTick:int +ReemitAngleMinDeg:float +ReemitAngleMaxDeg:float +CloudAbsorbChance:float +IonizedLifetimeTicks:int +RefractoryTicks:int +StrikeRadiusTiles:float +SurgePowerPerDecade:float +SurgeDurationTicks:int +MaxSurgePower:float +MaxRaysPerTick:int +MaxQueuedEvents:int +ClientParticlePool:int +ClientDrawBudget:int +NetInterestRadiusTiles:int +NetMaxRaysPerTick:int +NetMaxEventsPerTick:int +ClientTrailTiles:float +ClientParticleSizePx:float +ClientBrightness:float +BoltLifeTicks:int +BoltBaseWidthPx:float +BoltWidthPerDecadePx:float +BoltMaxWidthPx:float +IonizedLightIntensity:float +LocalSimEnabled:bool +LocalSimDensityBoost:float +LocalSimHalfWidthTiles:float +LocalSimHalfHeightTiles:float +LocalSimMaxParticles:int +LocalSimOffRadiusTiles:float +LocalSimBrightness:float +BoltLightIntensity:float +StrikeFlashSizePx:float +LocalSimFadeSeconds:float +ThunderBigTier:float +Sanitize() +PostUpdateWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OrderText()
+    +Instance:CosmicRadiationSystem[s] +Heatmap:CosmicHeatmap +Sim:CosmicSimulation +BaseEnergy:float +Multiplier:float +ClusterMin:int +ClusterMax:int +HeatSigmaFraction:float +HeatFloor:float +RateDensity:float +SpawnSpreadDeg:float +ParticleSpeed:float +ParticleRange:float +SampleStepTicks:int +SpaceBottomFraction:float +ScanStripsPerTick:int +ResyncStripsPerTick:int +ReemitAngleMinDeg:float +ReemitAngleMaxDeg:float +CloudAbsorbChance:float +IonizedLifetimeTicks:int +RefractoryTicks:int +StrikeRadiusTiles:float +SurgePowerPerDecade:float +SurgeDurationTicks:int +MaxSurgePower:float +MaxRaysPerTick:int +MaxQueuedEvents:int +ClientParticlePool:int +ClientDrawBudget:int +NetInterestRadiusTiles:int +NetMaxRaysPerTick:int +NetMaxEventsPerTick:int +ClientTrailTiles:float +ClientParticleSizePx:float +ClientBrightness:float +BoltLifeTicks:int +BoltBaseWidthPx:float +BoltWidthPerDecadePx:float +BoltMaxWidthPx:float +IonizedLightIntensity:float +LocalSimEnabled:bool +LocalSimDensityBoost:float +LocalSimHalfWidthTiles:float +LocalSimHalfHeightTiles:float +LocalSimMaxParticles:int +LocalSimOffRadiusTiles:float +LocalSimBrightness:float +BoltLightIntensity:float +StrikeFlashSizePx:float +LocalSimFadeSeconds:float +ThunderBigTier:float +ClientTrailPixelPx:float +ClientWaveAmplitudePx:float +ClientWaveLengthTiles:float +ClientHaloPeriodTicks:float +ClientHaloLifeTicks:float +ClientHaloScale:float +ClientHaloBrightness:float +Sanitize() +ApplyConfigs() +PostSetupContent()[ov] +OnWorldLoad()[ov] +PostUpdateWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OrderText()
 **CosmicRayTracer.cs** uses: CosmicColor, Probe
   enum CosmicTileKind : byte
     {Empty, Gemspark, Cloud, Solid}
@@ -344,7 +347,7 @@ tModLoader/other bases -> project types:
 **RecipeKnowledgeSystem.cs**
   class RecipeKnowledgeSystem : ModSystem
     +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
-**ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PipeMK1Item, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, WoodenPowerPoleItem
+**ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PipeMK1Item, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, SunCapsuleItem, WoodenPowerPoleItem
   static class ScrollPoolDefinitions
     +Register()[s]
 **ScrollPools.cs** uses: RecipeArtRegistry, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey
@@ -1143,6 +1146,12 @@ tModLoader/other bases -> project types:
 **CartMapConfig.cs** uses: CartMapIcons
   class CartMapConfig : ModConfig
     +Current:CartMapConfig[s] +Mode:ConfigScope[ov] +IconSize:float +OutlineThickness:float +ButtonX:int +ButtonY:int +InvertIconDirection:bool +FlipLeftFacingSkins:bool +HideCarriedNpcHead:bool +OnChanged()[ov]
+**CosmicBalanceConfig.cs** uses: CosmicRadiationSystem
+  class CosmicBalanceConfig : ModConfig
+    +Mode:ConfigScope[ov] +AcceptClientChanges(ModConfig,int,ref NetworkText)[ov] +OnChanged()[ov] +WhiteBaseEnergy:float +WhiteMultiplier:float +WhiteClusterMin:int +WhiteClusterMax:int +VioletBaseEnergy:float +VioletMultiplier:float +VioletClusterMin:int +VioletClusterMax:int +BlueBaseEnergy:float +BlueMultiplier:float +BlueClusterMin:int +BlueClusterMax:int +GreenBaseEnergy:float +GreenMultiplier:float +GreenClusterMin:int +GreenClusterMax:int +YellowBaseEnergy:float +YellowMultiplier:float +YellowClusterMin:int +YellowClusterMax:int +OrangeBaseEnergy:float +OrangeMultiplier:float +OrangeClusterMin:int +OrangeClusterMax:int +RedBaseEnergy:float +RedMultiplier:float +RedClusterMin:int +RedClusterMax:int +GreyBaseEnergy:float +GreyMultiplier:float +GreyClusterMin:int +GreyClusterMax:int +HeatSigmaFraction:float +HeatFloor:float +RateDensity:float +SpawnSpreadDeg:float +ParticleSpeed:float +ParticleRange:float +SampleStepTicks:int +SpaceBottomFraction:float +ScanStripsPerTick:int +ResyncStripsPerTick:int +ReemitAngleMinDeg:float +ReemitAngleMaxDeg:float +CloudAbsorbChance:float +IonizedLifetimeTicks:int +RefractoryTicks:int +StrikeRadiusTiles:float +SurgePowerPerDecade:float +SurgeDurationTicks:int +MaxSurgePower:float +MaxRaysPerTick:int +MaxQueuedEvents:int +NetInterestRadiusTiles:int +NetMaxRaysPerTick:int +NetMaxEventsPerTick:int +Apply(CosmicRadiationSystem)
+**CosmicVisualConfig.cs** uses: CosmicRadiationSystem
+  class CosmicVisualConfig : ModConfig
+    +Mode:ConfigScope[ov] +OnChanged()[ov] +ClientParticlePool:int +ClientDrawBudget:int +ClientParticleSizePx:float +ClientBrightness:float +ClientTrailTiles:float +ClientTrailPixelPx:float +ClientWaveAmplitudePx:float +ClientWaveLengthTiles:float +ClientHaloPeriodTicks:float +ClientHaloLifeTicks:float +ClientHaloScale:float +ClientHaloBrightness:float +BoltLifeTicks:int +BoltBaseWidthPx:float +BoltWidthPerDecadePx:float +BoltMaxWidthPx:float +BoltLightIntensity:float +StrikeFlashSizePx:float +IonizedLightIntensity:float +LocalSimEnabled:bool +LocalSimDensityBoost:float +LocalSimHalfWidthTiles:float +LocalSimHalfHeightTiles:float +LocalSimMaxParticles:int +LocalSimOffRadiusTiles:float +LocalSimBrightness:float +LocalSimFadeSeconds:float +ThunderBigTier:float +Apply(CosmicRadiationSystem)
 **FurnaceOffsetConfig.cs**
   class FurnaceOffsetConfig : ModConfig
     +Mode:ConfigScope[ov] +OffsetX:float +OffsetY:float +AngleOffset:float +AngleOffset2:float +animationOffset:int +fireCropOffset:float +animationSpeedDivider:int +EnableDebugs:bool +RevealAllRecipes:bool +VItemOffset:float

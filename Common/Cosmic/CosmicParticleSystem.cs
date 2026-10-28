@@ -555,6 +555,15 @@ namespace Factorraria.Common.Cosmic
             float bright = Math.Max(0f, system.ClientBrightness) * brightScale;
             int budget = Math.Max(100, system.ClientDrawBudget);
 
+            // C9b: the trail and halo settings (read once per set, not per particle).
+            float cell = Math.Max(1f, system.ClientTrailPixelPx);
+            float waveAmp = Math.Max(0f, system.ClientWaveAmplitudePx);
+            float waveLen = Math.Max(0.1f, system.ClientWaveLengthTiles);
+            float haloPeriod = Math.Max(2f, system.ClientHaloPeriodTicks);
+            float haloLife = Math.Max(4f, system.ClientHaloLifeTicks);
+            float haloScale = Math.Max(1f, system.ClientHaloScale);
+            float haloBright = Math.Max(0f, system.ClientHaloBrightness);
+
             for (int i = 0; i < set.Length; i++)
             {
                 ref Particle p = ref set[i];
@@ -577,40 +586,99 @@ namespace Factorraria.Common.Cosmic
                     continue;
 
                 Color color = CosmicColors.DrawColor((CosmicColor)p.Color) * bright;
-                float rotation = (float)Math.Atan2(p.DirY, p.DirX);
+                float trailLength = head - tail;
 
-                // 8 straight segments, each brighter than the one behind it. C8: past the draw budget a trail shrinks to 3 segments, past twice
-                // the budget only the head is drawn, so a huge sky farm costs a bounded number of quads.
-                int segments = quadsThisFrame < budget ? 8 : quadsThisFrame < budget * 2 ? 3 : 0;
-                float step = (head - tail) / Math.Max(1, segments);
-                if (segments > 0 && step > 0.001f)
-                {
-                    for (int s = 0; s < segments; s++)
-                    {
-                        float a = tail + step * s;
-                        float fade = (s + 1f) / segments;
-                        Vector2 from = new Vector2((p.X + p.DirX * a) * 16f - Main.screenPosition.X, (p.Y + p.DirY * a) * 16f - Main.screenPosition.Y);
-                        sb.Draw(pixel, from, new Rectangle(0, 0, 1, 1), color * (fade * fade), rotation, new Vector2(0f, 0.5f), new Vector2(step * 16f + 0.5f, Math.Max(1f, size * 0.6f)), SpriteEffects.None, 0f);
-                    }
+                // C9b: the trail. Under the budget it is a pixel-art sine wave; over it a plain pixel line; over twice the budget nothing (head only).
+                if (quadsThisFrame < budget * 2 && trailLength > 0.02f)
+                    quadsThisFrame += DrawTrail(sb, pixel, in p, head, trailLength, color, cell, waveAmp, waveLen, quadsThisFrame < budget);
 
-                    quadsThisFrame += segments;
-                }
-
-                // the head only while it is still flying
+                // the head and its halo only while it is still flying
                 if (travelled <= p.Length)
                 {
                     Vector2 pos = new Vector2(hx * 16f - Main.screenPosition.X, hy * 16f - Main.screenPosition.Y);
-                    quadsThisFrame += circle != null ? 1 : 2;
 
-                    if (circle != null)
-                        sb.Draw(circle, pos, null, color, 0f, new Vector2(circle.Width, circle.Height) * 0.5f, size / circle.Width, SpriteEffects.None, 0f);
-                    else
+                    // The halo: a soft disc that starts at the head's size, expands to haloScale times it and fades, over and over (one pulse
+                    // every haloPeriod ticks, each living haloLife ticks). It follows the head, and no pulse is older than the particle.
+                    if (haloBright > 0f && quadsThisFrame < budget)
                     {
-                        sb.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), color * 0.35f, 0f, new Vector2(0.5f, 0.5f), new Vector2(size * 2.2f, size * 2.2f), SpriteEffects.None, 0f);
-                        sb.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), color, 0f, new Vector2(0.5f, 0.5f), new Vector2(size, size), SpriteEffects.None, 0f);
+                        Texture2D halo = HaloDisc();
+                        Vector2 haloMiddle = new Vector2(halo.Width / 2f, halo.Height / 2f);
+
+                        for (float ringAge = age % haloPeriod; ringAge < haloLife && ringAge <= age; ringAge += haloPeriod)
+                        {
+                            float t = ringAge / haloLife;
+                            float diameter = size * (1f + (haloScale - 1f) * t);
+                            float alpha = (1f - t) * (1f - t) * haloBright;
+                            sb.Draw(halo, pos, null, color * alpha, 0f, haloMiddle, diameter / halo.Width, SpriteEffects.None, 0f);
+                            quadsThisFrame++;
+                        }
                     }
+
+                    Texture2D headTexture = circle ?? FlashDisc();
+                    sb.Draw(headTexture, pos, null, color, 0f, new Vector2(headTexture.Width, headTexture.Height) * 0.5f, size / headTexture.Width, SpriteEffects.None, 0f);
+                    quadsThisFrame++;
                 }
             }
+        }
+
+        // C9b: draws one particle's trail as a pixel-art line on a grid of `cell` world pixels (snapped the way the power pole wire is, see
+        // PoleWireDrawSystem.DrawCurve) and returns how many quads it used. `trailLength` tiles run back from the head.
+        //
+        // The wave: a point `along` tiles from the start of the ray is pushed sideways by sin(along x 2 pi / waveLength). `along` is measured from
+        // the world-fixed start of the ray, NOT from the head, so the pattern does not move with the particle: in the particle's own frame the
+        // peaks and valleys slide backwards at exactly the particle's speed (the phase shifts by speed x 2 pi / waveLength every tick), and in the
+        // world they stand still while the particle flies through them. The swing is zero at the head (so the trail joins it), grows over the
+        // first fifth of the trail and fades to zero again at the tail; the brightness fades toward the tail too.
+        // withWave = false draws the straight line only (the cheap form used past the draw budget).
+        int DrawTrail(SpriteBatch sb, Texture2D pixel, in Particle p, float head, float trailLength, Color color, float cell, float amplitudePx, float waveLengthTiles, bool withWave)
+        {
+            bool wave = withWave && amplitudePx > 0.01f;
+            float lengthPx = trailLength * 16f;
+
+            // The wave is sampled twice per cell so that the snapped line has no gaps; the straight line once per two cells.
+            float step = wave ? cell * 0.5f : cell * 2f;
+            int samples = Math.Max(2, (int)Math.Ceiling(lengthPx / step));
+
+            float perpX = -p.DirY;
+            float perpY = p.DirX;
+            float radiansPerTile = MathHelper.TwoPi / waveLengthTiles;
+            Vector2 screen = Main.screenPosition;
+            Vector2 cellSize = new Vector2(cell, cell);
+            Rectangle source = new Rectangle(0, 0, 1, 1);
+
+            int lastX = int.MinValue;
+            int lastY = int.MinValue;
+            int drawn = 0;
+
+            for (int k = 0; k <= samples; k++)
+            {
+                float u = k / (float)samples;                 // 0 at the head, 1 at the end of the tail
+                float along = head - u * trailLength;         // tiles from the start of the ray (world-fixed)
+
+                float offset = 0f;
+                if (wave)
+                {
+                    float ramp = Math.Min(1f, u / 0.2f);
+                    ramp = ramp * ramp * (3f - 2f * ramp);
+                    offset = amplitudePx * ramp * (1f - u) * MathF.Sin(along * radiansPerTile);
+                }
+
+                float worldX = (p.X + p.DirX * along) * 16f + perpX * offset;
+                float worldY = (p.Y + p.DirY * along) * 16f + perpY * offset;
+                int cellX = (int)Math.Floor(worldX / cell);
+                int cellY = (int)Math.Floor(worldY / cell);
+                if (cellX == lastX && cellY == lastY)
+                    continue;
+
+                lastX = cellX;
+                lastY = cellY;
+
+                float fade = 1f - u;
+                sb.Draw(pixel, new Vector2(cellX * cell - screen.X, cellY * cell - screen.Y), source, color * (fade * fade), 0f, Vector2.Zero, cellSize, SpriteEffects.None, 0f);
+                drawn++;
+            }
+
+            return drawn;
         }
 
         // A deterministic number in 0..1 for a bolt's jitter (no Random, no allocation).
