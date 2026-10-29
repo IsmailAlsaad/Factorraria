@@ -19,8 +19,8 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileDrill
     // footprint. Until it exists the part draws as a grey footprint block with a lighter tip block.
     public class MissileDrillTile : ModTile
     {
-        // The vanilla sheet is only here so the mod loads; it is never drawn.
-        public override string Texture => "Terraria/Images/Tile_" + TileID.Statues;
+        // Only here so the loader has a sheet to request (avoids the vanilla Tile_105 lookup); PreDraw returns false, so it is never drawn.
+        public override string Texture => "Factorraria/Content/Tiles/SuperWeapons/MissileDrill/MissileDrill";
 
         public override void SetStaticDefaults()
         {

@@ -20,8 +20,8 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileThruster
     // with a lighter block for the rear plate.
     public class MissileThrusterTile : ModTile
     {
-        // The vanilla sheet is only here so the mod loads; it is never drawn.
-        public override string Texture => "Terraria/Images/Tile_" + TileID.Statues;
+        // Only here so the loader has a sheet to request (avoids the vanilla Tile_105 lookup); PreDraw returns false, so it is never drawn.
+        public override string Texture => "Factorraria/Content/Tiles/SuperWeapons/MissileThruster/MissileThruster";
 
         public override void SetStaticDefaults()
         {
