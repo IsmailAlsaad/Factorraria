@@ -120,7 +120,7 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Most particles the client draws at once (used from C6).", "particles")]
         public int ClientParticlePool = 1500;
 
-        [CosmicParam("Pixel quads (trail cells, halos and heads) the client draws per frame before it simplifies: past this a trail loses its sine wave and is drawn as a plain pixel line with no halos, past twice this only the heads are drawn. Real particles are drawn before the ambient ones, so the ambient ones simplify first. /fcosmic fx shows the quads drawn (client only, C8, C9b).", "quads")]
+        [CosmicParam("Pixel quads (trail cells and heads) the client draws per frame before it simplifies: past this a trail loses its sine wave and is drawn as one plain line, past twice this only the heads are drawn. Real particles are drawn before the ambient ones, so the ambient ones simplify first. /fcosmic fx shows the quads drawn (client only, C8, C9b, C9c, C9d).", "quads")]
         public int ClientDrawBudget = 6000;
 
         [CosmicParam("Players farther than this from an event get no packet for it (used from C6).", "tiles")]
@@ -135,8 +135,17 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Length of the fading trail behind a particle on screen (client only, used from C6).", "tiles")]
         public float ClientTrailTiles = 5f;
 
-        [CosmicParam("Diameter of a particle's head on screen. The optional Content/Particles/CosmicParticle.png is scaled to it (client only, used from C6).", "pixels")]
-        public float ClientParticleSizePx = 4f;
+        [CosmicParam("Diameter of the head of the lowest frequency particle (Grey) on screen. The head size grows with the frequency up to ClientHeadSizeMaxPx for White, the colors in between are interpolated by their order (client only, C9c).", "pixels")]
+        public float ClientHeadSizeMinPx = 3f;
+
+        [CosmicParam("Diameter of the head of the highest frequency particle (White) on screen. The head is a hard-edged, fully opaque disc (or the optional Content/Particles/CosmicParticle.png scaled to it). Grey uses ClientHeadSizeMinPx, the colors in between are interpolated by their order (client only, C9c).", "pixels")]
+        public float ClientHeadSizeMaxPx = 5f;
+
+        [CosmicParam("How long a new particle takes to grow from size zero to full size (its head and the swing of its trail). 0 = it appears at full size at once (client only, C9c).", "ticks")]
+        public float ClientHeadGrowTicks = 10f;
+
+        [CosmicParam("When a particle starts to fade out, as a fraction of its head's flight time (ray length / speed). 0.8 = it fades smoothly over the last fifth of the flight and is invisible when the head arrives. 1 = no fade, it just vanishes on arrival (client only, C9d).", "fraction")]
+        public float ClientFadeOutStart = 0.8f;
 
         [CosmicParam("Brightness multiplier of the particles and their trails (client only, used from C6).", "x")]
         public float ClientBrightness = 1f;
@@ -196,23 +205,11 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Size of one pixel of a particle's trail, in world pixels. The trail is drawn on this grid, snapped like the power pole wire (client only, C9b).", "pixels")]
         public float ClientTrailPixelPx = 2f;
 
-        [CosmicParam("How far the trail's sine wave swings to each side at its widest. 0 = a straight trail (client only, C9b).", "pixels")]
+        [CosmicParam("How far the trail's sine wave swings to each side, for the White particle (the highest frequency). Lower frequencies swing less, in even steps down to Grey, whose trail is a plain straight line. The swing is the same along the whole trail and never exceeds half the particle's head width, so the trail does not stick out past the head. 0 = straight trails for every color (client only, C9b, C9d).", "pixels")]
         public float ClientWaveAmplitudePx = 4f;
 
         [CosmicParam("Distance between two peaks of the trail's sine wave. The wave stands still in the world while the particle flies through it, so the peaks seem to slide back along the trail at exactly the particle's speed (client only, C9b).", "tiles")]
         public float ClientWaveLengthTiles = 1.25f;
-
-        [CosmicParam("A new pulse of the halo around a particle's head starts this often (client only, C9b).", "ticks")]
-        public float ClientHaloPeriodTicks = 14f;
-
-        [CosmicParam("How long one halo pulse takes to expand and fade out (client only, C9b).", "ticks")]
-        public float ClientHaloLifeTicks = 28f;
-
-        [CosmicParam("How wide a halo pulse is when it has fully expanded, as a multiple of the particle head's size (client only, C9b).", "x")]
-        public float ClientHaloScale = 3.5f;
-
-        [CosmicParam("Brightness of a halo pulse at its start, relative to the particle (client only, C9b). 0 = no halo.", "x")]
-        public float ClientHaloBrightness = 0.45f;
 
         // ------------------------------------------------------------ C8: hot reload and bad values
         // Runs every tick on the server and in single-player, right before the simulation. A tunable that is edited to something the simulation

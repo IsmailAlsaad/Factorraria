@@ -25,9 +25,21 @@ namespace Factorraria.Content.Configs
         [Range(100, 100000)]
         public int ClientDrawBudget = 6000;
 
-        [DefaultValue(4f)]
-        [Range(1f, 20f)]
-        public float ClientParticleSizePx = 4f;
+        [DefaultValue(3f)]
+        [Range(0.5f, 20f)]
+        public float ClientHeadSizeMinPx = 3f;
+
+        [DefaultValue(5f)]
+        [Range(0.5f, 20f)]
+        public float ClientHeadSizeMaxPx = 5f;
+
+        [DefaultValue(10f)]
+        [Range(0f, 120f)]
+        public float ClientHeadGrowTicks = 10f;
+
+        [DefaultValue(0.8f)]
+        [Range(0f, 1f)]
+        public float ClientFadeOutStart = 0.8f;
 
         [DefaultValue(1f)]
         [Range(0f, 4f)]
@@ -49,22 +61,6 @@ namespace Factorraria.Content.Configs
         [DefaultValue(1.25f)]
         [Range(0.2f, 8f)]
         public float ClientWaveLengthTiles = 1.25f;
-
-        [DefaultValue(14f)]
-        [Range(2f, 120f)]
-        public float ClientHaloPeriodTicks = 14f;
-
-        [DefaultValue(28f)]
-        [Range(4f, 240f)]
-        public float ClientHaloLifeTicks = 28f;
-
-        [DefaultValue(3.5f)]
-        [Range(1f, 12f)]
-        public float ClientHaloScale = 3.5f;
-
-        [DefaultValue(0.45f)]
-        [Range(0f, 2f)]
-        public float ClientHaloBrightness = 0.45f;
 
         [Header("Lightning")]
         [DefaultValue(14)]
@@ -140,16 +136,15 @@ namespace Factorraria.Content.Configs
 
             s.ClientParticlePool = ClientParticlePool;
             s.ClientDrawBudget = ClientDrawBudget;
-            s.ClientParticleSizePx = ClientParticleSizePx;
+            s.ClientHeadSizeMinPx = ClientHeadSizeMinPx;
+            s.ClientHeadSizeMaxPx = ClientHeadSizeMaxPx;
+            s.ClientHeadGrowTicks = ClientHeadGrowTicks;
+            s.ClientFadeOutStart = ClientFadeOutStart;
             s.ClientBrightness = ClientBrightness;
             s.ClientTrailTiles = ClientTrailTiles;
             s.ClientTrailPixelPx = ClientTrailPixelPx;
             s.ClientWaveAmplitudePx = ClientWaveAmplitudePx;
             s.ClientWaveLengthTiles = ClientWaveLengthTiles;
-            s.ClientHaloPeriodTicks = ClientHaloPeriodTicks;
-            s.ClientHaloLifeTicks = ClientHaloLifeTicks;
-            s.ClientHaloScale = ClientHaloScale;
-            s.ClientHaloBrightness = ClientHaloBrightness;
             s.BoltLifeTicks = BoltLifeTicks;
             s.BoltBaseWidthPx = BoltBaseWidthPx;
             s.BoltWidthPerDecadePx = BoltWidthPerDecadePx;

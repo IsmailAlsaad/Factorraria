@@ -63,6 +63,7 @@ namespace Factorraria.Common.Cosmic
             public byte End;
             public uint Born;
             public float X, Y, DirX, DirY, Length, Speed, Life;
+            public float Phase;   // C9c: random start phase of the trail wave (radians), so the waves of different particles are out of step
         }
 
         struct Glow
@@ -110,6 +111,17 @@ namespace Factorraria.Common.Cosmic
         // frame's draw; the particle drawing simplifies itself once it passes ClientDrawBudget (see DrawParticleSet). What /fcosmic fx shows.
         int quadsThisFrame;
         public int QuadsLastFrame, PeakQuads;
+
+        // C9c: the opaque heads. The particle batch is additive, which cannot make an opaque pixel, so DrawParticleSet queues each head here and
+        // PostDrawTiles draws the queue in a second AlphaBlend pass on top (DrawHeads). Cleared every frame; the list keeps its capacity.
+        struct HeadDraw
+        {
+            public Vector2 Pos;
+            public float Diameter;
+            public Color Color;
+        }
+
+        readonly List<HeadDraw> heads = new List<HeadDraw>(512);
 
         // What /fcosmic fx prints.
         public int ActiveCount, PeakActive;
@@ -187,6 +199,7 @@ namespace Factorraria.Common.Cosmic
             p.Length = length;
             p.Speed = speed;
             p.Life = (length + trail) / speed + 2f;
+            p.Phase = (float)Main.rand.NextDouble() * MathHelper.TwoPi;   // C9c: client random, nothing is synced
             Spawned++;
         }
 
@@ -469,6 +482,7 @@ namespace Factorraria.Common.Cosmic
             sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             quadsThisFrame = 0;
+            heads.Clear();
 
             DrawDischargeFlash(sb, pixel, now);
             DrawParticles(sb, pixel, now, system);   // C8: the real particles first, so they get the draw budget before the ambient ones (additive, so the order does not change the picture)
@@ -485,6 +499,8 @@ namespace Factorraria.Common.Cosmic
                 PeakQuads = quadsThisFrame;
 
             sb.End();
+
+            DrawHeads(sb);   // C9c: the opaque heads, on top of everything the additive pass drew
         }
 
         // C6b: an ionized cloud is no longer drawn with an overlay (clouds are already bright, so a glow on top was hard to read). Instead the
@@ -548,21 +564,29 @@ namespace Factorraria.Common.Cosmic
         }
 
         // C7: the same drawing for any particle array (the ambient local simulation has its own, dimmer set).
+        //
+        // C9c + C9d: the look of one particle, all from its color and age (the only per-particle state is the random wave phase):
+        //  - frequency = 1 (White) down to 0 (Grey), from the color's index. The head's diameter is Lerp(ClientHeadSizeMinPx, ClientHeadSizeMaxPx,
+        //    frequency) and the trail's wave swing is ClientWaveAmplitudePx x frequency, so a Grey trail is a plain straight line.
+        //  - grow = 0 to 1 over ClientHeadGrowTicks after the spawn; it scales the head diameter and the swing.
+        //  - the swing is clamped to half the head's diameter, so the trail never sticks out past the head. The head stays on the ray line.
+        //  - dying is a fade: from ClientFadeOutStart of the head's flight time (Length / Speed) the whole particle (head and trail) fades to
+        //    invisible by the time the head arrives. Nothing changes size.
+        //  - the head is opaque: this batch is additive, so the head is only queued here and DrawHeads draws it in an AlphaBlend pass on top.
         void DrawParticleSet(SpriteBatch sb, Texture2D pixel, uint now, CosmicRadiationSystem system, Particle[] set, float brightScale)
         {
             float trail = Math.Max(0.5f, system.ClientTrailTiles);
-            float size = Math.Max(1f, system.ClientParticleSizePx);
             float bright = Math.Max(0f, system.ClientBrightness) * brightScale;
             int budget = Math.Max(100, system.ClientDrawBudget);
 
-            // C9b: the trail and halo settings (read once per set, not per particle).
             float cell = Math.Max(1f, system.ClientTrailPixelPx);
             float waveAmp = Math.Max(0f, system.ClientWaveAmplitudePx);
-            float waveLen = Math.Max(0.1f, system.ClientWaveLengthTiles);
-            float haloPeriod = Math.Max(2f, system.ClientHaloPeriodTicks);
-            float haloLife = Math.Max(4f, system.ClientHaloLifeTicks);
-            float haloScale = Math.Max(1f, system.ClientHaloScale);
-            float haloBright = Math.Max(0f, system.ClientHaloBrightness);
+            float radiansPerTile = MathHelper.TwoPi / Math.Max(0.1f, system.ClientWaveLengthTiles);
+            float sizeMin = Math.Max(0.5f, system.ClientHeadSizeMinPx);
+            float sizeMax = Math.Max(0.5f, system.ClientHeadSizeMaxPx);
+            float growTicks = Math.Max(0f, system.ClientHeadGrowTicks);
+            float fadeStart = Math.Clamp(system.ClientFadeOutStart, 0f, 1f);
+            float colorSteps = Math.Max(1, CosmicColors.Count - 1);
 
             for (int i = 0; i < set.Length; i++)
             {
@@ -571,11 +595,13 @@ namespace Factorraria.Common.Cosmic
                     continue;
 
                 float age = (int)(now - p.Born);
+                float flight = p.Length / p.Speed;
+                if (age >= flight)
+                    continue;   // faded out completely when the head arrived (the trail that would still drain is not drawn)
+
                 float travelled = age * p.Speed;
-                float head = Math.Min(travelled, p.Length);
+                float head = travelled;
                 float tail = Math.Min(Math.Max(0f, travelled - trail), p.Length);
-                if (tail >= p.Length)
-                    continue;
 
                 float hx = p.X + p.DirX * head;
                 float hy = p.Y + p.DirY * head;
@@ -585,63 +611,104 @@ namespace Factorraria.Common.Cosmic
                 if (!BoxVisible(Math.Min(hx, tx) * 16f, Math.Min(hy, ty) * 16f, Math.Max(hx, tx) * 16f, Math.Max(hy, ty) * 16f))
                     continue;
 
-                Color color = CosmicColors.DrawColor((CosmicColor)p.Color) * bright;
+                // 1 for White, 0 for Grey, even steps between.
+                float frequency = 1f - Math.Min((float)p.Color, colorSteps) / colorSteps;
+
+                float grow = growTicks > 0.01f ? Smooth01(age / growTicks) : 1f;
+                float fade = 1f;
+                if (age > flight * fadeStart)
+                    fade = 1f - Smooth01((age - flight * fadeStart) / (flight - flight * fadeStart));
+
+                Color baseColor = CosmicColors.DrawColor((CosmicColor)p.Color);
+                Color color = baseColor * (bright * fade);
                 float trailLength = head - tail;
+                float diameter = MathHelper.Lerp(sizeMin, sizeMax, frequency) * grow;
 
-                // C9b: the trail. Under the budget it is a pixel-art sine wave; over it a plain pixel line; over twice the budget nothing (head only).
+                // The trail. Under the budget a colored one is a pixel-art sine wave (swing clamped to half the head width); a straight one (Grey,
+                // or anything past the budget) is one plain line quad; past twice the budget there is no trail at all (head only).
+                float amplitude = quadsThisFrame < budget ? Math.Min(waveAmp * frequency * grow, diameter * 0.5f) : 0f;
+
                 if (quadsThisFrame < budget * 2 && trailLength > 0.02f)
-                    quadsThisFrame += DrawTrail(sb, pixel, in p, head, trailLength, color, cell, waveAmp, waveLen, quadsThisFrame < budget);
-
-                // the head and its halo only while it is still flying
-                if (travelled <= p.Length)
                 {
-                    Vector2 pos = new Vector2(hx * 16f - Main.screenPosition.X, hy * 16f - Main.screenPosition.Y);
+                    if (amplitude > 0.01f)
+                        quadsThisFrame += DrawTrail(sb, pixel, in p, head, trailLength, color, cell, amplitude, radiansPerTile);
+                    else
+                        quadsThisFrame += DrawStraightTrail(sb, in p, head, trailLength, color, cell);
+                }
 
-                    // The halo: a soft disc that starts at the head's size, expands to haloScale times it and fades, over and over (one pulse
-                    // every haloPeriod ticks, each living haloLife ticks). It follows the head, and no pulse is older than the particle.
-                    if (haloBright > 0f && quadsThisFrame < budget)
-                    {
-                        Texture2D halo = HaloDisc();
-                        Vector2 haloMiddle = new Vector2(halo.Width / 2f, halo.Height / 2f);
-
-                        for (float ringAge = age % haloPeriod; ringAge < haloLife && ringAge <= age; ringAge += haloPeriod)
-                        {
-                            float t = ringAge / haloLife;
-                            float diameter = size * (1f + (haloScale - 1f) * t);
-                            float alpha = (1f - t) * (1f - t) * haloBright;
-                            sb.Draw(halo, pos, null, color * alpha, 0f, haloMiddle, diameter / halo.Width, SpriteEffects.None, 0f);
-                            quadsThisFrame++;
-                        }
-                    }
-
-                    Texture2D headTexture = circle ?? FlashDisc();
-                    sb.Draw(headTexture, pos, null, color, 0f, new Vector2(headTexture.Width, headTexture.Height) * 0.5f, size / headTexture.Width, SpriteEffects.None, 0f);
+                // The head, on the ray line, only while it is still flying.
+                if (diameter > 0.2f)
+                {
+                    HeadDraw h;
+                    h.Pos = new Vector2(hx * 16f - Main.screenPosition.X, hy * 16f - Main.screenPosition.Y);
+                    h.Diameter = diameter;
+                    h.Color = baseColor * (Math.Min(1f, bright) * fade);   // fully opaque at brightness 1 or more, see-through while fading
+                    heads.Add(h);
                     quadsThisFrame++;
                 }
             }
         }
 
-        // C9b: draws one particle's trail as a pixel-art line on a grid of `cell` world pixels (snapped the way the power pole wire is, see
+        // C9c: the second pass: every queued head as a hard-edged opaque disc (AlphaBlend), over the additive particles, bolts and flashes.
+        void DrawHeads(SpriteBatch sb)
+        {
+            if (heads.Count == 0)
+                return;
+
+            Texture2D disc = circle ?? HeadDisc();
+            Vector2 middle = new Vector2(disc.Width, disc.Height) * 0.5f;
+
+            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            for (int i = 0; i < heads.Count; i++)
+            {
+                HeadDraw h = heads[i];
+                sb.Draw(disc, h.Pos, null, h.Color, 0f, middle, h.Diameter / disc.Width, SpriteEffects.None, 0f);
+            }
+
+            sb.End();
+        }
+
+        static float Smooth01(float x)
+        {
+            x = Math.Clamp(x, 0f, 1f);
+            return x * x * (3f - 2f * x);
+        }
+
+        // The sideways push (pixels) of the trail wave at `along` tiles from the start of the ray. `along` is measured from the world-fixed start of
+        // the ray, so the pattern stands still in the world while the particle flies through it; `phase` is the particle's random offset.
+        static float WaveOffsetPx(float along, float amplitudePx, float radiansPerTile, float phase)
+        {
+            return amplitudePx * MathF.Sin(along * radiansPerTile + phase);
+        }
+
+        // C9d: a straight trail (Grey, or anything past the draw budget) as ONE quad: the 1-D gradient texture stretched from the head back along
+        // the ray, fading like the pixel trail does ((1 - u)^2 toward the tail). Not snapped to a pixel grid. Returns the quads used (1).
+        int DrawStraightTrail(SpriteBatch sb, in Particle p, float head, float trailLength, Color color, float thicknessPx)
+        {
+            Texture2D gradient = TrailGradient();
+            Vector2 pos = new Vector2((p.X + p.DirX * head) * 16f - Main.screenPosition.X, (p.Y + p.DirY * head) * 16f - Main.screenPosition.Y);
+            float rotation = MathF.Atan2(-p.DirY, -p.DirX);   // from the head back toward the tail
+            Vector2 scale = new Vector2(trailLength * 16f / gradient.Width, thicknessPx / gradient.Height);
+            sb.Draw(gradient, pos, null, color, rotation, new Vector2(0f, gradient.Height * 0.5f), scale, SpriteEffects.None, 0f);
+            return 1;
+        }
+
+        // C9b: draws one particle's wavy trail as a pixel-art line on a grid of `cell` world pixels (snapped the way the power pole wire is, see
         // PoleWireDrawSystem.DrawCurve) and returns how many quads it used. `trailLength` tiles run back from the head.
         //
-        // The wave: a point `along` tiles from the start of the ray is pushed sideways by sin(along x 2 pi / waveLength). `along` is measured from
-        // the world-fixed start of the ray, NOT from the head, so the pattern does not move with the particle: in the particle's own frame the
-        // peaks and valleys slide backwards at exactly the particle's speed (the phase shifts by speed x 2 pi / waveLength every tick), and in the
-        // world they stand still while the particle flies through them. The swing is zero at the head (so the trail joins it), grows over the
-        // first fifth of the trail and fades to zero again at the tail; the brightness fades toward the tail too.
-        // withWave = false draws the straight line only (the cheap form used past the draw budget).
-        int DrawTrail(SpriteBatch sb, Texture2D pixel, in Particle p, float head, float trailLength, Color color, float cell, float amplitudePx, float waveLengthTiles, bool withWave)
+        // The wave: a point `along` tiles from the start of the ray is pushed sideways by WaveOffsetPx. C9d: the swing is the same along the whole
+        // trail (only the brightness fades toward the tail), and the caller has already clamped it to half the head's width.
+        int DrawTrail(SpriteBatch sb, Texture2D pixel, in Particle p, float head, float trailLength, Color color, float cell, float amplitudePx, float radiansPerTile)
         {
-            bool wave = withWave && amplitudePx > 0.01f;
             float lengthPx = trailLength * 16f;
 
-            // The wave is sampled twice per cell so that the snapped line has no gaps; the straight line once per two cells.
-            float step = wave ? cell * 0.5f : cell * 2f;
+            // Sampled twice per cell so that the snapped line has no gaps.
+            float step = cell * 0.5f;
             int samples = Math.Max(2, (int)Math.Ceiling(lengthPx / step));
 
             float perpX = -p.DirY;
             float perpY = p.DirX;
-            float radiansPerTile = MathHelper.TwoPi / waveLengthTiles;
             Vector2 screen = Main.screenPosition;
             Vector2 cellSize = new Vector2(cell, cell);
             Rectangle source = new Rectangle(0, 0, 1, 1);
@@ -655,13 +722,7 @@ namespace Factorraria.Common.Cosmic
                 float u = k / (float)samples;                 // 0 at the head, 1 at the end of the tail
                 float along = head - u * trailLength;         // tiles from the start of the ray (world-fixed)
 
-                float offset = 0f;
-                if (wave)
-                {
-                    float ramp = Math.Min(1f, u / 0.2f);
-                    ramp = ramp * ramp * (3f - 2f * ramp);
-                    offset = amplitudePx * ramp * (1f - u) * MathF.Sin(along * radiansPerTile);
-                }
+                float offset = WaveOffsetPx(along, amplitudePx, radiansPerTile, p.Phase);
 
                 float worldX = (p.X + p.DirX * along) * 16f + perpX * offset;
                 float worldY = (p.Y + p.DirY * along) * 16f + perpY * offset;

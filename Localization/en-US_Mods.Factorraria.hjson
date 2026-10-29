@@ -242,11 +242,11 @@ Items: {
 
 	SunCapsuleItem: {
 		DisplayName: Sun Capsule
-		Tooltip: 
-		'''
-		Stores surplus energy from power networks
-		Discharges when the network is underpowered
-		'''
+		Tooltip:
+			'''
+			Stores surplus energy from power networks
+			Discharges when the network is underpowered
+			'''
 	}
 }
 
@@ -557,7 +557,7 @@ Configs: {
 
 		Headers: {
 			Particles: Particles: pool, budget, size, brightness
-			Trail: Particle trail (sine wave) and halo
+			Trail: Particle trail (sine wave)
 			Lightning: Lightning and ionized clouds
 			Ambient: Ambient sky around you
 			Sound: Thunder sound
@@ -570,12 +570,27 @@ Configs: {
 
 		ClientDrawBudget: {
 			Label: Client Draw Budget
-			Tooltip: Pixel quads (trail cells, halos and heads) the client draws per frame before it simplifies: past this a trail loses its sine wave and is drawn as a plain pixel line with no halos, past twice this only the heads are drawn. Real particles are drawn before the ambient ones, so the ambient ones simplify first. /fcosmic fx shows the quads drawn (client only, C8, C9b). Unit: quads. Default: 6000.
+			Tooltip: Pixel quads (trail cells and heads) the client draws per frame before it simplifies: past this a trail loses its sine wave and is drawn as one plain line, past twice this only the heads are drawn. Real particles are drawn before the ambient ones, so the ambient ones simplify first. /fcosmic fx shows the quads drawn (client only, C8, C9b, C9c, C9d). Unit: quads. Default: 6000.
 		}
 
-		ClientParticleSizePx: {
-			Label: Client Particle Size Px
-			Tooltip: Diameter of a particle's head on screen. The optional Content/Particles/CosmicParticle.png is scaled to it. Unit: pixels. Default: 4.
+		ClientHeadSizeMinPx: {
+			Label: Client Head Size Min Px
+			Tooltip: Diameter of the head of the lowest frequency particle (Grey) on screen. The head size grows with the frequency up to ClientHeadSizeMaxPx for White, the colors in between are interpolated by their order (client only, C9c). Unit: pixels. Default: 3.
+		}
+
+		ClientHeadSizeMaxPx: {
+			Label: Client Head Size Max Px
+			Tooltip: Diameter of the head of the highest frequency particle (White) on screen. The head is a hard-edged, fully opaque disc (or the optional Content/Particles/CosmicParticle.png scaled to it). Grey uses ClientHeadSizeMinPx, the colors in between are interpolated by their order (client only, C9c). Unit: pixels. Default: 5.
+		}
+
+		ClientHeadGrowTicks: {
+			Label: Client Head Grow Ticks
+			Tooltip: How long a new particle takes to grow from size zero to full size (its head and the swing of its trail). 0 = it appears at full size at once (client only, C9c). Unit: ticks. Default: 10.
+		}
+
+		ClientFadeOutStart: {
+			Label: Client Fade Out Start
+			Tooltip: When a particle starts to fade out, as a fraction of its head's flight time (ray length / speed). 0.8 = it fades smoothly over the last fifth of the flight and is invisible when the head arrives. 1 = no fade, it just vanishes on arrival (client only, C9d). Unit: fraction. Default: 0.8.
 		}
 
 		ClientBrightness: {
@@ -595,32 +610,12 @@ Configs: {
 
 		ClientWaveAmplitudePx: {
 			Label: Client Wave Amplitude Px
-			Tooltip: How far the trail's sine wave swings to each side at its widest. 0 = a straight trail (client only, C9b). Unit: pixels. Default: 4.
+			Tooltip: How far the trail's sine wave swings to each side, for the White particle (the highest frequency). Lower frequencies swing less, in even steps down to Grey, whose trail is a plain straight line. The swing is the same along the whole trail and never exceeds half the particle's head width, so the trail does not stick out past the head. 0 = straight trails for every color (client only, C9b, C9d). Unit: pixels. Default: 4.
 		}
 
 		ClientWaveLengthTiles: {
 			Label: Client Wave Length Tiles
 			Tooltip: Distance between two peaks of the trail's sine wave. The wave stands still in the world while the particle flies through it, so the peaks seem to slide back along the trail at exactly the particle's speed (client only, C9b). Unit: tiles. Default: 1.25.
-		}
-
-		ClientHaloPeriodTicks: {
-			Label: Client Halo Period Ticks
-			Tooltip: A new pulse of the halo around a particle's head starts this often (client only, C9b). Unit: ticks. Default: 14.
-		}
-
-		ClientHaloLifeTicks: {
-			Label: Client Halo Life Ticks
-			Tooltip: How long one halo pulse takes to expand and fade out (client only, C9b). Unit: ticks. Default: 28.
-		}
-
-		ClientHaloScale: {
-			Label: Client Halo Scale
-			Tooltip: How wide a halo pulse is when it has fully expanded, as a multiple of the particle head's size (client only, C9b). Unit: x. Default: 3.5.
-		}
-
-		ClientHaloBrightness: {
-			Label: Client Halo Brightness
-			Tooltip: Brightness of a halo pulse at its start, relative to the particle (client only, C9b). 0 = no halo. Unit: x. Default: 0.45.
 		}
 
 		BoltLifeTicks: {

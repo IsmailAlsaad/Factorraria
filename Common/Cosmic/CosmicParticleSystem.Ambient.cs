@@ -268,6 +268,7 @@ namespace Factorraria.Common.Cosmic
             p.Length = length;
             p.Speed = speed;
             p.Life = life;
+            p.Phase = (float)ambientRng.NextDouble() * MathHelper.TwoPi;   // C9c: random wave phase
             AmbientSpawned++;
         }
 
@@ -432,16 +433,17 @@ namespace Factorraria.Common.Cosmic
             return flashDisc;
         }
 
-        // C9b: the soft round glow behind a particle's head: brightest in the middle and fading smoothly to nothing at the edge (a radial
-        // falloff, unlike FlashDisc which is solid with only a soft rim). Made once on the main thread, premultiplied.
-        Texture2D haloDisc;
+        // C9c: the hard-edged round disc of a particle head (the opaque head, drawn with AlphaBlend by DrawHeads). Solid inside, with an edge one texel
+        // wide so it does not look jagged. Small on purpose (16 x 16): the heads are only a few pixels wide, and a big texture drawn that small would
+        // shimmer, because the sampler has no mipmaps. Made once on the main thread, premultiplied.
+        Texture2D headDisc;
 
-        Texture2D HaloDisc()
+        Texture2D HeadDisc()
         {
-            if (haloDisc != null && !haloDisc.IsDisposed)
-                return haloDisc;
+            if (headDisc != null && !headDisc.IsDisposed)
+                return headDisc;
 
-            int size = 64;
+            int size = 16;
             Color[] data = new Color[size * size];
             float radius = size / 2f;
 
@@ -451,29 +453,56 @@ namespace Factorraria.Common.Cosmic
                 {
                     float dx = x + 0.5f - radius;
                     float dy = y + 0.5f - radius;
-                    float d = Math.Min(1f, MathF.Sqrt(dx * dx + dy * dy) / radius);
-                    float a = (1f - d) * (1f - d);
+                    float a = Math.Clamp(radius - MathF.Sqrt(dx * dx + dy * dy), 0f, 1f);
                     data[y * size + x] = new Color(a, a, a, a);
                 }
             }
 
-            haloDisc = new Texture2D(Main.instance.GraphicsDevice, size, size);
-            haloDisc.SetData(data);
-            return haloDisc;
+            headDisc = new Texture2D(Main.instance.GraphicsDevice, size, size);
+            headDisc.SetData(data);
+            return headDisc;
+        }
+
+        // C9d: the 1-D gradient of a straight trail: 64 x 1, bright at the left end (the head) and fading as (1 - u)^2 toward the right (the tail),
+        // premultiplied, made once on the main thread. DrawStraightTrail stretches it over the whole trail in ONE quad.
+        Texture2D trailGradient;
+
+        Texture2D TrailGradient()
+        {
+            if (trailGradient != null && !trailGradient.IsDisposed)
+                return trailGradient;
+
+            int width = 64;
+            Color[] data = new Color[width];
+            for (int x = 0; x < width; x++)
+            {
+                float u = (x + 0.5f) / width;
+                float a = (1f - u) * (1f - u);
+                data[x] = new Color(a, a, a, a);
+            }
+
+            trailGradient = new Texture2D(Main.instance.GraphicsDevice, width, 1);
+            trailGradient.SetData(data);
+            return trailGradient;
         }
 
         public override void Unload()
         {
             Texture2D disc = flashDisc;
-            Texture2D halo = haloDisc;
+            Texture2D head = headDisc;
+            Texture2D gradient = trailGradient;
             flashDisc = null;
-            haloDisc = null;
+            headDisc = null;
+            trailGradient = null;
 
             if (disc != null)
                 Main.QueueMainThreadAction(() => disc.Dispose());
 
-            if (halo != null)
-                Main.QueueMainThreadAction(() => halo.Dispose());
+            if (head != null)
+                Main.QueueMainThreadAction(() => head.Dispose());
+
+            if (gradient != null)
+                Main.QueueMainThreadAction(() => gradient.Dispose());
         }
 
         // ------------------------------------------------------------ EnableDebugs overlay
