@@ -63,6 +63,7 @@ namespace Factorraria.Common.Net
         PoleLinkChanged = 54,         // server -> client: "these poles now have exactly these links" (complete slot list per pole) plus a result for the sender: made (take this wire) or refused and why (power poles patch P3)
         CosmicRays = 55,              // server -> nearby clients: "these cosmic particles fly now": color, start, direction, length, how the path ends (cosmetic only; cosmic radiation patch C6)
         CosmicEvent = 56,             // server -> nearby clients: "these cosmic events happened": absorb, ionize, discharge, strike, spit (cosmetic only; cosmic radiation patch C6)
+        SuperWeaponEffect = 57,       // server -> all clients: "this super weapon effect happened at (x, y)": kind byte first, then the position; cosmetic only (super weapons patch S1.2, kind 0 = Wall of Flesh shield break)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

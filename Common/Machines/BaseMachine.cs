@@ -201,6 +201,9 @@ namespace Factorraria.Common.Machines
         protected virtual int InputLiquidCount => 0;
         protected virtual int OutputLiquidCount => 0;
 
+        /// <summary>Capacity of input tank tankIndex (liquid-fuel tanks come first), in liquid units. Default 1000, the LiquidStack default.</summary>
+        protected virtual float InputTankCapacity(int tankIndex) => 1000f;
+
         LiquidStack[] inputLiquids;
         LiquidStack[] outputLiquids;
         public LiquidStack[] InputLiquids => inputLiquids ??= CreateInputLiquids();
@@ -257,6 +260,7 @@ namespace Factorraria.Common.Machines
             LiquidStack[] arr = CreateLiquidArray(fuelTanks + InputLiquidCount);
             for (int i = 0; i < arr.Length; i++)
             {
+                arr[i].Capacity = InputTankCapacity(i);
                 int tank = i;   // capture a copy per tank
                 if (tank < fuelTanks)
                 {

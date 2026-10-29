@@ -21,6 +21,7 @@ using Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssembler
 using Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles;
+using Factorraria.Content.Tiles.SuperWeapons.MissileTank;
 
 namespace Factorraria.Common.Machines
 {
@@ -181,6 +182,13 @@ namespace Factorraria.Common.Machines
                 basePath + "ElectricalConsumers/PowerPoles/PlatinumPowerPole",
                 footprintWidth: 1, footprintHeight: 16,
                 originX: 0, originY: 0);
+
+            // Missile tank (super weapons S2.2): ONE static sheet (no On/Off look), so the same path goes in both slots. The real MissileTank.png is
+            // used once it exists, else a vanilla placeholder sheet.
+            MachineUIRegistry.Register(ModContent.TileType<MissileTankTile>(), new MissileTankUIState());
+            MachineVisualRegistry.Register<MissileTankTileEntity>(ModContent.TileType<MissileTankTile>(),
+                MissileTankTile.SheetPath(),
+                MissileTankTile.SheetPath());
         }
 
         public override void PostAddRecipes()
@@ -196,6 +204,7 @@ namespace Factorraria.Common.Machines
             ExtractinatorRecipeRegistry.BuildRecipes();
             MechanicalAssemblerRecipeRegistry.BuildRecipes();
             MagicMaterializerRegistry.BuildRecipes();
+            MissileTankRegistry.Build();
 
 
             // Recipe discovery: lets scrolls roll a recipe and resolve a saved key back to (machine, group).

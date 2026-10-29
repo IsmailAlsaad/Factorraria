@@ -71,6 +71,21 @@ Items: {
 		Tooltip: ""
 	}
 
+	MissileDrillItem: {
+		DisplayName: Missile Drill
+		Tooltip: Placed facing the way you face
+	}
+
+	MissileTankItem: {
+		DisplayName: Missile Fuel Tank
+		Tooltip: Holds 5000 units of Fuel
+	}
+
+	MissileThrusterItem: {
+		DisplayName: Missile Thruster
+		Tooltip: Placed facing the way you face. A missile needs three
+	}
+
 	MotorMK1Item: {
 		DisplayName: Lead Motor
 		Tooltip: Right click to rotate the tile
@@ -935,6 +950,9 @@ Tiles: {
 	WoodenPowerPoleTile.MapEntry: Wooden Power Pole
 	PlatinumPowerPoleTile.MapEntry: Platinum Power Pole
 	MeteorHeadStatueTile.MapEntry: Meteor Head Statue
+	MissileDrillTile.MapEntry: Missile Drill
+	MissileTankTile.MapEntry: Missile Fuel Tank
+	MissileThrusterTile.MapEntry: Missile Thruster
 	BeeWheelTile.MapEntry: Bee Wheel Tile
 	SunCapsuleTile.MapEntry: Sun Capsule Tile
 }
