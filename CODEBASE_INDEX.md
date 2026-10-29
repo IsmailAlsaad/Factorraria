@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-29 | 346 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-29 | 348 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(66) BaseMachine(47) FactorrariaPacket(35) LiquidTypeRegistry(32) PacketDirection(30) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(15) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(12)
+FactorrariaNet(67) BaseMachine(48) FactorrariaPacket(35) LiquidTypeRegistry(32) PacketDirection(30) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(15) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -30,9 +30,9 @@ Project bases -> derived:
 - PowerPoleTileBase: PlatinumPowerPoleTile, WoodenPowerPoleTile
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 tModLoader/other bases -> project types:
-- ModSystem (90): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, SuperWeaponNetSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldDrawSystem, WorldLiquidSources
+- ModSystem (91): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, SuperWeaponDebugSystem, SuperWeaponNetSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldDrawSystem, WorldLiquidSources
 - ModItem (41): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
-- byte (27): CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, SuperWeaponEffectKind
+- byte (30): AssemblyIssue, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (16): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, VItemTestCommand, WallShieldCommand, WireCountCommand
 - ModTile (16): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
@@ -947,6 +947,22 @@ tModLoader/other bases -> project types:
     +TileType:int +FootprintTilesX:int +FootprintTilesY:int +ArtWidthPx:int +ArtHeightPx:int +ArtOffsetXPx:int +ArtOffsetYPx:int +Texture:Asset<Texture2D>
   class OverhangDrawSystem : ModSystem
     +ScanPaddingTiles:int +FallbackColor:Color +FallbackOverhangColor:Color +FallbackAlpha:float +Load()[ov] +Unload()[ov] +Register(int,string,int,int,int,int,int,int) +GetFacing(Tile,int)[s] +PostDrawTiles()[ov]
+**SuperWeaponAssembly.cs**
+  enum SuperWeaponState : byte
+    {Incomplete, Assembled, Primed, Igniting, Launched}
+  enum SuperWeaponPartKind : byte
+    {None, Drill, Thruster}
+  enum AssemblyIssue : byte
+    {None, NoDrill, DrillRowOff, DrillsOnBothEnds, DrillWrongFacing, ThrusterMissing, ThrusterRowOff, ThrusterWrongFacing}
+  struct PartCell
+    +Kind:SuperWeaponPartKind +Facing:int +IsOrigin:bool
+  struct AssemblyResult
+    +Assembled:bool +Facing:int +Issue:AssemblyIssue +IssueRow:int +IssueX:int +IssueY:int
+  static class SuperWeaponAssembly
+    +TankWidth:int[c] +TankHeight:int[c] +DrillWidth:int[c] +DrillHeight:int[c] +Evaluate(int,int,Func<int, int, PartCell>)[s] +Describe(bool,int,AssemblyIssue,int)[s]
+**SuperWeaponDebugSystem.cs** uses: AssemblyIssue, BaseMachine, FurnaceOffsetConfig, MissileTankTileEntity, SuperWeaponAssembly
+  class SuperWeaponDebugSystem : ModSystem
+    +PostDrawTiles()[ov]
 **WallShieldCommand.cs** uses: Change, FurnaceOffsetConfig, WallShieldDrawSystem, WallShieldGlobalNPC
   class WallShieldCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
@@ -1674,9 +1690,9 @@ tModLoader/other bases -> project types:
 **MissileTankTile.cs** uses: MissileTankItem, MissileTankTileEntity
   class MissileTankTile : ModTile
     +ArtPath:string[c] +SheetPath()[s] +Texture:string[ov]
-**MissileTankTileEntity.cs** uses: BaseMachine, LiquidFuelTable, MissileTankRegistry, MissileTankTile
+**MissileTankTileEntity.cs** uses: AssemblyIssue, AssemblyResult, BaseMachine, FactorrariaNet, LiquidFuelTable, MissileDrillTile, MissileTankRegistry, MissileTankTile, MissileThrusterTile, OverhangDrawSystem, PartCell, SuperWeaponAssembly, SuperWeaponPartKind, SuperWeaponState
   class MissileTankTileEntity : BaseMachine
-    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +FuelCapacity:float #InputTankCapacity(int)[ov]
+    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +FuelCapacity:float #InputTankCapacity(int)[ov] +AssemblyCheckTicks:int +WeaponState:SuperWeaponState +WeaponFacing:int +WeaponIssue:AssemblyIssue +WeaponIssueRow:int +WeaponIssueDx:int +WeaponIssueDy:int +IsAssembled:bool +AssemblyText:string +Update()[ov] +RefreshAssembly() #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov]
 **MissileTankUIState.cs** uses: MachineUIElementEntry, MachineUIStateBase
   class MissileTankUIState : MachineUIStateBase
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]
@@ -1706,3 +1722,4 @@ tModLoader/other bases -> project types:
 - tools/: patch_engine.ps1
 - tools/cosmic_tests/: Program.cs.txt, Program_C2.cs.txt, README.txt
 - tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt
+- tools/sw_tests/: Program.cs.txt, README.txt
