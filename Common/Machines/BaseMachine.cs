@@ -1431,6 +1431,11 @@ namespace Factorraria.Common.Machines
         public float PowerNetSupply;
         public bool PowerNetLinked;
 
+        // Battery part of the same readout (Sun Capsule): what the grid's batteries are charging with right now, and the most they could
+        // discharge. They travel right after demand and supply (two more 7-bit ints) in the light state and the detail channel.
+        public float PowerNetCharge;
+        public float PowerNetDischarge;
+
         // Cosmic radiation (patch C5): a lightning strike puts a power surge on the struck machine. PowerNetwork.Tick adds SurgePower to
         // its grid's supply while SurgeTicksLeft counts down. Server and single-player only, never saved and never sent (clients only see
         // the resulting isOn and the supply readout), so a world reload always starts without a surge. Stacking rules: CosmicStrikeMath.Stack.
@@ -1446,6 +1451,8 @@ namespace Factorraria.Common.Machines
         {
             w.Write7BitEncodedInt(ReadoutInt(PowerNetDemand));
             w.Write7BitEncodedInt(ReadoutInt(PowerNetSupply));
+            w.Write7BitEncodedInt(ReadoutInt(PowerNetCharge));
+            w.Write7BitEncodedInt(ReadoutInt(PowerNetDischarge));
         }
 
         // A lightning surge can be astronomically large (cosmic radiation C5), so the readout saturates instead of overflowing the int.
@@ -1462,6 +1469,8 @@ namespace Factorraria.Common.Machines
             PowerNetLinked = (flags & 8) != 0;
             PowerNetDemand = r.Read7BitEncodedInt();
             PowerNetSupply = r.Read7BitEncodedInt();
+            PowerNetCharge = r.Read7BitEncodedInt();
+            PowerNetDischarge = r.Read7BitEncodedInt();
         }
 
         float GetSnapshotUseFraction() => this is IElectricConsumer consumer ? consumer.useFraction : this is IElectricProducer producer ? producer.useFraction : 0f;

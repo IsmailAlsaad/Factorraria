@@ -53,6 +53,23 @@ namespace Factorraria.Common.PowerGrid
             float storageCharged = 0f;
             float storageDischarged = 0f;
 
+            // What the grid itself makes and asks for, before any battery. The hover readout shows these as "demand/supply".
+            float baseDemand = totalDemand;
+            float baseSupply = totalSupply;
+
+            // The most the working batteries could give right now. A battery only discharges when the whole group can cover the whole
+            // shortfall: a rescue that cannot finish would drain them without ever switching the grid on (a brownout freezes machines).
+            // So a group that is too small waits and keeps its charge, and once one battery runs dry and the group falls below the load,
+            // every battery stops again. Stateless on purpose: it is simply redone every tick.
+            float dischargeCapacity = 0f;
+            foreach (var producer in electricProducers)
+            {
+                if (producer is IElectricStorage capacityStorage && capacityStorage.isWorking)
+                    dischargeCapacity += capacityStorage.AvailableDischarge();
+            }
+
+            bool batteriesCanLift = shortfall > storageEpsilon && dischargeCapacity + storageEpsilon >= shortfall;
+
             foreach (var producer in electricProducers)
             {
                 if (producer is not IElectricStorage storage)
@@ -61,7 +78,7 @@ namespace Factorraria.Common.PowerGrid
                 float flow = 0f;
                 if (storage.isWorking)
                 {
-                    if (shortfall > storageEpsilon)
+                    if (batteriesCanLift)
                     {
                         flow = -Math.Min(storage.AvailableDischarge(), shortfall);
                         shortfall += flow;
@@ -99,14 +116,14 @@ namespace Factorraria.Common.PowerGrid
             {
                 producer.isOn = isGridStable;
                 producer.useFraction = UseFraction;
-                PublishReadout(producer, totalDemand, totalSupply, linked);
+                PublishReadout(producer, baseDemand, baseSupply, storageCharged, dischargeCapacity, linked);
             }
 
             foreach (var consumer in electricConsumers)
             {
                 consumer.isOn = isGridStable;
                 consumer.useFraction = isGridStable ? 1f : 0f;
-                PublishReadout(consumer, totalDemand, totalSupply, linked);
+                PublishReadout(consumer, baseDemand, baseSupply, storageCharged, dischargeCapacity, linked);
             }
         }
 
@@ -119,12 +136,16 @@ namespace Factorraria.Common.PowerGrid
             return CosmicStrikeMath.Tick(ref machine.SurgePower, ref machine.SurgeTicksLeft);
         }
 
-        static void PublishReadout(object member, float demand, float supply, bool linked)
+        // demand / supply are the grid's own numbers (no battery in them). charge = what the batteries take right now (only while some
+        // battery really charges), dischargeCapacity = the most the working batteries could give (0 when there is none).
+        static void PublishReadout(object member, float demand, float supply, float charge, float dischargeCapacity, bool linked)
         {
             if (member is BaseMachine machine)
             {
                 machine.PowerNetDemand = demand;
                 machine.PowerNetSupply = supply;
+                machine.PowerNetCharge = charge;
+                machine.PowerNetDischarge = dischargeCapacity;
                 machine.PowerNetLinked = linked;
             }
         }

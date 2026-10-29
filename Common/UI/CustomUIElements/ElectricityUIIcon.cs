@@ -29,6 +29,11 @@ namespace Factorraria.Common.UI.CustomUIElements
 
         BaseMachine Machine; // optional: when set, hovering the icon shows the power readout next to the cursor
 
+        // Optional, set with an object initializer. The Sun Capsule uses all three: its icon shows its own charge instead of the grid.
+        public Func<(string text, Color color)> HoverOverride; // replaces the whole power readout while hovering
+        public Func<bool> PulseWhen;                           // replaces the "fill above 0" rule for the background pulses
+        public bool EmptyAtZero;                               // a fill of 0 draws no bolt (the normal icon never drops below its 12% floor)
+
         public ElectricityUIIcon(Func<float> getAmount, Func<bool> isVisible = null, Func<bool> isDisabled = null, BaseMachine machine = null)
         {
             FillAmount = getAmount;
@@ -77,7 +82,8 @@ namespace Factorraria.Common.UI.CustomUIElements
             float drawPercent = FillAmount();
 
             Timer++;
-            if (drawPercent > 0f)
+            bool pulsing = PulseWhen != null ? PulseWhen() : drawPercent > 0f;
+            if (pulsing)
             {
                 PulseCount = (int)BackgroundLifespan / BackgroundSpawnInterval;
 
@@ -96,7 +102,8 @@ namespace Factorraria.Common.UI.CustomUIElements
                 }
             }
 
-            drawPercent = drawPercent == -1 ? 0f : Remap(drawPercent, 0f, 1f, 0.12f, 0.95f);
+            drawPercent = drawPercent == -1 || (EmptyAtZero && drawPercent <= 0f) ? 0f : Remap(Math.Clamp(drawPercent, 0f, 1f), 0f, 1f, 0.12f, 0.95f);
+            if (drawPercent <= 0f) return;   // nothing to fill (the fill is the last thing drawn)
 
             int drawWidth = ElectricityFullIcon.Width();
             int drawHeight = (int)(ElectricityFullIcon.Height() * drawPercent);
@@ -118,6 +125,13 @@ namespace Factorraria.Common.UI.CustomUIElements
 
             Main.LocalPlayer.mouseInterface = true;
 
+            if (HoverOverride != null)
+            {
+                var (overrideText, overrideColor) = HoverOverride();
+                ElectricityHoverTip.Show(overrideText, overrideColor);
+                return;
+            }
+
             if (Machine.WireToggle)
             {
                 ElectricityHoverTip.Show("Off", new Color(240, 70, 70));
@@ -134,16 +148,50 @@ namespace Factorraria.Common.UI.CustomUIElements
 
             float demand = Machine.PowerNetDemand;
             float supply = Machine.PowerNetSupply;
+            float charge = Machine.PowerNetCharge;                 // what the batteries are charging with right now (0 = none charging)
+            float dischargeCapacity = Machine.PowerNetDischarge;   // the most the working batteries could give (0 = none)
 
-            if (demand > supply || (!producer && supply <= 0f) || (demand == 0 && supply == 0))
+            Color red = new Color(240, 70, 70);
+            Color orange = new Color(255, 150, 40);
+            Color blue = new Color(90, 170, 255);
+            Color separator = new Color(190, 190, 190);
+
+            // demand and supply are the grid's own numbers. While the batteries are lifting the grid it is switched on although demand is
+            // above the plain supply: that is not "No power".
+            bool liftedByBatteries = Machine.isOn && demand > supply;
+
+            if (!liftedByBatteries && (demand > supply || (!producer && supply <= 0f) || (demand == 0 && supply == 0)))
             {
-                ElectricityHoverTip.Show("No power", new Color(240, 70, 70));
+                // Batteries that are waiting for enough company still show what they could give.
+                if (dischargeCapacity > 0f)
+                    ElectricityHoverTip.Show(("No power", red), (" + ", separator), (PowerText(dischargeCapacity), blue));
+                else
+                    ElectricityHoverTip.Show("No power", red);
                 return;
             }
 
-            float ratio = supply > 0f ? demand / supply : 0f;
-            Color color = ratio < 0.4f ? new Color(80, 220, 80) : ratio < 0.8f ? new Color(255, 220, 60) : new Color(240, 70, 70);
-            ElectricityHoverTip.Show(PowerText(demand) + "/" + PowerText(supply), color);
+            float effectiveSupply = liftedByBatteries ? demand : supply;
+            float ratio = effectiveSupply > 0f ? demand / effectiveSupply : 0f;
+            Color color = ratio < 0.4f ? new Color(80, 220, 80) : ratio < 0.8f ? new Color(255, 220, 60) : red;
+
+            // "{charge} + {demand}/{supply} + {discharge capacity}": the charge only while a battery really charges (orange),
+            // the capacity only when it is above 0 (blue); with neither it is just "demand/supply".
+            var segments = new List<(string text, Color color)>();
+            if (charge > 0f)
+            {
+                segments.Add((PowerText(charge), orange));
+                segments.Add((" + ", separator));
+            }
+
+            segments.Add((PowerText(demand) + "/" + PowerText(supply), color));
+
+            if (dischargeCapacity > 0f)
+            {
+                segments.Add((" + ", separator));
+                segments.Add((PowerText(dischargeCapacity), blue));
+            }
+
+            ElectricityHoverTip.Show(segments.ToArray());
         }
 
         // Plain whole numbers. A lightning surge is logarithmic now (cosmic patch C6b), so the supply never gets astronomical and no

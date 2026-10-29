@@ -12,13 +12,17 @@ namespace Factorraria.Common.UI.CustomUIElements
     // here with Show() while it is drawn, and this layer (inserted right before "Vanilla: Mouse Text", so nothing covers it) draws it.
     public class ElectricityHoverTip : ModSystem
     {
-        static string pendingText;
-        static Color pendingColor;
+        static (string text, Color color)[] pendingSegments;
 
         public static void Show(string text, Color color)
         {
-            pendingText = text;
-            pendingColor = color;
+            pendingSegments = new[] { (text, color) };
+        }
+
+        // Several pieces drawn one after the other on the same line, each in its own colour (the battery readout: orange, grey "+", blue).
+        public static void Show(params (string text, Color color)[] segments)
+        {
+            pendingSegments = segments;
         }
 
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
@@ -35,26 +39,37 @@ namespace Factorraria.Common.UI.CustomUIElements
 
         static void DrawPending()
         {
-            if (pendingText == null) return;
+            if (pendingSegments == null) return;
 
-            string text = pendingText;
-            Color color = pendingColor;
-            pendingText = null;
+            var segments = pendingSegments;
+            pendingSegments = null;
 
             DynamicSpriteFont font = FontAssets.MouseText.Value;
-            Vector2 size = font.MeasureString(text);
+
+            float width = 0f;
+            float height = 0f;
+            foreach (var segment in segments)
+            {
+                Vector2 segmentSize = font.MeasureString(segment.text);
+                width += segmentSize.X;
+                if (segmentSize.Y > height) height = segmentSize.Y;
+            }
 
             float x = Main.mouseX + 16f;
             float y = Main.mouseY + 16f;
-            if (x + size.X > Main.screenWidth - 4) x = Main.screenWidth - size.X - 4f;
-            if (y + size.Y > Main.screenHeight - 4) y = Main.screenHeight - size.Y - 4f;
+            if (x + width > Main.screenWidth - 4) x = Main.screenWidth - width - 4f;
+            if (y + height > Main.screenHeight - 4) y = Main.screenHeight - height - 4f;
 
-            Utils.DrawBorderStringFourWay(Main.spriteBatch, font, text, x, y, color, Color.Black, Vector2.Zero);
+            foreach (var segment in segments)
+            {
+                Utils.DrawBorderStringFourWay(Main.spriteBatch, font, segment.text, x, y, segment.color, Color.Black, Vector2.Zero);
+                x += font.MeasureString(segment.text).X;
+            }
         }
 
         public override void Unload()
         {
-            pendingText = null;
+            pendingSegments = null;
         }
     }
 }

@@ -146,6 +146,7 @@ namespace Factorraria.Common.Machines
             MachineVisualRegistry.RegisterOnStates(ModContent.TileType<SunCapsuleTile>(),
                 basePath + "ElectricalProducers/SunCapsule/SunCapsule_On_Charging",
                 basePath + "ElectricalProducers/SunCapsule/SunCapsule_On_Discharging");
+            MachineUIRegistry.Register(ModContent.TileType<SunCapsuleTile>(), new SunCapsuleUIState());
 
             MachineUIRegistry.Register(ModContent.TileType<RoboticArmTile>(), new RoboticArmUIState());
             MachineVisualRegistry.Register<RoboticArmTileEntity>(ModContent.TileType<RoboticArmTile>(),
