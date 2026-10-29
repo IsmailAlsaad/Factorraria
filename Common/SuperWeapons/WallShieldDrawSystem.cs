@@ -168,7 +168,9 @@ namespace Factorraria.Common.SuperWeapons
             }
         }
 
-        // The strip from the mouth to the edge of the screen, between the wall's top and bottom.
+        // Replacement for the vanilla wall body, drawn the way Main.DrawWoF draws it: ONE column as wide as the texture at the wall's X
+        // (80 px further left when the wall faces right), rows of 140 px anchored to the top of the wall, the animation frame picked by
+        // wofDrawFrameIndex (the sheet is 3 frames of 140 px stacked), flipped with spriteDirection, lit per 16 px slice.
         void DrawBody(SpriteBatch spriteBatch, NPC mouthNpc)
         {
             TryGetBodySpan(mouthNpc.Center, out float top, out float bottom);
@@ -176,61 +178,42 @@ namespace Factorraria.Common.SuperWeapons
             float zoom = Main.GameViewMatrix.Zoom.X;
             if (zoom < 0.01f)
                 zoom = 1f;
-            float halfWidth = Main.screenWidth / zoom * 0.5f + 64f;
-            float halfHeight = Main.screenHeight / zoom * 0.5f + 64f;
-            float centerX = Main.screenPosition.X + Main.screenWidth * 0.5f;
-            float centerY = Main.screenPosition.Y + Main.screenHeight * 0.5f;
-
-            int side = FlipBody ? mouthNpc.direction : -mouthNpc.direction;
-            if (side == 0)
-                side = -1;
-
-            float edge = mouthNpc.Center.X + side * BodyStartOffsetPx;
-            float left;
-            float right;
-            if (side < 0)
-            {
-                left = centerX - halfWidth;
-                right = Math.Min(edge, centerX + halfWidth);
-            }
-            else
-            {
-                left = Math.Max(edge, centerX - halfWidth);
-                right = centerX + halfWidth;
-            }
-
-            top = Math.Max(top, centerY - halfHeight);
-            bottom = Math.Min(bottom, centerY + halfHeight);
-            if (right <= left || bottom <= top)
-                return;
+            float visibleTop = Main.screenPosition.Y + Main.screenHeight * 0.5f - Main.screenHeight / zoom * 0.5f - 32f;
+            float visibleBottom = Main.screenPosition.Y + Main.screenHeight * 0.5f + Main.screenHeight / zoom * 0.5f + 32f;
 
             Texture2D tile = body != null ? body.Value : null;
+            int width = tile != null ? tile.Width : 190;
+            float x = mouthNpc.position.X;
+            if (mouthNpc.direction > 0)
+                x -= 80f;
+
             if (tile == null)
             {
-                DrawBlock(spriteBatch, (int)left, (int)top, (int)right, (int)bottom);
+                DrawBlock(spriteBatch, (int)x, (int)Math.Max(top, visibleTop), (int)x + width, (int)Math.Min(bottom, visibleBottom));
                 return;
             }
 
-            // tiled, anchored to world coordinates so the pattern does not slide while the wall moves
-            int tileWidth = tile.Width;
-            int tileHeight = tile.Height;
-            int l = (int)left;
-            int t = (int)top;
-            int r = (int)right;
-            int b = (int)bottom;
-            for (int y = (int)Math.Floor(t / (double)tileHeight) * tileHeight; y < b; y += tileHeight)
+            int rowHeight = 140;
+            int frameValue = Main.wofDrawFrameIndex;
+            int frameY = ((frameValue >= rowHeight ? frameValue / rowHeight : frameValue) % 3) * rowHeight;  // accepts a frame index (0 to 2) or a pixel offset (0 / 140 / 280)
+            if (frameY + rowHeight > tile.Height)
+                frameY = 0;
+
+            SpriteEffects effects = mouthNpc.spriteDirection == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            int lightX = (int)((x + width * 0.5f) / 16f);
+            float firstRow = top + (float)Math.Floor((Math.Max(top, visibleTop) - top) / rowHeight) * rowHeight;
+            for (float rowY = firstRow; rowY < Math.Min(bottom, visibleBottom); rowY += rowHeight)
             {
-                for (int x = (int)Math.Floor(l / (double)tileWidth) * tileWidth; x < r; x += tileWidth)
+                for (int dy = 0; dy < rowHeight; dy += 16)
                 {
-                    int destLeft = Math.Max(x, l);
-                    int destTop = Math.Max(y, t);
-                    int destRight = Math.Min(x + tileWidth, r);
-                    int destBottom = Math.Min(y + tileHeight, b);
-                    if (destRight <= destLeft || destBottom <= destTop)
+                    float drawY = rowY + dy;
+                    if (drawY >= bottom || drawY >= visibleBottom)
+                        break;
+                    if (drawY + 16f < visibleTop)
                         continue;
 
-                    Rectangle source = new Rectangle(destLeft - x, destTop - y, destRight - destLeft, destBottom - destTop);
-                    spriteBatch.Draw(tile, new Vector2(destLeft, destTop) - Main.screenPosition, source, Color.White);
+                    Color light = Lighting.GetColor(lightX, (int)(drawY / 16f));
+                    spriteBatch.Draw(tile, new Vector2(x, drawY) - Main.screenPosition, new Rectangle(0, frameY + dy, width, 16), light, 0f, Vector2.Zero, 1f, effects, 0f);
                 }
             }
         }
