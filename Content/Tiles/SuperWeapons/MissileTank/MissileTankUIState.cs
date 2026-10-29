@@ -12,7 +12,7 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
         protected override List<MachineUIElementEntry> BuildElements()
         {
             var list = new List<MachineUIElementEntry>();
-            list.Add(FuelTankEntry(0, new Vector2(-8, -20)));
+            list.Add(FuelTankEntry(0, new Vector2(24, -90)));
             return list;
         }
     }

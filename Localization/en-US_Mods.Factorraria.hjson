@@ -73,17 +73,17 @@ Items: {
 
 	MissileDrillItem: {
 		DisplayName: Missile Drill
-		Tooltip: Placed facing the way you face
+		Tooltip: ""
 	}
 
 	MissileTankItem: {
 		DisplayName: Missile Fuel Tank
-		Tooltip: Holds 5000 units of Fuel
+		Tooltip: ""
 	}
 
 	MissileThrusterItem: {
 		DisplayName: Missile Thruster
-		Tooltip: Placed facing the way you face. A missile needs three
+		Tooltip: ""
 	}
 
 	MotorMK1Item: {

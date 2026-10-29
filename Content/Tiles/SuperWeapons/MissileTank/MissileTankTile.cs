@@ -40,7 +40,7 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
             TileObjectData.newTile.HookPostPlaceMyPlayer = new PlacementHook(ModContent.GetInstance<MissileTankTileEntity>().Hook_AfterPlacement, -1, 0, true);
             TileObjectData.addTile(Type);
 
-            DustType = DustID.Iron;
+            DustType = DustID.Glass;
             AddMapEntry(new Color(150, 150, 160), CreateMapEntryName());
             RegisterItemDrop(ModContent.ItemType<MissileTankItem>());
         }

@@ -43,7 +43,7 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileThruster
             TileObjectData.addAlternate(1);                                       // style 1 = facing left
             TileObjectData.addTile(Type);
 
-            DustType = DustID.Iron;
+            DustType = DustID.Meteorite;
             AddMapEntry(new Color(150, 150, 160), CreateMapEntryName());
             RegisterItemDrop(ModContent.ItemType<MissileThrusterItem>());   // no style list = fallback for both facings
 
