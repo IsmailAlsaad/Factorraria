@@ -162,9 +162,9 @@ namespace Factorraria.Common.UI.CustomUIElements
 
             if (!liftedByBatteries && (demand > supply || (!producer && supply <= 0f) || (demand == 0 && supply == 0)))
             {
-                // Batteries that are waiting for enough company still show what they could give.
+                // Batteries that are waiting for enough company: keep the numbers (red) so the player sees demand is above supply + capacity.
                 if (dischargeCapacity > 0f)
-                    ElectricityHoverTip.Show(("No power", red), (" + ", separator), (PowerText(dischargeCapacity), blue));
+                    ElectricityHoverTip.Show((PowerText(demand) + "/" + PowerText(supply), red), (" + ", separator), (PowerText(dischargeCapacity), blue));
                 else
                     ElectricityHoverTip.Show("No power", red);
                 return;
