@@ -565,13 +565,13 @@ namespace Factorraria.Common.Cosmic
 
         // C7: the same drawing for any particle array (the ambient local simulation has its own, dimmer set).
         //
-        // C9c + C9d: the look of one particle, all from its color and age (the only per-particle state is the random wave phase):
+        // C9c to C9e: the look of one particle, all from its color and age (the only per-particle state is the random wave phase):
         //  - frequency = 1 (White) down to 0 (Grey), from the color's index. The head's diameter is Lerp(ClientHeadSizeMinPx, ClientHeadSizeMaxPx,
         //    frequency) and the trail's wave swing is ClientWaveAmplitudePx x frequency, so a Grey trail is a plain straight line.
         //  - grow = 0 to 1 over ClientHeadGrowTicks after the spawn; it scales the head diameter and the swing.
         //  - the swing is clamped to half the head's diameter, so the trail never sticks out past the head. The head stays on the ray line.
-        //  - dying is a fade: from ClientFadeOutStart of the head's flight time (Length / Speed) the whole particle (head and trail) fades to
-        //    invisible by the time the head arrives. Nothing changes size.
+        //  - dying (C9e): only the HEAD fades, from ClientFadeOutStart of its flight time (Length / Speed) to invisible when it arrives. The trail
+        //    does not fade: it stays in place and its rear end keeps moving until it has caught up with the spot where the head died.
         //  - the head is opaque: this batch is additive, so the head is only queued here and DrawHeads draws it in an AlphaBlend pass on top.
         void DrawParticleSet(SpriteBatch sb, Texture2D pixel, uint now, CosmicRadiationSystem system, Particle[] set, float brightScale)
         {
@@ -596,12 +596,11 @@ namespace Factorraria.Common.Cosmic
 
                 float age = (int)(now - p.Born);
                 float flight = p.Length / p.Speed;
-                if (age >= flight)
-                    continue;   // faded out completely when the head arrived (the trail that would still drain is not drawn)
-
                 float travelled = age * p.Speed;
-                float head = travelled;
+                float head = Math.Min(travelled, p.Length);
                 float tail = Math.Min(Math.Max(0f, travelled - trail), p.Length);
+                if (tail >= p.Length)
+                    continue;   // the trail has drained all the way to the spot where the head died
 
                 float hx = p.X + p.DirX * head;
                 float hy = p.Y + p.DirY * head;
@@ -615,12 +614,16 @@ namespace Factorraria.Common.Cosmic
                 float frequency = 1f - Math.Min((float)p.Color, colorSteps) / colorSteps;
 
                 float grow = growTicks > 0.01f ? Smooth01(age / growTicks) : 1f;
+
+                // The head's fade: 1 while flying, down to 0 over the end of the flight, 0 once it has arrived. The trail does not use it.
                 float fade = 1f;
-                if (age > flight * fadeStart)
+                if (age >= flight)
+                    fade = 0f;
+                else if (age > flight * fadeStart)
                     fade = 1f - Smooth01((age - flight * fadeStart) / (flight - flight * fadeStart));
 
                 Color baseColor = CosmicColors.DrawColor((CosmicColor)p.Color);
-                Color color = baseColor * (bright * fade);
+                Color color = baseColor * bright;
                 float trailLength = head - tail;
                 float diameter = MathHelper.Lerp(sizeMin, sizeMax, frequency) * grow;
 
@@ -636,8 +639,8 @@ namespace Factorraria.Common.Cosmic
                         quadsThisFrame += DrawStraightTrail(sb, in p, head, trailLength, color, cell);
                 }
 
-                // The head, on the ray line, only while it is still flying.
-                if (diameter > 0.2f)
+                // The head, on the ray line, until it has faded out.
+                if (diameter > 0.2f && fade > 0.003f)
                 {
                     HeadDraw h;
                     h.Pos = new Vector2(hx * 16f - Main.screenPosition.X, hy * 16f - Main.screenPosition.Y);

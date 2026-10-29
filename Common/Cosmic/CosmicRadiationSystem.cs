@@ -144,7 +144,7 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("How long a new particle takes to grow from size zero to full size (its head and the swing of its trail). 0 = it appears at full size at once (client only, C9c).", "ticks")]
         public float ClientHeadGrowTicks = 10f;
 
-        [CosmicParam("When a particle starts to fade out, as a fraction of its head's flight time (ray length / speed). 0.8 = it fades smoothly over the last fifth of the flight and is invisible when the head arrives. 1 = no fade, it just vanishes on arrival (client only, C9d).", "fraction")]
+        [CosmicParam("When the head of a particle starts to fade out, as a fraction of its flight time (ray length / speed). 0.8 = the head fades smoothly over the last fifth of the flight and is invisible on arrival. The trail does not fade: it stays where it is and drains away from its rear end until it has caught up with the spot where the head died. 1 = the head vanishes on arrival (client only, C9e).", "fraction")]
         public float ClientFadeOutStart = 0.8f;
 
         [CosmicParam("Brightness multiplier of the particles and their trails (client only, used from C6).", "x")]
