@@ -27,6 +27,14 @@ namespace Factorraria.Common.SuperWeapons
         public float FallbackAlpha = 0.65f; // opacity of the grey block drawn for a missing PNG
         public Color FallbackColor = new Color(96, 98, 106);
 
+        // What DrawBody used last (read by /fshield status). Debug only, removed once the body animation is settled.
+        public bool DebugSpanOk;
+        public float DebugTop;
+        public float DebugBottom;
+        public int DebugFrameValue;
+        public int DebugFrameY;
+        public int DebugRows;
+
         Asset<Texture2D> body;
         Asset<Texture2D> mouth;
         Asset<Texture2D> eye;
@@ -56,6 +64,15 @@ namespace Factorraria.Common.SuperWeapons
         public string ArtStatus()
         {
             return "body " + (body != null ? "found" : "missing") + ", mouth " + (mouth != null ? "found" : "missing") + ", eye " + (eye != null ? "found" : "missing");
+        }
+
+        /// <summary>What /fshield status prints about the body drawing: the raw vanilla values and what DrawBody did with them.</summary>
+        public string BodyStatus()
+        {
+            string tex = body != null ? body.Value.Width + "x" + body.Value.Height : "missing";
+            return "wofDrawAreaTop " + Main.wofDrawAreaTop + ", wofDrawAreaBottom " + Main.wofDrawAreaBottom + ", wofDrawFrameIndex " + Main.wofDrawFrameIndex
+                + ", maxTilesY " + Main.maxTilesY + " | span " + (DebugSpanOk ? "from vanilla" : "FALLBACK (1200 px)") + " top " + DebugTop.ToString("0") + " bottom " + DebugBottom.ToString("0")
+                + " (" + ((DebugBottom - DebugTop) / 16f).ToString("0") + " tiles) | frameValue " + DebugFrameValue + " -> frameY " + DebugFrameY + ", rows drawn " + DebugRows + ", texture " + tex;
         }
 
         /// <summary>
@@ -173,7 +190,9 @@ namespace Factorraria.Common.SuperWeapons
         // wofDrawFrameIndex (the sheet is 3 frames of 140 px stacked), flipped with spriteDirection, lit per 16 px slice.
         void DrawBody(SpriteBatch spriteBatch, NPC mouthNpc)
         {
-            TryGetBodySpan(mouthNpc.Center, out float top, out float bottom);
+            DebugSpanOk = TryGetBodySpan(mouthNpc.Center, out float top, out float bottom);
+            DebugTop = top;
+            DebugBottom = bottom;
 
             float zoom = Main.GameViewMatrix.Zoom.X;
             if (zoom < 0.01f)
@@ -198,12 +217,16 @@ namespace Factorraria.Common.SuperWeapons
             int frameY = ((frameValue >= rowHeight ? frameValue / rowHeight : frameValue) % 3) * rowHeight;  // accepts a frame index (0 to 2) or a pixel offset (0 / 140 / 280)
             if (frameY + rowHeight > tile.Height)
                 frameY = 0;
+            DebugFrameValue = frameValue;
+            DebugFrameY = frameY;
+            DebugRows = 0;
 
             SpriteEffects effects = mouthNpc.spriteDirection == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             int lightX = (int)((x + width * 0.5f) / 16f);
             float firstRow = top + (float)Math.Floor((Math.Max(top, visibleTop) - top) / rowHeight) * rowHeight;
             for (float rowY = firstRow; rowY < Math.Min(bottom, visibleBottom); rowY += rowHeight)
             {
+                DebugRows++;
                 for (int dy = 0; dy < rowHeight; dy += 16)
                 {
                     float drawY = rowY + dy;

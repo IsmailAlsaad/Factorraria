@@ -952,7 +952,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **WallShieldDrawSystem.cs** uses: WallShieldGlobalNPC
   class WallShieldDrawSystem : ModSystem
-    +FlipBody:bool +BodyStartOffsetPx:float +FallbackAlpha:float +FallbackColor:Color +Load()[ov] +Unload()[ov] +ArtStatus() +TryGetBodySpan(Vector2,out float,out float)
+    +FlipBody:bool +BodyStartOffsetPx:float +FallbackAlpha:float +FallbackColor:Color +DebugSpanOk:bool +DebugTop:float +DebugBottom:float +DebugFrameValue:int +DebugFrameY:int +DebugRows:int +Load()[ov] +Unload()[ov] +ArtStatus() +BodyStatus() +TryGetBodySpan(Vector2,out float,out float)
 **WallShieldGlobalNPC.cs** uses: SuperWeaponEffectKind, SuperWeaponNet
   class WallShieldGlobalNPC : GlobalNPC
     +InstancePerEntity:bool[ov] +AppliesToEntity(NPC,bool)[ov] +ShieldUp:bool +IsWallType(int)[s] +IsShielded(NPC)[s] +BreakShield()[s] +RaiseShield()[s] +SendExtraAI(NPC,BitWriter,BinaryWriter)[ov] +ReceiveExtraAI(NPC,BitReader,BinaryReader)[ov] +ModifyIncomingHit(NPC,ref HitModifiers)[ov] +UpdateLifeRegen(NPC,ref int)[ov] +CheckDead(NPC)[ov] +PostAI(NPC)[ov]

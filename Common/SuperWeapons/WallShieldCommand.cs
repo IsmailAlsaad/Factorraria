@@ -79,7 +79,10 @@ namespace Factorraria.Common.SuperWeapons
                 caller.Reply("  no Wall of Flesh alive on this side", Color.Gray);
             caller.Reply("  Hungry / leech NPCs alive (never shielded): " + unshielded, Color.Gray);
             if (!Main.dedServ)
+            {
                 caller.Reply("  overlay art: " + ModContent.GetInstance<WallShieldDrawSystem>().ArtStatus() + " (a missing one draws as a grey block)", Color.Gray);
+                caller.Reply("  body draw: " + ModContent.GetInstance<WallShieldDrawSystem>().BodyStatus(), Color.Gray);
+            }
         }
 
         // S1.2: drawing settings of the stone overlay. They only exist where something is drawn.
