@@ -214,7 +214,8 @@ namespace Factorraria.Common.SuperWeapons
 
             int rowHeight = 140;
             int frameValue = Main.wofDrawFrameIndex;
-            int frameY = ((frameValue >= rowHeight ? frameValue / rowHeight : frameValue) % 3) * rowHeight;  // accepts a frame index (0 to 2) or a pixel offset (0 / 140 / 280)
+            // wofDrawFrameIndex is a counter that runs 0 to 17 (seen in game: 5, 11, 12), not a frame number: 0-5 first frame, 6-11 second, 12+ third.
+            int frameY = (frameValue >= 12 ? 2 : frameValue >= 6 ? 1 : 0) * rowHeight;
             if (frameY + rowHeight > tile.Height)
                 frameY = 0;
             DebugFrameValue = frameValue;
@@ -236,7 +237,8 @@ namespace Factorraria.Common.SuperWeapons
                         continue;
 
                     Color light = Lighting.GetColor(lightX, (int)(drawY / 16f));
-                    spriteBatch.Draw(tile, new Vector2(x, drawY) - Main.screenPosition, new Rectangle(0, frameY + dy, width, 16), light, 0f, Vector2.Zero, 1f, effects, 0f);
+                    int sliceHeight = Math.Min(16, rowHeight - dy);
+                    spriteBatch.Draw(tile, new Vector2(x, drawY) - Main.screenPosition, new Rectangle(0, frameY + dy, width, sliceHeight), light, 0f, Vector2.Zero, 1f, effects, 0f);
                 }
             }
         }
