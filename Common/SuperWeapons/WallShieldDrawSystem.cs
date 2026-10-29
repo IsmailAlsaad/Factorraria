@@ -31,6 +31,7 @@ namespace Factorraria.Common.SuperWeapons
         Asset<Texture2D> mouth;
         Asset<Texture2D> eye;
         bool drawDisabled;
+        bool ownBatchInBehindPass;  // learned at runtime: false = vanilla leaves a SpriteBatch open in the behind-tiles pass (the normal case)
 
         public override void Load()
         {
@@ -104,21 +105,34 @@ namespace Factorraria.Common.SuperWeapons
             if (!any)
                 return;
 
+            // Vanilla leaves a SpriteBatch open after the behind-tiles DrawNPCs (the wall NPCs are behindTiles) and closes it after the front pass.
+            // Never call Begin into an open batch: even a caught InvalidOperationException is logged by tModLoader as a "Silently Caught Exception".
             SpriteBatch spriteBatch = Main.spriteBatch;
+            bool needOwnBatch = !behindTiles || ownBatchInBehindPass;
             bool began = false;
             try
             {
-                try
+                if (needOwnBatch)
                 {
                     spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
                     began = true;
                 }
-                catch (InvalidOperationException)
-                {
-                    // a batch is already open here: draw into it
-                }
 
                 DrawAll(spriteBatch, behindTiles);
+            }
+            catch (InvalidOperationException e)
+            {
+                if (behindTiles && !ownBatchInBehindPass)
+                {
+                    // no batch was open after all: use our own from the next frame on
+                    ownBatchInBehindPass = true;
+                    Mod.Logger.Info("WallShieldDrawSystem: no SpriteBatch is open after the behind-tiles pass, using its own. " + e.Message);
+                }
+                else
+                {
+                    drawDisabled = true;
+                    Mod.Logger.Warn("WallShieldDrawSystem: drawing the shield failed and was switched off: " + e.Message);
+                }
             }
             catch (Exception e)
             {
