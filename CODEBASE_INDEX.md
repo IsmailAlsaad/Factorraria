@@ -1644,6 +1644,7 @@ tModLoader/other bases -> project types:
 - docs/liquid_overhaul/: ROADMAP.md
 - docs/multiplayer/: ROADMAP.md, SURVEY_APPENDIX.md
 - docs/poles/: ROADMAP.md
+- docs/super_weapons/: ROADMAP.md
 - tools/: patch_engine.ps1
 - tools/cosmic_tests/: Program.cs.txt, Program_C2.cs.txt, README.txt
 - tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt
