@@ -241,8 +241,12 @@ Items: {
 	}
 
 	SunCapsuleItem: {
-		DisplayName: Sun Capsule Item
-		Tooltip: ""
+		DisplayName: Sun Capsule
+		Tooltip: 
+		'''
+		Stores surplus energy from power networks
+		Discharges when the network is underpowered
+		'''
 	}
 }
 
