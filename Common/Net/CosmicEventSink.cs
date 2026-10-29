@@ -66,7 +66,7 @@ namespace Factorraria.Common.Net
             if (Local)
             {
                 LocalRays++;
-                CosmicParticleSystem.Instance.AddRay(e.Color, (byte)e.End, e.StartX, e.StartY, e.DirX, e.DirY, e.Length, CosmicRadiationSystem.Instance.ParticleSpeed);
+                CosmicParticleSystem.Instance.AddRay(e.Color, (byte)e.End, e.StartX, e.StartY, e.DirX, e.DirY, e.Length, CosmicRadiationSystem.Instance.ParticleSpeed * (e.SpeedMul > 0f ? e.SpeedMul : 1f));
             }
 
             if (!remoteActive)
@@ -306,7 +306,8 @@ namespace Factorraria.Common.Net
 
     // The two packets, byte by byte (everything is cosmetic; both sides must agree, so a change here bumps nothing saved):
     //   CosmicRays (55):  float speed (tiles/tick), ushort count, then per ray:
-    //                     byte (color | end << 3), float startX, float startY, short angle (radians / pi * 32767), ushort length (1/16 tile)
+    //                     byte (color | end << 3), float startX, float startY, short angle (radians / pi * 32767), ushort length (1/16 tile),
+    //                     byte speed factor (0 to 254 = 0.5 to 1.5 times the packet speed; 127 = exactly 1)
     //   CosmicEvent (56): ushort count, then per event a kind byte and
     //                     Absorb:    byte color, short tileX, short tileY
     //                     Ionize:    byte color, ushort lifeTicks, ushort n, n x (short x, short y)
@@ -329,6 +330,17 @@ namespace Factorraria.Common.Net
             return (byte)Math.Max(0.0, Math.Min(255.0, tier));
         }
 
+        public static byte QuantizeSpeedFactor(float factor)
+        {
+            float clamped = Math.Clamp(factor > 0f ? factor : 1f, 0.5f, 1.5f);
+            return (byte)Math.Round((clamped - 0.5f) * 254f);
+        }
+
+        public static float DequantizeSpeedFactor(byte value)
+        {
+            return 0.5f + Math.Min(value, (byte)254) / 254f;
+        }
+
         public static void WriteRays(BinaryWriter writer, float speed, List<CosmicRayEvent> rays, List<int> picked)
         {
             writer.Write(speed);
@@ -342,6 +354,7 @@ namespace Factorraria.Common.Net
                 writer.Write(r.StartY);
                 writer.Write((short)Math.Round(Math.Atan2(r.DirY, r.DirX) / Math.PI * 32767.0));
                 writer.Write((ushort)Math.Max(0.0, Math.Min(65535.0, Math.Round(r.Length * 16.0))));
+                writer.Write(QuantizeSpeedFactor(r.SpeedMul));
             }
         }
 
@@ -359,6 +372,7 @@ namespace Factorraria.Common.Net
                 float y = reader.ReadSingle();
                 double angle = reader.ReadInt16() / 32767.0 * Math.PI;
                 float length = reader.ReadUInt16() / 16f;
+                float speedFactor = DequantizeSpeedFactor(reader.ReadByte());
 
                 if (float.IsNaN(x) || float.IsNaN(y))
                     continue;
@@ -377,7 +391,7 @@ namespace Factorraria.Common.Net
                     DirX = (float)Math.Cos(angle),
                     DirY = (float)Math.Sin(angle),
                     Length = length,
-                    Speed = speed
+                    Speed = speed * speedFactor
                 });
             }
         }

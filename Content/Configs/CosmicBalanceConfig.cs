@@ -239,6 +239,10 @@ namespace Factorraria.Content.Configs
         [Range(0f, 89f)]
         public float ReemitAngleMaxDeg = 10f;
 
+        [DefaultValue(0.2f)]
+        [Range(0f, 0.5f)]
+        public float ReemitVariation = 0.2f;
+
         [Header("Clouds")]
         [DefaultValue(0.5f)]
         [Range(0f, 1f)]
@@ -312,6 +316,7 @@ namespace Factorraria.Content.Configs
             s.ResyncStripsPerTick = ResyncStripsPerTick;
             s.ReemitAngleMinDeg = ReemitAngleMinDeg;
             s.ReemitAngleMaxDeg = ReemitAngleMaxDeg;
+            s.ReemitVariation = ReemitVariation;
             s.CloudAbsorbChance = CloudAbsorbChance;
             s.IonizedLifetimeTicks = IonizedLifetimeTicks;
             s.RefractoryTicks = RefractoryTicks;

@@ -491,6 +491,11 @@ Configs: {
 			Tooltip: Largest angle between a re-emitted particle and the path it came along. Unit: degrees. Default: 10.
 		}
 
+		ReemitVariation: {
+			Label: Reemit Variation
+			Tooltip: Each re-emitted particle gets its own random speed and lifespan, up to this fraction faster or slower and longer or shorter than the plain values. Unit: fraction. Default: 0.2 (20%).
+		}
+
 		CloudAbsorbChance: {
 			Label: Cloud Absorb Chance
 			Tooltip: Chance a particle passing through one cloud block is absorbed by it (same for every color). Unit: chance 0-1. Default: 0.5.

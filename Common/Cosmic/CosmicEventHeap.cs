@@ -20,6 +20,8 @@ namespace Factorraria.Common.Cosmic
         public float Y;
         public float DirX;
         public float DirY;
+        public float SpeedMul;   // re-emitted rays only: random factor on ParticleSpeed (0 = never set, counts as 1)
+        public float LifeMul;    // re-emitted rays only: random factor on the lifespan (0 = never set, counts as 1)
         public int TileX;
         public int TileY;
         internal long Seq;   // set by the heap: events with the same Tick come out in the order they were pushed

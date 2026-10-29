@@ -36,6 +36,7 @@
         public CosmicColor Color;
         public float StartX, StartY, DirX, DirY, Length;
         public CosmicRayEndKind End;
+        public float SpeedMul;   // this ray flies at ParticleSpeed x SpeedMul (the simulation always sets it; 0 = treat as 1)
     }
 
     // A gemspark absorbed a particle (the two child rays have their own Ray events).

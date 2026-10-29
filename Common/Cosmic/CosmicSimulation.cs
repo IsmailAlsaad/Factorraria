@@ -465,7 +465,14 @@ namespace Factorraria.Common.Cosmic
             queued = false;
             RaysTraced++;
 
-            CosmicRayResult r = CosmicRayTracer.Trace(probe, ev.X, ev.Y, ev.DirX, ev.DirY, ev.Color, s.ParticleRange, s.CloudAbsorbChance, rng);
+            // Re-emitted rays carry their own random speed and lifespan factors (1 = the plain tunables). The lifespan in ticks is
+            // range / speed, so the range follows both factors: a 10% longer life at 10% more speed flies 21% further.
+            float speedMul = ev.SpeedMul > 0f ? ev.SpeedMul : 1f;
+            float lifeMul = ev.LifeMul > 0f ? ev.LifeMul : 1f;
+            float range = s.ParticleRange * speedMul * lifeMul;
+            float speed = Math.Max(0.01f, s.ParticleSpeed * speedMul);
+
+            CosmicRayResult r = CosmicRayTracer.Trace(probe, ev.X, ev.Y, ev.DirX, ev.DirY, ev.Color, range, s.CloudAbsorbChance, rng);
 
             // C6: every traced ray is drawn from start to end, whatever its outcome (a Range end has Distance 0, it flies the full range).
             Sink?.Ray(new CosmicRayEvent
@@ -476,8 +483,9 @@ namespace Factorraria.Common.Cosmic
                 StartY = ev.Y,
                 DirX = ev.DirX,
                 DirY = ev.DirY,
-                Length = r.End == CosmicRayEnd.Range ? s.ParticleRange : r.Distance,
-                End = r.End == CosmicRayEnd.Absorb ? CosmicRayEndKind.Absorb : r.End == CosmicRayEnd.Ionize ? CosmicRayEndKind.Ionize : CosmicRayEndKind.None
+                Length = r.End == CosmicRayEnd.Range ? range : r.Distance,
+                End = r.End == CosmicRayEnd.Absorb ? CosmicRayEndKind.Absorb : r.End == CosmicRayEnd.Ionize ? CosmicRayEndKind.Ionize : CosmicRayEndKind.None,
+                SpeedMul = speedMul
             });
 
             if (r.End == CosmicRayEnd.Solid)
@@ -498,7 +506,7 @@ namespace Factorraria.Common.Cosmic
                 return r;
             }
 
-            long travelTicks = (long)Math.Ceiling(r.Distance / Math.Max(0.01f, s.ParticleSpeed));
+            long travelTicks = (long)Math.Ceiling(r.Distance / speed);
 
             Heap.Push(new CosmicQueuedEvent
             {
@@ -570,6 +578,11 @@ namespace Factorraria.Common.Cosmic
 
                 CosmicRayTracer.Rotate(ev.DirX, ev.DirY, child == 0 ? degA : -degB, out float dirX, out float dirY);
 
+                // Each child gets its own speed and lifespan, up to ReemitVariation (0.2 = 20%) above or below the tunables.
+                float variation = Math.Clamp(s.ReemitVariation, 0f, 0.5f);
+                float childSpeedMul = 1f + ((float)rng.NextDouble() * 2f - 1f) * variation;
+                float childLifeMul = 1f + ((float)rng.NextDouble() * 2f - 1f) * variation;
+
                 Heap.Push(new CosmicQueuedEvent
                 {
                     Tick = ev.Tick,
@@ -578,7 +591,9 @@ namespace Factorraria.Common.Cosmic
                     X = ev.TileX + 0.5f,
                     Y = ev.TileY + 0.5f,
                     DirX = dirX,
-                    DirY = dirY
+                    DirY = dirY,
+                    SpeedMul = childSpeedMul,
+                    LifeMul = childLifeMul
                 });
                 Reemitted[(int)next]++;
             }

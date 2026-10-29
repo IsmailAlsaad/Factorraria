@@ -84,6 +84,9 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Largest angle between a re-emitted particle and the path it came along (used from C3).", "degrees")]
         public float ReemitAngleMaxDeg = 10f;
 
+        [CosmicParam("Each re-emitted particle gets its own random speed and lifespan, up to this fraction faster or slower and longer or shorter than the plain values (0.2 = 20%, 0 = off).", "fraction")]
+        public float ReemitVariation = 0.2f;
+
         // ------------------------------------------------------------ clouds (C4)
 
         [CosmicParam("Chance a particle passing through one cloud block is absorbed by it (same for every color, used from C4).", "chance 0-1")]
@@ -240,6 +243,7 @@ namespace Factorraria.Common.Cosmic
             ResyncStripsPerTick = Math.Clamp(ResyncStripsPerTick, 0, 1000);
             ReemitAngleMinDeg = Fix(ReemitAngleMinDeg, 0f, 89f);
             ReemitAngleMaxDeg = Fix(ReemitAngleMaxDeg, 0f, 89f);
+            ReemitVariation = Fix(ReemitVariation, 0f, 0.5f);
             CloudAbsorbChance = Fix(CloudAbsorbChance, 0f, 1f);
             IonizedLifetimeTicks = Math.Clamp(IonizedLifetimeTicks, 1, 36000);
             RefractoryTicks = Math.Clamp(RefractoryTicks, 0, 36000);
