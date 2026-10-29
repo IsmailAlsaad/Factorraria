@@ -1659,7 +1659,7 @@ tModLoader/other bases -> project types:
 ### Content/Tiles/SuperWeapons/MissileDrill/
 **MissileDrillItem.cs** uses: MissileDrillTile
   class MissileDrillItem : ModItem
-    +Texture:string[ov] +AddRecipes()[ov]
+    +Texture:string[ov]
 **MissileDrillTile.cs** uses: Direction, MissileDrillItem, OverhangDrawSystem
   class MissileDrillTile : ModTile
     +Texture:string[ov] +PreDraw(int,int,SpriteBatch)[ov]
@@ -1667,7 +1667,7 @@ tModLoader/other bases -> project types:
 ### Content/Tiles/SuperWeapons/MissileTank/
 **MissileTankItem.cs** uses: MissileTankTile
   class MissileTankItem : ModItem
-    +Texture:string[ov] +AddRecipes()[ov]
+    +Texture:string[ov]
 **MissileTankRegistry.cs** uses: LiquidFuelTable, LiquidTypeRegistry
   static class MissileTankRegistry
     +LiquidFuels:LiquidFuelTable[s] +Build()[s]
@@ -1684,7 +1684,7 @@ tModLoader/other bases -> project types:
 ### Content/Tiles/SuperWeapons/MissileThruster/
 **MissileThrusterItem.cs** uses: MissileThrusterTile
   class MissileThrusterItem : ModItem
-    +Texture:string[ov] +AddRecipes()[ov]
+    +Texture:string[ov]
 **MissileThrusterTile.cs** uses: Direction, MissileThrusterItem, OverhangDrawSystem
   class MissileThrusterTile : ModTile
     +Texture:string[ov] +PreDraw(int,int,SpriteBatch)[ov]

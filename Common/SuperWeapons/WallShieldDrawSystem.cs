@@ -15,9 +15,9 @@ namespace Factorraria.Common.SuperWeapons
     // order between the mouth and the eyes. The detour draws after the vanilla pass, in one fixed order: body strip, mouth, then eyes.
     //
     // Art (Ismail), all optional while testing. A missing PNG makes that part draw as a translucent grey block, so alignment can be checked first:
-    //   Common/SuperWeapons/WallShield_Body.png    a tileable stone texture (64x64 suggested), repeated over the body strip
-    //   Common/SuperWeapons/WallShield_Mouth.png   same size and frame layout as vanilla NPC_113.png, drawn with the NPC's own frame
-    //   Common/SuperWeapons/WallShield_Eye.png     same size and frame layout as vanilla NPC_114.png, drawn with the NPC's own frame
+    //   Content/Tiles/SuperWeapons/WallShield_Body.png   replacement for the vanilla wall body texture, 190x420, repeated over the body strip
+    //   Content/Tiles/SuperWeapons/WallShield_Mouth.png   same size and frame layout as vanilla NPC_113.png, drawn with the NPC's own frame
+    //   Content/Tiles/SuperWeapons/WallShield_Eye.png   same size and frame layout as vanilla NPC_114.png, drawn with the NPC's own frame
     // /fshield status prints the exact sheet and frame sizes of both.
     public class WallShieldDrawSystem : ModSystem
     {
@@ -37,9 +37,9 @@ namespace Factorraria.Common.SuperWeapons
             if (Main.dedServ)
                 return;
 
-            ModContent.RequestIfExists<Texture2D>("Factorraria/Common/SuperWeapons/WallShield_Body", out body);
-            ModContent.RequestIfExists<Texture2D>("Factorraria/Common/SuperWeapons/WallShield_Mouth", out mouth);
-            ModContent.RequestIfExists<Texture2D>("Factorraria/Common/SuperWeapons/WallShield_Eye", out eye);
+            ModContent.RequestIfExists<Texture2D>("Factorraria/Content/Tiles/SuperWeapons/WallShield_Body", out body);
+            ModContent.RequestIfExists<Texture2D>("Factorraria/Content/Tiles/SuperWeapons/WallShield_Mouth", out mouth);
+            ModContent.RequestIfExists<Texture2D>("Factorraria/Content/Tiles/SuperWeapons/WallShield_Eye", out eye);
             On_Main.DrawNPCs += DrawShieldsAfterNPCs;
         }
 
