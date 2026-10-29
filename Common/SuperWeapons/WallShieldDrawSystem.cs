@@ -171,7 +171,7 @@ namespace Factorraria.Common.SuperWeapons
                 if (npc.behindTiles != behindTiles || npc.type != Terraria.ID.NPCID.WallofFlesh || !WallShieldGlobalNPC.IsShielded(npc))
                     continue;
 
-                DrawBody(spriteBatch, npc);
+                DrawBodyLikeVanilla(spriteBatch, npc);
                 DrawSheetOverlay(spriteBatch, npc, mouth);
             }
 
@@ -232,6 +232,72 @@ namespace Factorraria.Common.SuperWeapons
                 {
                     float drawY = rowY + dy;
                     if (drawY >= bottom || drawY >= visibleBottom)
+                        break;
+                    if (drawY + 16f < visibleTop)
+                        continue;
+
+                    Color light = Lighting.GetColor(lightX, (int)(drawY / 16f));
+                    int sliceHeight = Math.Min(16, rowHeight - dy);
+                    spriteBatch.Draw(tile, new Vector2(x, drawY) - Main.screenPosition, new Rectangle(0, frameY + dy, width, sliceHeight), light, 0f, Vector2.Zero, 1f, effects, 0f);
+                }
+            }
+        }
+
+        // The wall body, drawn the way the real vanilla Main.DrawWOFBody does it (read from the decompiled 1.4 exe, not guessed):
+        //  - it is NOT limited to the wall area: rows start at wofDrawAreaTop and fill the whole screen height, above and below it;
+        //    wofDrawAreaBottom is not used at all
+        //  - rows are Height / 3 (140 px) tall, anchored at wofDrawAreaTop, each cut into 16 px slices lit with Lighting.GetColor
+        //  - the animation frame is wofDrawFrameIndex / 6 (the counter runs 0 to 17 and vanilla advances it inside DrawWOFBody)
+        //  - one column as wide as the texture at npc.position.X (80 px further left when direction > 0), flipped when spriteDirection == 1
+        //  - vanilla draws nothing while the anchor is more than 12 rows below the top of the screen
+        // This replaces DrawBody, which stopped at wofDrawAreaBottom and so drew the texture only a few times inside the wall area.
+        void DrawBodyLikeVanilla(SpriteBatch spriteBatch, NPC mouthNpc)
+        {
+            Texture2D tile = body != null ? body.Value : null;
+            int width = tile != null ? tile.Width : 190;
+            int rowHeight = tile != null ? tile.Height / 3 : 140;
+
+            float zoom = Main.GameViewMatrix.Zoom.X;
+            if (zoom < 0.01f)
+                zoom = 1f;
+            float visibleTop = Main.screenPosition.Y + Main.screenHeight * 0.5f - Main.screenHeight / zoom * 0.5f;
+            float visibleBottom = Main.screenPosition.Y + Main.screenHeight * 0.5f + Main.screenHeight / zoom * 0.5f;
+
+            float top = Main.wofDrawAreaTop;
+            DebugSpanOk = top >= 0f;    // wofDrawAreaTop is -1 until the wall's AI has run once
+            DebugTop = top;
+            DebugBottom = visibleBottom;
+            DebugRows = 0;
+            if (top < 0f || (int)((top - visibleTop) / rowHeight) + 1 > 12)
+                return;
+
+            float x = mouthNpc.position.X;
+            if (mouthNpc.direction > 0)
+                x -= 80f;
+
+            if (tile == null)
+            {
+                DrawBlock(spriteBatch, (int)x, (int)visibleTop, (int)x + width, (int)visibleBottom);
+                return;
+            }
+
+            int frameValue = Math.Max(0, Main.wofDrawFrameIndex);
+            int frameY = Math.Min(frameValue / 6, 2) * rowHeight;
+            DebugFrameValue = frameValue;
+            DebugFrameY = frameY;
+
+            SpriteEffects effects = mouthNpc.spriteDirection == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            int lightX = (int)((x + width * 0.5f) / 16f);
+
+            // first row that reaches the top of the screen, on the grid anchored at wofDrawAreaTop (works whether the anchor is above or below the screen top)
+            float firstRow = top + (float)Math.Floor((visibleTop - top) / rowHeight) * rowHeight;
+            for (float rowY = firstRow; rowY < visibleBottom; rowY += rowHeight)
+            {
+                DebugRows++;
+                for (int dy = 0; dy < rowHeight; dy += 16)
+                {
+                    float drawY = rowY + dy;
+                    if (drawY >= visibleBottom)
                         break;
                     if (drawY + 16f < visibleTop)
                         continue;
