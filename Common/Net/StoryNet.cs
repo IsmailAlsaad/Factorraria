@@ -4,6 +4,7 @@ using Factorraria.Content.NPCs.HerBackpack;
 using System.Collections.Generic;
 using System.IO;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -306,6 +307,7 @@ namespace Factorraria.Common.Net
                     Main.NewText("You take the Mechanic's Bag.", 255, 240, 20);
                 else if (kind == StoryActionKind.TurnInBag)
                 {
+                    SoundEngine.PlaySound(SoundID.Grab);
                     Main.NewText("You give the Mechanic's Bag back. Her shop is open.", 255, 240, 20);
 
                     // Multiplayer: the server took the Bag out of its copy already; take it out of this copy too (single-player has one copy, the handler already did it).
