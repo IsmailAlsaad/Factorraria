@@ -1435,7 +1435,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/
-**MechanicalAssemblerRecipeRegistry.cs** uses: CopperWireItem, CustomRecipe, GoldPlateItem, GoldWireItem, MeteorHeadStatueItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
+**MechanicalAssemblerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, CopperWireItem, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
   class MechanicalAssemblerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **MechanicalAssemblerTile.cs** uses: MechanicalAssemblerItem, MechanicalAssemblerTileEntity
@@ -1743,6 +1743,7 @@ tModLoader/other bases -> project types:
 - docs/cosmic_radiation/: ROADMAP.md
 - docs/liquid_overhaul/: ROADMAP.md
 - docs/multiplayer/: ROADMAP.md, SURVEY_APPENDIX.md
+- docs/npcs/: ROADMAP.md
 - docs/poles/: ROADMAP.md
 - docs/super_weapons/: ROADMAP.md
 - tools/: patch_engine.ps1
