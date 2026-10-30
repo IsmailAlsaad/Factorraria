@@ -4,6 +4,9 @@ using Factorraria.Content.Items.Liquids.Pipes;
 using Factorraria.Content.Items.Materials;
 using Factorraria.Content.Items.Statues;
 using Factorraria.Content.Items.Wires;
+using Factorraria.Content.Tiles.SuperWeapons.MissileDrill;
+using Factorraria.Content.Tiles.SuperWeapons.MissileTank;
+using Factorraria.Content.Tiles.SuperWeapons.MissileThruster;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
@@ -89,6 +92,31 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
                 new List<Item> {
                     new Item(ModContent.ItemType<SteelBarItem>(), 1)},
                 new Item(ModContent.ItemType<SteelScrewItem>(), 3)));
+
+            Book.Add(new CustomRecipe(
+                new List<Item> {
+                    new Item(ModContent.ItemType<ByriteAlloyItem>(), 30),
+                    new Item(ModContent.ItemType<DemoniteSheetItem>(), 80)},
+                new Item(ModContent.ItemType<MissileDrillItem>(), 1)));
+            Book.Add(new CustomRecipe(
+                new List<Item> {
+                    new Item(ModContent.ItemType<ByriteAlloyItem>(), 30),
+                    new Item(ModContent.ItemType<CrimtaneSheetItem>(), 80)},
+                new Item(ModContent.ItemType<MissileDrillItem>(), 1)));
+
+
+            Book.Add(new CustomRecipe(
+                new List<Item> {
+                    new Item(ModContent.ItemType<ByriteAlloySlabItem>(), 60),
+                    new Item(ModContent.ItemType<SteelScrewItem>(), 40)},
+                new Item(ModContent.ItemType<MissileTankItem>(), 1)));
+
+
+            Book.Add(new CustomRecipe(
+                new List<Item> {
+                    new Item(ModContent.ItemType<MeteoritePanelItem>(), 20),
+                    new Item(ModContent.ItemType<SteelScrewItem>(), 15)},
+                new Item(ModContent.ItemType<MissileThrusterItem>(), 1)));
         }
     }
 }

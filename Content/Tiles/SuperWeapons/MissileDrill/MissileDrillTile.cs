@@ -11,12 +11,12 @@ using Terraria.ObjectData;
 namespace Factorraria.Content.Tiles.SuperWeapons.MissileDrill
 {
     // The missile's drill head (super weapons patch S2.1). Tile footprint 2 wide x 3 tall (32x48 px); the art is 48x48 and drawn facing right,
-    // so its tip sticks 16 px out past the footprint on the facing side. Style 0 faces right, style 1 (alternate placement) faces left, picked by
+    // so its 16 px overhang sticks out on the BACK side (the left when facing right; S6.3 moved the footprint to the right 32 px). Style 0 faces right, style 1 (alternate placement) faces left, picked by
     // the way the player faces when placing. No TileEntity, no state: placed, mined and synced by vanilla tile code. The tile's own draw is off
     // (PreDraw returns false); OverhangDrawSystem draws the whole art after the tiles, see its header.
     //
-    // Art (Ismail): Content/Tiles/SuperWeapons/MissileDrill/MissileDrill.png, 48x48, facing right, tip on the right, the 32 left pixels are the
-    // footprint. Until it exists the part draws as a grey footprint block with a lighter tip block.
+    // Art (Ismail): Content/Tiles/SuperWeapons/MissileDrill/MissileDrill.png, 48x48, facing right, the left 16 pixels are the overhang and the
+    // right 32 pixels are the footprint. Until it exists the part draws as a grey footprint block with a lighter overhang block.
     public class MissileDrillTile : ModTile
     {
         // Only here so the loader has a sheet to request (avoids the vanilla Tile_105 lookup); PreDraw returns false, so it is never drawn.
@@ -50,7 +50,7 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileDrill
             AddMapEntry(new Color(150, 150, 160), CreateMapEntryName());
             RegisterItemDrop(ModContent.ItemType<MissileDrillItem>());   // no style list = fallback for both facings
 
-            ModContent.GetInstance<OverhangDrawSystem>().Register(Type, "Factorraria/Content/Tiles/SuperWeapons/MissileDrill/MissileDrill", 2, 3, 48, 48, 0, 0);
+            ModContent.GetInstance<OverhangDrawSystem>().Register(Type, "Factorraria/Content/Tiles/SuperWeapons/MissileDrill/MissileDrill", 2, 3, 48, 48, -16, 0);
         }
 
         public override bool PreDraw(int i, int j, SpriteBatch spriteBatch)
