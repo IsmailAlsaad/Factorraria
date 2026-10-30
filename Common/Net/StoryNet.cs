@@ -315,7 +315,8 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            if (!StorySystem.Get(StoryFlags.MechanicRescued) || StorySystem.Get(StoryFlags.ScrollsGiven))
+            // D20 (N8.1): the Mechanic hands the scrolls out only while a Dryad exists. A refused request changes nothing; the next talk asks again.
+            if (!StorySystem.Get(StoryFlags.MechanicRescued) || StorySystem.Get(StoryFlags.ScrollsGiven) || !DryadStory.DryadExists())
             {
                 ReplyAction(sender, StoryActionKind.ClaimScrolls, false, StoryActionFailure.Unavailable);
                 return;
