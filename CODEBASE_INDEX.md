@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-30 | 368 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-31 | 369 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -31,8 +31,8 @@ Project bases -> derived:
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 tModLoader/other bases -> project types:
 - ModSystem (99): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
-- ModItem (41): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
-- byte (30): AssemblyIssue, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
+- ModItem (42): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
+- byte (32): AssemblyIssue, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (16): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
 - ModTile (16): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
@@ -801,11 +801,15 @@ tModLoader/other bases -> project types:
 **SlotEditTestCommand.cs** uses: MachineRecipeSelect, MachineSlotEdit, MaterializerToggle
   class SlotEditTestCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
-**StoryNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, StorySystem
+**StoryNet.cs** uses: FactorrariaNet, FactorrariaPacket, HerBackpackNPC, JoinSync, MechanicsBagItem, PacketDirection, StoryFlags, StorySystem
   class StoryNetSystem : ModSystem
     +Load()[ov]
+  enum StoryActionKind : byte
+    {TakeBag}
+  enum StoryActionFailure : byte
+    {None, CannotAct, NoNpc, TooFar, Unavailable}
   static class StoryNet
-    +MaxJoinFlags:int[s] +BroadcastFlag(string,bool)[s] +HandleFlagChanged(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
+    +MaxJoinFlags:int[s] +InteractReachTiles:int[s] +ActionTimeoutTicks:int[s] +BroadcastFlag(string,bool)[s] +HandleFlagChanged(BinaryReader,int)[s] +ActionPending:bool[s] +RequestTakeBag(int)[s] +HandleActionRequest(BinaryReader,int)[s] +HandleActionResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
 **SuperWeaponNet.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, SuperWeaponExplosionFxSystem, WallShieldBreakFxSystem
   enum SuperWeaponEffectKind : byte
     {ShieldBreak, Ignition, Launch, Impact, Fizzle}
@@ -951,14 +955,14 @@ tModLoader/other bases -> project types:
 **MechanicShopGlobalNPC.cs** uses: Entry, StoryFlags, StorySystem
   class MechanicShopGlobalNPC : GlobalNPC
     +ModifyShop(NPCShop)[ov]
-**RareNpcSpawns.cs** uses: FactorrariaNet, HerBackpackNPC, StoryFlags, StorySystem
+**RareNpcSpawns.cs** uses: FactorrariaNet, HerBackpackNPC, MechanicsBagItem, StoryFlags, StorySystem
   static class RareNpcRules
-    +MechanicSpawnWeight:float[s] +DungeonMechanicSpawnWeight:float[s] +BackpackSpawnWeight:float[s] +RareNpcRarity:int[s] +MechanicWeight(Player,out string)[s] +BackpackWeight(Player,out string)[s]
+    +MechanicSpawnWeight:float[s] +DungeonMechanicSpawnWeight:float[s] +BackpackSpawnWeight:float[s] +RareNpcRarity:int[s] +BackpackRespawnDelayTicks:int[s] +MechanicWeight(Player,out string)[s] +BackpackWeight(Player,out string)[s]
   class RareNpcGlobalNPC : GlobalNPC
     +EditSpawnPool(IDictionary<int, float>,NPCSpawnInfo)[ov]
   class RareNpcSystem : ModSystem
-    +PostWorldGen()[ov] +PostUpdateWorld()[ov]
-**StoryCommand.cs** uses: Factorraria, HerBackpackNPC, ImportantDialogueEntry, ImportantDialogueRegistry, RareNpcRules, StoryFlags, StorySystem
+    +OnWorldLoad()[ov] +PostUpdateWorld()[ov]
+**StoryCommand.cs** uses: Factorraria, HerBackpackNPC, ImportantDialogueEntry, ImportantDialogueRegistry, MechanicsBagItem, RareNpcRules, StoryFlags, StorySystem
   class StoryCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **StoryFlags.cs**
@@ -1410,6 +1414,11 @@ tModLoader/other bases -> project types:
   class MeteorHeadStatueItem : ModItem
     +Texture:string[ov]
 
+### Content/Items/Story/
+**MechanicsBagItem.cs**
+  class MechanicsBagItem : ModItem
+    +Texture:string[ov] +DisplayName:LocalizedText[ov] +Tooltip:LocalizedText[ov]
+
 ### Content/Items/Wires/
 **CopperWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
   class CopperWireItem : ModItem
@@ -1437,9 +1446,9 @@ tModLoader/other bases -> project types:
   class OilLiquidFall : ModLiquidFall
 
 ### Content/NPCs/HerBackpack/
-**HerBackpackNPC.cs** uses: RareNpcRules
+**HerBackpackNPC.cs** uses: RareNpcRules, StoryNet
   class HerBackpackNPC : ModNPC
-    +BackpackWidth:int[s] +BackpackHeight:int[s] +Texture:string[ov] +DisplayName:LocalizedText[ov] +SpawnChance(NPCSpawnInfo)[ov] +CanChat()[ov] +AI()[ov]
+    +BackpackWidth:int[s] +BackpackHeight:int[s] +Texture:string[ov] +DisplayName:LocalizedText[ov] +SpawnChance(NPCSpawnInfo)[ov] +CanChat()[ov] +GetChat()[ov] +SetChatButtons(ref string,ref string)[ov] +OnChatButtonClicked(bool,ref string)[ov] +AI()[ov]
 
 ### Content/Particles/
 **PuffExplosion.cs** uses: Particle

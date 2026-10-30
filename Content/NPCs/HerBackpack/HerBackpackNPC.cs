@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Story;
+﻿using Factorraria.Common.Net;
+using Factorraria.Common.Story;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -60,8 +61,23 @@ namespace Factorraria.Content.NPCs.HerBackpack
         // Rare spawn rules: dungeon, after Skeletron, Bag not taken yet, one at a time (RareNpcRules.BackpackWeight).
         public override float SpawnChance(NPCSpawnInfo spawnInfo) => RareNpcRules.BackpackWeight(spawnInfo.Player, out _);
 
-        // No interaction in N4.1 (the chat window comes in N4.2).
-        public override bool CanChat() => false;
+        // Right click opens the chat window with one button, "Take it" (the vanilla "Close" button is always there).
+        // Placeholder texts until the localization pass (N9).
+        public override bool CanChat() => true;
+
+        public override string GetChat() => Language.GetOrRegister("Mods.Factorraria.Story.HerBackpackChat", () => "Looks dirty and full of wires.").Value;
+
+        public override void SetChatButtons(ref string button, ref string button2)
+        {
+            button = Language.GetOrRegister("Mods.Factorraria.Story.HerBackpackTake", () => "Take it").Value;
+        }
+
+        // The server decides (StoryNet.HandleActionRequest): the Bag goes to the first player whose request arrives, the Backpack vanishes for everyone.
+        public override void OnChatButtonClicked(bool firstButton, ref string shopName)
+        {
+            if (firstButton)
+                StoryNet.RequestTakeBag(NPC.whoAmI);
+        }
 
         public override void AI()
         {

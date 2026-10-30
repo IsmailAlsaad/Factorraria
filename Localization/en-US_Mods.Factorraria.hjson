@@ -983,4 +983,6 @@ Tiles: {
 Story: {
 	HerBackpackName: Mechanic's Backpack
 	MechanicShopUnlocked: Mods.Factorraria.Story.MechanicShopUnlocked
+	MechanicsBagName: The Mechanic's Bag
+	MechanicsBagTooltip: Filled with tools and tangled wire
 }

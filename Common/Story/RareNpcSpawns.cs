@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Net;
+using Factorraria.Content.Items.Story;
 using Factorraria.Content.NPCs.HerBackpack;
 using System.Collections.Generic;
 using Terraria;
@@ -20,6 +21,7 @@ namespace Factorraria.Common.Story
         public static float DungeonMechanicSpawnWeight = 0.5f;
         public static float BackpackSpawnWeight = 0.5f;
         public static int RareNpcRarity = 1;
+        public static int BackpackRespawnDelayTicks = 600;   // the Bag must be missing this long before BackpackTaken is cleared (the Backpack can spawn again)
 
         /// <summary>The tied Mechanic: Cavern layer only (the dungeon after the Skeletron-first fork), while she was never rescued and no Mechanic of any kind exists.</summary>
         public static float MechanicWeight(Player player, out string reason)
@@ -125,34 +127,29 @@ namespace Factorraria.Common.Story
     }
 
     /// <summary>
-    /// World generation cleanup (rule M1) and the rescue watcher (rule S2). Server / single-player only.
+    /// The rescue watcher (rule S2) and the bag-loss watcher (patch N4.2). Server / single-player only.
     /// </summary>
     public class RareNpcSystem : ModSystem
     {
-        // The vanilla dungeon tied Mechanic must not be rescuable before the story: remove every tied Mechanic that world generation made.
-        // Logged either way, so the first new world shows whether vanilla really creates her as an NPC at this point (roadmap V1a).
-        public override void PostWorldGen()
+        static int bagMissingTicks;
+
+        public override void OnWorldLoad()
         {
-            int removed = 0;
-            for (int i = 0; i < Main.maxNPCs; i++)
-            {
-                NPC npc = Main.npc[i];
-                if (!npc.active || npc.type != NPCID.BoundMechanic)
-                    continue;
-
-                npc.active = false;
-                removed++;
-            }
-
-            FactorrariaNet.Log("[Story] world generation: removed " + removed + " vanilla tied Mechanic NPC(s)");
+            bagMissingTicks = 0;
         }
 
-        // S2: the first tick the rescue flag is true, latch MechanicRescued. On the Skeletron-first route the rescue also unlocks the whole shop.
         public override void PostUpdateWorld()
         {
             if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
                 return;
 
+            WatchRescue();
+            WatchBag();
+        }
+
+        // S2: the first tick the rescue flag is true, latch MechanicRescued. On the Skeletron-first route the rescue also unlocks the whole shop.
+        static void WatchRescue()
+        {
             if (!NPC.savedMech || StorySystem.Get(StoryFlags.MechanicRescued))
                 return;
 
@@ -160,6 +157,78 @@ namespace Factorraria.Common.Story
 
             if (StorySystem.Get(StoryFlags.DungeonFork))
                 StorySystem.ServerSet(StoryFlags.MechanicShopUnlocked, true);
+        }
+
+        // Bag-loss watcher: while a Bag was taken and the shop is still locked, some player (any inventory, bank, trash) or the ground must hold it.
+        // If none does for BackpackRespawnDelayTicks in a row (it burned, fell out of the world, the holder deleted it), BackpackTaken is cleared
+        // so Her Backpack can spawn again. Known limit: a Bag stored in a chest counts as lost (chests are not scanned).
+        static void WatchBag()
+        {
+            if (!StorySystem.Get(StoryFlags.BackpackTaken) || StorySystem.Get(StoryFlags.MechanicShopUnlocked))
+            {
+                bagMissingTicks = 0;
+                return;
+            }
+
+            bool anyPlayer = false;
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                if (Main.player[i].active)
+                {
+                    anyPlayer = true;
+                    break;
+                }
+            }
+
+            if (!anyPlayer || BagExists())
+            {
+                bagMissingTicks = 0;
+                return;
+            }
+
+            bagMissingTicks++;
+            if (bagMissingTicks < System.Math.Max(1, RareNpcRules.BackpackRespawnDelayTicks))
+                return;
+
+            bagMissingTicks = 0;
+            StorySystem.ServerSet(StoryFlags.BackpackTaken, false);
+            FactorrariaNet.Log("[Story] the Mechanic's Bag is lost: BackpackTaken cleared, Her Backpack can spawn again");
+        }
+
+        static bool BagExists()
+        {
+            int bag = ModContent.ItemType<MechanicsBagItem>();
+
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                Player player = Main.player[i];
+                if (!player.active)
+                    continue;
+
+                if (Holds(player.inventory, bag) || Holds(player.armor, bag) || Holds(player.miscEquips, bag)
+                    || Holds(player.bank.item, bag) || Holds(player.bank2.item, bag) || Holds(player.bank3.item, bag) || Holds(player.bank4.item, bag)
+                    || (player.trashItem != null && !player.trashItem.IsAir && player.trashItem.type == bag))
+                    return true;
+            }
+
+            for (int i = 0; i < Main.maxItems; i++)
+            {
+                if (Main.item[i].active && !Main.item[i].IsAir && Main.item[i].type == bag)
+                    return true;
+            }
+
+            return false;
+        }
+
+        static bool Holds(Item[] items, int type)
+        {
+            foreach (Item item in items)
+            {
+                if (item != null && !item.IsAir && item.type == type)
+                    return true;
+            }
+
+            return false;
         }
     }
 }

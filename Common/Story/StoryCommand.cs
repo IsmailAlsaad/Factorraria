@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Net;
+using Factorraria.Content.Items.Story;
 using Factorraria.Content.NPCs.HerBackpack;
 using Microsoft.Xna.Framework;
 using System;
@@ -19,12 +20,13 @@ namespace Factorraria.Common.Story
     ///   /fstory spawn mechanic|backpack spawn the tied Mechanic or Her Backpack next to you (patch N4.1)
     ///   /fstory dump                    rare NPC state: flags, the spawn rule verdicts for you, every Mechanic / Backpack NPC (patch N4.1)
     ///   /fstory weight <name> <number>  change a rare spawn tunable while playing: mechanic, dungeon, backpack, rarity (patch N4.1)
+    ///   /fstory bag                     put one Mechanic's Bag into your inventory, for testing the bag-loss watcher and the turn-in (patch N4.2)
     /// </summary>
     public class StoryCommand : ModCommand
     {
         public override string Command => "fstory";
         public override CommandType Type => CommandType.World;
-        public override string Usage => "/fstory status | known | flag <name> [on|off] | dialogue | spawn <mechanic|backpack> | dump | weight <name> <number>";
+        public override string Usage => "/fstory status | known | flag <name> [on|off] | dialogue | spawn <mechanic|backpack> | dump | bag | weight <name> <number>";
         public override string Description => "NPC story debug tools";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -55,6 +57,10 @@ namespace Factorraria.Common.Story
 
                 case "dump":
                     Dump(caller);
+                    break;
+
+                case "bag":
+                    GiveBag(caller);
                     break;
 
                 case "weight":
@@ -181,6 +187,20 @@ namespace Factorraria.Common.Story
 
             if (count == 0)
                 caller.Reply("No Mechanic or Her Backpack NPC exists right now.", Color.LightGreen);
+        }
+
+        // Test helper (patch N4.2): hands the caller one Bag without touching any flag.
+        static void GiveBag(CommandCaller caller)
+        {
+            Player player = caller.Player;
+            if (player == null)
+            {
+                caller.Reply("There is no player to give the Bag to.", Color.Yellow);
+                return;
+            }
+
+            player.QuickSpawnItem(player.GetSource_Misc("fstory bag"), ModContent.ItemType<MechanicsBagItem>(), 1);
+            caller.Reply("Gave you one Mechanic's Bag.", Color.LightGreen);
         }
 
         static string OnOff(string flag) => StorySystem.Get(flag) ? "on" : "off";
