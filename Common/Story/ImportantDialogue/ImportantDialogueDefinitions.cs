@@ -32,6 +32,23 @@ namespace Factorraria.Common.Story
                 OnTalkStart = (player, npc) => Main.NewText("[Story test] talk start: Test.Guide")
             });
 
+            // Merchant: carry Wood. Same button test on an NPC that normally has a free second chat slot (the Guide may use both for Help and Crafting).
+            ImportantDialogueRegistry.Register(new ImportantDialogueEntry
+            {
+                Id = "Test.Merchant",
+                NpcType = NPCID.Merchant,
+                Priority = 0,
+                Condition = player => player.HasItem(ItemID.Wood),
+                Button1 = new ImportantDialogueButton
+                {
+                    OnClick = (player, npc) =>
+                    {
+                        Main.npcChatText = "[Story test] The Merchant test button was clicked.";
+                        Main.NewText("[Story test] button clicked on NPC " + npc.whoAmI);
+                    }
+                }
+            });
+
             // High priority: carry Wood. Has a chat button. No exit (retire it with /fstory flag Done.Test.Guide.High on).
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {

@@ -28,6 +28,37 @@ namespace Factorraria.Common.Story
             MechanicRescued, MechanicShopUnlocked, ScrollsGiven, DungeonFork, TestDialogueExit
         };
 
+        /// <summary>
+        /// Cleans a typed key (drops spaces, control and invisible characters, which chat copy/paste can add) and matches it
+        /// ignoring case. Returns the canonical key, or null when it is unknown. "done.x" becomes "Done.x".
+        /// </summary>
+        public static string Resolve(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+                return null;
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            foreach (char c in key)
+            {
+                if (char.IsWhiteSpace(c) || char.IsControl(c) || char.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.Format)
+                    continue;
+                sb.Append(c);
+            }
+
+            string clean = sb.ToString();
+            if (clean.Length == 0)
+                return null;
+
+            if (clean.StartsWith(DonePrefix, StringComparison.OrdinalIgnoreCase))
+                return clean.Length > DonePrefix.Length ? DonePrefix + clean.Substring(DonePrefix.Length) : null;
+
+            foreach (string known in All())
+                if (string.Equals(known, clean, StringComparison.OrdinalIgnoreCase))
+                    return known;
+
+            return null;
+        }
+
         /// <summary>True for a fixed key above or for any "Done.&lt;id&gt;" key.</summary>
         public static bool IsKnown(string key)
         {

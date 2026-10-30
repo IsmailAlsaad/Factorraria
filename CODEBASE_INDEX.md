@@ -952,7 +952,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **StoryFlags.cs**
   static class StoryFlags
-    +EyeKillSeen:string[s] +DryadSeen:string[s] +BackpackTaken:string[s] +MechanicRescued:string[s] +MechanicShopUnlocked:string[s] +ScrollsGiven:string[s] +DungeonFork:string[s] +TestDialogueExit:string[s] +DonePrefix:string[s] +DoneKey(string)[s] +All()[s] +IsKnown(string)[s]
+    +EyeKillSeen:string[s] +DryadSeen:string[s] +BackpackTaken:string[s] +MechanicRescued:string[s] +MechanicShopUnlocked:string[s] +ScrollsGiven:string[s] +DungeonFork:string[s] +TestDialogueExit:string[s] +DonePrefix:string[s] +DoneKey(string)[s] +All()[s] +Resolve(string)[s] +IsKnown(string)[s]
 **StorySystem.cs** uses: FactorrariaNet, StoryNet
   class StorySystem : ModSystem
     +MaxKeyLength:int[s] +Version:int[s] +Flags:IReadOnlyCollection<string>[s] +Get(string)[s] +ServerSet(string,bool)[s] +ApplyFromServer(string,bool)[s] +ReplaceAll(IEnumerable<string>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
@@ -980,7 +980,7 @@ tModLoader/other bases -> project types:
     +All:IReadOnlyList<ImportantDialogueEntry>[s] +Register(ImportantDialogueEntry)[s] +ById(string)[s] +HasNpc(int)[s] +ForNpc(int)[s] +Clear()[s]
 **ImportantDialogueSystem.cs** ns!=Factorraria.Common.Story uses: Entry, FactorrariaNet, ImportantDialogueChatButtons, ImportantDialogueDefinitions, ImportantDialogueEntry, ImportantDialogueRegistry, StoryFlags, StorySystem
   class ImportantDialogueSystem : ModSystem
-    +DialogueExitCheckTicks:int[s] +ConditionCacheTicks:int[s] +ExclamationBobPixels:float[s] +ExclamationOffsetY:float[s] +ExclamationTexturePath:string[s] +Load()[ov] +Unload()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindActive(Player,int,bool)[s] +RunTalkStart(Player,NPC)[s] +DrawMark(SpriteBatch,NPC,Vector2)[s] +ReportOnce(string,Exception)[s]
+    +DialogueExitCheckTicks:int[s] +ConditionCacheTicks:int[s] +ExclamationBobPixels:float[s] +ExclamationOffsetY:float[s] +ExclamationTexturePath:string[s] +ExclamationFallbackPaths:string[s] +Load()[ov] +Unload()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindActive(Player,int,bool)[s] +RunTalkStart(Player,NPC)[s] +DrawMark(SpriteBatch,NPC,Vector2)[s] +ReportOnce(string,Exception)[s]
     struct CachedActive
       +Tick:uint +Version:int +Entry:ImportantDialogueEntry
 

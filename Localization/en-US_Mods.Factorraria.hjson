@@ -897,6 +897,8 @@ Configs: {
 }
 
 Dialogue: {
+	Test.Merchant.Text: Test dialogue (Merchant). You carry Wood, {PlayerName}.
+	Test.Merchant.Button1: Test button
 	Test: {
 		Guide: {
 			Text: Test dialogue (low priority). You carry a Torch, {PlayerName}. I say this on every click until the exit flag TestDialogueExit is set.

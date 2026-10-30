@@ -23,7 +23,8 @@ namespace Factorraria.Common.Story
         public static int ConditionCacheTicks = 10;
         public static float ExclamationBobPixels = 2f;
         public static float ExclamationOffsetY = 10f;
-        public static string ExclamationTexturePath = "Factorraria/Content/UI/ImportantDialogue/Exclamation";
+        public static string ExclamationTexturePath = "Factorraria/Common/UI/CustomUIElements/Exclamation";
+
 
         struct CachedActive
         {
@@ -164,8 +165,28 @@ namespace Factorraria.Common.Story
             if (!markTextureTried)
             {
                 markTextureTried = true;
-                if (!ModContent.RequestIfExists<Texture2D>(ExclamationTexturePath, out markTexture))
+                markTexture = null;
+                string used = null;
+                if (ModContent.RequestIfExists<Texture2D>(ExclamationTexturePath, out markTexture))
+                    used = ExclamationTexturePath;
+                else
+                {
                     markTexture = null;
+                    foreach (string path in ExclamationFallbackPaths)
+                    {
+                        if (ModContent.RequestIfExists<Texture2D>(path, out markTexture))
+                        {
+                            used = path;
+                            break;
+                        }
+
+                        markTexture = null;
+                    }
+                }
+
+                FactorrariaNet.Log(used != null
+                    ? "[Story] exclamation mark art loaded from " + used
+                    : "[Story] Exclamation.png not found (looked at " + ExclamationTexturePath + " and " + ExclamationFallbackPaths.Length + " other places), using the text \"!\"");
             }
 
             float bob = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4f) * ExclamationBobPixels;

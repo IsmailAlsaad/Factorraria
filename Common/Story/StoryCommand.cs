@@ -109,10 +109,15 @@ namespace Factorraria.Common.Story
                 return;
             }
 
-            string key = args[1];
-            if (!StoryFlags.IsKnown(key))
+            string typed = args[1];
+            string key = StoryFlags.Resolve(typed);
+            if (key == null)
             {
-                caller.Reply("Unknown flag '" + key + "'. Try /fstory known.", Color.Yellow);
+                // Show the character codes so an invisible character in the typed name is visible.
+                List<string> codes = new List<string>();
+                foreach (char c in typed)
+                    codes.Add(((int)c).ToString());
+                caller.Reply("Unknown flag '" + typed + "' (" + typed.Length + " chars: " + string.Join(" ", codes) + "). Try /fstory known.", Color.Yellow);
                 return;
             }
 

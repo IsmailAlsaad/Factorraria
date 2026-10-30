@@ -24,6 +24,7 @@ namespace Factorraria.Common.Story
         static readonly int[] slotButton = { -1, -1 };
         static ImportantDialogueEntry slotEntry;
         static int slotNpc = -1;
+        static readonly System.Collections.Generic.HashSet<string> reportedFull = new System.Collections.Generic.HashSet<string>();
 
         public static void Install()
         {
@@ -85,7 +86,9 @@ namespace Factorraria.Common.Story
                 button2 = label;
                 slotButton[1] = index;
             }
-            // Both slots are taken by vanilla buttons: this button is not shown.
+            // Both slots are taken by vanilla buttons: this button is not shown. Say so once, with the vanilla labels.
+            else if (reportedFull.Add(entry.Id + "." + index))
+                FactorrariaNet.Log("[Story] button " + (index + 1) + " of " + entry.Id + " is NOT shown: both chat button slots are used by vanilla (\"" + button + "\" and \"" + button2 + "\")");
         }
 
         /// <summary>Called from PreChatButtonClicked. True = the clicked slot was one of ours and its callback ran (vanilla must not run).</summary>

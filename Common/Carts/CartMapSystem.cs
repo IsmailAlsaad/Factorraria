@@ -12,12 +12,6 @@ using Terraria.UI;
 
 namespace Factorraria.Common.Carts
 {
-    /// <summary>
-    /// The little button on the fullscreen map that cycles which carts are shown (none -> all -> motor only). Client-only, local choice.
-    /// Art (Ismail makes it): Content/UI/CartMap/CartMapButton_Off.png, CartMapButton_All.png, CartMapButton_Motor.png, 32x32 each,
-    /// plus an optional CartMapButton_Off_Highlight.png, _All_Highlight.png, _Motor_Highlight.png (32x32) shown while the mouse is over the button.
-    /// Until the PNGs exist it draws a plain box with a text label, so the feature works without them.
-    /// </summary>
     public class CartMapSystem : ModSystem
     {
         // The position is in the mod config (CartMapConfig.ButtonX / ButtonY); the size is the size of the art.
