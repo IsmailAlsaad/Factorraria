@@ -169,24 +169,6 @@ namespace Factorraria.Common.Story
                 string used = null;
                 if (ModContent.RequestIfExists<Texture2D>(ExclamationTexturePath, out markTexture))
                     used = ExclamationTexturePath;
-                else
-                {
-                    markTexture = null;
-                    foreach (string path in ExclamationFallbackPaths)
-                    {
-                        if (ModContent.RequestIfExists<Texture2D>(path, out markTexture))
-                        {
-                            used = path;
-                            break;
-                        }
-
-                        markTexture = null;
-                    }
-                }
-
-                FactorrariaNet.Log(used != null
-                    ? "[Story] exclamation mark art loaded from " + used
-                    : "[Story] Exclamation.png not found (looked at " + ExclamationTexturePath + " and " + ExclamationFallbackPaths.Length + " other places), using the text \"!\"");
             }
 
             float bob = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4f) * ExclamationBobPixels;
