@@ -43,12 +43,12 @@ namespace Factorraria.Common.SuperWeapons
         public float MaxSpin = 0.22f;
 
         /// <summary>How many columns and sub-rows each 140 px body row is cut into.</summary>
-        public int BodyCols = 2;
-        public int BodySubRows = 2;
+        public int BodyCols = 3;
+        public int BodySubRows = 3;
 
         /// <summary>How many columns and rows the mouth and each eye frame is cut into.</summary>
-        public int SheetCols = 2;
-        public int SheetRows = 2;
+        public int SheetCols = 3;
+        public int SheetRows = 3;
 
         /// <summary>How long the dust curtain keeps falling down the body, in ticks.</summary>
         public int CurtainTicks = 80;
