@@ -21,7 +21,7 @@ namespace Factorraria.Common.SuperWeapons
     public class SuperWeaponExplosionFxSystem : ModSystem
     {
         /// <summary>Total life of one explosion, in ticks.</summary>
-        public int DurationTicks = 110;
+        public int DurationTicks = 210;
 
         /// <summary>How far the shockwave ring grows per tick, in pixels.</summary>
         public float ShockwaveSpeedPx = 32f;
@@ -104,39 +104,38 @@ namespace Factorraria.Common.SuperWeapons
             // Shockwave: a ring of smoke pushed outwards, denser as it grows.
             if (age < ShockwaveTicks)
             {
-                float radius = 40f + age * ShockwaveSpeedPx;
+                float radius = 40f;// + age * ShockwaveSpeedPx;
                 int count = (int)MathHelper.Clamp(14f + radius / 16f, 14f, 80f);
-                float offset = Main.rand.NextFloat(MathHelper.TwoPi);
                 for (int k = 0; k < count; k++)
                 {
-                    Vector2 direction = (offset + k * MathHelper.TwoPi / count).ToRotationVector2();
-                    Dust ring = Dust.NewDustPerfect(at + direction * radius, DustID.Smoke, direction * 3.5f, 120, default, 2.2f);
+                    Vector2 direction = Main.rand.NextVector2Circular(1f,1f);
+                    Dust ring = Dust.NewDustPerfect(at + direction * radius, DustID.Smoke, direction * Main.rand.NextFloat(15f,30f), 120, default, 2.2f);
                     ring.noGravity = true;
                 }
             }
 
-            // Fire column rising from the impact, ending in a wide smoke cap.
-            if (age < 30)
-            {
-                float height = age * 11f;
-                for (int k = 0; k < 7; k++)
-                {
-                    Vector2 where = at + new Vector2(Main.rand.NextFloat(-40f, 40f) * (1f - age / 45f), -height + Main.rand.NextFloat(-20f, 20f));
-                    Dust column = Dust.NewDustPerfect(where, DustID.Torch, new Vector2(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-6f, -2f)), 0, default, Main.rand.NextFloat(2f, 3.4f));
-                    column.noGravity = true;
-                }
-            }
+            //// Fire column rising from the impact, ending in a wide smoke cap.
+            //if (age < 30)
+            //{
+            //    float height = age * 11f;
+            //    for (int k = 0; k < 7; k++)
+            //    {
+            //        Vector2 where = at + new Vector2(Main.rand.NextFloat(-40f, 40f) * (1f - age / 45f), -height + Main.rand.NextFloat(-20f, 20f));
+            //        Dust column = Dust.NewDustPerfect(where, DustID.Torch, new Vector2(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-6f, -2f)), 0, default, Main.rand.NextFloat(2f, 3.4f));
+            //        column.noGravity = true;
+            //    }
+            //}
 
-            if (age == 30)
-            {
-                Vector2 top = at + new Vector2(0f, -330f);
-                for (int k = 0; k < 70; k++)
-                {
-                    Vector2 direction = Main.rand.NextVector2Circular(1f, 0.45f);
-                    Dust cap = Dust.NewDustPerfect(top + direction * 40f, DustID.Smoke, direction * Main.rand.NextFloat(3f, 9f), 100, default, Main.rand.NextFloat(2.6f, 4f));
-                    cap.noGravity = true;
-                }
-            }
+            //if (age == 30)
+            //{
+            //    Vector2 top = at + new Vector2(0f, -330f);
+            //    for (int k = 0; k < 70; k++)
+            //    {
+            //        Vector2 direction = Main.rand.NextVector2Circular(1f, 0.45f);
+            //        Dust cap = Dust.NewDustPerfect(top + direction * 40f, DustID.Smoke, direction * Main.rand.NextFloat(3f, 9f), 100, default, Main.rand.NextFloat(2.6f, 4f));
+            //        cap.noGravity = true;
+            //    }
+            //}
 
             // Secondary blasts around the impact, each with a bang.
             if (age >= 4 && age <= 32 && age % 4 == 0)
@@ -157,14 +156,14 @@ namespace Factorraria.Common.SuperWeapons
             }
 
             // Lingering smoke drifting up until the end.
-            if (age < DurationTicks - 15)
-            {
-                for (int k = 0; k < 3; k++)
-                {
-                    Dust smoke = Dust.NewDustPerfect(at + Main.rand.NextVector2Circular(160f, 100f) + new Vector2(0f, -age * 2f), DustID.Smoke, new Vector2(Main.rand.NextFloat(-1f, 1f), Main.rand.NextFloat(-2.5f, -0.5f)), 120, default, Main.rand.NextFloat(2f, 3.2f));
-                    smoke.noGravity = true;
-                }
-            }
+            //if (age < DurationTicks - 15)
+            //{
+            //    for (int k = 0; k < 3; k++)
+            //    {
+            //        Dust smoke = Dust.NewDustPerfect(at + Main.rand.NextVector2Circular(160f, 100f) + new Vector2(0f, -age * 2f), DustID.Smoke, new Vector2(Main.rand.NextFloat(-1f, 1f), Main.rand.NextFloat(-2.5f, -0.5f)), 120, default, Main.rand.NextFloat(2f, 3.2f));
+            //        smoke.noGravity = true;
+            //    }
+            //}
         }
 
         // The flash: a white screen cover that fades fast, weaker the farther the local player is.
