@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Net;
+using Factorraria.Content.NPCs.HerBackpack;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,15 @@ namespace Factorraria.Common.Story
     ///   /fstory known                   the fixed flag keys (and the "Done.&lt;id&gt;" form)
     ///   /fstory flag &lt;name&gt; [on|off]    set (default) or clear a flag
     ///   /fstory dialogue                every important dialogue: NPC, priority, condition, exit, done (patch N2.1)
+    ///   /fstory spawn mechanic|backpack spawn the tied Mechanic or Her Backpack next to you (patch N4.1)
+    ///   /fstory dump                    rare NPC state: flags, the spawn rule verdicts for you, every Mechanic / Backpack NPC (patch N4.1)
+    ///   /fstory weight <name> <number>  change a rare spawn tunable while playing: mechanic, dungeon, backpack, rarity (patch N4.1)
     /// </summary>
     public class StoryCommand : ModCommand
     {
         public override string Command => "fstory";
         public override CommandType Type => CommandType.World;
-        public override string Usage => "/fstory status | known | flag <name> [on|off] | dialogue";
+        public override string Usage => "/fstory status | known | flag <name> [on|off] | dialogue | spawn <mechanic|backpack> | dump | weight <name> <number>";
         public override string Description => "NPC story debug tools";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -43,6 +47,18 @@ namespace Factorraria.Common.Story
 
                 case "dialogue":
                     Dialogue(caller);
+                    break;
+
+                case "spawn":
+                    Spawn(caller, args);
+                    break;
+
+                case "dump":
+                    Dump(caller);
+                    break;
+
+                case "weight":
+                    Weight(caller, args);
                     break;
 
                 default:
@@ -99,6 +115,109 @@ namespace Factorraria.Common.Story
 
                 caller.Reply(entry.Id + " | " + Lang.GetNPCNameValue(entry.NpcType) + " | priority " + entry.Priority + " | condition " + condition + " | exit " + exit + " | done " + (entry.IsDone ? "true" : "false"), Color.LightGreen);
             }
+        }
+
+        // Debug spawn (patch N4.1). A World command, so in multiplayer it runs on the server and the vanilla NPC sync shows the NPC to everyone.
+        static void Spawn(CommandCaller caller, string[] args)
+        {
+            string what = args.Length > 1 ? args[1].ToLowerInvariant() : "";
+            int type;
+            if (what == "mechanic")
+                type = NPCID.BoundMechanic;
+            else if (what == "backpack")
+                type = ModContent.NPCType<HerBackpackNPC>();
+            else
+            {
+                caller.Reply("Usage: /fstory spawn mechanic|backpack", Color.Yellow);
+                return;
+            }
+
+            Player player = caller.Player;
+            if (player == null)
+            {
+                caller.Reply("There is no player to spawn next to.", Color.Yellow);
+                return;
+            }
+
+            int x = (int)player.Center.X + player.direction * 96;
+            int y = (int)player.Bottom.Y;
+            int index = NPC.NewNPC(new Terraria.DataStructures.EntitySource_Misc("fstory spawn"), x, y, type);
+            if (index < 0 || index >= Main.maxNPCs)
+            {
+                caller.Reply("No free NPC slot.", Color.Yellow);
+                return;
+            }
+
+            caller.Reply("Spawned " + Main.npc[index].GivenOrTypeName + " as NPC #" + index + " at tile " + (int)(Main.npc[index].Center.X / 16f) + ", " + (int)(Main.npc[index].Center.Y / 16f) + ".", Color.LightGreen);
+        }
+
+        // Everything needed to judge the rare spawns in one place (patch N4.1). The verdicts use the calling player's zones as the server sees them.
+        static void Dump(CommandCaller caller)
+        {
+            caller.Reply("[Story] NPC.savedMech " + NPC.savedMech + ", Skeletron defeated " + NPC.downedBoss3 + ", MechanicRescued " + OnOff(StoryFlags.MechanicRescued) + ", MechanicShopUnlocked " + OnOff(StoryFlags.MechanicShopUnlocked)
+                + ", BackpackTaken " + OnOff(StoryFlags.BackpackTaken) + ", DungeonFork " + OnOff(StoryFlags.DungeonFork), Color.LightGreen);
+
+            string reason;
+            float weight = RareNpcRules.MechanicWeight(caller.Player, out reason);
+            caller.Reply("Tied Mechanic spawn weight for you now: " + weight + (weight <= 0f ? " (" + reason + ")" : ""), Color.LightGreen);
+
+            weight = RareNpcRules.BackpackWeight(caller.Player, out reason);
+            caller.Reply("Her Backpack spawn weight for you now: " + weight + (weight <= 0f ? " (" + reason + ")" : ""), Color.LightGreen);
+
+            caller.Reply("Tunables: mechanic " + RareNpcRules.MechanicSpawnWeight + ", dungeon " + RareNpcRules.DungeonMechanicSpawnWeight + ", backpack " + RareNpcRules.BackpackSpawnWeight + ", rarity " + RareNpcRules.RareNpcRarity, Color.LightGreen);
+
+            int backpackType = ModContent.NPCType<HerBackpackNPC>();
+            int count = 0;
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (!npc.active || (npc.type != NPCID.BoundMechanic && npc.type != NPCID.Mechanic && npc.type != backpackType))
+                    continue;
+
+                count++;
+                caller.Reply("NPC #" + i + " " + npc.GivenOrTypeName + " (type " + npc.type + ") at tile " + (int)(npc.Center.X / 16f) + ", " + (int)(npc.Center.Y / 16f)
+                    + " | rarity " + npc.rarity + " | friendly " + npc.friendly + " | townNPC " + npc.townNPC + " | homeless " + npc.homeless + " | aiStyle " + npc.aiStyle, Color.LightGreen);
+            }
+
+            if (count == 0)
+                caller.Reply("No Mechanic or Her Backpack NPC exists right now.", Color.LightGreen);
+        }
+
+        static string OnOff(string flag) => StorySystem.Get(flag) ? "on" : "off";
+
+        // Changes a rare spawn tunable while playing (patch N4.1). Runs on the server in multiplayer, which is where the rules are used.
+        static void Weight(CommandCaller caller, string[] args)
+        {
+            if (args.Length < 3 || !float.TryParse(args[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float value))
+            {
+                caller.Reply("Usage: /fstory weight <mechanic|dungeon|backpack|rarity> <number>", Color.Yellow);
+                return;
+            }
+
+            switch (args[1].ToLowerInvariant())
+            {
+                case "mechanic":
+                    RareNpcRules.MechanicSpawnWeight = value;
+                    break;
+
+                case "dungeon":
+                    RareNpcRules.DungeonMechanicSpawnWeight = value;
+                    break;
+
+                case "backpack":
+                    RareNpcRules.BackpackSpawnWeight = value;
+                    break;
+
+                case "rarity":
+                    RareNpcRules.RareNpcRarity = (int)value;
+                    break;
+
+                default:
+                    caller.Reply("Usage: /fstory weight <mechanic|dungeon|backpack|rarity> <number>", Color.Yellow);
+                    return;
+            }
+
+            caller.Reply("Set " + args[1].ToLowerInvariant() + " to " + value + ". (Rarity only applies to NPCs spawned afterwards.)", Color.LightGreen);
         }
 
         static void SetFlag(CommandCaller caller, string[] args)

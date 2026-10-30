@@ -979,3 +979,8 @@ Tiles: {
 	BeeWheelTile.MapEntry: Bee Wheel Tile
 	SunCapsuleTile.MapEntry: Sun Capsule Tile
 }
+
+Story: {
+	HerBackpackName: Mechanic's Backpack
+	MechanicShopUnlocked: Mods.Factorraria.Story.MechanicShopUnlocked
+}
