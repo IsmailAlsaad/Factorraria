@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-30 | 352 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-30 | 354 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(68) BaseMachine(49) FactorrariaPacket(35) LiquidTypeRegistry(32) PacketDirection(30) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(15) FurnaceOffsetConfig(14) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13)
+FactorrariaNet(68) BaseMachine(50) FactorrariaPacket(35) LiquidTypeRegistry(32) PacketDirection(30) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(15) FurnaceOffsetConfig(14) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -35,16 +35,16 @@ tModLoader/other bases -> project types:
 - byte (30): AssemblyIssue, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (17): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, SuperWeaponCommand, VItemTestCommand, WallShieldCommand, WireCountCommand
 - ModTile (16): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
+- GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
-- GlobalTile (11): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, TilePlacedGlobalTile
 - GlobalItem (9): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModPlayer (9): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalNPC (5): AwakenedSpawnGlobalNPC, BossLootGlobal, CartPassengerGlobalNPC, MeteorHeadStatueGlobalNPC, WallShieldGlobalNPC
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
+- ModProjectile (3): MechSuitArmProjectile, MechanicalArmProjectile, SuperWeaponMissile
 - ModLiquid (2): FuelLiquid, OilLiquid
 - ModLiquidFall (2): FuelLiquidFall, OilLiquidFall
-- ModProjectile (2): MechSuitArmProjectile, MechanicalArmProjectile
 - UIPanel (2): RecipeBrowserPanel, RecipeElement
 - UIScrollbar (2): BookScrollbar, ZoomScrollbar
 - Attribute (1): CosmicParamAttribute
@@ -802,7 +802,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **SuperWeaponNet.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, WallShieldDrawSystem
   enum SuperWeaponEffectKind : byte
-    {ShieldBreak, Ignition}
+    {ShieldBreak, Ignition, Launch}
   static class SuperWeaponNet
     +SendEffect(SuperWeaponEffectKind,Vector2)[s] +PlayLocal(SuperWeaponEffectKind,Vector2)[s]
   class SuperWeaponNetSystem : ModSystem
@@ -960,18 +960,24 @@ tModLoader/other bases -> project types:
     +Assembled:bool +Facing:int +Issue:AssemblyIssue +IssueRow:int +IssueX:int +IssueY:int
   static class SuperWeaponAssembly
     +TankWidth:int[c] +TankHeight:int[c] +DrillWidth:int[c] +DrillHeight:int[c] +Evaluate(int,int,Func<int, int, PartCell>)[s] +Describe(bool,int,AssemblyIssue,int)[s]
-**SuperWeaponCommand.cs** uses: Change, FurnaceOffsetConfig, MissileTankTileEntity, SuperWeaponState, SuperWeaponSystem, WallShieldGlobalNPC
+**SuperWeaponCommand.cs** uses: Change, FurnaceOffsetConfig, MissileTankTileEntity, SuperWeaponMissile, SuperWeaponState, SuperWeaponSystem, WallShieldGlobalNPC
   class SuperWeaponCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **SuperWeaponDebugSystem.cs** uses: AssemblyIssue, BaseMachine, FurnaceOffsetConfig, MissileTankTileEntity, SuperWeaponAssembly
   class SuperWeaponDebugSystem : ModSystem
     +PostDrawTiles()[ov]
+**SuperWeaponDropGuard.cs** uses: SuperWeaponSystem
+  class SuperWeaponDropGuard : GlobalTile
+    +CanDrop(int,int,int)[ov]
 **SuperWeaponIgnitionFxSystem.cs** uses: BaseMachine, MissileTankTileEntity, SuperWeaponAssembly, SuperWeaponState, SuperWeaponSystem
   class SuperWeaponIgnitionFxSystem : ModSystem
     +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
-**SuperWeaponSystem.cs** uses: FactorrariaNet, MissileTankTileEntity, SuperWeaponAssembly, SuperWeaponEffectKind, SuperWeaponNet, SuperWeaponState, SuperWeaponTrigger, TriggerCandidate, WallShieldGlobalNPC
+**SuperWeaponMissile.cs** uses: BaseMachine, SuperWeaponSystem
+  class SuperWeaponMissile : ModProjectile
+    +ArtPath:string[c] +Texture:string[ov] +CanHitNPC(NPC)[ov] +CanHitPlayer(Player)[ov] +CanHitPvp(Player)[ov] +AI()[ov] +PreDraw(ref Color)[ov] +AnyInFlight()[s] +KillAll()[s]
+**SuperWeaponSystem.cs** uses: FactorrariaNet, MissileDrillTile, MissileTankTile, MissileTankTileEntity, MissileThrusterTile, SuperWeaponAssembly, SuperWeaponEffectKind, SuperWeaponMissile, SuperWeaponNet, SuperWeaponState, SuperWeaponTrigger, TriggerCandidate, WallShieldGlobalNPC
   class SuperWeaponSystem : ModSystem
-    +TriggerCheckTicks:int +IgniteTicks:int +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +ClearAll()
+    +TriggerCheckTicks:int +IgniteTicks:int +MissileAccel:float +MissileMaxSpeedPx:float +MissileMaxRangeTiles:int +HitDistancePx:float +SuppressPartDrops:bool +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +IsPartTile(int)[s] +ClearAll() +Say(string)[s]
 **SuperWeaponTrigger.cs**
   struct TriggerCandidate
     +Id:int +X:float +Facing:int

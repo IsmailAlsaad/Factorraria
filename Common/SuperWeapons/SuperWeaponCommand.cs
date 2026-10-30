@@ -66,6 +66,21 @@ namespace Factorraria.Common.SuperWeapons
                 }
             }
 
+            int missileType = ModContent.ProjectileType<SuperWeaponMissile>();
+            int missiles = 0;
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (!projectile.active || projectile.type != missileType)
+                    continue;
+
+                missiles++;
+                caller.Reply("  missile in flight: tile (" + (int)(projectile.Center.X / 16f) + ", " + (int)(projectile.Center.Y / 16f) + "), speed " + projectile.velocity.X.ToString("0.0") + " px/tick, facing " + (projectile.ai[1] < 0f ? "left" : "right"), Color.White);
+            }
+
+            if (missiles == 0)
+                caller.Reply("  no missile in flight", Color.Gray);
+
             if (wall == null)
                 caller.Reply("  no Wall of Flesh", Color.Gray);
             else

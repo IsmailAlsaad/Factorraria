@@ -13,7 +13,8 @@ namespace Factorraria.Common.Net
     public enum SuperWeaponEffectKind : byte
     {
         ShieldBreak = 0,  // the Wall of Flesh's stone shield broke (patch S1.2)
-        Ignition = 1      // a primed missile's boosters just lit (patch S4.1): sound and camera shake at the tank
+        Ignition = 1,     // a primed missile's boosters just lit (patch S4.1): sound and camera shake at the tank
+        Launch = 2        // the missile left the ground and its parts vanished (patch S4.2): bang and camera shake at the weapon
     }
 
     // Super weapons patch S1.2. The shield state itself is synced with the wall NPC (S1.1); this is only the cosmetic burst. The server (or
@@ -59,6 +60,19 @@ namespace Factorraria.Common.Net
                     SoundEngine.PlaySound(SoundID.Item34 with { Volume = 1f, Pitch = -0.3f }, position);
                     SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.6f, Pitch = -0.8f }, position);
                     Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 3f, 20f, 120, 2000f, "FactorrariaIgnition"));
+                    break;
+
+                case SuperWeaponEffectKind.Launch:
+                    // Placeholder sounds and dust; the flames of the flight itself come from the missile projectile.
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1f, Pitch = -0.6f }, position);
+                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.8f, Pitch = -0.4f }, position);
+                    for (int i = 0; i < 40; i++)
+                    {
+                        Dust smoke = Dust.NewDustPerfect(position + Main.rand.NextVector2Circular(60f, 24f), DustID.Smoke, Main.rand.NextVector2Circular(4f, 3f), 100, default, 2.2f);
+                        smoke.noGravity = true;
+                    }
+
+                    Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 8f, 12f, 60, 2500f, "FactorrariaLaunch"));
                     break;
             }
         }
@@ -120,7 +134,7 @@ namespace Factorraria.Common.Net
             byte kind = reader.ReadByte();
             float x = reader.ReadSingle();
             float y = reader.ReadSingle();
-            if (kind > (byte)SuperWeaponEffectKind.Ignition)
+            if (kind > (byte)SuperWeaponEffectKind.Launch)
                 return;
 
             incoming.Enqueue(new Pending { Kind = (SuperWeaponEffectKind)kind, Position = new Vector2(x, y) });
