@@ -813,6 +813,14 @@ Not in the original survey; designed multiplayer-first. See the Progress entry "
 - **Known limits:** the light-state byte layout changed (two ints after supply), so a client and a server must run the same build. A client shows a charge rounded to 1/32 of the capacity until it has the exact value from a snapshot. A grid whose demand keeps changing can flip between "wait" and "discharge" from one tick to the next; there is no hysteresis.
 - **Test list:** 2 capsules (120 of discharge) on a load of 200: no discharge, both keep their charge, hover shows "No power + 120". 4 capsules (240): they discharge and the grid switches on; when one runs dry (180) all four stop. A generator with surplus charges them: orange charge number shows only while charging. On a client: icon fill, hover "stored/capacity", particles.
 
+## NPC story flags (side feature, NPC story N1.1, 2026-10-30)
+
+- **What:** the NPC story (docs/npcs/ROADMAP.md) keeps its progress as named world flags in `StorySystem` (Common/Story/StorySystem.cs). Later patches read them for dialogue conditions, the Mechanic shop gate and the Dryad and Skeletron events.
+- **Authority:** only the server or single-player writes (`ServerSet`). A multiplayer client's `ServerSet` does nothing.
+- **Sync:** the join provider `story-flags` sends the whole set; `StoryFlagChanged` (id 58, ToClient) sends one key and value per change; both are validated (key length at most `MaxKeyLength`, join count at most `MaxJoinFlags`).
+- **Save:** world data key `Flags`, cleared on unload like `RecipeKnowledgeSystem`.
+- **Debug:** `/fstory` is a World command, so in multiplayer it runs on the server and writes the real flags. Removed in patch N9.
+
 ## Slot caps (side feature, 2026-10-24)
 - **Why:** a furnace given 9999 input and 9999 fuel by hand runs forever, so there is no reason to automate. Conveyors already buffered only a multiple of the recipe count; hand deposits had no limit.
 - **Design:** `BaseMachine.GetSlotCap(kind, index, item)` is the one rule. Output = `OutputBufferMultiplier` (10) x per-craft product amount (`OutputCapFor`), input = `IngredientBufferMultiplier` (2) x recipe count (`IngredientCapFor`, auto mode detects the recipe from the other filled slots plus the deposited item), fuel = `FuelTable.StackLimit`. Authority: the server (or single-player) owns the slots; the clicking client clamps in the same frame (`MachineSlotEdit.ClampAfterClick`, called from `UIItemSlotWrapper` for single-player, host and predicted client), and `MachineSlotEdit` on the server rejects a non-removal edit above the cap. No new packet.

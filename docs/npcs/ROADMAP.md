@@ -19,18 +19,26 @@ The NPC layer that makes the mod playable: the Dryad arrives from the Eye of Cth
 ### Defaults chosen by Claude (change any; all are listed again in section 9)
 - D1. "Drop" means the Dryad appears as a town NPC at the Eye of Cthulhu's death position (chat line "The Dryad has arrived"). No item, no cell.
 - D2. "Has not arrived yet" = no Dryad exists right now AND no Dryad has ever existed in this world (a latched flag). A Dryad who died later is not re-dropped.
-- D3. "First defeated" uses our own saved flag, not `NPC.downedBoss1`, so the decision does not depend on vanilla's update order (V4). Worlds where `downedBoss1` is already true start with the flag set.
+- D3. "First defeated" uses our own saved flag, not `NPC.downedBoss1`, so the decision does not depend on vanilla's update order (V4). Old worlds are ignored (Ismail, 2026-10-30).
 - D4. All story state is WORLD state (saved, synced), not per player, like recipe knowledge.
 - D5. Her Backpack opens a normal chat window with one button, "Take it". No instant pickup.
-- D6. The bag turn-in happens automatically at the moment the player starts talking to the Mechanic while carrying the bag (no extra button). The server checks the bag, the client removes it after the answer (the same pattern as `RecipeKnowledgeNet` parchments).
+- D6. SUPERSEDED by Ismail (2026-10-30), see "Confirmed by Ismail": the Mechanic shows "!" while the player carries the Bag and asks "Have you found my bag?" with the buttons "Give the bag" and "Close". The button sends the `TurnInBag` request; the server checks the bag, the client removes it after the answer (the same pattern as `RecipeKnowledgeNet` parchments).
 - D7. The shop unlock is a world flag. After it, the vanilla shop list comes back behind that flag (entries are gated, not deleted). The first-bag player unlocks it for everyone.
 - D8. Dryad dialogue 1 exits when the Mechanic is rescued AND housed (literal reading of the plan). One tunable switch turns the house requirement off.
 - D9. The Mechanic's scroll gift is once per world, to the player who talks to her first. It is handed over as three Sealed Scrolls (`ClosedScrollItem`), each with its own one-recipe pool.
 - D10. The scroll pools point at placeholder recipe art until Ismail decides what the part scrolls teach (see Q9).
 - D11. Skeletron-first fork: the underground Mechanic is removed (only one Mechanic can exist), the dungeon Backpack is replaced by the tied Mechanic, the Dryad story is switched off, the Mechanic's own scroll dialogue still works after her rescue.
 - D12. Underground placement: random spots between the rock layer and 100 tiles above the Underworld, open 3x4 space on a solid floor, no liquid, away from the world spawn, the dungeon and the other bound NPCs.
-- D13. Existing worlds are migrated at load (section 3, rule M6). New worlds are handled in `PostWorldGen`.
+- D13. SUPERSEDED: old worlds are ignored (Ismail, 2026-10-30). No migration and no load-time placement; only new worlds get the story, placement runs in `PostWorldGen`.
 - D14. The exclamation mark is drawn above any NPC whose entry condition is met for the LOCAL player, only while the NPC is on screen and its chat is not open.
+
+### Confirmed by Ismail (2026-10-30)
+- D1 (the Dryad appears at the Eye's death spot), D2 (what "not arrived yet" means), D7 (the vanilla shop list returns after the bag) and D8 (the Dryad's exit needs the Mechanic housed) are confirmed.
+- **Her Backpack chat:** text "Looks dirty and full of wires", buttons "Take it" and "Close".
+- **Bag turn-in (replaces D6):** while the player carries the Bag, the Mechanic gets an important dialogue with the "!". She says "Have you found my bag?" with the buttons "Give the bag" and "Close". So the important dialogue framework (N2.1) supports two chat buttons per entry (labels and a click callback), not only text.
+- **Bag loss (replaces Q4):** the Bag respawns in the dungeon (Her Backpack comes back) if the player loses it. It stops respawning when a player holds it in the inventory, or after it was given to the Mechanic (`MechanicShopUnlocked`). Rule: a server watcher respawns the Backpack at its saved position when `BackpackTaken` is true, `MechanicShopUnlocked` is false, no online player holds a Bag in the inventory (main slots, banks and the cursor item) and no Bag lies on the ground, for `BackpackRespawnDelayTicks` in a row (so a Bag that was just dropped or is being picked up does not trigger it). Known limits: a Bag in a chest counts as lost, and with nobody online the watcher does not run; a second Bag from a respawn is harmless because only one is consumed.
+- **Old worlds (replaces D13 and Q12):** ignored.
+- Not answered yet: scrolls lost (Q8). The other open items stay on their defaults.
 
 ## 2. The story flow
 
@@ -75,7 +83,7 @@ Route B (Skeletron before the Eye of Cthulhu):
 - M3. Her Backpack is a `ModNPC`: friendly, never moves, cannot be hurt, saved with the world (`NeedSaving`), never despawns (`CheckActive` false).
 - M4. Taking the Bag: the server verifies the NPC, the distance and `BackpackTaken`, gives one Bag to the player, removes the Backpack, sets `BackpackTaken`.
 - M5. The Bag is a quest-rarity item. It should survive lava (V9).
-- M6. Old worlds: on world load, if `MechanicPlaced` is not set: if `NPC.savedMech` is already true, set `MechanicPlaced`, `MechanicRescued` and `MechanicShopUnlocked` (the player already finished the vanilla way); otherwise run M1 and M2 now (the vanilla tied Mechanic is still in the dungeon; if she is not found, log it and skip).
+- M6. Old worlds are ignored (Ismail, 2026-10-30): no migration and no placement at load. Placement runs only in `PostWorldGen`.
 
 ## 4. Codebase and API facts this plan relies on
 
@@ -151,13 +159,13 @@ Run the checks in section 10 (V1, V2, V3, V4, V9, V11) on the local vanilla sour
 
 ### Phase N4 - Placement and the Backpack
 - N4.1 `MechanicPlacement` (M1, M2, M6 plus the underground search and tunables), the `savedMech` watcher (S2), the `/fstory dump` and `/fstory place` tools, a minimal `HerBackpackNPC` (stands, saved, no interaction yet).
-- Tests (new world on small, medium and large): there is a Backpack in the dungeon where the tied Mechanic used to be and a tied Mechanic underground; the log prints both positions; saving and reloading keeps both; an OLD world gets the same on load; an old world with the Mechanic already rescued gets the story flags set and nothing spawned; the underground Mechanic can be rescued and becomes the town NPC; `MechanicRescued` turns on.
-- N4.2 Backpack interaction and `MechanicsBagItem`: chat window with "Take it", the `TakeBag` request and result.
+- Tests (new world on small, medium and large): there is a Backpack in the dungeon where the tied Mechanic used to be and a tied Mechanic underground; the log prints both positions; saving and reloading keeps both; the underground Mechanic can be rescued and becomes the town NPC; `MechanicRescued` turns on.
+- N4.2 Backpack interaction and `MechanicsBagItem`: chat window "Looks dirty and full of wires" with the buttons "Take it" and "Close", the `TakeBag` request and result, and the respawn watcher (see "Confirmed by Ismail", `BackpackRespawnDelayTicks`).
 - Tests: the Bag arrives once, the Backpack disappears for every client, a second player cannot take a second Bag, quest tooltip, lava does not destroy the Bag (V9), reload keeps `BackpackTaken`.
 
 ### Phase N5 - Bag turn-in
-- N5.1 Mechanic dialogue entry `Mechanic.Bag` (condition: the local player carries the Bag and the shop is locked), the `TurnInBag` request, consumption after the result, `MechanicShopUnlocked`.
-- Tests: with the Bag the Mechanic shows "!", talking consumes exactly one Bag and unlocks the full shop for everyone, a second Bag does nothing, talking without the Bag does nothing, a client that drops the Bag mid-talk is refused cleanly.
+- N5.1 Mechanic dialogue entry `Mechanic.Bag` (condition: the local player carries the Bag and the shop is locked): "Have you found my bag?" with the buttons "Give the bag" and "Close"; the button sends the `TurnInBag` request, the Bag is consumed after the result, `MechanicShopUnlocked` is set.
+- Tests: with the Bag the Mechanic shows "!", pressing "Give the bag" consumes exactly one Bag and unlocks the full shop for everyone, "Close" keeps the Bag, a second Bag does nothing, talking without the Bag shows no "!", a client that drops the Bag mid-talk is refused cleanly.
 
 ### Phase N6 - The Dryad
 - N6.1 Eye of Cthulhu handler (S3, S4), the Dryad spawn and announcement, Dryad dialogues 1 and 2 (placeholder text).
@@ -175,22 +183,22 @@ Run the checks in section 10 (V1, V2, V3, V4, V9, V11) on the local vanilla sour
 - Tunables moved to a config, localization pass (Ismail's text), remove `/fstory` and the test entry, dedicated server plus two clients full run of both routes, join sync with a world in the middle of the story, update this document.
 
 ## 8. Tunables (names are final in the patches)
-`UndergroundMinDepthTiles`, `UndergroundBottomMarginTiles` (100), `PlacementTries`, `MinDistanceFromSpawnTiles`, `MinDistanceFromBoundNpcsTiles`, `OpenCellWidthTiles` (3), `OpenCellHeightTiles` (4), `InteractReachTiles`, `DialogueExitCheckTicks` (30), `ConditionCacheTicks` (10), `ExclamationBobPixels`, `ExclamationOffsetY`, `RequireHouseForDryadExit` (true), `ScrollsPerPart` (1).
+`UndergroundMinDepthTiles`, `UndergroundBottomMarginTiles` (100), `PlacementTries`, `MinDistanceFromSpawnTiles`, `MinDistanceFromBoundNpcsTiles`, `OpenCellWidthTiles` (3), `OpenCellHeightTiles` (4), `InteractReachTiles`, `DialogueExitCheckTicks` (30), `ConditionCacheTicks` (10), `ExclamationBobPixels`, `ExclamationOffsetY`, `RequireHouseForDryadExit` (true), `ScrollsPerPart` (1), `BackpackRespawnDelayTicks` (600).
 Plain static fields, not `const`, so hot reload can change them.
 
 ## 9. Open items (each default below is used unless Ismail says otherwise)
 - Q1. Dryad "drop": D1 (appears as an NPC). Alternatives: a tied Dryad he must free, or an item.
 - Q2. "Not arrived yet": D2. Alternative: only "no Dryad right now".
 - Q3. Backpack: D5 (chat window, Take button). Alternative: a right click picks it up at once.
-- Q4. Bag lost (burnt, thrown away): there is no second Backpack. Defaults: the Bag is lava-proof and a quest item, `/fstory bag` exists for testing. Alternatives: the Backpack comes back after a while, or the Mechanic sells a replacement.
-- Q5. Bag turn-in trigger: D6 (automatic when the talk starts). Alternative: a chat button.
+- Q4. RESOLVED by Ismail: the Backpack respawns while the Bag is lost (see "Confirmed by Ismail").
+- Q5. RESOLVED by Ismail: a chat button "Give the bag" (see D6).
 - Q6. What "temporarily remove everything" means for the shop after the bag: D7 (the vanilla list returns). Alternative: it stays empty after the bag too, until he designs the stock.
 - Q7. Dryad exit needs a house: D8 (yes). Alternative: only the rescue.
 - Q8. Scrolls: D9 (once per world, to the first player). If they are lost: `/fstory scrolls` for testing. Alternatives: the Mechanic gives a repeat set for a price, or the scroll gift is automatic recipe unlocks without items.
 - Q9. What the three scrolls teach: today the part recipes are Anvil recipes, which are not in the recipe book, so the pools use placeholder art pages. Ismail either draws recipe pages and adds `AddArt`, or adds Mechanical Assembler recipes for the parts and uses `.Add("MechanicalAssembler", <part item>)`. A pool with one entry falls back to a random recipe if that page is already unlocked (the existing scroll rule); that is harmless.
 - Q10. The fork (D11) details: removing the underground Mechanic, switching off the Dryad story, keeping her scroll dialogue.
 - Q11. Underground placement (D12): layer, distances, biomes to avoid (Jungle, Corruption or Crimson, Marble, Granite, hive, Temple are avoided by default; Dungeon walls too).
-- Q12. Old worlds (D13): migrate at load, or new worlds only.
+- Q12. RESOLVED by Ismail: old worlds are ignored.
 - Q13. Should the Dryad's dialogue 1 also start when she arrived by the vanilla route (Eater of Worlds or Brain of Cthulhu first) and the Eye was never killed? Default: no, the story starts at the Eye (so skipping the Eye means the dungeon route only).
 
 ## 10. Verification list (checked in the local vanilla source before the patch that needs it)
@@ -221,7 +229,7 @@ Search the local decompiled vanilla source (Ismail's tModLoader source folder; t
 One line per patch: `[ ]` not started, `[~]` applied, untested, `[x]` tested and done.
 
 - [ ] N0 Verification of the vanilla facts (V1 to V11, Ismail reads the local source)
-- [ ] N1.1 Story foundation (flags, save, sync, /fstory)
+- [~] N1.1 Story foundation (patch_npc_n1_1_story_foundation.ps1, applied, untested; Common/Story/StoryFlags.cs, StorySystem.cs, StoryCommand.cs, Common/Net/StoryNet.cs, packet StoryFlagChanged = 58. AUTHORITY: the server / single-player writes flags (`StorySystem.ServerSet`), clients only read. SYNC: join provider "story-flags" sends the whole set, StoryFlagChanged broadcasts each change, single-player applies directly with no packet. SAVE: world data key "Flags". `/fstory status | known | flag <name> [on|off]` is a World command, so in multiplayer it runs on the server. Tests: see the N1.1 reply)
 - [ ] N2.1 Important dialogue framework (registry, "!" mark, chat text, exit latching)
 - [ ] N3.1 Mechanic shop (gate vanilla entries, two belts)
 - [ ] N4.1 Placement (underground Mechanic, Backpack in the dungeon, migration, rescue watcher)
@@ -232,4 +240,4 @@ One line per patch: `[ ]` not started, `[~]` applied, untested, `[x]` tested and
 - [ ] N8.1 Skeletron first fork
 - [ ] N9 Hardening, remove debug, dedicated server test
 
-Next chat prompt (to start): "Implement Phase N1 patch N1.1 of the NPC story roadmap (docs/npcs/ROADMAP.md). Answers to the open items in section 9: <paste or say 'use the defaults'>. Vanilla facts from section 10 (V1 to V11) so far: <paste or 'not checked yet'>."
+Next chat prompt (after N1.1 applied): "N1.1 is applied (check its Progress line); results: <paste>. Implement patch N2.1 (important dialogue framework) of the NPC story roadmap (docs/npcs/ROADMAP.md). Decisions are in section 1 (Confirmed by Ismail) and section 9. Vanilla facts V1 to V11 so far: <paste or 'not checked yet'>."
