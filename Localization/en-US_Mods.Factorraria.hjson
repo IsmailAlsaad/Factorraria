@@ -900,6 +900,7 @@ Keybinds: {
 Projectiles: {
 	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
 	MechSuitArmProjectile.DisplayName: Mech Suit Arm Projectile
+	SuperWeaponMissile.DisplayName: Super Weapon Missile
 }
 
 RecipeBook: {
