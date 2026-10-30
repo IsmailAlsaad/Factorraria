@@ -969,7 +969,7 @@ tModLoader/other bases -> project types:
   class StoryEventsGlobalNPC : GlobalNPC
     +OnKill(NPC)[ov]
   static class DryadStory
-    +RequireHouseForDryadExit:bool[s] +SpawnSearchRadiusTiles:int[s] +DryadWidth:int[s] +DryadHeight:int[s] +OnEyeKilled(Vector2)[s] +MechanicHoused()[s]
+    +RequireHouseForDryadExit:bool[s] +DryadWidth:int[s] +DryadHeight:int[s] +OnEyeKilled(Vector2)[s] +MechanicHoused()[s]
   class StoryEventsSystem : ModSystem
     +WatchEveryTicks:int[s] +PostUpdateWorld()[ov]
 **StoryFlags.cs**

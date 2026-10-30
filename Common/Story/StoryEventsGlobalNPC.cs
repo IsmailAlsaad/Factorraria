@@ -28,14 +28,13 @@ namespace Factorraria.Common.Story
     /// <summary>
     /// The Dryad's arrival (NPC roadmap rules S3 and S4, decisions D1 to D3).
     ///  - First Eye of Cthulhu kill (our own saved flag EyeKillSeen, not NPC.downedBoss1): if no Dryad exists and none ever did (DryadSeen),
-    ///    a Dryad is spawned as a homeless town NPC at the Eye's death position and the vanilla arrival line is announced.
+    ///    a Dryad is spawned as a homeless town NPC exactly at the Eye's centre and the vanilla arrival line is announced.
     ///  - SERVER / single-player only. Clients see the Dryad through the normal NPC sync and the flags through the story flag sync. No packet.
     /// </summary>
     public static class DryadStory
     {
         // Tunables (not const, so hot reload can change them).
         public static bool RequireHouseForDryadExit = true;   // D8: dialogue 1 ends only when the rescued Mechanic also has a house; false = the rescue alone ends it
-        public static int SpawnSearchRadiusTiles = 25;        // how far from the Eye's death spot (in tiles) a free standing place is looked for
         public static int DryadWidth = 18;
         public static int DryadHeight = 40;
 
@@ -69,19 +68,9 @@ namespace Factorraria.Common.Story
 
         static bool SpawnDryad(Vector2 center)
         {
-            int radius = System.Math.Max(1, SpawnSearchRadiusTiles);
-            int x, y;
-
-            // The Eye flies through blocks, so its death spot can be inside the ground: use the nearest free standing place instead, then the world spawn.
-            if (!FindStandingSpot(center, radius, out x, out y)
-                && !FindStandingSpot(new Vector2(Main.spawnTileX * 16f, Main.spawnTileY * 16f), radius, out x, out y))
-            {
-                x = Main.spawnTileX;
-                y = Main.spawnTileY;
-            }
-
-            // NewNPC puts the bottom centre of the NPC at (X, Y): the floor line of the foot tile.
-            int index = NPC.NewNPC(new EntitySource_Misc("FactorrariaStoryDryad"), x * 16 + 8, (y + 1) * 16, NPCID.Dryad);
+            // The Dryad's centre is placed exactly on the Eye's centre (NewNPC takes the bottom centre of the NPC, so the Y is moved down by half her height).
+            // The Eye flies through blocks, so if it died inside the ground she starts there and the vanilla NPC physics decide what happens next.
+            int index = NPC.NewNPC(new EntitySource_Misc("FactorrariaStoryDryad"), (int)center.X, (int)(center.Y + DryadHeight / 2f), NPCID.Dryad);
             if (index < 0 || index >= Main.maxNPCs)
                 return false;
 
@@ -99,49 +88,8 @@ namespace Factorraria.Common.Story
             else
                 Main.NewText(Language.GetTextValue("Announcement.HasArrived", dryad.FullName), 50, 125, 255);
 
-            FactorrariaNet.Log("[Story] the Dryad arrived at tile (" + x + ", " + y + ") after the first Eye of Cthulhu kill");
+            FactorrariaNet.Log("[Story] the Dryad arrived at the Eye of Cthulhu's death position (tile " + (int)(center.X / 16f) + ", " + (int)(center.Y / 16f) + ")");
             return true;
-        }
-
-        // The free standing place closest to a world position: solid ground below, room for the Dryad's box, no liquid.
-        static bool FindStandingSpot(Vector2 near, int radius, out int footX, out int footY)
-        {
-            footX = 0;
-            footY = 0;
-
-            int cx = (int)(near.X / 16f);
-            int cy = (int)(near.Y / 16f);
-            float best = float.MaxValue;
-            bool found = false;
-
-            for (int dy = -radius; dy <= radius; dy++)
-            {
-                for (int dx = -radius; dx <= radius; dx++)
-                {
-                    float distance = dx * dx + dy * dy;
-                    if (distance >= best)
-                        continue;
-
-                    int x = cx + dx;
-                    int y = cy + dy;
-                    if (!WorldGen.InWorld(x, y, 10))
-                        continue;
-
-                    if (!WorldGen.SolidTile(x, y + 1) || Main.tile[x, y].LiquidAmount > 0)
-                        continue;
-
-                    Vector2 position = new Vector2(x * 16 + 8 - DryadWidth / 2f, (y + 1) * 16 - DryadHeight);
-                    if (Collision.SolidCollision(position, DryadWidth, DryadHeight))
-                        continue;
-
-                    best = distance;
-                    footX = x;
-                    footY = y;
-                    found = true;
-                }
-            }
-
-            return found;
         }
 
         /// <summary>True when a town Mechanic exists and has a house (used by the exit of Dryad dialogue 1, D8).</summary>
