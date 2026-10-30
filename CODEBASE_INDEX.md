@@ -805,11 +805,11 @@ tModLoader/other bases -> project types:
   class StoryNetSystem : ModSystem
     +Load()[ov]
   enum StoryActionKind : byte
-    {TakeBag}
+    {TakeBag, TurnInBag}
   enum StoryActionFailure : byte
-    {None, CannotAct, NoNpc, TooFar, Unavailable}
+    {None, CannotAct, NoNpc, TooFar, Unavailable, NoItem}
   static class StoryNet
-    +MaxJoinFlags:int[s] +InteractReachTiles:int[s] +ActionTimeoutTicks:int[s] +BroadcastFlag(string,bool)[s] +HandleFlagChanged(BinaryReader,int)[s] +ActionPending:bool[s] +RequestTakeBag(int)[s] +HandleActionRequest(BinaryReader,int)[s] +HandleActionResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
+    +MaxJoinFlags:int[s] +InteractReachTiles:int[s] +ActionTimeoutTicks:int[s] +BroadcastFlag(string,bool)[s] +HandleFlagChanged(BinaryReader,int)[s] +ActionPending:bool[s] +RequestTakeBag(int)[s] +RequestTurnInBag(int)[s] +HasBag(Player)[s] +HandleActionRequest(BinaryReader,int)[s] +HandleActionResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
 **SuperWeaponNet.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, SuperWeaponExplosionFxSystem, WallShieldBreakFxSystem
   enum SuperWeaponEffectKind : byte
     {ShieldBreak, Ignition, Launch, Impact, Fizzle}
@@ -976,12 +976,12 @@ tModLoader/other bases -> project types:
 **ImportantDialogueChatButtons.cs** ns!=Factorraria.Common.Story uses: FactorrariaNet, ImportantDialogueButton, ImportantDialogueEntry, ImportantDialogueSystem
   static class ImportantDialogueChatButtons
     +OrigSetChatButtons(ref string,ref string) +HookSetChatButtons(OrigSetChatButtons,ref string,ref string) +Install()[s] +TryHandleClick(NPC,bool)[s]
-**ImportantDialogueDefinitions.cs** ns!=Factorraria.Common.Story uses: ImportantDialogueButton, ImportantDialogueEntry, ImportantDialogueRegistry, StoryFlags, StorySystem
+**ImportantDialogueDefinitions.cs** ns!=Factorraria.Common.Story uses: ImportantDialogueButton, ImportantDialogueEntry, ImportantDialogueRegistry, StoryFlags, StoryNet, StorySystem
   static class ImportantDialogueDefinitions
     +Register()[s]
 **ImportantDialogueEntry.cs** ns!=Factorraria.Common.Story uses: StoryFlags, StorySystem
   class ImportantDialogueButton
-    +LabelKey:string +OnClick:Action<Player, NPC>
+    +LabelKey:string +OnClick:Action<Player, NPC> +ReplaceVanillaFirstButton:bool
   class ImportantDialogueEntry
     +KeyPrefix:string[s] +Id:string +NpcType:int +Priority:int +Condition:Func<Player, bool> +Exit:Func<bool> +OnTalkStart:Action<Player, NPC> +Button1:ImportantDialogueButton +Button2:ImportantDialogueButton +TextKey:string +IsDone:bool +ResolveTextKey() +GetText(Player) +GetButtonLabel(int)
 **ImportantDialogueGlobalNPC.cs** ns!=Factorraria.Common.Story uses: ImportantDialogueChatButtons, ImportantDialogueEntry, ImportantDialogueRegistry, ImportantDialogueSystem

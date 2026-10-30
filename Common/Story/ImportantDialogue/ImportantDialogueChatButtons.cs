@@ -10,7 +10,7 @@ namespace Factorraria.Common.Story
     /// Puts the active important dialogue's buttons into the NPC chat window (NPC roadmap patch N2.1). Client only.
     /// tModLoader has SetChatButtons only on ModNPC, not on GlobalNPC, so this detours NPCLoader.SetChatButtons (public static,
     /// called every frame the chat window is open, after the vanilla labels are set) and adds our labels to the first FREE slot.
-    /// A vanilla button (Shop, Help, ...) therefore stays first; vanilla Close is always separate. Clicks come back through
+    /// A vanilla button (Shop, Help, ...) therefore stays first (unless the button sets ReplaceVanillaFirstButton, then it takes slot 1); vanilla Close is always separate. Clicks come back through
     /// GlobalNPC.PreChatButtonClicked (ImportantDialogueGlobalNPC), which asks TryHandleClick whether the slot was ours.
     /// tModLoader removes the detour when the mod unloads.
     /// </summary>
@@ -76,7 +76,15 @@ namespace Factorraria.Common.Story
                 return;
 
             string label = entry.GetButtonLabel(index);
-            if (string.IsNullOrEmpty(button))
+
+            // Replace the vanilla first button (for example the Mechanic's "Shop"): our label takes chat slot 1, the vanilla click is cancelled in TryHandleClick.
+            // Only if no button of ours already sits there; otherwise this one falls through to the first free slot.
+            if (def.ReplaceVanillaFirstButton && slotButton[0] < 0)
+            {
+                button = label;
+                slotButton[0] = index;
+            }
+            else if (string.IsNullOrEmpty(button))
             {
                 button = label;
                 slotButton[0] = index;

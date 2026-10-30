@@ -12,6 +12,14 @@ namespace Factorraria.Common.Story
 
         /// <summary>Called on the local client when the player clicks the button. Send a request to the server from here, do not change world state directly.</summary>
         public Action<Player, NPC> OnClick;
+
+        /// <summary>
+        /// False (default): the button takes the first FREE chat slot, a vanilla Shop / Help button stays first.
+        /// True: the button REPLACES the vanilla first button (chat slot 1) while the entry is active, and the vanilla action of that button
+        /// does not run (its click is cancelled). The vanilla second button and Close stay. Only one button of an entry can take the first slot;
+        /// a second one that asks for it falls back to the first free slot. Example: the Mechanic's "Shop" becomes "Give the bag" (N5.1).
+        /// </summary>
+        public bool ReplaceVanillaFirstButton;
     }
 
     /// <summary>
@@ -43,7 +51,7 @@ namespace Factorraria.Common.Story
         /// <summary>Optional. Runs once on the local client when the player starts a conversation with the NPC while this entry is active.</summary>
         public Action<Player, NPC> OnTalkStart;
 
-        /// <summary>Optional chat buttons (up to two). A button takes the first free button slot of the chat window, so a vanilla button (Shop, Help) stays first. The vanilla Close button is always there as well.</summary>
+        /// <summary>Optional chat buttons (up to two). A button takes the first free button slot of the chat window, so a vanilla button (Shop, Help) stays first, unless the button sets ReplaceVanillaFirstButton. The vanilla Close button is always there as well.</summary>
         public ImportantDialogueButton Button1;
         public ImportantDialogueButton Button2;
 

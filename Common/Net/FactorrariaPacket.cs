@@ -65,7 +65,7 @@ namespace Factorraria.Common.Net
         CosmicEvent = 56,             // server -> nearby clients: "these cosmic events happened": absorb, ionize, discharge, strike, spit (cosmetic only; cosmic radiation patch C6)
         SuperWeaponEffect = 57,       // server -> all clients: "this super weapon effect happened at (x, y)": kind byte first, then the position; cosmetic only (super weapons patch S1.2, kind 0 = Wall of Flesh shield break)
         StoryFlagChanged = 58,        // server -> all clients: "NPC story flag <key> is now on / off" (NPC story patch N1.1; the full set goes out with the join sync provider "story-flags")
-        StoryActionRequest = 59,      // client -> server: "I do this story action": kind byte (0 = take the Mechanic's Bag from Her Backpack), then the NPC index (NPC story patch N4.2; later kinds: turn in the Bag, claim the scrolls)
+        StoryActionRequest = 59,      // client -> server: "I do this story action": kind byte (0 = take the Mechanic's Bag from Her Backpack, 1 = turn the Bag in to the Mechanic), then the NPC index (NPC story patches N4.2 and N5.1; later kind: claim the scrolls)
         StoryActionResult = 60,       // server -> the requesting client: "your story action was accepted / refused": kind byte, accepted flag, failure byte (NPC story patch N4.2)
     }
 
