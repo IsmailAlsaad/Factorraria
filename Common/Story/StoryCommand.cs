@@ -23,13 +23,12 @@ namespace Factorraria.Common.Story
     ///   /fstory bag                     put one Mechanic's Bag into your inventory, for testing the bag-loss watcher and the turn-in (patch N4.2)
     ///   /fstory scrolls                 put the Mechanic's three super weapon scrolls into your inventory without touching any flag (patch N7.1). To repeat the real hand-out: /fstory flag ScrollsGiven off, /fstory flag Done.Mechanic.SuperWeaponIntro off, /fstory flag Done.Dryad.PlanWithMechanic off
     ///   /fstory eye                     run the first-Eye-of-Cthulhu handler at your position without fighting it: sets EyeKillSeen and spawns the Dryad if she never arrived (patch N6.1). To repeat: /fstory flag EyeKillSeen off and /fstory flag DryadSeen off
-    ///   /fstory fork [status|off|on]    the Skeletron-first fork (patch N8.1). status (default): the facts, the verdict of StoryForkRules.ShouldLatch and what the fork changes for you now. off: clear DungeonFork AND pause the fork watcher (otherwise it latches again within a tick while Skeletron is down); the pause ends on world load. on: resume the watcher. To force the fork without Skeletron use /fstory flag DungeonFork on
     /// </summary>
     public class StoryCommand : ModCommand
     {
         public override string Command => "fstory";
         public override CommandType Type => CommandType.World;
-        public override string Usage => "/fstory status | known | flag <name> [on|off] | dialogue | spawn <mechanic|backpack> | dump | bag | scrolls | eye | fork [status|off|on] | weight <name> <number>";
+        public override string Usage => "/fstory status | known | flag <name> [on|off] | dialogue | spawn <mechanic|backpack> | dump | bag | scrolls | eye | weight <name> <number>";
         public override string Description => "NPC story debug tools";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -72,10 +71,6 @@ namespace Factorraria.Common.Story
 
                 case "eye":
                     Eye(caller);
-                    break;
-
-                case "fork":
-                    Fork(caller, args);
                     break;
 
                 case "weight":
@@ -202,57 +197,6 @@ namespace Factorraria.Common.Story
 
             if (count == 0)
                 caller.Reply("No Mechanic or Her Backpack NPC exists right now.", Color.LightGreen);
-        }
-
-        // Test helper (patch N8.1): the Skeletron-first fork. A World command, so in multiplayer it runs on the server, where the watcher lives.
-        static void Fork(CommandCaller caller, string[] args)
-        {
-            string word = args.Length > 1 ? args[1].ToLowerInvariant() : "status";
-
-            if (word == "off")
-            {
-                StoryForkRules.WatcherEnabled = false;
-                StorySystem.ServerSet(StoryFlags.DungeonFork, false);
-                caller.Reply("[Story] DungeonFork is off and the fork watcher is paused until /fstory fork on or the next world load.", Color.LightGreen);
-                return;
-            }
-
-            if (word == "on")
-            {
-                StoryForkRules.WatcherEnabled = true;
-                string whyNot;
-                bool wouldLatch = StoryForkRules.ShouldLatch(out whyNot);
-                caller.Reply("[Story] the fork watcher is running" + (wouldLatch ? ": DungeonFork latches within a tick." : "; nothing to latch now (" + whyNot + ")."), Color.LightGreen);
-                return;
-            }
-
-            if (word != "status")
-            {
-                caller.Reply("Usage: /fstory fork [status|off|on]", Color.Yellow);
-                return;
-            }
-
-            string reason;
-            bool latch = StoryForkRules.ShouldLatch(out reason);
-            bool fork = StorySystem.Get(StoryFlags.DungeonFork);
-
-            caller.Reply("[Story] DungeonFork " + OnOff(StoryFlags.DungeonFork) + ", watcher " + (StoryForkRules.WatcherEnabled ? "running" : "paused") + ". Skeletron defeated " + NPC.downedBoss3
-                + ", Eye defeated " + NPC.downedBoss1 + ", EyeKillSeen " + OnOff(StoryFlags.EyeKillSeen) + ", MechanicRescued " + OnOff(StoryFlags.MechanicRescued) + ", NPC.savedMech " + NPC.savedMech
-                + ", MechanicShopUnlocked " + OnOff(StoryFlags.MechanicShopUnlocked) + ", BackpackTaken " + OnOff(StoryFlags.BackpackTaken) + ", DryadSeen " + OnOff(StoryFlags.DryadSeen), Color.LightGreen);
-            caller.Reply("Fork verdict: " + (latch ? "it starts now" : "does not start (" + reason + ")"), Color.LightGreen);
-
-            string why;
-            float weight = RareNpcRules.MechanicWeight(caller.Player, out why);
-            caller.Reply("Tied Mechanic for you now: weight " + weight + (weight <= 0f ? " (" + why + ")" : ""), Color.LightGreen);
-            weight = RareNpcRules.BackpackWeight(caller.Player, out why);
-            caller.Reply("Her Backpack for you now: weight " + weight + (weight <= 0f ? " (" + why + ")" : ""), Color.LightGreen);
-
-            string dryad = fork && !DryadStory.SpawnOnFork ? "no scripted Dryad at the Eye (SpawnOnFork is false); Dryad dialogues are off on the fork"
-                : StorySystem.Get(StoryFlags.EyeKillSeen) ? "the Eye was already killed once: nothing more spawns"
-                : StorySystem.Get(StoryFlags.DryadSeen) || NPC.AnyNPCs(NPCID.Dryad) ? "a Dryad exists or arrived before: the Eye kill spawns none"
-                : fork ? "the first Eye kill spawns her (her dialogues stay off on the fork)" : "on: the first Eye kill spawns her";
-            caller.Reply("Dryad story: " + dryad, Color.LightGreen);
-            caller.Reply("Scrolls: ScrollsGiven " + OnOff(StoryFlags.ScrollsGiven) + ", a Dryad exists now: " + NPC.AnyNPCs(NPCID.Dryad) + " (the Mechanic hands them out only while one does)", Color.LightGreen);
         }
 
         // Test helper (patch N6.1): the first Eye of Cthulhu kill without the fight. A World command, so in multiplayer it runs on the server.

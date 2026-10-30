@@ -801,7 +801,7 @@ tModLoader/other bases -> project types:
 **SlotEditTestCommand.cs** uses: MachineRecipeSelect, MachineSlotEdit, MaterializerToggle
   class SlotEditTestCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
-**StoryNet.cs** uses: DryadStory, FactorrariaNet, FactorrariaPacket, HerBackpackNPC, JoinSync, MechanicsBagItem, PacketDirection, StoryFlags, StoryScrolls, StorySystem
+**StoryNet.cs** uses: FactorrariaNet, FactorrariaPacket, HerBackpackNPC, JoinSync, MechanicsBagItem, PacketDirection, StoryFlags, StoryScrolls, StorySystem
   class StoryNetSystem : ModSystem
     +Load()[ov]
   enum StoryActionKind : byte
@@ -958,20 +958,18 @@ tModLoader/other bases -> project types:
 **RareNpcSpawns.cs** uses: FactorrariaNet, HerBackpackNPC, MechanicsBagItem, StoryFlags, StorySystem
   static class RareNpcRules
     +MechanicSpawnWeight:float[s] +DungeonMechanicSpawnWeight:float[s] +BackpackSpawnWeight:float[s] +RareNpcRarity:int[s] +BackpackRespawnDelayTicks:int[s] +MechanicWeight(Player,out string)[s] +BackpackWeight(Player,out string)[s]
-  static class StoryForkRules
-    +WatcherEnabled:bool[s] +ShouldLatch(out string)[s]
   class RareNpcGlobalNPC : GlobalNPC
     +EditSpawnPool(IDictionary<int, float>,NPCSpawnInfo)[ov]
   class RareNpcSystem : ModSystem
     +OnWorldLoad()[ov] +PostUpdateWorld()[ov]
-**StoryCommand.cs** uses: DryadStory, HerBackpackNPC, ImportantDialogueEntry, ImportantDialogueRegistry, MechanicsBagItem, RareNpcRules, StoryFlags, StoryForkRules, StoryScrolls, StorySystem
+**StoryCommand.cs** uses: DryadStory, HerBackpackNPC, ImportantDialogueEntry, ImportantDialogueRegistry, MechanicsBagItem, RareNpcRules, StoryFlags, StoryScrolls, StorySystem
   class StoryCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **StoryEventsGlobalNPC.cs** uses: FactorrariaNet, StoryFlags, StorySystem
   class StoryEventsGlobalNPC : GlobalNPC
     +OnKill(NPC)[ov]
   static class DryadStory
-    +RequireHouseForDryadExit:bool[s] +SpawnOnFork:bool[s] +DryadWidth:int[s] +DryadHeight:int[s] +OnEyeKilled(Vector2)[s] +DryadExists()[s] +MechanicHoused()[s]
+    +RequireHouseForDryadExit:bool[s] +DryadWidth:int[s] +DryadHeight:int[s] +OnEyeKilled(Vector2)[s] +MechanicHoused()[s]
   class StoryEventsSystem : ModSystem
     +WatchEveryTicks:int[s] +PostUpdateWorld()[ov]
 **StoryFlags.cs**
