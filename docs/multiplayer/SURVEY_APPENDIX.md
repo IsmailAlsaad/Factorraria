@@ -821,6 +821,16 @@ Not in the original survey; designed multiplayer-first. See the Progress entry "
 - **Save:** world data key `Flags`, cleared on unload like `RecipeKnowledgeSystem`.
 - **Debug:** `/fstory` is a World command, so in multiplayer it runs on the server and writes the real flags. Removed in patch N9.
 
+## NPC important dialogue (side feature, NPC story N2.1, 2026-10-30)
+
+- **What:** an NPC with an "important dialogue" shows a "!" and says the same text on every click until the entry ends (docs/npcs/ROADMAP.md). Entries are registered in `ImportantDialogueDefinitions` with a condition (when it starts), an exit (when it ends), optional chat buttons and an optional talk-start callback.
+- **Authority:** the exit is world level. The server (or single-player) evaluates it every `DialogueExitCheckTicks` (30) in `ImportantDialogueSystem.PostUpdateEverything` and latches `Done.<Id>` with `StorySystem.ServerSet`, so an exit that flips back later cannot revive the entry. A multiplayer client never writes.
+- **Client only:** the condition (it may read the local inventory), the "!" draw (`GlobalNPC.PostDraw`), the chat text (`GlobalNPC.GetChat`, local client only), the chat buttons and `OnTalkStart` (`ImportantDialoguePlayer`, local player only). They read the synced flags and change no shared state. A button callback that must change the world sends a request packet (later patches).
+- **Chat buttons:** tModLoader has no `GlobalNPC.SetChatButtons`, so `ImportantDialogueChatButtons` detours `NPCLoader.SetChatButtons` (client only, `MonoModHooks.Add`); clicks come back through `GlobalNPC.PreChatButtonClicked`. A dedicated server never installs the detour.
+- **Sync:** no new packet. The `Done.<Id>` flags use the N1.1 flag sync (join provider and `StoryFlagChanged`).
+- **Known limits:** the active entry is cached on the client for `ConditionCacheTicks` (10) for drawing, so the "!" can lag a change of the inventory by up to a sixth of a second. A throwing condition, exit or callback is logged once and treated as false.
+- **Debug:** `/fstory dialogue`. Two test entries on the Guide, removed in patch N9.
+
 ## Slot caps (side feature, 2026-10-24)
 - **Why:** a furnace given 9999 input and 9999 fuel by hand runs forever, so there is no reason to automate. Conveyors already buffered only a multiple of the recipe count; hand deposits had no limit.
 - **Design:** `BaseMachine.GetSlotCap(kind, index, item)` is the one rule. Output = `OutputBufferMultiplier` (10) x per-craft product amount (`OutputCapFor`), input = `IngredientBufferMultiplier` (2) x recipe count (`IngredientCapFor`, auto mode detects the recipe from the other filled slots plus the deposited item), fuel = `FuelTable.StackLimit`. Authority: the server (or single-player) owns the slots; the clicking client clamps in the same frame (`MachineSlotEdit.ClampAfterClick`, called from `UIItemSlotWrapper` for single-player, host and predicted client), and `MachineSlotEdit` on the server rejects a non-removal edit above the cap. No new packet.

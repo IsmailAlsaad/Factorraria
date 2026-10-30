@@ -14,12 +14,13 @@ namespace Factorraria.Common.Story
     ///   /fstory status                  every set flag, the flag version, and which side this process is
     ///   /fstory known                   the fixed flag keys (and the "Done.&lt;id&gt;" form)
     ///   /fstory flag &lt;name&gt; [on|off]    set (default) or clear a flag
+    ///   /fstory dialogue                every important dialogue: NPC, priority, condition, exit, done (patch N2.1)
     /// </summary>
     public class StoryCommand : ModCommand
     {
         public override string Command => "fstory";
         public override CommandType Type => CommandType.World;
-        public override string Usage => "/fstory status | known | flag <name> [on|off]";
+        public override string Usage => "/fstory status | known | flag <name> [on|off] | dialogue";
         public override string Description => "NPC story debug tools";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -40,6 +41,10 @@ namespace Factorraria.Common.Story
                     SetFlag(caller, args);
                     break;
 
+                case "dialogue":
+                    Dialogue(caller);
+                    break;
+
                 default:
                     caller.Reply("Usage: " + Usage, Color.Yellow);
                     break;
@@ -53,6 +58,47 @@ namespace Factorraria.Common.Story
 
             string side = Main.netMode == NetmodeID.Server ? "dedicated server" : Main.netMode == NetmodeID.MultiplayerClient ? "multiplayer client" : "single-player";
             caller.Reply("[Story] " + side + ", version " + StorySystem.Version + ", " + sorted.Count + " flag(s) set" + (sorted.Count > 0 ? ": " + string.Join(", ", sorted) : "."), Color.LightGreen);
+        }
+
+        // Lists every important dialogue. In multiplayer this runs on the server, so Condition is evaluated for the calling player's server-side copy.
+        static void Dialogue(CommandCaller caller)
+        {
+            if (ImportantDialogueRegistry.All.Count == 0)
+            {
+                caller.Reply("[Story] no important dialogues are registered.", Color.LightGreen);
+                return;
+            }
+
+            foreach (ImportantDialogueEntry entry in ImportantDialogueRegistry.All)
+            {
+                string condition = "?";
+                if (caller.Player != null)
+                {
+                    try
+                    {
+                        condition = entry.Condition(caller.Player) ? "true" : "false";
+                    }
+                    catch (Exception)
+                    {
+                        condition = "error";
+                    }
+                }
+
+                string exit = "none";
+                if (entry.Exit != null)
+                {
+                    try
+                    {
+                        exit = entry.Exit() ? "true" : "false";
+                    }
+                    catch (Exception)
+                    {
+                        exit = "error";
+                    }
+                }
+
+                caller.Reply(entry.Id + " | " + Lang.GetNPCNameValue(entry.NpcType) + " | priority " + entry.Priority + " | condition " + condition + " | exit " + exit + " | done " + (entry.IsDone ? "true" : "false"), Color.LightGreen);
+            }
         }
 
         static void SetFlag(CommandCaller caller, string[] args)

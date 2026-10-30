@@ -11,13 +11,12 @@ namespace Factorraria.Common.Story
     {
         public static string EyeKillSeen = "EyeKillSeen";                 // the Eye of Cthulhu was killed once (decides the Dryad drop)
         public static string DryadSeen = "DryadSeen";                     // a Dryad has existed in this world at least once
-        public static string MechanicPlaced = "MechanicPlaced";           // worldgen placed the hidden Mechanic and the Backpack
-        public static string BackpackPlaced = "BackpackPlaced";           // Her Backpack exists in the dungeon
-        public static string BackpackTaken = "BackpackTaken";             // a player took the Mechanic's Bag from the Backpack
+        public static string BackpackTaken = "BackpackTaken";             // a player took the Mechanic's Bag from Her Backpack (cleared again by the bag-loss watcher while the Bag is lost, so the Backpack can spawn again)
         public static string MechanicRescued = "MechanicRescued";         // NPC.savedMech turned true
         public static string MechanicShopUnlocked = "MechanicShopUnlocked"; // the bag was given (or she was rescued in the dungeon fork)
         public static string ScrollsGiven = "ScrollsGiven";               // the Mechanic handed out the three super weapon scrolls
         public static string DungeonFork = "DungeonFork";                 // Skeletron fell before the Eye of Cthulhu (the dungeon route)
+        public static string TestDialogueExit = "TestDialogueExit";       // TEMPORARY (patch N2.1): the exit switch of the Test.Guide dialogue; removed in N9
 
         public static string DonePrefix = "Done.";
 
@@ -25,8 +24,8 @@ namespace Factorraria.Common.Story
 
         public static string[] All() => new[]
         {
-            EyeKillSeen, DryadSeen, MechanicPlaced, BackpackPlaced, BackpackTaken,
-            MechanicRescued, MechanicShopUnlocked, ScrollsGiven, DungeonFork
+            EyeKillSeen, DryadSeen, BackpackTaken,
+            MechanicRescued, MechanicShopUnlocked, ScrollsGiven, DungeonFork, TestDialogueExit
         };
 
         /// <summary>True for a fixed key above or for any "Done.&lt;id&gt;" key.</summary>

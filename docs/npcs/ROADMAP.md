@@ -1,13 +1,13 @@
 ﻿# NPC Story and Interactions: Development Roadmap
 
-The NPC layer that makes the mod playable: the Dryad arrives from the Eye of Cthulhu, the Mechanic is hidden underground, her backpack waits in the dungeon, an "Important dialogue" system (exclamation mark) guides the player, and the Mechanic hands out the first super weapon scrolls. Written against repo commit `75653b2` (2026-10-30). Where this document and the code disagree, the code wins. Nothing in this document is built yet.
+The NPC layer that makes the mod playable: the Dryad arrives from the Eye of Cthulhu, the Mechanic is hidden underground, her backpack waits in the dungeon, an "Important dialogue" system (exclamation mark) guides the player, and the Mechanic hands out the first super weapon scrolls. Written against repo commit `75653b2` (2026-10-30). Where this document and the code disagree, the code wins. Section 12 (Progress) says what is built. REVISED 2026-10-30 (chat of patch N2.1): the tied Mechanic and Her Backpack are NOT placed at world generation any more. They are rare NPCs that spawn near a player under conditions, and the Lifeform Analyzer detects them (section 1, "Rare spawns").
 
 ## 1. Decisions
 
 ### Fixed by Ismail
 - **Dryad.** She drops from the Eye of Cthulhu on its first defeat, but only if she has not arrived yet.
-- **Mechanic.** Her tied (bound) NPC spawns at a random underground spot, the same idea as the Goblin Tinkerer, instead of in the dungeon. Rescuing her works like any bound NPC.
-- **Her Backpack.** A new entity takes her place in the dungeon. It spawns where the vanilla tied Mechanic would. Right click: the player receives an item called **The Mechanic's Bag**.
+- **Mechanic.** Her tied (bound) NPC spawns at a random underground spot, the same idea as the Goblin Tinkerer, instead of in the dungeon. Rescuing her works like any bound NPC. REVISED: she is a rare spawn near the player, not placed at world generation (see "Rare spawns" below).
+- **Her Backpack.** A new entity takes her place in the dungeon. REVISED: it is a rare spawn in the dungeon near the player after Skeletron, not placed at world generation (see "Rare spawns" below). Right click: the player receives an item called **The Mechanic's Bag**.
 - **The Bag.** The player carries it in the inventory and talks to the Mechanic. The bag is consumed and the rest of her shop unlocks.
 - **Shop (temporary).** Everything is removed from her shop for now. The vanilla Clockwise and Counter Clockwise conveyor belts are her default stock, even without the bag.
 - **Important dialogue.** NPCs with important dialogue show an exclamation mark. Entries are registered dynamically with a condition (when it starts) and an exit condition (when it ends). While the condition is met and the exit is not, the NPC gives the same dialogue every time. Examples of exits: killing another boss, finding another NPC.
@@ -27,8 +27,8 @@ The NPC layer that makes the mod playable: the Dryad arrives from the Eye of Cth
 - D8. Dryad dialogue 1 exits when the Mechanic is rescued AND housed (literal reading of the plan). One tunable switch turns the house requirement off.
 - D9. The Mechanic's scroll gift is once per world, to the player who talks to her first. It is handed over as three Sealed Scrolls (`ClosedScrollItem`), each with its own one-recipe pool.
 - D10. The scroll pools point at placeholder recipe art until Ismail decides what the part scrolls teach (see Q9).
-- D11. Skeletron-first fork: the underground Mechanic is removed (only one Mechanic can exist), the dungeon Backpack is replaced by the tied Mechanic, the Dryad story is switched off, the Mechanic's own scroll dialogue still works after her rescue.
-- D12. Underground placement: random spots between the rock layer and 100 tiles above the Underworld, open 3x4 space on a solid floor, no liquid, away from the world spawn, the dungeon and the other bound NPCs.
+- D11. REVISED (rare spawns): Skeletron-first fork. `DungeonFork` is set, the tied Mechanic's rare spawn moves from the Cavern layer to the dungeon, the Backpack rule is off, the Dryad story is switched off, the Mechanic's own scroll dialogue still works after her rescue. Nothing is removed or replaced.
+- D12. SUPERSEDED (rare spawns, see "Rare spawns" below): there is no placement search any more; the vanilla spawn system picks the spot near the player.
 - D13. SUPERSEDED: old worlds are ignored (Ismail, 2026-10-30). No migration and no load-time placement; only new worlds get the story, placement runs in `PostWorldGen`.
 - D14. The exclamation mark is drawn above any NPC whose entry condition is met for the LOCAL player, only while the NPC is on screen and its chat is not open.
 
@@ -36,54 +36,62 @@ The NPC layer that makes the mod playable: the Dryad arrives from the Eye of Cth
 - D1 (the Dryad appears at the Eye's death spot), D2 (what "not arrived yet" means), D7 (the vanilla shop list returns after the bag) and D8 (the Dryad's exit needs the Mechanic housed) are confirmed.
 - **Her Backpack chat:** text "Looks dirty and full of wires", buttons "Take it" and "Close".
 - **Bag turn-in (replaces D6):** while the player carries the Bag, the Mechanic gets an important dialogue with the "!". She says "Have you found my bag?" with the buttons "Give the bag" and "Close". So the important dialogue framework (N2.1) supports two chat buttons per entry (labels and a click callback), not only text.
-- **Bag loss (replaces Q4):** the Bag respawns in the dungeon (Her Backpack comes back) if the player loses it. It stops respawning when a player holds it in the inventory, or after it was given to the Mechanic (`MechanicShopUnlocked`). Rule: a server watcher respawns the Backpack at its saved position when `BackpackTaken` is true, `MechanicShopUnlocked` is false, no online player holds a Bag in the inventory (main slots, banks and the cursor item) and no Bag lies on the ground, for `BackpackRespawnDelayTicks` in a row (so a Bag that was just dropped or is being picked up does not trigger it). Known limits: a Bag in a chest counts as lost, and with nobody online the watcher does not run; a second Bag from a respawn is harmless because only one is consumed.
+- **Bag loss (replaces Q4):** the Bag respawns in the dungeon (Her Backpack comes back) if the player loses it. It stops respawning when a player holds it in the inventory, or after it was given to the Mechanic (`MechanicShopUnlocked`). Rule: a server watcher clears `BackpackTaken` (the Backpack then comes back through its rare spawn, it is not placed at a saved position) when `BackpackTaken` is true, `MechanicShopUnlocked` is false, no online player holds a Bag in the inventory (main slots, banks and the cursor item) and no Bag lies on the ground, for `BackpackRespawnDelayTicks` in a row (so a Bag that was just dropped or is being picked up does not trigger it). Known limits: a Bag in a chest counts as lost, and with nobody online the watcher does not run; a second Bag from a respawn is harmless because only one is consumed.
 - **Old worlds (replaces D13 and Q12):** ignored.
 - Not answered yet: scrolls lost (Q8). The other open items stay on their defaults.
+- **Rare spawns (replaces worldgen placement), Ismail 2026-10-30:** neither the underground tied Mechanic nor Her Backpack is placed during world generation. Both are RARE NPCs that appear near a player when a condition holds (underground, after a boss, and so on), like vanilla rare creatures. The vanilla **Lifeform Analyzer** must detect both, so each sets `NPC.rarity` above 0 (V12 checks what the analyzer really reads). Defaults chosen by Claude, all open to change (Q11, Q14, tunables in section 8):
+  - D15. Tied Mechanic: the vanilla `NPCID.BoundMechanic`, added to the spawn pool by a GlobalNPC `EditSpawnPool` (server / single-player), only while `MechanicRescued` is false, `DungeonFork` is false, no tied or town Mechanic exists, and the player is in the Cavern layer (not in the dungeon, not in the Underworld). Weight `MechanicSpawnWeight` (small).
+  - D16. Her Backpack: a `ModNPC` with `SpawnChance`, only while Skeletron was defeated (`NPC.downedBoss3`), the player is in the dungeon, `BackpackTaken` is false, `MechanicShopUnlocked` is false, `DungeonFork` is false and no Backpack exists. Weight `BackpackSpawnWeight`.
+  - D17. Both can despawn like any vanilla NPC when the player leaves; they roll again later. Nothing about them is saved except the flags. At most one of each exists at a time.
+  - D18. Skeletron-first fork (D11): `DungeonFork` moves the tied Mechanic's rule from the Cavern layer to the dungeon (weight `DungeonMechanicSpawnWeight`); the Backpack rule is off.
+  - D19. World generation only removes the vanilla dungeon tied Mechanic (`PostWorldGen`, assumes V1) so she cannot be rescued before the story. Old worlds are ignored.
 
 ## 2. The story flow
 
 Route A (normal):
-1. World generation: the vanilla dungeon tied Mechanic becomes Her Backpack. A new tied Mechanic is hidden underground.
+1. World generation: the vanilla dungeon tied Mechanic is removed. Nothing else is placed: the tied Mechanic (Cavern layer) and Her Backpack (dungeon, after Skeletron) are rare NPCs that spawn near a player; the Lifeform Analyzer shows them.
 2. Eye of Cthulhu first defeat: the Dryad appears if she never arrived.
 3. Dryad "!" (dialogue 1) repeats until the Mechanic is rescued and housed.
 4. The player finds and frees the Mechanic. She becomes a town NPC (vanilla rescue).
 5. Mechanic "!" (scroll dialogue): she explains the missile and gives the 3 scrolls (once). Dryad "!" (dialogue 2) shows from the Dryad's exit until the scrolls are given.
-6. Later: Skeletron falls, the dungeon opens, the player takes the Bag from Her Backpack.
+6. Later: Skeletron falls, the dungeon opens, Her Backpack can spawn near the player in the dungeon (rare), and the player takes the Bag from it.
 7. Mechanic "!" while the player carries the Bag: the Bag is consumed, the full shop unlocks.
 
 Route B (Skeletron before the Eye of Cthulhu):
 1. First Skeletron kill with the Eye never killed: the fork runs (D11).
-2. The tied Mechanic is in the dungeon. Rescuing her sets the shop unlock at once. The Backpack and Bag are no longer needed.
+2. The tied Mechanic can now spawn (rare) in the dungeon instead of the Cavern layer. Rescuing her sets the shop unlock at once. The Backpack and Bag are no longer needed.
 
 ## 3. The model (exact rules the code must follow)
 
 **World flags** (`StorySystem`, string keys, saved in the world file, synced on join and on change):
-`EyeKillSeen`, `DryadSeen`, `MechanicPlaced`, `BackpackPlaced`, `BackpackTaken`, `MechanicRescued`, `MechanicShopUnlocked`, `ScrollsGiven`, `DungeonFork`, plus one `Done.<DialogueId>` flag per important dialogue. The saved data also holds the Backpack and Mechanic tile positions (server only, used by the fork and the debug commands).
+`EyeKillSeen`, `DryadSeen`, `BackpackTaken`, `MechanicRescued`, `MechanicShopUnlocked`, `ScrollsGiven`, `DungeonFork`, plus one `Done.<DialogueId>` flag per important dialogue, plus the temporary `TestDialogueExit` (removed in N9). No `MechanicPlaced` / `BackpackPlaced` (removed in patch N2.1: nothing is placed any more) and no saved positions: the two rare NPCs spawn dynamically (rules M1 to M7).
 
 **Rules**
 - S1. Only the server (or single-player) writes a flag. Clients read.
 - S2. `MechanicRescued` is latched by a server watcher the first tick `NPC.savedMech` is true. If `DungeonFork` is set at that moment, `MechanicShopUnlocked` is set too.
 - S3. `DryadSeen` is latched by a server watcher the first tick any Dryad NPC exists.
 - S4. Eye of Cthulhu death (server, `OnKill`): if `EyeKillSeen` is false, set it; then if `DryadSeen` is false and no Dryad exists, spawn the Dryad at the death position, announce her arrival, set `DryadSeen`.
-- S5. Skeletron death (server, `OnKill`): if `DungeonFork` is false and `EyeKillSeen` is false and `MechanicRescued` is false, run the fork (D11) and set `DungeonFork`.
+- S5. Skeletron death (server, `OnKill`): if `DungeonFork` is false and `EyeKillSeen` is false and `MechanicRescued` is false, set `DungeonFork` (D11, D18: this only switches the spawn rules, nothing is removed or replaced).
 
 **Important dialogue entry** (registered in `ImportantDialogueDefinitions`, the file Ismail edits, like `ScrollPoolDefinitions`):
 - `Id` (unique string), `NpcType`, `Priority` (higher shows first when several are active on one NPC),
 - `Condition(Player)`: when the entry starts. Evaluated on the local client, may look at the local inventory.
 - `Exit()`: when it ends. World level only, evaluated on the server every `DialogueExitCheckTicks`. When true, the server sets `Done.<Id>` and the entry is retired for good (latched, so an exit that could flip back, like "has a house", cannot revive it).
-- `Text(Player)`: a localization key `Mods.Factorraria.Dialogue.<Id>`, `{PlayerName}` replaced.
+- `Text(Player)`: the localization key `Mods.Factorraria.Dialogue.<Id>.Text`, `{PlayerName}` replaced.
+- `Button1`, `Button2` (optional, N2.1): a label (`Mods.Factorraria.Dialogue.<Id>.Button1` / `.Button2`) and an `OnClick(Player, NPC)` callback, local client. A button takes the first free chat button slot, so a vanilla Shop or Help button stays first; vanilla Close is always separate.
 - `OnTalkStart(Player, NPC)` (optional): runs once on the local client when the player starts a conversation with that NPC while the entry is active. Used for the bag turn-in and the scroll gift (they send a request, see section 5).
 - Active entry of an NPC = the highest `Priority` entry with `Condition` true and `Done` false. The NPC shows "!" while any entry is active; the chat text is the active entry's text; when none is active the NPC chats normally.
 
 **Shop.** The Mechanic's vanilla shop entries get an extra condition (`MechanicShopUnlocked`). Two entries are added with no condition: `ItemID.ConveyorBeltLeft` (Clockwise) and `ItemID.ConveyorBeltRight` (Counter Clockwise) (verified from `Localization/en-US.hjson`).
 
-**Placement (rule M1 to M6).**
-- M1. After world generation (`PostWorldGen`), scan `Main.npc` for the vanilla tied Mechanic (`NPCID.BoundMechanic`). Remember her position, deactivate her, spawn Her Backpack there. (Assumes V1: vanilla spawns her as a real NPC during generation.)
-- M2. Pick an underground cell by D12 and spawn a tied Mechanic there with the same fields vanilla sets for the tied Goblin Tinkerer (V1).
-- M3. Her Backpack is a `ModNPC`: friendly, never moves, cannot be hurt, saved with the world (`NeedSaving`), never despawns (`CheckActive` false).
+**Rare spawns (rules M1 to M7; replace worldgen placement).**
+- M1. World generation places nothing. `PostWorldGen` only deactivates the vanilla dungeon tied Mechanic (`NPCID.BoundMechanic`) so she cannot be found early. (Assumes V1: vanilla spawns her as a real NPC during generation. Old worlds are ignored.)
+- M2. The tied Mechanic is the vanilla `NPCID.BoundMechanic`, added to the spawn pool by a GlobalNPC `EditSpawnPool` (server / single-player only) under the D15 conditions, and given `NPC.rarity` above 0 so the Lifeform Analyzer shows her. The spawn spot is vanilla's (near the player, off screen), so no search code is needed. If a pool spawn does not give a correct tied NPC (V13), copy the fields vanilla sets for a tied Goblin Tinkerer in a GlobalNPC `OnSpawn`.
+- M3. Her Backpack is a `ModNPC`: friendly, never moves, cannot be hurt, `NPC.rarity` above 0, `SpawnChance` under the D16 conditions. It is not saved with the world (a rare spawn, it may despawn).
 - M4. Taking the Bag: the server verifies the NPC, the distance and `BackpackTaken`, gives one Bag to the player, removes the Backpack, sets `BackpackTaken`.
 - M5. The Bag is a quest-rarity item. It should survive lava (V9).
-- M6. Old worlds are ignored (Ismail, 2026-10-30): no migration and no placement at load. Placement runs only in `PostWorldGen`.
+- M6. At most one tied Mechanic and one Backpack exist at a time (the spawn rules check `NPC.AnyNPCs`).
+- M7. Lifeform Analyzer: each rare NPC sets `NPC.rarity` above 0 (value and any other condition the analyzer needs: V12). The Backpack must not be hidden from it by being friendly or a town type; if it is, add a workaround in N4.1.
 
 ## 4. Codebase and API facts this plan relies on
 
@@ -101,12 +109,13 @@ Confirmed in the public tModLoader 1.4.4 source (Ismail's local build is 2026.08
 - `ModNPC` has `CanChat`, `GetChat`, `SetChatButtons`, `OnChatButtonClicked(bool, ref string)`, `NeedSaving`, `SaveData`, `LoadData`, `CheckActive`.
 - `NPCShop.Entries` is a readable list and `ActiveEntries` skips disabled entries. Not yet confirmed: `Entry.Disable()` and `Entry.AddCondition()` (V5).
 - `NPCID.Sets.SavesAndLoads` is internal in tModLoader, so a ModNPC must use `NeedSaving`.
+- Verified in the public tModLoader 1.4.4 source for patch N2.1 (recheck on 2026.08.3.0): `SetChatButtons` exists ONLY on `ModNPC` (`NPCLoader.SetChatButtons(ref button, ref button2)` is public static and only calls `ModNPC`). `GlobalNPC` has `PreChatButtonClicked(NPC, bool firstButton)` (false cancels the vanilla button code) and `OnChatButtonClicked`, both local client. `MonoModHooks.Add(MethodBase, Delegate)` is public and tModLoader removes the detour on unload. `GlobalNPC.EditSpawnPool(IDictionary<int,float> pool, NPCSpawnInfo)` and `EditSpawnRate` exist. `NPC.rarity` is a public int; the Lifeform Analyzer is `InfoDisplay.LifeformAnalyzer`, but its NPC scan is in unpatched vanilla (V12).
 
 NOT verified (the vanilla source is not public from here, see section 10): how vanilla spawns the tied NPCs at world generation, the exact rescue code, the Dryad arrival rules, and the order of events in vanilla NPC death.
 
 ## 5. Multiplayer design (rule 9)
 
-- **Server (or single-player) owns:** every flag, the placement, the Dryad spawn, the fork, the Backpack removal, the bag check and removal of the result, the scroll hand-out, the done-latching of dialogue exits.
+- **Server (or single-player) owns:** every flag, the rare spawn rules (`EditSpawnPool` and `SpawnChance` run on the server / single-player), the Dryad spawn, the fork flag, the Backpack removal, the bag check and removal of the result, the scroll hand-out, the done-latching of dialogue exits.
 - **Clients own (local only):** the exclamation mark draw, choosing the chat text, the shop contents (computed from the synced flags), the talk-start detection (`Player.talkNPC` changes from none to an NPC), requests.
 - **Synced state:** the flags. Join: a `story-flags` join provider sends them all. Change: `StoryFlagChanged` (server to all clients).
 - **Packets (all code in `Common/Net/StoryNet.cs`):**
@@ -116,7 +125,7 @@ NOT verified (the vanilla source is not public from here, see section 10): how v
 - **Server validation for every request:** the player is alive and in game, the NPC exists with the right type, the player is within `InteractReachTiles` of it, the flag state allows it (not taken, not given, not unlocked), the bag exists in the server's copy of the inventory. A refused request leaves the client unchanged.
 - **Single-player:** the request helper calls the server handler directly (working rule 3); the result is applied at once.
 - **Rate limit:** register the requests with a cost like the other ToServer packets.
-- **Join mid-story:** the flags arrive with the join sync; the Backpack and the tied Mechanic are normal saved NPCs and sync with the vanilla NPC sync.
+- **Join mid-story:** the flags arrive with the join sync; the Backpack and the tied Mechanic are normal NPCs (not saved with the world, they can despawn) and sync with the vanilla NPC sync.
 
 ## 6. Data model and files
 
@@ -124,9 +133,9 @@ New:
 - `Common/Story/StorySystem.cs`: flags, save and load, the `savedMech` and Dryad watchers, the Skeletron and Eye handlers (as a `GlobalNPC` in `StoryEventsGlobalNPC.cs`).
 - `Common/Story/StoryFlags.cs`: the flag keys.
 - `Common/Net/StoryNet.cs`: the three packets, the join provider, the request helpers and handlers.
-- `Common/Story/ImportantDialogue/ImportantDialogueRegistry.cs`, `ImportantDialogueDefinitions.cs` (the file Ismail edits), `ImportantDialogueGlobalNPC.cs` (chat text, exclamation mark), `ImportantDialoguePlayer.cs` (talk-start edge).
+- `Common/Story/ImportantDialogue/`: `ImportantDialogueEntry.cs` (entry and button types), `ImportantDialogueRegistry.cs`, `ImportantDialogueDefinitions.cs` (the file Ismail edits), `ImportantDialogueSystem.cs` (server exit check and Done latching, local condition cache, the "!" draw), `ImportantDialogueGlobalNPC.cs` (chat text, "!", button clicks), `ImportantDialoguePlayer.cs` (talk-start edge), `ImportantDialogueChatButtons.cs` (the `NPCLoader.SetChatButtons` detour). Built in patch N2.1.
 - `Common/Story/MechanicShopGlobalNPC.cs`: `ModifyShop`.
-- `Common/Story/MechanicPlacement.cs`: `PostWorldGen`, migration, the underground search, the fork helper.
+- `Common/Story/RareNpcSpawns.cs`: the GlobalNPC `EditSpawnPool` rule for the tied Mechanic, `NPC.rarity` for the Lifeform Analyzer, `PostWorldGen` cleanup (M1), the fork rule change, the `savedMech` watcher (N4.1).
 - `Common/Story/StoryCommand.cs`: `/fstory` (status, flag, dump, place, backpack, bag, scrolls, fork). Temporary, removed in N9.
 - `Content/NPCs/HerBackpack/HerBackpackNPC.cs` + `HerBackpack.png`.
 - `Content/Items/Story/MechanicsBagItem.cs` + `MechanicsBagItem.png`.
@@ -143,25 +152,28 @@ Art Ismail makes (paths and sizes; until a PNG exists the code uses `RequestIfEx
 One chat = one patch (or a few small ones from one phase). Each ships as a patch script, marks itself `[~]` in section 12 and adds a Progress line to `docs/multiplayer/ROADMAP.md`.
 
 ### Phase N0 - Verification (before N4)
-Run the checks in section 10 (V1, V2, V3, V4, V9, V11) on the local vanilla source and report the findings. N1 to N3 do not depend on them.
+Run the checks in section 10 (V1, V2, V3, V4, V9, V12, V13) on the local vanilla source and report the findings. N1 to N3 do not depend on them.
 
 ### Phase N1 - Story foundation
 - N1.1 `StorySystem`: flags, save and load (TagCompound), the join provider, `StoryFlagChanged`, `/fstory status` and `/fstory flag`. No gameplay yet.
 - Tests: set a flag with the command, save and reload the world, the flag is still set; a second client joining sees the flag; a client's own `/fstory flag` is refused (server only).
 
 ### Phase N2 - Important dialogue framework
-- N2.1 Registry, definitions file with ONE test entry on the Guide, `ImportantDialogueGlobalNPC` (chat text, exclamation mark), `ImportantDialoguePlayer` (talk-start), the server exit check and `Done.<Id>` latching.
-- Tests: the Guide shows "!" only while the test condition is true, the chat text is the entry's text and repeats on every click, setting the exit flag removes the "!" and brings the normal chat back for good (even after the exit flips back), the "!" hides while chatting and off screen, a second client sees the same. Two entries on one NPC show by priority.
+- N2.1 (as built) The registry, the definitions file (TWO temporary test entries on the Guide), `ImportantDialogueSystem` (server exit check and `Done.<Id>` latching, local condition cache, the "!" draw), `ImportantDialogueGlobalNPC` (chat text, "!", button clicks), `ImportantDialoguePlayer` (talk-start edge) and `ImportantDialogueChatButtons` (up to two chat buttons per entry).
+- Chat buttons: tModLoader has `SetChatButtons` only on ModNPC, so N2.1 detours `NPCLoader.SetChatButtons` (client only, `MonoModHooks.Add`) and adds the entry's labels to the first free button slot (a vanilla Shop or Help button stays first, vanilla Close is separate). Clicks come through `GlobalNPC.PreChatButtonClicked` and cancel the vanilla button code. Texts and labels live in `Dialogue.<Id>.Text`, `.Button1`, `.Button2` of the localization file.
+- Test entries: `Test.Guide` (low priority, the player carries a Torch, exit = flag `TestDialogueExit`) and `Test.Guide.High` (priority 10, the player carries Wood, one chat button, no exit; retire it with `/fstory flag Done.Test.Guide.High on`). `/fstory dialogue` lists every entry with its state. Both entries, the flag and the command part are removed in N9.
+- Tests: the Guide shows "!" only while a Torch is in the inventory; the chat text is the entry's text and repeats on every click; `/fstory flag TestDialogueExit on` removes the "!" within about a second and the normal chat comes back, and it stays gone even after the flag is turned off again; the "!" hides while chatting and when the Guide is off screen; with Torch and Wood both carried the Wood entry wins and the Guide's chat window gets a "Test button" (second slot, next to Help and Close) that prints a line in the chat log and replaces the chat text; "talk start" lines print once per conversation; a second client sees the same "!" and text. Resolves V6, V7 and V14.
+- Art: `Content/UI/ImportantDialogue/Exclamation.png` (optional, up to about 16x28). Missing = a yellow bordered "!" text.
 
 ### Phase N3 - Mechanic shop
 - N3.1 `MechanicShopGlobalNPC`: gate the vanilla entries behind `MechanicShopUnlocked`, add the two conveyor belts.
 - Tests: the Mechanic's shop (spawn her with a vanilla method or the debug command) shows only the two belts; `/fstory flag MechanicShopUnlocked on` brings the vanilla list back; the belts' prices and names look right; a second client sees the same list.
 
-### Phase N4 - Placement and the Backpack
-- N4.1 `MechanicPlacement` (M1, M2, M6 plus the underground search and tunables), the `savedMech` watcher (S2), the `/fstory dump` and `/fstory place` tools, a minimal `HerBackpackNPC` (stands, saved, no interaction yet).
-- Tests (new world on small, medium and large): there is a Backpack in the dungeon where the tied Mechanic used to be and a tied Mechanic underground; the log prints both positions; saving and reloading keeps both; the underground Mechanic can be rescued and becomes the town NPC; `MechanicRescued` turns on.
-- N4.2 Backpack interaction and `MechanicsBagItem`: chat window "Looks dirty and full of wires" with the buttons "Take it" and "Close", the `TakeBag` request and result, and the respawn watcher (see "Confirmed by Ismail", `BackpackRespawnDelayTicks`).
-- Tests: the Bag arrives once, the Backpack disappears for every client, a second player cannot take a second Bag, quest tooltip, lava does not destroy the Bag (V9), reload keeps `BackpackTaken`.
+### Phase N4 - Rare spawns and the Backpack
+- N4.1 `RareNpcSpawns` (a GlobalNPC `EditSpawnPool` for the tied Mechanic under D15, `NPC.rarity` for the Lifeform Analyzer, the M1 cleanup in `PostWorldGen`), the `savedMech` watcher (S2), `/fstory spawn mechanic|backpack` and `/fstory dump` debug tools, a minimal `HerBackpackNPC` (stands, rare spawn through `SpawnChance`, no interaction yet).
+- Tests (new world): no tied Mechanic in the dungeon; `/fstory spawn mechanic` and `/fstory spawn backpack` place them next to the player; with the conditions met and the weights raised they appear on their own (Mechanic in the Cavern layer, Backpack in the dungeon after Skeletron); the Lifeform Analyzer shows both; at most one of each exists; the Mechanic can be rescued and becomes the town NPC; `MechanicRescued` turns on and she never spawns tied again; on a dedicated server with two clients.
+- N4.2 Backpack interaction and `MechanicsBagItem`: chat window "Looks dirty and full of wires" with the buttons "Take it" and "Close", the `TakeBag` request and result, and the bag-loss watcher (see "Confirmed by Ismail", `BackpackRespawnDelayTicks`): it clears `BackpackTaken` so the Backpack can spawn again.
+- Tests: the Bag arrives once, the Backpack disappears for every client, a second player cannot take a second Bag, quest tooltip, lava does not destroy the Bag (V9), reload keeps `BackpackTaken`, dropping the Bag in lava or a void and waiting makes the Backpack spawnable again.
 
 ### Phase N5 - Bag turn-in
 - N5.1 Mechanic dialogue entry `Mechanic.Bag` (condition: the local player carries the Bag and the shop is locked): "Have you found my bag?" with the buttons "Give the bag" and "Close"; the button sends the `TurnInBag` request, the Bag is consumed after the result, `MechanicShopUnlocked` is set.
@@ -176,14 +188,14 @@ Run the checks in section 10 (V1, V2, V3, V4, V9, V11) on the local vanilla sour
 - Tests: right after her rescue the Mechanic shows "!", talking gives exactly three Sealed Scrolls once, each opens into a parchment, reading each unlocks its page, the "!" goes away on the Mechanic and on the Dryad, a second player gets nothing.
 
 ### Phase N8 - Skeletron first
-- N8.1 The Skeletron handler (S5) and the fork helper.
-- Tests: kill Skeletron with `EyeKillSeen` false: the underground Mechanic is gone, the dungeon has a tied Mechanic, rescuing her unlocks the full shop at once and the Dryad story stays off; killing the Eye first and then Skeletron changes nothing; Skeletron killed twice does nothing the second time; the fork when the Bag is already taken.
+- N8.1 The Skeletron handler (S5): it sets `DungeonFork`, which moves the tied Mechanic's spawn rule to the dungeon (D18) and switches the Backpack rule and the Dryad story off. Nothing is removed or replaced.
+- Tests: kill Skeletron with `EyeKillSeen` false: `DungeonFork` turns on, the tied Mechanic stops spawning in the Cavern layer and can spawn (rare) in the dungeon, rescuing her unlocks the full shop at once and the Dryad story stays off; killing the Eye first and then Skeletron changes nothing; Skeletron killed twice does nothing the second time; the fork when the Bag is already taken.
 
 ### Phase N9 - Hardening
 - Tunables moved to a config, localization pass (Ismail's text), remove `/fstory` and the test entry, dedicated server plus two clients full run of both routes, join sync with a world in the middle of the story, update this document.
 
 ## 8. Tunables (names are final in the patches)
-`UndergroundMinDepthTiles`, `UndergroundBottomMarginTiles` (100), `PlacementTries`, `MinDistanceFromSpawnTiles`, `MinDistanceFromBoundNpcsTiles`, `OpenCellWidthTiles` (3), `OpenCellHeightTiles` (4), `InteractReachTiles`, `DialogueExitCheckTicks` (30), `ConditionCacheTicks` (10), `ExclamationBobPixels`, `ExclamationOffsetY`, `RequireHouseForDryadExit` (true), `ScrollsPerPart` (1), `BackpackRespawnDelayTicks` (600).
+`MechanicSpawnWeight`, `DungeonMechanicSpawnWeight`, `BackpackSpawnWeight`, `RareNpcRarity`, `InteractReachTiles`, `DialogueExitCheckTicks` (30), `ConditionCacheTicks` (10), `ExclamationBobPixels`, `ExclamationOffsetY`, `RequireHouseForDryadExit` (true), `ScrollsPerPart` (1), `BackpackRespawnDelayTicks` (600).
 Plain static fields, not `const`, so hot reload can change them.
 
 ## 9. Open items (each default below is used unless Ismail says otherwise)
@@ -197,42 +209,48 @@ Plain static fields, not `const`, so hot reload can change them.
 - Q8. Scrolls: D9 (once per world, to the first player). If they are lost: `/fstory scrolls` for testing. Alternatives: the Mechanic gives a repeat set for a price, or the scroll gift is automatic recipe unlocks without items.
 - Q9. What the three scrolls teach: today the part recipes are Anvil recipes, which are not in the recipe book, so the pools use placeholder art pages. Ismail either draws recipe pages and adds `AddArt`, or adds Mechanical Assembler recipes for the parts and uses `.Add("MechanicalAssembler", <part item>)`. A pool with one entry falls back to a random recipe if that page is already unlocked (the existing scroll rule); that is harmless.
 - Q10. The fork (D11) details: removing the underground Mechanic, switching off the Dryad story, keeping her scroll dialogue.
-- Q11. Underground placement (D12): layer, distances, biomes to avoid (Jungle, Corruption or Crimson, Marble, Granite, hive, Temple are avoided by default; Dungeon walls too).
+- Q11. REPLACED by the rare-spawn model: there is no placement search. Which zones and bosses gate the two spawns is Q14.
 - Q12. RESOLVED by Ismail: old worlds are ignored.
 - Q13. Should the Dryad's dialogue 1 also start when she arrived by the vanilla route (Eater of Worlds or Brain of Cthulhu first) and the Eye was never killed? Default: no, the story starts at the Eye (so skipping the Eye means the dungeon route only).
+- Q14. Rare spawn conditions and rarity (D15 to D18): which zones and bosses gate the tied Mechanic and Her Backpack, the spawn weights and the `NPC.rarity` values are guesses. Ismail tunes them in game with the tunables of section 8. Should Her Backpack also be allowed before Skeletron (dungeon entered some other way)? Default: no.
 
 ## 10. Verification list (checked in the local vanilla source before the patch that needs it)
 Search the local decompiled vanilla source (Ismail's tModLoader source folder; the 1.3 decompile can mislead, prefer 1.4). Suggested searches: `BoundMechanic`, `BoundGoblin`, `savedMech`, `NPCID.Dryad`, `downedBoss1`.
-- V1 (N4.1, BLOCKER) How vanilla places the tied Mechanic, Goblin Tinkerer and Wizard during generation: which pass, the spawn call, the fields it sets (`homeless`, `direction`, `ai`, home tile). Confirm the tied Mechanic exists as a real NPC at `PostWorldGen`. Fallback if not: find the dungeon room from `GenVars` and place the Backpack with our own search.
+- V1 (N4.1, BLOCKER) Two things. (a) At world generation: is the vanilla dungeon tied Mechanic a real NPC at `PostWorldGen`, so M1 can deactivate her (search `BoundMechanic`, `BoundGoblin`, and the generation pass that spawns them)? (b) Does a `BoundMechanic` created by the spawn pool behave like a tied NPC: tied AI, `homeless`, `direction`, rescue turns her into the town Mechanic and sets `NPC.savedMech`? Fallback for (b): copy the fields vanilla sets for the tied Goblin Tinkerer in a GlobalNPC `OnSpawn` (see V13).
 - V2 (N4.1) The rescue code: does it set `NPC.savedMech`, does it call `Transform`, and is `savedMech` synced to clients.
 - V3 (N6.1) Vanilla Dryad arrival rule (which boss flags), the arrival announcement call, and that a homeless spawned town NPC persists.
 - V4 (N6.1, N8.1) When `OnKill` runs relative to the vanilla boss-defeated flags. Our own flags make this safe either way; this only confirms the hook fires on the server in single-player and multiplayer.
 - V5 (N3.1) `NPCShop.Entry` members (`Disable`, `AddCondition`) and the Mechanic's shop name (expected `"Shop"`).
 - V6 (N2.1) `GlobalNPC.PostDraw` for the mark and where `Player.talkNPC` is set, including after the chat closes.
 - V7 (N2.1) Whether `GetChat` can run more than once per conversation (it must stay free of side effects; the plan already keeps side effects in the talk-start edge).
-- V8 (N4.1) A saved `ModNPC` created during generation survives save and reload and does not despawn.
+- V8 OBSOLETE (the Backpack is a rare spawn and is no longer saved with the world).
 - V9 (N4.2) Lava immunity for a quest-rarity item (`ItemID.Sets.IsLavaImmuneRegardlessOfRarity` or rarity rules).
 - V10 (N3.1) Which belt item is Clockwise: resolved, `ConveyorBeltLeft`.
-- V11 (N4.1) `GenVars` dungeon location fields, for the placement fallback and the exclusion zone.
+- V11 OBSOLETE (no dungeon search is needed any more).
+- V12 (N4.1, N4.2) The Lifeform Analyzer: what does it read to list a creature (`NPC.rarity` above 0? also `friendly`, `townNPC`, `lifeMax`, a distance limit?), and what name does it show for a ModNPC? Search `accCritterGuide`, `LifeformAnalyzer`, `rarity` in the local `Main.cs` / `Player.cs`. If it skips friendly or town-type NPCs, N4.1 needs a workaround. Check whether vanilla tied NPCs already set a rarity.
+- V13 (N4.1) `GlobalNPC.EditSpawnPool` with a friendly vanilla type: does `NPC.SpawnNPC` accept a `BoundMechanic` from the pool and spawn it with correct tied state, or must the fields be set by hand? Check `NPCSpawnInfo` (`SpawnTileType`, `Player`, `Sky`, `PlayerInTown`) for the zone tests, and that friendly types are not filtered out of the pool.
+- V14 (N2.1) The chat button detour: the Guide's extra button appears and its click arrives in `PreChatButtonClicked(false)`; NPCs whose vanilla first or second button is already used (Dryad Status, Nurse Heal) keep it; vanilla Close stays. Tested with the Guide in N2.1.
 
 ## 11. Risks
-- If vanilla does not spawn the tied Mechanic as an NPC during generation (V1), the Backpack placement needs our own dungeon search. The plan allows it, but N4.1 grows.
+- Rare spawns can be too rare or too common to feel right (tunables `MechanicSpawnWeight`, `BackpackSpawnWeight`, Q14) and a rare NPC can despawn before the player reaches it; the Lifeform Analyzer is the player's way to find them (V12).
+- A tied Mechanic created by the spawn pool may lack the tied-NPC setup vanilla does at generation (V1b, V13); a friendly Backpack may be skipped by the Lifeform Analyzer (V12).
+- If the vanilla dungeon tied Mechanic is not a real NPC at `PostWorldGen` (V1a), M1 needs another way to remove her.
 - Gating the vanilla shop entries can clash with other mods that edit the Mechanic's shop.
 - A talk-start edge detection that misses (chat opened and closed within a tick) would skip a turn-in. The player can simply talk again.
 - Losing the Bag or the scrolls can block progress (Q4, Q8). The debug commands cover testing only.
-- Worlds with the Mechanic already rescued must not be touched (rule M6).
+- Worlds with the Mechanic already rescued must not get a second tied Mechanic (her spawn rule checks `MechanicRescued` and `NPC.savedMech`).
 - Dryad spawning without a house: she wanders to the world spawn like any homeless town NPC; the player has to house her.
-- The Skeletron fork removes an NPC the player may already have found; it only runs when the Mechanic was never rescued.
+- The Skeletron fork removes nothing now (it only moves the spawn rules); it only runs when the Mechanic was never rescued.
 
 ## 12. Progress
 
 One line per patch: `[ ]` not started, `[~]` applied, untested, `[x]` tested and done.
 
 - [ ] N0 Verification of the vanilla facts (V1 to V11, Ismail reads the local source)
-- [~] N1.1 Story foundation (patch_npc_n1_1_story_foundation.ps1, applied, untested; Common/Story/StoryFlags.cs, StorySystem.cs, StoryCommand.cs, Common/Net/StoryNet.cs, packet StoryFlagChanged = 58. AUTHORITY: the server / single-player writes flags (`StorySystem.ServerSet`), clients only read. SYNC: join provider "story-flags" sends the whole set, StoryFlagChanged broadcasts each change, single-player applies directly with no packet. SAVE: world data key "Flags". `/fstory status | known | flag <name> [on|off]` is a World command, so in multiplayer it runs on the server. Tests: see the N1.1 reply)
-- [ ] N2.1 Important dialogue framework (registry, "!" mark, chat text, exit latching)
+- [~] N1.1 Story foundation (patch_npc_n1_1_story_foundation.ps1, applied, untested; Common/Story/StoryFlags.cs, StorySystem.cs, StoryCommand.cs, Common/Net/StoryNet.cs, packet StoryFlagChanged = 58. AUTHORITY: the server / single-player writes flags (`StorySystem.ServerSet`), clients only read. SYNC: join provider "story-flags" sends the whole set, StoryFlagChanged broadcasts each change, single-player applies directly with no packet. SAVE: world data key "Flags". `/fstory status | known | flag <name> [on|off]` is a World command, so in multiplayer it runs on the server. Tests: see the N1.1 reply. REVISED in patch N2.1: the flags MechanicPlaced and BackpackPlaced were removed (nothing is placed any more) and the temporary TestDialogueExit was added)
+- [~] N2.1 Important dialogue framework (patch_npc_n2_1_important_dialogue.ps1, applied, untested; Common/Story/ImportantDialogue/*.cs. AUTHORITY: the server / single-player latches `Done.<Id>` when an entry's Exit is true (checked every `DialogueExitCheckTicks`); clients only read flags and run Condition, the chat text, the chat buttons, the "!" mark and OnTalkStart locally. SYNC: no new packet, the Done flags travel with the N1.1 flag sync. Chat buttons: `NPCLoader.SetChatButtons` is detoured on clients (tModLoader has no GlobalNPC.SetChatButtons) and clicks arrive in `PreChatButtonClicked`. Two TEST entries on the Guide (Torch = low priority, Wood = high priority with a button), removed in N9; new flag TestDialogueExit; `/fstory dialogue`. Tests: see section 7, Phase N2)
 - [ ] N3.1 Mechanic shop (gate vanilla entries, two belts)
-- [ ] N4.1 Placement (underground Mechanic, Backpack in the dungeon, migration, rescue watcher)
+- [ ] N4.1 Rare spawns (underground tied Mechanic, Lifeform Analyzer rarity, dungeon cleanup, rescue watcher, minimal Backpack)
 - [ ] N4.2 Her Backpack interaction and The Mechanic's Bag
 - [ ] N5.1 Bag turn-in and full shop unlock
 - [ ] N6.1 The Dryad (Eye of Cthulhu arrival, dialogues 1 and 2)
@@ -240,4 +258,4 @@ One line per patch: `[ ]` not started, `[~]` applied, untested, `[x]` tested and
 - [ ] N8.1 Skeletron first fork
 - [ ] N9 Hardening, remove debug, dedicated server test
 
-Next chat prompt (after N1.1 applied): "N1.1 is applied (check its Progress line); results: <paste>. Implement patch N2.1 (important dialogue framework) of the NPC story roadmap (docs/npcs/ROADMAP.md). Decisions are in section 1 (Confirmed by Ismail) and section 9. Vanilla facts V1 to V11 so far: <paste or 'not checked yet'>."
+Next chat prompt (after N2.1 applied): "N1.1 and N2.1 are applied but untested (their Progress lines and section 7 list the tests; I test them together with later patches when it makes sense). Results so far: <paste or 'none'>. Implement patch N3.1 (Mechanic shop) of the NPC story roadmap (docs/npcs/ROADMAP.md). Decisions are in section 1 (Confirmed by Ismail, including Rare spawns) and section 9. The tied Mechanic and Her Backpack are rare spawns found with the Lifeform Analyzer, not placed at world generation. Vanilla facts V1 to V14 so far: <paste or 'not checked yet'>."
