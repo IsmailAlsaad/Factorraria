@@ -21,12 +21,13 @@ namespace Factorraria.Common.Story
     ///   /fstory dump                    rare NPC state: flags, the spawn rule verdicts for you, every Mechanic / Backpack NPC (patch N4.1)
     ///   /fstory weight <name> <number>  change a rare spawn tunable while playing: mechanic, dungeon, backpack, rarity (patch N4.1)
     ///   /fstory bag                     put one Mechanic's Bag into your inventory, for testing the bag-loss watcher and the turn-in (patch N4.2)
+    ///   /fstory eye                     run the first-Eye-of-Cthulhu handler at your position without fighting it: sets EyeKillSeen and spawns the Dryad if she never arrived (patch N6.1). To repeat: /fstory flag EyeKillSeen off and /fstory flag DryadSeen off
     /// </summary>
     public class StoryCommand : ModCommand
     {
         public override string Command => "fstory";
         public override CommandType Type => CommandType.World;
-        public override string Usage => "/fstory status | known | flag <name> [on|off] | dialogue | spawn <mechanic|backpack> | dump | bag | weight <name> <number>";
+        public override string Usage => "/fstory status | known | flag <name> [on|off] | dialogue | spawn <mechanic|backpack> | dump | bag | eye | weight <name> <number>";
         public override string Description => "NPC story debug tools";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -61,6 +62,10 @@ namespace Factorraria.Common.Story
 
                 case "bag":
                     GiveBag(caller);
+                    break;
+
+                case "eye":
+                    Eye(caller);
                     break;
 
                 case "weight":
@@ -187,6 +192,13 @@ namespace Factorraria.Common.Story
 
             if (count == 0)
                 caller.Reply("No Mechanic or Her Backpack NPC exists right now.", Color.LightGreen);
+        }
+
+        // Test helper (patch N6.1): the first Eye of Cthulhu kill without the fight. A World command, so in multiplayer it runs on the server.
+        static void Eye(CommandCaller caller)
+        {
+            Vector2 where = caller.Player != null ? caller.Player.Center : new Vector2(Main.spawnTileX * 16f, Main.spawnTileY * 16f);
+            caller.Reply("[Story] " + DryadStory.OnEyeKilled(where) + ".", Color.LightGreen);
         }
 
         // Test helper (patch N4.2): hands the caller one Bag without touching any flag.

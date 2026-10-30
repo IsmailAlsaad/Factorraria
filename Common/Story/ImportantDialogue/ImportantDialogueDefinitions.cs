@@ -21,6 +21,30 @@ namespace Factorraria.Common.Story
         public static void Register()
         {
             // ------------------------------------------------------------------
+            // Dryad dialogues (patch N6.1). Text only (no chat buttons), so her vanilla buttons stay as they are.
+            // Dryad.RescueMechanic (dialogue 1): starts once the Eye of Cthulhu was killed (our flag EyeKillSeen, so a Dryad who arrived the vanilla way
+            // also says it) and never on the Skeletron-first route. Ends when the Mechanic is rescued AND housed (D8; DryadStory.RequireHouseForDryadExit).
+            ImportantDialogueRegistry.Register(new ImportantDialogueEntry
+            {
+                Id = "Dryad.RescueMechanic",
+                NpcType = NPCID.Dryad,
+                Priority = 5,
+                Condition = player => StorySystem.Get(StoryFlags.EyeKillSeen) && !StorySystem.Get(StoryFlags.DungeonFork),
+                Exit = () => StorySystem.Get(StoryFlags.MechanicRescued) && (!DryadStory.RequireHouseForDryadExit || DryadStory.MechanicHoused())
+            });
+
+            // Dryad.PlanWithMechanic (dialogue 2): from the moment dialogue 1 is done until the Mechanic handed out the scrolls (ScrollsGiven is set in N7.1;
+            // until then test it with /fstory flag ScrollsGiven on).
+            ImportantDialogueRegistry.Register(new ImportantDialogueEntry
+            {
+                Id = "Dryad.PlanWithMechanic",
+                NpcType = NPCID.Dryad,
+                Priority = 5,
+                Condition = player => StorySystem.Get(StoryFlags.DoneKey("Dryad.RescueMechanic")) && !StorySystem.Get(StoryFlags.ScrollsGiven) && !StorySystem.Get(StoryFlags.DungeonFork),
+                Exit = () => StorySystem.Get(StoryFlags.ScrollsGiven)
+            });
+
+            // ------------------------------------------------------------------
             // Mechanic.Bag (patch N5.1): the player carries the Mechanic's Bag and her shop is still locked. She asks "Have you found my bag?".
             // The vanilla first button ("Shop") is REPLACED by "Give the bag" while this entry is active; it sends the TurnInBag request and the
             // server decides (it consumes one Bag and sets MechanicShopUnlocked). Exit: the shop is unlocked (latches Done.Mechanic.Bag).

@@ -897,6 +897,16 @@ Configs: {
 }
 
 Dialogue: {
+	Dryad: {
+		RescueMechanic: {
+			Text: oh {PlayerName}... thank you for saving me, I was trying to rescue someone proficient in machines, she was lost underground... can you help rescue her?
+		}
+
+		PlanWithMechanic: {
+			Text: The Mechanic and I talked, {PlayerName}. She has a plan for you. Go and see her.
+		}
+	}
+
 	Mechanic: {
 		Bag: {
 			Text: Have you found my bag?
