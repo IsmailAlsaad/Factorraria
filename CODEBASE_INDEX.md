@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-31 | 370 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-31 | 371 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -352,7 +352,7 @@ tModLoader/other bases -> project types:
     +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
 **ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PipeMK1Item, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, SunCapsuleItem, WoodenPowerPoleItem
   static class ScrollPoolDefinitions
-    +Register()[s]
+    +MissileDrillPool:string[s] +MissileTankPool:string[s] +MissileThrusterPool:string[s] +Register()[s]
 **ScrollPools.cs** uses: RecipeArtRegistry, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey
   class ScrollPool
     +Name:string +Hint:string +Entries:IReadOnlyList<Entry> +WithHint(string) +Add(string,int,float) +AddLiquid(string,int,float) +AddArt(string,float)
@@ -801,15 +801,15 @@ tModLoader/other bases -> project types:
 **SlotEditTestCommand.cs** uses: MachineRecipeSelect, MachineSlotEdit, MaterializerToggle
   class SlotEditTestCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
-**StoryNet.cs** uses: FactorrariaNet, FactorrariaPacket, HerBackpackNPC, JoinSync, MechanicsBagItem, PacketDirection, StoryFlags, StorySystem
+**StoryNet.cs** uses: FactorrariaNet, FactorrariaPacket, HerBackpackNPC, JoinSync, MechanicsBagItem, PacketDirection, StoryFlags, StoryScrolls, StorySystem
   class StoryNetSystem : ModSystem
     +Load()[ov]
   enum StoryActionKind : byte
-    {TakeBag, TurnInBag}
+    {TakeBag, TurnInBag, ClaimScrolls}
   enum StoryActionFailure : byte
     {None, CannotAct, NoNpc, TooFar, Unavailable, NoItem}
   static class StoryNet
-    +MaxJoinFlags:int[s] +InteractReachTiles:int[s] +ActionTimeoutTicks:int[s] +BroadcastFlag(string,bool)[s] +HandleFlagChanged(BinaryReader,int)[s] +ActionPending:bool[s] +RequestTakeBag(int)[s] +RequestTurnInBag(int)[s] +HasBag(Player)[s] +HandleActionRequest(BinaryReader,int)[s] +HandleActionResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
+    +MaxJoinFlags:int[s] +InteractReachTiles:int[s] +ActionTimeoutTicks:int[s] +BroadcastFlag(string,bool)[s] +HandleFlagChanged(BinaryReader,int)[s] +ActionPending:bool[s] +RequestTakeBag(int)[s] +RequestTurnInBag(int)[s] +RequestClaimScrolls(int)[s] +HasBag(Player)[s] +HandleActionRequest(BinaryReader,int)[s] +HandleActionResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
 **SuperWeaponNet.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, SuperWeaponExplosionFxSystem, WallShieldBreakFxSystem
   enum SuperWeaponEffectKind : byte
     {ShieldBreak, Ignition, Launch, Impact, Fizzle}
@@ -962,7 +962,7 @@ tModLoader/other bases -> project types:
     +EditSpawnPool(IDictionary<int, float>,NPCSpawnInfo)[ov]
   class RareNpcSystem : ModSystem
     +OnWorldLoad()[ov] +PostUpdateWorld()[ov]
-**StoryCommand.cs** uses: DryadStory, HerBackpackNPC, ImportantDialogueEntry, ImportantDialogueRegistry, MechanicsBagItem, RareNpcRules, StoryFlags, StorySystem
+**StoryCommand.cs** uses: DryadStory, HerBackpackNPC, ImportantDialogueEntry, ImportantDialogueRegistry, MechanicsBagItem, RareNpcRules, StoryFlags, StoryScrolls, StorySystem
   class StoryCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **StoryEventsGlobalNPC.cs** uses: FactorrariaNet, StoryFlags, StorySystem
@@ -975,6 +975,9 @@ tModLoader/other bases -> project types:
 **StoryFlags.cs**
   static class StoryFlags
     +EyeKillSeen:string[s] +DryadSeen:string[s] +BackpackTaken:string[s] +MechanicRescued:string[s] +MechanicShopUnlocked:string[s] +ScrollsGiven:string[s] +DungeonFork:string[s] +TestDialogueExit:string[s] +DonePrefix:string[s] +DoneKey(string)[s] +All()[s] +Resolve(string)[s] +IsKnown(string)[s]
+**StoryScrolls.cs** uses: ClosedScrollItem, ScrollPoolDefinitions
+  static class StoryScrolls
+    +ScrollsPerPart:int[s] +PoolNames()[s] +Give(Player,string)[s]
 **StorySystem.cs** uses: FactorrariaNet, StoryNet
   class StorySystem : ModSystem
     +MaxKeyLength:int[s] +Version:int[s] +Flags:IReadOnlyCollection<string>[s] +Get(string)[s] +ServerSet(string,bool)[s] +ApplyFromServer(string,bool)[s] +ReplaceAll(IEnumerable<string>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]

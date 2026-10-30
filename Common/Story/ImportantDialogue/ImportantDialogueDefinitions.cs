@@ -48,7 +48,8 @@ namespace Factorraria.Common.Story
             // Mechanic.Bag (patch N5.1): the player carries the Mechanic's Bag and her shop is still locked. She asks "Have you found my bag?".
             // The vanilla first button ("Shop") is REPLACED by "Give the bag" while this entry is active; it sends the TurnInBag request and the
             // server decides (it consumes one Bag and sets MechanicShopUnlocked). Exit: the shop is unlocked (latches Done.Mechanic.Bag).
-            // Priority 5: the scroll intro of N7.1 will get its own priority; the Bag is the later step of the story.
+            // Priority 5: lower than Mechanic.SuperWeaponIntro (6), because the scrolls are the earlier step of the story. If a player carries the
+            // Bag before the scrolls were handed out, the intro shows first, and the Bag entry takes over as soon as the scrolls are given.
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Mechanic.Bag",
@@ -61,6 +62,24 @@ namespace Factorraria.Common.Story
                     ReplaceVanillaFirstButton = true,
                     OnClick = (player, npc) => StoryNet.RequestTurnInBag(npc.whoAmI)
                 }
+            });
+
+            // ------------------------------------------------------------------
+            // Mechanic.SuperWeaponIntro (patch N7.1): right after her rescue the Mechanic shows "!" and explains super weapon #1 (the missile: drill,
+            // tank, thruster). The scroll hand-out is an OnTalkStart request (not a chat button): the Mechanic's two vanilla chat buttons (Shop and
+            // Happiness) are both used, so a button would have to hide her Shop. The first conversation sends ClaimScrolls; the server hands out
+            // three Sealed Scrolls ONCE per world, to the first player who asks (D9), and sets ScrollsGiven. If a request is refused (too far,
+            // she is gone) nothing is lost: the entry stays active and the next conversation asks again.
+            // Condition: she was rescued (also on the Skeletron-first route, D11) and the scrolls were not given. Exit: ScrollsGiven, which also
+            // ends Dryad.PlanWithMechanic. Priority 6: above Mechanic.Bag (5).
+            ImportantDialogueRegistry.Register(new ImportantDialogueEntry
+            {
+                Id = "Mechanic.SuperWeaponIntro",
+                NpcType = NPCID.Mechanic,
+                Priority = 6,
+                Condition = player => StorySystem.Get(StoryFlags.MechanicRescued) && !StorySystem.Get(StoryFlags.ScrollsGiven),
+                Exit = () => StorySystem.Get(StoryFlags.ScrollsGiven),
+                OnTalkStart = (player, npc) => StoryNet.RequestClaimScrolls(npc.whoAmI)
             });
 
             // ------------------------------------------------------------------

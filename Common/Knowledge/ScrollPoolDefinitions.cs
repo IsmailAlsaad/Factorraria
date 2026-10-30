@@ -31,9 +31,15 @@ namespace Factorraria.Common.Knowledge
     /// </summary>
     public static class ScrollPoolDefinitions
     {
+        // Names of the three super weapon part pools (NPC roadmap patch N7.1). The Mechanic hands out one Sealed Scroll of each (StoryScrolls).
+        public static string MissileDrillPool = "MissileDrill";
+        public static string MissileTankPool = "MissileTank";
+        public static string MissileThrusterPool = "MissileThruster";
+
         public static void Register()
         {
             DefaultPool();
+            SuperWeaponPartPools();
 
             // ---- your own pools go here (or uncomment the example) ----
             // Example_Dungeon();
@@ -88,6 +94,21 @@ namespace Factorraria.Common.Knowledge
 
             // NOT IN THE POOL: the Decay Chamber item itself (Lesion Station). Its recipe is a hand-craft at the
             // Demon Altar (RecipeSystem.cs), and no machine book contains it, so there is no catalog recipe to teach.
+        }
+
+        // ==========================================================================================
+        // SUPER WEAPON #1 (the missile): ONE POOL PER PART, ONE PAGE EACH. The Mechanic gives one scroll of each (StoryScrolls, patch N7.1).
+        // The pages are recipe book ART (placeholders, see RecipeArtDefinitions) because the part recipes are Anvil recipes today, and the
+        // recipe book has no Anvil. When the parts get Mechanical Assembler recipes, swap an AddArt line for
+        //     .Add("MechanicalAssembler", ModContent.ItemType<MissileDrillItem>())
+        // (the item types are in Content/Tiles/SuperWeapons/*). A pool with a single page that is already unlocked falls back to a random
+        // recipe of the whole book (the normal scroll rule), which is harmless.
+        // ==========================================================================================
+        static void SuperWeaponPartPools()
+        {
+            ScrollPools.Define(MissileDrillPool, "Grease-stained notes about something that bites into rock.").AddArt("MissileDrillPage");
+            ScrollPools.Define(MissileTankPool, "Grease-stained notes about something that holds a lot of fuel.").AddArt("MissileTankPage");
+            ScrollPools.Define(MissileThrusterPool, "Grease-stained notes about something that pushes very hard.").AddArt("MissileThrusterPage");
         }
 
         // Real, compiled example that is NOT called by default. Adjust the entries to recipes that exist, then call it from Register().

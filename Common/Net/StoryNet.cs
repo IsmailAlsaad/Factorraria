@@ -25,11 +25,12 @@ namespace Factorraria.Common.Net
         }
     }
 
-    /// <summary>What a story action request asks for (NPC story patches N4.2 and N5.1). The kind that follows arrives with N7.1 (claim the scrolls).</summary>
+    /// <summary>What a story action request asks for (NPC story patches N4.2, N5.1 and N7.1).</summary>
     public enum StoryActionKind : byte
     {
         TakeBag = 0,
-        TurnInBag = 1
+        TurnInBag = 1,
+        ClaimScrolls = 2
     }
 
     public enum StoryActionFailure : byte
@@ -114,6 +115,25 @@ namespace Factorraria.Common.Net
             });
         }
 
+        /// <summary>
+        /// Client (or single-player): asks the server to hand the three super weapon scrolls to this player (patch N7.1). npcIndex = the town Mechanic.
+        /// Sent from the talk-start of the Mechanic.SuperWeaponIntro dialogue, so the first conversation after her rescue gives them.
+        /// </summary>
+        public static void RequestClaimScrolls(int npcIndex)
+        {
+            if (ActionPending || StorySystem.Get(StoryFlags.ScrollsGiven))
+                return;
+
+            actionPending = true;
+            actionPendingTick = Main.GameUpdateCount;
+
+            FactorrariaNet.SendRequest(FactorrariaPacket.StoryActionRequest, writer =>
+            {
+                writer.Write((byte)StoryActionKind.ClaimScrolls);
+                writer.Write((short)npcIndex);
+            });
+        }
+
         /// <summary>True when the player's main inventory (the 59 slots, the same ones the turn-in consumes from) holds a Mechanic's Bag. Used by the dialogue condition and by the server check.</summary>
         public static bool HasBag(Player player)
         {
@@ -175,6 +195,10 @@ namespace Factorraria.Common.Net
 
                 case StoryActionKind.TurnInBag:
                     HandleTurnInBag(player, sender, npcIndex);
+                    break;
+
+                case StoryActionKind.ClaimScrolls:
+                    HandleClaimScrolls(player, sender, npcIndex);
                     break;
 
                 default:
@@ -266,6 +290,44 @@ namespace Factorraria.Common.Net
             ReplyAction(sender, StoryActionKind.TurnInBag, true, StoryActionFailure.None);
         }
 
+        // Server / single-player (patch N7.1). The server decides: the Mechanic is a real town NPC, the player is close, she was rescued, and the
+        // scrolls were not handed out yet (once per world, to the first player who asks; D9). ScrollsGiven is set BEFORE the items are spawned, so a
+        // second player's request in the same moment is refused. The flag reaches every client through the story flag sync (so the "!" goes away on
+        // the Mechanic and on the Dryad); the scrolls are real items spawned next to the player (QuickSpawnItem broadcasts by itself).
+        static void HandleClaimScrolls(Player player, int sender, int npcIndex)
+        {
+            if (npcIndex < 0 || npcIndex >= Main.maxNPCs)
+            {
+                ReplyAction(sender, StoryActionKind.ClaimScrolls, false, StoryActionFailure.NoNpc);
+                return;
+            }
+
+            NPC npc = Main.npc[npcIndex];
+            if (!npc.active || npc.type != NPCID.Mechanic || !npc.townNPC)
+            {
+                ReplyAction(sender, StoryActionKind.ClaimScrolls, false, StoryActionFailure.NoNpc);
+                return;
+            }
+
+            if (player.Distance(npc.Center) > System.Math.Max(1, InteractReachTiles) * 16f)
+            {
+                ReplyAction(sender, StoryActionKind.ClaimScrolls, false, StoryActionFailure.TooFar);
+                return;
+            }
+
+            if (!StorySystem.Get(StoryFlags.MechanicRescued) || StorySystem.Get(StoryFlags.ScrollsGiven))
+            {
+                ReplyAction(sender, StoryActionKind.ClaimScrolls, false, StoryActionFailure.Unavailable);
+                return;
+            }
+
+            StorySystem.ServerSet(StoryFlags.ScrollsGiven, true);
+            StoryScrolls.Give(player, "FactorrariaStoryScrolls");
+
+            FactorrariaNet.Log("[Story] " + player.name + " received the three super weapon scrolls from the Mechanic (NPC #" + npcIndex + ")");
+            ReplyAction(sender, StoryActionKind.ClaimScrolls, true, StoryActionFailure.None);
+        }
+
         static void ReplyAction(int sender, StoryActionKind kind, bool accepted, StoryActionFailure failure)
         {
             if (Main.netMode == NetmodeID.Server)
@@ -305,6 +367,11 @@ namespace Factorraria.Common.Net
                 // Placeholder texts until the localization pass (N9).
                 if (kind == StoryActionKind.TakeBag)
                     Main.NewText("You take the Mechanic's Bag.", 255, 240, 20);
+                else if (kind == StoryActionKind.ClaimScrolls)
+                {
+                    SoundEngine.PlaySound(SoundID.Grab);
+                    Main.NewText("The Mechanic gives you three Sealed Scrolls.", 255, 240, 20);
+                }
                 else if (kind == StoryActionKind.TurnInBag)
                 {
                     SoundEngine.PlaySound(SoundID.Grab);
@@ -327,16 +394,17 @@ namespace Factorraria.Common.Net
             }
 
             bool turnIn = kind == StoryActionKind.TurnInBag;
+            bool scrolls = kind == StoryActionKind.ClaimScrolls;
             switch (failure)
             {
                 case StoryActionFailure.TooFar:
                     Main.NewText("You are too far away.", 200, 200, 200);
                     break;
                 case StoryActionFailure.NoNpc:
-                    Main.NewText(turnIn ? "She is not here any more." : "It is gone.", 200, 200, 200);
+                    Main.NewText(turnIn || scrolls ? "She is not here any more." : "It is gone.", 200, 200, 200);
                     break;
                 case StoryActionFailure.Unavailable:
-                    Main.NewText(turnIn ? "Her shop is already open." : "Someone already took it.", 200, 200, 200);
+                    Main.NewText(scrolls ? "She has nothing more to give you." : turnIn ? "Her shop is already open." : "Someone already took it.", 200, 200, 200);
                     break;
                 case StoryActionFailure.NoItem:
                     Main.NewText("You do not have the Mechanic's Bag.", 200, 200, 200);

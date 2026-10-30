@@ -903,6 +903,7 @@ Dialogue: {
 	}
 
 	Mechanic: {
+		SuperWeaponIntro.Text: So you are the one the Dryad told me about, {PlayerName}. Thank you for getting me out of there. I have a plan: a missile, built from three parts, a drill, a tank and a thruster. Here are three scrolls, one for each part. This would require a lot of parts, so I would recommend automating them.
 		Bag: {
 			Text: Have you found my bag?
 			Button1: Give the bag
