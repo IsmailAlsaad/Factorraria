@@ -4,6 +4,9 @@ using Factorraria.Content.Items.Hooks;
 using Factorraria.Content.Items.Liquids.Pipes;
 using Factorraria.Content.Items.Machines;
 using Factorraria.Content.Items.Materials;
+using Factorraria.Content.Tiles.SuperWeapons.MissileDrill;
+using Factorraria.Content.Tiles.SuperWeapons.MissileTank;
+using Factorraria.Content.Tiles.SuperWeapons.MissileThruster;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -97,18 +100,15 @@ namespace Factorraria.Common.Knowledge
         }
 
         // ==========================================================================================
-        // SUPER WEAPON #1 (the missile): ONE POOL PER PART, ONE PAGE EACH. The Mechanic gives one scroll of each (StoryScrolls, patch N7.1).
-        // The pages are recipe book ART (placeholders, see RecipeArtDefinitions) because the part recipes are Anvil recipes today, and the
-        // recipe book has no Anvil. When the parts get Mechanical Assembler recipes, swap an AddArt line for
-        //     .Add("MechanicalAssembler", ModContent.ItemType<MissileDrillItem>())
-        // (the item types are in Content/Tiles/SuperWeapons/*). A pool with a single page that is already unlocked falls back to a random
-        // recipe of the whole book (the normal scroll rule), which is harmless.
+        // SUPER WEAPON #1 (the missile): ONE POOL PER PART, ONE REAL RECIPE EACH (patch N7.1b). The Mechanic gives one scroll of each
+        // (StoryScrolls, patch N7.1). Each pool teaches the part's Mechanical Assembler recipe (MechanicalAssemblerRecipeRegistry). A pool whose
+        // only recipe is already unlocked or crafted falls back to a random recipe of the whole book (the normal scroll rule).
         // ==========================================================================================
         static void SuperWeaponPartPools()
         {
-            ScrollPools.Define(MissileDrillPool, "Grease-stained notes about something that bites into rock.").AddArt("MissileDrillPage");
-            ScrollPools.Define(MissileTankPool, "Grease-stained notes about something that holds a lot of fuel.").AddArt("MissileTankPage");
-            ScrollPools.Define(MissileThrusterPool, "Grease-stained notes about something that pushes very hard.").AddArt("MissileThrusterPage");
+            ScrollPools.Define(MissileDrillPool, "Infected drill head blueprint").Add("MechanicalAssembler", ModContent.ItemType<MissileDrillItem>());
+            ScrollPools.Define(MissileTankPool, "Byrite tank casing blueprint").Add("MechanicalAssembler", ModContent.ItemType<MissileTankItem>());
+            ScrollPools.Define(MissileThrusterPool, "Meteorite thruster booster blueprint").Add("MechanicalAssembler", ModContent.ItemType<MissileThrusterItem>());
         }
 
         // Real, compiled example that is NOT called by default. Adjust the entries to recipes that exist, then call it from Register().

@@ -20,12 +20,6 @@
         public static void Register()
         {
              RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Placeholder");
-
-             // Super weapon #1 part pages (patch N7.1): the three scrolls the Mechanic hands out each unlock one of these.
-             // Until the PNGs exist the book page says the art is missing (and a warning is logged); no art is generated.
-             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/MissileDrillPage");
-             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/MissileTankPage");
-             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/MissileThrusterPage");
         }
     }
 }
