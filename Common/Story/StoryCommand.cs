@@ -160,7 +160,7 @@ namespace Factorraria.Common.Story
         // Everything needed to judge the rare spawns in one place (patch N4.1). The verdicts use the calling player's zones as the server sees them.
         static void Dump(CommandCaller caller)
         {
-            caller.Reply("[Story] NPC.savedMech " + NPC.savedMech + ", Skeletron defeated " + NPC.downedBoss3 + ", MechanicRescued " + OnOff(StoryFlags.MechanicRescued) + ", MechanicShopUnlocked " + OnOff(StoryFlags.MechanicShopUnlocked)
+            caller.Reply("[Story] NPC.savedMech " + NPC.savedMech + ", Eye defeated " + NPC.downedBoss1 + ", Skeletron defeated " + NPC.downedBoss3 + ", MechanicRescued " + OnOff(StoryFlags.MechanicRescued) + ", MechanicShopUnlocked " + OnOff(StoryFlags.MechanicShopUnlocked)
                 + ", BackpackTaken " + OnOff(StoryFlags.BackpackTaken) + ", DungeonFork " + OnOff(StoryFlags.DungeonFork), Color.LightGreen);
 
             string reason;

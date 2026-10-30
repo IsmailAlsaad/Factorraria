@@ -4,7 +4,7 @@ generated 2026-10-31 | 369 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(71) BaseMachine(50) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(20) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(12)
+FactorrariaNet(71) BaseMachine(50) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(12)
 
 ## Inheritance
 Project bases -> derived:
@@ -962,7 +962,7 @@ tModLoader/other bases -> project types:
     +EditSpawnPool(IDictionary<int, float>,NPCSpawnInfo)[ov]
   class RareNpcSystem : ModSystem
     +OnWorldLoad()[ov] +PostUpdateWorld()[ov]
-**StoryCommand.cs** uses: Factorraria, HerBackpackNPC, ImportantDialogueEntry, ImportantDialogueRegistry, MechanicsBagItem, RareNpcRules, StoryFlags, StorySystem
+**StoryCommand.cs** uses: HerBackpackNPC, ImportantDialogueEntry, ImportantDialogueRegistry, MechanicsBagItem, RareNpcRules, StoryFlags, StorySystem
   class StoryCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **StoryFlags.cs**

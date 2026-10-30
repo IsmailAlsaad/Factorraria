@@ -31,6 +31,9 @@ namespace Factorraria.Content.NPCs.HerBackpack
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[Type] = 1;
+
+            // Not a town NPC: no Happiness button in its chat window (to confirm in game).
+            NPCID.Sets.NoTownNPCHappiness[Type] = true;
             NPCID.Sets.NPCBestiaryDrawOffset[Type] = new NPCID.Sets.NPCBestiaryDrawModifiers { Hide = true };
         }
 

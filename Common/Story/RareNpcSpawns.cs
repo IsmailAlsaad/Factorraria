@@ -51,6 +51,11 @@ namespace Factorraria.Common.Story
                 return Allow(DungeonMechanicSpawnWeight, "DungeonMechanicSpawnWeight is 0", out reason);
             }
 
+            // Route A: she only starts spawning underground once the Eye of Cthulhu was defeated (vanilla's own flag).
+            // Route B (Skeletron first) is the DungeonFork branch above, which does not need the Eye.
+            if (!NPC.downedBoss1)
+                return Deny("the Eye of Cthulhu was not defeated yet (route A needs it; route B starts when Skeletron falls first)", out reason);
+
             if (player.ZoneDungeon)
                 return Deny("the player is in the dungeon (the Mechanic waits for the Cavern layer)", out reason);
 
@@ -76,6 +81,9 @@ namespace Factorraria.Common.Story
 
             if (!player.ZoneDungeon)
                 return Deny("the player is not in the dungeon", out reason);
+
+            if (!StorySystem.Get(StoryFlags.MechanicRescued))
+                return Deny("the Mechanic was not rescued yet", out reason);
 
             if (StorySystem.Get(StoryFlags.BackpackTaken))
                 return Deny("BackpackTaken is on", out reason);
@@ -144,6 +152,7 @@ namespace Factorraria.Common.Story
                 return;
 
             WatchRescue();
+            WatchFork();
             WatchBag();
         }
 
@@ -157,6 +166,18 @@ namespace Factorraria.Common.Story
 
             if (StorySystem.Get(StoryFlags.DungeonFork))
                 StorySystem.ServerSet(StoryFlags.MechanicShopUnlocked, true);
+        }
+
+        // Route B (rule S5, done here as a world watcher instead of an OnKill hook): the first tick Skeletron is down while the Eye of Cthulhu never
+        // was and the Mechanic was not rescued, DungeonFork is latched. From then on the tied Mechanic spawns in the dungeon (not underground),
+        // her rescue unlocks the whole shop at once (WatchRescue) and Her Backpack never spawns.
+        static void WatchFork()
+        {
+            if (StorySystem.Get(StoryFlags.DungeonFork) || !NPC.downedBoss3 || NPC.downedBoss1 || StorySystem.Get(StoryFlags.MechanicRescued))
+                return;
+
+            StorySystem.ServerSet(StoryFlags.DungeonFork, true);
+            FactorrariaNet.Log("[Story] Skeletron fell before the Eye of Cthulhu: DungeonFork on (route B)");
         }
 
         // Bag-loss watcher: while a Bag was taken and the shop is still locked, some player (any inventory, bank, trash) or the ground must hold it.
