@@ -14,7 +14,9 @@ namespace Factorraria.Common.Net
     {
         ShieldBreak = 0,  // the Wall of Flesh's stone shield broke (patch S1.2)
         Ignition = 1,     // a primed missile's boosters just lit (patch S4.1): sound and camera shake at the tank
-        Launch = 2        // the missile left the ground and its parts vanished (patch S4.2): bang and camera shake at the weapon
+        Launch = 2,       // the missile left the ground and its parts vanished (patch S4.2): bang and camera shake at the weapon
+        Impact = 3,       // the missile hit the wall (patch S4.3): the big explosion at the missile (ShieldBreak follows from BreakShield)
+        Fizzle = 4        // the missile ended without a hit (patch S4.3): a small puff at the missile
     }
 
     // Super weapons patch S1.2. The shield state itself is synced with the wall NPC (S1.1); this is only the cosmetic burst. The server (or
@@ -73,6 +75,35 @@ namespace Factorraria.Common.Net
                     }
 
                     Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 8f, 12f, 60, 2500f, "FactorrariaLaunch"));
+                    break;
+
+                case SuperWeaponEffectKind.Impact:
+                    // Placeholder sounds and dust: a fireball plus smoke. The stone debris comes with the ShieldBreak effect.
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1f, Pitch = -0.8f }, position);
+                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1f, Pitch = -0.6f }, position);
+                    for (int i = 0; i < 80; i++)
+                    {
+                        Dust fire = Dust.NewDustPerfect(position + Main.rand.NextVector2Circular(40f, 40f), DustID.Torch, Main.rand.NextVector2Circular(9f, 9f), 0, default, Main.rand.NextFloat(2f, 3.5f));
+                        fire.noGravity = true;
+                    }
+
+                    for (int i = 0; i < 40; i++)
+                    {
+                        Dust smoke = Dust.NewDustPerfect(position + Main.rand.NextVector2Circular(50f, 50f), DustID.Smoke, Main.rand.NextVector2Circular(5f, 5f), 100, default, 2.4f);
+                        smoke.noGravity = true;
+                    }
+
+                    Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 12f, 10f, 50, 3000f, "FactorrariaImpact"));
+                    break;
+
+                case SuperWeaponEffectKind.Fizzle:
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.4f, Pitch = 0.2f }, position);
+                    for (int i = 0; i < 20; i++)
+                    {
+                        Dust puff = Dust.NewDustPerfect(position + Main.rand.NextVector2Circular(24f, 16f), i % 2 == 0 ? DustID.Smoke : DustID.Torch, Main.rand.NextVector2Circular(3f, 3f), 100, default, 1.6f);
+                        puff.noGravity = true;
+                    }
+
                     break;
             }
         }
@@ -134,7 +165,7 @@ namespace Factorraria.Common.Net
             byte kind = reader.ReadByte();
             float x = reader.ReadSingle();
             float y = reader.ReadSingle();
-            if (kind > (byte)SuperWeaponEffectKind.Launch)
+            if (kind > (byte)SuperWeaponEffectKind.Fizzle)
                 return;
 
             incoming.Enqueue(new Pending { Kind = (SuperWeaponEffectKind)kind, Position = new Vector2(x, y) });

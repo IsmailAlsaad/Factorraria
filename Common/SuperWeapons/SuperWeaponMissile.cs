@@ -31,12 +31,45 @@ namespace Factorraria.Common.SuperWeapons
         // Any existing image: the real drawing is done by PreDraw, so this only has to load.
         public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.Bullet;
 
-        Asset<Texture2D> art;
+        // Client only. Requested lazily and loaded right away (S4.3 fix: the S4.2 version requested it asynchronously in SetStaticDefaults
+        // and only kept it on the prototype, and the missile kept drawing the grey block). Shared by every missile.
+        static Asset<Texture2D> art;
+        static bool artRequested;
 
-        public override void SetStaticDefaults()
+        public override void Unload()
         {
-            if (!Main.dedServ && ModContent.HasAsset(ArtPath))
-                art = ModContent.Request<Texture2D>(ArtPath);
+            art = null;
+            artRequested = false;
+        }
+
+        static Texture2D GetArt()
+        {
+            if (Main.dedServ)
+                return null;
+
+            if (!artRequested)
+            {
+                artRequested = true;
+                ModContent.RequestIfExists(ArtPath, out art, AssetRequestMode.ImmediateLoad);
+            }
+
+            return art != null && art.IsLoaded ? art.Value : null;
+        }
+
+        /// <summary>One line for /fweapon status: whether the missile art exists in the mod and loaded.</summary>
+        public static string ArtStatus()
+        {
+            if (Main.dedServ)
+                return "art: dedicated server (no art)";
+
+            bool exists = ModContent.HasAsset(ArtPath);
+            Texture2D texture = GetArt();
+            if (texture != null)
+                return "art: loaded (" + texture.Width + "x" + texture.Height + ", expected " + ArtWidth + "x" + ArtHeight + ") from " + ArtPath;
+
+            return exists
+                ? "art: found in the mod but NOT loaded (state " + (art == null ? "no asset" : art.State.ToString()) + ")"
+                : "art: NOT FOUND at " + ArtPath + " (check the folder, the file name and its case, then rebuild the mod)";
         }
 
         public override void SetDefaults()
@@ -77,7 +110,7 @@ namespace Factorraria.Common.SuperWeapons
             if (Math.Abs(Projectile.Center.X - Projectile.ai[2]) > system.MissileMaxRangeTiles * 16f)
             {
                 if (Main.netMode != NetmodeID.MultiplayerClient)
-                    SuperWeaponSystem.Say("[Missile] fizzled: flew " + system.MissileMaxRangeTiles + " tiles without reaching a shielded wall");
+                    Fizzle("flew " + system.MissileMaxRangeTiles + " tiles without reaching a shielded wall");
 
                 End();
                 return;
@@ -85,11 +118,27 @@ namespace Factorraria.Common.SuperWeapons
 
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                // S4.2 STUB: the wall check without the explosion. S4.3 replaces this with the explosion and BreakShield().
-                NPC wall = SuperWeaponSystem.FindShieldedWall();
-                if (wall != null && Math.Abs(wall.Center.X - Projectile.Center.X) < system.HitDistancePx)
+                // S4.3: the line check (D1: x only). Wall gone or shield already down -> fizzle; wall close enough -> explode and break the shield.
+                NPC wall = SuperWeaponSystem.FindWall();
+                if (wall == null)
                 {
-                    SuperWeaponSystem.Say("[Missile] reached the wall at tile x " + (int)(wall.Center.X / 16f) + " (S4.2 stub: no explosion, the shield stays up; S4.3 breaks it)");
+                    Fizzle("the Wall of Flesh is gone");
+                    End();
+                    return;
+                }
+
+                if (!WallShieldGlobalNPC.IsShielded(wall))
+                {
+                    Fizzle("the shield was already down");
+                    End();
+                    return;
+                }
+
+                if (Math.Abs(wall.Center.X - Projectile.Center.X) < system.HitDistancePx)
+                {
+                    SuperWeaponNet.SendEffect(SuperWeaponEffectKind.Impact, Projectile.Center);
+                    int changed = WallShieldGlobalNPC.BreakShield();
+                    SuperWeaponSystem.Say("[Missile] HIT: the wall at tile x " + (int)(wall.Center.X / 16f) + " lost its shield (" + changed + " NPC(s) changed)");
                     End();
                     return;
                 }
@@ -97,6 +146,13 @@ namespace Factorraria.Common.SuperWeapons
 
             if (!Main.dedServ)
                 Flames(facing, speed / Math.Max(1f, system.MissileMaxSpeedPx));
+        }
+
+        // Server / single-player: the small "it did nothing" effect (placeholder smoke) plus the log line.
+        void Fizzle(string why)
+        {
+            SuperWeaponNet.SendEffect(SuperWeaponEffectKind.Fizzle, Projectile.Center);
+            SuperWeaponSystem.Say("[Missile] fizzled: " + why);
         }
 
         // Server / single-player: remove it and tell the clients. A client just removes its own copy.
@@ -136,9 +192,9 @@ namespace Factorraria.Common.SuperWeapons
             SpriteEffects effects = Projectile.ai[1] < 0f ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             Vector2 center = Projectile.Center - Main.screenPosition;
 
-            if (art != null && art.IsLoaded)
+            Texture2D texture = GetArt();
+            if (texture != null)
             {
-                Texture2D texture = art.Value;
                 Main.EntitySpriteDraw(texture, center, null, lightColor, 0f, texture.Size() / 2f, 1f, effects, 0);
                 return false;
             }

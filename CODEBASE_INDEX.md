@@ -802,7 +802,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **SuperWeaponNet.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, WallShieldDrawSystem
   enum SuperWeaponEffectKind : byte
-    {ShieldBreak, Ignition, Launch}
+    {ShieldBreak, Ignition, Launch, Impact, Fizzle}
   static class SuperWeaponNet
     +SendEffect(SuperWeaponEffectKind,Vector2)[s] +PlayLocal(SuperWeaponEffectKind,Vector2)[s]
   class SuperWeaponNetSystem : ModSystem
@@ -972,12 +972,12 @@ tModLoader/other bases -> project types:
 **SuperWeaponIgnitionFxSystem.cs** uses: BaseMachine, MissileTankTileEntity, SuperWeaponAssembly, SuperWeaponState, SuperWeaponSystem
   class SuperWeaponIgnitionFxSystem : ModSystem
     +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
-**SuperWeaponMissile.cs** uses: BaseMachine, SuperWeaponSystem
+**SuperWeaponMissile.cs** uses: BaseMachine, State, SuperWeaponEffectKind, SuperWeaponNet, SuperWeaponSystem, WallShieldGlobalNPC
   class SuperWeaponMissile : ModProjectile
-    +ArtPath:string[c] +Texture:string[ov] +CanHitNPC(NPC)[ov] +CanHitPlayer(Player)[ov] +CanHitPvp(Player)[ov] +AI()[ov] +PreDraw(ref Color)[ov] +AnyInFlight()[s] +KillAll()[s]
+    +ArtPath:string[c] +Texture:string[ov] +Unload()[ov] +ArtStatus()[s] +CanHitNPC(NPC)[ov] +CanHitPlayer(Player)[ov] +CanHitPvp(Player)[ov] +AI()[ov] +PreDraw(ref Color)[ov] +AnyInFlight()[s] +KillAll()[s]
 **SuperWeaponSystem.cs** uses: FactorrariaNet, MissileDrillTile, MissileTankTile, MissileTankTileEntity, MissileThrusterTile, SuperWeaponAssembly, SuperWeaponEffectKind, SuperWeaponMissile, SuperWeaponNet, SuperWeaponState, SuperWeaponTrigger, TriggerCandidate, WallShieldGlobalNPC
   class SuperWeaponSystem : ModSystem
-    +TriggerCheckTicks:int +IgniteTicks:int +MissileAccel:float +MissileMaxSpeedPx:float +MissileMaxRangeTiles:int +HitDistancePx:float +SuppressPartDrops:bool +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +IsPartTile(int)[s] +ClearAll() +Say(string)[s]
+    +TriggerCheckTicks:int +IgniteTicks:int +MissileAccel:float +MissileMaxSpeedPx:float +MissileMaxRangeTiles:int +HitDistancePx:float +SuppressPartDrops:bool +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindWall()[s] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +IsPartTile(int)[s] +ClearAll() +Say(string)[s]
 **SuperWeaponTrigger.cs**
   struct TriggerCandidate
     +Id:int +X:float +Facing:int

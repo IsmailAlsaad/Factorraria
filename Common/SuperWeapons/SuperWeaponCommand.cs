@@ -81,6 +81,8 @@ namespace Factorraria.Common.SuperWeapons
             if (missiles == 0)
                 caller.Reply("  no missile in flight", Color.Gray);
 
+            caller.Reply("  " + SuperWeaponMissile.ArtStatus(), Color.White);
+
             if (wall == null)
                 caller.Reply("  no Wall of Flesh", Color.Gray);
             else

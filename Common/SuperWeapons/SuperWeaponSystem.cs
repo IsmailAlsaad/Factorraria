@@ -41,7 +41,7 @@ namespace Factorraria.Common.SuperWeapons
         /// <summary>The missile fizzles after flying this far from the launch point, in tiles (S4.2).</summary>
         public int MissileMaxRangeTiles = 700;
 
-        /// <summary>The missile reaches the wall when its x is closer than this (S4.2: only logged; S4.3 breaks the shield).</summary>
+        /// <summary>The missile hits the wall when its x is closer than this (S4.3: explosion plus BreakShield).</summary>
         public float HitDistancePx = 32f;
 
         /// <summary>True only while Launch removes the weapon's tiles, so SuperWeaponDropGuard keeps the parts from dropping items.</summary>
@@ -76,6 +76,19 @@ namespace Factorraria.Common.SuperWeapons
 
             checkTimer = Math.Max(1, TriggerCheckTicks);
             CheckTrigger();
+        }
+
+        /// <summary>The live Wall of Flesh (the mouth), shield up or not, or null (S4.3: the missile tells "gone" from "shield already down").</summary>
+        public static NPC FindWall()
+        {
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (npc.active && npc.type == NPCID.WallofFlesh)
+                    return npc;
+            }
+
+            return null;
         }
 
         /// <summary>The Wall of Flesh (the mouth) while its stone shield is up, or null.</summary>
