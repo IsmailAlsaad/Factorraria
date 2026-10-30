@@ -99,31 +99,17 @@ namespace Factorraria.Common.Net
             }
         }
 
-        // Stone debris along the whole wall, a boom plus a stone crack (placeholder sounds), and a camera punch that fades with distance.
+        // The shield breaking (S6.2): the sounds and the camera here; the real show (the art chopped into flying shards, the dust burst and the
+        // falling dust curtain) is WallShieldBreakFxSystem.
         static void ShieldBreak(Vector2 position)
         {
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1f, Pitch = -0.5f }, position);
             SoundEngine.PlaySound(SoundID.Tink with { Volume = 1f, Pitch = -0.7f }, position);
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.8f, Pitch = -0.9f }, position);
 
-            WallShieldDrawSystem draw = ModContent.GetInstance<WallShieldDrawSystem>();
-            draw.TryGetBodySpan(position, out float top, out float bottom);
+            ModContent.GetInstance<WallShieldBreakFxSystem>().Start(position);
 
-            for (int i = 0; i < 120; i++)
-            {
-                Vector2 at = new Vector2(position.X + Main.rand.NextFloat(-70f, 70f), Main.rand.NextFloat(top, bottom));
-                Vector2 velocity = Main.rand.NextVector2Circular(7f, 5f);
-                Dust dust = Dust.NewDustPerfect(at, DustID.Stone, velocity, 0, default, Main.rand.NextFloat(1.2f, 2.1f));
-                dust.noGravity = Main.rand.NextBool(3);
-            }
-
-            for (int i = 0; i < 30; i++)
-            {
-                Vector2 at = new Vector2(position.X + Main.rand.NextFloat(-50f, 50f), Main.rand.NextFloat(top, bottom));
-                Dust dust = Dust.NewDustPerfect(at, DustID.Smoke, Main.rand.NextVector2Circular(3f, 3f), 120, default, 1.6f);
-                dust.noGravity = true;
-            }
-
-            Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 14f, 8f, 45, 3000f, "FactorrariaShieldBreak"));
+            Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 18f, 8f, 70, 3500f, "FactorrariaShieldBreak"));
         }
     }
 

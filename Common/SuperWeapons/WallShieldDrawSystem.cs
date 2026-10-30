@@ -37,6 +37,12 @@ namespace Factorraria.Common.SuperWeapons
         Asset<Texture2D> body;
         Asset<Texture2D> mouth;
         Asset<Texture2D> eye;
+
+        // The loaded shield art, or null when a PNG is missing (read by WallShieldBreakFxSystem to cut the real textures into shards).
+        public Texture2D BodyArt => body != null ? body.Value : null;
+        public Texture2D MouthArt => mouth != null ? mouth.Value : null;
+        public Texture2D EyeArt => eye != null ? eye.Value : null;
+
         bool drawDisabled;
         bool ownBatchInBehindPass;  // learned at runtime: false = vanilla leaves a SpriteBatch open in the behind-tiles pass (the normal case)
 
