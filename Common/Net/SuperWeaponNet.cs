@@ -78,22 +78,13 @@ namespace Factorraria.Common.Net
                     break;
 
                 case SuperWeaponEffectKind.Impact:
-                    // Placeholder sounds and dust: a fireball plus smoke. The stone debris comes with the ShieldBreak effect.
-                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1f, Pitch = -0.8f }, position);
-                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1f, Pitch = -0.6f }, position);
-                    for (int i = 0; i < 80; i++)
-                    {
-                        Dust fire = Dust.NewDustPerfect(position + Main.rand.NextVector2Circular(40f, 40f), DustID.Torch, Main.rand.NextVector2Circular(9f, 9f), 0, default, Main.rand.NextFloat(2f, 3.5f));
-                        fire.noGravity = true;
-                    }
-
-                    for (int i = 0; i < 40; i++)
-                    {
-                        Dust smoke = Dust.NewDustPerfect(position + Main.rand.NextVector2Circular(50f, 50f), DustID.Smoke, Main.rand.NextVector2Circular(5f, 5f), 100, default, 2.4f);
-                        smoke.noGravity = true;
-                    }
-
-                    Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 12f, 10f, 50, 3000f, "FactorrariaImpact"));
+                    // The big one (S4.4): sounds and the camera here, everything that plays over time (fireball, shockwave ring, rising column,
+                    // secondary blasts, screen flash, lingering smoke) lives in SuperWeaponExplosionFxSystem. The stone debris comes with the ShieldBreak effect.
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1f, Pitch = -1f }, position);
+                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1f, Pitch = -0.8f }, position);
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.8f, Pitch = -0.4f }, position);
+                    ModContent.GetInstance<SuperWeaponExplosionFxSystem>().Start(position);
+                    Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 24f, 9f, 90, 4500f, "FactorrariaImpact"));
                     break;
 
                 case SuperWeaponEffectKind.Fizzle:
