@@ -43,12 +43,12 @@ namespace Factorraria.Common.SuperWeapons
         public float MaxSpin = 0.22f;
 
         /// <summary>How many columns and sub-rows each 140 px body row is cut into.</summary>
-        public int BodyCols = 4;
-        public int BodySubRows = 4;
+        public int BodyCols = 2;
+        public int BodySubRows = 2;
 
         /// <summary>How many columns and rows the mouth and each eye frame is cut into.</summary>
-        public int SheetCols = 4;
-        public int SheetRows = 4;
+        public int SheetCols = 2;
+        public int SheetRows = 2;
 
         /// <summary>How long the dust curtain keeps falling down the body, in ticks.</summary>
         public int CurtainTicks = 80;
@@ -358,11 +358,7 @@ namespace Factorraria.Common.SuperWeapons
             if (shards.Count == 0)
                 return;
 
-            int inventory = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Inventory"));
-            if (inventory == -1)
-                return;
-
-            layers.Insert(inventory, new LegacyGameInterfaceLayer("Factorraria: Shield Shards", delegate
+            layers.Insert(0, new LegacyGameInterfaceLayer("Factorraria: Shield Shards", delegate
             {
                 DrawShards(Main.spriteBatch);
                 return true;
