@@ -18,7 +18,7 @@ namespace Factorraria.Common.SuperWeapons
     {
         Incomplete = 0,
         Assembled = 1,
-        Primed = 2,      // S3.2: assembled and the tank holds a full 5000 Fuel
+        Primed = 2,      // unused: patch S3.2 was dropped (ready = Assembled + full tank, see MissileTankTileEntity.IsReadyToFire); the number stays so the wire values do not change
         Igniting = 3,    // S4.1
         Launched = 4     // S4.2
     }

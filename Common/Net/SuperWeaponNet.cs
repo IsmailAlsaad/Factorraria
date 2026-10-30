@@ -12,7 +12,8 @@ namespace Factorraria.Common.Net
     // The super weapon effects that clients draw and hear. The numbers are part of the wire format (append only).
     public enum SuperWeaponEffectKind : byte
     {
-        ShieldBreak = 0   // the Wall of Flesh's stone shield broke (patch S1.2)
+        ShieldBreak = 0,  // the Wall of Flesh's stone shield broke (patch S1.2)
+        Ignition = 1      // a primed missile's boosters just lit (patch S4.1): sound and camera shake at the tank
     }
 
     // Super weapons patch S1.2. The shield state itself is synced with the wall NPC (S1.1); this is only the cosmetic burst. The server (or
@@ -51,6 +52,13 @@ namespace Factorraria.Common.Net
             {
                 case SuperWeaponEffectKind.ShieldBreak:
                     ShieldBreak(position);
+                    break;
+
+                case SuperWeaponEffectKind.Ignition:
+                    // Placeholder sounds. The flames are drawn every tick by SuperWeaponIgnitionFxSystem from the tank's own state.
+                    SoundEngine.PlaySound(SoundID.Item34 with { Volume = 1f, Pitch = -0.3f }, position);
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.6f, Pitch = -0.8f }, position);
+                    Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 3f, 20f, 120, 2000f, "FactorrariaIgnition"));
                     break;
             }
         }
@@ -112,7 +120,7 @@ namespace Factorraria.Common.Net
             byte kind = reader.ReadByte();
             float x = reader.ReadSingle();
             float y = reader.ReadSingle();
-            if (kind > (byte)SuperWeaponEffectKind.ShieldBreak)
+            if (kind > (byte)SuperWeaponEffectKind.Ignition)
                 return;
 
             incoming.Enqueue(new Pending { Kind = (SuperWeaponEffectKind)kind, Position = new Vector2(x, y) });

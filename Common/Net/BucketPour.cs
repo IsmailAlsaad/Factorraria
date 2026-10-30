@@ -16,8 +16,9 @@ namespace Factorraria.Common.Net
     //
     // Rule: a left click with any liquid bucket (vanilla water / lava / honey, or a BucketBase bucket such as Fuel and Oil) on a machine
     // that has input tanks, or on a motor cart that runs on a liquid, pours one bucket (BucketUnits, the same 255 as one full world tile)
-    // into it when a tank accepts that liquid and has room for the whole bucket. Otherwise the click does what it always did (pours
-    // into the world).
+    // into it when a tank accepts that liquid and has any room left. A machine tank with less than a bucket of room is topped up to its
+    // capacity and the bucket is still used up (the leftover liquid is lost on purpose). A cart still needs room for the whole bucket.
+    // Otherwise the click does what it always did (pours into the world).
     //
     // Authority: the server (or single-player) owns every tank. The click is detected on the owning client (it needs the cursor and the
     // held item) and checked against the replicas for a quick yes or no, so a refused pour falls through to the normal world pour with no
@@ -96,6 +97,8 @@ namespace Factorraria.Common.Net
 
         static bool HasRoomForBucket(LiquidStack tank) => tank.Capacity - tank.Amount >= BucketUnits - 0.01f;
 
+        static bool HasAnyRoom(LiquidStack tank) => tank.Capacity - tank.Amount > 0.01f;
+
         /// <summary>
         /// The input tank of this machine a bucket of this liquid would go into: a tank that already holds it and has room, else the first
         /// empty tank that accepts it (the same order the pipes use). Water is resolved to the machine's biome water like a pipe does.
@@ -118,7 +121,7 @@ namespace Factorraria.Common.Net
             for (int i = 0; i < tanks.Length; i++)
             {
                 LiquidStack slot = tanks[i];
-                if (!slot.Accepts(resolved) || !HasRoomForBucket(slot))
+                if (!slot.Accepts(resolved) || !HasAnyRoom(slot))
                     continue;
 
                 if (slot.IsEmpty)
@@ -158,7 +161,7 @@ namespace Factorraria.Common.Net
                 tank.Amount = 0f;
             }
 
-            tank.Amount += BucketUnits;
+            tank.Amount = System.Math.Min(tank.Capacity, tank.Amount + BucketUnits);
         }
 
         // ---------------------------------------------------------------- client: the click

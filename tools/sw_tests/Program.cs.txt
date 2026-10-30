@@ -295,6 +295,49 @@ static class Program
             Check("describe: thruster rows are shown 1-based", SuperWeaponAssembly.Describe(false, 1, AssemblyIssue.ThrusterMissing, 2).Contains("row 3"));
         }
 
+        // ---- patch S4.1: which weapon fires (SuperWeaponTrigger.Pick)
+        {
+            var list = new List<TriggerCandidate>();
+            Check("trigger: no candidates -> none", SuperWeaponTrigger.Pick(1000f, list, false) == -1);
+            Check("trigger: null list -> none", SuperWeaponTrigger.Pick(1000f, null, false) == -1);
+
+            list.Add(new TriggerCandidate(1, 500f, 1));
+            Check("trigger: facing right, wall on the right -> fires", SuperWeaponTrigger.Pick(1000f, list, false) == 0);
+            Check("trigger: facing right, wall on the left -> does not fire", SuperWeaponTrigger.Pick(100f, list, false) == -1);
+            Check("trigger: wall exactly at the weapon's x -> does not fire", SuperWeaponTrigger.Pick(500f, list, false) == -1);
+            Check("trigger: busy (another weapon igniting) -> none", SuperWeaponTrigger.Pick(1000f, list, true) == -1);
+
+            list.Clear();
+            list.Add(new TriggerCandidate(1, 500f, -1));
+            Check("trigger: facing left, wall on the left -> fires", SuperWeaponTrigger.Pick(100f, list, false) == 0);
+            Check("trigger: facing left, wall on the right -> does not fire", SuperWeaponTrigger.Pick(900f, list, false) == -1);
+
+            list.Clear();
+            list.Add(new TriggerCandidate(1, 100f, 1));    // far
+            list.Add(new TriggerCandidate(2, 800f, 1));    // near
+            list.Add(new TriggerCandidate(3, 900f, -1));   // nearest but faces away from a wall on its right
+            Check("trigger: the nearest weapon that faces the wall fires", SuperWeaponTrigger.Pick(1000f, list, false) == 1);
+
+            list.Clear();
+            list.Add(new TriggerCandidate(7, 400f, 1));
+            list.Add(new TriggerCandidate(3, 600f, -1));
+            Check("trigger: equal distance on both sides goes to the lower id", SuperWeaponTrigger.Pick(500f, list, false) == 1);
+            list.Clear();
+            list.Add(new TriggerCandidate(9, 400f, 1));
+            list.Add(new TriggerCandidate(4, 400f, 1));
+            Check("trigger: exact tie (same x) goes to the lower id", SuperWeaponTrigger.Pick(1000f, list, false) == 1);
+
+            list.Clear();
+            list.Add(new TriggerCandidate(1, 400f, 0));
+            Check("trigger: facing 0 never fires", SuperWeaponTrigger.Pick(1000f, list, false) == -1);
+
+            // two weapons on opposite sides of the wall: each only fires at the wall on its own facing side
+            list.Clear();
+            list.Add(new TriggerCandidate(1, 100f, 1));    // left of the wall, faces right: fires
+            list.Add(new TriggerCandidate(2, 1900f, 1));   // right of the wall, faces right (away): does not
+            Check("trigger: a weapon on the far side facing away does not fire", SuperWeaponTrigger.Pick(1000f, list, false) == 0);
+        }
+
         Console.WriteLine();
         Console.WriteLine(failed == 0 ? "ALL PASSED (" + passed + " checks)" : failed + " FAILED, " + passed + " passed");
         return failed == 0 ? 0 : 1;

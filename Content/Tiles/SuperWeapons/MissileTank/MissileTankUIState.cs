@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
 {
-    // Just the Fuel gauge for now (hover shows the amount). The status text and the primed state come with patch S3.2.
+    // Just the Fuel gauge (hover shows the amount). The planned status text / primed state patch (S3.2) was dropped.
     internal class MissileTankUIState : MachineUIStateBase
     {
         protected override Vector2 BasePanelSize => new Vector2(100, 100);

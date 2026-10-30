@@ -37,7 +37,7 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
         /// <summary>Ticks between two checks of the world around the tank (a check reads about 30 tiles).</summary>
         public int AssemblyCheckTicks = 10;
 
-        public SuperWeaponState WeaponState;   // Incomplete or Assembled for now; S3.2 adds Primed
+        public SuperWeaponState WeaponState;   // Incomplete / Assembled from the tiles; Igniting / Launched are driven by SuperWeaponSystem (S4.1)
         public int WeaponFacing;               // +1 right, -1 left, 0 = no drill found yet
         public AssemblyIssue WeaponIssue;
         public int WeaponIssueRow;             // thruster issues: the tank row 0..2
@@ -50,6 +50,15 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
         public string AssemblyText => SuperWeaponAssembly.Describe(IsAssembled, WeaponFacing, WeaponIssue, WeaponIssueRow);
 
         int assemblyTimer;   // runtime only: ticks until the next check, 0 = check on the next tick
+
+        /// <summary>S4.1, server / single-player only, never saved or sent (clients only see the Igniting state): ticks left of the ignition countdown.</summary>
+        public int IgnitionTicksLeft;
+
+        /// <summary>True while the tank holds a full load of Fuel. Read on the server / single-player (the tank amount is the real one there).</summary>
+        public bool IsFull => InputLiquids[0].Amount >= FuelCapacity - 0.01f;
+
+        /// <summary>S4.1: the weapon can fire = assembled correctly (and not already igniting / launched) and the tank is full. There is no separate Primed state.</summary>
+        public bool IsReadyToFire => WeaponState == SuperWeaponState.Assembled && IsFull;
 
         static readonly Func<int, int, PartCell> partReader = ReadPartCell;
 
@@ -73,7 +82,16 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
         {
             AssemblyResult result = SuperWeaponAssembly.Evaluate(Position.X, Position.Y, partReader);
 
-            // S3.2 turns Assembled into Primed here when the tank holds a full 5000 Fuel.
+            // S4.1: Igniting and Launched belong to SuperWeaponSystem. While the weapon stays a valid assembly they are left alone; a removed
+            // part drops the tank back to a normal state (and so aborts the countdown).
+            if (WeaponState >= SuperWeaponState.Igniting)
+            {
+                if (result.Assembled)
+                    return;
+
+                IgnitionTicksLeft = 0;
+            }
+
             SuperWeaponState state = result.Assembled ? SuperWeaponState.Assembled : SuperWeaponState.Incomplete;
             int dx = result.Assembled ? 0 : result.IssueX - Position.X;
             int dy = result.Assembled ? 0 : result.IssueY - Position.Y;
@@ -89,6 +107,47 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
             WeaponIssueDx = dx;
             WeaponIssueDy = dy;
 
+            if (Main.netMode == NetmodeID.Server)
+                FactorrariaNet.Log("[SuperWeapons] tank at (" + Position.X + ", " + Position.Y + "): " + WeaponState + ", " + AssemblyText);
+        }
+
+        /// <summary>S4.1, server / single-player only: Assembled + full tank -> Igniting. Returns false (and does nothing) when the tank is not ready.</summary>
+        public bool BeginIgnition(int ticks)
+        {
+            if (!IsReadyToFire)
+                return false;
+
+            WeaponState = SuperWeaponState.Igniting;
+            IgnitionTicksLeft = Math.Max(1, ticks);
+            LogWeapon();
+            return true;
+        }
+
+        /// <summary>S4.1, server / single-player only: Igniting -> Launched (S4.2 spawns the missile and removes the parts here).</summary>
+        public void CompleteIgnition()
+        {
+            if (WeaponState != SuperWeaponState.Igniting)
+                return;
+
+            WeaponState = SuperWeaponState.Launched;
+            IgnitionTicksLeft = 0;
+            LogWeapon();
+        }
+
+        /// <summary>S4.1, server / single-player only: leaves Igniting / Launched and goes back to the state the tiles say.</summary>
+        public void ClearLaunch()
+        {
+            if (WeaponState < SuperWeaponState.Igniting)
+                return;
+
+            IgnitionTicksLeft = 0;
+            WeaponState = SuperWeaponState.Incomplete;
+            RefreshAssembly();
+            LogWeapon();
+        }
+
+        void LogWeapon()
+        {
             if (Main.netMode == NetmodeID.Server)
                 FactorrariaNet.Log("[SuperWeapons] tank at (" + Position.X + ", " + Position.Y + "): " + WeaponState + ", " + AssemblyText);
         }
