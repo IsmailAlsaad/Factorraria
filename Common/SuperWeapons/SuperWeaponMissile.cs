@@ -57,22 +57,6 @@ namespace Factorraria.Common.SuperWeapons
             return art != null && art.IsLoaded ? art.Value : null;
         }
 
-        /// <summary>One line for /fweapon status: whether the missile art exists in the mod and loaded.</summary>
-        public static string ArtStatus()
-        {
-            if (Main.dedServ)
-                return "art: dedicated server (no art)";
-
-            bool exists = ModContent.HasAsset(ArtPath);
-            Texture2D texture = GetArt();
-            if (texture != null)
-                return "art: loaded (" + texture.Width + "x" + texture.Height + ", expected " + ArtWidth + "x" + ArtHeight + ") from " + ArtPath;
-
-            return exists
-                ? "art: found in the mod but NOT loaded (state " + (art == null ? "no asset" : art.State.ToString()) + ")"
-                : "art: NOT FOUND at " + ArtPath + " (check the folder, the file name and its case, then rebuild the mod)";
-        }
-
         public override void SetDefaults()
         {
             Projectile.width = 112;
@@ -111,7 +95,7 @@ namespace Factorraria.Common.SuperWeapons
             if (Math.Abs(Projectile.Center.X - Projectile.ai[2]) > system.MissileMaxRangeTiles * 16f)
             {
                 if (Main.netMode != NetmodeID.MultiplayerClient)
-                    Fizzle("flew " + system.MissileMaxRangeTiles + " tiles without reaching a shielded wall");
+                    Fizzle();   // flew the maximum range without reaching a shielded wall
 
                 End();
                 return;
@@ -123,14 +107,14 @@ namespace Factorraria.Common.SuperWeapons
                 NPC wall = SuperWeaponSystem.FindWall();
                 if (wall == null)
                 {
-                    Fizzle("the Wall of Flesh is gone");
+                    Fizzle();   // the Wall of Flesh is gone
                     End();
                     return;
                 }
 
                 if (!WallShieldGlobalNPC.IsShielded(wall))
                 {
-                    Fizzle("the shield was already down");
+                    Fizzle();   // the shield was already down
                     End();
                     return;
                 }
@@ -138,8 +122,7 @@ namespace Factorraria.Common.SuperWeapons
                 if (Math.Abs(wall.Center.X - Projectile.Center.X) < system.HitDistancePx)
                 {
                     SuperWeaponNet.SendEffect(SuperWeaponEffectKind.Impact, Projectile.Center);
-                    int changed = WallShieldGlobalNPC.BreakShield();
-                    SuperWeaponSystem.Say("[Missile] HIT: the wall at tile x " + (int)(wall.Center.X / 16f) + " lost its shield (" + changed + " NPC(s) changed)");
+                    WallShieldGlobalNPC.BreakShield();
                     End();
                     return;
                 }
@@ -149,11 +132,10 @@ namespace Factorraria.Common.SuperWeapons
                 Flames(facing, speed / Math.Max(1f, system.MissileMaxSpeedPx));
         }
 
-        // Server / single-player: the small "it did nothing" effect (placeholder smoke) plus the log line.
-        void Fizzle(string why)
+        // Server / single-player: the small "it did nothing" effect (placeholder smoke).
+        void Fizzle()
         {
             SuperWeaponNet.SendEffect(SuperWeaponEffectKind.Fizzle, Projectile.Center);
-            SuperWeaponSystem.Say("[Missile] fizzled: " + why);
         }
 
         // Server / single-player: remove it and tell the clients. A client just removes its own copy.
@@ -220,30 +202,6 @@ namespace Factorraria.Common.SuperWeapons
                     return true;
 
             return false;
-        }
-
-        /// <summary>Server / single-player (debug /fweapon reset): removes every missile in flight. Returns how many.</summary>
-        public static int KillAll()
-        {
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-                return 0;
-
-            int type = ModContent.ProjectileType<SuperWeaponMissile>();
-            int killed = 0;
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile projectile = Main.projectile[i];
-                if (!projectile.active || projectile.type != type)
-                    continue;
-
-                if (Main.netMode == NetmodeID.Server)
-                    NetMessage.SendData(MessageID.KillProjectile, -1, -1, null, projectile.identity, projectile.owner);
-
-                projectile.Kill();
-                killed++;
-            }
-
-            return killed;
         }
     }
 }

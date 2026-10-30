@@ -4,7 +4,7 @@ generated 2026-10-30 | 355 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(68) BaseMachine(50) FactorrariaPacket(35) LiquidTypeRegistry(32) PacketDirection(30) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(15) FurnaceOffsetConfig(14) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13)
+FactorrariaNet(66) BaseMachine(50) FactorrariaPacket(35) LiquidTypeRegistry(32) PacketDirection(30) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(15) FurnaceOffsetConfig(14) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -977,12 +977,12 @@ tModLoader/other bases -> project types:
 **SuperWeaponIgnitionFxSystem.cs** uses: BaseMachine, MissileTankTileEntity, SuperWeaponAssembly, SuperWeaponState, SuperWeaponSystem
   class SuperWeaponIgnitionFxSystem : ModSystem
     +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
-**SuperWeaponMissile.cs** uses: BaseMachine, State, SuperWeaponEffectKind, SuperWeaponNet, SuperWeaponSystem, WallShieldGlobalNPC
+**SuperWeaponMissile.cs** uses: BaseMachine, SuperWeaponEffectKind, SuperWeaponNet, SuperWeaponSystem, WallShieldGlobalNPC
   class SuperWeaponMissile : ModProjectile
-    +ArtPath:string[c] +Texture:string[ov] +Unload()[ov] +ArtStatus()[s] +CanHitNPC(NPC)[ov] +CanHitPlayer(Player)[ov] +CanHitPvp(Player)[ov] +AI()[ov] +PreDraw(ref Color)[ov] +AnyInFlight()[s] +KillAll()[s]
-**SuperWeaponSystem.cs** uses: FactorrariaNet, MissileDrillTile, MissileTankTile, MissileTankTileEntity, MissileThrusterTile, SuperWeaponAssembly, SuperWeaponEffectKind, SuperWeaponMissile, SuperWeaponNet, SuperWeaponState, SuperWeaponTrigger, TriggerCandidate, WallShieldGlobalNPC
+    +ArtPath:string[c] +Texture:string[ov] +Unload()[ov] +CanHitNPC(NPC)[ov] +CanHitPlayer(Player)[ov] +CanHitPvp(Player)[ov] +AI()[ov] +PreDraw(ref Color)[ov] +AnyInFlight()[s]
+**SuperWeaponSystem.cs** uses: MissileDrillTile, MissileTankTile, MissileTankTileEntity, MissileThrusterTile, SuperWeaponAssembly, SuperWeaponEffectKind, SuperWeaponMissile, SuperWeaponNet, SuperWeaponState, SuperWeaponTrigger, TriggerCandidate, WallShieldGlobalNPC
   class SuperWeaponSystem : ModSystem
-    +TriggerCheckTicks:int +IgniteTicks:int +MissileAccel:float +MissileMaxSpeedPx:float +MissileMaxRangeTiles:int +HitDistancePx:float +SuppressPartDrops:bool +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindWall()[s] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +IsPartTile(int)[s] +ClearAll() +Say(string)[s]
+    +TriggerCheckTicks:int +IgniteTicks:int +MissileAccel:float +MissileMaxSpeedPx:float +MissileMaxRangeTiles:int +HitDistancePx:float +SuppressPartDrops:bool +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindWall()[s] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +IsPartTile(int)[s]
 **SuperWeaponTrigger.cs**
   struct TriggerCandidate
     +Id:int +X:float +Facing:int
@@ -993,7 +993,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **WallShieldDrawSystem.cs** uses: WallShieldGlobalNPC
   class WallShieldDrawSystem : ModSystem
-    +FlipBody:bool +BodyStartOffsetPx:float +FallbackAlpha:float +FallbackColor:Color +DebugSpanOk:bool +DebugTop:float +DebugBottom:float +DebugFrameValue:int +DebugFrameY:int +DebugRows:int +Load()[ov] +Unload()[ov] +ArtStatus() +BodyStatus() +TryGetBodySpan(Vector2,out float,out float)
+    +FlipBody:bool +BodyStartOffsetPx:float +FallbackAlpha:float +FallbackColor:Color +DebugSpanOk:bool +DebugTop:float +DebugBottom:float +DebugFrameValue:int +DebugFrameY:int +DebugRows:int +Load()[ov] +Unload()[ov] +TryGetBodySpan(Vector2,out float,out float)
 **WallShieldGlobalNPC.cs** uses: SuperWeaponEffectKind, SuperWeaponNet
   class WallShieldGlobalNPC : GlobalNPC
     +InstancePerEntity:bool[ov] +AppliesToEntity(NPC,bool)[ov] +ShieldUp:bool +IsWallType(int)[s] +IsShielded(NPC)[s] +BreakShield()[s] +RaiseShield()[s] +SendExtraAI(NPC,BitWriter,BinaryWriter)[ov] +ReceiveExtraAI(NPC,BitReader,BinaryReader)[ov] +ModifyIncomingHit(NPC,ref HitModifiers)[ov] +UpdateLifeRegen(NPC,ref int)[ov] +CheckDead(NPC)[ov] +PostAI(NPC)[ov]
@@ -1715,7 +1715,7 @@ tModLoader/other bases -> project types:
 **MissileTankTile.cs** uses: MissileTankItem, MissileTankTileEntity
   class MissileTankTile : ModTile
     +ArtPath:string[c] +SheetPath()[s] +Texture:string[ov]
-**MissileTankTileEntity.cs** uses: AssemblyIssue, AssemblyResult, BaseMachine, FactorrariaNet, LiquidFuelTable, MissileDrillTile, MissileTankRegistry, MissileTankTile, MissileThrusterTile, OverhangDrawSystem, PartCell, SuperWeaponAssembly, SuperWeaponPartKind, SuperWeaponState
+**MissileTankTileEntity.cs** uses: AssemblyIssue, AssemblyResult, BaseMachine, LiquidFuelTable, MissileDrillTile, MissileTankRegistry, MissileTankTile, MissileThrusterTile, OverhangDrawSystem, PartCell, SuperWeaponAssembly, SuperWeaponPartKind, SuperWeaponState
   class MissileTankTileEntity : BaseMachine
     +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +FuelCapacity:float #InputTankCapacity(int)[ov] +AssemblyCheckTicks:int +WeaponState:SuperWeaponState +WeaponFacing:int +WeaponIssue:AssemblyIssue +WeaponIssueRow:int +WeaponIssueDx:int +WeaponIssueDy:int +IsAssembled:bool +AssemblyText:string +IgnitionTicksLeft:int +IsFull:bool +IsReadyToFire:bool +Update()[ov] +RefreshAssembly() +BeginIgnition(int) +CompleteIgnition() +ClearLaunch() #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov]
 **MissileTankUIState.cs** uses: MachineUIElementEntry, MachineUIStateBase

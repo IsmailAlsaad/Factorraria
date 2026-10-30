@@ -106,9 +106,6 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
             WeaponIssueRow = result.IssueRow;
             WeaponIssueDx = dx;
             WeaponIssueDy = dy;
-
-            if (Main.netMode == NetmodeID.Server)
-                FactorrariaNet.Log("[SuperWeapons] tank at (" + Position.X + ", " + Position.Y + "): " + WeaponState + ", " + AssemblyText);
         }
 
         /// <summary>S4.1, server / single-player only: Assembled + full tank -> Igniting. Returns false (and does nothing) when the tank is not ready.</summary>
@@ -119,7 +116,6 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
 
             WeaponState = SuperWeaponState.Igniting;
             IgnitionTicksLeft = Math.Max(1, ticks);
-            LogWeapon();
             return true;
         }
 
@@ -131,7 +127,6 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
 
             WeaponState = SuperWeaponState.Launched;
             IgnitionTicksLeft = 0;
-            LogWeapon();
         }
 
         /// <summary>S4.1, server / single-player only: leaves Igniting / Launched and goes back to the state the tiles say.</summary>
@@ -143,13 +138,6 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
             IgnitionTicksLeft = 0;
             WeaponState = SuperWeaponState.Incomplete;
             RefreshAssembly();
-            LogWeapon();
-        }
-
-        void LogWeapon()
-        {
-            if (Main.netMode == NetmodeID.Server)
-                FactorrariaNet.Log("[SuperWeapons] tank at (" + Position.X + ", " + Position.Y + "): " + WeaponState + ", " + AssemblyText);
         }
 
         // What the world holds at one tile, for the pure check. The facing comes from the tile frame (style 0 = right, style 1 = left, see

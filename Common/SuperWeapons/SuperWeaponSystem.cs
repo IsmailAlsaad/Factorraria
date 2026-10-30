@@ -22,7 +22,7 @@ namespace Factorraria.Common.SuperWeapons
     // ready tanks (Assembled + full tank) whose facing points at the wall (sign(wall.x - weapon.x) == Facing) and start the nearest one (SuperWeaponTrigger.Pick).
     // Nothing starts while another weapon is Igniting or Launched, so only one fires per wall. The check is continuous, so a weapon that became ready
     // after the wall spawned also fires. IGNITION: IgniteTicks ticks of Igniting, then Launched. In S4.1 Launched only logs (S4.2 spawns the
-    // missile and removes the parts); it is cleared when the wall is gone or shield-less, when a part is removed, or by /fweapon reset.
+    // missile and removes the parts); it is cleared when the wall is gone or shield-less, when a part is removed.
     // The tunables are instance fields so hot reload can change them.
     public class SuperWeaponSystem : ModSystem
     {
@@ -142,7 +142,7 @@ namespace Factorraria.Common.SuperWeapons
                 StartIgnition(primedTanks[pick]);
         }
 
-        /// <summary>Starts the countdown on a ready tank (the trigger, and /fweapon fire). Returns false when the tank is not ready or another one is counting down.</summary>
+        /// <summary>Starts the countdown on a ready tank (the trigger). Returns false when the tank is not ready or another one is counting down.</summary>
         public bool StartIgnition(MissileTankTileEntity tank)
         {
             if (Main.netMode == NetmodeID.MultiplayerClient || igniting != null || !tank.BeginIgnition(IgniteTicks))
@@ -151,7 +151,6 @@ namespace Factorraria.Common.SuperWeapons
             igniting = tank;
             Vector2 center = TankCenter(tank);
             SuperWeaponNet.SendEffect(SuperWeaponEffectKind.Ignition, center);
-            Say("[Missile] ignition: tank at (" + tank.Position.X + ", " + tank.Position.Y + "), facing " + (tank.WeaponFacing > 0 ? "right" : "left") + ", launch in " + IgniteTicks + " ticks");
             return true;
         }
 
@@ -166,7 +165,6 @@ namespace Factorraria.Common.SuperWeapons
             {
                 // the tank was mined, or a part was removed and the tank went back to a normal state: the countdown is aborted
                 igniting = null;
-                Say("[Missile] ignition aborted");
                 return;
             }
 
@@ -196,20 +194,17 @@ namespace Factorraria.Common.SuperWeapons
             Projectile.NewProjectile(new EntitySource_Misc("Factorraria.SuperWeaponLaunch"), center, Vector2.Zero, ModContent.ProjectileType<SuperWeaponMissile>(), 0, 0f, Main.myPlayer, 0f, facing, center.X);
             SuperWeaponNet.SendEffect(SuperWeaponEffectKind.Launch, center);
 
-            int removed = 0;
             SuppressPartDrops = true;
             try
             {
-                removed += KillPartTiles(left, top, SuperWeaponAssembly.TankWidth, SuperWeaponAssembly.TankHeight);
-                removed += KillPartTiles(drillX, top, SuperWeaponAssembly.DrillWidth, SuperWeaponAssembly.DrillHeight);
-                removed += KillPartTiles(thrusterX, top, 1, SuperWeaponAssembly.TankHeight);
+                KillPartTiles(left, top, SuperWeaponAssembly.TankWidth, SuperWeaponAssembly.TankHeight);
+                KillPartTiles(drillX, top, SuperWeaponAssembly.DrillWidth, SuperWeaponAssembly.DrillHeight);
+                KillPartTiles(thrusterX, top, 1, SuperWeaponAssembly.TankHeight);
             }
             finally
             {
                 SuppressPartDrops = false;
             }
-
-            Say("[Missile] LAUNCH: missile spawned at tile (" + (int)(center.X / 16f) + ", " + (int)(center.Y / 16f) + "), facing " + (facing > 0 ? "right" : "left") + ", removed " + removed + " part tile(s)");
         }
 
         // Kills the part tiles of a rectangle (never anything else) through the normal tile kill path: the machine kill hook removes the tank's
@@ -252,31 +247,6 @@ namespace Factorraria.Common.SuperWeapons
             foreach (TileEntity entity in TileEntity.ByID.Values)
                 if (entity is MissileTankTileEntity tank && tank.WeaponState >= SuperWeaponState.Igniting)
                     tank.ClearLaunch();
-        }
-
-        /// <summary>Debug (/fweapon reset): every Igniting / Launched tank goes back to a normal state. Returns how many.</summary>
-        public int ClearAll()
-        {
-            int cleared = SuperWeaponMissile.KillAll();   // S4.2: missiles in flight count too
-            igniting = null;
-            foreach (TileEntity entity in TileEntity.ByID.Values)
-            {
-                if (entity is MissileTankTileEntity tank && tank.WeaponState >= SuperWeaponState.Igniting)
-                {
-                    tank.ClearLaunch();
-                    cleared++;
-                }
-            }
-
-            return cleared;
-        }
-
-        // Temporary test output (removed in S6, roadmap section 11): the server log, plus the chat in single-player so it can be read there.
-        public static void Say(string message)
-        {
-            FactorrariaNet.Log("[SuperWeapons] " + message);
-            if (Main.netMode == NetmodeID.SinglePlayer)
-                Main.NewText(message, Color.Orange);
         }
     }
 }

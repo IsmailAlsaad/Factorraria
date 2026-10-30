@@ -18,16 +18,15 @@ namespace Factorraria.Common.SuperWeapons
     //   Content/Tiles/SuperWeapons/WallShield_Body.png   replacement for the vanilla wall body texture, 190x420, repeated over the body strip
     //   Content/Tiles/SuperWeapons/WallShield_Mouth.png   same size and frame layout as vanilla NPC_113.png, drawn with the NPC's own frame
     //   Content/Tiles/SuperWeapons/WallShield_Eye.png   same size and frame layout as vanilla NPC_114.png, drawn with the NPC's own frame
-    // /fshield status prints the exact sheet and frame sizes of both.
     public class WallShieldDrawSystem : ModSystem
     {
-        // Tunables (instance fields, so hot reload can change them; /fshield flip and /fshield offset change them in game).
+        // Tunables (instance fields, so hot reload can change them).
         public bool FlipBody;               // false: the body trails behind the mouth (opposite its direction); true: the other side
         public float BodyStartOffsetPx;     // moves the body strip's front edge away from the mouth's centre toward the body (negative = toward the mouth)
         public float FallbackAlpha = 0.65f; // opacity of the grey block drawn for a missing PNG
         public Color FallbackColor = new Color(96, 98, 106);
 
-        // What DrawBody used last (read by /fshield status). Debug only, removed once the body animation is settled.
+        // What DrawBody used last. Debug values nothing reads any more; can go when the body drawing is next touched.
         public bool DebugSpanOk;
         public float DebugTop;
         public float DebugBottom;
@@ -58,21 +57,6 @@ namespace Factorraria.Common.SuperWeapons
                 return;
 
             On_Main.DrawNPCs -= DrawShieldsAfterNPCs;
-        }
-
-        /// <summary>What /fshield status prints about the art.</summary>
-        public string ArtStatus()
-        {
-            return "body " + (body != null ? "found" : "missing") + ", mouth " + (mouth != null ? "found" : "missing") + ", eye " + (eye != null ? "found" : "missing");
-        }
-
-        /// <summary>What /fshield status prints about the body drawing: the raw vanilla values and what DrawBody did with them.</summary>
-        public string BodyStatus()
-        {
-            string tex = body != null ? body.Value.Width + "x" + body.Value.Height : "missing";
-            return "wofDrawAreaTop " + Main.wofDrawAreaTop + ", wofDrawAreaBottom " + Main.wofDrawAreaBottom + ", wofDrawFrameIndex " + Main.wofDrawFrameIndex
-                + ", maxTilesY " + Main.maxTilesY + " | span " + (DebugSpanOk ? "from vanilla" : "FALLBACK (1200 px)") + " top " + DebugTop.ToString("0") + " bottom " + DebugBottom.ToString("0")
-                + " (" + ((DebugBottom - DebugTop) / 16f).ToString("0") + " tiles) | frameValue " + DebugFrameValue + " -> frameY " + DebugFrameY + ", rows drawn " + DebugRows + ", texture " + tex;
         }
 
         /// <summary>
