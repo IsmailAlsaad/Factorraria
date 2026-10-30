@@ -114,6 +114,55 @@ namespace Factorraria.Common.Story
     }
 
     /// <summary>
+    /// Route B, the Skeletron-first fork (NPC roadmap rule S5, decisions D11 and D18, patches N4.3 and N8.1). One place decides when the fork
+    /// starts, so the watcher, /fstory fork and the tests agree. Server / single-player only (the watcher runs there); clients only read the
+    /// DungeonFork flag. What the fork changes (nothing is removed or replaced):
+    ///  - the tied Mechanic's spawn rule moves from the Cavern layer to the dungeon (RareNpcRules.MechanicWeight),
+    ///  - her rescue unlocks the whole shop at once (RareNpcSystem.WatchRescue),
+    ///  - Her Backpack never spawns (RareNpcRules.BackpackWeight) and the bag-loss watcher rests,
+    ///  - the Dryad dialogues are off (neither starts, ImportantDialogueDefinitions); the scripted Dryad at the Eye is kept (DryadStory.SpawnOnFork), because the Mechanic's scrolls need a Dryad (DryadStory.DryadExists).
+    /// The Mechanic's own scroll dialogue still works after her rescue.
+    /// </summary>
+    public static class StoryForkRules
+    {
+        // Tunable (not const, so hot reload and /fstory fork can change it). Reset to true on every world load.
+        public static bool WatcherEnabled = true;
+
+        /// <summary>True when the fork should start right now. When false, reason says why not (the first failing rule).</summary>
+        public static bool ShouldLatch(out string reason)
+        {
+            reason = null;
+
+            if (StorySystem.Get(StoryFlags.DungeonFork))
+            {
+                reason = "DungeonFork is already on (a later Skeletron kill does nothing)";
+                return false;
+            }
+
+            if (!NPC.downedBoss3)
+            {
+                reason = "Skeletron was not defeated yet";
+                return false;
+            }
+
+            // Either flag means the Eye came first: our own saved flag, or vanilla's (they are set in the same tick on a normal kill).
+            if (StorySystem.Get(StoryFlags.EyeKillSeen) || NPC.downedBoss1)
+            {
+                reason = "the Eye of Cthulhu was defeated first (route A)";
+                return false;
+            }
+
+            if (StorySystem.Get(StoryFlags.MechanicRescued) || NPC.savedMech)
+            {
+                reason = "the Mechanic was already rescued (route A)";
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    /// <summary>
     /// Adds the tied Mechanic to the natural spawn pool and gives her a rarity so the Lifeform Analyzer can list her.
     /// EditSpawnPool runs on the server / single-player only. The spawn spot is vanilla's (near the player, off screen).
     /// </summary>
@@ -144,6 +193,7 @@ namespace Factorraria.Common.Story
         public override void OnWorldLoad()
         {
             bagMissingTicks = 0;
+            StoryForkRules.WatcherEnabled = true;
         }
 
         public override void PostUpdateWorld()
@@ -157,23 +207,24 @@ namespace Factorraria.Common.Story
         }
 
         // S2: the first tick the rescue flag is true, latch MechanicRescued. On the Skeletron-first route the rescue also unlocks the whole shop.
+        // N8.1: that unlock is a standing rule (fork on + rescued = shop unlocked), not a one-time step at the rescue tick, so it also happens
+        // when the two flags became true in another order (a restored world, a debug flag).
         static void WatchRescue()
         {
-            if (!NPC.savedMech || StorySystem.Get(StoryFlags.MechanicRescued))
-                return;
+            if (NPC.savedMech && !StorySystem.Get(StoryFlags.MechanicRescued))
+                StorySystem.ServerSet(StoryFlags.MechanicRescued, true);
 
-            StorySystem.ServerSet(StoryFlags.MechanicRescued, true);
-
-            if (StorySystem.Get(StoryFlags.DungeonFork))
+            if (StorySystem.Get(StoryFlags.DungeonFork) && StorySystem.Get(StoryFlags.MechanicRescued) && !StorySystem.Get(StoryFlags.MechanicShopUnlocked))
                 StorySystem.ServerSet(StoryFlags.MechanicShopUnlocked, true);
         }
 
-        // Route B (rule S5, done here as a world watcher instead of an OnKill hook): the first tick Skeletron is down while the Eye of Cthulhu never
-        // was and the Mechanic was not rescued, DungeonFork is latched. From then on the tied Mechanic spawns in the dungeon (not underground),
-        // her rescue unlocks the whole shop at once (WatchRescue) and Her Backpack never spawns.
+        // Route B (rule S5, done here as a world watcher instead of an OnKill hook): the first tick StoryForkRules.ShouldLatch says yes (Skeletron is
+        // down while the Eye of Cthulhu never was and the Mechanic was not rescued), DungeonFork is latched. Once it is on, ShouldLatch is false, so
+        // a second Skeletron kill does nothing. From then on the tied Mechanic spawns in the dungeon (not underground), her rescue unlocks the whole
+        // shop at once (WatchRescue), Her Backpack never spawns and the Dryad dialogues are off. /fstory fork off pauses this watcher for testing.
         static void WatchFork()
         {
-            if (StorySystem.Get(StoryFlags.DungeonFork) || !NPC.downedBoss3 || NPC.downedBoss1 || StorySystem.Get(StoryFlags.MechanicRescued))
+            if (!StoryForkRules.WatcherEnabled || !StoryForkRules.ShouldLatch(out _))
                 return;
 
             StorySystem.ServerSet(StoryFlags.DungeonFork, true);
@@ -185,7 +236,8 @@ namespace Factorraria.Common.Story
         // so Her Backpack can spawn again. Known limit: a Bag stored in a chest counts as lost (chests are not scanned).
         static void WatchBag()
         {
-            if (!StorySystem.Get(StoryFlags.BackpackTaken) || StorySystem.Get(StoryFlags.MechanicShopUnlocked))
+            // N8.1: on the Skeletron-first route there is no Backpack and no Bag to respawn, so the watcher rests there too.
+            if (!StorySystem.Get(StoryFlags.BackpackTaken) || StorySystem.Get(StoryFlags.MechanicShopUnlocked) || StorySystem.Get(StoryFlags.DungeonFork))
             {
                 bagMissingTicks = 0;
                 return;

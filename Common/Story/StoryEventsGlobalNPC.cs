@@ -35,6 +35,7 @@ namespace Factorraria.Common.Story
     {
         // Tunables (not const, so hot reload can change them).
         public static bool RequireHouseForDryadExit = true;   // D8: dialogue 1 ends only when the rescued Mechanic also has a house; false = the rescue alone ends it
+        public static bool SpawnOnFork = true;                // N8.1: true = with DungeonFork on (Skeletron-first route) the first Eye of Cthulhu kill still spawns the Dryad, because the Mechanic's scrolls need a Dryad (her dialogues stay off); false = no scripted Dryad on this route
         public static int DryadWidth = 18;
         public static int DryadHeight = 40;
 
@@ -51,6 +52,14 @@ namespace Factorraria.Common.Story
                 return "the Eye of Cthulhu was already killed once (EyeKillSeen is on): nothing to do";
 
             StorySystem.ServerSet(StoryFlags.EyeKillSeen, true);
+
+            // N8.1: on the Skeletron-first route (D11) the Dryad dialogues are off, but the Dryad herself still arrives (SpawnOnFork, default true),
+            // because the Mechanic only hands out the scrolls while a Dryad exists (rule D20). SpawnOnFork = false stops the scripted arrival there.
+            if (StorySystem.Get(StoryFlags.DungeonFork) && !SpawnOnFork)
+            {
+                FactorrariaNet.Log("[Story] Eye of Cthulhu first kill with DungeonFork on and SpawnOnFork false: no Dryad is spawned");
+                return "EyeKillSeen set; DungeonFork is on and DryadStory.SpawnOnFork is false, so no Dryad is spawned";
+            }
 
             if (StorySystem.Get(StoryFlags.DryadSeen) || NPC.AnyNPCs(NPCID.Dryad))
             {
@@ -91,6 +100,12 @@ namespace Factorraria.Common.Story
             FactorrariaNet.Log("[Story] the Dryad arrived at the Eye of Cthulhu's death position (tile " + (int)(center.X / 16f) + ", " + (int)(center.Y / 16f) + ")");
             return true;
         }
+
+        /// <summary>
+        /// True while any Dryad NPC exists (rule D20: the Mechanic hands out the scrolls only then, on both routes). Works on every side: the server
+        /// and single-player read their own NPC list, a client reads the vanilla-synced one.
+        /// </summary>
+        public static bool DryadExists() => NPC.AnyNPCs(NPCID.Dryad);
 
         /// <summary>True when a town Mechanic exists and has a house (used by the exit of Dryad dialogue 1, D8).</summary>
         public static bool MechanicHoused()
