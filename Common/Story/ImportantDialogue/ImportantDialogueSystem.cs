@@ -177,7 +177,7 @@ namespace Factorraria.Common.Story
             if (markTexture != null)
             {
                 Texture2D texture = markTexture.Value;
-                spriteBatch.Draw(texture, pos, null, Color.White, 0f, new Vector2(texture.Width / 2f, texture.Height), 1f, SpriteEffects.None, 0f);
+                spriteBatch.Draw(texture, pos, null, Color.White, 0f, new Vector2(texture.Width / 2f, texture.Height), 1.3f, SpriteEffects.None, 0f);
                 return;
             }
 
