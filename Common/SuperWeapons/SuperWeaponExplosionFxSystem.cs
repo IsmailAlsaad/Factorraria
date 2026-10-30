@@ -64,9 +64,13 @@ namespace Factorraria.Common.SuperWeapons
         {
             for (int i = 0; i < 220; i++)
             {
-                Vector2 velocity = Main.rand.NextVector2Circular(1f, 1f) * Main.rand.NextFloat(4f, 20f);
-                Dust fire = Dust.NewDustPerfect(at + Main.rand.NextVector2Circular(50f, 50f), DustID.Torch, velocity, 0, default, Main.rand.NextFloat(2.4f, 4.4f));
+                Vector2 velocity = Main.rand.NextVector2Circular(1f, 1f) * Main.rand.NextFloat(4f, 22f);
+                Dust fire = Dust.NewDustPerfect(at + Main.rand.NextVector2Circular(50f, 50f), DustID.InfernoFork, velocity, 0, default, Main.rand.NextFloat(3.4f, 5.4f));
                 fire.noGravity = true;
+
+                Vector2 velocity1 = Main.rand.NextVector2Circular(1f, 1f) * Main.rand.NextFloat(100f, 200f);
+                Dust fire1 = Dust.NewDustPerfect(at + Main.rand.NextVector2Circular(50f, 50f), DustID.Torch, velocity, 0, default, Main.rand.NextFloat(2.4f, 3.4f));
+                fire1.noGravity = true;
             }
 
             for (int i = 0; i < 120; i++)
@@ -140,7 +144,7 @@ namespace Factorraria.Common.SuperWeapons
             // Secondary blasts around the impact, each with a bang.
             if (age >= 4 && age <= 32 && age % 4 == 0)
             {
-                Vector2 spot = at + Main.rand.NextVector2Circular(220f, 160f);
+                Vector2 spot = at + Main.rand.NextVector2Circular(260f, 60f);
                 SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.7f, Pitch = Main.rand.NextFloat(-0.6f, 0.2f) }, spot);
                 for (int k = 0; k < 60; k++)
                 {

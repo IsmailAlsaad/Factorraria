@@ -73,21 +73,21 @@ Items: {
 
 	MissileDrillItem: {
 		DisplayName: Infected Drill Head
-		Tooltip: "A component of Super Weapon #1"
+		Tooltip: A component of Super Weapon #1
 	}
 
 	MissileTankItem: {
 		DisplayName: Byrite Tank Casing
-		Tooltip: 
-		'''
-		A component of Super Weapon #1
-		Must be filled with fuel
-		'''
+		Tooltip:
+			'''
+			A component of Super Weapon #1
+			Must be filled with fuel
+			'''
 	}
 
 	MissileThrusterItem: {
 		DisplayName: Meteorite Thruster Booster
-		Tooltip: "A component of Super Weapon #1"
+		Tooltip: A component of Super Weapon #1
 	}
 
 	MotorMK1Item: {
