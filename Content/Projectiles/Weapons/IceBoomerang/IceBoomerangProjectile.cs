@@ -12,7 +12,7 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
 {
     /// <summary>
     /// The thrown Ice Boomerang. It flies straight at the cursor (braking gradually at the end) and never comes back by itself:
-    /// it stops at the cursor, on a tile or on the first enemy it touches, spins down, and turns into an IceCrystalProjectile
+    /// it stops at the cursor or on a tile (it pierces enemies on the way out), spins down, and turns into an IceCrystalProjectile
     /// right there. If it touches a crystal first, it ricochets through all of the owner's crystals and then returns.
     /// MULTIPLAYER: the owner's client decides everything (stop point, crystal spawn); other machines only run the visuals.
     /// ai[0]: phase (0 outbound, 1 settling, 2 chain, 3 returning, 4 spent; synced through netUpdate when it flips)
@@ -154,7 +154,7 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
             Projectile.rotation += 0.45f * spinDirection;
             FlightDust(0);
 
-            // Touching a crystal (before any enemy: an enemy hit this tick already ended the throw) starts the ricochet chain.
+            // Touching a crystal starts the ricochet chain (enemies pierced on the way out do not stop the throw).
             if (isOwner)
             {
                 Projectile crystal = FindCrystalTouching();
@@ -385,7 +385,7 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
                 ModContent.ProjectileType<IceCrystalProjectile>(), 0, 0f, Projectile.owner, IceCrystalProjectile.RandomFrame());
         }
 
-        // A tile or an enemy hit during the outbound throw turns the boomerang into a crystal at once (no spin-down). The
+        // A tile hit during the outbound throw turns the boomerang into a crystal at once (no spin-down). The
         // boomerang is flagged Spent (synced) instead of being killed on the spot, so every machine removes its own copy.
         void FormCrystalNow()
         {
@@ -409,10 +409,12 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
 
             if (CurrentPhase == Phase.Outbound)
             {
+                // It pierces enemies on the way out. The boomerang must NOT be moved here: this runs on the owner's client only, a
+                // teleport onto the enemy's edge is not seen by the other machines until the next netUpdate and can push the hitbox into a tile.
                 Rectangle box = target.Hitbox;
                 Vector2 center = Projectile.Center;
-                Projectile.Center = new Vector2(MathHelper.Clamp(center.X, box.Left, box.Right), MathHelper.Clamp(center.Y, box.Top, box.Bottom));
-                IceBoomerangFx.Burst(Projectile.Center, 8, 3f, 1.1f);
+                Vector2 contact = new Vector2(MathHelper.Clamp(center.X, box.Left, box.Right), MathHelper.Clamp(center.Y, box.Top, box.Bottom));
+                IceBoomerangFx.Burst(contact, 8, 3f, 1.1f);
             }
             else if (CurrentPhase != Phase.Settling && CurrentPhase != Phase.Spent)
             {
