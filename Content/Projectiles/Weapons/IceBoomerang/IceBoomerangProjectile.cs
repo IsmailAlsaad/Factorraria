@@ -338,6 +338,8 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), crystal.Center, Vector2.Zero,
                 ModContent.ProjectileType<IceCrystalBlastProjectile>(), blastDamage, Projectile.knockBack, Projectile.owner, level);
 
+            IceCrystalProjectile.RegisterBounce(crystal); // costs the crystal 15 s of life (applied on every machine)
+
             ChooseNextTargetOrReturn(crystal.Center);
             Projectile.netUpdate = true;
         }
@@ -380,7 +382,7 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
         {
             IceCrystalProjectile.EvictForNewCrystal(Projectile.owner);
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
-                ModContent.ProjectileType<IceCrystalProjectile>(), 0, 0f, Projectile.owner);
+                ModContent.ProjectileType<IceCrystalProjectile>(), 0, 0f, Projectile.owner, IceCrystalProjectile.RandomFrame());
         }
 
         // A tile or an enemy hit during the outbound throw turns the boomerang into a crystal at once (no spin-down). The

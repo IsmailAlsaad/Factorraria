@@ -34,6 +34,14 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
         public static int CrystalLifeTicks => 1800;   // 30 seconds
         public static int CrystalPopTicks => 14;      // grow-in animation
         public static int ExpiryWarnTicks => 180;     // flicker during the last 3 seconds
+        public static int CrystalSheetFrames => 3;    // frames stacked vertically in the vanilla snowflake sheet (one is picked per crystal)
+        public static int CrystalBounceLifeLossTicks => 900; // every bounce off a crystal costs it 15 seconds of life
+
+        // --- Crystal halo: copies of the crystal's silhouette that expand and fade out, a new one every HaloIntervalTicks ---
+        public static int HaloIntervalTicks => 36;
+        public static int HaloLifeTicks => 60;
+        public static float HaloMaxScale => 2f;       // size at the end of its life, relative to the crystal
+        public static float HaloAlpha => 0.4f;        // opacity when it is born
 
         // --- Chill (crystal touch; later also crystal explosions) ---
         public static int ChillTicks => 240;
