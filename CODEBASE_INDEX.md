@@ -4,7 +4,7 @@ generated 2026-10-31 | 373 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(74) BaseMachine(50) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(12)
+FactorrariaNet(73) BaseMachine(50) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(12)
 
 ## Inheritance
 Project bases -> derived:
@@ -955,9 +955,9 @@ tModLoader/other bases -> project types:
 **MechanicShopGlobalNPC.cs** uses: Entry, StoryFlags, StorySystem
   class MechanicShopGlobalNPC : GlobalNPC
     +ModifyShop(NPCShop)[ov]
-**MechanicWrenchSystem.cs** uses: FactorrariaNet, StoryFlags, StorySystem
+**MechanicWrenchSystem.cs** uses: StoryFlags, StorySystem
   class MechanicWrenchSystem : ModSystem
-    +NoWrenchTexturePath:string[s] +WrenchAllowed:bool[s] +PostSetupContent()[ov] +Unload()[ov] +PreUpdateNPCs()[ov] +PostUpdateEverything()[ov]
+    +WrenchAllowed:bool[s] +PostSetupContent()[ov] +Unload()[ov] +PreUpdateNPCs()[ov]
 **RareNpcSpawns.cs** uses: FactorrariaNet, HerBackpackNPC, MechanicsBagItem, StoryFlags, StorySystem
   static class RareNpcRules
     +MechanicSpawnWeight:float[s] +DungeonMechanicSpawnWeight:float[s] +BackpackSpawnWeight:float[s] +RareNpcRarity:int[s] +BackpackRespawnDelayTicks:int[s] +MechanicWeight(Player,out string)[s] +BackpackWeight(Player,out string)[s]
