@@ -940,6 +940,8 @@ Projectiles: {
 	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
 	MechSuitArmProjectile.DisplayName: Mech Suit Arm Projectile
 	SuperWeaponMissile.DisplayName: Super Weapon Missile
+	IceBoomerangProjectile.DisplayName: Ice Boomerang Projectile
+	IceCrystalProjectile.DisplayName: Ice Crystal Projectile
 }
 
 RecipeBook: {

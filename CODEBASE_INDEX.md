@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-31 | 375 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-31 | 380 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -38,11 +38,11 @@ tModLoader/other bases -> project types:
 - GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - GlobalNPC (11): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
+- GlobalItem (10): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, IceBoomerangGlobalItem, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModPlayer (10): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
-- GlobalItem (9): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
+- ModProjectile (5): IceBoomerangProjectile, IceCrystalProjectile, MechSuitArmProjectile, MechanicalArmProjectile, SuperWeaponMissile
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
-- ModProjectile (3): MechSuitArmProjectile, MechanicalArmProjectile, SuperWeaponMissile
 - ModLiquid (2): FuelLiquid, OilLiquid
 - ModLiquidFall (2): FuelLiquidFall, OilLiquidFall
 - UIPanel (2): RecipeBrowserPanel, RecipeElement
@@ -1443,6 +1443,11 @@ tModLoader/other bases -> project types:
   class MechanicsBagItem : ModItem
     +Texture:string[ov] +DisplayName:LocalizedText[ov] +Tooltip:LocalizedText[ov]
 
+### Content/Items/Weapons/IceBoomerang/
+**IceBoomerangGlobalItem.cs** uses: IceBoomerangProjectile, IceBoomerangTuning
+  class IceBoomerangGlobalItem : GlobalItem
+    +AppliesToEntity(Item,bool)[ov] +CanUseItem(Item,Player)[ov] +Shoot(Item,Player,EntitySource_ItemUse_WithAmmo,Vector2,Vector2,int,int,float)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
+
 ### Content/Items/Wires/
 **CopperWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
   class CopperWireItem : ModItem
@@ -1488,6 +1493,22 @@ tModLoader/other bases -> project types:
 **MechSuitArmProjectile.cs** uses: MechSuitPlayer, MechanicalArmIK
   class MechSuitArmProjectile : ModProjectile
     +AnchorTile:Point +ArmBendSign:float +Latched:bool +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +PreDraw(ref Color)[ov]
+
+### Content/Projectiles/Weapons/IceBoomerang/
+**IceBoomerangFx.cs**
+  static class IceBoomerangFx
+    +Burst(Vector2,int,float,float)[s] +Ring(Vector2,int,float,float)[s] +Gather(Vector2,float)[s] +PlayFormed(Vector2)[s] +PlayShatter(Vector2)[s]
+**IceBoomerangProjectile.cs** uses: IceBoomerangFx, IceBoomerangTuning, IceCrystalProjectile
+  class IceBoomerangProjectile : ModProjectile
+    +Texture:string[ov] +Load()[ov] +Unload()[ov] +CanDamage()[ov] +AI()[ov] +OnTileCollide(Vector2)[ov] +OnHitNPC(NPC,HitInfo,int)[ov] +PreDraw(ref Color)[ov]
+**IceBoomerangTuning.cs**
+  static class IceBoomerangTuning
+    +ThrowSpeed:float[s] +MinThrowRange:float[s] +MaxThrowRange:float[s] +SettleTicks:int[s] +MaxCrystals:int[s] +CrystalLifeTicks:int[s] +CrystalPopTicks:int[s] +ExpiryWarnTicks:int[s] +ChillTicks:int[s] +ChillRefreshBelowTicks:int[s] +ChillCheckInterval:int[s]
+  static class IceBoomerangChill
+    +Apply(NPC)[s]
+**IceCrystalProjectile.cs** uses: IceBoomerangChill, IceBoomerangFx, IceBoomerangTuning
+  class IceCrystalProjectile : ModProjectile
+    +Texture:string[ov] +Load()[ov] +Unload()[ov] +EvictForNewCrystal(int)[s] +AI()[ov] +OnKill(int)[ov] +PreDraw(ref Color)[ov]
 
 ### Content/Tiles/Conveyors/
 **ClockwisePriorityConveyorTile.cs** uses: ConveyorFilterNet, VirtualItemSystem
@@ -1838,6 +1859,7 @@ tModLoader/other bases -> project types:
 - docs/npcs/: ROADMAP.md
 - docs/poles/: ROADMAP.md
 - docs/super_weapons/: ROADMAP.md
+- docs/weapon_overhaul/: ROADMAP.md
 - tools/: patch_engine.ps1
 - tools/cosmic_tests/: Program.cs.txt, Program_C2.cs.txt, README.txt
 - tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt
