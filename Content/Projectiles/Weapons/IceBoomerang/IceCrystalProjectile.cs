@@ -195,9 +195,9 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
             int interval = Math.Max(1, IceBoomerangTuning.HaloIntervalTicks);
             int haloLife = Math.Max(1, IceBoomerangTuning.HaloLifeTicks);
             Color haloColor = new Color(170, 225, 255, 0);
-            for (int pulse = (int)age / interval; pulse >= 0; pulse--)
+            for (int i = (int)age / interval; i >= 0; i--)
             {
-                int pulseAge = (int)age - pulse * interval;
+                int pulseAge = (int)age - i * interval;
                 if (pulseAge >= haloLife)
                     break;
                 float u = pulseAge / (float)haloLife;

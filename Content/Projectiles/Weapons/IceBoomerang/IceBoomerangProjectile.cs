@@ -409,12 +409,10 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
 
             if (CurrentPhase == Phase.Outbound)
             {
-                // The crystal forms where the boomerang touched the enemy (nearest point of its hitbox).
                 Rectangle box = target.Hitbox;
                 Vector2 center = Projectile.Center;
                 Projectile.Center = new Vector2(MathHelper.Clamp(center.X, box.Left, box.Right), MathHelper.Clamp(center.Y, box.Top, box.Bottom));
                 IceBoomerangFx.Burst(Projectile.Center, 8, 3f, 1.1f);
-                FormCrystalNow();
             }
             else if (CurrentPhase != Phase.Settling && CurrentPhase != Phase.Spent)
             {
