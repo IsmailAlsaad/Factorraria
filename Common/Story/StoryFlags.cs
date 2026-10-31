@@ -18,7 +18,6 @@ namespace Factorraria.Common.Story
         public static string DungeonFork = "DungeonFork";                 // Skeletron fell before the Eye of Cthulhu (the dungeon route)
         public static string DryadFromEye = "DryadFromEye";               // the Dryad arrived because OnEyeKilled spawned her (first Eye kill, none before; patch N10.1); decides which dialogue 1 she says: with the thanks (on) or without (off)
         public static string DryadTalked = "DryadTalked";                 // a player had a real conversation with a Dryad (patch N8.2); the Mechanic hands out the scrolls only after this
-        public static string TestDialogueExit = "TestDialogueExit";       // TEMPORARY (patch N2.1): the exit switch of the Test.Guide dialogue; removed in N9
 
         public static string DonePrefix = "Done.";
 
@@ -27,7 +26,7 @@ namespace Factorraria.Common.Story
         public static string[] All() => new[]
         {
             EyeKillSeen, DryadSeen, BackpackTaken,
-            MechanicRescued, MechanicShopUnlocked, ScrollsGiven, DungeonFork, DryadFromEye, DryadTalked, TestDialogueExit
+            MechanicRescued, MechanicShopUnlocked, ScrollsGiven, DungeonFork, DryadFromEye, DryadTalked
         };
 
         /// <summary>

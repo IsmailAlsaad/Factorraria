@@ -913,22 +913,6 @@ Dialogue: {
 			Button1: Give the bag
 		}
 	}
-
-	Test: {
-		Merchant: {
-			Text: Test dialogue (Merchant). You carry Wood, {PlayerName}.
-			Button1: Test button
-		}
-
-		Guide: {
-			Text: Test dialogue (low priority). You carry a Torch, {PlayerName}. I say this on every click until the exit flag TestDialogueExit is set.
-
-			High: {
-				Text: Test dialogue (HIGH priority). You carry Wood, {PlayerName}, so I say this instead of the Torch line.
-				Button1: Test button
-			}
-		}
-	}
 }
 
 Keybinds: {

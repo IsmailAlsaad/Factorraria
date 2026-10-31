@@ -987,12 +987,12 @@ tModLoader/other bases -> project types:
   class StoryEventsGlobalNPC : GlobalNPC
     +OnKill(NPC)[ov]
   static class DryadStory
-    +RequireHouseForDryadExit:bool[s] +SpawnOnFork:bool[s] +DryadWidth:int[s] +DryadHeight:int[s] +OnEyeKilled(Vector2)[s] +DryadExists()[s] +MechanicHoused()[s]
+    +RequireHouseForDryadExit:bool[s] +SpawnOnFork:bool[s] +DryadWidth:int[s] +DryadHeight:int[s] +OnEyeKilled(Vector2)[s] +MechanicHoused()[s]
   class StoryEventsSystem : ModSystem
     +WatchEveryTicks:int[s] +PostUpdateWorld()[ov]
 **StoryFlags.cs**
   static class StoryFlags
-    +EyeKillSeen:string[s] +DryadSeen:string[s] +BackpackTaken:string[s] +MechanicRescued:string[s] +MechanicShopUnlocked:string[s] +ScrollsGiven:string[s] +DungeonFork:string[s] +DryadFromEye:string[s] +DryadTalked:string[s] +TestDialogueExit:string[s] +DonePrefix:string[s] +DoneKey(string)[s] +All()[s] +Resolve(string)[s] +IsKnown(string)[s]
+    +EyeKillSeen:string[s] +DryadSeen:string[s] +BackpackTaken:string[s] +MechanicRescued:string[s] +MechanicShopUnlocked:string[s] +ScrollsGiven:string[s] +DungeonFork:string[s] +DryadFromEye:string[s] +DryadTalked:string[s] +DonePrefix:string[s] +DoneKey(string)[s] +All()[s] +Resolve(string)[s] +IsKnown(string)[s]
 **StoryScrolls.cs** uses: ClosedScrollItem, ScrollPoolDefinitions
   static class StoryScrolls
     +ScrollsPerPart:int[s] +PoolNames()[s] +Give(Player,string)[s]

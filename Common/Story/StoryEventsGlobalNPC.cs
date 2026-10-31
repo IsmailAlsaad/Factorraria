@@ -104,12 +104,6 @@ namespace Factorraria.Common.Story
             return true;
         }
 
-        /// <summary>
-        /// True while any Dryad NPC exists. Since N8.2 it is no longer the gate for the scrolls (the flag DryadTalked is); kept as a helper. Works on every side: the server
-        /// and single-player read their own NPC list, a client reads the vanilla-synced one.
-        /// </summary>
-        public static bool DryadExists() => NPC.AnyNPCs(NPCID.Dryad);
-
         /// <summary>True when a town Mechanic exists and has a house (used by the exit of Dryad dialogue 1, D8).</summary>
         public static bool MechanicHoused()
         {

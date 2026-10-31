@@ -408,56 +408,24 @@ namespace Factorraria.Common.Net
             if (Main.dedServ)
                 return;
 
-            if (accepted)
-            {
-                // Placeholder texts until the localization pass (N9).
-                if (kind == StoryActionKind.TakeBag)
-                    Main.NewText("You take the Mechanic's Bag.", 255, 240, 20);
-                else if (kind == StoryActionKind.ClaimScrolls)
-                {
-                    SoundEngine.PlaySound(SoundID.Grab);
-                    Main.NewText("The Mechanic gives you three Sealed Scrolls.", 255, 240, 20);
-                }
-                else if (kind == StoryActionKind.TurnInBag)
-                {
-                    SoundEngine.PlaySound(SoundID.Grab);
-                    Main.NewText("You give the Mechanic's Bag back. Her shop is open.", 255, 240, 20);
-
-                    // Multiplayer: the server took the Bag out of its copy already; take it out of this copy too (single-player has one copy, the handler already did it).
-                    if (Main.netMode == NetmodeID.MultiplayerClient)
-                    {
-                        Item slot = ConsumeOneBag(Main.LocalPlayer);
-                        if (slot != null)
-                            FactorrariaNet.SyncInventoryItem(Main.LocalPlayer, slot);
-                    }
-
-                    // The chat window is still open: replace the question with a thank-you (placeholder text).
-                    if (Main.LocalPlayer.talkNPC >= 0)
-                        Main.npcChatText = "My bag! Thank you, {PlayerName}. Take a look at what I have.".Replace("{PlayerName}", Main.LocalPlayer.name);
-                }
-
+            // N9.1 (Ismail 2026-10-31): this handler no longer prints anything, neither in the chat log nor in the NPC chat window. A refused request is silent.
+            // What stays: the pickup sound and, in multiplayer, taking the handed-in Bag out of this client's copy of the inventory.
+            if (!accepted)
                 return;
-            }
 
-            bool turnIn = kind == StoryActionKind.TurnInBag;
-            bool scrolls = kind == StoryActionKind.ClaimScrolls;
-            switch (failure)
+            if (kind == StoryActionKind.ClaimScrolls)
+                SoundEngine.PlaySound(SoundID.Grab);
+            else if (kind == StoryActionKind.TurnInBag)
             {
-                case StoryActionFailure.TooFar:
-                    Main.NewText("You are too far away.", 200, 200, 200);
-                    break;
-                case StoryActionFailure.NoNpc:
-                    Main.NewText(turnIn || scrolls ? "She is not here any more." : "It is gone.", 200, 200, 200);
-                    break;
-                case StoryActionFailure.Unavailable:
-                    Main.NewText(scrolls ? "She has nothing more to give you." : turnIn ? "Her shop is already open." : "Someone already took it.", 200, 200, 200);
-                    break;
-                case StoryActionFailure.NoItem:
-                    Main.NewText("You do not have the Mechanic's Bag.", 200, 200, 200);
-                    break;
-                default:
-                    Main.NewText("You cannot do that right now.", 200, 200, 200);
-                    break;
+                SoundEngine.PlaySound(SoundID.Grab);
+
+                // Multiplayer: the server took the Bag out of its copy already; take it out of this copy too (single-player has one copy, the handler already did it).
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                {
+                    Item slot = ConsumeOneBag(Main.LocalPlayer);
+                    if (slot != null)
+                        FactorrariaNet.SyncInventoryItem(Main.LocalPlayer, slot);
+                }
             }
         }
 
