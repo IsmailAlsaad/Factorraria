@@ -17,6 +17,7 @@
 			<HintPath>..\ModAssemblies\Luminance_v1.0.14.dll</HintPath>
 		</Reference>
 		<Reference Include="IsmailsWeaponReworks">
+			<HintPath>..\ModAssemblies\IsmailsWeaponReworks_v0.1.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
