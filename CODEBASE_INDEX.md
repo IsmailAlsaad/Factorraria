@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-31 | 374 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-31 | 375 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(73) BaseMachine(50) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(12)
+FactorrariaNet(74) BaseMachine(50) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(12)
 
 ## Inheritance
 Project bases -> derived:
@@ -37,7 +37,7 @@ tModLoader/other bases -> project types:
 - ModTile (16): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
-- GlobalNPC (10): AwakenedSpawnGlobalNPC, BossLootGlobal, CartPassengerGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
+- GlobalNPC (11): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
 - ModPlayer (10): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (9): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
@@ -952,6 +952,9 @@ tModLoader/other bases -> project types:
     +IsAwakening:bool +AwakenerOrigin:Point16 +AwakenRadiusTiles:int +AwakenedStatueCount:int +AwakenedEnemyCount:int
 
 ### Common/Story/
+**BoundMechanicGlobalNPC.cs** uses: FactorrariaNet
+  class BoundMechanicGlobalNPC : GlobalNPC
+    +UndergroundTexturePath:string[s] +AppliesToEntity(NPC,bool)[ov] +Unload()[ov] +PreDraw(NPC,SpriteBatch,Vector2,Color)[ov] +PostDraw(NPC,SpriteBatch,Vector2,Color)[ov]
 **MechanicShopGlobalNPC.cs** uses: Entry, StoryFlags, StorySystem
   class MechanicShopGlobalNPC : GlobalNPC
     +ModifyShop(NPCShop)[ov]
