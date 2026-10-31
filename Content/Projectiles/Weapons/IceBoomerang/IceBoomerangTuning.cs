@@ -15,6 +15,20 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
         public static float MaxThrowRange => MinThrowRange;   // far beyond the screen; the cursor is the real limit
         public static int SettleTicks => 18;          // spin-down before it turns into a crystal
 
+        // --- Gradual stop at the cursor ---
+        public static float BrakeDistance => 160f;    // it starts slowing down this far before the cursor
+        public static float BrakeMinSpeed => 2f;      // crawl speed right before it settles
+
+        // --- Chain ---
+        public static float ChainSpeedGainPerLevel => 0.25f; // +25% of the throw speed per crystal bounced off
+        public static float ChainMaxSpeed => 44f;
+        public static float DamageGainPerLevel => 0.35f;     // +35% of the boomerang's damage per crystal bounced off
+        public static float BlastRadius => 90f;              // pixels
+        public static float BlastDamageMultiplier => 0.8f;   // of the boomerang's current damage
+        public static int BlastLifeTicks => 6;
+        public static int BlastFlashTicks => 12;             // crystal flash when it explodes
+        public static int FlightMaxTicks => 1800;            // safety net for a chain/return (30 s)
+
         // --- Crystals ---
         public static int MaxCrystals => 5;           // the 6th evicts the oldest
         public static int CrystalLifeTicks => 1800;   // 30 seconds

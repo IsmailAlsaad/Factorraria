@@ -87,6 +87,8 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
             }
 
             float age = Projectile.localAI[0]++;
+            if (Projectile.localAI[1] > 0f)
+                Projectile.localAI[1]--; // flash after a blast, set by the blast on every machine
             if (age == 0f)
             {
                 IceBoomerangFx.PlayFormed(Projectile.Center);
@@ -146,8 +148,9 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
             Vector2 drawPosition = Projectile.Center + new Vector2(0f, bob) - Main.screenPosition;
             float pulse = 0.5f + 0.5f * (float)Math.Sin(age * 0.08f);
             Color glow = new Color(110, 200, 255, 0);
-            Main.EntitySpriteDraw(texture, drawPosition, null, glow * (0.35f + 0.25f * pulse) * visible, 0f, origin, scale * 1.3f, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(texture, drawPosition, null, Color.Lerp(lightColor, Color.White, 0.7f) * visible, 0f, origin, scale, SpriteEffects.None, 0);
+            float flash = Projectile.localAI[1] / IceBoomerangTuning.BlastFlashTicks;
+            Main.EntitySpriteDraw(texture, drawPosition, null, glow * (0.35f + 0.25f * pulse + 0.6f * flash) * visible, 0f, origin, scale * (1.3f + 0.35f * flash), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, drawPosition, null, Color.Lerp(lightColor, Color.White, 0.7f + 0.3f * flash) * visible, 0f, origin, scale * (1f + 0.12f * flash), SpriteEffects.None, 0);
             return false;
         }
     }

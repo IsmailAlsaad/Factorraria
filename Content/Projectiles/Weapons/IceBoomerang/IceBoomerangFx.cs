@@ -51,6 +51,21 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
             SoundEngine.PlaySound(SoundID.Item28 with { Volume = 0.8f, PitchVariance = 0.2f }, position);
         }
 
+        // The pitch rises with every crystal the boomerang has bounced off.
+        public static void PlayBlast(Vector2 position, int level)
+        {
+            if (Main.dedServ)
+                return;
+            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.85f, Pitch = MathHelper.Min(0.9f, -0.3f + 0.15f * level) }, position);
+        }
+
+        public static void PlayCatch(Vector2 position)
+        {
+            if (Main.dedServ)
+                return;
+            SoundEngine.PlaySound(SoundID.Item28 with { Volume = 0.6f, Pitch = 0.5f }, position);
+        }
+
         public static void PlayShatter(Vector2 position)
         {
             if (Main.dedServ)
