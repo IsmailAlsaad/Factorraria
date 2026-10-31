@@ -22,6 +22,7 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
         // --- Chain ---
         public static float ChainSpeedGainPerLevel => 0.25f; // +25% of the throw speed per crystal bounced off
         public static float ChainMaxSpeed => 44f;
+        public static float ChainMaxTargetDistance => 150f * 16f; // the chain ignores crystals farther than this (150 tiles) from the boomerang
         public static float DamageGainPerLevel => 0.35f;     // +35% of the boomerang's damage per crystal bounced off
         public static float BlastRadius => 90f;              // pixels
         public static float BlastDamageMultiplier => 0.8f;   // of the boomerang's current damage

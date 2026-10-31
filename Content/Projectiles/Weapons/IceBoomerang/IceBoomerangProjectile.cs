@@ -350,12 +350,15 @@ namespace Factorraria.Content.Projectiles.Weapons.IceBoomerang
             int type = CrystalType;
             Projectile best = null;
             float bestDistance = float.MaxValue;
+            float maxDistanceSquared = IceBoomerangTuning.ChainMaxTargetDistance * IceBoomerangTuning.ChainMaxTargetDistance;
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile p = Main.projectile[i];
                 if (!p.active || p.type != type || p.owner != Projectile.owner || p.ai[1] == 1f || visited.Contains(p.identity))
                     continue;
                 float distance = Vector2.DistanceSquared(from, p.Center);
+                if (distance > maxDistanceSquared)
+                    continue; // too far away to be a target (it is still left alone by the chain, not removed)
                 if (distance < bestDistance)
                 {
                     bestDistance = distance;
