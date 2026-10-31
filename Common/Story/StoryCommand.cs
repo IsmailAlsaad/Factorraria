@@ -22,7 +22,7 @@ namespace Factorraria.Common.Story
     ///   /fstory weight <name> <number>  change a rare spawn tunable while playing: mechanic, dungeon, backpack, rarity (patch N4.1)
     ///   /fstory bag                     put one Mechanic's Bag into your inventory, for testing the bag-loss watcher and the turn-in (patch N4.2)
     ///   /fstory scrolls                 put the Mechanic's three super weapon scrolls into your inventory without touching any flag (patch N7.1). To repeat the real hand-out: /fstory flag ScrollsGiven off, /fstory flag Done.Mechanic.SuperWeaponIntro off, /fstory flag Done.Dryad.PlanWithMechanic off
-    ///   /fstory eye                     run the first-Eye-of-Cthulhu handler at your position without fighting it: sets EyeKillSeen and spawns the Dryad if she never arrived (patch N6.1). To repeat: /fstory flag EyeKillSeen off and /fstory flag DryadSeen off
+    ///   /fstory eye                     run the first-Eye-of-Cthulhu handler at your position without fighting it: sets EyeKillSeen and spawns the Dryad if she never arrived (patch N6.1). To repeat: /fstory flag EyeKillSeen off, /fstory flag DryadSeen off and /fstory flag DryadFromEye off
     ///   /fstory fork [status|off|on]    the Skeletron-first fork (patch N8.1). status (default): the facts, the verdict of StoryForkRules.ShouldLatch and what the fork changes for you now. off: clear DungeonFork AND pause the fork watcher (otherwise it latches again within a tick while Skeletron is down); the pause ends on world load. on: resume the watcher. To force the fork without Skeletron use /fstory flag DungeonFork on
     /// </summary>
     public class StoryCommand : ModCommand
@@ -251,7 +251,7 @@ namespace Factorraria.Common.Story
                 : StorySystem.Get(StoryFlags.EyeKillSeen) ? "the Eye was already killed once: nothing more spawns"
                 : StorySystem.Get(StoryFlags.DryadSeen) || NPC.AnyNPCs(NPCID.Dryad) ? "a Dryad exists or arrived before: the Eye kill spawns none"
                 : fork ? "the first Eye kill spawns her (her dialogues stay off on the fork)" : "on: the first Eye kill spawns her";
-            caller.Reply("Dryad story: " + dryad, Color.LightGreen);
+            caller.Reply("Dryad story: " + dryad + " (DryadFromEye " + OnOff(StoryFlags.DryadFromEye) + ": dialogue 1 shows only while it is on)", Color.LightGreen);
             caller.Reply("Scrolls: ScrollsGiven " + OnOff(StoryFlags.ScrollsGiven) + ", DryadTalked " + OnOff(StoryFlags.DryadTalked) + ", a Dryad exists now: " + NPC.AnyNPCs(NPCID.Dryad) + " (the Mechanic hands them out only after a conversation with the Dryad)", Color.LightGreen);
         }
 

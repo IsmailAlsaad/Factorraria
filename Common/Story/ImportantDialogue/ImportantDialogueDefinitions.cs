@@ -22,14 +22,14 @@ namespace Factorraria.Common.Story
         {
             // ------------------------------------------------------------------
             // Dryad dialogues (patch N6.1). Text only (no chat buttons), so her vanilla buttons stay as they are.
-            // Dryad.RescueMechanic (dialogue 1): starts once the Eye of Cthulhu was killed (our flag EyeKillSeen, so a Dryad who arrived the vanilla way
-            // also says it) and never on the Skeletron-first route. Ends when the Mechanic is rescued AND housed (D8; DryadStory.RequireHouseForDryadExit).
+            // Dryad.RescueMechanic (dialogue 1): starts only for the Dryad who arrived through the Eye of Cthulhu route (our flag DryadFromEye, N10.1; a Dryad who
+            // arrived any other way never says it) and never on the Skeletron-first route. Ends when the Mechanic is rescued AND housed (D8; DryadStory.RequireHouseForDryadExit).
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Dryad.RescueMechanic",
                 NpcType = NPCID.Dryad,
                 Priority = 5,
-                Condition = player => StorySystem.Get(StoryFlags.EyeKillSeen) && !StorySystem.Get(StoryFlags.DungeonFork),
+                Condition = player => StorySystem.Get(StoryFlags.DryadFromEye) && !StorySystem.Get(StoryFlags.DungeonFork),
                 Exit = () => StorySystem.Get(StoryFlags.MechanicRescued) && (!DryadStory.RequireHouseForDryadExit || DryadStory.MechanicHoused())
             });
 

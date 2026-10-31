@@ -976,7 +976,7 @@ tModLoader/other bases -> project types:
     +WatchEveryTicks:int[s] +PostUpdateWorld()[ov]
 **StoryFlags.cs**
   static class StoryFlags
-    +EyeKillSeen:string[s] +DryadSeen:string[s] +BackpackTaken:string[s] +MechanicRescued:string[s] +MechanicShopUnlocked:string[s] +ScrollsGiven:string[s] +DungeonFork:string[s] +DryadTalked:string[s] +TestDialogueExit:string[s] +DonePrefix:string[s] +DoneKey(string)[s] +All()[s] +Resolve(string)[s] +IsKnown(string)[s]
+    +EyeKillSeen:string[s] +DryadSeen:string[s] +BackpackTaken:string[s] +MechanicRescued:string[s] +MechanicShopUnlocked:string[s] +ScrollsGiven:string[s] +DungeonFork:string[s] +DryadFromEye:string[s] +DryadTalked:string[s] +TestDialogueExit:string[s] +DonePrefix:string[s] +DoneKey(string)[s] +All()[s] +Resolve(string)[s] +IsKnown(string)[s]
 **StoryScrolls.cs** uses: ClosedScrollItem, ScrollPoolDefinitions
   static class StoryScrolls
     +ScrollsPerPart:int[s] +PoolNames()[s] +Give(Player,string)[s]
