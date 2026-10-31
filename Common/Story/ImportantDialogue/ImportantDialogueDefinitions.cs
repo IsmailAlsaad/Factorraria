@@ -33,14 +33,14 @@ namespace Factorraria.Common.Story
                 Exit = () => StorySystem.Get(StoryFlags.MechanicRescued) && (!DryadStory.RequireHouseForDryadExit || DryadStory.MechanicHoused())
             });
 
-            // Dryad.PlanWithMechanic (dialogue 2): from the moment dialogue 1 is done until the Mechanic handed out the scrolls (ScrollsGiven is set in N7.1;
+            // Dryad.PlanWithMechanic (dialogue 2, N10.1b: ONLY for a Dryad who did NOT come through the Eye route, i.e. DryadFromEye is off): from the moment dialogue 1 is done until the Mechanic handed out the scrolls (ScrollsGiven is set in N7.1;
             // until then test it with /fstory flag ScrollsGiven on).
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Dryad.PlanWithMechanic",
                 NpcType = NPCID.Dryad,
                 Priority = 5,
-                Condition = player => StorySystem.Get(StoryFlags.DoneKey("Dryad.RescueMechanic")) && !StorySystem.Get(StoryFlags.ScrollsGiven) && !StorySystem.Get(StoryFlags.DungeonFork),
+                Condition = player => !StorySystem.Get(StoryFlags.DryadFromEye) && StorySystem.Get(StoryFlags.DoneKey("Dryad.RescueMechanic")) && !StorySystem.Get(StoryFlags.ScrollsGiven) && !StorySystem.Get(StoryFlags.DungeonFork),
                 Exit = () => StorySystem.Get(StoryFlags.ScrollsGiven)
             });
 
