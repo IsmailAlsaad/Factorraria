@@ -1,4 +1,6 @@
-﻿using Terraria;
+﻿using Factorraria.Common.Net;
+using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Common.Story
@@ -22,7 +24,13 @@ namespace Factorraria.Common.Story
 
             lastTalkNpc = now;
             if (now >= 0 && now < Main.maxNPCs && Main.npc[now].active)
+            {
                 ImportantDialogueSystem.RunTalkStart(Player, Main.npc[now]);
+
+                // N8.2 (rule D20): any conversation with a Dryad counts, also when she has no active important dialogue. The server decides.
+                if (Main.npc[now].type == NPCID.Dryad)
+                    StoryNet.RequestDryadTalk(now);
+            }
         }
     }
 }

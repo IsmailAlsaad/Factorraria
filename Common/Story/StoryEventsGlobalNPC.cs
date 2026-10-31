@@ -102,7 +102,7 @@ namespace Factorraria.Common.Story
         }
 
         /// <summary>
-        /// True while any Dryad NPC exists (rule D20: the Mechanic hands out the scrolls only then, on both routes). Works on every side: the server
+        /// True while any Dryad NPC exists. Since N8.2 it is no longer the gate for the scrolls (the flag DryadTalked is); kept as a helper. Works on every side: the server
         /// and single-player read their own NPC list, a client reads the vanilla-synced one.
         /// </summary>
         public static bool DryadExists() => NPC.AnyNPCs(NPCID.Dryad);

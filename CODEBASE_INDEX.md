@@ -801,15 +801,15 @@ tModLoader/other bases -> project types:
 **SlotEditTestCommand.cs** uses: MachineRecipeSelect, MachineSlotEdit, MaterializerToggle
   class SlotEditTestCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
-**StoryNet.cs** uses: DryadStory, FactorrariaNet, FactorrariaPacket, HerBackpackNPC, JoinSync, MechanicsBagItem, PacketDirection, StoryFlags, StoryScrolls, StorySystem
+**StoryNet.cs** uses: FactorrariaNet, FactorrariaPacket, HerBackpackNPC, JoinSync, MechanicsBagItem, PacketDirection, StoryFlags, StoryScrolls, StorySystem
   class StoryNetSystem : ModSystem
     +Load()[ov]
   enum StoryActionKind : byte
-    {TakeBag, TurnInBag, ClaimScrolls}
+    {TakeBag, TurnInBag, ClaimScrolls, TalkDryad}
   enum StoryActionFailure : byte
     {None, CannotAct, NoNpc, TooFar, Unavailable, NoItem}
   static class StoryNet
-    +MaxJoinFlags:int[s] +InteractReachTiles:int[s] +ActionTimeoutTicks:int[s] +BroadcastFlag(string,bool)[s] +HandleFlagChanged(BinaryReader,int)[s] +ActionPending:bool[s] +RequestTakeBag(int)[s] +RequestTurnInBag(int)[s] +RequestClaimScrolls(int)[s] +HasBag(Player)[s] +HandleActionRequest(BinaryReader,int)[s] +HandleActionResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
+    +MaxJoinFlags:int[s] +InteractReachTiles:int[s] +ActionTimeoutTicks:int[s] +BroadcastFlag(string,bool)[s] +HandleFlagChanged(BinaryReader,int)[s] +ActionPending:bool[s] +RequestTakeBag(int)[s] +RequestTurnInBag(int)[s] +RequestClaimScrolls(int)[s] +RequestDryadTalk(int)[s] +HasBag(Player)[s] +HandleActionRequest(BinaryReader,int)[s] +HandleActionResult(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
 **SuperWeaponNet.cs** uses: FactorrariaNet, FactorrariaPacket, PacketDirection, SuperWeaponExplosionFxSystem, WallShieldBreakFxSystem
   enum SuperWeaponEffectKind : byte
     {ShieldBreak, Ignition, Launch, Impact, Fizzle}
@@ -976,7 +976,7 @@ tModLoader/other bases -> project types:
     +WatchEveryTicks:int[s] +PostUpdateWorld()[ov]
 **StoryFlags.cs**
   static class StoryFlags
-    +EyeKillSeen:string[s] +DryadSeen:string[s] +BackpackTaken:string[s] +MechanicRescued:string[s] +MechanicShopUnlocked:string[s] +ScrollsGiven:string[s] +DungeonFork:string[s] +TestDialogueExit:string[s] +DonePrefix:string[s] +DoneKey(string)[s] +All()[s] +Resolve(string)[s] +IsKnown(string)[s]
+    +EyeKillSeen:string[s] +DryadSeen:string[s] +BackpackTaken:string[s] +MechanicRescued:string[s] +MechanicShopUnlocked:string[s] +ScrollsGiven:string[s] +DungeonFork:string[s] +DryadTalked:string[s] +TestDialogueExit:string[s] +DonePrefix:string[s] +DoneKey(string)[s] +All()[s] +Resolve(string)[s] +IsKnown(string)[s]
 **StoryScrolls.cs** uses: ClosedScrollItem, ScrollPoolDefinitions
   static class StoryScrolls
     +ScrollsPerPart:int[s] +PoolNames()[s] +Give(Player,string)[s]
@@ -999,7 +999,7 @@ tModLoader/other bases -> project types:
 **ImportantDialogueGlobalNPC.cs** ns!=Factorraria.Common.Story uses: ImportantDialogueChatButtons, ImportantDialogueEntry, ImportantDialogueRegistry, ImportantDialogueSystem
   class ImportantDialogueGlobalNPC : GlobalNPC
     +GetChat(NPC,ref string)[ov] +PreChatButtonClicked(NPC,bool)[ov] +PostDraw(NPC,SpriteBatch,Vector2,Color)[ov]
-**ImportantDialoguePlayer.cs** ns!=Factorraria.Common.Story uses: ImportantDialogueSystem
+**ImportantDialoguePlayer.cs** ns!=Factorraria.Common.Story uses: ImportantDialogueSystem, StoryNet
   class ImportantDialoguePlayer : ModPlayer
     +PostUpdate()[ov]
 **ImportantDialogueRegistry.cs** ns!=Factorraria.Common.Story uses: ImportantDialogueEntry, StoryFlags, StorySystem

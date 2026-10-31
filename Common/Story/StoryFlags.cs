@@ -16,6 +16,7 @@ namespace Factorraria.Common.Story
         public static string MechanicShopUnlocked = "MechanicShopUnlocked"; // the bag was given (or she was rescued in the dungeon fork)
         public static string ScrollsGiven = "ScrollsGiven";               // the Mechanic handed out the three super weapon scrolls
         public static string DungeonFork = "DungeonFork";                 // Skeletron fell before the Eye of Cthulhu (the dungeon route)
+        public static string DryadTalked = "DryadTalked";                 // a player had a real conversation with a Dryad (patch N8.2); the Mechanic hands out the scrolls only after this
         public static string TestDialogueExit = "TestDialogueExit";       // TEMPORARY (patch N2.1): the exit switch of the Test.Guide dialogue; removed in N9
 
         public static string DonePrefix = "Done.";
@@ -25,7 +26,7 @@ namespace Factorraria.Common.Story
         public static string[] All() => new[]
         {
             EyeKillSeen, DryadSeen, BackpackTaken,
-            MechanicRescued, MechanicShopUnlocked, ScrollsGiven, DungeonFork, TestDialogueExit
+            MechanicRescued, MechanicShopUnlocked, ScrollsGiven, DungeonFork, DryadTalked, TestDialogueExit
         };
 
         /// <summary>

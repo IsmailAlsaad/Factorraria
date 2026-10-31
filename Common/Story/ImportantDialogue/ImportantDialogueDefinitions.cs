@@ -70,15 +70,15 @@ namespace Factorraria.Common.Story
             // Happiness) are both used, so a button would have to hide her Shop. The first conversation sends ClaimScrolls; the server hands out
             // three Sealed Scrolls ONCE per world, to the first player who asks (D9), and sets ScrollsGiven. If a request is refused (too far,
             // she is gone) nothing is lost: the entry stays active and the next conversation asks again.
-            // Condition: she was rescued (also on the Skeletron-first route, D11), a Dryad exists (D20, N8.1: the Dryad and the Mechanic must both
-            // exist for the scrolls) and the scrolls were not given. Exit: ScrollsGiven, which also
+            // Condition: she was rescued (also on the Skeletron-first route, D11), a player had a real conversation with a Dryad (D20, N8.2: the
+            // world flag DryadTalked, set by the server) and the scrolls were not given. Exit: ScrollsGiven, which also
             // ends Dryad.PlanWithMechanic. Priority 6: above Mechanic.Bag (5).
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Mechanic.SuperWeaponIntro",
                 NpcType = NPCID.Mechanic,
                 Priority = 6,
-                Condition = player => StorySystem.Get(StoryFlags.MechanicRescued) && !StorySystem.Get(StoryFlags.ScrollsGiven) && DryadStory.DryadExists(),
+                Condition = player => StorySystem.Get(StoryFlags.MechanicRescued) && !StorySystem.Get(StoryFlags.ScrollsGiven) && StorySystem.Get(StoryFlags.DryadTalked),
                 Exit = () => StorySystem.Get(StoryFlags.ScrollsGiven),
                 OnTalkStart = (player, npc) => StoryNet.RequestClaimScrolls(npc.whoAmI)
             });

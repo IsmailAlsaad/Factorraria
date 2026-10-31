@@ -120,7 +120,7 @@ namespace Factorraria.Common.Story
     ///  - the tied Mechanic's spawn rule moves from the Cavern layer to the dungeon (RareNpcRules.MechanicWeight),
     ///  - her rescue unlocks the whole shop at once (RareNpcSystem.WatchRescue),
     ///  - Her Backpack never spawns (RareNpcRules.BackpackWeight) and the bag-loss watcher rests,
-    ///  - the Dryad dialogues are off (neither starts, ImportantDialogueDefinitions); the scripted Dryad at the Eye is kept (DryadStory.SpawnOnFork), because the Mechanic's scrolls need a Dryad (DryadStory.DryadExists).
+    ///  - the Dryad dialogues are off (neither starts, ImportantDialogueDefinitions); the scripted Dryad at the Eye is kept (DryadStory.SpawnOnFork), because the Mechanic's scrolls need a real conversation with a Dryad (flag DryadTalked, patch N8.2).
     /// The Mechanic's own scroll dialogue still works after her rescue.
     /// </summary>
     public static class StoryForkRules

@@ -30,7 +30,8 @@ namespace Factorraria.Common.Net
     {
         TakeBag = 0,
         TurnInBag = 1,
-        ClaimScrolls = 2
+        ClaimScrolls = 2,
+        TalkDryad = 3   // N8.2: fire-and-forget, the server never answers it (no result packet, no chat line)
     }
 
     public enum StoryActionFailure : byte
@@ -134,6 +135,23 @@ namespace Factorraria.Common.Net
             });
         }
 
+        /// <summary>
+        /// Client (or single-player): tells the server this player just started a conversation with a Dryad (patch N8.2, rule D20). Fire and forget:
+        /// it does not use ActionPending (no answer comes back), and the flag it sets reaches everybody through the story flag sync. Sent from the
+        /// talk-start edge in ImportantDialoguePlayer, also when the Dryad has no active important dialogue.
+        /// </summary>
+        public static void RequestDryadTalk(int npcIndex)
+        {
+            if (StorySystem.Get(StoryFlags.DryadTalked))
+                return;
+
+            FactorrariaNet.SendRequest(FactorrariaPacket.StoryActionRequest, writer =>
+            {
+                writer.Write((byte)StoryActionKind.TalkDryad);
+                writer.Write((short)npcIndex);
+            });
+        }
+
         /// <summary>True when the player's main inventory (the 59 slots, the same ones the turn-in consumes from) holds a Mechanic's Bag. Used by the dialogue condition and by the server check.</summary>
         public static bool HasBag(Player player)
         {
@@ -183,7 +201,8 @@ namespace Factorraria.Common.Net
             Player player = Main.player[sender];
             if (!player.active || player.dead)
             {
-                ReplyAction(sender, kind, false, StoryActionFailure.CannotAct);
+                if (kind != StoryActionKind.TalkDryad)
+                    ReplyAction(sender, kind, false, StoryActionFailure.CannotAct);
                 return;
             }
 
@@ -199,6 +218,10 @@ namespace Factorraria.Common.Net
 
                 case StoryActionKind.ClaimScrolls:
                     HandleClaimScrolls(player, sender, npcIndex);
+                    break;
+
+                case StoryActionKind.TalkDryad:
+                    HandleTalkDryad(player, npcIndex);
                     break;
 
                 default:
@@ -315,8 +338,8 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            // D20 (N8.1): the Mechanic hands the scrolls out only while a Dryad exists. A refused request changes nothing; the next talk asks again.
-            if (!StorySystem.Get(StoryFlags.MechanicRescued) || StorySystem.Get(StoryFlags.ScrollsGiven) || !DryadStory.DryadExists())
+            // D20 (N8.2): the Mechanic hands the scrolls out only after a real conversation with a Dryad (DryadTalked). A refused request changes nothing; the next talk asks again.
+            if (!StorySystem.Get(StoryFlags.MechanicRescued) || StorySystem.Get(StoryFlags.ScrollsGiven) || !StorySystem.Get(StoryFlags.DryadTalked))
             {
                 ReplyAction(sender, StoryActionKind.ClaimScrolls, false, StoryActionFailure.Unavailable);
                 return;
@@ -327,6 +350,28 @@ namespace Factorraria.Common.Net
 
             FactorrariaNet.Log("[Story] " + player.name + " received the three super weapon scrolls from the Mechanic (NPC #" + npcIndex + ")");
             ReplyAction(sender, StoryActionKind.ClaimScrolls, true, StoryActionFailure.None);
+        }
+
+        // Server (or single-player). Patch N8.2 (rule D20): the first conversation with a live Dryad, by any player, sets DryadTalked. The NPC must be an
+        // active town Dryad and the player within InteractReachTiles; anything else is ignored silently (the next conversation sends the request again).
+        // No answer is sent. The flag travels to every client with the story flag sync, so the Mechanic's intro starts for everybody.
+        static void HandleTalkDryad(Player player, int npcIndex)
+        {
+            if (StorySystem.Get(StoryFlags.DryadTalked))
+                return;
+
+            if (npcIndex < 0 || npcIndex >= Main.maxNPCs)
+                return;
+
+            NPC npc = Main.npc[npcIndex];
+            if (!npc.active || npc.type != NPCID.Dryad || !npc.townNPC)
+                return;
+
+            if (player.Distance(npc.Center) > System.Math.Max(1, InteractReachTiles) * 16f)
+                return;
+
+            StorySystem.ServerSet(StoryFlags.DryadTalked, true);
+            FactorrariaNet.Log("[Story] " + player.name + " talked to the Dryad (NPC #" + npcIndex + "): DryadTalked is on");
         }
 
         static void ReplyAction(int sender, StoryActionKind kind, bool accepted, StoryActionFailure failure)

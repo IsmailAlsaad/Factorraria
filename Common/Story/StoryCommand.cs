@@ -252,7 +252,7 @@ namespace Factorraria.Common.Story
                 : StorySystem.Get(StoryFlags.DryadSeen) || NPC.AnyNPCs(NPCID.Dryad) ? "a Dryad exists or arrived before: the Eye kill spawns none"
                 : fork ? "the first Eye kill spawns her (her dialogues stay off on the fork)" : "on: the first Eye kill spawns her";
             caller.Reply("Dryad story: " + dryad, Color.LightGreen);
-            caller.Reply("Scrolls: ScrollsGiven " + OnOff(StoryFlags.ScrollsGiven) + ", a Dryad exists now: " + NPC.AnyNPCs(NPCID.Dryad) + " (the Mechanic hands them out only while one does)", Color.LightGreen);
+            caller.Reply("Scrolls: ScrollsGiven " + OnOff(StoryFlags.ScrollsGiven) + ", DryadTalked " + OnOff(StoryFlags.DryadTalked) + ", a Dryad exists now: " + NPC.AnyNPCs(NPCID.Dryad) + " (the Mechanic hands them out only after a conversation with the Dryad)", Color.LightGreen);
         }
 
         // Test helper (patch N6.1): the first Eye of Cthulhu kill without the fight. A World command, so in multiplayer it runs on the server.
