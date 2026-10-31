@@ -79,20 +79,36 @@ namespace Factorraria.Common.Story
             });
 
             // ------------------------------------------------------------------
+            // Mechanic.RescuedEye (patch N10.3, polish note 4): the special dialogue of a Mechanic rescued on the Eye route (EyeKillSeen on, no DungeonFork).
+            // It comes FIRST (priority 7, above Mechanic.SuperWeaponIntro 6): the Mechanic says it in the first conversation after her rescue, with the "!"
+            // until this player has had that conversation (the per-player seen rule, N10.2); the Condition itself also ends once this player has seen it, so from
+            // the next conversation Mechanic.SuperWeaponIntro (or the normal chat) takes over. It hands out nothing: only the entry that is active when a
+            // conversation opens runs its OnTalkStart, so the scrolls are never given in this conversation. Exit: ScrollsGiven (a player who joins after the
+            // scrolls were given never gets it). Text only, placeholder wording in Localization.
+            ImportantDialogueRegistry.Register(new ImportantDialogueEntry
+            {
+                Id = "Mechanic.RescuedEye",
+                NpcType = NPCID.Mechanic,
+                Priority = 7,
+                Condition = player => StorySystem.Get(StoryFlags.MechanicRescued) && StorySystem.Get(StoryFlags.EyeKillSeen) && !StorySystem.Get(StoryFlags.DungeonFork)
+                    && !StorySystem.Get(StoryFlags.ScrollsGiven) && !ImportantDialoguePlayer.HasSeen(player, "Mechanic.RescuedEye"),
+                Exit = () => StorySystem.Get(StoryFlags.ScrollsGiven)
+            });
+
             // Mechanic.SuperWeaponIntro (patch N7.1): right after her rescue the Mechanic shows "!" and explains super weapon #1 (the missile: drill,
             // tank, thruster). The scroll hand-out is an OnTalkStart request (not a chat button): the Mechanic's two vanilla chat buttons (Shop and
             // Happiness) are both used, so a button would have to hide her Shop. The first conversation sends ClaimScrolls; the server hands out
             // three Sealed Scrolls ONCE per world, to the first player who asks (D9), and sets ScrollsGiven. If a request is refused (too far,
             // she is gone) nothing is lost: the entry stays active and the next conversation asks again.
             // Condition: she was rescued (also on the Skeletron-first route, D11), a player had a real conversation with a Dryad (D20, N8.2: the
-            // world flag DryadTalked, set by the server) and the scrolls were not given. Exit: ScrollsGiven, which also
+            // world flag DryadTalked, set by the server), she has a house (N10.2b: she is not homeless) and the scrolls were not given. Exit: ScrollsGiven, which also
             // ends Dryad.PlanWithMechanic. Priority 6: above Mechanic.Bag (5).
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Mechanic.SuperWeaponIntro",
                 NpcType = NPCID.Mechanic,
                 Priority = 6,
-                Condition = player => StorySystem.Get(StoryFlags.MechanicRescued) && !StorySystem.Get(StoryFlags.ScrollsGiven) && StorySystem.Get(StoryFlags.DryadTalked),
+                Condition = player => StorySystem.Get(StoryFlags.MechanicRescued) && !StorySystem.Get(StoryFlags.ScrollsGiven) && StorySystem.Get(StoryFlags.DryadTalked) && DryadStory.MechanicHoused(),
                 Exit = () => StorySystem.Get(StoryFlags.ScrollsGiven),
                 OnTalkStart = (player, npc) => StoryNet.RequestClaimScrolls(npc.whoAmI)
             });

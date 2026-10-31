@@ -991,7 +991,7 @@ tModLoader/other bases -> project types:
 **ImportantDialogueChatButtons.cs** ns!=Factorraria.Common.Story uses: FactorrariaNet, ImportantDialogueButton, ImportantDialogueEntry, ImportantDialogueSystem
   static class ImportantDialogueChatButtons
     +OrigSetChatButtons(ref string,ref string) +HookSetChatButtons(OrigSetChatButtons,ref string,ref string) +Install()[s] +TryHandleClick(NPC,bool)[s]
-**ImportantDialogueDefinitions.cs** ns!=Factorraria.Common.Story uses: DryadStory, ImportantDialogueButton, ImportantDialogueEntry, ImportantDialogueRegistry, StoryFlags, StoryNet, StorySystem
+**ImportantDialogueDefinitions.cs** ns!=Factorraria.Common.Story uses: DryadStory, ImportantDialogueButton, ImportantDialogueEntry, ImportantDialoguePlayer, ImportantDialogueRegistry, StoryFlags, StoryNet, StorySystem
   static class ImportantDialogueDefinitions
     +Register()[s]
 **ImportantDialogueEntry.cs** ns!=Factorraria.Common.Story uses: ImportantDialoguePlayer, StoryFlags, StorySystem

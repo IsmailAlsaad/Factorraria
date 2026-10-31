@@ -338,8 +338,8 @@ namespace Factorraria.Common.Net
                 return;
             }
 
-            // D20 (N8.2): the Mechanic hands the scrolls out only after a real conversation with a Dryad (DryadTalked). A refused request changes nothing; the next talk asks again.
-            if (!StorySystem.Get(StoryFlags.MechanicRescued) || StorySystem.Get(StoryFlags.ScrollsGiven) || !StorySystem.Get(StoryFlags.DryadTalked))
+            // D20 (N8.2): the Mechanic hands the scrolls out only after a real conversation with a Dryad (DryadTalked) and only once she has a house (N10.2b: the Mechanic NPC is not homeless). A refused request changes nothing; the next talk asks again.
+            if (!StorySystem.Get(StoryFlags.MechanicRescued) || StorySystem.Get(StoryFlags.ScrollsGiven) || !StorySystem.Get(StoryFlags.DryadTalked) || npc.homeless)
             {
                 ReplyAction(sender, StoryActionKind.ClaimScrolls, false, StoryActionFailure.Unavailable);
                 return;
