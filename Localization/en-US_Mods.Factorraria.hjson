@@ -906,7 +906,7 @@ Dialogue: {
 
 	Mechanic: {
 		RescuedEye.Text: Thanks! I was stuck down here for a long time trying to find where my backpack went.
-		SuperWeaponIntro.Text: So you are the one the Dryad told me about, {PlayerName}. I have come up with a plan to weaken the wall: a missile, built from three parts, a drill, a tank and a thruster. Here are three scrolls, one for each part. This would require a lot of parts, so I would recommend automating them.
+		SuperWeaponIntro.Text: So you are the one the Dryad told me about, {PlayerName}. I have come up with a plan to weaken the wall: a missile, built from three parts, a drill, a tank and a thruster. Here are the blueprints to construct them. This would require a lot of parts, so I would recommend automating the process.
 
 		Bag: {
 			Text: Have you found my bag?

@@ -92,6 +92,7 @@ namespace Factorraria.Common.Story
                 NpcType = NPCID.Mechanic,
                 Priority = 7,
                 ReplacesRescueChat = true,
+                RescueCondition = player => StorySystem.Get(StoryFlags.EyeKillSeen) && !StorySystem.Get(StoryFlags.DungeonFork),   // N10.8: the Eye route only; "Done" and "seen" do not stop the rescue line
                 Condition = player => (StorySystem.Get(StoryFlags.MechanicRescued) || NPC.savedMech) && StorySystem.Get(StoryFlags.EyeKillSeen) && !StorySystem.Get(StoryFlags.DungeonFork)
                     && !StorySystem.Get(StoryFlags.ScrollsGiven) && !ImportantDialoguePlayer.HasSeen(player, "Mechanic.RescuedEye"),
                 Exit = () => StorySystem.Get(StoryFlags.MechanicRescued)

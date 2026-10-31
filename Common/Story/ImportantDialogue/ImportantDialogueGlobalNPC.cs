@@ -20,53 +20,26 @@ namespace Factorraria.Common.Story
             if (Main.dedServ || !ImportantDialogueRegistry.HasNpc(npc.type))
                 return;
 
+            // N10.8: a freshly freed Mechanic says the rescue line, whichever path writes her first chat (see MechanicRescueTracker.PendingRescueText).
+            string rescueText = MechanicRescueTracker.PendingRescueText(npc);
+            if (rescueText != null)
+            {
+                chat = rescueText;
+                return;
+            }
+
             ImportantDialogueEntry entry = ImportantDialogueSystem.FindActive(Main.LocalPlayer, npc.type, true);
             if (entry != null)
                 chat = entry.GetText(Main.LocalPlayer);
         }
 
-        // N10.3b: the first chat a freed Mechanic ever has is vanilla's own rescue line. It is replaced (same tick) by the active entry that has
-        // ReplacesRescueChat. We cannot rely on GetChat for this, because vanilla may set the rescue line directly (and the story flag MechanicRescued
-        // is only set by the server watcher a tick later), so we watch the NPC itself: PostAI remembers every tick a BoundMechanic ran its AI; the
-        // first tick the NPC at that index is a Mechanic and the local player is talking to her, the chat text is overwritten. Local client only,
-        // no packet; nothing is saved (a bound NPC that is not rescued leaves only a stale tick that expires after RescueWindowTicks).
-        public static uint RescueWindowTicks = 300;
-        static readonly Dictionary<int, uint> boundMechanicTick = new Dictionary<int, uint>();
-
-        public override void Unload() => boundMechanicTick.Clear();
-
+        // N10.3b / N10.8: the first chat a freed Mechanic ever has is vanilla's own rescue line. Replacing it (and telling the server watcher that she was
+        // freed) is done by MechanicRescueTracker (Common/Story/MechanicRescueTracker.cs); this hook only tells it which NPCs run their AI. It runs on every
+        // side that runs the NPC's AI; the tracker decides what each side does. No packet.
         public override void PostAI(NPC npc)
         {
-            if (Main.dedServ || Main.gameMenu)
-                return;
-
-            if (npc.type == NPCID.BoundMechanic)
-            {
-                boundMechanicTick[npc.whoAmI] = Main.GameUpdateCount;
-                return;
-            }
-
-            if (npc.type != NPCID.Mechanic || boundMechanicTick.Count == 0 || !boundMechanicTick.TryGetValue(npc.whoAmI, out uint lastBound))
-                return;
-
-            if (Main.GameUpdateCount - lastBound > RescueWindowTicks)
-            {
-                boundMechanicTick.Remove(npc.whoAmI);
-                return;
-            }
-
-            Player player = Main.LocalPlayer;
-            if (player.talkNPC != npc.whoAmI)
-                return;
-
-            boundMechanicTick.Remove(npc.whoAmI);
-
-            ImportantDialogueEntry entry = ImportantDialogueSystem.FindActive(player, npc.type, true);
-            if (entry == null || !entry.ReplacesRescueChat)
-                return;
-
-            Main.npcChatText = entry.GetText(player);
-            FactorrariaNet.Log("[Story] rescue chat replaced by " + entry.Id);
+            if (npc.type == NPCID.BoundMechanic || npc.type == NPCID.Mechanic)
+                MechanicRescueTracker.OnAi(npc);
         }
 
         public override bool PreChatButtonClicked(NPC npc, bool firstButton)

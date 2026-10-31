@@ -59,11 +59,18 @@ namespace Factorraria.Common.Story
         public string TextKey;
 
         /// <summary>
-        /// Optional (N10.3b). True = while this entry is active, its text REPLACES the vanilla chat line of a bound NPC's rescue (the very first chat the
-        /// freed NPC ever has). Done by ImportantDialogueGlobalNPC.PostAI on the local client; nothing else changes (no "!", no buttons are involved).
+        /// Optional (N10.3b, reworked in N10.8). True = this entry's text REPLACES the vanilla chat line of a bound NPC's rescue (the very first chat the
+        /// freed NPC ever has). Done by MechanicRescueTracker on the local client; nothing else changes (no "!", no buttons are involved).
         /// Only meaningful for the Mechanic today (NPCID.BoundMechanic turning into NPCID.Mechanic).
         /// </summary>
         public bool ReplacesRescueChat;
+
+        /// <summary>
+        /// Optional (N10.8). Used instead of Condition when the rescue chat is replaced (ReplacesRescueChat). Null = Condition. It should describe the route
+        /// only (world flags), not the entry's own progress: a rescue happens once, so "Done" and "seen" must not stop it (a repeated test rescue in the same
+        /// world, or an exit that already latched, would otherwise skip it).
+        /// </summary>
+        public Func<Player, bool> RescueCondition;
 
         /// <summary>
         /// Optional (N10.2, polish note 2). Localization key of a REMINDER text: once the local player has seen this entry (a conversation that opened with

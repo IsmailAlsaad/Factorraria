@@ -189,10 +189,15 @@ namespace Factorraria.Common.Story
     public class RareNpcSystem : ModSystem
     {
         static int bagMissingTicks;
+        static int townMechanicTicks;
+
+        // N10.8 tunable (not const, so hot reload can change it): how long a town Mechanic may exist with no rescue signal before the log says so.
+        public static int TownMechanicWithoutSignalTicks = 120;
 
         public override void OnWorldLoad()
         {
             bagMissingTicks = 0;
+            townMechanicTicks = 0;
             StoryForkRules.WatcherEnabled = true;
         }
 
@@ -206,16 +211,55 @@ namespace Factorraria.Common.Story
             WatchBag();
         }
 
-        // S2: the first tick the rescue flag is true, latch MechanicRescued. On the Skeletron-first route the rescue also unlocks the whole shop.
-        // N8.1: that unlock is a standing rule (fork on + rescued = shop unlocked), not a one-time step at the rescue tick, so it also happens
-        // when the two flags became true in another order (a restored world, a debug flag).
+        // S2: the first tick the Mechanic counts as rescued, latch MechanicRescued. N10.8: she counts as rescued when vanilla's NPC.savedMech is on OR when
+        // MechanicRescueTracker saw a tied Mechanic turn into the town Mechanic on this side (a one-shot signal), so the watcher does not hang on one signal.
+        // On the Skeletron-first route the rescue also unlocks the whole shop. N8.1: that unlock is a standing rule (fork on + rescued = shop unlocked), not a
+        // one-time step at the rescue tick, so it also happens when the two flags became true in another order (a restored world, a debug flag).
+        // Every rescue writes one verdict line to the log, so a shop that stays locked can be explained from the log alone.
         static void WatchRescue()
         {
-            if (NPC.savedMech && !StorySystem.Get(StoryFlags.MechanicRescued))
+            bool bySavedMech = NPC.savedMech;
+            bool byTracker = MechanicRescueTracker.TakeRescueSignal();
+
+            if ((bySavedMech || byTracker) && !StorySystem.Get(StoryFlags.MechanicRescued))
+            {
                 StorySystem.ServerSet(StoryFlags.MechanicRescued, true);
+
+                // The route is also decided by the facts at the rescue: Skeletron is down and the Eye never died, but the fork watcher has not latched yet
+                // (same tick, or it was started late). ShouldLatch cannot say yes any more once she is rescued, so the rule is repeated here.
+                if (!StorySystem.Get(StoryFlags.DungeonFork) && StoryForkRules.WatcherEnabled && NPC.downedBoss3 && !StorySystem.Get(StoryFlags.EyeKillSeen) && !NPC.downedBoss1)
+                {
+                    StorySystem.ServerSet(StoryFlags.DungeonFork, true);
+                    FactorrariaNet.Log("[Story] the rescue found Skeletron down and the Eye of Cthulhu never killed while DungeonFork was still off: DungeonFork latched now (route B)");
+                }
+
+                LogRescue(bySavedMech, byTracker);
+            }
 
             if (StorySystem.Get(StoryFlags.DungeonFork) && StorySystem.Get(StoryFlags.MechanicRescued) && !StorySystem.Get(StoryFlags.MechanicShopUnlocked))
                 StorySystem.ServerSet(StoryFlags.MechanicShopUnlocked, true);
+
+            // A town Mechanic exists, MechanicRescued is off and neither signal fired: say so once (it points at a rescue path the watcher cannot see).
+            if (!StorySystem.Get(StoryFlags.MechanicRescued) && NPC.AnyNPCs(NPCID.Mechanic))
+            {
+                townMechanicTicks++;
+                if (townMechanicTicks == TownMechanicWithoutSignalTicks)
+                    FactorrariaNet.Log("[Story] a town Mechanic exists but neither NPC.savedMech nor the tied-to-town switch was seen, so MechanicRescued is still off (set it by hand with /fstory flag MechanicRescued on if this Mechanic came from a debug spawn)");
+            }
+            else
+            {
+                townMechanicTicks = 0;
+            }
+        }
+
+        // One line per rescue: what the watcher saw and what it means for the shop.
+        static void LogRescue(bool bySavedMech, bool byTracker)
+        {
+            bool fork = StorySystem.Get(StoryFlags.DungeonFork);
+            FactorrariaNet.Log("[Story] the Mechanic was rescued (NPC.savedMech " + bySavedMech + ", tied-to-town switch seen " + byTracker + "). DungeonFork " + (fork ? "on" : "off")
+                + ", fork watcher " + (StoryForkRules.WatcherEnabled ? "running" : "paused") + ", Skeletron defeated " + NPC.downedBoss3 + ", Eye defeated (vanilla) " + NPC.downedBoss1
+                + ", EyeKillSeen " + (StorySystem.Get(StoryFlags.EyeKillSeen) ? "on" : "off")
+                + (fork ? ": the whole shop unlocks now (Skeletron-first route)" : ": the shop stays locked until the Mechanic's Bag is handed in (Eye route)"));
         }
 
         // Route B (rule S5, done here as a world watcher instead of an OnKill hook): the first tick StoryForkRules.ShouldLatch says yes (Skeletron is

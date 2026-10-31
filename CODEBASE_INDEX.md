@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-10-31 | 381 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-10-31 | 382 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -30,7 +30,7 @@ Project bases -> derived:
 - PowerPoleTileBase: PlatinumPowerPoleTile, WoodenPowerPoleTile
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 tModLoader/other bases -> project types:
-- ModSystem (101): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
+- ModSystem (102): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
 - ModItem (42): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
 - byte (32): AssemblyIssue, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (17): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
@@ -955,6 +955,13 @@ tModLoader/other bases -> project types:
 **BoundMechanicGlobalNPC.cs** uses: FactorrariaNet
   class BoundMechanicGlobalNPC : GlobalNPC
     +UndergroundTexturePath:string[s] +AppliesToEntity(NPC,bool)[ov] +Unload()[ov] +PreDraw(NPC,SpriteBatch,Vector2,Color)[ov] +PostDraw(NPC,SpriteBatch,Vector2,Color)[ov]
+**MechanicRescueTracker.cs** uses: FactorrariaNet, ImportantDialogueEntry, ImportantDialoguePlayer, ImportantDialogueRegistry, ImportantDialogueSystem, StoryFlags, StorySystem
+  static class MechanicRescueTracker
+    +RescueWindowTicks:uint[s] +RescueGraceTicks:uint[s] +TakeRescueSignal()[s] +Reset()[s] +OnAi(NPC)[s] +PendingRescueText(NPC)[s] +Tick()[s]
+    sealed class Rescue
+      +Armed:uint +Decided:bool +Text:string +ReplacedTick:uint
+  class MechanicRescueSystem : ModSystem
+    +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Unload()[ov] +PostUpdateEverything()[ov]
 **MechanicShopGlobalNPC.cs** uses: Entry, StoryFlags, StorySystem
   class MechanicShopGlobalNPC : GlobalNPC
     +ModifyShop(NPCShop)[ov]
@@ -964,7 +971,7 @@ tModLoader/other bases -> project types:
 **MechanicWrenchSystem.cs** uses: StoryFlags, StorySystem
   class MechanicWrenchSystem : ModSystem
     +WrenchAllowed:bool[s] +PostSetupContent()[ov] +Unload()[ov] +PreUpdateNPCs()[ov]
-**RareNpcSpawns.cs** uses: FactorrariaNet, HerBackpackNPC, MechanicsBagItem, StoryFlags, StorySystem
+**RareNpcSpawns.cs** uses: FactorrariaNet, HerBackpackNPC, MechanicRescueTracker, MechanicsBagItem, StoryFlags, StorySystem
   static class RareNpcRules
     +MechanicSpawnWeight:float[s] +DungeonMechanicSpawnWeight:float[s] +BackpackSpawnWeight:float[s] +RareNpcRarity:int[s] +BackpackRespawnDelayTicks:int[s] +MechanicWeight(Player,out string)[s] +BackpackWeight(Player,out string)[s]
   static class StoryForkRules
@@ -972,7 +979,7 @@ tModLoader/other bases -> project types:
   class RareNpcGlobalNPC : GlobalNPC
     +EditSpawnPool(IDictionary<int, float>,NPCSpawnInfo)[ov]
   class RareNpcSystem : ModSystem
-    +OnWorldLoad()[ov] +PostUpdateWorld()[ov]
+    +TownMechanicWithoutSignalTicks:int[s] +OnWorldLoad()[ov] +PostUpdateWorld()[ov]
 **StoryCommand.cs** uses: DryadStory, HerBackpackNPC, ImportantDialogueEntry, ImportantDialogueRegistry, MechanicsBagItem, RareNpcRules, StoryFlags, StoryForkRules, StoryScrolls, StorySystem
   class StoryCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
@@ -1007,10 +1014,10 @@ tModLoader/other bases -> project types:
   class ImportantDialogueButton
     +LabelKey:string +OnClick:Action<Player, NPC> +ReplaceVanillaFirstButton:bool
   class ImportantDialogueEntry
-    +KeyPrefix:string[s] +Id:string +NpcType:int +Priority:int +Condition:Func<Player, bool> +Exit:Func<bool> +OnTalkStart:Action<Player, NPC> +Button1:ImportantDialogueButton +Button2:ImportantDialogueButton +TextKey:string +ReplacesRescueChat:bool +ReminderTextKey:string +IsDone:bool +ResolveTextKey() +GetText(Player) +GetButtonLabel(int)
-**ImportantDialogueGlobalNPC.cs** ns!=Factorraria.Common.Story uses: FactorrariaNet, ImportantDialogueChatButtons, ImportantDialogueEntry, ImportantDialoguePlayer, ImportantDialogueRegistry, ImportantDialogueSystem
+    +KeyPrefix:string[s] +Id:string +NpcType:int +Priority:int +Condition:Func<Player, bool> +Exit:Func<bool> +OnTalkStart:Action<Player, NPC> +Button1:ImportantDialogueButton +Button2:ImportantDialogueButton +TextKey:string +ReplacesRescueChat:bool +RescueCondition:Func<Player, bool> +ReminderTextKey:string +IsDone:bool +ResolveTextKey() +GetText(Player) +GetButtonLabel(int)
+**ImportantDialogueGlobalNPC.cs** ns!=Factorraria.Common.Story uses: ImportantDialogueChatButtons, ImportantDialogueEntry, ImportantDialoguePlayer, ImportantDialogueRegistry, ImportantDialogueSystem, MechanicRescueTracker
   class ImportantDialogueGlobalNPC : GlobalNPC
-    +GetChat(NPC,ref string)[ov] +RescueWindowTicks:uint[s] +Unload()[ov] +PostAI(NPC)[ov] +PreChatButtonClicked(NPC,bool)[ov] +PostDraw(NPC,SpriteBatch,Vector2,Color)[ov]
+    +GetChat(NPC,ref string)[ov] +PostAI(NPC)[ov] +PreChatButtonClicked(NPC,bool)[ov] +PostDraw(NPC,SpriteBatch,Vector2,Color)[ov]
 **ImportantDialoguePlayer.cs** ns!=Factorraria.Common.Story uses: ImportantDialogueSystem, StoryNet
   class ImportantDialoguePlayer : ModPlayer
     +HasSeen(Player,string)[s] +MarkSeen(Player,string)[s] +SeenIds(Player)[s] +ForgetSeen(Player,string)[s] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +PostUpdate()[ov]
