@@ -11,8 +11,7 @@ namespace Factorraria.Common.Story
     ///    agrees within a tick of the flag changing. The server runs the attack decisions and the thrown projectile, the clients the animation.
     ///  - ATTACK: while the flag is off, NPCID.Sets.AttackType[NPCID.Mechanic] is -1 (tModLoader documents -1 as "this NPC won't attack"); when it is on,
     ///    it is the vanilla value (0 = she throws a projectile), captured at PostSetupContent. The vanilla value is put back on unload.
-    ///  - ART: none. Ismail checked: the vanilla NPC_124 sheet already has no wrench, so the wrench seen behind her is drawn dynamically. The first version
-    ///    swapped her sheet for a wrench-free PNG; that was useless and is removed (N10.5). Hiding the drawn wrench is a separate, still open step.
+    ///  - ART: none. Her vanilla NPC_124 sheet has no wrench; vanilla draws it in code. It is hidden by MechanicWrenchGlobalNPC.PreDraw (N10.6) while the flag is off.
     /// </summary>
     public class MechanicWrenchSystem : ModSystem
     {
