@@ -72,7 +72,7 @@ namespace Factorraria.Common.Story
                 return "EyeKillSeen set, but the Dryad could not be spawned (no free NPC slot)";
 
             // N10.1: she came through the Eye route. Only this exact path sets the flag (a Dryad who arrived the vanilla way, or who was already
-            // there when the Eye died, never does), and it gates Dryad dialogue 1.
+            // there when the Eye died, never does), and it picks the version of Dryad dialogue 1 with the thanks.
             StorySystem.ServerSet(StoryFlags.DryadFromEye, true);
             StorySystem.ServerSet(StoryFlags.DryadSeen, true);
             return "EyeKillSeen and DryadFromEye set and the Dryad was spawned";

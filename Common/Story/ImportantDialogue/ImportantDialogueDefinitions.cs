@@ -22,8 +22,8 @@ namespace Factorraria.Common.Story
         {
             // ------------------------------------------------------------------
             // Dryad dialogues (patch N6.1). Text only (no chat buttons), so her vanilla buttons stay as they are.
-            // Dryad.RescueMechanic (dialogue 1): starts only for the Dryad who arrived through the Eye of Cthulhu route (our flag DryadFromEye, N10.1; a Dryad who
-            // arrived any other way never says it) and never on the Skeletron-first route. Ends when the Mechanic is rescued AND housed (D8; DryadStory.RequireHouseForDryadExit).
+            // Dryad.RescueMechanic (dialogue 1): N10.1d: the version WITH the thanks, only for the Dryad who arrived through the Eye of Cthulhu route (our flag DryadFromEye,
+            // N10.1). Every other Dryad says Dryad.RescueMechanicOther below instead (same dialogue, no thanks). Neither shows on the Skeletron-first route. Ends when the Mechanic is rescued AND housed (D8; DryadStory.RequireHouseForDryadExit).
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Dryad.RescueMechanic",
@@ -33,14 +33,25 @@ namespace Factorraria.Common.Story
                 Exit = () => StorySystem.Get(StoryFlags.MechanicRescued) && (!DryadStory.RequireHouseForDryadExit || DryadStory.MechanicHoused())
             });
 
-            // Dryad.PlanWithMechanic (dialogue 2, N10.1b: ONLY for a Dryad who did NOT come through the Eye route, i.e. DryadFromEye is off): from the moment dialogue 1 is done until the Mechanic handed out the scrolls (ScrollsGiven is set in N7.1;
+            // Dryad.RescueMechanicOther (dialogue 1 for every Dryad who did NOT come through the Eye route, N10.1d): the same request without the thanks
+            // (nobody saved her). Condition is the exact opposite of Dryad.RescueMechanic, so only one of the two is ever active. Same exit.
+            ImportantDialogueRegistry.Register(new ImportantDialogueEntry
+            {
+                Id = "Dryad.RescueMechanicOther",
+                NpcType = NPCID.Dryad,
+                Priority = 5,
+                Condition = player => !StorySystem.Get(StoryFlags.DryadFromEye) && !StorySystem.Get(StoryFlags.DungeonFork),
+                Exit = () => StorySystem.Get(StoryFlags.MechanicRescued) && (!DryadStory.RequireHouseForDryadExit || DryadStory.MechanicHoused())
+            });
+
+            // Dryad.PlanWithMechanic (dialogue 2, N10.1c: any Dryad, Eye route or not): from the moment dialogue 1 is done (it ends, or was skipped because the Mechanic was already rescued and housed) until the Mechanic handed out the scrolls (ScrollsGiven is set in N7.1;
             // until then test it with /fstory flag ScrollsGiven on).
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Dryad.PlanWithMechanic",
                 NpcType = NPCID.Dryad,
                 Priority = 5,
-                Condition = player => !StorySystem.Get(StoryFlags.DryadFromEye) && StorySystem.Get(StoryFlags.DoneKey("Dryad.RescueMechanic")) && !StorySystem.Get(StoryFlags.ScrollsGiven) && !StorySystem.Get(StoryFlags.DungeonFork),
+                Condition = player => (StorySystem.Get(StoryFlags.DoneKey("Dryad.RescueMechanic")) || StorySystem.Get(StoryFlags.DoneKey("Dryad.RescueMechanicOther"))) && !StorySystem.Get(StoryFlags.ScrollsGiven) && !StorySystem.Get(StoryFlags.DungeonFork),
                 Exit = () => StorySystem.Get(StoryFlags.ScrollsGiven)
             });
 
