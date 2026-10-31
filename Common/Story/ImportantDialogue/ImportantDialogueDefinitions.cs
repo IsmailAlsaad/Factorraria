@@ -79,20 +79,22 @@ namespace Factorraria.Common.Story
             });
 
             // ------------------------------------------------------------------
-            // Mechanic.RescuedEye (patch N10.3, polish note 4): the special dialogue of a Mechanic rescued on the Eye route (EyeKillSeen on, no DungeonFork).
-            // It comes FIRST (priority 7, above Mechanic.SuperWeaponIntro 6): the Mechanic says it in the first conversation after her rescue, with the "!"
-            // until this player has had that conversation (the per-player seen rule, N10.2); the Condition itself also ends once this player has seen it, so from
-            // the next conversation Mechanic.SuperWeaponIntro (or the normal chat) takes over. It hands out nothing: only the entry that is active when a
-            // conversation opens runs its OnTalkStart, so the scrolls are never given in this conversation. Exit: ScrollsGiven (a player who joins after the
-            // scrolls were given never gets it). Text only, placeholder wording in Localization.
+            // Mechanic.RescuedEye (patch N10.3, polish note 4; reworked in N10.3b): the special line of a Mechanic rescued on the Eye route (EyeKillSeen on,
+            // no DungeonFork). It REPLACES the vanilla rescue chat (the very first chat she ever has, ReplacesRescueChat, see ImportantDialogueGlobalNPC.PostAI)
+            // and is said once: Exit is MechanicRescued, which is already true when she is freed, so Done.Mechanic.RescuedEye latches within
+            // DialogueExitCheckTicks of the rescue and the entry never comes back. The Condition accepts vanilla's NPC.savedMech as well, because the world flag
+            // MechanicRescued is only set by the server watcher a tick after the rescue (too late for the rescue chat itself). No "!" is involved: the
+            // player opens this chat by freeing her. Priority 7 stays above Mechanic.SuperWeaponIntro (6). It hands out nothing: the scrolls are claimed in the
+            // next conversation by Mechanic.SuperWeaponIntro (once she is housed and a Dryad was talked to). Text: Ismail's own wording in Localization.
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Mechanic.RescuedEye",
                 NpcType = NPCID.Mechanic,
                 Priority = 7,
-                Condition = player => StorySystem.Get(StoryFlags.MechanicRescued) && StorySystem.Get(StoryFlags.EyeKillSeen) && !StorySystem.Get(StoryFlags.DungeonFork)
+                ReplacesRescueChat = true,
+                Condition = player => (StorySystem.Get(StoryFlags.MechanicRescued) || NPC.savedMech) && StorySystem.Get(StoryFlags.EyeKillSeen) && !StorySystem.Get(StoryFlags.DungeonFork)
                     && !StorySystem.Get(StoryFlags.ScrollsGiven) && !ImportantDialoguePlayer.HasSeen(player, "Mechanic.RescuedEye"),
-                Exit = () => StorySystem.Get(StoryFlags.ScrollsGiven)
+                Exit = () => StorySystem.Get(StoryFlags.MechanicRescued)
             });
 
             // Mechanic.SuperWeaponIntro (patch N7.1): right after her rescue the Mechanic shows "!" and explains super weapon #1 (the missile: drill,

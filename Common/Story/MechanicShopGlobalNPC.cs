@@ -28,6 +28,14 @@ namespace Factorraria.Common.Story
                 if (type == ItemID.ConveyorBeltLeft || type == ItemID.ConveyorBeltRight)
                     continue;
 
+                // N10.4 (polish note 5): the Booster Track is removed from her shop for good. Disable() is not a condition, so it stays gone after
+                // MechanicShopUnlocked too (the mod has its own cart boosters).
+                if (type == ItemID.BoosterTrack)
+                {
+                    entry.Disable();
+                    continue;
+                }
+
                 entry.AddCondition(unlocked);
             }
 

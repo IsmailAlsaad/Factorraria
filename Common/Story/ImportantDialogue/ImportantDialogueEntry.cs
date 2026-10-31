@@ -59,6 +59,13 @@ namespace Factorraria.Common.Story
         public string TextKey;
 
         /// <summary>
+        /// Optional (N10.3b). True = while this entry is active, its text REPLACES the vanilla chat line of a bound NPC's rescue (the very first chat the
+        /// freed NPC ever has). Done by ImportantDialogueGlobalNPC.PostAI on the local client; nothing else changes (no "!", no buttons are involved).
+        /// Only meaningful for the Mechanic today (NPCID.BoundMechanic turning into NPCID.Mechanic).
+        /// </summary>
+        public bool ReplacesRescueChat;
+
+        /// <summary>
         /// Optional (N10.2, polish note 2). Localization key of a REMINDER text: once the local player has seen this entry (a conversation that opened with
         /// it has ended), the chat says this instead of the normal text, until the entry's Exit turns true. Null = the normal text every time.
         /// The "!" itself disappears after the first conversation for every entry (polish note 3), with or without a reminder.
