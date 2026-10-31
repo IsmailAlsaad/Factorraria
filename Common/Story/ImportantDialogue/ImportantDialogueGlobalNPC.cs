@@ -39,7 +39,9 @@ namespace Factorraria.Common.Story
             if (player.talkNPC == npc.whoAmI)
                 return;
 
-            if (ImportantDialogueSystem.FindActive(player, npc.type, false) != null)
+            // N10.2 (polish note 3): the "!" only marks a dialogue this player has not seen yet.
+            ImportantDialogueEntry active = ImportantDialogueSystem.FindActive(player, npc.type, false);
+            if (active != null && !ImportantDialoguePlayer.HasSeen(player, active.Id))
                 ImportantDialogueSystem.DrawMark(spriteBatch, npc, screenPos);
         }
     }

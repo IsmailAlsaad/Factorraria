@@ -901,6 +901,7 @@ Dialogue: {
 		RescueMechanic.Text: oh {PlayerName}... thank you for saving me, I was trying to rescue someone proficient in machines, she was lost underground... can you help rescue her?
 		RescueMechanicOther.Text: I was trying to rescue someone proficient in machines, she was lost underground... can you help rescue her?
 		PlanWithMechanic.Text: The Mechanic and I talked, {PlayerName}. She has a plan for you. Go and see her.
+		RescueReminder: Did you find the lost mechanic?
 	}
 
 	Mechanic: {

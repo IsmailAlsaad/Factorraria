@@ -13,8 +13,9 @@ namespace Factorraria.Common.Story
     ///   Condition   when it starts (runs on the local client, may look at the local inventory)
     ///   Exit        when it ends for good (world level, checked by the server); null = never ends by itself
     ///   OnTalkStart optional, once when the player starts talking to the NPC while the entry is active
+    ///   ReminderTextKey optional (N10.2): the chat text once this player has seen the entry (a conversation that opened with it has ended); null = the same text
     ///   Button1/2   optional chat buttons (label key + click callback; ReplaceVanillaFirstButton = true takes the place of the vanilla first button)
-    /// While Condition is true and the entry is not done, the NPC shows "!" and says the same text on every click.
+    /// While Condition is true and the entry is not done, the NPC says the entry's text on every click (or the reminder, N10.2) and shows "!" until the local player has seen the entry once (N10.2).
     /// </summary>
     public static class ImportantDialogueDefinitions
     {
@@ -27,6 +28,7 @@ namespace Factorraria.Common.Story
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Dryad.RescueMechanic",
+                ReminderTextKey = ImportantDialogueEntry.KeyPrefix + "Dryad.RescueReminder",
                 NpcType = NPCID.Dryad,
                 Priority = 5,
                 Condition = player => StorySystem.Get(StoryFlags.DryadFromEye) && !StorySystem.Get(StoryFlags.DungeonFork),
@@ -38,6 +40,7 @@ namespace Factorraria.Common.Story
             ImportantDialogueRegistry.Register(new ImportantDialogueEntry
             {
                 Id = "Dryad.RescueMechanicOther",
+                ReminderTextKey = ImportantDialogueEntry.KeyPrefix + "Dryad.RescueReminder",
                 NpcType = NPCID.Dryad,
                 Priority = 5,
                 Condition = player => !StorySystem.Get(StoryFlags.DryadFromEye) && !StorySystem.Get(StoryFlags.DungeonFork),

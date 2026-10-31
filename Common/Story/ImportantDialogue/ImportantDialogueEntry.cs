@@ -58,6 +58,13 @@ namespace Factorraria.Common.Story
         /// <summary>Optional. Null = "Mods.Factorraria.Dialogue.&lt;Id&gt;.Text".</summary>
         public string TextKey;
 
+        /// <summary>
+        /// Optional (N10.2, polish note 2). Localization key of a REMINDER text: once the local player has seen this entry (a conversation that opened with
+        /// it has ended), the chat says this instead of the normal text, until the entry's Exit turns true. Null = the normal text every time.
+        /// The "!" itself disappears after the first conversation for every entry (polish note 3), with or without a reminder.
+        /// </summary>
+        public string ReminderTextKey;
+
         public bool IsDone => StorySystem.Get(StoryFlags.DoneKey(Id));
 
         public string ResolveTextKey() => TextKey ?? (KeyPrefix + Id + ".Text");
@@ -66,6 +73,8 @@ namespace Factorraria.Common.Story
         public string GetText(Player player)
         {
             string key = ResolveTextKey();
+            if (ReminderTextKey != null && player != null && ImportantDialoguePlayer.HasSeen(player, Id))
+                key = ReminderTextKey;
             string text = Language.Exists(key) ? Language.GetTextValue(key) : "[missing text: " + key + "]";
             return text.Replace("{PlayerName}", player != null ? player.name : "");
         }
