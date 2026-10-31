@@ -117,6 +117,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
                     new Item(ModContent.ItemType<MeteoritePanelItem>(), 20),
                     new Item(ModContent.ItemType<SteelScrewItem>(), 15)},
                 new Item(ModContent.ItemType<MissileThrusterItem>(), 1)));
+
+
+            Book.Add(new CustomRecipe(
+                new List<Item> {
+                    new Item(ItemID.GoldenKey, 1),
+                    new Item(ModContent.ItemType<ByriteAlloySlabItem>(), 12)},
+                new Item(ItemID.ShadowKey, 1)));
         }
     }
 }
