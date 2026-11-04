@@ -416,6 +416,22 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Select(key, true);
         }
 
+        /// <summary>
+        /// Ingredient click: types the item's plain name in the search bar (product-name filter, so the target recipe stays listed) and selects
+        /// the recipe that makes it. Client-only UI, nothing is synced. No name = plain GoTo.
+        /// </summary>
+        public void GoToAndSearch(string key, string text)
+        {
+            if (key == null) return;
+            if (string.IsNullOrWhiteSpace(text)) { GoTo(key); return; }
+
+            searchFilter = text;
+            searchBar?.SetText(text);
+            SelectedKey = key;   // Rebuild tracks the selection against the whole book, so it survives the new filter
+            Rebuild();
+            Select(key, true);
+        }
+
         void ScrollToSelected()
         {
             if (SelectedKey == null || !entryTop.TryGetValue(SelectedKey, out float top)) return;

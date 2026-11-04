@@ -1425,6 +1425,8 @@ namespace Factorraria.Common.Carts
                     Rotation = 0f;
                 }
 
+                global::Factorraria.Common.Net.CartSound.Play(global::Factorraria.Common.Net.CartSoundKind.Collide, Position); // same ding as two carts colliding
+
                 return;
             }
         }

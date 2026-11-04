@@ -18,6 +18,7 @@ namespace Factorraria.Common.Liquids
         public override void SetStaticDefaults()
         {
             Main.tileSolid[Type] = true;
+            Main.tileSolidTop[Type] = true; // platform-like top: things can drop through from below, stand on top
             Main.tileLighted[Type] = true;
             Main.tileFrameImportant[Type] = true; // tells Terraria this tile's look depends on TileFrameX/Y, not a fixed sprite
             Main.tileNoAttach[Type] = false;
@@ -112,6 +113,12 @@ namespace Factorraria.Common.Liquids
 
             Main.tile[i, j].TileFrameX = (short)(connectionMask * 18);
             Main.tile[i, j].TileFrameY = 0;
+        }
+
+        // Unhammerable: no slopes, no half blocks (the sprite and the flow logic assume a full tile).
+        public override bool Slope(int i, int j)
+        {
+            return false;
         }
 
         public override bool CreateDust(int i, int j, ref int type)

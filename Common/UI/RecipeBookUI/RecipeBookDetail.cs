@@ -31,7 +31,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         int fuelBoxOffsetX = 12;       // gap between the arrow's centre line and the fuel cell
 
         // Clickable ingredient boxes of the recipe drawn this frame (box, catalog key to jump to). Refilled every draw.
-        readonly List<(Rectangle box, string key)> navHits = new List<(Rectangle box, string key)>();
+        readonly List<(Rectangle box, string key, string text)> navHits = new List<(Rectangle box, string key, string text)>();
 
         // Revealed ingredient boxes that have NO recipe in the book (box, name to type in the search bar). Refilled every draw.
         readonly List<(Rectangle box, string text)> searchHits = new List<(Rectangle box, string text)>();
@@ -68,7 +68,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             {
                 if (!hit.box.Contains(click)) continue;
                 SoundEngine.PlaySound(SoundID.MenuTick);
-                book.GoTo(hit.key);
+                book.GoToAndSearch(hit.key, hit.text);
                 return;
             }
 
@@ -240,7 +240,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         }
 
         /// <summary>Draws cells in rows wrapped at the area's width, each row centered on the page. Returns the y below the last row.</summary>
-        static float DrawCells(SpriteBatch sb, List<Cell> cells, Rectangle area, float y, List<(Rectangle box, string key)> navHits = null, List<(Rectangle box, string text)> searchHits = null)
+        static float DrawCells(SpriteBatch sb, List<Cell> cells, Rectangle area, float y, List<(Rectangle box, string key, string text)> navHits = null, List<(Rectangle box, string text)> searchHits = null)
         {
             int size = RecipeBookLayout.DetailCell;
             int gap = RecipeBookLayout.DetailCellGap;
@@ -273,7 +273,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                         Utils.DrawBorderString(sb, cell.Count, new Vector2(box.Right - 4 - s.X, box.Bottom - 4 - s.Y), Color.White, scale);
                     }
 
-                    if (cell.NavKey != null) navHits?.Add((box, cell.NavKey));
+                    if (cell.NavKey != null) navHits?.Add((box, cell.NavKey, cell.SearchName));
                     else if (cell.SearchName != null && !cell.Hidden) searchHits?.Add((box, cell.SearchName));   // no highlight for these: only recipe jumps light up
 
                     if (!box.Contains(mouse)) continue;
