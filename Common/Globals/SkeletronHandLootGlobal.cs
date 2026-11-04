@@ -13,7 +13,6 @@ namespace Factorraria.Common.NPCs
     /// </summary>
     public class SkeletronHandLootGlobal : GlobalNPC
     {
-        public int HandDropOneIn = 6; // per hand: 6 = 1 in 6 (two hands is about 31% for at least one)
 
         public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
         {
@@ -25,7 +24,10 @@ namespace Factorraria.Common.NPCs
             if (npc.type == NPCID.SkeletronHead)
                 SkeletronHandLoot.Strip(npcLoot.Get(false));
             else if (npc.type == NPCID.SkeletronHand)
-                npcLoot.Add(ItemDropRule.Common(ItemID.SkeletronHand, HandDropOneIn));
+            {
+                int handDropOneIn = 1; // per hand: 6 = 1 in 6 (two hands is about 31% for at least one)
+                npcLoot.Add(ItemDropRule.Common(ItemID.SkeletronHand, handDropOneIn));
+            }
         }
     }
 
