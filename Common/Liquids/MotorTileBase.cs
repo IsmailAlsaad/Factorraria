@@ -42,7 +42,7 @@ namespace Factorraria.Common.Liquids
             TileObjectData.addTile(Type);
 
             // Art outside the 16px cell: 2 cells in a row (0 = Off, 1 = On), drawn facing Right and rotated with the motor. See TileOverdrawSystem.
-            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell);
+            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false);
         }
 
         // MotorMK1Tile -> .../MotorMK1Overdraw (PNG optional: a missing sheet just draws nothing).

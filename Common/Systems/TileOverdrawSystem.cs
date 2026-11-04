@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
@@ -16,12 +17,17 @@ namespace Factorraria.Common.Systems
         public int TileType;
         public Asset<Texture2D> Texture;   // null while the PNG does not exist: nothing is drawn
         public int MarginPx;
+        public bool InFront = true;        // true: drawn after all tiles (over them); false: drawn before any tile (behind them)
         public TileOverdrawSelector Select;
         public bool Warned;
     }
 
     // Draws extra art AROUND a normal 1x1 tile (pixels outside its 16x16 cell) for tiles that register with it. CLIENT ONLY: nothing here is
     // saved or sent; it only reads what every client already has (the tile frame, or the machine entity's state).
+    //
+    // InFront (per registration, default true): true draws after all tiles, so the overhang covers neighbouring tiles. false draws in the
+    // behind-tiles pass (the DrawNPCs(behindTiles: true) call vanilla makes before any tile), so every tile, the owner included, is drawn over
+    // it and the overhang only shows where nothing solid is in front of it. The entry's InFront field can also be flipped at runtime.
     //
     // Why a system and not ModTile.PostDraw: PostDraw runs inside the tile pass, so tiles drawn later paint over the overhang (and it would
     // pop out at the screen edge). Everything is drawn here after all tiles instead, over the visible area plus a small padding.
@@ -36,13 +42,30 @@ namespace Factorraria.Common.Systems
 
         readonly Dictionary<int, TileOverdrawEntry> entries = new Dictionary<int, TileOverdrawEntry>();
 
+        public override void Load()
+        {
+            if (Main.dedServ) return; // no screen on a dedicated server: the draw detour is never needed there
+            On_Main.DrawNPCs += DrawBehindTilesPass;
+        }
+
         public override void Unload()
         {
             entries.Clear();
+            if (Main.dedServ) return; // matches Load()
+            On_Main.DrawNPCs -= DrawBehindTilesPass;
         }
 
-        /// <summary>Call from the tile's SetStaticDefaults. Does nothing on a dedicated server (no screen). marginPx 0 = DefaultMarginPx.</summary>
-        public void Register(int tileType, string texturePath, TileOverdrawSelector selector, int marginPx = 0)
+        // Vanilla calls DrawNPCs(behindTiles: true) before any tile is drawn (same ride as MachineDynamicDrawSystem).
+        void DrawBehindTilesPass(On_Main.orig_DrawNPCs orig, Main self, bool behindTiles)
+        {
+            if (behindTiles)
+                DrawPass(false);
+
+            orig(self, behindTiles);
+        }
+
+        /// <summary>Call from the tile's SetStaticDefaults. Does nothing on a dedicated server (no screen). marginPx 0 = DefaultMarginPx. inFront false = draw behind tiles.</summary>
+        public void Register(int tileType, string texturePath, TileOverdrawSelector selector, int marginPx = 0, bool inFront = true)
         {
             if (Main.dedServ)
                 return;
@@ -54,17 +77,25 @@ namespace Factorraria.Common.Systems
                 TileType = tileType,
                 Texture = texture,
                 MarginPx = marginPx > 0 ? marginPx : DefaultMarginPx,
+                InFront = inFront,
                 Select = selector
             };
         }
 
         public override void PostDrawTiles()
         {
+            DrawPass(true);
+        }
+
+        // front true = the after-tiles pass, false = the behind-tiles pass. Only entries whose InFront matches are drawn.
+        void DrawPass(bool front)
+        {
             if (Main.dedServ || Main.gameMenu || entries.Count == 0)
                 return;
 
             SpriteBatch spriteBatch = Main.spriteBatch;
             bool batchBegun = false;
+            bool ownBatch = false;
 
             VisibleTileScan.GetRange(ScanPaddingTiles, out int left, out int right, out int top, out int bottom);
 
@@ -73,7 +104,7 @@ namespace Factorraria.Common.Systems
                 for (int y = top; y <= bottom; y++)
                 {
                     Tile tile = Framing.GetTileSafely(x, y);
-                    if (!tile.HasTile || !entries.TryGetValue(tile.TileType, out TileOverdrawEntry entry) || entry.Texture == null)
+                    if (!tile.HasTile || !entries.TryGetValue(tile.TileType, out TileOverdrawEntry entry) || entry.Texture == null || entry.InFront != front)
                         continue;
 
                     if (!entry.Select(x, y, tile, out int cell, out float rotation) || cell < 0)
@@ -94,8 +125,16 @@ namespace Factorraria.Common.Systems
 
                     if (!batchBegun)
                     {
-                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
                         batchBegun = true;
+                        try
+                        {
+                            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                            ownBatch = true;
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // a SpriteBatch is already open here (behind pass): draw into it and leave it open
+                        }
                     }
 
                     Vector2 center = new Vector2(x * 16 + 8, y * 16 + 8) - Main.screenPosition;
@@ -104,7 +143,7 @@ namespace Factorraria.Common.Systems
                 }
             }
 
-            if (batchBegun)
+            if (ownBatch)
                 spriteBatch.End();
         }
     }

@@ -37,7 +37,7 @@ namespace Factorraria.Common.Liquids
             PipeTierRegistry.Register(Type, MaxFlowRate);
 
             // Art outside the 16px cell: one cell per connection mask (16 cells in a row), see TileOverdrawSystem.
-            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell);
+            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false);
         }
 
         // PipeMK1Tile -> .../PipeMK1Overdraw (PNG optional: a missing sheet just draws nothing).
