@@ -1309,7 +1309,7 @@ tModLoader/other bases -> project types:
     +Enabled:bool +SpawnChancePerTile:double +LinkedChance:double +ChestChance:double +TerrariumChance:double +GoldChestShare:double +MinSpacingTiles:int +MaxCartsPerTrack:int +FlatMarginPx:int +HeadroomRowsMargin:int +OreSlots:int +OreMin:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
 **OilWorldGen.cs** uses: OilLiquid
   class OilWorldGen : ModSystem
-    +Enabled:bool +PoolDepth:int +FloorThickness:int +RimMargin:int +MinPoolDepthHere:int +PocketAttemptsPerTile:double +PocketExponent:double +PocketMinDepthFraction:double +PocketRadiusXMin:double +PocketRadiusXMax:double +PocketRadiusYMin:double +PocketRadiusYMax:double +PocketMaxCells:int +ExcludeHive:bool +PoolFraction:double +ShellThickness:int +ShellFullFraction:double +ShellEndFraction:double +OvalInset:int +ScanMarginTop:int +ScanMarginBottom:int +MinColumnHeight:int +SmoothRadius:int +PocketMaxChance:double +PocketChanceExponent:double +PocketCellsBottom:int +PocketCellsTop:int +MaxLiquidBodyCells:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
+    +Enabled:bool +PoolDepth:int +FloorThickness:int +RimMargin:int +MinPoolDepthHere:int +PocketAttemptsPerTile:double +PocketExponent:double +PocketMinDepthFraction:double +PocketRadiusXMin:double +PocketRadiusXMax:double +PocketRadiusYMin:double +PocketRadiusYMax:double +PocketMaxCells:int +ExcludeHive:bool +PoolFraction:double +ShellThickness:int +ShellFullFraction:double +ShellEndFraction:double +OvalInset:int +ScanMarginTop:int +ScanMarginBottom:int +MinColumnHeight:int +SmoothRadius:int +PocketMaxChance:double +PocketChanceExponent:double +PocketCellsBottom:int +PocketCellsTop:int +MaxLiquidBodyCells:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov] +PostWorldGen()[ov]
 **PostWorldGenEdits.cs** uses: CoalTile
   class PostWorldGenEdits : ModSystem
     +Enabled:bool[s] +PostWorldGen()[ov]
@@ -1346,15 +1346,15 @@ tModLoader/other bases -> project types:
     +AppliesToEntity(Item,bool)[ov] +CanUseItem(Item,Player)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
 
 ### Content/Items/Conveyors/
-**ClockwisePriorityConveyor.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyor, FactorrariaNet
+**ClockwisePriorityConveyor.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyor, FactorrariaNet, VanillaConveyorGlobalItem
   class ClockwisePriorityConveyor : ModItem
     +CanRightClick()[ov] +RightClick(Player)[ov] +ConsumeItem(Player)[ov]
-**CounterClockwisePriorityConveyor.cs** uses: ClockwisePriorityConveyor, CounterClockwisePriorityConveyorTile, FactorrariaNet
+**CounterClockwisePriorityConveyor.cs** uses: ClockwisePriorityConveyor, CounterClockwisePriorityConveyorTile, FactorrariaNet, VanillaConveyorGlobalItem
   class CounterClockwisePriorityConveyor : ModItem
     +CanRightClick()[ov] +RightClick(Player)[ov] +ConsumeItem(Player)[ov]
 **VanillaConveyorGlobalItem.cs** uses: FactorrariaNet
   class VanillaConveyorGlobalItem : GlobalItem
-    +AppliesToEntity(Item,bool)[ov] +CanRightClick(Item)[ov] +RightClick(Item,Player)[ov] +ConsumeItem(Item,Player)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
+    +AppliesToEntity(Item,bool)[ov] +CanRightClick(Item)[ov] +RightClick(Item,Player)[ov] +MarkSwap()[s] +ConsumeUnlessSwapping()[s] +ConsumeItem(Item,Player)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
 
 ### Content/Items/Discovery/
 **ClosedScrollItem.cs** uses: RecipeParchmentItem, ScrollPools

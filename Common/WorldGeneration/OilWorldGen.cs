@@ -751,20 +751,46 @@ namespace Factorraria.Common.WorldGeneration
             if (poolCellList.Count == 0)
                 return;
 
+            CleanPool("restore pass");
+        }
+
+        // PostWorldGen runs after the last pass of every mod (ours is the last of ours, but another mod may add passes after it), so this is the
+        // final word on the pool: only oil is left in it.
+        public override void PostWorldGen()
+        {
+            if (poolCellList.Count == 0)
+                return;
+
+            CleanPool("post worldgen");
+        }
+
+        // Keeps only oil in the pool: any tile still standing in a pool or pocket cell (a chest, a life crystal, asphalt, a block, a torch...)
+        // is removed whole, every pool cell becomes a full tile of oil again, and foreign liquid above the pool is swept.
+        private void CleanPool(string stage)
+        {
             int oilType = ModLiquidLib.ModLoader.LiquidLoader.LiquidType<OilLiquid>();
             int fixedCells = 0;
-            int teamBlocksRemoved = 0;
+            int mergeBlocksRemoved = 0;
+            int objectsRemoved = 0;
+            int blocksRemoved = 0;
+            List<Point> reframe = new List<Point>();
+
             foreach (Point p in poolCellList)
             {
                 Tile tile = Main.tile[p.X, p.Y];
                 if (tile.HasTile)
                 {
-                    // A team block in a pool cell is what oil leaves when it meets another liquid: take it out, the cell becomes oil again.
-                    if (!IsLiquidMergeBlock(tile.TileType))
-                        continue;
+                    int type = tile.TileType;
+                    if (IsLiquidMergeBlock(type))
+                        mergeBlocksRemoved++;
+                    else if (Main.tileSolid[type])
+                        blocksRemoved++;
+                    else
+                        objectsRemoved++;
 
+                    RemoveObjectAt(p.X, p.Y);
                     tile.HasTile = false;
-                    teamBlocksRemoved++;
+                    reframe.Add(p);
                 }
 
                 if (tile.LiquidType != oilType || tile.LiquidAmount < byte.MaxValue)
@@ -775,9 +801,13 @@ namespace Factorraria.Common.WorldGeneration
                 }
             }
 
+            foreach (Point p in reframe)
+                WorldGen.SquareTileFrame(p.X, p.Y, true);
+
             int sweptLate = SweepForeignLiquid(oilType);
-            Mod.Logger.Info("[OilGen] restore pass: re-applied oil to " + fixedCells + " of " + poolCellList.Count + " pool cells, removed " + teamBlocksRemoved
-                + " merge blocks, swept " + sweptLate + " foreign liquid cells above the pool");
+            Mod.Logger.Info("[OilGen] " + stage + ": re-applied oil to " + fixedCells + " of " + poolCellList.Count + " pool cells, removed "
+                + mergeBlocksRemoved + " merge blocks, " + blocksRemoved + " other blocks and " + objectsRemoved + " objects (chests, crystals...) from the pool, swept "
+                + sweptLate + " foreign liquid cells above the pool");
         }
 
         // Runs after every other worldgen pass: shows whether a later pass changed the liquid we wrote.
