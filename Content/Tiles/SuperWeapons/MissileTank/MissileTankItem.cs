@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using Factorraria.Common.SuperWeapons;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -25,5 +26,8 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
             Item.value = Item.buyPrice(gold: 1);
             Item.createTile = ModContent.TileType<MissileTankTile>();
         }
+
+        // No placing in mid-air: the part needs something touching its footprint (see SuperWeaponPlacement).
+        public override bool CanUseItem(Player player) => SuperWeaponPlacement.CanPlacePart(player, Item);
     }
 }

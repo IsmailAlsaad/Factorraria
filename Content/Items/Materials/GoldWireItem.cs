@@ -30,6 +30,7 @@ namespace Factorraria.Content.Items.Materials
             Item.useTime = 5;
             Item.useStyle = ItemUseStyleID.Swing;
             Item.consumable = true;
+            Item.tileBoost = 3;   // +3 tiles of placing range (the client range check and the server's FactorrariaNet.InReach both read it)
         }
 
         public override bool CanUseItem(Player player)

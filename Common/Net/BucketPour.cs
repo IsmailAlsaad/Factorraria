@@ -437,6 +437,20 @@ namespace Factorraria.Common.Net
             return BucketPour.IsBottomless(type);
         }
 
+        // The vanilla text says the liquid can be poured out; here a bucket goes into machines. Matches the phrase inside any tooltip line,
+        // so it also catches the bottomless buckets' lines.
+        public override void ModifyTooltips(Item item, System.Collections.Generic.List<TooltipLine> tooltips)
+        {
+            string oldText = "Can be poured out";
+            string newText = "Can be poured into a machine";
+
+            foreach (TooltipLine line in tooltips)
+            {
+                if (line.Text != null && line.Text.IndexOf(oldText, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    line.Text = line.Text.Replace(oldText, newText, System.StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
         public override bool CanUseItem(Item item, Player player)
         {
             if (BucketPour.TryPourAtCursor(player, item))

@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-01 | 382 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-04 | 379 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(74) BaseMachine(50) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(12)
+FactorrariaNet(76) BaseMachine(50) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(12)
 
 ## Inheritance
 Project bases -> derived:
@@ -38,11 +38,11 @@ tModLoader/other bases -> project types:
 - GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
 - UIElement (12): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - GlobalNPC (11): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
-- GlobalItem (10): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, IceBoomerangGlobalItem, MagicMaterializerItemTooltip, RoboticArmDropCapture, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
-- ModPlayer (10): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
-- ModProjectile (6): IceBoomerangProjectile, IceCrystalBlastProjectile, IceCrystalProjectile, MechSuitArmProjectile, MechanicalArmProjectile, SuperWeaponMissile
+- ModPlayer (11): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
+- GlobalItem (10): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
+- ModProjectile (3): MechSuitArmProjectile, MechanicalArmProjectile, SuperWeaponMissile
 - ModLiquid (2): FuelLiquid, OilLiquid
 - ModLiquidFall (2): FuelLiquidFall, OilLiquidFall
 - UIPanel (2): RecipeBrowserPanel, RecipeElement
@@ -503,7 +503,7 @@ tModLoader/other bases -> project types:
   static class BucketPour
     +BucketUnits:float[s] +Reset()[s] +TryGetBucketLiquid(Item,out int)[s] +IsBottomless(int)[s] +TryFindMachineTank(BaseMachine,int,out LiquidStack,out int)[s] +CanPourCart(Cart,int)[s] +TryPourAtCursor(Player,Item)[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +ClientTick()[s]
   class BucketPourGlobalItem : GlobalItem
-    +AppliesToEntity(Item,bool)[ov] +CanUseItem(Item,Player)[ov]
+    +AppliesToEntity(Item,bool)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov] +CanUseItem(Item,Player)[ov]
   class BucketPourSystem : ModSystem
     +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
 **CartCargoNet.cs** uses: FactorrariaNet
@@ -1066,6 +1066,9 @@ tModLoader/other bases -> project types:
 **SuperWeaponMissile.cs** uses: BaseMachine, SuperWeaponEffectKind, SuperWeaponNet, SuperWeaponSystem, WallShieldGlobalNPC
   class SuperWeaponMissile : ModProjectile
     +ArtPath:string[c] +Texture:string[ov] +Unload()[ov] +CanHitNPC(NPC)[ov] +CanHitPlayer(Player)[ov] +CanHitPvp(Player)[ov] +AI()[ov] +PreDraw(ref Color)[ov] +AnyInFlight()[s]
+**SuperWeaponPlacement.cs** uses: FactorrariaNet, MissileDrillTile, MissileTankTile, MissileThrusterTile
+  static class SuperWeaponPlacement
+    +CanPlacePart(Player,Item)[s]
 **SuperWeaponSystem.cs** uses: MissileDrillTile, MissileTankTile, MissileTankTileEntity, MissileThrusterTile, SuperWeaponAssembly, SuperWeaponEffectKind, SuperWeaponMissile, SuperWeaponNet, SuperWeaponState, SuperWeaponTrigger, TriggerCandidate, WallShieldGlobalNPC
   class SuperWeaponSystem : ModSystem
     +TriggerCheckTicks:int +IgniteTicks:int +MissileAccel:float +MissileMaxSpeedPx:float +MissileMaxRangeTiles:int +HitDistancePx:float +SuppressPartDrops:bool +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindWall()[s] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +IsPartTile(int)[s]
@@ -1166,6 +1169,9 @@ tModLoader/other bases -> project types:
 **RecipeSystem.cs** uses: RecipeBook
   class RecipeSystem : ModSystem
     +AddRecipes()[ov]
+**SkeletronHandDropGlobalItem.cs**
+  class SkeletronHandDropGlobalItem : GlobalItem
+    +AppliesToEntity(Item,bool)[ov] +OnSpawn(Item,IEntitySource)[ov]
 **VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, Factorraria, FurnaceOffsetConfig, GhostDiagnostics, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem
   class VirtualItemSystem : ModSystem
     +tileItemMap:Dictionary<Point, VirtualItem>[s] +vItemsById:Dictionary<int, VirtualItem>[s] +WorldItemsConverted:int[s] +PlayerPickups:int[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +AddReplica(VirtualItem)[s] +TryGetById(int,out VirtualItem)[s] +ForgetId(VirtualItem)[s] +Describe()[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +SyncWorldItem(int,string)[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +ReplaceFilterNetworks(List<KeyValuePair<int, List<Point>>>)[s] +TryGetConveyorFilter(int,int,out int)[s]
@@ -1449,11 +1455,9 @@ tModLoader/other bases -> project types:
 **MechanicsBagItem.cs**
   class MechanicsBagItem : ModItem
     +Texture:string[ov] +DisplayName:LocalizedText[ov] +Tooltip:LocalizedText[ov]
-
-### Content/Items/Weapons/IceBoomerang/
-**IceBoomerangGlobalItem.cs** uses: IceBoomerangProjectile, IceBoomerangTuning
-  class IceBoomerangGlobalItem : GlobalItem
-    +AppliesToEntity(Item,bool)[ov] +CanUseItem(Item,Player)[ov] +Shoot(Item,Player,EntitySource_ItemUse_WithAmmo,Vector2,Vector2,int,int,float)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
+**MechanicsBagPlayer.cs** uses: FactorrariaNet, MechanicsBagItem
+  class MechanicsBagPlayer : ModPlayer
+    +PostUpdate()[ov]
 
 ### Content/Items/Wires/
 **CopperWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
@@ -1500,27 +1504,6 @@ tModLoader/other bases -> project types:
 **MechSuitArmProjectile.cs** uses: MechSuitPlayer, MechanicalArmIK
   class MechSuitArmProjectile : ModProjectile
     +AnchorTile:Point +ArmBendSign:float +Latched:bool +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +PreDraw(ref Color)[ov]
-
-### Content/Projectiles/Weapons/IceBoomerang/
-**IceBoomerangFx.cs**
-  static class IceBoomerangFx
-    +Burst(Vector2,int,float,float)[s] +Ring(Vector2,int,float,float)[s] +Gather(Vector2,float)[s] +PlayFormed(Vector2)[s] +PlayBlast(Vector2,int)[s] +PlayCatch(Vector2)[s] +PlayShatter(Vector2)[s]
-**IceBoomerangProjectile.cs** uses: IceBoomerangFx, IceBoomerangTuning, IceCrystalBlastProjectile, IceCrystalProjectile
-  class IceBoomerangProjectile : ModProjectile
-    +Texture:string[ov] +Load()[ov] +Unload()[ov] +CanDamage()[ov] +Colliding(Rectangle,Rectangle)[ov] +AI()[ov] +OnTileCollide(Vector2)[ov] +OnHitNPC(NPC,HitInfo,int)[ov] +PreDraw(ref Color)[ov]
-    enum Phase
-      {Outbound, Settling, Chain, Returning, Spent}
-**IceBoomerangTuning.cs**
-  static class IceBoomerangTuning
-    +ThrowSpeed:float[s] +MinThrowRange:float[s] +MaxThrowRange:float[s] +SettleTicks:int[s] +BrakeDistance:float[s] +BrakeMinSpeed:float[s] +ChainSpeedGainPerLevel:float[s] +ChainMaxSpeed:float[s] +ChainMaxTargetDistance:float[s] +DamageGainPerLevel:float[s] +BlastRadius:float[s] +BlastDamageMultiplier:float[s] +BlastLifeTicks:int[s] +BlastFlashTicks:int[s] +FlightMaxTicks:int[s] +MaxCrystals:int[s] +CrystalLifeTicks:int[s] +CrystalPopTicks:int[s] +ExpiryWarnTicks:int[s] +CrystalSheetFrames:int[s] +CrystalBounceLifeLossTicks:int[s] +HaloIntervalTicks:int[s] +HaloLifeTicks:int[s] +HaloMaxScale:float[s] +HaloAlpha:float[s] +ChillTicks:int[s] +ChillRefreshBelowTicks:int[s] +ChillCheckInterval:int[s]
-  static class IceBoomerangChill
-    +Apply(NPC)[s]
-**IceCrystalBlastProjectile.cs** uses: IceBoomerangChill, IceBoomerangFx, IceBoomerangTuning, IceCrystalProjectile
-  class IceCrystalBlastProjectile : ModProjectile
-    +Texture:string[ov] +Colliding(Rectangle,Rectangle)[ov] +AI()[ov] +OnHitNPC(NPC,HitInfo,int)[ov] +PreDraw(ref Color)[ov]
-**IceCrystalProjectile.cs** uses: IceBoomerangChill, IceBoomerangFx, IceBoomerangTuning
-  class IceCrystalProjectile : ModProjectile
-    +Texture:string[ov] +Load()[ov] +Unload()[ov] +RandomFrame()[s] +RegisterBounce(Projectile)[s] +EvictForNewCrystal(int)[s] +AI()[ov] +OnKill(int)[ov] +PreDraw(ref Color)[ov]
 
 ### Content/Tiles/Conveyors/
 **ClockwisePriorityConveyorTile.cs** uses: ConveyorFilterNet, VirtualItemSystem
@@ -1824,17 +1807,17 @@ tModLoader/other bases -> project types:
     +Texture:string[ov] +HitWire(int,int)[ov]
 
 ### Content/Tiles/SuperWeapons/MissileDrill/
-**MissileDrillItem.cs** uses: MissileDrillTile
+**MissileDrillItem.cs** uses: MissileDrillTile, SuperWeaponPlacement
   class MissileDrillItem : ModItem
-    +Texture:string[ov]
+    +Texture:string[ov] +CanUseItem(Player)[ov]
 **MissileDrillTile.cs** uses: Direction, MissileDrillItem, OverhangDrawSystem
   class MissileDrillTile : ModTile
     +Texture:string[ov] +PreDraw(int,int,SpriteBatch)[ov]
 
 ### Content/Tiles/SuperWeapons/MissileTank/
-**MissileTankItem.cs** uses: MissileTankTile
+**MissileTankItem.cs** uses: MissileTankTile, SuperWeaponPlacement
   class MissileTankItem : ModItem
-    +Texture:string[ov]
+    +Texture:string[ov] +CanUseItem(Player)[ov]
 **MissileTankRegistry.cs** uses: LiquidFuelTable, LiquidTypeRegistry
   static class MissileTankRegistry
     +LiquidFuels:LiquidFuelTable[s] +Build()[s]
@@ -1849,9 +1832,9 @@ tModLoader/other bases -> project types:
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]
 
 ### Content/Tiles/SuperWeapons/MissileThruster/
-**MissileThrusterItem.cs** uses: MissileThrusterTile
+**MissileThrusterItem.cs** uses: MissileThrusterTile, SuperWeaponPlacement
   class MissileThrusterItem : ModItem
-    +Texture:string[ov]
+    +Texture:string[ov] +CanUseItem(Player)[ov]
 **MissileThrusterTile.cs** uses: Direction, MissileThrusterItem, OverhangDrawSystem
   class MissileThrusterTile : ModTile
     +Texture:string[ov] +PreDraw(int,int,SpriteBatch)[ov]

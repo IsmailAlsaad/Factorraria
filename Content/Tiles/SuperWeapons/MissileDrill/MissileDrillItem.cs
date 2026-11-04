@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using Factorraria.Common.SuperWeapons;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -27,5 +28,8 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileDrill
             Item.createTile = ModContent.TileType<MissileDrillTile>();
             Item.placeStyle = 0;
         }
+
+        // No placing in mid-air: the part needs something touching its footprint (see SuperWeaponPlacement).
+        public override bool CanUseItem(Player player) => SuperWeaponPlacement.CanPlacePart(player, Item);
     }
 }

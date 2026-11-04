@@ -76,6 +76,23 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
                 .AddTile(TileID.HeavyWorkBench)
                 .Register();
 
+            // Booster Track (post-Mech): 100 Minecart Track + one mechanical boss piece
+            Recipe.Create(ItemID.BoosterTrack, 100)
+                .AddIngredient(ItemID.MinecartTrack, 100)
+                .AddIngredient(ItemID.MechanicalWheelPiece, 1)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+            Recipe.Create(ItemID.BoosterTrack, 100)
+                .AddIngredient(ItemID.MinecartTrack, 100)
+                .AddIngredient(ItemID.MechanicalWagonPiece, 1)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+            Recipe.Create(ItemID.BoosterTrack, 100)
+                .AddIngredient(ItemID.MinecartTrack, 100)
+                .AddIngredient(ItemID.MechanicalBatteryPiece, 1)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+
             //// Iron pipe
             //Recipe.Create(ModContent.ItemType<GoldWireItem>(), 2)
             //    .AddIngredient(ModContent.ItemType<GoldPlateItem>(), 1)
