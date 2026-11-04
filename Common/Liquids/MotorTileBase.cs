@@ -23,6 +23,7 @@ namespace Factorraria.Common.Liquids
             Main.tileFrameImportant[Type] = true;
             Main.tileLighted[Type] = true;
             Main.tileSolid[Type] = true;
+            Main.tileSolidTop[Type] = true; // platform-like top: things can drop through from below, stand on top
             Main.tileNoAttach[Type] = false;
 
             TileObjectData.newTile.CopyFrom(TileObjectData.Style1x1);
@@ -72,6 +73,13 @@ namespace Factorraria.Common.Liquids
         public override bool CreateDust(int i, int j, ref int type)
         {
             // make a custom dust later
+            return false;
+        }
+
+
+        // Unhammerable: no slopes, no half blocks (the sprite and the flow logic assume a full tile).
+        public override bool Slope(int i, int j)
+        {
             return false;
         }
     }
