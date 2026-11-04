@@ -37,11 +37,20 @@ namespace Factorraria.Common.Liquids
             PipeTierRegistry.Register(Type, MaxFlowRate);
 
             // Art outside the 16px cell: one cell per connection mask (16 cells in a row), see TileOverdrawSystem.
-            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false);
+            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell);
         }
 
         // PipeMK1Tile -> .../PipeMK1Overdraw (PNG optional: a missing sheet just draws nothing).
         protected virtual string OverdrawTexturePath => Texture.EndsWith("Tile") ? Texture.Substring(0, Texture.Length - 4) + "Overdraw" : Texture + "_Overdraw";
+
+        // Placement hologram: the pipe is not placed yet, so the mask is worked out from its neighbours exactly like ReframeSelf does.
+        static bool SelectPreviewCell(int i, int j, Tile tile, out int cell, out float rotation)
+        {
+            rotation = 0f;
+            PipeConnectionHelper.GetOpenSides(i, j, out bool up, out bool down, out bool left, out bool right);
+            cell = (up ? 1 : 0) | (down ? 2 : 0) | (left ? 4 : 0) | (right ? 8 : 0);
+            return true;
+        }
 
         // The tile frame is TileFrameX = connectionMask * 18 (ReframeSelf), so the mask is the cell index.
         static bool SelectOverdrawCell(int i, int j, Tile tile, out int cell, out float rotation)

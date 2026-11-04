@@ -42,11 +42,19 @@ namespace Factorraria.Common.Liquids
             TileObjectData.addTile(Type);
 
             // Art outside the 16px cell: 2 cells in a row (0 = Off, 1 = On), drawn facing Right and rotated with the motor. See TileOverdrawSystem.
-            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false);
+            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell);
         }
 
         // MotorMK1Tile -> .../MotorMK1Overdraw (PNG optional: a missing sheet just draws nothing).
         protected virtual string OverdrawTexturePath => Texture.EndsWith("Tile") ? Texture.Substring(0, Texture.Length - 4) + "Overdraw" : Texture + "_Overdraw";
+
+        // Placement hologram: a new motor is Off and faces Right (MotorTileEntityBase.Facing default).
+        static bool SelectPreviewCell(int i, int j, Tile tile, out int cell, out float rotation)
+        {
+            cell = 0;
+            rotation = 0f;
+            return true;
+        }
 
         // Same state and rotation the motor's own visual uses (MachineVisualOverride.PreDraw). No entity on this client yet = draw nothing.
         static bool SelectOverdrawCell(int i, int j, Tile tile, out int cell, out float rotation)
