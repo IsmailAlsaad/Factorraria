@@ -44,6 +44,7 @@ namespace Factorraria.Content.Projectiles.Hooks
         // Owner only: how many AI updates the owner keeps a released arm alive, so the state packet (netUpdate) goes out before it is removed.
         int ReleaseKillTicks = 4;
         int releaseTicks;
+        uint launchTick;   // owner only: the game update the arm was launched in (see ApplyPush)
         const float RetractSpeed = 14f; // pixels per AI tick while pulling back in
 
         public override void Load()
@@ -115,6 +116,7 @@ namespace Factorraria.Content.Projectiles.Hooks
                 float throwAngle = Projectile.velocity.ToRotation();
                 Projectile.localAI[0] = throwAngle + (MathHelper.PiOver2 * Projectile.ai[1]);
                 Projectile.localAI[1] = 1f;
+                launchTick = Main.GameUpdateCount;
                 Projectile.netUpdate = true;
             }
 
@@ -238,7 +240,9 @@ namespace Factorraria.Content.Projectiles.Hooks
             // then a snap. Send the player every tick while pushing (the projectile's AI runs after the players, so the position is current).
             FactorrariaNet.SyncPlayerNow(player);
 
-            if (Main.myPlayer == Projectile.owner && PlayerInput.Triggers.JustPressed.Grapple)
+            // The press that launched the arm is still "just pressed" for the rest of that game update. An arm fired at something right next to
+            // the player (the ground under their feet) latches in that very update, so without this check it retracted straight away.
+            if (Main.myPlayer == Projectile.owner && Main.GameUpdateCount != launchTick && PlayerInput.Triggers.JustPressed.Grapple)
             {
                 BeginRetract();
             }

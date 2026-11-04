@@ -979,19 +979,13 @@ namespace Factorraria.Common.Carts
             return name != "Chain" ? GetChainTexture("Chain") : null; // null = plain line fallback
         }
 
-        /// <summary>Draws the chain between two neighbouring carts, from the edge of one to the edge of the other (nothing if they overlap).</summary>
+        /// <summary>Draws the chain between the hitch points of two neighbouring carts. It is always drawn, however close the carts are.</summary>
         private static void DrawChainLink(Cart front, Cart back)
         {
             Vector2 a = front.Position + CartGeometry.Up(front) * ChainHitchHeight;
             Vector2 b = back.Position + CartGeometry.Up(back) * ChainHitchHeight;
             Vector2 between = b - a;
             float length = between.Length();
-            float halfWidth = CartPhysics.HitboxWidth * 0.5f;
-
-            if (length <= halfWidth * 2f + 2f)
-            {
-                return; // the carts overlap or touch (for example after a bump): no room for a chain
-            }
 
             Vector2 middle = (a + b) * 0.5f;
             const float cullPadding = 128f;
@@ -1001,7 +995,9 @@ namespace Factorraria.Common.Carts
                 return;
             }
 
-            Vector2 direction = between / length;
+            // Touching or overlapping carts still get their link. If the two hitch points coincide there is no direction between them, so the
+            // front cart's heading is used.
+            Vector2 direction = length > 0.001f ? between / length : new Vector2((float)Math.Cos(front.Rotation), (float)Math.Sin(front.Rotation));
             //Vector2 from = a + direction * halfWidth;
             //Vector2 to = b - direction * halfWidth;
             Vector2 from = a;
@@ -1017,15 +1013,17 @@ namespace Factorraria.Common.Carts
             }
 
             // Pieces are stretched a little so they fit the gap exactly (no overshoot at either end).
-            int pieces = Math.Max(1, (int)Math.Ceiling(distance / texture.Height));
-            float pieceLength = distance / pieces;
+            // A gap shorter than one piece (carts close together) gets one whole piece centred between the hitches instead of a squashed sliver.
+            bool tooShort = distance < texture.Height;
+            int pieces = tooShort ? 1 : Math.Max(1, (int)Math.Ceiling(distance / texture.Height));
+            float pieceLength = tooShort ? texture.Height : distance / pieces;
             float rotation = (float)Math.Atan2(direction.Y, direction.X) - MathHelper.PiOver2;
             Vector2 origin = new Vector2(texture.Width * 0.5f, texture.Height * 0.5f);
             Vector2 scale = new Vector2(1f, pieceLength / texture.Height);
 
             for (int i = 0; i < pieces; i++)
             {
-                Vector2 position = from + direction * (pieceLength * (i + 0.5f)) - Main.screenPosition;
+                Vector2 position = (tooShort ? middle : from + direction * (pieceLength * (i + 0.5f))) - Main.screenPosition;
                 Main.spriteBatch.Draw(texture, position, null, light, rotation, origin, scale, SpriteEffects.None, 0f);
             }
         }

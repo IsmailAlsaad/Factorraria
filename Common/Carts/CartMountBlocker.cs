@@ -13,23 +13,29 @@ namespace Factorraria.Common.Carts
     ///   1. Player.TileInteractionsUse (the world right-click handler) is skipped when the tile is a minecart track.
     ///   2. A grappling hook created by that right click is removed (see CartTrackHookBlocker).
     ///   3. Mount.SetMount refuses a cart mount while right mouse is held over a track.
-    /// Every other way of mounting (items, keybinds) and normal grappling hooks are untouched.
+    ///   4. The mount key (Player.QuickMount) with a cart equipped and no real mount to use is refused unless a track is within
+    ///      MountKeyTrackRangeTiles of the player (vanilla would otherwise latch onto a track however far away it is).
+    /// Every other way of mounting (items, other keybinds) and normal grappling hooks are untouched.
     /// Minecart tracks, booster tracks and pressure plate tracks are all TileID.MinecartTrack (different frames).
     /// </summary>
     public class CartMountBlocker : ModSystem
     {
+        public int MountKeyTrackRangeTiles = 8;   // how close (in tiles, a square around the player) a minecart track must be for the mount key to work
+
         private static int logged;
 
         public override void Load()
         {
             On_Player.TileInteractionsUse += BlockTrackInteraction;
             On_Mount.SetMount += BlockTrackMount;
+            On_Player.QuickMount += BlockFarTrackMount;
         }
 
         public override void Unload()
         {
             On_Player.TileInteractionsUse -= BlockTrackInteraction;
             On_Mount.SetMount -= BlockTrackMount;
+            On_Player.QuickMount -= BlockFarTrackMount;
         }
 
         public static bool IsTrackTile(int x, int y)
@@ -72,6 +78,53 @@ namespace Factorraria.Common.Carts
             }
 
             orig(self, m, mountedPlayer, faceLeft);
+        }
+
+        // Layer 4: the mount key. Only the cart path is gated: a player who is already mounted (the key dismounts) or who has a real mount
+        // to use (QuickMount_GetItemToUse) goes through vanilla untouched.
+        private static void BlockFarTrackMount(On_Player.orig_QuickMount orig, Player self)
+        {
+            if (self.whoAmI == Main.myPlayer && !self.mount.Active && self.QuickMount_GetItemToUse() == null && !CartMountKeyAllowed(self))
+            {
+                Log("layer 4, mount key refused (no cart equipped or no track in reach)");
+                return;
+            }
+
+            orig(self);
+        }
+
+        // A cart must sit in the minecart slot (miscEquips: pet, light pet, minecart, mount, grapple) and a track must be within range of the
+        // player. A track under the cursor that is out of range also refuses the key, in case vanilla aims at the cursor rather than the player.
+        private static bool CartMountKeyAllowed(Player player)
+        {
+            Item cart = player.miscEquips[2];
+            if (cart == null || cart.IsAir || !CartSkinTable.IsSkinItem(cart))
+            {
+                return false;
+            }
+
+            int range = ModContent.GetInstance<CartMountBlocker>().MountKeyTrackRangeTiles;
+            int playerX = (int)(player.Center.X / 16f);
+            int playerY = (int)(player.Center.Y / 16f);
+
+            if (IsTrackTile(Player.tileTargetX, Player.tileTargetY)
+                && (System.Math.Abs(Player.tileTargetX - playerX) > range || System.Math.Abs(Player.tileTargetY - playerY) > range))
+            {
+                return false;
+            }
+
+            for (int x = playerX - range; x <= playerX + range; x++)
+            {
+                for (int y = playerY - range; y <= playerY + range; y++)
+                {
+                    if (IsTrackTile(x, y))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public static bool IsTrackRightClick(Player player)
