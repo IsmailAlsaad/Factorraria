@@ -86,23 +86,17 @@ namespace Factorraria.Common.Carts
         {
             if (self.whoAmI == Main.myPlayer && !self.mount.Active && self.QuickMount_GetItemToUse() == null && !CartMountKeyAllowed(self))
             {
-                Log("layer 4, mount key refused (no cart equipped or no track in reach)");
+                Log("layer 4, mount key refused (no track in reach)");
                 return;
             }
 
             orig(self);
         }
 
-        // A cart must sit in the minecart slot (miscEquips: pet, light pet, minecart, mount, grapple) and a track must be within range of the
-        // player. A track under the cursor that is out of range also refuses the key, in case vanilla aims at the cursor rather than the player.
+        // A minecart track must be within range of the player. Whether a cart is equipped does not matter here: vanilla decides what the key
+        // does with it. A track under the cursor that is out of range also refuses the key, in case vanilla aims at the cursor rather than the player.
         private static bool CartMountKeyAllowed(Player player)
         {
-            Item cart = player.miscEquips[2];
-            if (cart == null || cart.IsAir || !CartSkinTable.IsSkinItem(cart))
-            {
-                return false;
-            }
-
             int range = ModContent.GetInstance<CartMountBlocker>().MountKeyTrackRangeTiles;
             int playerX = (int)(player.Center.X / 16f);
             int playerY = (int)(player.Center.Y / 16f);
