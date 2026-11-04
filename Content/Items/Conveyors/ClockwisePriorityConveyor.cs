@@ -40,6 +40,7 @@ namespace Factorraria.Content.Items.Conveyors
         // 2. Perform the transformation
         public override void RightClick(Player player)
         {
+            VanillaConveyorGlobalItem.MarkSwap();
             int currentStack = Item.stack;
             bool isFavorited = Item.favorited;
 
@@ -56,6 +57,6 @@ namespace Factorraria.Content.Items.Conveyors
         }
 
         // 3. Prevent tModLoader from consuming 1 item from the stack upon right-click
-        public override bool ConsumeItem(Player player) => false;
+        public override bool ConsumeItem(Player player) => VanillaConveyorGlobalItem.ConsumeUnlessSwapping();
     }
 }

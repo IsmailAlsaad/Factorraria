@@ -22,6 +22,7 @@ namespace Factorraria.Content.Items.Conveyors
 
         public override void RightClick(Item item, Player player)
         {
+            MarkSwap();
             int currentStack = item.stack;
             bool isFavorited = item.favorited;
 
@@ -38,8 +39,20 @@ namespace Factorraria.Content.Items.Conveyors
             // RightClick runs on the clicking client only, so the server's copy of this slot still holds the old type. Send the slot.
             FactorrariaNet.SyncInventoryItem(player, item);
         }
+        static bool skipNextConsume;
 
-        public override bool ConsumeItem(Item item, Player player) => false;
+        public static void MarkSwap() => skipNextConsume = true;
+
+        public static bool ConsumeUnlessSwapping()
+        {
+            if (!skipNextConsume)
+                return true;
+
+            skipNextConsume = false;
+            return false;
+        }
+
+        public override bool ConsumeItem(Item item, Player player) => ConsumeUnlessSwapping();
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
