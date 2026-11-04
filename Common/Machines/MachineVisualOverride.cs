@@ -540,7 +540,7 @@ namespace Factorraria.Common.Machines
         }
 
         // Assumes the motor art is drawn facing Right at 0 rotation — Facing's default value.
-        static float GetMotorRotation(Direction facing) => facing switch
+        public static float GetMotorRotation(Direction facing) => facing switch
         {
             Direction.Right => 0f,
             Direction.Down => MathHelper.PiOver2,

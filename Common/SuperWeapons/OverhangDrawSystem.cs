@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
+using Factorraria.Common.Systems;
 using Terraria.ObjectData;
 
 namespace Factorraria.Common.SuperWeapons
@@ -111,17 +112,7 @@ namespace Factorraria.Common.SuperWeapons
             SpriteBatch spriteBatch = Main.spriteBatch;
             bool batchBegun = false;
 
-            float zoom = Main.GameViewMatrix.Zoom.X;
-            if (zoom < 0.01f)
-                zoom = 1f;
-            float centerX = Main.screenPosition.X + Main.screenWidth * 0.5f;
-            float centerY = Main.screenPosition.Y + Main.screenHeight * 0.5f;
-            float halfWidth = Main.screenWidth / zoom * 0.5f;
-            float halfHeight = Main.screenHeight / zoom * 0.5f;
-            int left = Math.Max(0, (int)((centerX - halfWidth) / 16f) - ScanPaddingTiles);
-            int right = Math.Min(Main.maxTilesX - 1, (int)((centerX + halfWidth) / 16f) + ScanPaddingTiles);
-            int top = Math.Max(0, (int)((centerY - halfHeight) / 16f) - ScanPaddingTiles);
-            int bottom = Math.Min(Main.maxTilesY - 1, (int)((centerY + halfHeight) / 16f) + ScanPaddingTiles);
+            VisibleTileScan.GetRange(ScanPaddingTiles, out int left, out int right, out int top, out int bottom);
 
             for (int x = left; x <= right; x++)
             {

@@ -35,6 +35,20 @@ namespace Factorraria.Common.Liquids
             TileObjectData.addTile(Type);
 
             PipeTierRegistry.Register(Type, MaxFlowRate);
+
+            // Art outside the 16px cell: one cell per connection mask (16 cells in a row), see TileOverdrawSystem.
+            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell);
+        }
+
+        // PipeMK1Tile -> .../PipeMK1Overdraw (PNG optional: a missing sheet just draws nothing).
+        protected virtual string OverdrawTexturePath => Texture.EndsWith("Tile") ? Texture.Substring(0, Texture.Length - 4) + "Overdraw" : Texture + "_Overdraw";
+
+        // The tile frame is TileFrameX = connectionMask * 18 (ReframeSelf), so the mask is the cell index.
+        static bool SelectOverdrawCell(int i, int j, Tile tile, out int cell, out float rotation)
+        {
+            rotation = 0f;
+            cell = tile.TileFrameX / 18;
+            return cell >= 0 && cell < 16;
         }
 
         public override bool CanPlace(int i, int j)
