@@ -69,6 +69,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             panel.Height.Set(RecipeBookLayout.PanelHeight, 0f);
             Append(panel);
             panel.Append(new RecipeBookDragHandle(this));
+            panel.Append(new RecipeBookCloseButton());   // after the drag handle: it must sit on top of it
             ApplyPosition();
 
             Rectangle l = RecipeBookLayout.ListArea;

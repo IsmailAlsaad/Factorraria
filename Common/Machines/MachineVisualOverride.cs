@@ -558,12 +558,17 @@ namespace Factorraria.Common.Machines
             if (machine == null)
             {
                 // Patch 6.1: a multiplayer client with no replica asks the server for it (the open request creates and shares the entity there).
-                if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient && global::Factorraria.Common.UI.MachineUIRegistry.Definitions.ContainsKey(type))
+                if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient && global::Factorraria.Common.UI.MachineUIRegistry.Definitions.ContainsKey(type) && FactorrariaNet.InReach(Main.LocalPlayer, i, j))
                     ModContent.GetInstance<global::Factorraria.Common.Systems.MachineUISystem>().RequestOpenWhenReplicaArrives(i, j);
                 return;
             }
 
             TileEntityHelper.TryGetEntityFromTile(i, j, out _, out Point16 topLeft);
+
+            // Too far to use: ignore the click. Without this the UI opened here and was closed again next frame by the keep-reach check in
+            // MachineUISystem.UpdateUI. Extra reach 0 = the rule the server applies to a new open (MachineRequest.Validate).
+            if (!MachineDetailSystem.WithinReach(Main.LocalPlayer, machine, 0f))
+                return;
 
             machine.OnRightClick(topLeft.X, topLeft.Y); // machine decides what happens
         }

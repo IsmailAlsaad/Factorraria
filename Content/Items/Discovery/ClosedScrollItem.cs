@@ -49,7 +49,13 @@ namespace Factorraria.Content.Items.Discovery
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string hint = ScrollPools.HintFor(PoolName);
-            if (hint != null) tooltips.Add(new TooltipLine(Mod, "PoolHint", hint));
+            if (hint == null) return;
+
+            // The "Right click to break the seal..." text is the item's own tooltip (line "Tooltip0"): put the notes right before it.
+            var line = new TooltipLine(Mod, "PoolHint", hint);
+            int at = tooltips.FindIndex(t => t.Name == "Tooltip0");
+            if (at >= 0) tooltips.Insert(at, line);
+            else tooltips.Add(line);
         }
 
         public override void SaveData(TagCompound tag)

@@ -33,6 +33,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
         // Clickable ingredient boxes of the recipe drawn this frame (box, catalog key to jump to). Refilled every draw.
         readonly List<(Rectangle box, string key)> navHits = new List<(Rectangle box, string key)>();
 
+        // Revealed ingredient boxes that have NO recipe in the book (box, name to type in the search bar). Refilled every draw.
+        readonly List<(Rectangle box, string text)> searchHits = new List<(Rectangle box, string text)>();
+
         public RecipeBookDetail(RecipeBookState book)
         {
             this.book = book;
@@ -69,6 +72,15 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 return;
             }
 
+            // No recipe to jump to: type the item's name in the search bar anyway (like the item-search keybind), so the click always does something.
+            foreach (var hit in searchHits)
+            {
+                if (!hit.box.Contains(click)) continue;
+                SoundEngine.PlaySound(SoundID.MenuTick);
+                book.SetSearch(hit.text);
+                return;
+            }
+
             RecipeOutputGroup g = book.SelectedGroup;
             if (g == null || g.Recipes.Count < 2) return;
 
@@ -88,6 +100,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         {
             Rectangle r = GetDimensions().ToRectangle();
             navHits.Clear();
+            searchHits.Clear();
 
             // Art entries (RecipeArtRegistry) replace the whole page with their PNG.
             if (book.SelectedArt != null)
@@ -141,7 +154,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             // An ingredient the player neither holds right now nor has crafted before stays a silhouette with "???", even
             // when a parchment taught the recipe (keeps recipe trees honest). A Crafted recipe shows everything.
             // Recipes known only from holding an input (FadedIngredient) also hide every liquid.
-            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, book.SelectedState, book.SelectedKey), area, y, navHits);
+            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, book.SelectedState, book.SelectedKey), area, y, navHits, searchHits);
 
             y += 4f;
             List<RecipeCatalog.FuelEntry> fuels = RecipeCatalog.FuelsOf(book.SelectedMachine);
@@ -182,6 +195,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             public int Stack;
             public bool Hidden;       // product not crafted yet: black silhouette, "???" on hover
             public string NavKey;     // catalog key of the recipe that makes this ingredient (null = none in the book: not clickable)
+            public string SearchName; // plain name typed into the search bar when the cell is clicked and NavKey is null (never used while Hidden)
         }
 
         // inputState != null means "these are the recipe's inputs": the reveal rule and click-to-jump apply. selfKey = the recipe on screen.
@@ -202,6 +216,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                     Stack = i.Stack,
                     Hidden = itemHidden,
                     NavKey = isInput && !itemHidden ? RecipeVisibility.FindBookRecipeFor(RecipeOutputKey.ForItem(i.Type), selfKey) : null,
+                    SearchName = isInput ? ContentSamples.ItemsByType[i.Type].Name : null,
                 });
             }
             foreach (LiquidIngredient l in liquids)
@@ -218,13 +233,14 @@ namespace Factorraria.Common.UI.RecipeBookUI
                     Name = name + " - " + string.Format(RecipeBookLayout.Text("Units"), amount),
                     Hidden = liquidHidden,
                     NavKey = isInput && !liquidHidden && !l.IsAnyWater ? RecipeVisibility.FindBookRecipeFor(RecipeOutputKey.ForLiquid(l.LiquidType), selfKey) : null,
+                    SearchName = isInput ? name : null,
                 });
             }
             return cells;
         }
 
         /// <summary>Draws cells in rows wrapped at the area's width, each row centered on the page. Returns the y below the last row.</summary>
-        static float DrawCells(SpriteBatch sb, List<Cell> cells, Rectangle area, float y, List<(Rectangle box, string key)> navHits = null)
+        static float DrawCells(SpriteBatch sb, List<Cell> cells, Rectangle area, float y, List<(Rectangle box, string key)> navHits = null, List<(Rectangle box, string text)> searchHits = null)
         {
             int size = RecipeBookLayout.DetailCell;
             int gap = RecipeBookLayout.DetailCellGap;
@@ -258,6 +274,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                     }
 
                     if (cell.NavKey != null) navHits?.Add((box, cell.NavKey));
+                    else if (cell.SearchName != null && !cell.Hidden) searchHits?.Add((box, cell.SearchName));   // no highlight for these: only recipe jumps light up
 
                     if (!box.Contains(mouse)) continue;
 
@@ -312,11 +329,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 Name = !single ? RecipeBookLayout.Text(fuel.LabelKey) : fuel.Icon.IsLiquid ? (LiquidTypeRegistry.Get(fuel.Icon.Id)?.Name ?? "") : null,
                 Hidden = hidden,
                 NavKey = hidden || !single ? null : RecipeVisibility.FindBookRecipeFor(fuel.Icon, book.SelectedKey),
+                SearchName = hidden || !single ? null : fuel.Icon.IsLiquid ? LiquidTypeRegistry.Get(fuel.Icon.Id)?.Name : ContentSamples.ItemsByType[fuel.Icon.Id].Name,
             };
 
             // DrawCells with a one-cell area draws, highlights, shows the tooltip and records the click box.
             var box = new Rectangle(area.Center.X + fuelBoxOffsetX, (int)(arrowTop + arrowLength / 2f - size / 2f), size, size);
-            DrawCells(sb, new List<Cell> { cell }, box, box.Y, navHits);
+            DrawCells(sb, new List<Cell> { cell }, box, box.Y, navHits, searchHits);
 
             string label = RecipeBookLayout.Text("Fuel");
             Vector2 labelSize = FontAssets.MouseText.Value.MeasureString(label) * 0.9f;

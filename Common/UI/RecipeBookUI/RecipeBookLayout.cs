@@ -81,6 +81,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// <summary>When dragging, at least this many pixels of the drag bar stay on screen horizontally.</summary>
         public const int DragKeepVisible = 60;
 
+        // Close "X": a square in the top border (the drag bar strip), CloseButtonPad px from the panel's right edge, centered vertically in the strip.
+        public static int CloseButtonSize = 14;
+        public static int CloseButtonPad = 6;
+        public static Rectangle CloseButton => new Rectangle(PanelWidth - CloseButtonPad - CloseButtonSize, (Margin - CloseButtonSize) / 2, CloseButtonSize, CloseButtonSize);
+
         /// <summary>Search bar: sits in the title strip (top TitleHeight px) of the left page, above ListArea.</summary>
         public static Rectangle SearchArea
         {
@@ -181,14 +186,20 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public const string StarOffHighlightedPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookStar_Off_Highlighted";
         public const string StarOnPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookStar_On";
         public const string StarOnHighlightedPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookStar_On_Highlighted";
+        public static string CloseButtonPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookClose";
+        public static string CloseButtonHoverPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookClose_Hover";
 
         static Asset<Texture2D> button, buttonHover, background;
+        static Asset<Texture2D> closeButton, closeButtonHover;
         static Asset<Texture2D> starOff, starOffHighlighted, starOn, starOnHighlighted;
         static bool loaded;
 
         public static Asset<Texture2D> Button { get { Load(); return button; } }
         public static Asset<Texture2D> ButtonHover { get { Load(); return buttonHover; } }
         public static Asset<Texture2D> Background { get { Load(); return background; } }
+        /// <summary>Close X art, or null until the PNG exists (the button then draws a placeholder X). Drawn at native size, centered.</summary>
+        public static Asset<Texture2D> CloseButton { get { Load(); return closeButton; } }
+        public static Asset<Texture2D> CloseButtonHover { get { Load(); return closeButtonHover; } }
 
         /// <summary>Favorite star art for a state, or null if that PNG does not exist yet (the entry then draws a placeholder).</summary>
         public static Asset<Texture2D> Star(bool on, bool highlighted)
@@ -208,6 +219,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
             starOffHighlighted = TryRequest(StarOffHighlightedPath);
             starOn = TryRequest(StarOnPath);
             starOnHighlighted = TryRequest(StarOnHighlightedPath);
+            closeButton = TryRequest(CloseButtonPath);
+            closeButtonHover = TryRequest(CloseButtonHoverPath);
         }
 
         static Asset<Texture2D> TryRequest(string path) =>
@@ -216,6 +229,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static void Clear()
         {
             button = buttonHover = background = null;
+            closeButton = closeButtonHover = null;
             starOff = starOffHighlighted = starOn = starOnHighlighted = null;
             loaded = false;
         }
