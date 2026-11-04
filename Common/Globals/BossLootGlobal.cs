@@ -56,6 +56,20 @@ namespace Factorraria.Common.NPCs
             {
                 npcLoot.Add(ItemDropRule.Common(ItemID.BeeMinecart, 1, 1, 1));
             }
+
+            // Skeletron (Head)
+            if (npc.type == NPCID.SkeletronHead)
+            {
+                npcLoot.RemoveLoot(ItemID.SkeletronHand);
+            }
+
+            // Skeletron (Hand)
+            if (npc.type == NPCID.SkeletronHand)
+            {
+                npcLoot.Add(ItemDropRule.Common(ItemID.SkeletronHand, 1, 1, 1));
+            }
+
+
         }
     }
 
