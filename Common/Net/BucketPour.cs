@@ -379,6 +379,31 @@ namespace Factorraria.Common.Net
             if (IsBottomless(itemType))
                 return;
 
+            // The cursor stack is slot 58 and, on the owning client, it is Main.mouseItem rather than player.inventory[58]. It goes first,
+            // the same order the server used to validate the pour.
+            Item cursor = Main.mouseItem;
+            if (cursor != null && !cursor.IsAir && cursor.type == itemType)
+            {
+                cursor.stack--;
+                if (cursor.stack <= 0)
+                {
+                    cursor.SetDefaults(ItemID.EmptyBucket);
+                }
+                else
+                {
+                    Item emptyBucket = new Item();
+                    emptyBucket.SetDefaults(ItemID.EmptyBucket);
+                    Item overflow = player.GetItem(player.whoAmI, emptyBucket, GetItemSettings.ItemCreatedFromItemUsage);
+                    if (overflow != null && !overflow.IsAir)
+                        player.QuickSpawnItem(player.GetSource_Misc("BucketPour"), overflow, overflow.stack);
+                }
+
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                    NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, player.whoAmI, 58, cursor.prefix);
+
+                return;
+            }
+
             int slot = -1;
             Item selected = player.inventory[player.selectedItem];
             if (selected != null && !selected.IsAir && selected.type == itemType)
