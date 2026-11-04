@@ -27,7 +27,7 @@ namespace Factorraria.Common.Systems
     //
     // InFront (per registration, default true): true draws after all tiles, so the overhang covers neighbouring tiles. false draws in the
     // behind-tiles pass (the DrawNPCs(behindTiles: true) call vanilla makes before any tile), so every tile, the owner included, is drawn over
-    // it and the overhang only shows where nothing solid is in front of it. The entry's InFront field can also be flipped at runtime.
+    // it and the overhang only shows where nothing solid is in front of it. That pass draws into the SpriteBatch vanilla already has open. The entry's InFront field can also be flipped at runtime.
     //
     // Why a system and not ModTile.PostDraw: PostDraw runs inside the tile pass, so tiles drawn later paint over the overhang (and it would
     // pop out at the screen edge). Everything is drawn here after all tiles instead, over the visible area plus a small padding.
@@ -126,14 +126,13 @@ namespace Factorraria.Common.Systems
                     if (!batchBegun)
                     {
                         batchBegun = true;
-                        try
+
+                        // The behind pass runs inside DoDraw_DrawNPCsBehindTiles, where vanilla already has a SpriteBatch open (a Begin here throws
+                        // every frame), so it draws straight into that one. The after-tiles pass has none open and begins its own.
+                        if (front)
                         {
                             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
                             ownBatch = true;
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            // a SpriteBatch is already open here (behind pass): draw into it and leave it open
                         }
                     }
 
