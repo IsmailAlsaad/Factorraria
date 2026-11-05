@@ -98,7 +98,7 @@ namespace Factorraria.Content.Projectiles.Mounts
 
                     // Cosmetic and local: every machine works out the latch itself, so every client hears it (positional), the server skips it.
                     if (!Main.dedServ)
-                        SoundEngine.PlaySound(SoundID.Tink, Projectile.Center);
+                        SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
                 }
                 else
                 {

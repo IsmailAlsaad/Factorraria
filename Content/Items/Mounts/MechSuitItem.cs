@@ -134,8 +134,8 @@ namespace Factorraria.Content.Items.Mounts
         // Tunables — adjust to taste.
         // Public so the EnableDebugs overlay (MechSuitDebugSystem) can draw them. Plain fields on purpose, so hot reload can tweak them.
         public float SearchRadiusTiles = 12f;   // an arm looks for an anchor tile this far from the player
-        public float CutoffRadiusTiles = 20f;   // the player can never get farther than this from the closest latched arm
-        public float DeadzoneRadiusTiles = 4f;  // a new arm only launches at a tile at least this far from every other arm's anchor
+        public float CutoffRadiusTiles = 13f;   // the player can never get farther than this from the closest latched arm
+        public float DeadzoneRadiusTiles = 6f;  // a new arm only launches at a tile at least this far from every other arm's anchor
         public float MoveSpeed = 7f;
         public int SearchCooldownTicks = 10;    // throttles the tile scan while drifting/waiting
 
