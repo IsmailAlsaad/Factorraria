@@ -29,6 +29,8 @@ namespace Factorraria.Common.Liquids
             Main.tileSolidTop[Type] = true; // platform-like top: things can drop through from below, stand on top
             Main.tileNoAttach[Type] = false;
 
+            HitSound = SoundID.Tink;
+
             TileObjectData.newTile.CopyFrom(TileObjectData.Style1x1);
             TileObjectData.newTile.Origin = new Point16(0, 0);
             TileObjectData.newTile.HookPostPlaceMyPlayer = new PlacementHook(ModContent.GetInstance<TEntity>().Hook_AfterPlacement, -1, 0, true);

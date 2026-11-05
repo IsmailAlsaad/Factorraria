@@ -29,6 +29,8 @@ namespace Factorraria.Common.Liquids
             Main.tileFrameImportant[Type] = true; // tells Terraria this tile's look depends on TileFrameX/Y, not a fixed sprite
             Main.tileNoAttach[Type] = false;
 
+            HitSound = SoundID.Tink;
+
             TileObjectData.newTile.CopyFrom(TileObjectData.Style1x1);
             // Prevent DivideByZeroException when external mods query tile style
             TileObjectData.newTile.StyleHorizontal = true;
