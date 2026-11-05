@@ -21,6 +21,9 @@ namespace Factorraria.Common.Liquids
         // A motor only joins pipes of the SAME material (see PipeTierRegistry.CanLink).
         protected abstract PipeMaterial Material { get; }
 
+        // Dust the motor throws when it breaks.
+        protected virtual int MotorDustId => DustID.Lead;
+
         public override void SetStaticDefaults()
         {
             Main.tileFrameImportant[Type] = true;
@@ -117,10 +120,9 @@ namespace Factorraria.Common.Liquids
 
         public override bool CreateDust(int i, int j, ref int type)
         {
-            // make a custom dust later
-            return false;
+            type = MotorDustId;
+            return true;
         }
-
 
         // Unhammerable: no slopes, no half blocks (the sprite and the flow logic assume a full tile).
         public override bool Slope(int i, int j)
