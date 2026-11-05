@@ -257,6 +257,15 @@ namespace Factorraria.Content.Projectiles.Hooks
 
             Vector2 shoulder = player.Center;
             Vector2 head = Projectile.Center;
+
+            // The arm cannot stretch: once the player is farther from the claw than the arm reaches (a latched arm pushed past its full length,
+            // up to DetachDistance, or the claw reeling in from the far side), the claw is drawn pulled off the wall toward the player, exactly at
+            // the arm's reach, instead of the beams stretching. Visual only: the projectile's real position and the detach check are untouched.
+            float reach = UpperArmLength + ForearmLength;
+            Vector2 toHead = head - shoulder;
+            if (toHead.LengthSquared() > reach * reach)
+                head = shoulder + Vector2.Normalize(toHead) * reach;
+
             Vector2 joint = MechanicalArmIK.SolveElbow(shoulder, head, UpperArmLength, ForearmLength, Projectile.ai[1], Projectile.localAI[0]);
 
             Texture2D beam = ArmSegmentTexture.Value;

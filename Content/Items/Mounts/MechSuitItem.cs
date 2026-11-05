@@ -102,11 +102,13 @@ namespace Factorraria.Content.Items.Mounts
         public int ProjectileIndex;
         public Point AnchorTile;
 
+        // A retracting arm (the claw is reeling back in before the arm is removed) no longer counts: its slot is free and it blocks no deadzone.
         public bool IsActive =>
             ProjectileIndex >= 0 &&
             ProjectileIndex < Main.maxProjectiles &&
             Main.projectile[ProjectileIndex].active &&
-            Main.projectile[ProjectileIndex].type == ModContent.ProjectileType<MechSuitArmProjectile>();
+            Main.projectile[ProjectileIndex].type == ModContent.ProjectileType<MechSuitArmProjectile>() &&
+            !(Main.projectile[ProjectileIndex].ModProjectile is MechSuitArmProjectile retracting && retracting.Retracting);
 
         public bool IsLatched =>
             IsActive &&
@@ -177,13 +179,13 @@ namespace Factorraria.Content.Items.Mounts
             MechSuitNet.ReportState(false);
         }
 
-        // Owner only: kills this player's own arm projectiles and forgets them.
+        // Owner only: reels this player's own arm projectiles back in (each removes itself once its claw is home) and forgets them.
         void RetractArms()
         {
             for (int i = 0; i < MaxArms; i++)
             {
-                if (arms[i].IsActive)
-                    Main.projectile[arms[i].ProjectileIndex].Kill();
+                if (arms[i].IsActive && Main.projectile[arms[i].ProjectileIndex].ModProjectile is MechSuitArmProjectile arm)
+                    arm.BeginRetract();
 
                 arms[i] = new MechArmSlot { ProjectileIndex = -1 };
             }
@@ -401,17 +403,26 @@ namespace Factorraria.Content.Items.Mounts
             Player.velocity = Vector2.Zero;
         }
 
-        // Frame 5 of the player sheet is the jump/fall pose. Legs always; the body only when no item swing is using its arm frames.
+        // Frame 5 of the player sheet is the jump/fall pose. Legs always; the body only when no item swing is using its arm frames and no held
+        // item needs its hold pose (a torch, a cane: anything with a holdStyle). Vanilla picks the hold pose over the jump pose even in the air and
+        // has already put it into bodyFrame, so for those items the suit leaves the body frame alone.
         void ApplyFallPose()
         {
             Player.legFrame.Y = Player.legFrame.Height * 5;
             Player.legFrameCounter = 0.0;
 
-            if (Player.itemAnimation <= 0)
+            if (Player.itemAnimation <= 0 && !HoldsItemWithHoldPose())
             {
                 Player.bodyFrame.Y = Player.bodyFrame.Height * 5;
                 Player.bodyFrameCounter = 0.0;
             }
+        }
+
+        // Same condition vanilla's PlayerFrame uses before it chooses the arm-out hold pose (holdStyle set, and not a no-water item in water).
+        bool HoldsItemWithHoldPose()
+        {
+            Item held = Player.inventory[Player.selectedItem];
+            return held != null && !held.IsAir && held.holdStyle > 0 && (!Player.wet || !held.noWet);
         }
 
         // Draw time as well, in case the frame code ran after PostUpdate this tick. Every machine draws every suited player this way.
@@ -453,7 +464,9 @@ namespace Factorraria.Content.Items.Mounts
                 bool wasLatched = arms[i].IsLatched;
                 if (dist > CutoffRadiusPixels && (wasLatched ? latchedCount > 1 : latchedCount > 0))
                 {
-                    Main.projectile[arms[i].ProjectileIndex].Kill();
+                    if (Main.projectile[arms[i].ProjectileIndex].ModProjectile is MechSuitArmProjectile cutoffArm)
+                        cutoffArm.BeginRetract(); // the claw reels in before the arm goes; the slot is free from this tick
+
                     arms[i] = new MechArmSlot { ProjectileIndex = -1 };
                     activeCount--;
                     if (wasLatched) latchedCount--;

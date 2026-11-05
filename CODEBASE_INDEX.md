@@ -4,7 +4,7 @@ generated 2026-11-05 | 391 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(79) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(13)
+FactorrariaNet(80) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -1324,6 +1324,11 @@ tModLoader/other bases -> project types:
   class SiliconOreWorldGen : ModSystem
     +DensityPerTile:double[s] +StrengthMin:int[s] +StrengthMax:int[s] +StepsMin:int[s] +StepsMax:int[s] +BottomMargin:int[s] +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
 
+### Content/Buffs/
+**MechSuitBuff.cs** uses: MechSuitMount
+  class MechSuitBuff : ModBuff
+    +Texture:string[ov] +Update(Player,ref int)[ov]
+
 ### Content/Configs/
 **CartMapConfig.cs** uses: CartMapIcons
   class CartMapConfig : ModConfig
@@ -1458,9 +1463,6 @@ tModLoader/other bases -> project types:
   class SteelScrewItem : ModItem
 
 ### Content/Items/Mounts/
-**MechSuitBuff.cs** uses: MechSuitMount
-  class MechSuitBuff : ModBuff
-    +Texture:string[ov] +Update(Player,ref int)[ov]
 **MechSuitItem.cs** uses: FactorrariaNet, MechSuitArmProjectile, MechSuitMount, MechSuitNet
   class MechSuitItem : ModItem
   static class MechSuitTileSearch
@@ -1531,9 +1533,9 @@ tModLoader/other bases -> project types:
     +Load()[ov] +Unload()[ov] +CanUseGrapple(Player)[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +OnKill(int)[ov] +OnTileCollide(Vector2)[ov] +PreDraw(ref Color)[ov]
 
 ### Content/Projectiles/Mounts/
-**MechSuitArmProjectile.cs** uses: MechSuitPlayer, MechanicalArmIK
+**MechSuitArmProjectile.cs** uses: FactorrariaNet, MechSuitPlayer, MechanicalArmIK
   class MechSuitArmProjectile : ModProjectile
-    +AnchorTile:Point +ArmBendSign:float +Latched:bool +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +PreDraw(ref Color)[ov]
+    +AnchorTile:Point +ArmBendSign:float +Latched:bool +Retracting:bool +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +BeginRetract() +PreDraw(ref Color)[ov]
 
 ### Content/Tiles/Conveyors/
 **ClockwisePriorityConveyorTile.cs** uses: ConveyorFilterNet, VirtualItemSystem
