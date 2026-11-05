@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameInput;
 using Terraria.ID;
@@ -135,7 +136,7 @@ namespace Factorraria.Content.Items.Mounts
         // Public so the EnableDebugs overlay (MechSuitDebugSystem) can draw them. Plain fields on purpose, so hot reload can tweak them.
         public float SearchRadiusTiles = 12f;   // an arm looks for an anchor tile this far from the player
         public float CutoffRadiusTiles = 13f;   // the player can never get farther than this from the closest latched arm
-        public float DeadzoneRadiusTiles = 6f;  // a new arm only launches at a tile at least this far from every other arm's anchor
+        public float DeadzoneRadiusTiles = 8f;  // a new arm only launches at a tile at least this far from every other arm's anchor
         public float MoveSpeed = 7f;
         public int SearchCooldownTicks = 10;    // throttles the tile scan while drifting/waiting
 
@@ -157,10 +158,7 @@ namespace Factorraria.Content.Items.Mounts
         int PosResyncTicks = 1;
         int posResyncTimer;
         Vector2 lastMoveInput;
-        // Vanilla's move step reads controlDown as "fall through platforms". While the suit flies it is forced on for that one step and put
-        // back in PostUpdate (before anything reads or sends the real control bits). Owner and remote copies both do this.
-        bool controlDownForced;
-        bool controlDownSaved;
+
         readonly List<Vector2> deadzoneScratch = new List<Vector2>();
 
         public void Activate()
@@ -248,7 +246,7 @@ namespace Factorraria.Content.Items.Mounts
                 if (TryGetClosestLatchedAnchor(out Vector2 remoteAnchor))
                 {
                     Player.velocity = BoundedSuitVelocity(remoteAnchor);
-                    ForcePlatformPassThrough();
+                    StepThroughPlatforms();
                 }
                 return;
             }
@@ -279,19 +277,13 @@ namespace Factorraria.Content.Items.Mounts
             }
 
             ApplyFreeMovement(anchor);
-            ForcePlatformPassThrough();
+            StepThroughPlatforms();
         }
 
         // After vanilla has moved the player this frame (so the packet carries the new position). Owner only: send the suit's position when the
         // input changes and every PosResyncTicks, because the owner's velocity is overwritten every frame and vanilla sees nothing worth sending.
         public override void PostUpdate()
         {
-            if (controlDownForced)
-            {
-                Player.controlDown = controlDownSaved;
-                controlDownForced = false;
-            }
-
             if (IsActive && TryGetClosestLatchedAnchor(out _))
                 ApplyFallPose();
 
@@ -383,16 +375,25 @@ namespace Factorraria.Content.Items.Mounts
             return found;
         }
 
-        // Platforms: only the "fall through" flag of the vanilla move step lets a body pass through them, and it is tied to controlDown.
-        // Forced on for this one step while the suit flies; PostUpdate puts the real value back.
-        void ForcePlatformPassThrough()
+        // Platforms: a platform only blocks a body that moves down onto it, and vanilla's move step lets it through only with its own
+        // "fall through" flag (tied to the real Down key, which forcing controlDown did not reach). So the suit does the step itself: when
+        // the move is blocked only because of a platform (same TileCollision with and without fall-through gives different answers), the
+        // player is moved by the fall-through result and the velocity is cleared, so vanilla's step that follows has nothing left to block.
+        // The velocity is rebuilt every tick while an arm is latched (owner and remote copies), so clearing it costs nothing.
+        void StepThroughPlatforms()
         {
-            if (controlDownForced)
+            Vector2 velocity = Player.velocity;
+            if (velocity == Vector2.Zero)
                 return;
 
-            controlDownSaved = Player.controlDown;
-            Player.controlDown = true;
-            controlDownForced = true;
+            int gravDir = (int)Player.gravDir;
+            Vector2 solid = Collision.TileCollision(Player.position, velocity, Player.width, Player.height, false, false, gravDir);
+            Vector2 through = Collision.TileCollision(Player.position, velocity, Player.width, Player.height, true, true, gravDir);
+            if (solid == through)
+                return;
+
+            Player.position += through;
+            Player.velocity = Vector2.Zero;
         }
 
         // Frame 5 of the player sheet is the jump/fall pose. Legs always; the body only when no item swing is using its arm frames.
@@ -516,6 +517,7 @@ namespace Factorraria.Content.Items.Mounts
                 return;
 
             arms[slot] = new MechArmSlot { ProjectileIndex = projIndex, AnchorTile = tile };
+            SoundEngine.PlaySound(SoundID.Item1 with { PitchVariance = 0.3f });
         }
 
         static Vector2 AnchorWorldCenter(Point tile) => new Vector2(tile.X * 16 + 8, tile.Y * 16 + 8);
