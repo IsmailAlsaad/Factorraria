@@ -588,8 +588,19 @@ namespace Factorraria.Common.Carts
                     {
                         CartChestUISystem.Toggle(target); // patch 9.5: a client opens it too (CartChestUISystem subscribes)
                     }
+                    else if (CartRide.CanMount(target) && CartRide.CanPlayerRide(player))
+                    {
+                        // A plain cart (no chest, terrarium or motor): the player gets on it. Multiplayer: the server takes the cart and answers.
+                        if (Main.netMode == NetmodeID.MultiplayerClient)
+                        {
+                            CartInputNet.RequestMount(target);
+                        }
+                        else
+                        {
+                            CartRide.MountHere(player, target);
+                        }
+                    }
 
-                    // A plain cart (no chest, terrarium or motor) will be mounted by a plain right click (next step).
                     // Every other plain right click does nothing: only Shift + Right click picks a cart up.
                     return;
                 }

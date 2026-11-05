@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-05 | 391 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-05 | 392 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(80) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(13)
+FactorrariaNet(81) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(22) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(15) CartModule(15) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -35,9 +35,9 @@ tModLoader/other bases -> project types:
 - byte (32): AssemblyIssue, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (17): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
 - ModTile (16): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
+- ModPlayer (13): CartEquipPlayer, CartInteractionPlayer, CartRiderPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
 - UIElement (13): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
-- ModPlayer (12): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
 - GlobalNPC (11): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
 - GlobalItem (10): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
@@ -120,7 +120,7 @@ tModLoader/other bases -> project types:
     +ButtonSize:int +Unload()[ov] +DrawButton(ref string)
 **CartMountBlocker.cs** uses: Cart
   class CartMountBlocker : ModSystem
-    +MountKeyTrackRangeTiles:int +Load()[ov] +Unload()[ov] +IsTrackTile(int,int)[s] +Log(string)[s] +IsTrackRightClick(Player)[s]
+    +MountKeyTrackRangeTiles:int +AllowCartMount:bool[s] +Load()[ov] +Unload()[ov] +IsTrackTile(int,int)[s] +Log(string)[s] +IsTrackRightClick(Player)[s]
   class CartTrackHookBlocker : GlobalProjectile
     +InstancePerEntity:bool[ov] +AppliesToEntity(Projectile,bool)[ov] +OnSpawn(Projectile,IEntitySource)[ov] +GrappleCanLatchOnTo(Projectile,Player,int,int)[ov]
 **CartPassengerGlobalNPC.cs** uses: CartPassengers
@@ -128,7 +128,14 @@ tModLoader/other bases -> project types:
     +InstancePerEntity:bool[ov] +CarrierCartId:int +PickupCooldown:int +GraceTicks:int +IsCarried:bool +PreAI(NPC)[ov] +PostAI(NPC)[ov] +PreDraw(NPC,SpriteBatch,Vector2,Color)[ov] +CheckActive(NPC)[ov] +CanHitPlayer(NPC,Player,ref int)[ov] +SendExtraAI(NPC,BitWriter,BinaryWriter)[ov] +ReceiveExtraAI(NPC,BitReader,BinaryReader)[ov]
 **CartPassengers.cs** uses: Cart, CartGeometry, CartModule, CartPassengerGlobalNPC, CartPhysics, CartSound, CartSoundKind, CartSystem
   static class CartPassengers
-    +CanCarry(NPC)[s] +GetPassenger(Cart)[s] +Update(Cart)[s] +OnBump(Cart)[s] +Release(Cart,bool)[s] +GetExtraLift(NPC)[s] +Pin(Cart,NPC)[s] +ClientTick()[s] +DrawingPassenger:a dedicated server never draws) bool[s] +CollectRiders()[s] +DrawRider(Cart)[s] +Save(Cart)[s]
+    +CanCarry(NPC)[s] +GetPassenger(Cart)[s] +Update(Cart)[s] +OnBump(Cart)[s] +Release(Cart,bool)[s] +ReleaseWithVelocity(Cart,Vector2)[s] +GetExtraLift(NPC)[s] +Pin(Cart,NPC)[s] +ClientTick()[s] +DrawingPassenger:a dedicated server never draws) bool[s] +CollectRiders()[s] +DrawRider(Cart)[s] +Save(Cart)[s]
+**CartRide.cs** uses: Cart, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartMountBlocker, CartPassengers, CartSystem, FactorrariaNet
+  struct CartRideStart
+    +SkinItem:int +Position:Vector2 +Velocity:Vector2 +Facing:int
+  static class CartRide
+    +MountRailLift:float[s] +MountTypeOf(int)[s] +CanMount(Cart)[s] +CanPlayerRide(Player)[s] +Take(Cart,out CartRideStart)[s] +MountHere(Player,Cart)[s] +Apply(Player,CartRideStart)[s] +ReturnCart(Player,int)[s] +FindReturnSpot(Player,out int,out int)[s] +PlaceOrDrop(Player,int,bool,int,int,int)[s]
+  class CartRiderPlayer : ModPlayer
+    +RidingSkin:int +Begin(int,int) +PostUpdate()[ov] +PlayerDisconnect()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +OnEnterWorld()[ov]
 **CartSkinTable.cs** uses: Cart, CartItem, CartSkins, Factorraria
   static class CartSkinTable
     +FallbackIconScale:float[c] +RailSink:float[c] +GetHeldItem(Player)[s] +IsSkinItem(Item)[s] +IsPlaceable(Item)[s] +SkinTypeFor(Item)[s] +GetMountData(int)[s] +GetChainName(int)[s] +GetAnimation(int)[s] +GetPlacedSprite(int,int)[s]
@@ -139,7 +146,7 @@ tModLoader/other bases -> project types:
 **CartSkins.cs**
   static class CartSkins
     +VanillaPrefix:string[c] +DefaultKey:string[c] +KeyOf(int)[s] +TryTypeOf(string,out int)[s]
-**CartSystem.cs** uses: BucketPour, Cart, CartCargo, CartChain, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartNet, CartPassengers, CartPhysics, CartSkinTable, CartSkins, CartSound, CartSoundKind, FurnaceOffsetConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, PlacedSprite, TrackData, TrackSample
+**CartSystem.cs** uses: BucketPour, Cart, CartCargo, CartChain, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartNet, CartPassengers, CartPhysics, CartRide, CartSkinTable, CartSkins, CartSound, CartSoundKind, FurnaceOffsetConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, PlacedSprite, TrackData, TrackSample
   class CartSystem : ModSystem
     +Carts:List<Cart>[s] +NextCartId:int[s] +AssignId(Cart)[s] +FindById(int)[s] +Unload()[ov] +OnWorldLoad()[ov] +ClearWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +ClientInterpolate()[s] +CheckPlacement(Player,int,int,out Vector2,out bool)[s] +SpawnCart(Vector2,int,CartModule)[s] +FindCartAtCursor(Player)[s] +GetInstallModule(Item,Cart,out CartModule)[s] +IsInInteractRange(Player,Cart,float)[s] +PickUp(Player,Cart)[s] +GetZoomCorrectedMouseWorld()[s]
 **TrackData.cs**
@@ -521,15 +528,15 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
   class CartTestFeed : ModSystem
     +Start(Vector2)[s] +Stop()[s] +PostUpdateEverything()[ov] +OnWorldUnload()[ov]
-**CartInputNet.cs** uses: Cart, CartModule, CartPhysics, CartSkinTable, CartSystem, FactorrariaNet, FactorrariaPacket, PacketDirection
+**CartInputNet.cs** uses: Cart, CartModule, CartPhysics, CartRide, CartRideStart, CartSkinTable, CartSystem, FactorrariaNet, FactorrariaPacket, PacketDirection
   class CartInputNetSystem : ModSystem
     +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
   enum CartAction : byte
-    {Place, Install, Shove, PickUp}
+    {Place, Install, Shove, PickUp, Mount, Dismount}
   static class CartInputNet
-    +ServerPlaced:int[s] +ServerInstalled:int[s] +ServerShoved:int[s] +ServerPickedUp:int[s] +ServerRefused:int[s] +ClientSent:int[s] +ClientAccepted:int[s] +ClientRefused:int[s] +ClientConsumed:int[s] +ClientConsumeMissed:int[s] +Reset()[s] +Describe()[s] +RequestPlace(Player,Item)[s] +RequestInstallOrShove(Item,Cart)[s] +RequestPickUp(Cart)[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +ClientTick()[s]
+    +ServerPlaced:int[s] +ServerInstalled:int[s] +ServerShoved:int[s] +ServerPickedUp:int[s] +ServerRefused:int[s] +ClientSent:int[s] +ClientAccepted:int[s] +ClientRefused:int[s] +ClientConsumed:int[s] +ClientConsumeMissed:int[s] +Reset()[s] +Describe()[s] +RequestPlace(Player,Item)[s] +RequestInstallOrShove(Item,Cart)[s] +RequestPickUp(Cart)[s] +RequestMount(Cart)[s] +RequestDismount(int,bool,int,int,int)[s] +HandleRequest(BinaryReader,int)[s] +ServerRiderLeft(Player)[s] +HandleResult(BinaryReader,int)[s] +ClientTick()[s]
     sealed class Result
-      +Action:CartAction +Accepted:bool +ItemType:int
+      +Action:CartAction +Accepted:bool +ItemType:int +Start:CartRideStart
 **CartMapNet.cs** uses: Cart, CartModule, CartNet, CartPassengers, CartSkins, CartSystem, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
   sealed class CartMapEntry
     +Id:int +TileX:float +TileY:float +Module:CartModule +Facing:int +SkinType:int +ModuleItemType:int +PassengerNpcType:int +PassengerKey:string +SkinKey:string +ModuleItemKey:string

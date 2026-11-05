@@ -37,6 +37,8 @@ namespace Factorraria.Common.Net
         Install = 1,
         Shove = 2,
         PickUp = 3,
+        Mount = 4,
+        Dismount = 5,
     }
 
     // Cart input as requests (roadmap patch 9.3, finding C3).
@@ -67,11 +69,13 @@ namespace Factorraria.Common.Net
             public CartAction Action;
             public bool Accepted;
             public int ItemType;
+            public CartRideStart Start;   // Mount results only: where and how fast the rider starts
         }
 
         static readonly ConcurrentQueue<Result> results = new();
         static uint pendingUntil;
         static readonly uint[] lastPlaceTick = new uint[Main.maxPlayers + 1];
+        static readonly int[] ridingSkin = new int[Main.maxPlayers + 1];   // server: skin item of the cart each player is riding (0 = none); a Dismount must match it
 
         // Temporary test counters (remove in Phase 10).
         public static int ServerPlaced;
@@ -90,6 +94,7 @@ namespace Factorraria.Common.Net
             while (results.TryDequeue(out _)) { }
             pendingUntil = 0;
             System.Array.Clear(lastPlaceTick, 0, lastPlaceTick.Length);
+            System.Array.Clear(ridingSkin, 0, ridingSkin.Length);
             ServerPlaced = ServerInstalled = ServerShoved = ServerPickedUp = ServerRefused = 0;
             ClientSent = ClientAccepted = ClientRefused = ClientConsumed = ClientConsumeMissed = 0;
         }
@@ -188,6 +193,49 @@ namespace Factorraria.Common.Net
             });
         }
 
+        /// <summary>Multiplayer client: a plain right click on a plain cart. The server takes the cart and answers with the ride's start state.</summary>
+        public static void RequestMount(Cart target)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient || target == null || target.Id <= 0)
+                return;
+
+            if (Main.GameUpdateCount < pendingUntil)
+                return;
+
+            pendingUntil = Main.GameUpdateCount + 30;
+            int cartId = target.Id;
+
+            ClientSent++;
+            FactorrariaNet.SendRequest(FactorrariaPacket.CartActionRequest, w =>
+            {
+                w.Write((byte)CartAction.Mount);
+                w.Write(cartId);
+            });
+        }
+
+        /// <summary>
+        /// Multiplayer client: the rider is off the cart. hasSpot says whether the client found a track under the feet (tile x, y); the server
+        /// re-checks and puts the cart back there, or hands the skin item over. Only valid for the cart the server let this player ride.
+        /// </summary>
+        public static void RequestDismount(int skinItem, bool hasSpot, int tileX, int tileY, int direction)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+                return;
+
+            sbyte dir = (sbyte)(direction >= 0 ? 1 : -1);
+
+            ClientSent++;
+            FactorrariaNet.SendRequest(FactorrariaPacket.CartActionRequest, w =>
+            {
+                w.Write((byte)CartAction.Dismount);
+                w.Write(skinItem);
+                w.Write(hasSpot);
+                w.Write(tileX);
+                w.Write(tileY);
+                w.Write(dir);
+            });
+        }
+
         // ---------------------------------------------------------------- server: requests
 
         public static void HandleRequest(BinaryReader reader, int sender)
@@ -198,8 +246,8 @@ namespace Factorraria.Common.Net
                 return;   // single-player and the host never send these: the old direct code ran
 
             Player player = Main.player[sender];
-            if (!player.active || player.dead)
-                return;
+            if (!player.active || (player.dead && action != CartAction.Dismount))
+                return;   // a rider who died must still be able to give the cart back
 
             switch (action)
             {
@@ -217,6 +265,14 @@ namespace Factorraria.Common.Net
 
                 case CartAction.PickUp:
                     ServerPickUp(player, reader.ReadInt32());
+                    break;
+
+                case CartAction.Mount:
+                    ServerMount(player, sender, reader.ReadInt32());
+                    break;
+
+                case CartAction.Dismount:
+                    ServerDismount(player, sender, reader.ReadInt32(), reader.ReadBoolean(), reader.ReadInt32(), reader.ReadInt32(), reader.ReadSByte());
                     break;
             }
         }
@@ -237,13 +293,22 @@ namespace Factorraria.Common.Net
             SendResult(sender, action, false, itemType);
         }
 
-        static void SendResult(int sender, CartAction action, bool accepted, int itemType)
+        static void SendResult(int sender, CartAction action, bool accepted, int itemType, CartRideStart? ride = null)
         {
             FactorrariaNet.SendToClient(sender, FactorrariaPacket.CartActionResult, w =>
             {
                 w.Write((byte)action);
                 w.Write(accepted);
                 w.Write(itemType);
+
+                if (action == CartAction.Mount && accepted && ride.HasValue)
+                {
+                    w.Write(ride.Value.Position.X);
+                    w.Write(ride.Value.Position.Y);
+                    w.Write(ride.Value.Velocity.X);
+                    w.Write(ride.Value.Velocity.Y);
+                    w.Write((sbyte)ride.Value.Facing);
+                }
             });
         }
 
@@ -357,6 +422,70 @@ namespace Factorraria.Common.Net
             FactorrariaNet.Log("[Carts] " + player.name + " picked up cart " + id);
         }
 
+        // Riding: the server takes the cart (CartRide.Take: the passenger gets out with the cart's velocity, the cart leaves its chain and
+        // is removed, every client hears it through CartDelta) and remembers the skin per player. The client then mounts itself (vanilla
+        // syncs a player's mount from its owner), on the start state in the answer. Dismount: only for the skin the server let that player
+        // ride, so a request can not make carts out of nothing.
+        static void ServerMount(Player player, int sender, int cartId)
+        {
+            Cart cart = CartSystem.FindById(cartId);
+            if (cart == null || !CartSystem.IsInInteractRange(player, cart, SlackPixels))
+            {
+                Refuse(player, sender, CartAction.Mount, 0, cart == null ? "no such cart" : "out of reach");
+                return;
+            }
+
+            if (ridingSkin[sender] > 0)
+            {
+                Refuse(player, sender, CartAction.Mount, 0, "already riding a cart");
+                return;
+            }
+
+            if (!CooldownPassed(sender))
+            {
+                Refuse(player, sender, CartAction.Mount, 0, "too fast (10 tick cooldown)");
+                return;
+            }
+
+            if (!CartRide.Take(cart, out CartRideStart start))
+            {
+                Refuse(player, sender, CartAction.Mount, 0, "that cart can not be ridden");
+                return;
+            }
+
+            ridingSkin[sender] = start.SkinItem;
+            FactorrariaNet.Log("[Carts] " + player.name + " mounted a cart (skin item " + start.SkinItem + ")");
+            SendResult(sender, CartAction.Mount, true, start.SkinItem, start);
+        }
+
+        static void ServerDismount(Player player, int sender, int skinItem, bool hasSpot, int tileX, int tileY, sbyte direction)
+        {
+            if (skinItem <= 0 || ridingSkin[sender] != skinItem)
+            {
+                Refuse(player, sender, CartAction.Dismount, skinItem, "not riding that cart");
+                return;
+            }
+
+            ridingSkin[sender] = 0;
+            CartRide.PlaceOrDrop(player, skinItem, hasSpot, tileX, tileY, direction);
+            FactorrariaNet.Log("[Carts] " + player.name + " got off a cart");
+            SendResult(sender, CartAction.Dismount, true, skinItem);
+        }
+
+        /// <summary>Server: a rider left the game. The cart they were riding comes back as an item at their feet.</summary>
+        public static void ServerRiderLeft(Player player)
+        {
+            if (Main.netMode != NetmodeID.Server || player == null || player.whoAmI < 0 || player.whoAmI >= ridingSkin.Length)
+                return;
+
+            int skin = ridingSkin[player.whoAmI];
+            if (skin <= 0)
+                return;
+
+            ridingSkin[player.whoAmI] = 0;
+            player.QuickSpawnItem(player.GetSource_Misc("FactorrariaCartRiderLeft"), new Item(skin), 1);
+        }
+
         // ---------------------------------------------------------------- client: the answer
 
         // May run on the network thread: it only queues.
@@ -369,6 +498,15 @@ namespace Factorraria.Common.Net
             result.Action = (CartAction)reader.ReadByte();
             result.Accepted = reader.ReadBoolean();
             result.ItemType = reader.ReadInt32();
+
+            if (result.Action == CartAction.Mount && result.Accepted)
+            {
+                result.Start.SkinItem = result.ItemType;
+                result.Start.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                result.Start.Velocity = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                result.Start.Facing = reader.ReadSByte() < 0 ? -1 : 1;
+            }
+
             results.Enqueue(result);
         }
 
@@ -377,7 +515,7 @@ namespace Factorraria.Common.Net
         {
             while (results.TryDequeue(out Result result))
             {
-                if (result.Action == CartAction.Place || result.Action == CartAction.Install)
+                if (result.Action == CartAction.Place || result.Action == CartAction.Install || result.Action == CartAction.Mount)
                     pendingUntil = 0;
 
                 if (!result.Accepted)
@@ -387,6 +525,18 @@ namespace Factorraria.Common.Net
                 }
 
                 ClientAccepted++;
+
+                if (result.Action == CartAction.Mount)
+                {
+                    Player me = Main.LocalPlayer;
+
+                    if (CartRide.CanPlayerRide(me))
+                        CartRide.Apply(me, result.Start);
+                    else
+                        CartRide.ReturnCart(me, result.Start.SkinItem);   // the player got on something else meanwhile: give the cart back
+
+                    continue;
+                }
 
                 if (result.Action == CartAction.Place || result.Action == CartAction.Install)
                 {

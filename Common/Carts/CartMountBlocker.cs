@@ -22,6 +22,9 @@ namespace Factorraria.Common.Carts
     {
         public int MountKeyTrackRangeTiles = 8;   // how close (in tiles, a square around the player) a minecart track must be for the mount key to work
 
+        /// <summary>Set around the mod's own SetMount call (CartRide.Apply) so the track-click block lets that one cart mount through.</summary>
+        public static bool AllowCartMount;
+
         private static int logged;
 
         public override void Load()
@@ -71,7 +74,7 @@ namespace Factorraria.Common.Carts
 
         private static void BlockTrackMount(On_Mount.orig_SetMount orig, Mount self, int m, Player mountedPlayer, bool faceLeft)
         {
-            if (m >= 0 && m < MountID.Sets.Cart.Length && MountID.Sets.Cart[m] && IsTrackRightClick(mountedPlayer))
+            if (m >= 0 && m < MountID.Sets.Cart.Length && MountID.Sets.Cart[m] && !AllowCartMount && IsTrackRightClick(mountedPlayer))
             {
                 Log("layer 3, SetMount refused");
                 return;

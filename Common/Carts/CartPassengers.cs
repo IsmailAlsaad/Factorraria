@@ -267,6 +267,33 @@ namespace Factorraria.Common.Carts
         }
 
         /// <summary>
+        /// A rider takes the cart: the passenger gets out and keeps the cart's velocity (px per tick), so it carries on the way the cart was
+        /// going. Same cooldown and despawn grace as Release. Server / single-player only (the caller is CartRide.Take).
+        /// </summary>
+        public static void ReleaseWithVelocity(Cart cart, Vector2 velocity)
+        {
+            NPC npc = GetPassenger(cart);
+            cart.PassengerNpc = -1;
+
+            if (npc == null)
+            {
+                return;
+            }
+
+            CartPassengerGlobalNPC tag = npc.GetGlobalNPC<CartPassengerGlobalNPC>();
+            tag.CarrierCartId = 0;
+            tag.PickupCooldown = CartPhysics.PassengerPickupCooldown;
+            tag.GraceTicks = npc.townNPC ? 0 : CartPhysics.PassengerGraceTicks;
+            npc.rotation = 0f;
+
+            CartSound.Play(CartSoundKind.PassengerRelease, npc.Center);
+
+            npc.velocity = velocity;
+
+            SyncNpc(npc);
+        }
+
+        /// <summary>
         /// How far (px) a passenger is lifted above the cart floor, on top of PassengerFloorLift, so that a short one still shows above the
         /// cart's front wall: the shorter the NPC, the higher it sits, and a tall one is not lifted at all. It only uses fixed tuning numbers
         /// and npc.height, so the server and every client work out the same value.
