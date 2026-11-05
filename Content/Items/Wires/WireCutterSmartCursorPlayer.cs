@@ -14,6 +14,21 @@ namespace Factorraria.Content.Items.Wires
         // How far from the mouse (in tiles) a wire can be and still be picked.
         public int SearchRadiusTiles = 4;
 
+        // After a smart cut the target is locked: no snapping until the button is released or the mouse moves to another tile,
+        // so holding the button on one spot cuts one wire instead of eating along the whole line at the use-time rate.
+        bool smartLocked;
+        int lockMouseTileX;
+        int lockMouseTileY;
+
+        /// <summary>Owner only. Called by the cutters right after a smart cut.</summary>
+        public void LockSmartTarget()
+        {
+            Microsoft.Xna.Framework.Vector2 mouse = Main.MouseWorld;
+            lockMouseTileX = (int)(mouse.X / 16f);
+            lockMouseTileY = (int)(mouse.Y / 16f);
+            smartLocked = true;
+        }
+
         bool HoldingCutter()
         {
             int held = Player.HeldItem.type;
@@ -36,6 +51,14 @@ namespace Factorraria.Content.Items.Wires
             Microsoft.Xna.Framework.Vector2 mouse = Main.MouseWorld;
             int mouseTileX = (int)(mouse.X / 16f);
             int mouseTileY = (int)(mouse.Y / 16f);
+
+            if (smartLocked)
+            {
+                if (!Player.controlUseItem || mouseTileX != lockMouseTileX || mouseTileY != lockMouseTileY)
+                    smartLocked = false;
+                else
+                    return false;
+            }
 
             float bestDistance = float.MaxValue;
             bool found = false;

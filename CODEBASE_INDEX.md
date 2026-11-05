@@ -1491,7 +1491,7 @@ tModLoader/other bases -> project types:
     +CanUseItem(Player)[ov] +UseItem(Player)[ov]
 **WireCutterSmartCursorPlayer.cs** uses: CustomWireSystem, CustomWireType, FactorrariaNet, IronCutterItem, LeadCutterItem
   class WireCutterSmartCursorPlayer : ModPlayer
-    +SearchRadiusTiles:int +TryGetTarget(out int,out int) +PostUpdate()[ov]
+    +SearchRadiusTiles:int +LockSmartTarget() +TryGetTarget(out int,out int) +PostUpdate()[ov]
 
 ### Content/Liquids/Fuel/
 **FuelLiquid.cs** uses: OilLiquid

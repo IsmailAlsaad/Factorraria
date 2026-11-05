@@ -46,6 +46,7 @@ namespace Factorraria.Content.Items.Wires
             {
                 tileX = smartX;
                 tileY = smartY;
+                player.GetModPlayer<WireCutterSmartCursorPlayer>().LockSmartTarget();
             }
 
             if (CustomWireSystem.HasWire(tileX, tileY, CustomWireType.Gold))
