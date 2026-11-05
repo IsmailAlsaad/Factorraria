@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-05 | 387 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-05 | 388 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(77) BaseMachine(51) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) MachineVisualRegistry(12)
+FactorrariaNet(78) BaseMachine(51) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) CustomWireType(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -37,8 +37,8 @@ tModLoader/other bases -> project types:
 - ModTile (16): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - UIElement (13): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
+- ModPlayer (12): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
 - GlobalNPC (11): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
-- ModPlayer (11): CartEquipPlayer, CartInteractionPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer
 - GlobalItem (10): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
@@ -1480,15 +1480,18 @@ tModLoader/other bases -> project types:
 **CopperWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
   class CopperWireItem : ModItem
     +CanUseItem(Player)[ov] +UseItem(Player)[ov]
-**IronCutterItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet, PoleLinkInputSystem
+**IronCutterItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet, PoleLinkInputSystem, WireCutterSmartCursorPlayer
   class IronCutterItem : ModItem
     +UseItem(Player)[ov]
-**LeadCutterItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet, PoleLinkInputSystem
+**LeadCutterItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet, PoleLinkInputSystem, WireCutterSmartCursorPlayer
   class LeadCutterItem : ModItem
     +UseItem(Player)[ov]
 **TinWireItem.cs** uses: CustomWireNet, CustomWireSystem, CustomWireType, FactorrariaNet
   class TinWireItem : ModItem
     +CanUseItem(Player)[ov] +UseItem(Player)[ov]
+**WireCutterSmartCursorPlayer.cs** uses: CustomWireSystem, CustomWireType, FactorrariaNet, IronCutterItem, LeadCutterItem
+  class WireCutterSmartCursorPlayer : ModPlayer
+    +SearchRadiusTiles:int +TryGetTarget(out int,out int) +PostUpdate()[ov]
 
 ### Content/Liquids/Fuel/
 **FuelLiquid.cs** uses: OilLiquid

@@ -41,6 +41,13 @@ namespace Factorraria.Content.Items.Wires
             int tileX = Player.tileTargetX;
             int tileY = Player.tileTargetY;
 
+            // Smart cursor: snap to the wired tile nearest the mouse (no-op with smart cursor off).
+            if (player.GetModPlayer<WireCutterSmartCursorPlayer>().TryGetTarget(out int smartX, out int smartY))
+            {
+                tileX = smartX;
+                tileY = smartY;
+            }
+
             if (CustomWireSystem.HasWire(tileX, tileY, CustomWireType.Gold))
             {
                 CustomWireNet.RequestEdit(false, tileX, tileY, CustomWireType.Gold);
