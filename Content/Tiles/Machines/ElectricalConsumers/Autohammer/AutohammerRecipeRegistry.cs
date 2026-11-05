@@ -161,12 +161,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
                 .Register();
 
             // Cog
-            Recipe.Create(ItemID.Cog, 5)
-                .AddIngredient(ItemID.TinPlating, 1)
+            Recipe.Create(ItemID.Cog, 2)
+                .AddIngredient(ItemID.TinOre, 5)
                 .AddTile(TileID.Anvils)
                 .Register();
-            Recipe.Create(ItemID.Cog, 5)
-                .AddIngredient(ItemID.CopperPlating, 1)
+            Recipe.Create(ItemID.Cog, 2)
+                .AddIngredient(ItemID.CopperOre, 5)
                 .AddTile(TileID.Anvils)
                 .Register();
 

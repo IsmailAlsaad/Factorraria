@@ -102,6 +102,7 @@ namespace Factorraria.Common.Knowledge
 
                 // Ice Machine / Liquid Distillator / Decay Chamber
                 .Add("IceMachine", ModContent.ItemType<CokeItem>())
+                .Add("IceMachine", ItemID.Obsidian)
                 .AddLiquid("LiquidDistillator", LiquidTypeRegistry.Fuel)             // fuel liquid
                 .Add("DecayChamber", ItemID.CrimtaneBar)
                 .Add("DecayChamber", ItemID.DemoniteBar);
