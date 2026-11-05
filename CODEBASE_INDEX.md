@@ -1464,7 +1464,7 @@ tModLoader/other bases -> project types:
   struct MechArmSlot
     +ProjectileIndex:int +AnchorTile:Point +IsActive:bool +IsLatched:bool
   class MechSuitPlayer : ModPlayer
-    +MaxArms:int[c] +SearchRadiusTiles:float +CutoffRadiusTiles:float +DeadzoneRadiusTiles:float +MoveSpeed:float +SearchCooldownTicks:int +SearchRadiusPixels:float +CutoffRadiusPixels:float +DeadzoneRadiusPixels:float +IsActive:bool +Activate() +Deactivate() +SetReportedState(bool) +PlayerDisconnect()[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov] +TryGetClosestLatchedAnchor(out Vector2) +ModifyDrawInfo(ref PlayerDrawSet)[ov]
+    +MaxArms:int[c] +SearchRadiusTiles:float +CutoffRadiusTiles:float +DeadzoneRadiusTiles:float +MoveSpeed:float +SearchCooldownTicks:int +SearchRadiusPixels:float +CutoffRadiusPixels:float +DeadzoneRadiusPixels:float +IsActive:bool +Activate() +Deactivate() +SetReportedState(bool) +PlayerDisconnect()[ov] +Kill(double,int,bool,PlayerDeathReason)[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov] +TryGetClosestLatchedAnchor(out Vector2) +ModifyDrawInfo(ref PlayerDrawSet)[ov]
 
 ### Content/Items/Statues/
 **MeteorHeadStatueItem.cs** uses: MeteorHeadStatueTile

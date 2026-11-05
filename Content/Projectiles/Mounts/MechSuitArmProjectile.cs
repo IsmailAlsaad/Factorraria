@@ -80,6 +80,14 @@ namespace Factorraria.Content.Projectiles.Mounts
                 return;
             }
 
+            // The block this arm holds (or flies to) is gone (mined, exploded, replaced). Tile changes reach every machine, so every machine
+            // drops its own copy; the owner's UpdateArms then sees a free slot and launches a new arm at the nearest valid tile.
+            if (!AnchorTileIsSolid())
+            {
+                Projectile.Kill();
+                return;
+            }
+
             if (!fallbackAngleSet)
             {
                 fallbackAngle = (AnchorWorldPos - player.Center).ToRotation();
@@ -106,6 +114,17 @@ namespace Factorraria.Content.Projectiles.Mounts
                     Projectile.rotation = toTarget.ToRotation();
                 }
             }
+        }
+
+        // Same rule the anchor search uses (MechSuitTileSearch): a tile that exists and is solid.
+        bool AnchorTileIsSolid()
+        {
+            Point anchor = AnchorTile;
+            if (!WorldGen.InWorld(anchor.X, anchor.Y))
+                return false;
+
+            Tile tile = Main.tile[anchor.X, anchor.Y];
+            return tile.HasTile && Main.tileSolid[tile.TileType];
         }
 
         public override bool PreDraw(ref Color lightColor)

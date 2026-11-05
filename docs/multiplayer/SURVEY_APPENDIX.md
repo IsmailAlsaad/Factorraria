@@ -508,6 +508,8 @@ Same two issues as step 2 (anchor tile and bend sign need `NetSend/NetReceive`; 
 
 **Status (patch 2.1g, applied, untested):** 2.1f works. The owner now tries to fill every free arm slot (no more "only when no arm or one is out of search range"); the claw head is drawn along elbow joint -> contact point on every machine (cosmetic, no packets).
 
+**Status (patch 10.1, applied, untested):** 2.1g test found that an arm whose block breaks never left and was never replaced. `MechSuitArmProjectile.AI` now kills the arm on every machine when its anchor tile is no longer solid, and the owner's `UpdateArms` refills the slot. `MechSuitPlayer.Kill` (owner) deactivates the suit on death so the mirrored flag on the server and the other clients is cleared. No packets changed.
+
 ### I8 (L) Items and tiles that need nothing
 Materials (`ByriteAlloy*`, `Coke`, `*Sheet`, `GoldPlate`, `GoldWire`, `MeteoritePanel`, `SimpleCircuit`, `Steel*`), `SiliconOre*` and `PureSilicon*` (item + ore tile), `MechanicalAssemblerItem`, and the joke items (draw hooks only; `IsmailsCaneItem` hold style is cosmetic). They are deterministic data and run the same on every side.
 

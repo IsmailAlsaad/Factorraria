@@ -207,13 +207,20 @@ namespace Factorraria.Content.Items.Mounts
             IsActive = false;
         }
 
+        // Every machine runs this when the player dies. The owner leaves the suit properly (retracts the arms and tells the server, which
+        // tells everyone), so the mirrored flag on the server and the other clients does not stay on through the respawn.
+        public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource)
+        {
+            if (IsActive && FactorrariaNet.IsOwner(Player))
+                Deactivate();
+        }
+
         // Server: a client is being told about this player (a late joiner). Tell it whether this player is in the suit.
         public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
         {
             if (Main.netMode == NetmodeID.Server && IsActive && toWho >= 0)
             {
                 MechSuitNet.SendState(Player.whoAmI, true, toWho);
-                Mod.Logger.Info($"[MechSuit] sent suit flag of player {Player.whoAmI} to joining client {toWho}"); // 2.1b test line, remove in Phase 10
             }
         }
 
