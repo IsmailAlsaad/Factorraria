@@ -1000,3 +1000,10 @@ Story: {
 	MechanicsBagName: The Mechanic's Bag
 	MechanicsBagTooltip: Filled with tools and tangled wire
 }
+
+Buffs: {
+	MechSuitBuff: {
+		DisplayName: Mech suit
+		Description: The mech suit will not fight for you (Although that would be cool)
+	}
+}

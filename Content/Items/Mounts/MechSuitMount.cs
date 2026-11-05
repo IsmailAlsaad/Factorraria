@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Net;
+using Factorraria.Content.Buffs;
 using Terraria;
 using Terraria.ModLoader;
 
