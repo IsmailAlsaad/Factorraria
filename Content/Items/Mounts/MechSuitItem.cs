@@ -25,30 +25,16 @@ namespace Factorraria.Content.Items.Mounts
             Item.value = Item.buyPrice(gold: 5);
             Item.rare = ItemRarityID.LightRed;
 
-            Item.useStyle = ItemUseStyleID.HoldUp;
+            // A real mount item: vanilla accepts it in the mount slot (miscEquips[3]), the Mount key (default Z) and a click both mount and
+            // dismount. The suit itself starts and stops from MechSuitMount.SetMount / Dismount (owner only).
+            Item.mountType = ModContent.MountType<MechSuitMount>();
+            Item.useStyle = ItemUseStyleID.Swing;
             Item.useTime = 20;
             Item.useAnimation = 20;
             Item.noMelee = true;
             Item.UseSound = SoundID.Item6;
             Item.autoReuse = false;
-            Item.consumable = false; // it's a toggle tool, not consumed on use
-        }
-
-        public override bool? UseItem(Player player)
-        {
-            // UseItem also runs for remote players on every machine, and on the server. Only the owner's own client toggles the suit; everyone
-            // else learns the flag from MechSuitNet.
-            if (!FactorrariaNet.IsOwner(player))
-                return true;
-
-            MechSuitPlayer mechPlayer = player.GetModPlayer<MechSuitPlayer>();
-
-            if (mechPlayer.IsActive)
-                mechPlayer.Deactivate();
-            else
-                mechPlayer.Activate();
-
-            return true;
+            Item.consumable = false;
         }
     }
     public static class MechSuitTileSearch
@@ -172,7 +158,19 @@ namespace Factorraria.Content.Items.Mounts
             MechSuitNet.ReportState(true);
         }
 
+        // Owner only. Turns the suit off and takes the vanilla mount off too (Space dismount, death). The mount's own Dismount hook then
+        // finds the suit already off and does nothing.
         public void Deactivate()
+        {
+            DeactivateCore();
+
+            if (Player.mount.Active && Player.mount.Type == ModContent.MountType<MechSuitMount>())
+                Player.mount.Dismount(Player);
+        }
+
+        // Owner only. The suit's own part of leaving: flag off, arms retracted, everyone told. MechSuitMount.Dismount calls this directly
+        // (Mount key, clicking the item, another mount, death), because vanilla is already taking the mount off by then.
+        public void DeactivateCore()
         {
             IsActive = false;
             RetractArms();

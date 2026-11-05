@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-05 | 389 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-05 | 391 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(78) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(13)
+FactorrariaNet(79) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(32) PacketDirection(31) RecipeBook(25) Cart(21) Factorraria(19) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(14) CartModule(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -54,7 +54,9 @@ tModLoader/other bases -> project types:
 - IEquatable (1): RecipeOutputKey
 - IItemDropRuleCondition (1): FirstKingSlimeKillCondition
 - Mod (1): Factorraria
+- ModBuff (1): MechSuitBuff
 - ModMapLayer (1): CartMapLayer
+- ModMount (1): MechSuitMount
 - ModNPC (1): HerBackpackNPC
 - ModTileEntity (1): BaseMachine
 
@@ -1456,15 +1458,20 @@ tModLoader/other bases -> project types:
   class SteelScrewItem : ModItem
 
 ### Content/Items/Mounts/
-**MechSuitItem.cs** uses: FactorrariaNet, MechSuitArmProjectile, MechSuitNet
+**MechSuitBuff.cs** uses: MechSuitMount
+  class MechSuitBuff : ModBuff
+    +Texture:string[ov] +Update(Player,ref int)[ov]
+**MechSuitItem.cs** uses: FactorrariaNet, MechSuitArmProjectile, MechSuitMount, MechSuitNet
   class MechSuitItem : ModItem
-    +UseItem(Player)[ov]
   static class MechSuitTileSearch
     +TryFindNearestAnchorTile(Vector2,float,List<Vector2>,float,out Point)[s]
   struct MechArmSlot
     +ProjectileIndex:int +AnchorTile:Point +IsActive:bool +IsLatched:bool
   class MechSuitPlayer : ModPlayer
-    +MaxArms:int[c] +SearchRadiusTiles:float +CutoffRadiusTiles:float +DeadzoneRadiusTiles:float +MoveSpeed:float +SearchCooldownTicks:int +SearchRadiusPixels:float +CutoffRadiusPixels:float +DeadzoneRadiusPixels:float +IsActive:bool +Activate() +Deactivate() +SetReportedState(bool) +PlayerDisconnect()[ov] +Kill(double,int,bool,PlayerDeathReason)[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov] +TryGetClosestLatchedAnchor(out Vector2) +ModifyDrawInfo(ref PlayerDrawSet)[ov]
+    +MaxArms:int[c] +SearchRadiusTiles:float +CutoffRadiusTiles:float +DeadzoneRadiusTiles:float +MoveSpeed:float +SearchCooldownTicks:int +SearchRadiusPixels:float +CutoffRadiusPixels:float +DeadzoneRadiusPixels:float +IsActive:bool +Activate() +Deactivate() +DeactivateCore() +SetReportedState(bool) +PlayerDisconnect()[ov] +Kill(double,int,bool,PlayerDeathReason)[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov] +TryGetClosestLatchedAnchor(out Vector2) +ModifyDrawInfo(ref PlayerDrawSet)[ov]
+**MechSuitMount.cs** uses: FactorrariaNet, MechSuitBuff, MechSuitPlayer
+  class MechSuitMount : ModMount
+    +SetMount(Player,ref bool)[ov] +Dismount(Player,ref bool)[ov]
 
 ### Content/Items/Statues/
 **MeteorHeadStatueItem.cs** uses: MeteorHeadStatueTile
