@@ -44,10 +44,6 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
                 ));
 
             Book.Add(new CustomRecipe(
-                new List<Item> { new Item(ModContent.ItemType<SiliconOreItem>(), 3) },
-                new Item(ModContent.ItemType<PureSiliconItem>(), 1)));
-
-            Book.Add(new CustomRecipe(
                 new List<Item> {
                     new Item(ItemID.SilverOre, 4),
                     new Item(ItemID.FallenStar, 1)},
