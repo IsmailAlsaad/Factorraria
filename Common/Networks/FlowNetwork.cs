@@ -479,8 +479,10 @@ namespace Factorraria.Common.Networks
 
                         if (entity is BaseMachine machine)
                         {
-                            ports.AttachMachine(i, dir, machine);
-                            continue;
+                            if (machine.HasLiquidPorts)
+                                ports.AttachMachine(i, dir, machine);
+
+                            continue;   // a machine without tanks is a wall to the pipe: not a port, and never world liquid either
                         }
                     }
 

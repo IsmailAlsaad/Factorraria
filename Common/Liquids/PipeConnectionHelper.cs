@@ -26,9 +26,11 @@ namespace Factorraria.Common.Liquids
                     return directionFromPipe == motor.Facing || directionFromPipe == motor.Facing.Opposite();
                 }
 
-                if (entity is BaseMachine)
+                if (entity is BaseMachine machine)
                 {
-                    return true;
+                    // A machine with no liquid input or output tank has nothing for a pipe to take or give: no sprite connection
+                    // (and FlowNetworkBuilder attaches nothing to it either, same rule).
+                    return machine.HasLiquidPorts;
                 }
             }
 

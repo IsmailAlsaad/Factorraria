@@ -213,6 +213,9 @@ namespace Factorraria.Common.Machines
         public LiquidStack[] RecipeInputLiquids => recipeInputLiquids ??= InputLiquids[LiquidFuelCount..];
         public LiquidStack[] OutputLiquids => outputLiquids ??= CreateLiquidArray(OutputLiquidCount);
 
+        /// <summary>True when pipes have something to do with this machine: at least one input tank (liquid-fuel tanks included) or one output tank. A machine without any is just a block to a pipe.</summary>
+        public bool HasLiquidPorts => InputLiquids.Length > 0 || OutputLiquids.Length > 0;
+
         static LiquidStack[] CreateLiquidArray(int count)
         {
             var arr = new LiquidStack[count];
