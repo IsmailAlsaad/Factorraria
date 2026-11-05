@@ -495,8 +495,8 @@ namespace Factorraria.Common.Carts
 
         /// <summary>
         /// Click rules. Left click: with a cart item = place; on a cart while holding a chest = install it; on a cart = shove.
-        /// Right click on a chest or terrarium cart = open its panel (shift + right click picks it up); on any other cart = pick it up.
-        /// Fuel will take over right click on motor carts later.
+        /// Right click on a cart with a panel (chest, terrarium, motor) = open its panel. Shift + Right click on any cart = pick it up.
+        /// A plain right click on a plain cart is reserved for mounting it (not implemented yet).
         /// A cart under the cursor beats other uses of the click unless a cart item is held.
         /// </summary>
         public override void PostUpdatePlayers()
@@ -582,15 +582,16 @@ namespace Factorraria.Common.Carts
 
                 Main.mouseRightRelease = false;
 
-                if (target.HasPanel && !Terraria.UI.ItemSlot.ShiftInUse)
+                if (!Terraria.UI.ItemSlot.ShiftInUse)
                 {
-                    CartChestUISystem.Toggle(target); // patch 9.5: a client opens it too (CartChestUISystem subscribes)
-                    return;
-                }
+                    if (target.HasPanel)
+                    {
+                        CartChestUISystem.Toggle(target); // patch 9.5: a client opens it too (CartChestUISystem subscribes)
+                    }
 
-                if (target.AlwaysRuns && !Terraria.UI.ItemSlot.ShiftInUse)
-                {
-                    return; // the mechanical cart has no panel: only Shift + Right click picks it up
+                    // A plain cart (no chest, terrarium or motor) will be mounted by a plain right click (next step).
+                    // Every other plain right click does nothing: only Shift + Right click picks a cart up.
+                    return;
                 }
 
                 if (Main.netMode == NetmodeID.MultiplayerClient)

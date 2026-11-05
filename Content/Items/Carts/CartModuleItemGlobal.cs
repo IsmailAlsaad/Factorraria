@@ -16,7 +16,7 @@ namespace Factorraria.Content.Items.Carts
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
             tooltips.Add(new TooltipLine(Mod, "FactorrariaCartModuleInstall", "Left click on a cart to place down"));
-            tooltips.Add(new TooltipLine(Mod, "FactorrariaCartModulePickup", "Shift + Right click to pick it up"));
+            tooltips.Add(new TooltipLine(Mod, "FactorrariaCartModulePickup", "Shift + Right click the cart to pick it up"));
         }
     }
 }

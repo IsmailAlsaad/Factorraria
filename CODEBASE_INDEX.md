@@ -393,7 +393,7 @@ tModLoader/other bases -> project types:
     +GetOrCreate(string,Texture2D,LiquidTypeDefinition,float)[s] +Clear()[s]
 **MotorTileBase.cs** uses: BaseMachine, IMotorTile, LiquidNetworkSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, PipeMaterial, PipeTierRegistry, PowerGridSystem, TileOverdrawSystem
   abstract class MotorTileBase<TEntity> : ModTile, IMotorTile
-    #Material:PipeMaterial[ab] #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov] +Slope(int,int)[ov]
+    #Material:PipeMaterial[ab] #MotorDustId:int[v] #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov] +Slope(int,int)[ov]
 **MotorTileEntityBase.cs** ns!=Factorraria.Common.Machines uses: Direction, ElectricConsumerMachine, Factorraria, LiquidNetworkSystem, MotorRotate, PipeTileBase
   abstract class MotorTileEntityBase : ElectricConsumerMachine
     +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +Update()[ov] #UpdateMotor()[v] +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
@@ -1796,7 +1796,7 @@ tModLoader/other bases -> project types:
 ### Content/Tiles/Machines/GeneralMachines/Motors/
 **IronMotorTile.cs** uses: IronMotorItem, IronMotorTileEntity, MotorTileBase, PipeMaterial
   class IronMotorTile : MotorTileBase<IronMotorTileEntity>
-    #Material:PipeMaterial[ov]
+    #Material:PipeMaterial[ov] #MotorDustId:int[ov]
 **IronMotorTileEntity.cs** uses: IronMotorTile, MotorTileEntityBase
   class IronMotorTileEntity : MotorTileEntityBase
     +ValidTileType:int[ov] +PumpStrength:float[ov] +PowerDemand:float[ov] +PipeEquivalentMaxFlowRate:float[ov] #UpdateMotor()[ov] #OnAnimationFrameChanged(int,int)[ov]
