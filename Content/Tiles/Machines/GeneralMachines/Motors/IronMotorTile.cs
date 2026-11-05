@@ -4,13 +4,15 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Motors
 {
-    public class MotorMK1Tile : MotorTileBase<MotorMK1TileEntity>
+    public class IronMotorTile : MotorTileBase<IronMotorTileEntity>
     {
+        protected override PipeMaterial Material => PipeMaterial.Iron;
+
         public override void SetStaticDefaults()
         {
             base.SetStaticDefaults();
 
-            RegisterItemDrop(ModContent.ItemType<MotorMK1Item>());
+            RegisterItemDrop(ModContent.ItemType<IronMotorItem>());
         }
     }
 }

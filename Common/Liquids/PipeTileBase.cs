@@ -9,11 +9,17 @@ using Terraria.ObjectData;
 
 namespace Factorraria.Common.Liquids
 {
-    // Every pipe TIER (MK1, future MK2, etc) inherits this and only has to say its
-    // own max flow rate — everything else (placement tracking, auto-shaping) is shared.
+    // Every pipe variant (lead, iron, ...) inherits this and only has to say its
+    // own material and max flow rate — everything else (placement tracking, auto-shaping) is shared.
     public abstract class PipeTileBase : ModTile
     {
         protected abstract float MaxFlowRate { get; }
+
+        // Pipes only connect to pipes and motors of the SAME material (see PipeTierRegistry.CanLink).
+        protected abstract PipeMaterial Material { get; }
+
+        // Dust the pipe throws when it breaks.
+        protected virtual int PipeDustId => DustID.Lead;
 
         public override void SetStaticDefaults()
         {
@@ -34,20 +40,20 @@ namespace Factorraria.Common.Liquids
             // MUST be called after setting AnchorBottom
             TileObjectData.addTile(Type);
 
-            PipeTierRegistry.Register(Type, MaxFlowRate);
+            PipeTierRegistry.Register(Type, MaxFlowRate, Material);
 
             // Art outside the 16px cell: one cell per connection mask (16 cells in a row), see TileOverdrawSystem.
             ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell);
         }
 
-        // PipeMK1Tile -> .../PipeMK1Overdraw (PNG optional: a missing sheet just draws nothing).
+        // LeadPipeTile -> .../LeadPipeOverdraw (PNG optional: a missing sheet just draws nothing).
         protected virtual string OverdrawTexturePath => Texture.EndsWith("Tile") ? Texture.Substring(0, Texture.Length - 4) + "Overdraw" : Texture + "_Overdraw";
 
         // Placement hologram: the pipe is not placed yet, so the mask is worked out from its neighbours exactly like ReframeSelf does.
-        static bool SelectPreviewCell(int i, int j, Tile tile, out int cell, out float rotation)
+        bool SelectPreviewCell(int i, int j, Tile tile, out int cell, out float rotation)
         {
             rotation = 0f;
-            PipeConnectionHelper.GetOpenSides(i, j, out bool up, out bool down, out bool left, out bool right);
+            PipeConnectionHelper.GetOpenSides(i, j, out bool up, out bool down, out bool left, out bool right, Type);
             cell = (up ? 1 : 0) | (down ? 2 : 0) | (left ? 4 : 0) | (right ? 8 : 0);
             return true;
         }
@@ -146,7 +152,7 @@ namespace Factorraria.Common.Liquids
 
         public override bool CreateDust(int i, int j, ref int type)
         {
-            type = DustID.Lead;
+            type = PipeDustId;
             return true;
         }
     }

@@ -5,7 +5,8 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Items.Liquids.Motors
 {
-    internal class MotorMK1Item : ModItem
+    [LegacyName("MotorMK1Item")]
+    internal class LeadMotorItem : ModItem
     {
         public override void SetDefaults()
         {
@@ -18,7 +19,7 @@ namespace Factorraria.Content.Items.Liquids.Motors
             Item.useAnimation = 15;
             Item.useTime = 10;
             Item.consumable = true;
-            Item.createTile = ModContent.TileType<MotorMK1Tile>();
+            Item.createTile = ModContent.TileType<LeadMotorTile>();
         }
     }
 }

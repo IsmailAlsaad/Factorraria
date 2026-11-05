@@ -10,19 +10,23 @@ namespace Factorraria.Common.Liquids
     // connected to something it isn't actually hooked up to, or vice versa.
     public static class PipeConnectionHelper
     {
-        public static bool CanConnect(int neighborX, int neighborY, Direction directionFromPipe)
+        // sourceTileType is the tile type of the pipe asking (a pipe of another material is never connectable).
+        public static bool CanConnect(int neighborX, int neighborY, Direction directionFromPipe, int sourceTileType)
         {
             Tile neighborTile = Main.tile[neighborX, neighborY];
 
             if (PipeTierRegistry.IsPipeTile(neighborTile.TileType))
-                return true;
+                return PipeTierRegistry.CanLink(sourceTileType, neighborTile.TileType);
 
             if (TileEntityHelper.TryGetEntityFromTile(neighborX, neighborY, out TileEntity entity, out _))
             {
                 if (entity is MotorTileEntityBase motor)
                 {
                     // Motors only accept pipes on their intake/discharge sides (front/back
-                    // along Facing) — never perpendicular.
+                    // along Facing) — never perpendicular, and never a pipe of another material.
+                    if (!PipeTierRegistry.CanLink(sourceTileType, neighborTile.TileType))
+                        return false;
+
                     return directionFromPipe == motor.Facing || directionFromPipe == motor.Facing.Opposite();
                 }
 
@@ -41,12 +45,16 @@ namespace Factorraria.Common.Liquids
         // PLUS, for a straight run's dangling end, the axis-opposite side. This is what lets a
         // pipe drain from or dump into open world liquid/air on its free end, and it's the SAME
         // mask the sprite uses (PipeTileBase.ReframeSelf), so visuals and logic can't drift apart.
-        public static void GetOpenSides(int i, int j, out bool up, out bool down, out bool left, out bool right)
+        // sourceTileType: leave at -1 to read the tile at (i, j); the placement hologram passes the pipe's own type, because nothing is placed there yet.
+        public static void GetOpenSides(int i, int j, out bool up, out bool down, out bool left, out bool right, int sourceTileType = -1)
         {
-            bool realUp = CanConnect(i, j - 1, Direction.Up);
-            bool realDown = CanConnect(i, j + 1, Direction.Down);
-            bool realLeft = CanConnect(i - 1, j, Direction.Left);
-            bool realRight = CanConnect(i + 1, j, Direction.Right);
+            if (sourceTileType < 0)
+                sourceTileType = Main.tile[i, j].TileType;
+
+            bool realUp = CanConnect(i, j - 1, Direction.Up, sourceTileType);
+            bool realDown = CanConnect(i, j + 1, Direction.Down, sourceTileType);
+            bool realLeft = CanConnect(i - 1, j, Direction.Left, sourceTileType);
+            bool realRight = CanConnect(i + 1, j, Direction.Right, sourceTileType);
 
             int connectionCount = (realUp ? 1 : 0) + (realDown ? 1 : 0) + (realLeft ? 1 : 0) + (realRight ? 1 : 0);
 

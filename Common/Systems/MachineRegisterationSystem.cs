@@ -120,9 +120,13 @@ namespace Factorraria.Common.Machines
                 basePath + "ElectricalConsumers/Extractinator/Extractinator_Off");
 
 
-            MachineVisualRegistry.Register<MotorMK1TileEntity>(ModContent.TileType<MotorMK1Tile>(),
-                basePath + "GeneralMachines/Motors/MotorMK1_On",
-                basePath + "GeneralMachines/Motors/MotorMK1_Off");
+            MachineVisualRegistry.Register<LeadMotorTileEntity>(ModContent.TileType<LeadMotorTile>(),
+                basePath + "GeneralMachines/Motors/LeadMotor_On",
+                basePath + "GeneralMachines/Motors/LeadMotor_Off");
+
+            MachineVisualRegistry.Register<IronMotorTileEntity>(ModContent.TileType<IronMotorTile>(),
+                basePath + "GeneralMachines/Motors/IronMotor_On",
+                basePath + "GeneralMachines/Motors/IronMotor_Off");
 
 
             MachineUIRegistry.Register(ModContent.TileType<MechanicalAssemblerTile>(), new MechanicalAssemblerUIState());

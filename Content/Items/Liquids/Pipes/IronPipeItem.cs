@@ -5,11 +5,11 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Items.Liquids.Pipes
 {
-    internal class PipeMK1Item : ModItem
+    internal class IronPipeItem : ModItem
     {
         public override void SetDefaults()
         {
-            Item.width = 12; 
+            Item.width = 12;
             Item.height = 12;
             Item.maxStack = 9999;
             Item.useStyle = ItemUseStyleID.Swing;
@@ -18,7 +18,7 @@ namespace Factorraria.Content.Items.Liquids.Pipes
             Item.useAnimation = 15;
             Item.useTime = 10;
             Item.consumable = true;
-            Item.createTile = ModContent.TileType<PipeMK1Tile>();
+            Item.createTile = ModContent.TileType<IronPipeTile>();
         }
     }
 }

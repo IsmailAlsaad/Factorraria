@@ -374,6 +374,10 @@ namespace Factorraria.Common.Networks
             return false;
         }
 
+        // Lead and iron never share a network: every member must have the seed pipe's material.
+        static bool SameMaterial(Point p, PipeMaterial material) =>
+            PipeTierRegistry.TryGetMaterial(Main.tile[p.X, p.Y].TileType, out PipeMaterial other) && other == material;
+
         // A motor is only joined to the network along its axis (front and back). A pipe touching its side is NOT connected.
         static bool OnAxis(Direction facing, Direction moveDir) => moveDir == facing || moveDir == facing.Opposite();
 
@@ -382,6 +386,7 @@ namespace Factorraria.Common.Networks
             // 1. Flood fill. members: tile -> the motor on it (null = pipe). Both ends of a link must accept it (FlowLinks rule).
             var members = new Dictionary<Point, MotorTileEntityBase> { [seed] = null };
             var queue = new Queue<Point>();
+            PipeTierRegistry.TryGetMaterial(Main.tile[seed.X, seed.Y].TileType, out PipeMaterial material);   // the seed is always a pipe
             queue.Enqueue(seed);
 
             while (queue.Count > 0)
@@ -399,8 +404,8 @@ namespace Factorraria.Common.Networks
 
                     if (IsPipeAt(q))
                     {
-                        // Only registered pipes join, same as the old flood fill.
-                        if (allPipes.Contains(q))
+                        // Only registered pipes of the same material join (a pipe of the other material is just a wall here).
+                        if (allPipes.Contains(q) && SameMaterial(q, material))
                         {
                             members[q] = null;
                             queue.Enqueue(q);
@@ -408,7 +413,7 @@ namespace Factorraria.Common.Networks
                         continue;
                     }
 
-                    if (TryGetMotor(q, out MotorTileEntityBase motor) && OnAxis(motor.Facing, dir))
+                    if (TryGetMotor(q, out MotorTileEntityBase motor) && OnAxis(motor.Facing, dir) && SameMaterial(q, material))
                     {
                         members[q] = motor;
                         queue.Enqueue(q);
@@ -489,7 +494,7 @@ namespace Factorraria.Common.Networks
                     // World liquid / open air: only on a side the pipe treats as an open mouth, and never into solid rock.
                     if (!openSidesKnown)
                     {
-                        PipeConnectionHelper.GetOpenSides(p.X, p.Y, out openUp, out openDown, out openLeft, out openRight);
+                        PipeConnectionHelper.GetOpenSides(p.X, p.Y, out openUp, out openDown, out openLeft, out openRight);   // reads the tile type at p, so the material rule applies
                         openSidesKnown = true;
                     }
 

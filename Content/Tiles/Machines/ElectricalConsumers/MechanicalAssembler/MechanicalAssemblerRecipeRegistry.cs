@@ -64,29 +64,30 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
                 .Register();
 
             // Lead pipe
-            Recipe.Create(ModContent.ItemType<PipeMK1Item>(), 2)
+            Recipe.Create(ModContent.ItemType<LeadPipeItem>(), 2)
                 .AddIngredient(ItemID.LeadBar, 3)
                 .AddTile(TileID.HeavyWorkBench)
                 .Register();
 
             // Lead motor
-            Recipe.Create(ModContent.ItemType<MotorMK1Item>(), 1)
+            Recipe.Create(ModContent.ItemType<LeadMotorItem>(), 1)
                 .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 2)
-                .AddIngredient(ModContent.ItemType<PipeMK1Item>(), 2)
+                .AddIngredient(ModContent.ItemType<LeadPipeItem>(), 2)
                 .AddTile(TileID.HeavyWorkBench)
                 .Register();
 
-            //// Iron pipe
-            //Recipe.Create(ModContent.ItemType<GoldWireItem>(), 2)
-            //    .AddIngredient(ModContent.ItemType<GoldPlateItem>(), 1)
-            //    .AddIngredient(ModContent.ItemType<TinWireItem>(), 6)
-            //    .AddTile(TileID.HeavyWorkBench)
-            //    .Register();
-            //Recipe.Create(ModContent.ItemType<GoldWireItem>(), 2)
-            //    .AddIngredient(ModContent.ItemType<GoldPlateItem>(), 1)
-            //    .AddIngredient(ModContent.ItemType<CopperWireItem>(), 6)
-            //    .AddTile(TileID.HeavyWorkBench)
-            //    .Register();
+            // Iron pipe (placeholder recipe, same shape as the lead one)
+            Recipe.Create(ModContent.ItemType<IronPipeItem>(), 2)
+                .AddIngredient(ItemID.IronBar, 3)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
+
+            // Iron motor (placeholder recipe, same shape as the lead one)
+            Recipe.Create(ModContent.ItemType<IronMotorItem>(), 1)
+                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 2)
+                .AddIngredient(ModContent.ItemType<IronPipeItem>(), 2)
+                .AddTile(TileID.HeavyWorkBench)
+                .Register();
 
             Book.Add(new CustomRecipe(
                 new List<Item> {

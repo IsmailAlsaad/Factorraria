@@ -87,7 +87,7 @@ namespace Factorraria.Common.Knowledge
                 // Mechanical Assembler
                 .Add("MechanicalAssembler", ModContent.ItemType<SimpleCircuitItem>())
                 .Add("MechanicalAssembler", ModContent.ItemType<GoldWireItem>())
-                .Add("MechanicalAssembler", ModContent.ItemType<PipeMK1Item>())      // lead pipe
+                .Add("MechanicalAssembler", ModContent.ItemType<LeadPipeItem>())      // lead pipe
                 .Add("MechanicalAssembler", ItemID.AmethystGemsparkBlock, weight: 1f / 7f)   // the seven gemspark blocks share ONE normal slot (7 x 1/7)
                 .Add("MechanicalAssembler", ItemID.TopazGemsparkBlock, weight: 1f / 7f)
                 .Add("MechanicalAssembler", ItemID.SapphireGemsparkBlock, weight: 1f / 7f)

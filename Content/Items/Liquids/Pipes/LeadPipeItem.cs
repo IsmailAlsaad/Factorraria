@@ -1,0 +1,25 @@
+﻿using Factorraria.Content.Tiles.Machines.GeneralMachines.Pipes;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+namespace Factorraria.Content.Items.Liquids.Pipes
+{
+    [LegacyName("PipeMK1Item")]
+    internal class LeadPipeItem : ModItem
+    {
+        public override void SetDefaults()
+        {
+            Item.width = 12; 
+            Item.height = 12;
+            Item.maxStack = 9999;
+            Item.useStyle = ItemUseStyleID.Swing;
+            Item.useTurn = true;
+            Item.autoReuse = true;
+            Item.useAnimation = 15;
+            Item.useTime = 10;
+            Item.consumable = true;
+            Item.createTile = ModContent.TileType<LeadPipeTile>();
+        }
+    }
+}

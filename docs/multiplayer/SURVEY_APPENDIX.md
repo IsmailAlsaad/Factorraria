@@ -389,7 +389,7 @@ All click handling stays on the owning client (it needs `Main.mouse*` and the he
 
 # Factorraria multiplayer survey - Step 7: Liquids, pipes, motors, networks
 
-Scope: `Common/Liquids/*` (PipeTileBase, PipeConnectionHelper, MotorTileBase, MotorTileEntityBase, LiquidStack, LiquidNetworkRegistries, LiquidTextureCache, WorldLiquidSources, LiquidInteractionEdits), `Common/Networks/*` (LiquidNetwork, PowerNetwork, PriorityConveyorNetwork), `Common/Systems/LiquidNetworkSystem`, the custom liquids (`FuelLiquid`, `OilLiquid`), the buckets, `PipeMK1Tile/Item`, `MotorMK1Tile/TileEntity/Item`.
+Scope: `Common/Liquids/*` (PipeTileBase, PipeConnectionHelper, MotorTileBase, MotorTileEntityBase, LiquidStack, LiquidNetworkRegistries, LiquidTextureCache, WorldLiquidSources, LiquidInteractionEdits), `Common/Networks/*` (LiquidNetwork, PowerNetwork, PriorityConveyorNetwork), `Common/Systems/LiquidNetworkSystem`, the custom liquids (`FuelLiquid`, `OilLiquid`), the buckets, `LeadPipeTile/Item`, `LeadMotorTile/TileEntity/Item`.
 
 Decisions carried over: world-shared recipe knowledge; server-authoritative carts; host-and-play and dedicated server both supported.
 

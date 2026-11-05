@@ -90,13 +90,23 @@ Items: {
 		Tooltip: A component of Super Weapon #1
 	}
 
-	MotorMK1Item: {
+	LeadMotorItem: {
 		DisplayName: Lead Motor
 		Tooltip: Right click to rotate the tile
 	}
 
-	PipeMK1Item: {
+	LeadPipeItem: {
 		DisplayName: Lead Pipe
+		Tooltip: ""
+	}
+
+	IronMotorItem: {
+		DisplayName: Iron Motor
+		Tooltip: Right click to rotate the tile
+	}
+
+	IronPipeItem: {
+		DisplayName: Iron Pipe
 		Tooltip: ""
 	}
 

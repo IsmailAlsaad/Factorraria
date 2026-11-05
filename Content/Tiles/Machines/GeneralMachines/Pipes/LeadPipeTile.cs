@@ -4,15 +4,17 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Pipes
 {
-    public class PipeMK1Tile : PipeTileBase
+    [LegacyName("PipeMK1Tile")]
+    public class LeadPipeTile : PipeTileBase
     {
         protected override float MaxFlowRate => 20f * 3600f; // your example number
+        protected override PipeMaterial Material => PipeMaterial.Lead;
 
         public override void SetStaticDefaults()
         {
             base.SetStaticDefaults();
 
-            RegisterItemDrop(ModContent.ItemType<PipeMK1Item>());
+            RegisterItemDrop(ModContent.ItemType<LeadPipeItem>());
         }
     }
 }

@@ -3,13 +3,14 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Motors
 {
-    public class MotorMK1TileEntity : MotorTileEntityBase
+    [LegacyName("MotorMK1TileEntity")]
+    public class LeadMotorTileEntity : MotorTileEntityBase
     {
-        public override int ValidTileType => ModContent.TileType<MotorMK1Tile>();
+        public override int ValidTileType => ModContent.TileType<LeadMotorTile>();
         public override float PumpStrength => 5 * 3600f;
         public override float PowerDemand => 30f;
 
-        // Matches PipeMK1Tile.MaxFlowRate — kept as a separate duplicated constant since
+        // Matches LeadPipeTile.MaxFlowRate — kept as a separate duplicated constant since
         // that property lives on a different ModTile instance and isn't cheaply shared.
         public override float PipeEquivalentMaxFlowRate => 20f * 3600f;
 

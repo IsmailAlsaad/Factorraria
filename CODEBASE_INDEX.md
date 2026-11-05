@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-05 | 382 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-05 | 387 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -23,15 +23,15 @@ Project bases -> derived:
 - ITileProbe: CosmicTileProbe
 - IZoomScalable: RecipeBrowserPanel
 - MachineUIStateBase: AutohammerUIState, BeeWheelUIState, DecayChamberUIState, ExtractinatorUIState, FurnaceUIState, GelBurnerUIState, HellforgeUIState, IceMachineUIState, LiquidDistillatorUIState, MagicMaterializerUIState, MechanicalAssemblerUIState, MissileTankUIState, PowerPoleUIState, RoboticArmUIState, SolidifierUIState, SunCapsuleUIState
-- MotorTileBase: MotorMK1Tile
-- MotorTileEntityBase: MotorMK1TileEntity
+- MotorTileBase: IronMotorTile, LeadMotorTile
+- MotorTileEntityBase: IronMotorTileEntity, LeadMotorTileEntity
 - Particle: PuffExplosion
-- PipeTileBase: PipeMK1Tile
+- PipeTileBase: IronPipeTile, LeadPipeTile
 - PowerPoleTileBase: PlatinumPowerPoleTile, WoodenPowerPoleTile
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 tModLoader/other bases -> project types:
 - ModSystem (103): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
-- ModItem (42): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IsmailsCaneItem, LeadCutterItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, MotorMK1Item, PipeMK1Item, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
+- ModItem (44): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenPowerPoleItem
 - byte (32): AssemblyIssue, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (17): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
 - ModTile (16): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
@@ -350,7 +350,7 @@ tModLoader/other bases -> project types:
 **RecipeKnowledgeSystem.cs**
   class RecipeKnowledgeSystem : ModSystem
     +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
-**ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PipeMK1Item, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, SunCapsuleItem, WoodenPowerPoleItem
+**ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, LeadPipeItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, SunCapsuleItem, WoodenPowerPoleItem
   static class ScrollPoolDefinitions
     +MissileDrillPool:string[s] +MissileTankPool:string[s] +MissileThrusterPool:string[s] +Register()[s]
 **ScrollPools.cs** uses: RecipeArtRegistry, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey
@@ -370,8 +370,10 @@ tModLoader/other bases -> project types:
     +Name:string +RenderColor:Color +VanillaTileLiquidId:byte? +IsWaterVariant:bool +IconPath:string
   static class LiquidTypeRegistry
     +definitions:List<LiquidTypeDefinition>[s] +Register(LiquidTypeDefinition)[s] +ToTileLiquidId(int)[s] +FromTileLiquidId(byte)[s] +Get(int)[s] +Water:int[s] +Lava:int[s] +Honey:int[s] +Shimmer:int[s] +Oil:int[s] +Fuel:int[s] +AnyWater:int[c] +SnowWater:int[s] +DesertWater:int[s] +JungleWater:int[s] +OceanWater:int[s] +UndergroundWater:int[s] +CavernWater:int[s] +CorruptionWater:int[s] +CrimsonWater:int[s] +HallowWater:int[s] +OasisWater:int[s] +WaterByBiome:Dictionary<MachineBiome, int>[s] +WaterFor(MachineBiome)[s] +IsWater(int)[s] +RegisterBiomeWater(MachineBiome,string,Color,string)[s]
+  enum PipeMaterial
+    {Lead, Iron}
   static class PipeTierRegistry
-    +MaxFlowRateByTileType:Dictionary<int, float>[s] +Register(int,float)[s] +IsPipeTile(int)[s]
+    +MaxFlowRateByTileType:Dictionary<int, float>[s] +MaterialByTileType:Dictionary<int, PipeMaterial>[s] +Register(int,float,PipeMaterial)[s] +RegisterMotor(int,PipeMaterial)[s] +TryGetMaterial(int,out PipeMaterial)[s] +CanLink(int,int)[s] +IsPipeTile(int)[s]
   class LiquidTypeRegistrationSystem : ModSystem
     +PostSetupContent()[ov] +Unload()[ov]
 **LiquidStack.cs**
@@ -389,18 +391,18 @@ tModLoader/other bases -> project types:
     +Recolor(GraphicsDevice,Texture2D,Color,Color,float)[s]
   static class LiquidTextureCache
     +GetOrCreate(string,Texture2D,LiquidTypeDefinition,float)[s] +Clear()[s]
-**MotorTileBase.cs** uses: BaseMachine, IMotorTile, LiquidNetworkSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, PowerGridSystem, TileOverdrawSystem
+**MotorTileBase.cs** uses: BaseMachine, IMotorTile, LiquidNetworkSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, PipeMaterial, PipeTierRegistry, PowerGridSystem, TileOverdrawSystem
   abstract class MotorTileBase<TEntity> : ModTile, IMotorTile
-    #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov] +Slope(int,int)[ov]
+    #Material:PipeMaterial[ab] #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov] +Slope(int,int)[ov]
 **MotorTileEntityBase.cs** ns!=Factorraria.Common.Machines uses: Direction, ElectricConsumerMachine, Factorraria, LiquidNetworkSystem, MotorRotate, PipeTileBase
   abstract class MotorTileEntityBase : ElectricConsumerMachine
     +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +Update()[ov] #UpdateMotor()[v] +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
 **PipeConnectionHelper.cs** uses: BaseMachine, Direction, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
   static class PipeConnectionHelper
-    +CanConnect(int,int,Direction)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool)[s]
-**PipeTileBase.cs** uses: LiquidNetworkSystem, PipeConnectionHelper, PipeTierRegistry, TileOverdrawSystem
+    +CanConnect(int,int,Direction,int)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
+**PipeTileBase.cs** uses: LiquidNetworkSystem, PipeConnectionHelper, PipeMaterial, PipeTierRegistry, TileOverdrawSystem
   abstract class PipeTileBase : ModTile
-    #MaxFlowRate:float[ab] #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +PlaceInWorld(int,int,Item)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +NearbyEffects(int,int,bool)[ov] +ReframeNeighbors(int,int)[s] +Slope(int,int)[ov] +CreateDust(int,int,ref int)[ov]
+    #MaxFlowRate:float[ab] #Material:PipeMaterial[ab] #PipeDustId:int[v] #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +PlaceInWorld(int,int,Item)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +NearbyEffects(int,int,bool)[ov] +ReframeNeighbors(int,int)[s] +Slope(int,int)[ov] +CreateDust(int,int,ref int)[ov]
 **WorldLiquidSources.cs**
   class WorldLiquidSources : ModSystem
     +InfiniteThreshold:int[c] +IsInfiniteSource(Point)[s] +ComputeIsInfinite(Point)[s] +OnWorldUnload()[ov]
@@ -868,7 +870,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 
 ### Common/Networks/
-**FlowNetwork.cs** uses: BaseMachine, Direction, FlowDir, FlowNode, FlowPort, FlowRoute, FlowRouteFinder, FlowRouteMerger, FlowSolver, FlowTransfer, LiquidStack, LiquidTankRules, LiquidTypeRegistry, LiquidWorldBanks, MotorTileEntityBase, PipeConnectionHelper, PipeTierRegistry, TileEntityHelper, WorldLiquidSources
+**FlowNetwork.cs** uses: BaseMachine, Direction, FlowDir, FlowNode, FlowPort, FlowRoute, FlowRouteFinder, FlowRouteMerger, FlowSolver, FlowTransfer, LiquidStack, LiquidTankRules, LiquidTypeRegistry, LiquidWorldBanks, MotorTileEntityBase, PipeConnectionHelper, PipeMaterial, PipeTierRegistry, TileEntityHelper, WorldLiquidSources
   sealed class FlowSource
     +Machine:BaseMachine +Tank:LiquidStack +TankIndex:int +WorldPos:Point +Owner:int +IsWorld:bool
   sealed class FlowSink
@@ -1117,7 +1119,7 @@ tModLoader/other bases -> project types:
 **LiquidNetworkSystem.cs** uses: Factorraria, FlowNetwork, FlowNetworkBuilder, LiquidPipeDiagnostics, LiquidTextureCache, LiquidWorldBanks, PipeTierRegistry
   class LiquidNetworkSystem : ModSystem
     +AllPipeTiles:HashSet<Point>[s] +networkNeedsRebuilding:bool[s] +FlowNetworks:List<FlowNetwork>[s] +WorldBanks:LiquidWorldBanks[s] +RebuildCount:int[s] +PostUpdateWorld()[ov] +RegisterPipeTile(Point)[s] +UnregisterPipeTile(Point)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov]
-**MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, BeeWheelTile, BeeWheelTileEntity, BeeWheelUIState, BeeWheelVisual, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FuelGroup, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, LiquidBiomeVisits, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MagicMaterializerRegistry, MagicMaterializerTileEntity, MagicMaterializerUIState, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MissileTankRegistry, MissileTankTile, MissileTankTileEntity, MissileTankUIState, MotorMK1Tile, MotorMK1TileEntity, PlatinumPowerPoleTile, PlatinumPowerPoleTileEntity, PowerPoleUIState, RecipeArtDefinitions, RecipeArtRegistry, RecipeBook, RecipeCatalog, RecipeVisibility, RoboticArmTile, RoboticArmTileEntity, RoboticArmUIState, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState, SunCapsuleTile, SunCapsuleTileEntity, SunCapsuleUIState, WoodenPowerPoleTile, WoodenPowerPoleTileEntity
+**MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, BeeWheelTile, BeeWheelTileEntity, BeeWheelUIState, BeeWheelVisual, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FuelGroup, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, IronMotorTile, IronMotorTileEntity, LeadMotorTile, LeadMotorTileEntity, LiquidBiomeVisits, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MagicMaterializerRegistry, MagicMaterializerTileEntity, MagicMaterializerUIState, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MissileTankRegistry, MissileTankTile, MissileTankTileEntity, MissileTankUIState, PlatinumPowerPoleTile, PlatinumPowerPoleTileEntity, PowerPoleUIState, RecipeArtDefinitions, RecipeArtRegistry, RecipeBook, RecipeCatalog, RecipeVisibility, RoboticArmTile, RoboticArmTileEntity, RoboticArmUIState, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState, SunCapsuleTile, SunCapsuleTileEntity, SunCapsuleUIState, WoodenPowerPoleTile, WoodenPowerPoleTileEntity
   class MachineRegisterationSystem : ModSystem
     +Load()[ov] +PostSetupContent()[ov] +PostAddRecipes()[ov] +Unload()[ov]
 **MachineUISystem.cs** uses: BaseMachine, CartChestUISystem, Factorraria, FactorrariaNet, MachineDetail, MachineDetailSystem, MachineUIRegistry, MachineUIStateBase, RecipeBookSystem, TileEntityHelper
@@ -1396,12 +1398,16 @@ tModLoader/other bases -> project types:
   class OilBucket : BucketBase
 
 ### Content/Items/Liquids/Motors/
-**MotorMK1Item.cs** uses: MotorMK1Tile
-  class MotorMK1Item : ModItem
+**IronMotorItem.cs** uses: IronMotorTile
+  class IronMotorItem : ModItem
+**LeadMotorItem.cs** uses: LeadMotorTile
+  class LeadMotorItem : ModItem
 
 ### Content/Items/Liquids/Pipes/
-**PipeMK1Item.cs** uses: PipeMK1Tile
-  class PipeMK1Item : ModItem
+**IronPipeItem.cs** uses: IronPipeTile
+  class IronPipeItem : ModItem
+**LeadPipeItem.cs** uses: LeadPipeTile
+  class LeadPipeItem : ModItem
 
 ### Content/Items/Machines/
 **BeeWheelItem.cs** uses: BeeWheelTile
@@ -1554,7 +1560,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/
-**MechanicalAssemblerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, CopperWireItem, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, MotorMK1Item, PipeMK1Item, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
+**MechanicalAssemblerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, CopperWireItem, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronMotorItem, IronPipeItem, LeadMotorItem, LeadPipeItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem
   class MechanicalAssemblerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **MechanicalAssemblerTile.cs** uses: MechanicalAssemblerItem, MechanicalAssemblerTileEntity
@@ -1788,16 +1794,26 @@ tModLoader/other bases -> project types:
     +PreHitWire(int,int,int)[ov]
 
 ### Content/Tiles/Machines/GeneralMachines/Motors/
-**MotorMK1Tile.cs** uses: MotorMK1Item, MotorMK1TileEntity, MotorTileBase
-  class MotorMK1Tile : MotorTileBase<MotorMK1TileEntity>
-**MotorMK1TileEntity.cs** uses: MotorMK1Tile, MotorTileEntityBase
-  class MotorMK1TileEntity : MotorTileEntityBase
+**IronMotorTile.cs** uses: IronMotorItem, IronMotorTileEntity, MotorTileBase, PipeMaterial
+  class IronMotorTile : MotorTileBase<IronMotorTileEntity>
+    #Material:PipeMaterial[ov]
+**IronMotorTileEntity.cs** uses: IronMotorTile, MotorTileEntityBase
+  class IronMotorTileEntity : MotorTileEntityBase
+    +ValidTileType:int[ov] +PumpStrength:float[ov] +PowerDemand:float[ov] +PipeEquivalentMaxFlowRate:float[ov] #UpdateMotor()[ov] #OnAnimationFrameChanged(int,int)[ov]
+**LeadMotorTile.cs** uses: LeadMotorItem, LeadMotorTileEntity, MotorTileBase, PipeMaterial
+  class LeadMotorTile : MotorTileBase<LeadMotorTileEntity>
+    #Material:PipeMaterial[ov]
+**LeadMotorTileEntity.cs** uses: LeadMotorTile, MotorTileEntityBase
+  class LeadMotorTileEntity : MotorTileEntityBase
     +ValidTileType:int[ov] +PumpStrength:float[ov] +PowerDemand:float[ov] +PipeEquivalentMaxFlowRate:float[ov] #UpdateMotor()[ov] #OnAnimationFrameChanged(int,int)[ov]
 
 ### Content/Tiles/Machines/GeneralMachines/Pipes/
-**PipeMK1Tile.cs** uses: PipeMK1Item, PipeTileBase
-  class PipeMK1Tile : PipeTileBase
-    #MaxFlowRate:float[ov]
+**IronPipeTile.cs** uses: IronPipeItem, PipeMaterial, PipeTileBase
+  class IronPipeTile : PipeTileBase
+    #MaxFlowRate:float[ov] #Material:PipeMaterial[ov] #PipeDustId:int[ov]
+**LeadPipeTile.cs** uses: LeadPipeItem, PipeMaterial, PipeTileBase
+  class LeadPipeTile : PipeTileBase
+    #MaxFlowRate:float[ov] #Material:PipeMaterial[ov]
 
 ### Content/Tiles/Ores/
 **CoalTile.cs**

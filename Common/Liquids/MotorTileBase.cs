@@ -11,13 +11,16 @@ using Terraria.ObjectData;
 
 namespace Factorraria.Common.Liquids
 {
-    // Every motor TIER (MK1, future MK2, etc) inherits this, parameterized by its
+    // Every motor variant (lead, iron, ...) inherits this, parameterized by its
     // own MotorTileEntity subtype. Handles placement-hook wiring and telling the
     // liquid network a topology-relevant tile appeared/disappeared — mirrors
     // PipeTileBase's role, just without the auto-shaping (motors don't reframe
     // based on neighbors, they're a fixed sprite rotated via right-click instead).
     public abstract class MotorTileBase<TEntity> : ModTile, IMotorTile where TEntity : MotorTileEntityBase, new()
     {
+        // A motor only joins pipes of the SAME material (see PipeTierRegistry.CanLink).
+        protected abstract PipeMaterial Material { get; }
+
         public override void SetStaticDefaults()
         {
             Main.tileFrameImportant[Type] = true;
@@ -41,11 +44,13 @@ namespace Factorraria.Common.Liquids
             // MUST be called after setting AnchorBottom
             TileObjectData.addTile(Type);
 
+            PipeTierRegistry.RegisterMotor(Type, Material);
+
             // Art outside the 16px cell: 2 cells in a row (0 = Off, 1 = On), drawn facing Right and rotated with the motor. See TileOverdrawSystem.
             ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell);
         }
 
-        // MotorMK1Tile -> .../MotorMK1Overdraw (PNG optional: a missing sheet just draws nothing).
+        // LeadMotorTile -> .../LeadMotorOverdraw (PNG optional: a missing sheet just draws nothing).
         protected virtual string OverdrawTexturePath => Texture.EndsWith("Tile") ? Texture.Substring(0, Texture.Length - 4) + "Overdraw" : Texture + "_Overdraw";
 
         // Placement hologram: a new motor is Off and faces Right (MotorTileEntityBase.Facing default).

@@ -94,16 +94,39 @@ namespace Factorraria.Common.Liquids
         }
     }
 
-    // Maps a pipe TILE TYPE to its max flow-rate capacity. MK1 registers one rate,
+    // Which family a pipe or motor belongs to. Lead and iron never join into one network and never connect visually.
+    public enum PipeMaterial
+    {
+        Lead = 0,
+        Iron = 1
+    }
+
+    // Maps a pipe TILE TYPE to its max flow-rate capacity and its material. Each tier registers its own rate,
     // a future MK2 registers a higher rate — no other code changes when a tier is added.
     public static class PipeTierRegistry
     {
         public static Dictionary<int, float> MaxFlowRateByTileType = new();
 
-        public static void Register(int pipeTileType, float maxFlowRate)
+        // Pipe AND motor tile types -> their material. A link between two tiles exists only when both are registered here with the SAME material.
+        public static Dictionary<int, PipeMaterial> MaterialByTileType = new();
+
+        public static void Register(int pipeTileType, float maxFlowRate, PipeMaterial material)
         {
             MaxFlowRateByTileType[pipeTileType] = maxFlowRate;
+            MaterialByTileType[pipeTileType] = material;
         }
+
+        // Motors are not pipes (no flow rate here, their entity has it), but they still belong to a material.
+        public static void RegisterMotor(int motorTileType, PipeMaterial material)
+        {
+            MaterialByTileType[motorTileType] = material;
+        }
+
+        public static bool TryGetMaterial(int tileType, out PipeMaterial material) => MaterialByTileType.TryGetValue(tileType, out material);
+
+        // The one rule that keeps lead and iron apart: used by the sprite mask, the network flood fill and the port scan.
+        public static bool CanLink(int tileTypeA, int tileTypeB) =>
+            MaterialByTileType.TryGetValue(tileTypeA, out PipeMaterial a) && MaterialByTileType.TryGetValue(tileTypeB, out PipeMaterial b) && a == b;
 
         // Lets the network scanner ask "is this tile even a pipe" without knowing
         // how many tiers exist.
