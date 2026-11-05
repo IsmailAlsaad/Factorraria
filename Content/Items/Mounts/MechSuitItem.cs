@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.GameInput;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -52,9 +53,9 @@ namespace Factorraria.Content.Items.Mounts
     public static class MechSuitTileSearch
     {
         // Nearest solid tile to centerWorld within radiusPixels, skipping anything in
-        // excludeTiles (tiles other arms are already anchored to). Plain O(radius^2) tile
+        // any tile closer than deadzoneRadiusPixels to an anchor another arm already uses. Plain O(radius^2) tile
         // scan — fine at the throttled call rate MechSuitPlayer uses (cooldown-gated).
-        public static bool TryFindNearestAnchorTile(Vector2 centerWorld, float radiusPixels, HashSet<Point> excludeTiles, out Point foundTile)
+        public static bool TryFindNearestAnchorTile(Vector2 centerWorld, float radiusPixels, List<Vector2> deadzoneCenters, float deadzoneRadiusPixels, out Point foundTile)
         {
             foundTile = default;
             float bestDistSq = float.MaxValue;
@@ -64,6 +65,7 @@ namespace Factorraria.Content.Items.Mounts
             int centerTileY = (int)(centerWorld.Y / 16f);
             int radiusTiles = (int)System.MathF.Ceiling(radiusPixels / 16f);
             float radiusSq = radiusPixels * radiusPixels;
+            float deadzoneSq = deadzoneRadiusPixels * deadzoneRadiusPixels;
 
             for (int x = centerTileX - radiusTiles; x <= centerTileX + radiusTiles; x++)
             {
@@ -72,7 +74,6 @@ namespace Factorraria.Content.Items.Mounts
                     if (!WorldGen.InWorld(x, y)) continue;
 
                     Point tilePoint = new Point(x, y);
-                    if (excludeTiles.Contains(tilePoint)) continue;
 
                     Tile tile = Main.tile[x, y];
                     if (!tile.HasTile || !Main.tileSolid[tile.TileType]) continue;
@@ -80,6 +81,21 @@ namespace Factorraria.Content.Items.Mounts
                     Vector2 tileCenter = new Vector2(x * 16 + 8, y * 16 + 8);
                     float distSq = Vector2.DistanceSquared(centerWorld, tileCenter);
                     if (distSq > radiusSq) continue;
+
+                    // Deadzone: a tile this close to another arm's anchor is not allowed (a circle, not just the anchor tile itself).
+                    bool inDeadzone = false;
+                    if (deadzoneCenters != null)
+                    {
+                        for (int d = 0; d < deadzoneCenters.Count; d++)
+                        {
+                            if (Vector2.DistanceSquared(deadzoneCenters[d], tileCenter) < deadzoneSq)
+                            {
+                                inDeadzone = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (inDeadzone) continue;
 
                     if (distSq < bestDistSq)
                     {
@@ -104,6 +120,11 @@ namespace Factorraria.Content.Items.Mounts
             ProjectileIndex < Main.maxProjectiles &&
             Main.projectile[ProjectileIndex].active &&
             Main.projectile[ProjectileIndex].type == ModContent.ProjectileType<MechSuitArmProjectile>();
+
+        public bool IsLatched =>
+            IsActive &&
+            Main.projectile[ProjectileIndex].ModProjectile is MechSuitArmProjectile arm &&
+            arm.Latched;
     }
 
     public class MechSuitPlayer : ModPlayer
@@ -111,13 +132,16 @@ namespace Factorraria.Content.Items.Mounts
         public const int MaxArms = 3;
 
         // Tunables — adjust to taste.
-        const float SearchRadiusTiles = 12f;
-        const float CutoffRadiusTiles = 20f;
-        const float MoveSpeed = 7f;
-        const int SearchCooldownTicks = 10; // throttles the tile scan while drifting/waiting
+        // Public so the EnableDebugs overlay (MechSuitDebugSystem) can draw them. Plain fields on purpose, so hot reload can tweak them.
+        public float SearchRadiusTiles = 12f;   // an arm looks for an anchor tile this far from the player
+        public float CutoffRadiusTiles = 20f;   // the player can never get farther than this from the closest latched arm
+        public float DeadzoneRadiusTiles = 4f;  // a new arm only launches at a tile at least this far from every other arm's anchor
+        public float MoveSpeed = 7f;
+        public int SearchCooldownTicks = 10;    // throttles the tile scan while drifting/waiting
 
-        const float SearchRadiusPixels = SearchRadiusTiles * 16f;
-        const float CutoffRadiusPixels = CutoffRadiusTiles * 16f;
+        public float SearchRadiusPixels => SearchRadiusTiles * 16f;
+        public float CutoffRadiusPixels => CutoffRadiusTiles * 16f;
+        public float DeadzoneRadiusPixels => DeadzoneRadiusTiles * 16f;
 
         public bool IsActive { get; private set; }
 
@@ -133,6 +157,11 @@ namespace Factorraria.Content.Items.Mounts
         int PosResyncTicks = 1;
         int posResyncTimer;
         Vector2 lastMoveInput;
+        // Vanilla's move step reads controlDown as "fall through platforms". While the suit flies it is forced on for that one step and put
+        // back in PostUpdate (before anything reads or sends the real control bits). Owner and remote copies both do this.
+        bool controlDownForced;
+        bool controlDownSaved;
+        readonly List<Vector2> deadzoneScratch = new List<Vector2>();
 
         public void Activate()
         {
@@ -196,7 +225,7 @@ namespace Factorraria.Content.Items.Mounts
         // pose. The owner overwrites its velocity in ApplyFreeMovement, so it does not need this.
         public override void PostUpdateRunSpeeds()
         {
-            if (IsActive && !FactorrariaNet.IsOwner(Player))
+            if (IsActive && !FactorrariaNet.IsOwner(Player) && TryGetClosestLatchedAnchor(out _))
             {
                 Player.gravity = 0f;
             }
@@ -215,7 +244,12 @@ namespace Factorraria.Content.Items.Mounts
                 // every frame), so this copy must too. The control bits from the player packet say what the owner is holding; a packet
                 // that says "stopped" carries no velocity, so extrapolating the old one made the copy slide on. The position packets
                 // (sent every tick by the owner, see PosResyncTicks) are what keep the copy where the owner actually is.
-                Player.velocity = ReadMoveInput() * MoveSpeed;
+                // With no arm latched the owner is in regular movement (gravity), so the copy keeps what the position packets say.
+                if (TryGetClosestLatchedAnchor(out Vector2 remoteAnchor))
+                {
+                    Player.velocity = BoundedSuitVelocity(remoteAnchor);
+                    ForcePlatformPassThrough();
+                }
                 return;
             }
 
@@ -230,20 +264,37 @@ namespace Factorraria.Content.Items.Mounts
             // held, so "controlJump && releaseJump" was never true here. PlayerInput would read the local keyboard for every player.
             bool jumpPressed = Player.controlJump && !jumpWasDown;
             jumpWasDown = Player.controlJump;
+
+            UpdateArms();
+
+            // No arm latched (still flying out, or nothing in range): the suit gives up the movement and the player falls and moves like
+            // normal, with gravity. Space is then a normal jump; it only dismounts while the suit is in control.
+            if (!TryGetClosestLatchedAnchor(out Vector2 anchor))
+                return;
+
             if (jumpPressed)
             {
                 Deactivate();
                 return;
             }
 
-            UpdateArms();
-            ApplyFreeMovement();
+            ApplyFreeMovement(anchor);
+            ForcePlatformPassThrough();
         }
 
         // After vanilla has moved the player this frame (so the packet carries the new position). Owner only: send the suit's position when the
         // input changes and every PosResyncTicks, because the owner's velocity is overwritten every frame and vanilla sees nothing worth sending.
         public override void PostUpdate()
         {
+            if (controlDownForced)
+            {
+                Player.controlDown = controlDownSaved;
+                controlDownForced = false;
+            }
+
+            if (IsActive && TryGetClosestLatchedAnchor(out _))
+                ApplyFallPose();
+
             if (!IsActive || !FactorrariaNet.IsOwner(Player))
                 return;
 
@@ -271,15 +322,97 @@ namespace Factorraria.Content.Items.Mounts
             return move;
         }
 
-        void ApplyFreeMovement()
+        void ApplyFreeMovement(Vector2 anchor)
         {
             Player.gravity = 0f;
 
-            Vector2 move = ReadMoveInput();
-
-            // Directly setting velocity (not position) keeps normal tile collision intact —
+            // Directly setting velocity (not position) keeps normal tile collision intact:
             // the vanilla movement step that follows still runs Collision.TileCollision on this.
-            Player.velocity = move * MoveSpeed;
+            Player.velocity = BoundedSuitVelocity(anchor);
+        }
+
+        // The input direction at MoveSpeed, bounded so the player can never end up farther than CutoffRadiusPixels from the closest latched
+        // arm's anchor: the part of the move that would leave the circle is cut off (the player slides along it), and a player that is already
+        // outside is pulled back in (at most twice MoveSpeed per tick). Used by the owner and by remote copies, so both agree.
+        Vector2 BoundedSuitVelocity(Vector2 anchor)
+        {
+            Vector2 velocity = ReadMoveInput() * MoveSpeed;
+
+            Vector2 fromAnchor = Player.Center + velocity - anchor;
+            float distance = fromAnchor.Length();
+            float cutoff = CutoffRadiusPixels;
+            if (distance > cutoff && distance > 0.001f)
+            {
+                Vector2 bounded = anchor + fromAnchor / distance * cutoff;
+                velocity = bounded - Player.Center;
+
+                float maxPull = MoveSpeed * 2f;
+                if (velocity.Length() > maxPull)
+                    velocity = Vector2.Normalize(velocity) * maxPull;
+            }
+
+            return velocity;
+        }
+
+        // Closest latched arm of this player, on any machine. Reads the arm projectiles themselves (the anchor travels in ai[0..2] and every
+        // machine works out Latched on its own), not the owner-only arms array, so remote copies and the debug overlay get the same answer.
+        public bool TryGetClosestLatchedAnchor(out Vector2 anchor)
+        {
+            anchor = default;
+            float bestDistSq = float.MaxValue;
+            bool found = false;
+            int armType = ModContent.ProjectileType<MechSuitArmProjectile>();
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (!projectile.active || projectile.type != armType || projectile.owner != Player.whoAmI)
+                    continue;
+                if (!(projectile.ModProjectile is MechSuitArmProjectile arm) || !arm.Latched)
+                    continue;
+
+                float distSq = Vector2.DistanceSquared(Player.Center, projectile.Center);
+                if (distSq < bestDistSq)
+                {
+                    bestDistSq = distSq;
+                    anchor = projectile.Center;
+                    found = true;
+                }
+            }
+
+            return found;
+        }
+
+        // Platforms: only the "fall through" flag of the vanilla move step lets a body pass through them, and it is tied to controlDown.
+        // Forced on for this one step while the suit flies; PostUpdate puts the real value back.
+        void ForcePlatformPassThrough()
+        {
+            if (controlDownForced)
+                return;
+
+            controlDownSaved = Player.controlDown;
+            Player.controlDown = true;
+            controlDownForced = true;
+        }
+
+        // Frame 5 of the player sheet is the jump/fall pose. Legs always; the body only when no item swing is using its arm frames.
+        void ApplyFallPose()
+        {
+            Player.legFrame.Y = Player.legFrame.Height * 5;
+            Player.legFrameCounter = 0.0;
+
+            if (Player.itemAnimation <= 0)
+            {
+                Player.bodyFrame.Y = Player.bodyFrame.Height * 5;
+                Player.bodyFrameCounter = 0.0;
+            }
+        }
+
+        // Draw time as well, in case the frame code ran after PostUpdate this tick. Every machine draws every suited player this way.
+        public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo)
+        {
+            if (IsActive && TryGetClosestLatchedAnchor(out _))
+                ApplyFallPose();
         }
 
         void UpdateArms()
@@ -288,6 +421,7 @@ namespace Factorraria.Content.Items.Mounts
                 searchCooldown--;
 
             int activeCount = 0;
+            int latchedCount = 0;
             bool anyBeyondSearch = false;
 
             for (int i = 0; i < MaxArms; i++)
@@ -299,6 +433,7 @@ namespace Factorraria.Content.Items.Mounts
                 }
 
                 activeCount++;
+                if (arms[i].IsLatched) latchedCount++;
 
                 float dist = Vector2.Distance(Player.Center, AnchorWorldCenter(arms[i].AnchorTile));
                 if (dist > SearchRadiusPixels)
@@ -312,11 +447,15 @@ namespace Factorraria.Content.Items.Mounts
                 if (!arms[i].IsActive) continue;
 
                 float dist = Vector2.Distance(Player.Center, AnchorWorldCenter(arms[i].AnchorTile));
-                if (dist > CutoffRadiusPixels && activeCount > 1)
+                // A latched arm beyond the cutoff is dropped only while another latched arm remains (the bound in BoundedSuitVelocity keeps
+                // the player inside the circle of the closest one). An arm still flying out is dropped if any latched arm exists.
+                bool wasLatched = arms[i].IsLatched;
+                if (dist > CutoffRadiusPixels && (wasLatched ? latchedCount > 1 : latchedCount > 0))
                 {
                     Main.projectile[arms[i].ProjectileIndex].Kill();
                     arms[i] = new MechArmSlot { ProjectileIndex = -1 };
                     activeCount--;
+                    if (wasLatched) latchedCount--;
                 }
             }
 
@@ -354,11 +493,12 @@ namespace Factorraria.Content.Items.Mounts
 
         void TryLaunchNewArm(int slot)
         {
-            HashSet<Point> exclude = new HashSet<Point>();
+            // Every arm that is out (flying or latched) blocks new anchors inside its deadzone circle.
+            deadzoneScratch.Clear();
             for (int i = 0; i < MaxArms; i++)
-                if (arms[i].IsActive) exclude.Add(arms[i].AnchorTile);
+                if (arms[i].IsActive) deadzoneScratch.Add(AnchorWorldCenter(arms[i].AnchorTile));
 
-            if (!MechSuitTileSearch.TryFindNearestAnchorTile(Player.Center, SearchRadiusPixels, exclude, out Point tile))
+            if (!MechSuitTileSearch.TryFindNearestAnchorTile(Player.Center, SearchRadiusPixels, deadzoneScratch, DeadzoneRadiusPixels, out Point tile))
                 return; // nothing in range — will just retry next eligible tick (fallback to gravity is implicit: no arm means normal player physics elsewhere still hold)
 
             // The anchor tile and the bend side travel in ai[0..2] of the spawn packet, so every machine builds the same arm from the packet itself.

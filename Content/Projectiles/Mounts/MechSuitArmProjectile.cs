@@ -4,7 +4,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Content.Projectiles.Mounts
@@ -93,6 +95,10 @@ namespace Factorraria.Content.Projectiles.Mounts
                 {
                     Projectile.Center = AnchorWorldPos;
                     latched = true;
+
+                    // Cosmetic and local: every machine works out the latch itself, so every client hears it (positional), the server skips it.
+                    if (!Main.dedServ)
+                        SoundEngine.PlaySound(SoundID.Tink, Projectile.Center);
                 }
                 else
                 {
