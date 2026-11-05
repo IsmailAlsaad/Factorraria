@@ -120,8 +120,8 @@ namespace Factorraria.Content.Projectiles.Mounts
             Texture2D headTexture = TextureAssets.Projectile[Type].Value;
             Color drawColor = Lighting.GetColor((int)(head.X / 16f), (int)(head.Y / 16f));
 
-            MechanicalArmIK.DrawSegment(Main.spriteBatch, beam, shoulder, joint, drawColor);
-            MechanicalArmIK.DrawSegment(Main.spriteBatch, beam, joint, head, drawColor);
+            MechanicalArmIK.DrawSegment(Main.spriteBatch, beam, shoulder, joint, drawColor, 0.4f);
+            MechanicalArmIK.DrawSegment(Main.spriteBatch, beam, joint, head, drawColor, 0.4f);
 
             Texture2D jointTexture = JointTexture.Value;
             Vector2 jointOrigin = jointTexture.Size() / 2f;
