@@ -1530,7 +1530,7 @@ tModLoader/other bases -> project types:
 ### Content/Projectiles/Hooks/
 **MechanicalArmProjectile.cs** uses: FactorrariaNet, MechanicalArmIK
   class MechanicalArmProjectile : ModProjectile
-    +Load()[ov] +Unload()[ov] +CanUseGrapple(Player)[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +OnKill(int)[ov] +OnTileCollide(Vector2)[ov] +PreDraw(ref Color)[ov]
+    +Load()[ov] +Unload()[ov] +CanUseGrapple(Player)[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +OnKill(int)[ov] +PreDraw(ref Color)[ov]
 
 ### Content/Projectiles/Mounts/
 **MechSuitArmProjectile.cs** uses: FactorrariaNet, MechSuitPlayer, MechanicalArmIK

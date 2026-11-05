@@ -44,6 +44,7 @@ namespace Factorraria.Content.Projectiles.Hooks
         // Owner only: how many AI updates the owner keeps a released arm alive, so the state packet (netUpdate) goes out before it is removed.
         int ReleaseKillTicks = 4;
         int releaseTicks;
+        bool retractTimerSet;
         uint launchTick;   // owner only: the game update the arm was launched in (see ApplyPush)
         const float RetractSpeed = 14f; // pixels per AI tick while pulling back in
 
@@ -87,7 +88,7 @@ namespace Factorraria.Content.Projectiles.Hooks
             Projectile.height = 32;
             Projectile.friendly = false;
             Projectile.hostile = false;
-            Projectile.tileCollide = true;
+            Projectile.tileCollide = false; // the claw tests its own tip against the tiles (FlyStep), the 32x32 hitbox latched it far from the wall
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
             Projectile.aiStyle = -1; // custom — vanilla's hook aiStyle pulls the player IN, which is exactly what we don't want
@@ -99,7 +100,7 @@ namespace Factorraria.Content.Projectiles.Hooks
 
         // While latched the projectile is frozen in the wall — don't let the normal
         // position-integration step (velocity added to position every frame) touch it.
-        public override bool ShouldUpdatePosition() => !Latched && !Retracting; // manual position control in both non-flying states
+        public override bool ShouldUpdatePosition() => false; // manual position control in every state (flying moves in FlyStep)
 
         public override void AI()
         {
@@ -138,6 +139,7 @@ namespace Factorraria.Content.Projectiles.Hooks
             if (!Latched)
             {
                 Projectile.rotation = Projectile.velocity.ToRotation();
+                FlyStep();
             }
             else
             {
@@ -154,7 +156,7 @@ namespace Factorraria.Content.Projectiles.Hooks
 
                     if (PlayerInput.Triggers.JustPressed.Jump)
                     {
-                        Release(); // instant for the owner (hidden at once), synced to everyone else
+                        BeginRetract(); // the claw reels back in (synced through ai[0] = 2), the push stops and the player keeps the momentum
                         return;
                     }
 
@@ -170,6 +172,13 @@ namespace Factorraria.Content.Projectiles.Hooks
 
         void UpdateRetract(Player player)
         {
+            // A latched arm keeps timeLeft pinned at 2 (see AI), so without a fresh value the projectile expired two updates into the reel-in
+            // and vanished instead of retracting. Every machine sets its own once.
+            if (!retractTimerSet)
+            {
+                retractTimerSet = true;
+                Projectile.timeLeft = 300;
+            }
             FactorrariaNet.SyncPlayerNow(player); // the owner is still carrying the push's momentum while the arm reels in
 
             Vector2 toPlayer = player.Center - Projectile.Center;
@@ -204,25 +213,73 @@ namespace Factorraria.Content.Projectiles.Hooks
             FactorrariaNet.SyncPlayerNow(Main.player[Projectile.owner]);
         }
 
-        public override bool OnTileCollide(Vector2 oldVelocity)
-        {
-            if (Latched)
-                return false;
+        // Where the claw's metal tip sits along the projectile's rotation, in pixels from its centre (the opaque sprite ends 15.5 px out), and how far
+        // the two outer prongs reach sideways.
+        float TipLength = 15f;
+        float ProngSpread = 7f;
 
-            // Lock in the push direction as the OPPOSITE of where the head was traveling/facing
-            // on impact — fixed for the rest of this latch, independent of player position.
-            pushDirection = oldVelocity != Vector2.Zero
-                ? -Vector2.Normalize(oldVelocity)
-                : new Vector2(0f, -1f); // degenerate fallback, shouldn't normally hit
+        // Flying: the claw moves in 2 px steps along its velocity and latches the moment its tip (or one of the two outer prongs) is inside a solid
+        // tile, so it stops against the tile instead of the 32x32 hitbox latching it up to half a tile-width-times-two away. Runs on every machine,
+        // like the vanilla collision did; the owner's netUpdate then carries the latch (ai[0] = 1).
+        void FlyStep()
+        {
+            Vector2 velocity = Projectile.velocity;
+            float speed = velocity.Length();
+            if (speed < 0.01f)
+                return;
+
+            Vector2 direction = velocity / speed;
+
+            if (ClawTouchesTile(Projectile.Center, direction))
+            {
+                LatchOn(direction);
+                return;
+            }
+
+            float travelled = 0f;
+            while (travelled < speed)
+            {
+                float step = Math.Min(2f, speed - travelled);
+                Vector2 next = Projectile.Center + direction * step;
+
+                if (ClawTouchesTile(next, direction))
+                {
+                    LatchOn(direction);
+                    return;
+                }
+
+                Projectile.Center = next;
+                travelled += step;
+            }
+        }
+
+        bool ClawTouchesTile(Vector2 center, Vector2 direction)
+        {
+            Vector2 side = new Vector2(-direction.Y, direction.X) * ProngSpread;
+            Vector2 tip = center + direction * TipLength;
+            Vector2 prong = center + direction * (TipLength - 4f);
+
+            return SolidAt(tip) || SolidAt(prong + side) || SolidAt(prong - side);
+        }
+
+        static bool SolidAt(Vector2 world)
+        {
+            int x = (int)(world.X / 16f);
+            int y = (int)(world.Y / 16f);
+            return WorldGen.InWorld(x, y) && WorldGen.SolidTile(x, y);
+        }
+
+        void LatchOn(Vector2 direction)
+        {
+            // Lock in the push direction as the OPPOSITE of where the head was traveling/facing on impact — fixed for the rest of this latch,
+            // independent of player position.
+            pushDirection = -direction;
 
             Projectile.velocity = Vector2.Zero;
             Projectile.ai[0] = 1f;
-            Projectile.tileCollide = false;
             Projectile.netUpdate = true;
 
-            SoundEngine.PlaySound(SoundID.Dig, Projectile.position);
-
-            return false;
+            SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
         }
 
         void ApplyPush(Player player)
