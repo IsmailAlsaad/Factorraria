@@ -39,6 +39,12 @@ namespace Factorraria.Common.Liquids
             // Clear default floor requirement
             TileObjectData.newTile.AnchorBottom = AnchorData.Empty;
 
+            // Lava: survives it (no break on contact, no obsidian kill) and can be placed inside it.
+            TileObjectData.newTile.LavaDeath = false;
+            TileObjectData.newTile.LavaPlacement = LiquidPlacement.Allowed;
+            Main.tileLavaDeath[Type] = false;
+            Main.tileObsidianKill[Type] = false;
+
             // MUST be called after setting AnchorBottom
             TileObjectData.addTile(Type);
 
