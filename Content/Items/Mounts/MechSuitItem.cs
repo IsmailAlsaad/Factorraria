@@ -423,7 +423,6 @@ namespace Factorraria.Content.Items.Mounts
 
             int activeCount = 0;
             int latchedCount = 0;
-            bool anyBeyondSearch = false;
 
             for (int i = 0; i < MaxArms; i++)
             {
@@ -435,10 +434,6 @@ namespace Factorraria.Content.Items.Mounts
 
                 activeCount++;
                 if (arms[i].IsLatched) latchedCount++;
-
-                float dist = Vector2.Distance(Player.Center, AnchorWorldCenter(arms[i].AnchorTile));
-                if (dist > SearchRadiusPixels)
-                    anyBeyondSearch = true;
             }
 
             // Cutoff retraction — only ever drop an arm if at least one other stays attached,
@@ -460,12 +455,11 @@ namespace Factorraria.Content.Items.Mounts
                 }
             }
 
-            // Launch a new arm if we have zero (fresh activation / open-air fallback) or the
-            // player has drifted past search radius on an existing one. Doesn't retract anything.
-            bool needsSearch = activeCount == 0 || anyBeyondSearch;
+            // Always try to fill every free slot (up to MaxArms): one arm per search tick, each at the nearest tile outside the deadzone
+            // circles of the arms that are already out. Doesn't retract anything; the scan is throttled by SearchCooldownTicks.
             int freeSlot = FindFreeSlot();
 
-            if (needsSearch && freeSlot != -1 && searchCooldown <= 0)
+            if (freeSlot != -1 && searchCooldown <= 0)
             {
                 TryLaunchNewArm(freeSlot);
                 searchCooldown = SearchCooldownTicks;

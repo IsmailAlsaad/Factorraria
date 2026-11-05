@@ -506,6 +506,8 @@ Same two issues as step 2 (anchor tile and bend sign need `NetSend/NetReceive`; 
 
 **Status (patch 2.1f, applied, untested):** 2.1e test: everything passed except going DOWN through platforms (up worked, as platforms are one-way). Forcing `controlDown` is removed (so the one-tick "Down held" packet risk is gone too). `StepThroughPlatforms` compares `Collision.TileCollision` with and without fall-through; if only a platform blocks the move, the player is moved by the fall-through result and velocity is cleared. Unverified in-game; the vanilla move step's own fall-through source was not available in the repo.
 
+**Status (patch 2.1g, applied, untested):** 2.1f works. The owner now tries to fill every free arm slot (no more "only when no arm or one is out of search range"); the claw head is drawn along elbow joint -> contact point on every machine (cosmetic, no packets).
+
 ### I8 (L) Items and tiles that need nothing
 Materials (`ByriteAlloy*`, `Coke`, `*Sheet`, `GoldPlate`, `GoldWire`, `MeteoritePanel`, `SimpleCircuit`, `Steel*`), `SiliconOre*` and `PureSilicon*` (item + ore tile), `MechanicalAssemblerItem`, and the joke items (draw hooks only; `IsmailsCaneItem` hold style is cosmetic). They are deterministic data and run the same on every side.
 

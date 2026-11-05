@@ -127,8 +127,12 @@ namespace Factorraria.Content.Projectiles.Mounts
             Vector2 jointOrigin = jointTexture.Size() / 2f;
             Main.spriteBatch.Draw(jointTexture, joint - Main.screenPosition, null, drawColor, 0f, jointOrigin, 1f, SpriteEffects.None, 0f);
 
+            // The claw points along the forearm: from the elbow joint to the point of contact (also while it is still flying out).
+            Vector2 forearm = head - joint;
+            float headRotation = forearm.LengthSquared() > 0.01f ? forearm.ToRotation() : Projectile.rotation;
+
             Vector2 headOrigin = headTexture.Size() / 2f;
-            Main.spriteBatch.Draw(headTexture, head - Main.screenPosition, null, drawColor, Projectile.rotation, headOrigin, 1f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(headTexture, head - Main.screenPosition, null, drawColor, headRotation, headOrigin, 1f, SpriteEffects.None, 0f);
 
             return false;
         }
