@@ -84,6 +84,10 @@ namespace Factorraria.Common.UI.CustomUIElements
         public ZoomScrollbar scrollbar;
         float zoom = 1f;
 
+        // The scroll position and zoom as they were at the end of the last drawn frame (see Draw).
+        float drawnView;
+        float drawnZoom;
+
         const float SearchHeight = 24f;
         RecipeSearchBar searchBar;
         string searchFilter = "";
@@ -258,7 +262,21 @@ namespace Factorraria.Common.UI.CustomUIElements
                 return;
             }
 
+            // The scroll position is a pixel offset, but zoom resizes the rows, the gaps and the list, so the same offset points at different
+            // content after a zoom change (the list seemed to scroll by itself). Rescale it by the zoom change so the same recipes stay in view.
+            // This runs after the layout was recalculated for the new zoom (MachineUISystem.UpdateUIPosition runs just before the draw), so the
+            // setter clamps against the new range.
+            if (scrollbar != null && drawnZoom > 0f && Math.Abs(zoom - drawnZoom) > 0.0001f)
+                scrollbar.ViewPosition = drawnView / drawnZoom * zoom;
+
             base.Draw(spriteBatch);
+
+            // After the draw, so a wheel scroll or a thumb drag made this frame is what the next zoom change starts from.
+            if (scrollbar != null)
+            {
+                drawnView = scrollbar.ViewPosition;
+                drawnZoom = zoom;
+            }
         }
 
         protected override void DrawSelf(SpriteBatch sb) => ScaledPanel.Draw(sb, GetDimensions().ToRectangle(), BackgroundColor, BorderColor, zoom);
