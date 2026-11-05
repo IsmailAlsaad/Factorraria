@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Factorraria.Common.UI.RecipeBookUI;
+using Factorraria.Common.Net;
 
 namespace Factorraria.Common.Knowledge
 {
@@ -17,6 +18,7 @@ namespace Factorraria.Common.Knowledge
     ///   /recipes crafted      list recipes crafted by a machine in this world
     ///   /recipes state        list every recipe that is not Hidden for you right now, with its state
     ///   /recipes reset        forget every parchment unlock, crafted mark and seen ingredient in this world (single-player only)
+    ///   /recipes obtained     toggle "items in your inventory count as crafted" (single-player only). Turn it OFF before /recipes reset to test the hidden states
     ///   /recipes counts       how many unlocked / crafted / seen entries THIS process knows (multiplayer test: compare with the server log)
     ///   /recipes defpos       print the defense icon position (use at 1920x1080, UI scale 100%, to calibrate the book button)
     ///   /recipes btnreset     put the recipe book button back to its default spot (forgets where you dragged it)
@@ -25,7 +27,7 @@ namespace Factorraria.Common.Knowledge
     {
         public override string Command => "recipes";
         public override CommandType Type => CommandType.Chat;
-        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | counts | reset | defpos | btnreset";
+        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | counts | reset | obtained | defpos | btnreset";
         public override string Description => "Recipe discovery debug tools";
 
         static void Give(CommandCaller caller, int type, string pool, int n, string what)
@@ -100,6 +102,16 @@ namespace Factorraria.Common.Knowledge
                     caller.Reply($"{shown} recipe(s) not hidden.", Color.LightGreen);
                     break;
                 }
+                case "obtained":
+                    if (Main.netMode != NetmodeID.SinglePlayer)
+                    {
+                        // The scan runs on the server, and a chat command runs on this client only.
+                        caller.Reply("/recipes obtained only works in single-player (the scan runs on the server in multiplayer).", Color.Yellow);
+                        break;
+                    }
+                    RecipeKnowledgeNet.ObtainedMarksCrafted = !RecipeKnowledgeNet.ObtainedMarksCrafted;
+                    caller.Reply("Items in your inventory count as crafted: " + (RecipeKnowledgeNet.ObtainedMarksCrafted ? "ON" : "OFF") + ".", Color.LightGreen);
+                    break;
                 case "counts":
                     caller.Reply($"Known here: {RecipeKnowledgeSystem.UnlockedKeys.Count} unlocked, {RecipeKnowledgeSystem.CraftedKeys.Count} crafted, {RecipeKnowledgeSystem.SeenItems.Count} seen ingredient item(s).", Color.LightGreen);
                     break;
@@ -128,6 +140,8 @@ namespace Factorraria.Common.Knowledge
                     RecipeKnowledgeSystem.ResetCrafted();
                     RecipeKnowledgeSystem.ResetSeen();
                     caller.Reply("Cleared all parchment unlocks, crafted marks and seen ingredients for this world.", Color.LightGreen);
+                    if (RecipeKnowledgeNet.ObtainedMarksCrafted)
+                        caller.Reply("Products in your inventory will be marked crafted again within a second. Run /recipes obtained first to turn that off.", Color.Yellow);
                     break;
                 default:
                     caller.Reply(Usage, Color.Yellow);

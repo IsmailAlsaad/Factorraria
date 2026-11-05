@@ -15,6 +15,8 @@ namespace Factorraria.Common.Net
     //  - join: provider "recipe-knowledge" sends all three sets, the client replaces its copy and both version counters are bumped
     //    (so the recipe book, the machine browsers and RecipeVisibility rebuild)
     //  - crafted: BaseMachine.FinishRecipe runs on the server and calls ServerMarkCrafted, which broadcasts KnowledgeDelta
+    //  - obtained: an item in a player's inventory counts as crafted. The server scans its own copy of every player's inventory a few
+    //    times a second (ServerScanObtained) and calls ServerMarkCrafted for every recipe that makes it. No packet of its own.
     //  - seen: RecipeVisibility scans the local inventory; every newly seen ingredient type is marked here at once and queued,
     //    and a few times a second the queue goes to the server as ONE SeenReport; the server keeps what is new and broadcasts
     //    SeenDelta to everyone else (one player holding an ingredient reveals it for everybody)
@@ -37,6 +39,7 @@ namespace Factorraria.Common.Net
         public override void PostUpdateEverything()
         {
             RecipeKnowledgeNet.Update();
+            RecipeKnowledgeNet.ServerScanObtained();
         }
 
         public override void OnWorldUnload()
@@ -110,6 +113,69 @@ namespace Factorraria.Common.Net
                 FactorrariaNet.Log("[Knowledge] recipe crafted: " + catalogKey + " (crafted now " + RecipeKnowledgeSystem.CraftedKeys.Count + ")");
 
             SendKnowledgeDelta(KnowledgeKind.Crafted, catalogKey);
+        }
+
+        // ---------------------------------------------------------------- obtained items count as crafted (server)
+
+        // Tunables (not const, so hot reload can change them).
+        public static bool ObtainedMarksCrafted = true;   // debug switch: /recipes obtained (single-player) turns it off so hidden states can be tested
+        public static int ObtainedScanTicks = 30;         // how often the server looks through every player's inventory
+        public static int MaxObtainedMarksPerScan = 48;   // new crafted marks per scan; the rest waits for the next scan (a join with a full inventory would otherwise broadcast hundreds of packets in one tick)
+
+        /// <summary>
+        /// Server or single-player, a few times a second: an item that sits in a player's inventory counts as crafted. Every recipe
+        /// that makes it (any machine) is marked crafted for the whole world, so its recipe book entry and its name in the machine
+        /// browser stop being faded / "???", however the player got the item (mined, looted, bought, traded, taken from a chest...).
+        /// The server reads its own copy of each player's inventory (vanilla keeps it synced), so a client cannot claim an item it does
+        /// not hold, and the marks travel through the existing KnowledgeDelta, so this needs no packet. A multiplayer client does nothing.
+        /// </summary>
+        public static void ServerScanObtained()
+        {
+            if (!ObtainedMarksCrafted || Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            if (Main.GameUpdateCount % (uint)System.Math.Max(1, ObtainedScanTicks) != 0)
+                return;
+
+            int budget = System.Math.Max(1, MaxObtainedMarksPerScan);
+
+            for (int p = 0; p < Main.maxPlayers && budget > 0; p++)
+            {
+                Player player = Main.player[p];
+                if (player == null || !player.active)
+                    continue;
+
+                // 0-49 inventory + hotbar, 50-53 coins, 54-57 ammo, 58 the item on the mouse. Piggy bank, safe, void bag and equipment
+                // are not scanned (the same rule as RecipeVisibility's ingredient scan).
+                for (int i = 0; i < player.inventory.Length && budget > 0; i++)
+                    budget -= MarkObtained(player, player.inventory[i]);
+
+                // Single-player: the item on the cursor lives in Main.mouseItem first.
+                if (!Main.dedServ && p == Main.myPlayer && budget > 0)
+                    budget -= MarkObtained(player, Main.mouseItem);
+            }
+        }
+
+        // Marks every not-yet-crafted recipe that makes this item. Returns how many recipes were newly marked (0 for most items).
+        static int MarkObtained(Player player, Item item)
+        {
+            if (item == null || item.IsAir || !RecipeVisibility.TryGetItemProducers(item.type, out List<string> keys))
+                return 0;
+
+            int marked = 0;
+            foreach (string key in keys)
+            {
+                if (RecipeKnowledgeSystem.IsCrafted(key))
+                    continue;
+
+                ServerMarkCrafted(key);
+                marked++;
+            }
+
+            if (marked > 0)
+                FactorrariaNet.Log("[Knowledge] " + player.name + " obtained " + item.Name + ": " + marked + " recipe(s) now count as crafted");
+
+            return marked;
         }
 
         static void SendKnowledgeDelta(KnowledgeKind kind, string catalogKey)

@@ -186,6 +186,13 @@ namespace Factorraria.Common.Machines
         // Recipe book detail page: which ingredients may be shown, and where an ingredient's own recipe lives
         // ------------------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Catalog keys of every recipe group (of any machine) that makes this item type as its primary product. False if none does.
+        /// The server uses it to mark an obtained item's recipes as crafted (RecipeKnowledgeNet.ServerScanObtained). Do not modify the list.
+        /// </summary>
+        public static bool TryGetItemProducers(int itemType, out List<string> keys) =>
+            producerIndex.TryGetValue(RecipeOutputKey.ForItem(itemType), out keys);
+
         /// <summary>True if some recipe that makes this product (item or liquid) has been crafted in this world.</summary>
         public static bool IsProductCrafted(RecipeOutputKey product)
         {
