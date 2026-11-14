@@ -158,7 +158,8 @@ namespace Factorraria.Common.Machines
                 basePath + "ElectricalConsumers/RoboticArm/RoboticArm_On",
                 basePath + "ElectricalConsumers/RoboticArm/RoboticArm_Off");
 
-            // Bee Wheel: ONE base texture (no On/Off look), so the same path goes in both slots. 5x5 canvas = the footprint (no overhang).
+            // Bee Wheel: ONE base texture (no On/Off look), so the same path goes in both slots. BeeWheel_Base.png is a 5x6 canvas (80x96): the 5x5 footprint
+            // at the top (originY 0) plus ONE extra 16px row underneath it that is drawn over the ground tile it stands on. The canvas size is read from the PNG.
             // The wheel itself (BeeWheel.png) is drawn by BeeWheelTileEntity; HologramExtra adds it to the placement preview.
             MachineUIRegistry.Register(ModContent.TileType<BeeWheelTile>(), new BeeWheelUIState());
             MachineVisualRegistry.RegisterOverhang<BeeWheelTileEntity>(ModContent.TileType<BeeWheelTile>(),
@@ -173,8 +174,9 @@ namespace Factorraria.Common.Machines
             MachineUIRegistry.Register(ModContent.TileType<PlatinumPowerPoleTile>(), new PowerPoleUIState());
 
             // Both poles are drawn through the overhang system and have ONE texture each (no On/Off look), so the same path is passed for both.
-            // Wooden: overhang canvas 3x14 per style, 4 styles side by side (192x224), the 1x14 footprint in the middle column, because a few pixels poke out left and right.
-            // Platinum: also an overhang registration for consistency, but with no overhang (canvas 1x16 = the footprint, 16x256). The swaying crossboards are drawn by PowerPoleCrossboardSystem for both.
+            // Wooden: overhang canvas 3x15 per style, 4 styles side by side (192x240 = 12x15 tiles), the 1x14 footprint in the middle column at the top (originY 0), because a few
+            // pixels poke out left and right; the 15th row is one extra row underneath the footprint (drawn over the ground tile the pole stands on).
+            // Platinum: canvas 1x17 (16x272): the 1x16 footprint at the top plus the same extra bottom row. The swaying crossboards are drawn by PowerPoleCrossboardSystem for both.
             MachineVisualRegistry.RegisterOverhang<WoodenPowerPoleTileEntity>(ModContent.TileType<WoodenPowerPoleTile>(),
                 basePath + "ElectricalConsumers/PowerPoles/WoodenPowerPole",
                 basePath + "ElectricalConsumers/PowerPoles/WoodenPowerPole",

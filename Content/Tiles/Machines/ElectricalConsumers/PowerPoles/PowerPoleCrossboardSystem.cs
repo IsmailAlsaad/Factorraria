@@ -207,7 +207,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
                 spriteBatch.Draw(texture, position, board.Cell(column, HighlightRow), color, angle, board.Pivot, 1f, SpriteEffects.None, 0f);
             }
 
-            // 3. wire connection cells: which points of this board carry a link, and of which wire type
+            // 3. wire connection cells: which points of this board carry a link, and of which wire type. A point also counts while its wire is only
+            //    pending (the start point of the link being made, and the green end point under the cursor, PoleLinkInputSystem.TryGetPreviewWire),
+            //    so the wire is seen wrapped around it before the second click. It reverts by itself when the link is cancelled.
             bool rightUsed = false;
             bool leftUsed = false;
             CustomWireType rightWire = default;
@@ -215,18 +217,21 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
             for (int i = 0; i < board.LinkPoints.Length; i++)
             {
                 PoleLink link = links.GetLink(pole.Position, slotBase + i);
-                if (link == null)
-                    continue;
+                CustomWireType pointWire;
+                if (link != null)
+                    pointWire = link.Wire;
+                else if (!input.TryGetPreviewWire(pole, slotBase + i, out pointWire))
+                    continue;   // no link and no pending wire on this point
 
                 if (board.IsRightPoint(i))
                 {
                     rightUsed = true;
-                    rightWire = link.Wire;
+                    rightWire = pointWire;
                 }
                 else
                 {
                     leftUsed = true;
-                    leftWire = link.Wire;
+                    leftWire = pointWire;
                 }
             }
 

@@ -1148,9 +1148,9 @@ tModLoader/other bases -> project types:
     +OpenMachine:BaseMachine +Load()[ov] +OpenUI(int,int,int,BaseMachine) +CloseUI() +RequestOpenWhenReplicaArrives(int,int) +NotifyMachineKilled(BaseMachine) +RequestCloseFromServer(int,int,bool) +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **PoleLinkInputSystem.cs** uses: CartSystem, CustomWireNet, CustomWireSystem, CustomWireType, IronCutterItem, LeadCutterItem, Pending, PoleLink, PoleLinkNet, PoleLinkSystem, PoleWireDrawSystem, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
   class PoleLinkInputSystem : ModSystem
-    +CutLinePixels:float +CutPointPixels:float +CutRepeatTicks:int +Pending:bool +ConsumeThisTick:bool +CutHoverLink:PoleLink +Load()[ov] +Unload()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +TryGetHeldWire(Player,out CustomWireType,out Item)[s] +TryFindPoleAtTile(int,int,out PowerPoleTileEntityBase)[s] +GetPointHighlight(PowerPoleTileEntityBase,int) +PostUpdateInput()[ov] +DrawWorld(SpriteBatch) +TryRequestCutAtCursor(Player)[s]
+    +CutLinePixels:float +CutPointPixels:float +CutRepeatTicks:int +Pending:bool +ConsumeThisTick:bool +CutHoverLink:PoleLink +Load()[ov] +Unload()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +TryGetHeldWire(Player,out CustomWireType,out Item)[s] +TryFindPoleAtTile(int,int,out PowerPoleTileEntityBase)[s] +GetPointHighlight(PowerPoleTileEntityBase,int) +TryGetPreviewWire(PowerPoleTileEntityBase,int,out CustomWireType) +PostUpdateInput()[ov] +DrawWorld(SpriteBatch) +TryRequestCutAtCursor(Player)[s]
     struct Preview
-      +Active:bool +From:Vector2 +To:Vector2 +Wire:CustomWireType +Invalid:bool +CanCommit:bool +EndSlot:int
+      +Active:bool +From:Vector2 +To:Vector2 +Wire:CustomWireType +Invalid:bool +CanCommit:bool +EndSlot:int +EndPole:Point16
     enum PointHighlight
       {None, Valid, Invalid}
 **PoleLinkSystem.cs** uses: CustomWireNet, CustomWireType, PoleBoard, PowerGridSystem, PowerPoleTileEntityBase, TileEntityHelper

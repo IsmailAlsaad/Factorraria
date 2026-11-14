@@ -12,7 +12,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalProducers.BeeWheel
     public class BeeWheelTile : ModTile
     {
         // The base is drawn through MachineVisualOverride and its placement hologram by MachineOverhangSystem (registered in
-        // MachineRegisterationSystem with a 5x5 canvas = the footprint, no overhang). The wheel (BeeWheel.png) is NOT part of this
+        // MachineRegisterationSystem with a 5x6 canvas: the 5x5 footprint on top plus one extra row underneath). The wheel (BeeWheel.png) is NOT part of this
         // texture: BeeWheelTileEntity draws it, and BeeWheelVisual.DrawHologram adds it to the placement preview.
         public override string Texture => "Factorraria/Content/Tiles/Machines/ElectricalProducers/BeeWheel/BeeWheel_Base";
 

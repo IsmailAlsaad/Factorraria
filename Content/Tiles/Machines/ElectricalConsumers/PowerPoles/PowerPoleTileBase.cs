@@ -10,7 +10,7 @@ using Terraria.ObjectData;
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
 {
     // Shared setup of both pole tiles: a 1-wide, non-solid column that stands on a solid tile. Both are drawn through the overhang
-    // system: wooden with a 3x14 canvas (a few pixels poke out left and right), platinum with a 1x16 canvas (no overhang, kept for consistency). Registered
+    // system: wooden with a 3x15 canvas per style (a few pixels poke out left and right), platinum with a 1x17 canvas; both have one extra row underneath the footprint. Registered
     // in MachineRegisterationSystem. The crossboards are separate PNGs drawn by PowerPoleCrossboardSystem so they can sway in the wind.
     public abstract class PowerPoleTileBase : ModTile
     {

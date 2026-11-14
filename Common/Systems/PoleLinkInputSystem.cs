@@ -64,6 +64,7 @@ namespace Factorraria.Common.Systems
             public bool Invalid;
             public bool CanCommit;
             public int EndSlot;
+            public Point16 EndPole;
         }
 
         Preview preview;
@@ -238,6 +239,23 @@ namespace Factorraria.Common.Systems
             return PointHighlight.Valid;
         }
 
+        // The wire to draw wrapped around a connection point BEFORE the link exists (read by PowerPoleCrossboardSystem for the wire cells of the board sheet):
+        //   - the START point of the pending link, from the first click on, so the player sees the wire is attached
+        //   - the END point the hologram is snapped to, but only while the hologram is green (a click right now would commit)
+        // Nothing is stored for it: it is derived from the pending state every frame, so cancelling (Escape, click in mid air, wire put away, pole gone)
+        // makes it vanish by itself. Local to the owner client like everything in this class; no packet, nothing saved.
+        public bool TryGetPreviewWire(PowerPoleTileEntityBase pole, int slot, out CustomWireType wire)
+        {
+            wire = heldWire;
+            if (!Pending || !holdingWire)
+                return false;
+
+            if (pole.Position == pendingPole && slot == pendingSlot)
+                return true;
+
+            return preview.Active && preview.CanCommit && preview.EndSlot == slot && pole.Position == preview.EndPole;
+        }
+
         // ---------------------------------------------------------------- the per-tick update
 
         public override void PostUpdateInput()
@@ -363,7 +381,8 @@ namespace Factorraria.Common.Systems
                 Wire = heldWire,
                 Invalid = invalid,
                 CanCommit = endPole != null && !invalid,
-                EndSlot = endSlot
+                EndSlot = endSlot,
+                EndPole = endPole != null ? endPole.Position : default
             };
         }
 
