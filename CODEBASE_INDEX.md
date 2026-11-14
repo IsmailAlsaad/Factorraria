@@ -1102,9 +1102,9 @@ tModLoader/other bases -> project types:
     +Pick(float,IList<TriggerCandidate>,bool)[s]
 **WallShieldBreakFxSystem.cs** uses: WallShieldDrawSystem
   class WallShieldBreakFxSystem : ModSystem
-    +MaxShards:int +ShardLifeMin:int +ShardLifeMax:int +ShardGravity:float +ShardSpeedMin:float +ShardSpeedMax:float +BackwardBias:float +MaxSpin:float +BodyCols:int +BodySubRows:int +SheetCols:int +SheetRows:int +CurtainTicks:int +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Start(Vector2) +PostUpdateEverything()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
+    +MaxShards:int +ShardLifeMin:int +ShardLifeMax:int +ShardGravity:float +ShardSpeedMin:float +ShardSpeedMax:float +BackwardBias:float +MaxSpin:float +BodyPieces:int +SheetPieces:int +MinPieceShare:float +CurtainTicks:int +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Start(Vector2) +PostUpdateEverything()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +Unload()[ov]
     class Shard
-      +Texture:Texture2D +Source:Rectangle +Position:Vector2 +Velocity:Vector2 +Rotation:float +Spin:float +Scale:float +Effects:SpriteEffects +Age:int +Life:int
+      +Texture:Texture2D +Local:Vector2 +Uv:Vector2 +Position:Vector2 +Velocity:Vector2 +Rotation:float +Spin:float +Scale:float +Age:int +Life:int
     class Curtain
       +X:float +Width:float +Age:int
 **WallShieldDrawSystem.cs** uses: WallShieldGlobalNPC

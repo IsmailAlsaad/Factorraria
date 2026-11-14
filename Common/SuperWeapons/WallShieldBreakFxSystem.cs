@@ -42,13 +42,14 @@ namespace Factorraria.Common.SuperWeapons
         /// <summary>Largest spin, in radians per tick.</summary>
         public float MaxSpin = 0.22f;
 
-        /// <summary>How many columns and sub-rows each 140 px body row is cut into.</summary>
-        public int BodyCols = 3;
-        public int BodySubRows = 3;
+        /// <summary>How many pieces each 190 x 140 px body row is broken into (random fracture lines, so the sizes and shapes differ).</summary>
+        public int BodyPieces = 9;
 
-        /// <summary>How many columns and rows the mouth and each eye frame is cut into.</summary>
-        public int SheetCols = 3;
-        public int SheetRows = 3;
+        /// <summary>How many pieces the mouth and each eye frame is broken into.</summary>
+        public int SheetPieces = 9;
+
+        /// <summary>The smallest piece a fracture may leave, as a fraction of an even share of the area (0.2 = a fifth of the average piece).</summary>
+        public float MinPieceShare = 0.2f;
 
         /// <summary>How long the dust curtain keeps falling down the body, in ticks.</summary>
         public int CurtainTicks = 80;
@@ -56,13 +57,13 @@ namespace Factorraria.Common.SuperWeapons
         class Shard
         {
             public Texture2D Texture;   // null = the grey stand-in block
-            public Rectangle Source;
-            public Vector2 Position;    // centre, world pixels
+            public Vector2[] Local;     // the polygon's corners, relative to Position, in unscaled unrotated screen space (already mirrored when the art is)
+            public Vector2[] Uv;        // the same corners as pixel positions in Texture
+            public Vector2 Position;    // the polygon's centre, world pixels
             public Vector2 Velocity;
             public float Rotation;
             public float Spin;
             public float Scale;
-            public SpriteEffects Effects;
             public int Age;
             public int Life;
         }
@@ -157,24 +158,121 @@ namespace Factorraria.Common.SuperWeapons
             }
         }
 
-        // Jittered cut positions that split a length into n pieces of about the same size: result[0] = 0, result[n] = total.
-        static int[] Cuts(int total, int n)
+        // ---- Random fracture ----
+        // A region is broken like glass: start with the whole rectangle and keep cutting one piece (picked by size, so big ones go first)
+        // along a straight line of random angle that passes near its middle, until there are enough pieces. Every piece stays convex, so a fan
+        // of triangles from its first corner fills it exactly, and the cracks are random lines instead of a grid of rows and columns.
+
+        static float PolygonArea(Vector2[] poly)
         {
-            n = Math.Max(1, n);
-            int[] cuts = new int[n + 1];
-            cuts[n] = total;
-            float step = total / (float)n;
-            for (int i = 1; i < n; i++)
+            float area = 0f;
+            for (int i = 0; i < poly.Length; i++)
             {
-                int cut = (int)(step * i + Main.rand.NextFloat(-0.3f, 0.3f) * step);
-                cuts[i] = Math.Max(cuts[i - 1] + 2, Math.Min(cut, total - 2 * (n - i)));
+                Vector2 a = poly[i];
+                Vector2 b = poly[(i + 1) % poly.Length];
+                area += a.X * b.Y - b.X * a.Y;
             }
 
-            return cuts;
+            return Math.Abs(area) * 0.5f;
+        }
+
+        static Vector2 PolygonCentre(Vector2[] poly)
+        {
+            float area = 0f;
+            Vector2 sum = Vector2.Zero;
+            for (int i = 0; i < poly.Length; i++)
+            {
+                Vector2 a = poly[i];
+                Vector2 b = poly[(i + 1) % poly.Length];
+                float cross = a.X * b.Y - b.X * a.Y;
+                area += cross;
+                sum += (a + b) * cross;
+            }
+
+            if (Math.Abs(area) < 0.001f)
+                return poly[0];
+
+            return sum / (3f * area);
+        }
+
+        // Splits a convex polygon by the line through point with the given normal. A corner exactly on the line goes to both sides.
+        static bool Split(Vector2[] poly, Vector2 point, Vector2 normal, out Vector2[] sideA, out Vector2[] sideB)
+        {
+            List<Vector2> a = new List<Vector2>();
+            List<Vector2> b = new List<Vector2>();
+            for (int i = 0; i < poly.Length; i++)
+            {
+                Vector2 current = poly[i];
+                Vector2 next = poly[(i + 1) % poly.Length];
+                float dc = Vector2.Dot(normal, current - point);
+                float dn = Vector2.Dot(normal, next - point);
+
+                if (dc >= 0f)
+                    a.Add(current);
+                if (dc <= 0f)
+                    b.Add(current);
+
+                if ((dc > 0f && dn < 0f) || (dc < 0f && dn > 0f))
+                {
+                    Vector2 cross = current + (next - current) * (dc / (dc - dn));
+                    a.Add(cross);
+                    b.Add(cross);
+                }
+            }
+
+            sideA = a.Count >= 3 ? a.ToArray() : null;
+            sideB = b.Count >= 3 ? b.ToArray() : null;
+            return sideA != null && sideB != null;
+        }
+
+        // The pieces (corner lists, in the region's own pixels, 0..width and 0..height) the region breaks into.
+        List<Vector2[]> Fracture(float width, float height, int pieces)
+        {
+            List<Vector2[]> list = new List<Vector2[]>
+            {
+                new[] { new Vector2(0f, 0f), new Vector2(width, 0f), new Vector2(width, height), new Vector2(0f, height) }
+            };
+
+            pieces = Math.Max(1, pieces);
+            float minArea = width * height / pieces * Math.Max(0.02f, MinPieceShare);
+            for (int attempt = 0; list.Count < pieces && attempt < pieces * 14; attempt++)
+            {
+                float total = 0f;
+                foreach (Vector2[] piece in list)
+                    total += PolygonArea(piece);
+
+                float roll = Main.rand.NextFloat(total);
+                int index = list.Count - 1;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    roll -= PolygonArea(list[i]);
+                    if (roll <= 0f)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                Vector2[] poly = list[index];
+                Vector2 centre = PolygonCentre(poly);
+                float spread = (float)Math.Sqrt(PolygonArea(poly)) * 0.3f;
+                Vector2 point = centre + Main.rand.NextVector2Circular(spread, spread);
+                float angle = Main.rand.NextFloat(MathHelper.Pi);
+                Vector2 normal = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+
+                if (!Split(poly, point, normal, out Vector2[] a, out Vector2[] b) || PolygonArea(a) < minArea || PolygonArea(b) < minArea)
+                    continue;
+
+                list[index] = a;
+                list.Add(b);
+            }
+
+            return list;
         }
 
         // The wall's body strip, cut the way DrawBodyLikeVanilla draws it: rows of Height / 3 anchored at wofDrawAreaTop, one column as wide
         // as the texture, the frame from wofDrawFrameIndex, mirrored when spriteDirection == 1. Only the rows on screen (plus a margin) become shards.
+        // Each row is fractured on its own (the art repeats every row, so a crack cannot run from one row into the next).
         void SpawnBody(Texture2D tile, NPC mouth, Vector2 impact, Vector2 bias)
         {
             float top = Main.wofDrawAreaTop;
@@ -194,41 +292,30 @@ namespace Factorraria.Common.SuperWeapons
                 x0 -= 80f;
 
             bool flipped = mouth.spriteDirection == 1;
-            SpriteEffects effects = flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             int frameY = tile != null ? Math.Min(Math.Max(0, Main.wofDrawFrameIndex) / 6, 2) * rowHeight : 0;
-            int subRows = Math.Max(1, BodySubRows);
 
             float firstRow = top + (float)Math.Floor((visibleTop - top) / rowHeight) * rowHeight;
             for (float rowY = firstRow; rowY < visibleBottom; rowY += rowHeight)
             {
-                int subHeight = rowHeight / subRows;
-                for (int s = 0; s < subRows; s++)
+                foreach (Vector2[] poly in Fracture(width, rowHeight, BodyPieces))
                 {
-                    int y0 = s * subHeight;
-                    int height = s == subRows - 1 ? rowHeight - y0 : subHeight;
-                    float cellTop = rowY + y0;
-                    if (cellTop + height < visibleTop || cellTop > visibleBottom)
-                        continue;
-
-                    int[] cuts = Cuts(width, BodyCols);
-                    for (int c = 0; c < cuts.Length - 1; c++)
+                    // texture x t shows at world x0 + (width - t) when the art is mirrored (same mapping DrawBodyLikeVanilla uses)
+                    Vector2 centre = PolygonCentre(poly);
+                    Vector2[] local = new Vector2[poly.Length];
+                    Vector2[] uv = new Vector2[poly.Length];
+                    for (int i = 0; i < poly.Length; i++)
                     {
-                        int a = cuts[c];
-                        int b = cuts[c + 1];
-                        int w = b - a;
-                        if (w <= 0)
-                            continue;
-
-                        // world column x in [a, b] shows texture x in [width - b, width - a] when the art is mirrored
-                        Rectangle source = new Rectangle(flipped ? width - b : a, frameY + y0, w, height);
-                        Vector2 center = new Vector2(x0 + a + w * 0.5f, cellTop + height * 0.5f);
-                        AddShard(tile, source, center, 0f, 1f, effects, impact, bias);
+                        local[i] = new Vector2((flipped ? -1f : 1f) * (poly[i].X - centre.X), poly[i].Y - centre.Y);
+                        uv[i] = new Vector2(poly[i].X, frameY + poly[i].Y);
                     }
+
+                    Vector2 world = new Vector2(x0 + (flipped ? width - centre.X : centre.X), rowY + centre.Y);
+                    AddShard(tile, local, uv, world, 0f, 1f, impact, bias);
                 }
             }
         }
 
-        // The mouth or one eye: the current frame of its sheet, cut into a grid, every piece placed where it is on the NPC (mirrored and rotated like the NPC).
+        // The mouth or one eye: the current frame of its sheet, fractured, every piece placed where it is on the NPC (mirrored and rotated like the NPC).
         void SpawnSheet(Texture2D sheet, NPC npc, Vector2 impact, Vector2 bias)
         {
             Rectangle frame = npc.frame;
@@ -243,30 +330,26 @@ namespace Factorraria.Common.SuperWeapons
             }
 
             bool flipped = npc.spriteDirection == 1;
-            SpriteEffects effects = flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            int[] xs = Cuts(frame.Width, SheetCols);
-            int[] ys = Cuts(frame.Height, SheetRows);
-            for (int r = 0; r < ys.Length - 1; r++)
+            float side = flipped ? -1f : 1f;
+            Vector2 half = new Vector2(frame.Width * 0.5f, frame.Height * 0.5f);
+            foreach (Vector2[] poly in Fracture(frame.Width, frame.Height, SheetPieces))
             {
-                for (int c = 0; c < xs.Length - 1; c++)
+                Vector2 centre = PolygonCentre(poly);
+                Vector2[] local = new Vector2[poly.Length];
+                Vector2[] uv = new Vector2[poly.Length];
+                for (int i = 0; i < poly.Length; i++)
                 {
-                    int w = xs[c + 1] - xs[c];
-                    int h = ys[r + 1] - ys[r];
-                    if (w <= 0 || h <= 0)
-                        continue;
-
-                    Rectangle source = new Rectangle(frame.X + xs[c], frame.Y + ys[r], w, h);
-                    Vector2 local = new Vector2(xs[c] + w * 0.5f - frame.Width * 0.5f, ys[r] + h * 0.5f - frame.Height * 0.5f) * npc.scale;
-                    if (flipped)
-                        local.X = -local.X;
-
-                    Vector2 center = npc.Center + new Vector2(0f, npc.gfxOffY) + local.RotatedBy(npc.rotation);
-                    AddShard(sheet, source, center, npc.rotation, npc.scale, effects, impact, bias);
+                    local[i] = new Vector2(side * (poly[i].X - centre.X), poly[i].Y - centre.Y);
+                    uv[i] = new Vector2(frame.X + poly[i].X, frame.Y + poly[i].Y);
                 }
+
+                Vector2 offset = new Vector2(side * (centre.X - half.X), centre.Y - half.Y) * npc.scale;
+                Vector2 world = npc.Center + new Vector2(0f, npc.gfxOffY) + offset.RotatedBy(npc.rotation);
+                AddShard(sheet, local, uv, world, npc.rotation, npc.scale, impact, bias);
             }
         }
 
-        void AddShard(Texture2D texture, Rectangle source, Vector2 center, float rotation, float scale, SpriteEffects effects, Vector2 impact, Vector2 bias)
+        void AddShard(Texture2D texture, Vector2[] local, Vector2[] uv, Vector2 center, float rotation, float scale, Vector2 impact, Vector2 bias)
         {
             if (shards.Count >= MaxShards)
                 return;
@@ -279,13 +362,13 @@ namespace Factorraria.Common.SuperWeapons
             shards.Add(new Shard
             {
                 Texture = texture,
-                Source = source,
+                Local = local,
+                Uv = uv,
                 Position = center,
                 Velocity = away * speed + bias * Main.rand.NextFloat(0.5f, 1.2f) + Main.rand.NextVector2Circular(1.5f, 1.5f),
                 Rotation = rotation,
                 Spin = Main.rand.NextFloat(-MaxSpin, MaxSpin),
                 Scale = scale,
-                Effects = effects,
                 Life = Main.rand.Next(Math.Min(ShardLifeMin, ShardLifeMax), Math.Max(ShardLifeMin, ShardLifeMax) + 1)
             });
         }
@@ -365,11 +448,26 @@ namespace Factorraria.Common.SuperWeapons
             }, InterfaceScaleType.Game));
         }
 
+        // The pieces are polygons, which SpriteBatch cannot draw, so they go through a BasicEffect as textured triangles (one draw per texture).
+        // The interface layer's SpriteBatch is ended for that and begun again with the state the Game-scale layers use.
+        BasicEffect effect;
+
+        public override void Unload()
+        {
+            BasicEffect old = effect;
+            effect = null;
+            if (old != null && !Main.dedServ)
+                Main.QueueMainThreadAction(old.Dispose);
+        }
+
         void DrawShards(SpriteBatch spriteBatch)
         {
             WallShieldDrawSystem art = ModContent.GetInstance<WallShieldDrawSystem>();
-            Texture2D pixel = TextureAssets.MagicPixel.Value;   // not 1x1: always drawn with a 1x1 source
-            Rectangle one = new Rectangle(0, 0, 1, 1);
+            Texture2D pixel = TextureAssets.MagicPixel.Value;   // not 1x1: every stand-in corner samples the middle of texel (0, 0)
+            Vector2 pixelUv = new Vector2(0.5f / pixel.Width, 0.5f / pixel.Height);
+
+            Dictionary<Texture2D, List<VertexPositionColorTexture>> batches = new Dictionary<Texture2D, List<VertexPositionColorTexture>>();
+            Vector3[] corners = new Vector3[16];
 
             foreach (Shard shard in shards)
             {
@@ -377,18 +475,69 @@ namespace Factorraria.Common.SuperWeapons
                 if (screen.X < -200f || screen.Y < -200f || screen.X > Main.screenWidth + 200f || screen.Y > Main.screenHeight + 200f)
                     continue;
 
+                int count = shard.Local.Length;
+                if (count < 3)
+                    continue;
+
+                if (corners.Length < count)
+                    corners = new Vector3[count];
+
                 float alpha = Math.Min(1f, (shard.Life - shard.Age) / Math.Max(1f, shard.Life * 0.3f));
                 Color light = Lighting.GetColor((int)(shard.Position.X / 16f), (int)(shard.Position.Y / 16f)) * alpha;
+                Texture2D texture = shard.Texture ?? pixel;
+                Color color = shard.Texture != null ? light : art.FallbackColor.MultiplyRGBA(light);
 
-                if (shard.Texture != null)
+                if (!batches.TryGetValue(texture, out List<VertexPositionColorTexture> list))
                 {
-                    spriteBatch.Draw(shard.Texture, screen, shard.Source, light, shard.Rotation, new Vector2(shard.Source.Width * 0.5f, shard.Source.Height * 0.5f), shard.Scale, shard.Effects, 0f);
+                    list = new List<VertexPositionColorTexture>();
+                    batches[texture] = list;
                 }
-                else
+
+                for (int i = 0; i < count; i++)
                 {
-                    Color block = art.FallbackColor.MultiplyRGBA(light);
-                    spriteBatch.Draw(pixel, screen, one, block, shard.Rotation, new Vector2(0.5f, 0.5f), new Vector2(shard.Source.Width, shard.Source.Height) * shard.Scale, SpriteEffects.None, 0f);
+                    Vector2 point = (shard.Local[i] * shard.Scale).RotatedBy(shard.Rotation) + screen;
+                    corners[i] = new Vector3(point, 0f);
                 }
+
+                for (int i = 1; i < count - 1; i++)
+                {
+                    foreach (int k in new[] { 0, i, i + 1 })
+                    {
+                        Vector2 uv = shard.Texture != null ? new Vector2(shard.Uv[k].X / texture.Width, shard.Uv[k].Y / texture.Height) : pixelUv;
+                        list.Add(new VertexPositionColorTexture(corners[k], color, uv));
+                    }
+                }
+            }
+
+            if (batches.Count == 0)
+                return;
+
+            GraphicsDevice device = Main.graphics.GraphicsDevice;
+            spriteBatch.End();
+            try
+            {
+                if (effect == null)
+                    effect = new BasicEffect(device) { TextureEnabled = true, VertexColorEnabled = true };
+
+                effect.World = Matrix.Identity;
+                effect.View = Main.GameViewMatrix.TransformationMatrix;
+                effect.Projection = Matrix.CreateOrthographicOffCenter(0f, device.Viewport.Width, device.Viewport.Height, 0f, 0f, 1f);
+
+                device.BlendState = BlendState.AlphaBlend;
+                device.DepthStencilState = DepthStencilState.None;
+                device.RasterizerState = RasterizerState.CullNone;
+                device.SamplerStates[0] = Main.DefaultSamplerState;
+
+                foreach (KeyValuePair<Texture2D, List<VertexPositionColorTexture>> batch in batches)
+                {
+                    effect.Texture = batch.Key;
+                    effect.CurrentTechnique.Passes[0].Apply();
+                    device.DrawUserPrimitives(PrimitiveType.TriangleList, batch.Value.ToArray(), 0, batch.Value.Count / 3);
+                }
+            }
+            finally
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             }
         }
     }
