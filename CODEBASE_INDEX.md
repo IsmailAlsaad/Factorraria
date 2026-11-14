@@ -1368,6 +1368,7 @@ tModLoader/other bases -> project types:
     +AppliesToEntity(Item,bool)[ov] +CanUseItem(Item,Player)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
 **WoodenMinecartItem.cs**
   class WoodenMinecartItem : ModItem
+    +CanUseItem(Player)[ov]
 
 ### Content/Items/Conveyors/
 **ClockwisePriorityConveyor.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyor, FactorrariaNet, VanillaConveyorGlobalItem
@@ -1558,7 +1559,7 @@ tModLoader/other bases -> project types:
     +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/
-**AutohammerRecipeRegistry.cs** uses: BeeWheelItem, ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PlatinumPowerPoleItem, RecipeBook, RoyalHoneyItem, SimpleCircuitItem, SunCapsuleItem, TinWireItem, WoodenPowerPoleItem
+**AutohammerRecipeRegistry.cs** uses: BeeWheelItem, ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PlatinumPowerPoleItem, RecipeBook, RoyalHoneyItem, SimpleCircuitItem, SunCapsuleItem, TinWireItem, WoodenMinecartItem, WoodenPowerPoleItem
   class AutohammerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **AutohammerTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.Autohammer uses: AutohammerRecipeRegistry, ElectricConsumerMachine, RecipeBook

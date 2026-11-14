@@ -28,5 +28,12 @@ namespace Factorraria.Content.Items.Carts
             Item.useStyle = ItemUseStyleID.Swing;
             Item.noMelee = true;
         }
+
+        // Using the item must never mount the player (vanilla mounts on use for any item with a mountType). The item blocks it itself
+        // instead of relying only on VanillaCartItemGlobal. Placing on a track is CartSystem's click handling and does not need this hook.
+        public override bool CanUseItem(Player player)
+        {
+            return false;
+        }
     }
 }
