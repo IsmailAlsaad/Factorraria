@@ -32,6 +32,9 @@ namespace Factorraria.Common.Machines
         // itemType -> catalog keys of every recipe group that takes it as an INPUT (fuel is not an input).
         static readonly Dictionary<int, List<string>> ingredientIndex = new Dictionary<int, List<string>>();
 
+        // liquid type -> catalog keys of every recipe group that takes it as a (specific) liquid INPUT. Any-water is not indexed.
+        static readonly Dictionary<int, List<string>> liquidIngredientIndex = new Dictionary<int, List<string>>();
+
         // product -> catalog keys of every recipe group that MAKES it (item or liquid), in catalog order.
         static readonly Dictionary<RecipeOutputKey, List<string>> producerIndex = new Dictionary<RecipeOutputKey, List<string>>();
 
@@ -44,6 +47,7 @@ namespace Factorraria.Common.Machines
         static uint lastHeldScan;
         static bool heldScanned;
         static int seenSyncVersion = int.MinValue;   // RecipeKnowledgeSystem.SeenVersion that heldKeys/heldItems were built from
+        static int knowledgeSyncVersion = int.MinValue;   // RecipeKnowledgeSystem.Version (crafted marks) that heldKeys was built from
 
         /// <summary>Bumped whenever the set of held-ingredient recipes changes. Pair with RecipeKnowledgeSystem.Version for UI rebuilds.</summary>
         public static int HeldVersion { get; private set; }
@@ -71,6 +75,16 @@ namespace Factorraria.Common.Machines
                         if (!keys.Contains(e.Key)) keys.Add(e.Key);
                     }
 
+            foreach (RecipeCatalog.Entry e in RecipeCatalog.Entries())
+                foreach (CustomRecipe recipe in e.Group.Recipes)
+                    foreach (LiquidIngredient liquid in recipe.LiquidInputs)
+                    {
+                        if (liquid.IsAnyWater) continue;
+                        if (!liquidIngredientIndex.TryGetValue(liquid.LiquidType, out List<string> keys))
+                            liquidIngredientIndex[liquid.LiquidType] = keys = new List<string>();
+                        if (!keys.Contains(e.Key)) keys.Add(e.Key);
+                    }
+
             // Fuels are not recipe inputs, but the book shows them once held, so they must be tracked as seen items too
             // (an empty key list: they unlock no recipe, they only count as held).
             foreach (int fuelType in RecipeCatalog.AllFuelItemTypes())
@@ -81,6 +95,7 @@ namespace Factorraria.Common.Machines
         {
             ingredientIndex.Clear();
             producerIndex.Clear();
+            liquidIngredientIndex.Clear();
             heldKeys.Clear();
             heldItems.Clear();
             heldScanned = false;
@@ -94,7 +109,7 @@ namespace Factorraria.Common.Machines
         static void EnsureHeldScan()
         {
             if (Main.dedServ) return;
-            if (heldScanned && seenSyncVersion == RecipeKnowledgeSystem.SeenVersion && Main.GameUpdateCount - lastHeldScan < 60) return;
+            if (heldScanned && seenSyncVersion == RecipeKnowledgeSystem.SeenVersion && knowledgeSyncVersion == RecipeKnowledgeSystem.Version && Main.GameUpdateCount - lastHeldScan < 60) return;
             heldScanned = true;
             lastHeldScan = Main.GameUpdateCount;
 
@@ -109,7 +124,7 @@ namespace Factorraria.Common.Machines
                 MarkIfIngredient(Main.mouseItem);
             }
 
-            if (seenSyncVersion != RecipeKnowledgeSystem.SeenVersion) RebuildSeenCaches();
+            if (seenSyncVersion != RecipeKnowledgeSystem.SeenVersion || knowledgeSyncVersion != RecipeKnowledgeSystem.Version) RebuildSeenCaches();
         }
 
         static void MarkIfIngredient(Item item)
@@ -130,6 +145,14 @@ namespace Factorraria.Common.Machines
                 heldItems.Add(type);
                 foreach (string key in keys) heldKeys.Add(key);
             }
+            // A liquid cannot be held, so a liquid that was seen (its biome visited) or crafted counts like a held ingredient:
+            // every recipe that takes it becomes known (faded) in the book.
+            foreach (KeyValuePair<int, List<string>> liquid in liquidIngredientIndex)
+            {
+                if (!RecipeKnowledgeSystem.IsLiquidSeen(liquid.Key) && !IsProductCrafted(RecipeOutputKey.ForLiquid(liquid.Key))) continue;
+                foreach (string key in liquid.Value) heldKeys.Add(key);
+            }
+            knowledgeSyncVersion = RecipeKnowledgeSystem.Version;
             seenSyncVersion = RecipeKnowledgeSystem.SeenVersion;
             HeldVersion++;
         }
