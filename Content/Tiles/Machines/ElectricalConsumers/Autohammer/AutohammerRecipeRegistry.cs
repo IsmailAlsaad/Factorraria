@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
+using Factorraria.Content.Items.Carts;
 using Factorraria.Content.Items.Conveyors;
 using Factorraria.Content.Items.Hooks;
 using Factorraria.Content.Items.Machines;
@@ -242,6 +243,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
                 .AddIngredient(ModContent.ItemType<MeteoritePanelItem>(), 20)
                 .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(), 8)
                 .AddIngredient(ItemID.FallenStar, 3)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            // Wooden Minecart
+            Recipe.Create(ModContent.ItemType<WoodenMinecartItem>(), 1)
+                .AddRecipeGroup(RecipeGroupID.Wood, 45)
                 .AddTile(TileID.Anvils)
                 .Register();
         }
