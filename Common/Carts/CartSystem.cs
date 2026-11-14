@@ -735,9 +735,9 @@ namespace Factorraria.Common.Carts
             {
                 cart.Chain.Remove(cart); // a middle carriage: the rest close the gap. The motor: the whole chain breaks up
             }
-            if (cart.Module == CartModule.Terrarium)
+            if (cart.Tank != null)
             {
-                CartCargo.PourTank(cart); // a terrarium cart empties back into the world instead of voiding its liquid
+                CartCargo.PourTank(cart); // a terrarium cart or a liquid motor cart (lava / honey / water) empties its tank back into the world instead of voiding the liquid
             }
             cart.Active = false;
 
