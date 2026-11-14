@@ -128,6 +128,11 @@ namespace Factorraria.Common.Machines
         public Func<int, int, BaseMachine> GetEntity;       // finds the entity, or CREATES it when missing (single-player and server only)
         public Func<int, int, BaseMachine> FindEntity;      // lookup only, never creates (patch 4.2)
 
+        // Overhang machines only. false (default): the canvas is drawn behind every tile but over the walls, so NPCs and enemies in the normal
+        // pass draw over it. true: drawn after all tiles, so it covers neighbouring tiles. Flip per machine after its RegisterOverhang call:
+        // MachineVisualRegistry.Definitions[tileType].OverhangInFront = true;
+        public bool OverhangInFront = false;
+
         // Patch 4.5: what draw and light code call. Lookup only, in every process: entities are created by the placement routes (4.2),
         // by the bootstrap scan (MachineBootstrapSystem) and by MachinePlacement.EnsureEntity, never from draw code.
         public BaseMachine ResolveEntity(int i, int j) => FindEntity?.Invoke(i, j);

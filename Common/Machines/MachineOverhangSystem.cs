@@ -18,12 +18,24 @@ namespace Factorraria.Common.Machines
         {
             if (Main.dedServ) return; // no screen on a dedicated server: the draw detour is never needed there
             On_TileObject.DrawPreview += HideVanillaPreview;
+            On_Main.DrawNPCs += DrawBehindTilesPass;
         }
 
         public override void Unload()
         {
             if (Main.dedServ) return; // matches Load()
             On_TileObject.DrawPreview -= HideVanillaPreview;
+            On_Main.DrawNPCs -= DrawBehindTilesPass;
+        }
+
+        // Vanilla calls DrawNPCs(behindTiles: true) after the walls and before any tile (same ride as TileOverdrawSystem). Drawing before
+        // orig puts the overhang over the walls and under every tile, and under the NPCs flagged behindTiles.
+        private void DrawBehindTilesPass(On_Main.orig_DrawNPCs orig, Main self, bool behindTiles)
+        {
+            if (behindTiles)
+                DrawPass(false);
+
+            orig(self, behindTiles);
         }
 
         private static void HideVanillaPreview(On_TileObject.orig_DrawPreview orig, SpriteBatch sb, TileObjectPreviewData op, Vector2 position)
@@ -36,7 +48,15 @@ namespace Factorraria.Common.Machines
 
         public override void PostDrawTiles()
         {
-            if (Main.dedServ || MachineVisualRegistry.Definitions.Count == 0)
+            DrawPass(true);
+        }
+
+        // front true = the after-tiles pass (machines with OverhangInFront, plus the placement hologram), false = the behind-tiles pass
+        // (every other overhang machine). The behind pass runs inside DoDraw_DrawNPCsBehindTiles, where vanilla already has a SpriteBatch
+        // open (a Begin there throws every frame), so it draws straight into that one; the after-tiles pass begins and ends its own.
+        private void DrawPass(bool front)
+        {
+            if (Main.dedServ || Main.gameMenu || MachineVisualRegistry.Definitions.Count == 0)
                 return;
 
             SpriteBatch spriteBatch = Main.spriteBatch;
@@ -50,6 +70,9 @@ namespace Factorraria.Common.Machines
                 Point16 corner = machine.Position;
                 Tile tile = Framing.GetTileSafely(corner.X, corner.Y);
                 if (!tile.HasTile || !MachineVisualRegistry.Definitions.TryGetValue(tile.TileType, out var def) || def.Canvas == null)
+                    continue;
+
+                if (def.OverhangInFront != front)
                     continue;
 
                 TileObjectData data = TileObjectData.GetTileData(tile.TileType, 0);
@@ -99,7 +122,8 @@ namespace Factorraria.Common.Machines
 
                 if (!batchBegun)
                 {
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                    if (front)
+                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
                     batchBegun = true;
                 }
 
@@ -108,7 +132,7 @@ namespace Factorraria.Common.Machines
                     DrawCanvasLiquidOverlays(spriteBatch, def.LiquidOverlays, transition, machine, canvas, worldTopLeft, frameY, color);
             }
 
-            if (TryGetHologram(out MachineVisualDefinition holoDef, out Vector2 holoTopLeft, out bool holoValid))
+            if (front && TryGetHologram(out MachineVisualDefinition holoDef, out Vector2 holoTopLeft, out bool holoValid))
             {
                 if (!batchBegun)
                 {
@@ -121,7 +145,7 @@ namespace Factorraria.Common.Machines
                 holoDef.HologramExtra?.Invoke(spriteBatch, holoTopLeft + new Vector2(holoDef.Canvas.OriginX * 16f, holoDef.Canvas.OriginY * 16f - holoDef.Canvas.YOffset), tint);
             }
 
-            if (batchBegun)
+            if (batchBegun && front)
                 spriteBatch.End();
         }
 
