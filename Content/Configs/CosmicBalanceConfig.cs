@@ -243,7 +243,7 @@ namespace Factorraria.Content.Configs
         [Range(0f, 0.5f)]
         public float ReemitVariation = 0.2f;
 
-        [DefaultValue(0.05f)]
+        [DefaultValue(0.15f)]
         [Range(0f, 1f)]
         public float SpontaneousSplitChance = 0.05f;
 
