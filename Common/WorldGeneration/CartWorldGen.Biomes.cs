@@ -27,6 +27,7 @@ namespace Factorraria.Common.WorldGeneration
         public double HellcartChance = 0.50;        // lava layer motor is a Demonic Hellcart instead of a Steampunk
         public double ShroomCartChance = 0.20;      // underground carriage is a Shroom Minecart
         public double GemCartChance = 0.10;         // underground carriage is a gem minecart (random of the six)
+        public double WoodenCartChance = 0.50;      // a plain carriage (no biome / depth skin) is a Wooden Minecart instead of a Minecart
         public double GoldChestShare2 = 0.5;        // wooden-or-gold / ivy-or-gold choices: chance of the gold one
 
         public double TerrariumEmptyChance = 1.0 / 3.0;   // terrarium cart: empty
@@ -145,7 +146,7 @@ namespace Factorraria.Common.WorldGeneration
                 }
             }
 
-            return ItemID.Minecart;
+            return WorldGen.genRand.NextDouble() < WoodenCartChance ? ModContent.ItemType<global::Factorraria.Content.Items.Carts.WoodenMinecartItem>() : ItemID.Minecart;
         }
 
         #endregion
