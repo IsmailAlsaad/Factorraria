@@ -87,6 +87,9 @@ namespace Factorraria.Common.Cosmic
         // particle was flying, and the angles of the last cascade (what /fcosmic stats prints).
         public readonly long[] Reemitted = new long[CosmicColors.Count];
         public long ChainEnds, Vanished;
+
+        // C10: spontaneous splits per color of the PARENT (the child rays are counted in Reemitted, like the gemspark ones).
+        public readonly long[] Splits = new long[CosmicColors.Count];
         public bool HasLastCascade;
         public CosmicColor LastCascadeFrom;
         public float LastChildDegA, LastChildDegB;
@@ -149,6 +152,7 @@ namespace Factorraria.Common.Cosmic
             Array.Clear(Ionized, 0, Ionized.Length);
             Array.Clear(Reemitted, 0, Reemitted.Length);
             ChainEnds = Vanished = 0;
+            Array.Clear(Splits, 0, Splits.Length);
             HasLastCascade = false;
             BlocksIonized = HitsAdded = HitsRefractory = CloudGone = Discharges = DischargedBlocks = 0;
             BiggestEnergy = 0.0;
@@ -474,6 +478,17 @@ namespace Factorraria.Common.Cosmic
 
             CosmicRayResult r = CosmicRayTracer.Trace(probe, ev.X, ev.Y, ev.DirX, ev.DirY, ev.Color, range, s.CloudAbsorbChance, rng);
 
+            // C10: the spontaneous split. Whatever the trace found (a receiver, a lead brick, nothing), the particle may split earlier along the
+            // way. Then the ray ends in mid-air at that point (the client draws it with that length), the outcome further on is forgotten, and a
+            // Split event is queued for the tick the particle gets there. Grey (no next color) never splits.
+            float flown = r.End == CosmicRayEnd.Range ? range : r.Distance;
+            if (s.SpontaneousSplitChance > 0f && CosmicColors.HasNext(ev.Color)
+                && CosmicRayTracer.TrySplitDistance(s.SpontaneousSplitChance, s.ParticleRange, flown, rng.NextDouble(), rng.NextDouble(), out float splitAt))
+            {
+                r.End = CosmicRayEnd.Split;
+                r.Distance = splitAt;
+            }
+
             // C6: every traced ray is drawn from start to end, whatever its outcome (a Range end has Distance 0, it flies the full range).
             Sink?.Ray(new CosmicRayEvent
             {
@@ -487,6 +502,36 @@ namespace Factorraria.Common.Cosmic
                 End = r.End == CosmicRayEnd.Absorb ? CosmicRayEndKind.Absorb : r.End == CosmicRayEnd.Ionize ? CosmicRayEndKind.Ionize : CosmicRayEndKind.None,
                 SpeedMul = speedMul
             });
+
+            if (r.End == CosmicRayEnd.Split)
+            {
+                if (Heap.Count >= s.MaxQueuedEvents)
+                {
+                    Dropped++;
+                    return r;
+                }
+
+                double dirLength = Math.Sqrt((double)ev.DirX * ev.DirX + (double)ev.DirY * ev.DirY);
+                float unitX = dirLength > 1e-9 ? (float)(ev.DirX / dirLength) : 0f;
+                float unitY = dirLength > 1e-9 ? (float)(ev.DirY / dirLength) : 1f;
+                float splitX = ev.X + unitX * r.Distance;
+                float splitY = ev.Y + unitY * r.Distance;
+
+                Heap.Push(new CosmicQueuedEvent
+                {
+                    Tick = ev.Tick + (long)Math.Ceiling(r.Distance / speed),
+                    Kind = CosmicQueuedKind.Split,
+                    Color = ev.Color,
+                    X = splitX,
+                    Y = splitY,
+                    DirX = unitX,
+                    DirY = unitY,
+                    TileX = (int)Math.Floor(splitX),
+                    TileY = (int)Math.Floor(splitY)
+                });
+                queued = true;
+                return r;
+            }
 
             if (r.End == CosmicRayEnd.Solid)
             {
@@ -525,7 +570,9 @@ namespace Factorraria.Common.Cosmic
         // A ray has arrived. C3 (gemspark: absorb and re-emit) acts in OnAbsorbed; C4 (cloud: ionize) acts in OnIonized.
         void Complete(CosmicRadiationSystem s, in CosmicQueuedEvent ev)
         {
-            if (ev.Kind == CosmicQueuedKind.Absorb)
+            if (ev.Kind == CosmicQueuedKind.Split)
+                OnSplit(s, ev);
+            else if (ev.Kind == CosmicQueuedKind.Absorb)
                 OnAbsorbed(s, ev);
             else if (ev.Kind == CosmicQueuedKind.Ionize)
             {
@@ -562,7 +609,27 @@ namespace Factorraria.Common.Cosmic
                 return;
             }
 
-            CosmicColor next = CosmicColors.Next(ev.Color);
+            EmitChildren(s, ev.Color, ev.Tick, ev.TileX + 0.5f, ev.TileY + 0.5f, ev.DirX, ev.DirY);
+        }
+
+        // C10. A ray split in mid-air (see ResolveRay). It counts as absorbed and re-emitted by an invisible gemspark: the same flash event goes to
+        // the clients (at the tile the particle is in), and the same two child rays of the next color start from the split point.
+        void OnSplit(CosmicRadiationSystem s, in CosmicQueuedEvent ev)
+        {
+            Splits[(int)ev.Color]++;
+            Sink?.Absorb(new CosmicAbsorbEvent { Tick = Now, Color = ev.Color, TileX = ev.TileX, TileY = ev.TileY });
+            EmitChildren(s, ev.Color, ev.Tick, ev.X, ev.Y, ev.DirX, ev.DirY);
+        }
+
+        // Shared by OnAbsorbed (from the middle of the gemspark tile) and OnSplit (from the split point): two rays of the color after `color`,
+        // the incoming direction rotated by +a and by -b degrees, each with its own random speed and lifespan. They go into the heap as
+        // RayStart events at `tick`, so a cascade never recurses.
+        void EmitChildren(CosmicRadiationSystem s, CosmicColor color, long tick, float x, float y, float inDirX, float inDirY)
+        {
+            if (!CosmicColors.HasNext(color))
+                return;
+
+            CosmicColor next = CosmicColors.Next(color);
             float low = Math.Max(0f, Math.Min(s.ReemitAngleMinDeg, s.ReemitAngleMaxDeg));
             float high = Math.Max(low, Math.Max(s.ReemitAngleMinDeg, s.ReemitAngleMaxDeg));
             float degA = low + (float)rng.NextDouble() * (high - low);
@@ -576,7 +643,7 @@ namespace Factorraria.Common.Cosmic
                     continue;
                 }
 
-                CosmicRayTracer.Rotate(ev.DirX, ev.DirY, child == 0 ? degA : -degB, out float dirX, out float dirY);
+                CosmicRayTracer.Rotate(inDirX, inDirY, child == 0 ? degA : -degB, out float dirX, out float dirY);
 
                 // Each child gets its own speed and lifespan, up to ReemitVariation (0.2 = 20%) above or below the tunables.
                 float variation = Math.Clamp(s.ReemitVariation, 0f, 0.5f);
@@ -585,11 +652,11 @@ namespace Factorraria.Common.Cosmic
 
                 Heap.Push(new CosmicQueuedEvent
                 {
-                    Tick = ev.Tick,
+                    Tick = tick,
                     Kind = CosmicQueuedKind.RayStart,
                     Color = next,
-                    X = ev.TileX + 0.5f,
-                    Y = ev.TileY + 0.5f,
+                    X = x,
+                    Y = y,
                     DirX = dirX,
                     DirY = dirY,
                     SpeedMul = childSpeedMul,
@@ -599,7 +666,7 @@ namespace Factorraria.Common.Cosmic
             }
 
             HasLastCascade = true;
-            LastCascadeFrom = ev.Color;
+            LastCascadeFrom = color;
             LastChildDegA = degA;
             LastChildDegB = degB;
         }
@@ -919,6 +986,8 @@ namespace Factorraria.Common.Cosmic
                     return head + "hit a cloud block at (" + r.TileX + ", " + r.TileY + ")" + tail + ", arrives in " + ticks + " ticks" + (queued ? "" : " (the queue is full, the outcome was dropped)");
                 case CosmicRayEnd.Solid:
                     return head + "blocked by a lead brick (or the world edge) at (" + r.TileX + ", " + r.TileY + ")" + tail;
+                case CosmicRayEnd.Split:
+                    return head + "split in mid-air into two " + CosmicColors.Next(color) + " rays" + tail + ", the split happens in " + ticks + " ticks" + (queued ? "" : " (the queue is full, the split was dropped)");
                 default:
                     return head + "flew the full range of " + s.ParticleRange.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " tiles without hitting a receiver";
             }

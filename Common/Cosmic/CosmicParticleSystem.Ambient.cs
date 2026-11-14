@@ -270,6 +270,98 @@ namespace Factorraria.Common.Cosmic
             p.Life = life;
             p.Phase = (float)ambientRng.NextDouble() * MathHelper.TwoPi;   // C9c: random wave phase
             AmbientSpawned++;
+
+            // C10: the ambient particles split by themselves too, with the same chance as the real ones, so the decor looks like the real sky.
+            if (s.SpontaneousSplitChance > 0f && CosmicColors.HasNext(color)
+                && CosmicRayTracer.TrySplitDistance(s.SpontaneousSplitChance, s.ParticleRange, length, ambientRng.NextDouble(), ambientRng.NextDouble(), out float splitAt))
+            {
+                p.Length = splitAt;
+                p.Life = (splitAt + trail) / speed + 2f;
+                AmbientSplitChildren(s, color, x + dirX * splitAt, y + dirY * splitAt, dirX, dirY, p.Born + (uint)Math.Ceiling(splitAt / speed), 1);
+            }
+        }
+
+        int TakeAmbientSlot()
+        {
+            for (int n = 0; n < ambient.Length; n++)
+            {
+                int i = (ambientNext + n) % ambient.Length;
+                if (!ambient[i].Active)
+                {
+                    ambientNext = (i + 1) % ambient.Length;
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        // C10: the ambient copy of the split (client only, never counted or sent). The particle that split already ends at the split point; two
+        // particles of the next color start there at `born` (a tick that may still be in the future: DrawParticleSet skips a particle until its
+        // Born). The same rules as the server's EmitChildren: the re-emit angles, the speed and lifespan variation, the real ray tracer (a child that
+        // would hit a receiver is dropped, that one is the server's to draw). A child can split again, down to Grey.
+        void AmbientSplitChildren(CosmicRadiationSystem s, CosmicColor parent, float x, float y, float inDirX, float inDirY, uint born, int depth)
+        {
+            if (!CosmicColors.HasNext(parent) || depth > CosmicColors.Count)
+                return;
+
+            CosmicColor next = CosmicColors.Next(parent);
+            float low = Math.Max(0f, Math.Min(s.ReemitAngleMinDeg, s.ReemitAngleMaxDeg));
+            float high = Math.Max(low, Math.Max(s.ReemitAngleMinDeg, s.ReemitAngleMaxDeg));
+            float variation = Math.Clamp(s.ReemitVariation, 0f, 0.5f);
+            float trail = Math.Max(0.5f, s.ClientTrailTiles);
+
+            for (int child = 0; child < 2; child++)
+            {
+                float deg = low + (float)ambientRng.NextDouble() * (high - low);
+                CosmicRayTracer.Rotate(inDirX, inDirY, child == 0 ? deg : -deg, out float dirX, out float dirY);
+
+                float speedMul = 1f + ((float)ambientRng.NextDouble() * 2f - 1f) * variation;
+                float lifeMul = 1f + ((float)ambientRng.NextDouble() * 2f - 1f) * variation;
+                float range = s.ParticleRange * speedMul * lifeMul;
+                float speed = Math.Max(0.01f, s.ParticleSpeed * speedMul);
+
+                CosmicRayResult r = CosmicRayTracer.Trace(ambientProbe, x, y, dirX, dirY, next, range, s.CloudAbsorbChance, ambientRng);
+                if (r.End == CosmicRayEnd.Absorb || r.End == CosmicRayEnd.Ionize)
+                {
+                    AmbientDropped++;
+                    continue;
+                }
+
+                float length = r.End == CosmicRayEnd.Solid ? r.Distance : range;
+                if (length < 0.5f)
+                    continue;
+
+                int slot = TakeAmbientSlot();
+                if (slot < 0)
+                {
+                    AmbientSkippedFull++;
+                    return;
+                }
+
+                ref Particle c = ref ambient[slot];
+                c.Active = true;
+                c.Color = (byte)next;
+                c.End = 0;
+                c.Born = born;
+                c.X = x;
+                c.Y = y;
+                c.DirX = dirX;
+                c.DirY = dirY;
+                c.Length = length;
+                c.Speed = speed;
+                c.Life = (length + trail) / speed + 2f;
+                c.Phase = (float)ambientRng.NextDouble() * MathHelper.TwoPi;
+                AmbientSpawned++;
+
+                if (s.SpontaneousSplitChance > 0f && CosmicColors.HasNext(next)
+                    && CosmicRayTracer.TrySplitDistance(s.SpontaneousSplitChance, s.ParticleRange, length, ambientRng.NextDouble(), ambientRng.NextDouble(), out float splitAt))
+                {
+                    c.Length = splitAt;
+                    c.Life = (splitAt + trail) / speed + 2f;
+                    AmbientSplitChildren(s, next, x + dirX * splitAt, y + dirY * splitAt, dirX, dirY, born + (uint)Math.Ceiling(splitAt / speed), depth + 1);
+                }
+            }
         }
 
         // Rolling scan for receivers in the box around the player, about 30 ticks per full pass. Finding one switches the simulation off at
@@ -486,8 +578,43 @@ namespace Factorraria.Common.Cosmic
             return trailGradient;
         }
 
+        // C10: the soft round glow behind a particle head: 64 x 64, brightest in the middle and fading to nothing at the edge ((1 - d)^2),
+        // premultiplied, made once on the main thread.
+        Texture2D haloGlow;
+
+        Texture2D HaloGlow()
+        {
+            if (haloGlow != null && !haloGlow.IsDisposed)
+                return haloGlow;
+
+            int size = 64;
+            Color[] data = new Color[size * size];
+            float radius = size / 2f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x + 0.5f - radius;
+                    float dy = y + 0.5f - radius;
+                    float t = Math.Clamp(1f - MathF.Sqrt(dx * dx + dy * dy) / radius, 0f, 1f);
+                    float a = t * t;
+                    data[y * size + x] = new Color(a, a, a, a);
+                }
+            }
+
+            haloGlow = new Texture2D(Main.instance.GraphicsDevice, size, size);
+            haloGlow.SetData(data);
+            return haloGlow;
+        }
+
         public override void Unload()
         {
+            Texture2D halo = haloGlow;
+            haloGlow = null;
+            if (halo != null)
+                Main.QueueMainThreadAction(() => halo.Dispose());
+
             Texture2D disc = flashDisc;
             Texture2D head = headDisc;
             Texture2D gradient = trailGradient;

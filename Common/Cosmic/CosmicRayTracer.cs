@@ -23,7 +23,8 @@ namespace Factorraria.Common.Cosmic
         Range = 0,      // flew the whole range without hitting anything that matters
         Solid = 1,      // stopped by a Lead Brick (or the world edge)
         Absorb = 2,     // absorbed by a gemspark of its own color
-        Ionize = 3      // absorbed by a cloud block (the roll succeeded)
+        Ionize = 3,     // absorbed by a cloud block (the roll succeeded)
+        Split = 4       // C10: spontaneously split in mid-air, as if absorbed and re-emitted; the ray ends there and two children start
     }
 
     public struct CosmicRayResult
@@ -61,6 +62,30 @@ namespace Factorraria.Common.Cosmic
             float sin = MathF.Sin(radians);
             outX = dirX * cos + dirY * sin;
             outY = dirY * cos - dirX * sin;
+        }
+
+        // C10: the spontaneous split. Every particle has a small chance to split somewhere along its flight, as if a gemspark had absorbed it and
+        // re-emitted two particles of the next color. `chanceOverRange` is the chance that a particle splits during a flight of `plainRange` tiles;
+        // it is turned into a constant chance per tile flown (hazard = -ln(1 - chance) / plainRange), so a longer flight splits more often and the
+        // chance over a flight of any length is exact. `flownLength` is how far this ray goes before anything else ends it. uRoll and uWhere are two
+        // uniform numbers in [0, 1) (the caller owns the random source, so the server and the client decor can both use this and tests can fix them).
+        // True: the ray splits `distance` tiles from its start (0 <= distance < flownLength, drawn from the truncated exponential, so earlier
+        // points are slightly more likely, as they should be). False: it flies on.
+        public static bool TrySplitDistance(float chanceOverRange, float plainRange, float flownLength, double uRoll, double uWhere, out float distance)
+        {
+            distance = 0f;
+            if (!(chanceOverRange > 0f) || !(plainRange > 0f) || !(flownLength > 0f))
+                return false;
+
+            double chance = Math.Min((double)chanceOverRange, 0.999999);
+            double hazard = -Math.Log(1.0 - chance) / plainRange;
+            double p = 1.0 - Math.Exp(-hazard * flownLength);
+            if (!(uRoll < p))
+                return false;
+
+            double d = -Math.Log(1.0 - uWhere * p) / hazard;
+            distance = (float)Math.Min(Math.Max(d, 0.0), flownLength);
+            return true;
         }
 
         // Start position in tile units (tile (i, j) covers [i, i+1) x [j, j+1)). The direction does not need to be normalized.

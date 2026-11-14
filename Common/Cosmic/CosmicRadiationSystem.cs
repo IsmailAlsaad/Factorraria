@@ -87,6 +87,9 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Each re-emitted particle gets its own random speed and lifespan, up to this fraction faster or slower and longer or shorter than the plain values (0.2 = 20%, 0 = off).", "fraction")]
         public float ReemitVariation = 0.2f;
 
+        [CosmicParam("Chance that a particle splits all by itself during a flight of ParticleRange tiles, as if a gemspark had absorbed it and re-emitted two particles of the next color (the same angles and variation as a gemspark). It is turned into a constant chance per tile flown, so a longer flight splits more often. Grey never splits. 0 = off (C10).", "chance 0-1")]
+        public float SpontaneousSplitChance = 0.05f;
+
         // ------------------------------------------------------------ clouds (C4)
 
         [CosmicParam("Chance a particle passing through one cloud block is absorbed by it (same for every color, used from C4).", "chance 0-1")]
@@ -146,6 +149,12 @@ namespace Factorraria.Common.Cosmic
 
         [CosmicParam("How long a new particle takes to grow from size zero to full size (its head and the swing of its trail). 0 = it appears at full size at once (client only, C9c).", "ticks")]
         public float ClientHeadGrowTicks = 10f;
+
+        [CosmicParam("Width of the soft halo around the head of a particle, as a multiple of the head's diameter. The halo is steady (it does not pulse), grows in and fades out together with the head. 0 = no halo (client only, C10).", "x head")]
+        public float ClientHaloScale = 3.5f;
+
+        [CosmicParam("How bright the halo is, in the particle's color, as a multiple of the particle's brightness (client only, C10). 0 = no halo.", "x")]
+        public float ClientHaloBrightness = 0.6f;
 
         [CosmicParam("When the head of a particle starts to fade out, as a fraction of its flight time (ray length / speed). 0.8 = the head fades smoothly over the last fifth of the flight and is invisible on arrival. The trail does not fade: it stays where it is and drains away from its rear end until it has caught up with the spot where the head died. 1 = the head vanishes on arrival (client only, C9e).", "fraction")]
         public float ClientFadeOutStart = 0.8f;
@@ -244,6 +253,7 @@ namespace Factorraria.Common.Cosmic
             ReemitAngleMinDeg = Fix(ReemitAngleMinDeg, 0f, 89f);
             ReemitAngleMaxDeg = Fix(ReemitAngleMaxDeg, 0f, 89f);
             ReemitVariation = Fix(ReemitVariation, 0f, 0.5f);
+            SpontaneousSplitChance = Fix(SpontaneousSplitChance, 0f, 1f);
             CloudAbsorbChance = Fix(CloudAbsorbChance, 0f, 1f);
             IonizedLifetimeTicks = Math.Clamp(IonizedLifetimeTicks, 1, 36000);
             RefractoryTicks = Math.Clamp(RefractoryTicks, 0, 36000);

@@ -37,6 +37,14 @@ namespace Factorraria.Content.Configs
         [Range(0f, 120f)]
         public float ClientHeadGrowTicks = 10f;
 
+        [DefaultValue(3.5f)]
+        [Range(0f, 12f)]
+        public float ClientHaloScale = 3.5f;
+
+        [DefaultValue(0.6f)]
+        [Range(0f, 4f)]
+        public float ClientHaloBrightness = 0.6f;
+
         [DefaultValue(0.8f)]
         [Range(0f, 1f)]
         public float ClientFadeOutStart = 0.8f;
@@ -139,6 +147,8 @@ namespace Factorraria.Content.Configs
             s.ClientHeadSizeMinPx = ClientHeadSizeMinPx;
             s.ClientHeadSizeMaxPx = ClientHeadSizeMaxPx;
             s.ClientHeadGrowTicks = ClientHeadGrowTicks;
+            s.ClientHaloScale = ClientHaloScale;
+            s.ClientHaloBrightness = ClientHaloBrightness;
             s.ClientFadeOutStart = ClientFadeOutStart;
             s.ClientBrightness = ClientBrightness;
             s.ClientTrailTiles = ClientTrailTiles;

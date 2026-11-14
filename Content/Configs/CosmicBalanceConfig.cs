@@ -243,6 +243,10 @@ namespace Factorraria.Content.Configs
         [Range(0f, 0.5f)]
         public float ReemitVariation = 0.2f;
 
+        [DefaultValue(0.05f)]
+        [Range(0f, 1f)]
+        public float SpontaneousSplitChance = 0.05f;
+
         [Header("Clouds")]
         [DefaultValue(0.5f)]
         [Range(0f, 1f)]
@@ -317,6 +321,7 @@ namespace Factorraria.Content.Configs
             s.ReemitAngleMinDeg = ReemitAngleMinDeg;
             s.ReemitAngleMaxDeg = ReemitAngleMaxDeg;
             s.ReemitVariation = ReemitVariation;
+            s.SpontaneousSplitChance = SpontaneousSplitChance;
             s.CloudAbsorbChance = CloudAbsorbChance;
             s.IonizedLifetimeTicks = IonizedLifetimeTicks;
             s.RefractoryTicks = RefractoryTicks;

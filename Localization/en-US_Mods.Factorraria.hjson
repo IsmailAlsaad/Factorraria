@@ -530,6 +530,11 @@ Configs: {
 			Tooltip: Each re-emitted particle gets its own random speed and lifespan, up to this fraction faster or slower and longer or shorter than the plain values. Unit: fraction. Default: 0.2 (20%).
 		}
 
+		SpontaneousSplitChance: {
+			Label: Spontaneous Split Chance
+			Tooltip: Chance that a particle splits all by itself during a flight of ParticleRange tiles, as if a gemspark had absorbed it and re-emitted two particles of the next color (the same angles and variation as a gemspark). It is turned into a constant chance per tile flown, so a longer flight splits more often. Grey never splits. 0 = off. Unit: chance 0-1. Default: 0.05.
+		}
+
 		CloudAbsorbChance: {
 			Label: Cloud Absorb Chance
 			Tooltip: Chance a particle passing through one cloud block is absorbed by it (same for every color). Unit: chance 0-1. Default: 0.5.
@@ -625,6 +630,16 @@ Configs: {
 		ClientHeadGrowTicks: {
 			Label: Client Head Grow Ticks
 			Tooltip: How long a new particle takes to grow from size zero to full size (its head and the swing of its trail). 0 = it appears at full size at once (client only, C9c). Unit: ticks. Default: 10.
+		}
+
+		ClientHaloScale: {
+			Label: Client Halo Scale
+			Tooltip: Width of the soft halo around the head of a particle, as a multiple of the head's diameter. The halo is steady (it does not pulse), grows in and fades out together with the head. 0 = no halo (client only, C10). Unit: x head. Default: 3.5.
+		}
+
+		ClientHaloBrightness: {
+			Label: Client Halo Brightness
+			Tooltip: How bright the halo is, in the particle's color, as a multiple of the particle's brightness (client only, C10). 0 = no halo. Unit: x. Default: 0.6.
 		}
 
 		ClientFadeOutStart: {

@@ -588,6 +588,13 @@ namespace Factorraria.Common.Cosmic
             float fadeStart = Math.Clamp(system.ClientFadeOutStart, 0f, 1f);
             float colorSteps = Math.Max(1, CosmicColors.Count - 1);
 
+            // C10: the halo. One soft additive quad behind each head; its size follows the head's (so it grows in with the spawn), its brightness
+            // follows the head's fade-out.
+            float haloScale = Math.Max(0f, system.ClientHaloScale);
+            float haloBright = Math.Max(0f, system.ClientHaloBrightness);
+            Texture2D haloTex = haloScale > 0.01f && haloBright > 0.001f ? HaloGlow() : null;
+            Vector2 haloMiddle = haloTex != null ? new Vector2(haloTex.Width, haloTex.Height) * 0.5f : Vector2.Zero;
+
             for (int i = 0; i < set.Length; i++)
             {
                 ref Particle p = ref set[i];
@@ -595,6 +602,9 @@ namespace Factorraria.Common.Cosmic
                     continue;
 
                 float age = (int)(now - p.Born);
+                if (age < 0f)
+                    continue;   // C10: an ambient child of a split starts at a tick that has not come yet
+
                 float flight = p.Length / p.Speed;
                 float travelled = age * p.Speed;
                 float head = Math.Min(travelled, p.Length);
@@ -637,6 +647,15 @@ namespace Factorraria.Common.Cosmic
                         quadsThisFrame += DrawTrail(sb, pixel, in p, head, trailLength, color, cell, amplitude, radiansPerTile);
                     else
                         quadsThisFrame += DrawStraightTrail(sb, in p, head, trailLength, color, cell);
+                }
+
+                // C10: the halo behind the head (drawn first, so the opaque head is on top of it).
+                if (haloTex != null && diameter > 0.2f && fade > 0.003f && quadsThisFrame < budget * 2)
+                {
+                    float haloSize = diameter * haloScale / haloTex.Width;
+                    Vector2 haloPos = new Vector2(hx * 16f - Main.screenPosition.X, hy * 16f - Main.screenPosition.Y);
+                    sb.Draw(haloTex, haloPos, null, baseColor * (haloBright * Math.Min(1f, bright) * fade), 0f, haloMiddle, haloSize, SpriteEffects.None, 0f);
+                    quadsThisFrame++;
                 }
 
                 // The head, on the ray line, until it has faded out.

@@ -346,6 +346,8 @@ namespace Factorraria.Common.Cosmic
             caller.Reply("  absorbed by gemsparks: " + PerColor(sim.Absorbed), Color.White);
             caller.Reply("  child rays made by gemsparks (re-emitted, per color of the child): " + PerColor(sim.Reemitted) + ". Chain ended at the lowest color (no next step) " + sim.ChainEnds + ", gemspark broken before arrival " + sim.Vanished + ".", Color.White);
 
+            caller.Reply("  spontaneous splits in mid-air (C10, per color of the parent; the two child rays of each are counted above as re-emitted): " + PerColor(sim.Splits) + ".", Color.White);
+
             if (sim.HasLastCascade)
                 caller.Reply("  last cascade: a " + sim.LastCascadeFrom + " ray was absorbed and made two " + CosmicColors.Next(sim.LastCascadeFrom) + " rays at +" + Inv(sim.LastChildDegA, "0.0") + " and -" + Inv(sim.LastChildDegB, "0.0") + " degrees from its path.", Color.White);
             caller.Reply("  hit clouds: " + PerColor(sim.Ionized), Color.White);
