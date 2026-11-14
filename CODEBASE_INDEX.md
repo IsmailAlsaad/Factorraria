@@ -118,9 +118,9 @@ tModLoader/other bases -> project types:
 **CartMapSystem.cs** uses: CartMapConfig, CartMapIcons, CartMapMode, CartMapSettings
   class CartMapSystem : ModSystem
     +ButtonSize:int +Unload()[ov] +DrawButton(ref string)
-**CartMountBlocker.cs** uses: Cart
+**CartMountBlocker.cs** uses: Cart, CartSkinTable
   class CartMountBlocker : ModSystem
-    +MountKeyTrackRangeTiles:int +AllowCartMount:bool[s] +Load()[ov] +Unload()[ov] +IsTrackTile(int,int)[s] +Log(string)[s] +IsTrackRightClick(Player)[s]
+    +MountKeyTrackRangeTiles:int +AllowCartMount:bool[s] +Load()[ov] +Unload()[ov] +IsTrackTile(int,int)[s] +Log(string)[s] +IsUsingCartItem(Player)[s] +IsTrackRightClick(Player)[s]
   class CartTrackHookBlocker : GlobalProjectile
     +InstancePerEntity:bool[ov] +AppliesToEntity(Projectile,bool)[ov] +OnSpawn(Projectile,IEntitySource)[ov] +GrappleCanLatchOnTo(Projectile,Player,int,int)[ov]
 **CartPassengerGlobalNPC.cs** uses: CartPassengers
