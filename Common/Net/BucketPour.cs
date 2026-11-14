@@ -141,13 +141,23 @@ namespace Factorraria.Common.Net
             return tank != null;
         }
 
-        /// <summary>Only a motor cart that runs on a liquid takes a bucket, and only its own fuel liquid, into an empty tank or one that holds that liquid.</summary>
+        /// <summary>
+        /// A liquid motor cart (its own fuel liquid only) or a terrarium cart (any liquid) takes a bucket into an empty tank or one that holds that
+        /// liquid, as long as there is any room: like a machine tank, it is topped up to capacity and the leftover is lost.
+        /// </summary>
         public static bool CanPourCart(Cart cart, int bucketLiquid)
         {
-            if (cart == null || !cart.Active || cart.Module != CartModule.Motor || !cart.UsesLiquid || cart.Tank == null)
+            if (cart == null || !cart.Active || cart.Tank == null)
                 return false;
 
-            if (!cart.IsFuelLiquid(bucketLiquid) || !HasRoomForBucket(cart.Tank))
+            bool liquidMotor = cart.Module == CartModule.Motor && cart.UsesLiquid;
+            if (!liquidMotor && cart.Module != CartModule.Terrarium)
+                return false;
+
+            if (liquidMotor && !cart.IsFuelLiquid(bucketLiquid))
+                return false;
+
+            if (!cart.Tank.Accepts(bucketLiquid) || !HasAnyRoom(cart.Tank))
                 return false;
 
             return cart.Tank.IsEmpty || cart.Tank.LiquidType == bucketLiquid;

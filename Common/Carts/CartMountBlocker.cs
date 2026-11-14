@@ -80,6 +80,14 @@ namespace Factorraria.Common.Carts
                 return;
             }
 
+            // Layer 5: using a cart item (left click) never puts the player on a cart, whichever vanilla path asks for the mount.
+            // Placing a cart is CartSystem's click handling; riding is the right click on a placed cart (AllowCartMount).
+            if (m >= 0 && m < MountID.Sets.Cart.Length && MountID.Sets.Cart[m] && !AllowCartMount && IsUsingCartItem(mountedPlayer))
+            {
+                Log("layer 5, SetMount refused while using a cart item");
+                return;
+            }
+
             orig(self, m, mountedPlayer, faceLeft);
         }
 
@@ -122,6 +130,14 @@ namespace Factorraria.Common.Carts
             }
 
             return false;
+        }
+
+        /// <summary>The local player is using (or holding the use button with) a cart skin item, on the cursor or in the hand.</summary>
+        public static bool IsUsingCartItem(Player player)
+        {
+            return player.whoAmI == Main.myPlayer
+                && (player.controlUseItem || player.itemAnimation > 0)
+                && CartSkinTable.IsSkinItem(CartSkinTable.GetHeldItem(player));
         }
 
         public static bool IsTrackRightClick(Player player)
