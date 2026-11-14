@@ -277,6 +277,11 @@ Items: {
 			Discharges when the network is underpowered
 			'''
 	}
+
+	WoodenMinecartItem: {
+		DisplayName: Wooden Minecart
+		Tooltip: ""
+	}
 }
 
 Configs: {
