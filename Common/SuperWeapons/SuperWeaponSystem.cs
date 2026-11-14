@@ -47,7 +47,19 @@ namespace Factorraria.Common.SuperWeapons
         /// <summary>True only while Launch removes the weapon's tiles, so SuperWeaponDropGuard keeps the parts from dropping items.</summary>
         public bool SuppressPartDrops;
 
+        /// <summary>Client only: how long a launch zone stays after its tank was last seen igniting, in ticks (the part kills arrive right after the tank vanishes).</summary>
+        public int BreakZoneTicks = 90;
+
+        class BreakZone
+        {
+            public int TankId;
+            public Rectangle Tiles;   // the whole weapon, in tile coordinates
+            public int TicksLeft;
+        }
+
         int checkTimer;
+        int zoneScanTimer;
+        readonly List<BreakZone> breakZones = new List<BreakZone>();
         MissileTankTileEntity igniting;   // the tank counting down, null = none
         readonly List<MissileTankTileEntity> primedTanks = new List<MissileTankTileEntity>();
         readonly List<TriggerCandidate> candidates = new List<TriggerCandidate>();
@@ -59,6 +71,8 @@ namespace Factorraria.Common.SuperWeapons
         void Reset()
         {
             checkTimer = 0;
+            zoneScanTimer = 0;
+            breakZones.Clear();
             igniting = null;
             primedTanks.Clear();
             candidates.Clear();
@@ -67,7 +81,10 @@ namespace Factorraria.Common.SuperWeapons
         public override void PostUpdateEverything()
         {
             if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                TrackBreakZones();
                 return;
+            }
 
             TickIgnition();
 
@@ -232,6 +249,61 @@ namespace Factorraria.Common.SuperWeapons
             }
 
             return killed;
+        }
+
+        /// <summary>
+        /// True while a launch is removing this part tile: the break dust and the break sound are skipped (SuperWeaponDropGuard), so the weapon
+        /// turns into the missile without a tile-break show. Single-player and server: exactly while Launch kills the parts (SuppressPartDrops).
+        /// Multiplayer client: the kills arrive as normal tile packets, so the tile counts when it lies inside the area of a weapon that is
+        /// Igniting (from the replica's state) or was a moment ago.
+        /// </summary>
+        public static bool IsLaunchBreak(int x, int y)
+        {
+            SuperWeaponSystem system = ModContent.GetInstance<SuperWeaponSystem>();
+            if (system == null)
+                return false;
+
+            if (system.SuppressPartDrops)
+                return true;
+
+            foreach (BreakZone zone in system.breakZones)
+                if (zone.Tiles.Contains(x, y))
+                    return true;
+
+            return false;
+        }
+
+        // Client only: remember the area of every weapon that is igniting. The tank entity is gone as soon as its own tile kill arrives, so the
+        // zone has to outlive it for the drill and thruster kills that follow in the same burst.
+        void TrackBreakZones()
+        {
+            for (int i = breakZones.Count - 1; i >= 0; i--)
+                if (--breakZones[i].TicksLeft <= 0)
+                    breakZones.RemoveAt(i);
+
+            if (--zoneScanTimer > 0)
+                return;
+
+            zoneScanTimer = 10;
+            foreach (TileEntity entity in TileEntity.ByID.Values)
+            {
+                if (!(entity is MissileTankTileEntity tank) || tank.WeaponState < SuperWeaponState.Igniting)
+                    continue;
+
+                int facing = tank.WeaponFacing == 0 ? 1 : tank.WeaponFacing;
+                int left = tank.Position.X;
+                int x = facing > 0 ? left - 1 : left - SuperWeaponAssembly.DrillWidth;   // thruster column on one end, drill on the other (same as Launch)
+                Rectangle tiles = new Rectangle(x, tank.Position.Y, SuperWeaponAssembly.TankWidth + SuperWeaponAssembly.DrillWidth + 1, SuperWeaponAssembly.TankHeight);
+
+                BreakZone zone = breakZones.Find(z => z.TankId == tank.ID);
+                if (zone == null)
+                    breakZones.Add(new BreakZone { TankId = tank.ID, Tiles = tiles, TicksLeft = Math.Max(1, BreakZoneTicks) });
+                else
+                {
+                    zone.Tiles = tiles;
+                    zone.TicksLeft = Math.Max(1, BreakZoneTicks);
+                }
+            }
         }
 
         /// <summary>True for the three super weapon part tiles.</summary>

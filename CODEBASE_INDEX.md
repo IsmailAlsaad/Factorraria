@@ -4,7 +4,7 @@ generated 2026-11-14 | 394 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(81) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(33) PacketDirection(31) RecipeBook(25) Cart(22) Factorraria(20) MachineUIStateBase(18) MachineUIElementEntry(17) CustomRecipe(17) TileEntityHelper(16) LiquidStack(16) JoinSync(16) CartSystem(15) CartModule(15) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(13)
+FactorrariaNet(81) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(34) PacketDirection(31) RecipeBook(25) Cart(22) Factorraria(20) MachineUIStateBase(18) MachineUIElementEntry(17) LiquidStack(17) CustomRecipe(17) TileEntityHelper(16) JoinSync(16) CartSystem(15) CartModule(15) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13) FurnaceOffsetConfig(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -16,7 +16,7 @@ Project bases -> derived:
 - IElectricConsumer: ElectricConsumerMachine
 - IElectricProducer: ElectricProducerMachine, IElectricStorage
 - IElectricStorage: SunCapsuleTileEntity
-- IMachineDynamicDraw: BeeWheelTileEntity, ExtractinatorTileEntity, RoboticArmTileEntity, SunCapsuleTileEntity
+- IMachineDynamicDraw: BeeWheelTileEntity, ExtractinatorTileEntity, MissileTankTileEntity, RoboticArmTileEntity, SunCapsuleTileEntity
 - IMotorTile: MotorTileBase
 - IStatueAwakener: MagicMaterializerTileEntity
 - ITilePlacedConsumer: AwakenedStatuePlacedConsumer, BeeWheelPlacedConsumer, ChestConveyorPlacedConsumer, CosmicReceiverPlacedConsumer, LiquidTopologyPlacedConsumer, MachinePlacedConsumer, MotorPlacedConsumer, PipePlacedConsumer, PlacementLogConsumer, PriorityConveyorPlacedConsumer
@@ -1071,7 +1071,7 @@ tModLoader/other bases -> project types:
     +PostDrawTiles()[ov]
 **SuperWeaponDropGuard.cs** uses: SuperWeaponSystem
   class SuperWeaponDropGuard : GlobalTile
-    +CanDrop(int,int,int)[ov]
+    +CanDrop(int,int,int)[ov] +CreateDust(int,int,int,ref int)[ov] +NumDust(int,int,int,bool,ref int)[ov] +KillSound(int,int,int,bool)[ov]
 **SuperWeaponExplosionFxSystem.cs**
   class SuperWeaponExplosionFxSystem : ModSystem
     +DurationTicks:int +ShockwaveSpeedPx:float +ShockwaveTicks:int +FlashTicks:int +FlashMaxAlpha:float +FlashRangePx:float +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Start(Vector2) +PostUpdateEverything()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
@@ -1088,7 +1088,9 @@ tModLoader/other bases -> project types:
     +CanPlacePart(Player,Item)[s]
 **SuperWeaponSystem.cs** uses: MissileDrillTile, MissileTankTile, MissileTankTileEntity, MissileThrusterTile, SuperWeaponAssembly, SuperWeaponEffectKind, SuperWeaponMissile, SuperWeaponNet, SuperWeaponState, SuperWeaponTrigger, TriggerCandidate, WallShieldGlobalNPC
   class SuperWeaponSystem : ModSystem
-    +TriggerCheckTicks:int +IgniteTicks:int +MissileAccel:float +MissileMaxSpeedPx:float +MissileMaxRangeTiles:int +HitDistancePx:float +SuppressPartDrops:bool +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindWall()[s] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +IsPartTile(int)[s]
+    +TriggerCheckTicks:int +IgniteTicks:int +MissileAccel:float +MissileMaxSpeedPx:float +MissileMaxRangeTiles:int +HitDistancePx:float +SuppressPartDrops:bool +BreakZoneTicks:int +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindWall()[s] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +IsLaunchBreak(int,int)[s] +IsPartTile(int)[s]
+    class BreakZone
+      +TankId:int +Tiles:Rectangle +TicksLeft:int
 **SuperWeaponTrigger.cs**
   struct TriggerCandidate
     +Id:int +X:float +Facing:int
@@ -1879,9 +1881,9 @@ tModLoader/other bases -> project types:
 **MissileTankTile.cs** uses: MissileTankItem, MissileTankTileEntity
   class MissileTankTile : ModTile
     +ArtPath:string[c] +SheetPath()[s] +Texture:string[ov]
-**MissileTankTileEntity.cs** uses: AssemblyIssue, AssemblyResult, BaseMachine, LiquidFuelTable, MissileDrillTile, MissileTankRegistry, MissileTankTile, MissileThrusterTile, OverhangDrawSystem, PartCell, SuperWeaponAssembly, SuperWeaponPartKind, SuperWeaponState
-  class MissileTankTileEntity : BaseMachine
-    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +FuelCapacity:float #InputTankCapacity(int)[ov] +AssemblyCheckTicks:int +WeaponState:SuperWeaponState +WeaponFacing:int +WeaponIssue:AssemblyIssue +WeaponIssueRow:int +WeaponIssueDx:int +WeaponIssueDy:int +IsAssembled:bool +AssemblyText:string +IgnitionTicksLeft:int +IsFull:bool +IsReadyToFire:bool +Update()[ov] +RefreshAssembly() +BeginIgnition(int) +CompleteIgnition() +ClearLaunch() #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov]
+**MissileTankTileEntity.cs** uses: AssemblyIssue, AssemblyResult, BaseMachine, IMachineDynamicDraw, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, MissileDrillTile, MissileTankRegistry, MissileTankTile, MissileThrusterTile, OverhangDrawSystem, PartCell, SuperWeaponAssembly, SuperWeaponPartKind, SuperWeaponState
+  class MissileTankTileEntity : BaseMachine, IMachineDynamicDraw
+    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +FuelCapacity:float #InputTankCapacity(int)[ov] +AssemblyCheckTicks:int +WeaponState:SuperWeaponState +WeaponFacing:int +WeaponIssue:AssemblyIssue +WeaponIssueRow:int +WeaponIssueDx:int +WeaponIssueDy:int +IsAssembled:bool +AssemblyText:string +IgnitionTicksLeft:int +IsFull:bool +IsReadyToFire:bool +Update()[ov] +RefreshAssembly() +BeginIgnition(int) +CompleteIgnition() +ClearLaunch() #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +WindowX:int +WindowY:int +WindowWidth:int +WindowHeight:int +WindowEase:float +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
 **MissileTankUIState.cs** uses: MachineUIElementEntry, MachineUIStateBase
   class MissileTankUIState : MachineUIStateBase
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]

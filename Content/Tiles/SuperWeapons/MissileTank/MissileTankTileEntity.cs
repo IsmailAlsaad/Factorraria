@@ -4,9 +4,12 @@ using Factorraria.Common.Net;
 using Factorraria.Common.SuperWeapons;
 using Factorraria.Content.Tiles.SuperWeapons.MissileDrill;
 using Factorraria.Content.Tiles.SuperWeapons.MissileThruster;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -16,7 +19,7 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
     // holds Fuel. It gets everything else from BaseMachine: pipes treat it as a sink (the tank is InputLiquids[0] with a Fuel-only filter),
     // bucket pour works through the same tank, and it is saved and synced like every machine (snapshot, light updates, detail channel).
     // Patch S3.1 adds the assembly check on this entity (see "Assembly" below); the primed state arrives in S3.2.
-    public class MissileTankTileEntity : BaseMachine
+    public class MissileTankTileEntity : BaseMachine, IMachineDynamicDraw
     {
         public override int ValidTileType => ModContent.TileType<MissileTankTile>();
 
@@ -209,5 +212,85 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
         }
 
         protected override string DescribeSnapshotExtra() => base.DescribeSnapshotExtra() + " weapon=" + WeaponState + " facing=" + WeaponFacing + " issue=" + WeaponIssue;
+
+        // ---- Fuel window (client only, cosmetic, nothing saved or sent) ----
+        // MissileTank.png has a see-through window in the middle of the casing. The liquid is drawn BEHIND the tiles (IMachineDynamicDraw's
+        // behind-tiles pass), so the casing art covers everything except the hole. The level follows the tank amount, read from the replica
+        // the light update keeps current, and eases toward it so it does not jump. The window numbers are in pixels from the tank's top-left
+        // (the 4x3 tank is 64 x 48 px, the art's 2 px sheet gaps are not counted); they are instance fields so hot reload can nudge them.
+
+        public int WindowX = 18;
+        public int WindowY = 18;
+        public int WindowWidth = 28;
+        public int WindowHeight = 16;
+
+        /// <summary>How fast the drawn level eases toward the real one, per tick (0 to 1).</summary>
+        public float WindowEase = 0.12f;
+
+        float shownFill = -1f;       // runtime only: the fill fraction as drawn, -1 = not initialised yet
+        int shownLiquidType = -1;    // runtime only: the last liquid seen in the tank, so the level can drain after the tank forgets its type
+
+        public void DynamicUpdate()
+        {
+            LiquidStack tank = InputLiquids[0];
+            if (!tank.IsEmpty)
+                shownLiquidType = tank.LiquidType;
+
+            float target = tank.IsEmpty ? 0f : MathHelper.Clamp(tank.Amount / Math.Max(1f, FuelCapacity), 0f, 1f);
+            shownFill = shownFill < 0f ? target : MathHelper.Lerp(shownFill, target, MathHelper.Clamp(WindowEase, 0.01f, 1f));
+            if (Math.Abs(shownFill - target) < 0.002f)
+                shownFill = target;
+        }
+
+        public bool TryGetDynamicBounds(out Vector2 center, out float radius)
+        {
+            center = new Vector2(Position.X * 16f + SuperWeaponAssembly.TankWidth * 8f, Position.Y * 16f + SuperWeaponAssembly.TankHeight * 8f);
+            radius = 48f;
+            return shownFill > 0.001f && shownLiquidType >= 0;
+        }
+
+        public void DynamicDraw(SpriteBatch spriteBatch) { }
+
+        public void DynamicDrawBehindTiles(SpriteBatch spriteBatch)
+        {
+            if (shownFill <= 0.001f || shownLiquidType < 0)
+                return;
+
+            int levelPx = Math.Max(1, (int)Math.Round(WindowHeight * shownFill));
+            int originX = Position.X * 16;
+            int originY = Position.Y * 16;
+
+            // 1 px wider on the sides and at the bottom than the hole: the casing art covers the overlap, so a sub-pixel difference
+            // between the casing and this draw (zoom, screen position) can never show a gap.
+            int bottom = originY + WindowY + WindowHeight + 1;
+            Rectangle fill = new Rectangle(originX + WindowX - 1, bottom - levelPx - 1, WindowWidth + 2, levelPx + 1);
+
+            Color tint = LiquidTypeRegistry.Get(shownLiquidType).RenderColor;
+            DrawWindowRect(spriteBatch, fill, tint, 0.85f);
+
+            if (levelPx >= 3)
+                DrawWindowRect(spriteBatch, new Rectangle(fill.X, fill.Y, fill.Width, 1), Color.Lerp(tint, Color.White, 0.4f), 0.95f);   // lighter surface line
+        }
+
+        // One rectangle in world pixels, split per tile so every part picks up its own tile's light.
+        void DrawWindowRect(SpriteBatch spriteBatch, Rectangle area, Color tint, float alpha)
+        {
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Rectangle source = new Rectangle(0, 0, 1, 1);   // MagicPixel is not guaranteed to be 1x1
+
+            for (int tx = Position.X; tx < Position.X + SuperWeaponAssembly.TankWidth; tx++)
+            {
+                for (int ty = Position.Y; ty < Position.Y + SuperWeaponAssembly.TankHeight; ty++)
+                {
+                    Rectangle part = Rectangle.Intersect(area, new Rectangle(tx * 16, ty * 16, 16, 16));
+                    if (part.Width <= 0 || part.Height <= 0)
+                        continue;
+
+                    Color color = tint.MultiplyRGBA(Lighting.GetColor(tx, ty)) * alpha;
+                    Rectangle screen = new Rectangle(part.X - (int)Main.screenPosition.X, part.Y - (int)Main.screenPosition.Y, part.Width, part.Height);
+                    spriteBatch.Draw(pixel, screen, source, color);
+                }
+            }
+        }
     }
 }
