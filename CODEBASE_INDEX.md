@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-14 | 394 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-14 | 395 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -17,6 +17,7 @@ Project bases -> derived:
 - IElectricProducer: ElectricProducerMachine, IElectricStorage
 - IElectricStorage: SunCapsuleTileEntity
 - IMachineDynamicDraw: BeeWheelTileEntity, ExtractinatorTileEntity, MissileTankTileEntity, RoboticArmTileEntity, SunCapsuleTileEntity
+- IMachineTileUnderlay: MissileTankTileEntity
 - IMotorTile: MotorTileBase
 - IStatueAwakener: MagicMaterializerTileEntity
 - ITilePlacedConsumer: AwakenedStatuePlacedConsumer, BeeWheelPlacedConsumer, ChestConveyorPlacedConsumer, CosmicReceiverPlacedConsumer, LiquidTopologyPlacedConsumer, MachinePlacedConsumer, MotorPlacedConsumer, PipePlacedConsumer, PlacementLogConsumer, PriorityConveyorPlacedConsumer
@@ -465,6 +466,9 @@ tModLoader/other bases -> project types:
 **IMachineDynamicDraw.cs**
   interface IMachineDynamicDraw
     +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
+**IMachineTileUnderlay.cs**
+  interface IMachineTileUnderlay
+    +DrawUnderTile(SpriteBatch,int,int)
 **MachineBiome.cs**
   enum MachineBiome
     {Unknown, Forest, Snow, Desert, Jungle, GlowingMushroom, Corruption, Crimson, Hallow, Underworld, Cavern, Underground, Sky, Ocean, ...}
@@ -477,7 +481,7 @@ tModLoader/other bases -> project types:
 **MachineTransitionSystem.cs** uses: BaseMachine, MachineVisualDefinition, MachineVisualRegistry
   class MachineTransitionSystem : ModSystem
     +PostUpdateEverything()[ov]
-**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, FactorrariaNet, FurnaceOffsetConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, TileEntityHelper
+**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, FactorrariaNet, FurnaceOffsetConfig, IMachineTileUnderlay, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, TileEntityHelper
   enum MachineTransition : byte
     {None, Startup, Shutdown}
   class LiquidOverlayLayer
@@ -1881,9 +1885,9 @@ tModLoader/other bases -> project types:
 **MissileTankTile.cs** uses: MissileTankItem, MissileTankTileEntity
   class MissileTankTile : ModTile
     +ArtPath:string[c] +SheetPath()[s] +Texture:string[ov]
-**MissileTankTileEntity.cs** uses: AssemblyIssue, AssemblyResult, BaseMachine, IMachineDynamicDraw, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, MissileDrillTile, MissileTankRegistry, MissileTankTile, MissileThrusterTile, OverhangDrawSystem, PartCell, SuperWeaponAssembly, SuperWeaponPartKind, SuperWeaponState
-  class MissileTankTileEntity : BaseMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +FuelCapacity:float #InputTankCapacity(int)[ov] +AssemblyCheckTicks:int +WeaponState:SuperWeaponState +WeaponFacing:int +WeaponIssue:AssemblyIssue +WeaponIssueRow:int +WeaponIssueDx:int +WeaponIssueDy:int +IsAssembled:bool +AssemblyText:string +IgnitionTicksLeft:int +IsFull:bool +IsReadyToFire:bool +Update()[ov] +RefreshAssembly() +BeginIgnition(int) +CompleteIgnition() +ClearLaunch() #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +WindowX:int +WindowY:int +WindowWidth:int +WindowHeight:int +WindowEase:float +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
+**MissileTankTileEntity.cs** uses: AssemblyIssue, AssemblyResult, BaseMachine, IMachineDynamicDraw, IMachineTileUnderlay, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, MissileDrillTile, MissileTankRegistry, MissileTankTile, MissileThrusterTile, OverhangDrawSystem, PartCell, SuperWeaponAssembly, SuperWeaponPartKind, SuperWeaponState
+  class MissileTankTileEntity : BaseMachine, IMachineDynamicDraw, IMachineTileUnderlay
+    +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +FuelCapacity:float #InputTankCapacity(int)[ov] +AssemblyCheckTicks:int +WeaponState:SuperWeaponState +WeaponFacing:int +WeaponIssue:AssemblyIssue +WeaponIssueRow:int +WeaponIssueDx:int +WeaponIssueDy:int +IsAssembled:bool +AssemblyText:string +IgnitionTicksLeft:int +IsFull:bool +IsReadyToFire:bool +Update()[ov] +RefreshAssembly() +BeginIgnition(int) +CompleteIgnition() +ClearLaunch() #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +WindowX:int +WindowY:int +WindowWidth:int +WindowHeight:int +WindowEase:float +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DrawUnderTile(SpriteBatch,int,int)
 **MissileTankUIState.cs** uses: MachineUIElementEntry, MachineUIStateBase
   class MissileTankUIState : MachineUIStateBase
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]

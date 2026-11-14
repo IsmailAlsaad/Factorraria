@@ -493,6 +493,9 @@ namespace Factorraria.Common.Machines
 
             float rotation = entity is MotorTileEntityBase motor ? GetMotorRotation(motor.Facing) : 0f;
 
+            if (entity is IMachineTileUnderlay underlay)
+                underlay.DrawUnderTile(spriteBatch, i, j);
+
             // A startup / shutdown that is playing replaces the On/Off art and the On liquid layers. It does not notify
             // OnAnimationFrameChanged, so per-frame sounds of the normal On animation don't fire on its frames.
             if (def.TryGetActiveTransition(entity, out Texture2D transitionTexture, out int transitionFrame, out MachineTransition transitionKind))

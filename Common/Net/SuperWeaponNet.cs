@@ -65,14 +65,10 @@ namespace Factorraria.Common.Net
                     break;
 
                 case SuperWeaponEffectKind.Launch:
-                    // Placeholder sounds and dust; the flames of the flight itself come from the missile projectile.
+                    // Placeholder sounds only: no particles at launch (the flames of the flight itself come from the missile projectile).
                     SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1f, Pitch = -0.6f }, position);
                     SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.8f, Pitch = -0.4f }, position);
-                    for (int i = 0; i < 40; i++)
-                    {
-                        Dust smoke = Dust.NewDustPerfect(position + Main.rand.NextVector2Circular(60f, 24f), DustID.Smoke, Main.rand.NextVector2Circular(4f, 3f), 100, default, 2.2f);
-                        smoke.noGravity = true;
-                    }
+
 
                     Main.instance.CameraModifiers.Add(new PunchCameraModifier(position, Main.rand.NextVector2CircularEdge(1f, 1f), 8f, 12f, 60, 2500f, "FactorrariaLaunch"));
                     break;

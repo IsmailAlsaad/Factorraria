@@ -19,7 +19,7 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
     // holds Fuel. It gets everything else from BaseMachine: pipes treat it as a sink (the tank is InputLiquids[0] with a Fuel-only filter),
     // bucket pour works through the same tank, and it is saved and synced like every machine (snapshot, light updates, detail channel).
     // Patch S3.1 adds the assembly check on this entity (see "Assembly" below); the primed state arrives in S3.2.
-    public class MissileTankTileEntity : BaseMachine, IMachineDynamicDraw
+    public class MissileTankTileEntity : BaseMachine, IMachineDynamicDraw, IMachineTileUnderlay
     {
         public override int ValidTileType => ModContent.TileType<MissileTankTile>();
 
@@ -242,16 +242,19 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
                 shownFill = target;
         }
 
+        // The liquid is drawn from the TILE pass itself: MachineVisualOverride.PreDraw calls DrawUnderTile for every cell of the tank right
+        // before that cell's casing art, in the same SpriteBatch, so the casing always paints over it and only the window hole shows liquid.
+        // Nothing is drawn in the dynamic passes (the behind-tiles pass turned out to land in front of the casing).
         public bool TryGetDynamicBounds(out Vector2 center, out float radius)
         {
-            center = new Vector2(Position.X * 16f + SuperWeaponAssembly.TankWidth * 8f, Position.Y * 16f + SuperWeaponAssembly.TankHeight * 8f);
-            radius = 48f;
-            return shownFill > 0.001f && shownLiquidType >= 0;
+            center = default;
+            radius = 0f;
+            return false;
         }
 
         public void DynamicDraw(SpriteBatch spriteBatch) { }
 
-        public void DynamicDrawBehindTiles(SpriteBatch spriteBatch)
+        public void DrawUnderTile(SpriteBatch spriteBatch, int i, int j)
         {
             if (shownFill <= 0.001f || shownLiquidType < 0)
                 return;
@@ -266,31 +269,23 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
             Rectangle fill = new Rectangle(originX + WindowX - 1, bottom - levelPx - 1, WindowWidth + 2, levelPx + 1);
 
             Color tint = LiquidTypeRegistry.Get(shownLiquidType).RenderColor;
-            DrawWindowRect(spriteBatch, fill, tint, 0.85f);
+            DrawCellRect(spriteBatch, i, j, fill, tint, 0.85f);
 
             if (levelPx >= 3)
-                DrawWindowRect(spriteBatch, new Rectangle(fill.X, fill.Y, fill.Width, 1), Color.Lerp(tint, Color.White, 0.4f), 0.95f);   // lighter surface line
+                DrawCellRect(spriteBatch, i, j, new Rectangle(fill.X, fill.Y, fill.Width, 1), Color.Lerp(tint, Color.White, 0.4f), 0.95f);   // lighter surface line
         }
 
-        // One rectangle in world pixels, split per tile so every part picks up its own tile's light.
-        void DrawWindowRect(SpriteBatch spriteBatch, Rectangle area, Color tint, float alpha)
+        // The part of a world-pixel rectangle that lies inside tile (i, j), lit by that tile. Tile-pass screen position includes the off-screen range.
+        void DrawCellRect(SpriteBatch spriteBatch, int i, int j, Rectangle area, Color tint, float alpha)
         {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Rectangle source = new Rectangle(0, 0, 1, 1);   // MagicPixel is not guaranteed to be 1x1
+            Rectangle part = Rectangle.Intersect(area, new Rectangle(i * 16, j * 16, 16, 16));
+            if (part.Width <= 0 || part.Height <= 0)
+                return;
 
-            for (int tx = Position.X; tx < Position.X + SuperWeaponAssembly.TankWidth; tx++)
-            {
-                for (int ty = Position.Y; ty < Position.Y + SuperWeaponAssembly.TankHeight; ty++)
-                {
-                    Rectangle part = Rectangle.Intersect(area, new Rectangle(tx * 16, ty * 16, 16, 16));
-                    if (part.Width <= 0 || part.Height <= 0)
-                        continue;
-
-                    Color color = tint.MultiplyRGBA(Lighting.GetColor(tx, ty)) * alpha;
-                    Rectangle screen = new Rectangle(part.X - (int)Main.screenPosition.X, part.Y - (int)Main.screenPosition.Y, part.Width, part.Height);
-                    spriteBatch.Draw(pixel, screen, source, color);
-                }
-            }
+            Vector2 zero = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
+            Color color = tint.MultiplyRGBA(Lighting.GetColor(i, j)) * alpha;
+            Rectangle screen = new Rectangle(part.X - (int)Main.screenPosition.X + (int)zero.X, part.Y - (int)Main.screenPosition.Y + (int)zero.Y, part.Width, part.Height);
+            spriteBatch.Draw(TextureAssets.MagicPixel.Value, screen, new Rectangle(0, 0, 1, 1), color);   // MagicPixel is not guaranteed to be 1x1
         }
     }
 }
