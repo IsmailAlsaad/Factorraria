@@ -22,7 +22,7 @@ namespace Factorraria.Common.Knowledge
     {
         public static int PollTicks = 30;   // how often the local player's biomes are checked (30 = twice a second)
 
-        static readonly Dictionary<int, MachineBiome> biomeOf = new Dictionary<int, MachineBiome>();
+        static readonly Dictionary<int, List<MachineBiome>> biomeOf = new Dictionary<int, List<MachineBiome>>();   // a liquid can be revealed by several biomes
 
         /// <summary>Builds the table. Needs the liquid ids, so it runs in PostAddRecipes (they are assigned in PostSetupContent).</summary>
         public static void Register()
@@ -40,7 +40,13 @@ namespace Factorraria.Common.Knowledge
                 Set(water.Value, water.Key);
         }
 
-        public static void Set(int liquidType, MachineBiome biome) => biomeOf[liquidType] = biome;
+        /// <summary>Adds a biome that reveals this liquid. Calling it again for the same liquid ADDS another biome (e.g. Underground Water: Underground + Glowing Mushroom).</summary>
+        public static void Set(int liquidType, MachineBiome biome)
+        {
+            if (!biomeOf.TryGetValue(liquidType, out List<MachineBiome> biomes))
+                biomeOf[liquidType] = biomes = new List<MachineBiome>();
+            if (!biomes.Contains(biome)) biomes.Add(biome);
+        }
 
         public static void Clear() => biomeOf.Clear();
 
@@ -53,9 +59,16 @@ namespace Factorraria.Common.Knowledge
         /// <summary>Local player: reports every not-yet-seen liquid whose biome the player is in right now.</summary>
         public static void Poll(Player player)
         {
-            foreach (KeyValuePair<int, MachineBiome> rule in biomeOf)
-                if (!RecipeKnowledgeSystem.IsLiquidSeen(rule.Key) && InBiome(player, rule.Value))
+            foreach (KeyValuePair<int, List<MachineBiome>> rule in biomeOf)
+            {
+                if (RecipeKnowledgeSystem.IsLiquidSeen(rule.Key)) continue;
+                foreach (MachineBiome biome in rule.Value)
+                {
+                    if (!InBiome(player, biome)) continue;
                     RecipeKnowledgeNet.ReportLiquidSeen(rule.Key);
+                    break;
+                }
+            }
         }
 
         // Each biome's own zone flag, checked independently (unlike BaseMachine's single priority-ordered biome),
