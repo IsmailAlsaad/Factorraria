@@ -53,7 +53,7 @@ namespace Factorraria.Content.Items.Carts
             }
             else
             {
-                tooltips.Add(new TooltipLine(Mod, "FactorrariaCartRide", "Right click an empty cart to ride it"));
+                //tooltips.Add(new TooltipLine(Mod, "FactorrariaCartRide", "Right click an empty cart to ride it"));
             }
         }
     }
