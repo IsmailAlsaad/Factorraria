@@ -6,6 +6,7 @@ using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Factorraria.Common.Net
@@ -418,6 +419,11 @@ namespace Factorraria.Common.Net
             else if (kind == StoryActionKind.TurnInBag)
             {
                 SoundEngine.PlaySound(SoundID.Grab);
+
+                // N5.2: the chat window that is still open switches from "Have you found my bag?" to her thanks. Local and cosmetic only (this client's chat text):
+                // the server already decided and set the flag, nobody else's chat changes. Only if the player is still talking to a Mechanic.
+                if (Main.LocalPlayer.talkNPC >= 0 && Main.npc[Main.LocalPlayer.talkNPC].type == NPCID.Mechanic)
+                    Main.npcChatText = Language.GetTextValue("Mods.Factorraria.Dialogue.Mechanic.Bag.Thanks");
 
                 // Multiplayer: the server took the Bag out of its copy already; take it out of this copy too (single-player has one copy, the handler already did it).
                 if (Main.netMode == NetmodeID.MultiplayerClient)

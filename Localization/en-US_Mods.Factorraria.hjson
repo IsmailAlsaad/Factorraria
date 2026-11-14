@@ -921,6 +921,7 @@ Dialogue: {
 		Bag: {
 			Text: Have you found my bag?
 			Button1: Give the bag
+			Thanks: You did find it! Thanks a lot for getting it back.
 		}
 	}
 }
