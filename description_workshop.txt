@@ -21,5 +21,5 @@ reworked weapons list are in the description of the weapon reworks steampage
 - No music/sound was made by AI
 - No game mechanics/features were designed by AI
 - No creative freedom were given to AI
-- AI was only used for assistance in backend code writing
+- AI was only used for assistance in backend code writing and bug fixing
 - Every decision, design, and idea is intentional human thought, plan and creativity

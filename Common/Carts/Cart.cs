@@ -1097,6 +1097,8 @@ namespace Factorraria.Common.Carts
                 bool leftSurface = leftOk && left.HasSurface;
                 bool rightSurface = rightOk && right.HasSurface;
 
+                ResolveStraddle(half, Position.Y, left, right, ref leftSurface, ref rightSurface);
+
                 if (!leftSurface && !rightSurface)
                 {
                     Derail(new Vector2(Speed, 0f));
@@ -1177,6 +1179,8 @@ namespace Factorraria.Common.Carts
             bool leftSurface = leftOk && left.HasSurface;
             bool rightSurface = rightOk && right.HasSurface;
 
+            ResolveStraddle(half, referenceY, left, right, ref leftSurface, ref rightSurface);
+
             if (!leftSurface && !rightSurface)
             {
                 return false;
@@ -1188,6 +1192,28 @@ namespace Factorraria.Common.Carts
             surfaceY = (yLeft + yRight) * 0.5f;
             rotation = (float)Math.Atan2(yRight - yLeft, 2f * half);
             return true;
+        }
+
+        /// <summary>
+        /// Both wheels sit on one rail, so their surfaces can differ by at most the steepest slope (45 degrees = the wheel base, plus slice steps).
+        /// A bigger gap means each wheel latched onto a different rail (a junction with rails in neighbouring rows) and the cart would sit in the air
+        /// between them. The wheel whose rail is nearest to referenceY keeps its rail, the other one counts as hanging over nothing.
+        /// </summary>
+        private static void ResolveStraddle(float half, float referenceY, TrackSample left, TrackSample right, ref bool leftSurface, ref bool rightSurface)
+        {
+            if (!leftSurface || !rightSurface || Math.Abs(right.SurfaceY - left.SurfaceY) <= 2f * half + 4f)
+            {
+                return;
+            }
+
+            if (Math.Abs(left.SurfaceY - referenceY) <= Math.Abs(right.SurfaceY - referenceY))
+            {
+                rightSurface = false;
+            }
+            else
+            {
+                leftSurface = false;
+            }
         }
 
         private static readonly float[] SmoothOffsets = { -0.75f, -0.25f, 0.25f, 0.75f };
