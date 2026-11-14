@@ -108,7 +108,7 @@ namespace Factorraria.Common.Crafting
 
             if (!made.IsAir)
             {
-                Item rest = Player.GetItem(Player.whoAmI, made, GetItemSettings.InventoryUIToInventorySettings);
+                Item rest = Player.GetItem(Player.whoAmI, made, new GetItemSettings(LongText: false, NoText: true));
                 if (!rest.IsAir) Player.QuickSpawnItem(Player.GetSource_Misc("Factorraria/TimedCrafting"), rest, rest.stack);
             }
 
