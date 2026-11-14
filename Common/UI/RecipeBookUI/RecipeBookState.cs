@@ -280,7 +280,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 }
                 foreach (LiquidIngredient liquid in recipe.LiquidInputs)
                 {
-                    if (fadeLiquids) continue;
+                    if (fadeLiquids && (liquid.IsAnyWater || !RecipeVisibility.IsLiquidRevealed(liquid.LiquidType))) continue;
                     if (reveal && !liquid.IsAnyWater && !RecipeVisibility.IsLiquidRevealed(liquid.LiquidType)) continue;
                     string liquidName = liquid.IsAnyWater ? RecipeBookLayout.Text("AnyWater") : LiquidTypeRegistry.Get(liquid.LiquidType).Name;
                     if (NameMatches(liquidName, name, exact)) return true;

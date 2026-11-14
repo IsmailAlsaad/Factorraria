@@ -153,7 +153,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             y = DrawLabel(sb, RecipeBookLayout.Text("Inputs"), area, y);
             // An ingredient the player neither holds right now nor has crafted before stays a silhouette with "???", even
             // when a parchment taught the recipe (keeps recipe trees honest). A Crafted recipe shows everything.
-            // Recipes known only from holding an input (FadedIngredient) also hide every liquid.
+            // Recipes known only from holding an input (FadedIngredient) hide every liquid that is not revealed yet (biome visited or crafted).
             y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, book.SelectedState, book.SelectedKey), area, y, navHits, searchHits);
 
             y += 4f;
@@ -225,7 +225,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 int iconId = l.IsAnyWater ? LiquidTypeRegistry.Water : l.LiquidType;
                 string name = l.IsAnyWater ? RecipeBookLayout.Text("AnyWater") : LiquidTypeRegistry.Get(l.LiquidType).Name;
                 string amount = l.Amount.ToString("0.##");
-                bool liquidHidden = hidden || (isInput && (fadeLiquids || (reveal && !l.IsAnyWater && !RecipeVisibility.IsLiquidRevealed(l.LiquidType))));
+                // A specific liquid follows the liquid rule (biome visited or crafted) in EVERY non-crafted state, faded ones included.
+                // Only "any water" has no rule of its own, so it stays hidden in a faded recipe.
+                bool liquidShown = l.IsAnyWater ? !fadeLiquids : RecipeVisibility.IsLiquidRevealed(l.LiquidType);
+                bool liquidHidden = hidden || (isInput && (fadeLiquids || reveal) && !liquidShown);
                 cells.Add(new Cell
                 {
                     Icon = RecipeOutputKey.ForLiquid(iconId),
