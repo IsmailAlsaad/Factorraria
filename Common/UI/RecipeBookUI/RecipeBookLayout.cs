@@ -208,6 +208,38 @@ namespace Factorraria.Common.UI.RecipeBookUI
             return on ? (highlighted ? starOnHighlighted : starOn) : (highlighted ? starOffHighlighted : starOff);
         }
 
+        static Color? headerBg;
+
+        /// <summary>
+        /// Opaque fill for a pinned machine header: one pixel sampled from the page art just inside the list area, or PageColor
+        /// until the art exists (or if sampling fails). Cached; Clear() resets it.
+        /// </summary>
+        public static Color HeaderBackground()
+        {
+            if (headerBg.HasValue) return headerBg.Value;
+            Color result = RecipeBookLayout.PageColor;
+            Asset<Texture2D> bg = Background;
+            if (bg != null)
+            {
+                try
+                {
+                    Texture2D tex = bg.Value;
+                    float k = RecipeBookLayout.BackgroundScale;
+                    float w = RecipeBookLayout.PanelWidth * k, h = RecipeBookLayout.PanelHeight * k;
+                    float px = RecipeBookLayout.ListArea.X + 4 - (RecipeBookLayout.PanelWidth - w) / 2f;
+                    float py = RecipeBookLayout.ListArea.Y + RecipeBookLayout.HeaderRowHeight / 2 - (RecipeBookLayout.PanelHeight - h) / 2f;
+                    int x = Microsoft.Xna.Framework.MathHelper.Clamp((int)(px / w * tex.Width), 0, tex.Width - 1);
+                    int y = Microsoft.Xna.Framework.MathHelper.Clamp((int)(py / h * tex.Height), 0, tex.Height - 1);
+                    var pixel = new Color[1];
+                    tex.GetData(0, new Rectangle(x, y, 1, 1), pixel, 0, 1);
+                    if (pixel[0].A == 255) result = pixel[0];
+                }
+                catch { }
+            }
+            headerBg = result;
+            return result;
+        }
+
         static void Load()
         {
             if (loaded) return;
@@ -231,6 +263,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             button = buttonHover = background = null;
             closeButton = closeButtonHover = null;
             starOff = starOffHighlighted = starOn = starOnHighlighted = null;
+            headerBg = null;
             loaded = false;
         }
     }

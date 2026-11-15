@@ -39,6 +39,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
         readonly List<UIElement> rows = new();
         readonly List<float> rowBase = new();
+        readonly List<int> headerIndex = new();              // indices into rows/rowBase of the machine headers (sticky while scrolling)
+        readonly List<UIElement> headerRows = new();         // the same headers; appended to listArea after every entry so they draw and take clicks on top
         readonly Dictionary<string, float> entryTop = new();
         float totalHeight;
         float lastView = -1f;
@@ -133,6 +135,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
             listArea.RemoveAllChildren();
             rows.Clear();
             rowBase.Clear();
+            headerIndex.Clear();
+            headerRows.Clear();
             entryTop.Clear();
 
             string lastMachine = null;
@@ -192,7 +196,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 if (e.Machine != lastMachine)
                 {
                     lastMachine = e.Machine;
-                    AddRow(new RecipeBookHeaderRow(e.Machine, collapsed, filtering ? (Action<string>)null : ToggleMachine), y);
+                    AddRow(new RecipeBookHeaderRow(e.Machine, collapsed, filtering ? (Action<string>)null : ToggleMachine), y, true);
                     y += RecipeBookLayout.HeaderRowHeight;
                 }
                 if (collapsed) continue;
@@ -206,6 +210,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 AddRow(entry, y);
                 y += RecipeBookLayout.EntryRowHeight;
             }
+
+            // Headers go in last so they draw above the entries (a pinned header must cover the rows that scroll under it).
+            foreach (UIElement header in headerRows) listArea.Append(header);
 
             // Stamped AFTER the loop: GetState can run the first inventory scan, which bumps HeldVersion.
             builtHeldVersion = RecipeVisibility.HeldVersion;
@@ -331,10 +338,15 @@ namespace Factorraria.Common.UI.RecipeBookUI
             panel.Recalculate();
         }
 
-        void AddRow(UIElement row, float y)
+        void AddRow(UIElement row, float y, bool header = false)
         {
             row.Top.Set(y, 0f);
-            listArea.Append(row);
+            if (header)
+            {
+                headerIndex.Add(rows.Count);
+                headerRows.Add(row);   // appended after the loop, see Rebuild
+            }
+            else listArea.Append(row);
             rows.Add(row);
             rowBase.Add(y);
         }
@@ -346,6 +358,20 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (!force && view == lastView) return;
             lastView = view;
             for (int i = 0; i < rows.Count; i++) rows[i].Top.Set(rowBase[i] - view, 0f);
+
+            // Sticky headers: a header scrolled past the top margin stays pinned there. The next header pushes it up as it arrives and
+            // then holds the slot itself, so only one machine name is ever pinned. Earlier headers end up above the top and are clipped.
+            float headerH = RecipeBookLayout.HeaderRowHeight;
+            for (int h = 0; h < headerIndex.Count; h++)
+            {
+                var header = (RecipeBookHeaderRow)rows[headerIndex[h]];
+                float natural = rowBase[headerIndex[h]] - view;
+                header.Pinned = natural < 0f;
+                if (!header.Pinned) continue;
+                float pinnedTop = 0f;
+                if (h + 1 < headerIndex.Count) pinnedTop = Math.Min(0f, rowBase[headerIndex[h + 1]] - view - headerH);
+                header.Top.Set(pinnedTop, 0f);
+            }
             listArea.Recalculate();
         }
 
@@ -437,7 +463,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (SelectedKey == null || !entryTop.TryGetValue(SelectedKey, out float top)) return;
             float viewH = RecipeBookLayout.ListArea.Height;
             float view = scrollbar.ViewPosition;
-            if (top < view) scrollbar.ViewPosition = top - RecipeBookLayout.HeaderRowHeight;
+            if (top - RecipeBookLayout.HeaderRowHeight < view) scrollbar.ViewPosition = top - RecipeBookLayout.HeaderRowHeight;
             else if (top + RecipeBookLayout.EntryRowHeight > view + viewH) scrollbar.ViewPosition = top + RecipeBookLayout.EntryRowHeight - viewH;
             ApplyScroll(false);
         }

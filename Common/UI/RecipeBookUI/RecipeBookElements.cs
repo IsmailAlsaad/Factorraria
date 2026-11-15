@@ -97,6 +97,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         readonly string text;
         public readonly string Machine;
         public readonly bool Collapsed;
+        /// <summary>Set by RecipeBookState while the header is stuck to the top margin: it then fills its own background so rows scrolling under it do not show through.</summary>
+        public bool Pinned;
         readonly Action<string> onToggle;
 
         public RecipeBookHeaderRow(string machine, bool collapsed, Action<string> onToggle)
@@ -126,6 +128,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         protected override void DrawSelf(SpriteBatch sb)
         {
             Rectangle r = GetDimensions().ToRectangle();
+            if (Pinned) BookDraw.Rect(sb, r, RecipeBookArt.HeaderBackground());
             bool toggleable = onToggle != null;
             if (toggleable && IsMouseHovering) BookDraw.Rect(sb, new Rectangle(r.X + 2, r.Y + 2, r.Width - 4, r.Height - 6), Color.White * 0.25f);
 
