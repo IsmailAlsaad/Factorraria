@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-15 | 395 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-16 | 395 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -1102,9 +1102,9 @@ tModLoader/other bases -> project types:
     +Pick(float,IList<TriggerCandidate>,bool)[s]
 **WallShieldBreakFxSystem.cs** uses: WallShieldDrawSystem
   class WallShieldBreakFxSystem : ModSystem
-    +MaxShards:int +ShardLifeMin:int +ShardLifeMax:int +ShardGravity:float +ShardSpeedMin:float +ShardSpeedMax:float +BackwardBias:float +MaxSpin:float +CrackSpokes:int +CrackRings:int +CrackFirstRing:float +CrackRingGrowth:float +CrackJag:float +CrackJagStep:float +CurtainTicks:int +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Start(Vector2) +PostUpdateEverything()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +Unload()[ov]
+    +MaxShards:int +ShardLifeMin:int +ShardLifeMax:int +ShardGravity:float +ShardSpeedMin:float +ShardSpeedMax:float +BackwardBias:float +MaxSpin:float +CrackSpokes:int +CrackRings:int +CrackFirstRing:float +CrackRingGrowth:float +CrackJag:float +CrackJagStep:float +EdgeJag:float +EdgeJagStep:float +CurtainTicks:int +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Start(Vector2) +PostUpdateEverything()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +Unload()[ov]
     class Shard
-      +Texture:Texture2D +Local:Vector2 +Uv:Vector2 +UvCentre:Vector2 +Position:Vector2 +Velocity:Vector2 +Rotation:float +Spin:float +Scale:float +Age:int +Life:int
+      +Texture:Texture2D +Local:Vector2 +Uv:Vector2 +Triangles:int +Position:Vector2 +Velocity:Vector2 +Rotation:float +Spin:float +Scale:float +Age:int +Life:int
     class Curtain
       +X:float +Width:float +Age:int
 **WallShieldDrawSystem.cs** uses: WallShieldGlobalNPC
