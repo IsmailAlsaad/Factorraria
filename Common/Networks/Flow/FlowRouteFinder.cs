@@ -111,12 +111,16 @@ namespace Factorraria.Common.Networks.Flow
                         foreach (int p in pumps) sumStrength += nodes[p].Strength;
 
                         // Pumps in series add up: the route carries the sum of their strengths minus decayPerClimb per climbed tile,
-                        // never more than the network cap. Each pump supplies its share of that flow (strength / sum), see PumpShares.
+                        // never more than the network cap. See PumpShares for how routes that share pumps split their total.
                         float rate = Math.Min(sumStrength - dist[goal] * decayPerClimb, cap);
                         if (rate <= 0f) continue;
 
+                        // One unit of flow on this route uses strength / liftRate of each pump's budget: the longer the climb, the more pump
+                        // capacity every unit costs. So all routes that share pumps share ONE total (sum of strengths minus climb loss),
+                        // and adding outlets only splits it. A route running alone still moves exactly its rate.
+                        float liftRate = sumStrength - dist[goal] * decayPerClimb;
                         var shares = new float[pumps.Count];
-                        for (int q = 0; q < shares.Length; q++) shares[q] = nodes[pumps[q]].Strength / sumStrength;
+                        for (int q = 0; q < shares.Length; q++) shares[q] = nodes[pumps[q]].Strength / liftRate;
 
                         routes.Add(new FlowRoute { Src = s, Dst = k, Climbs = dist[goal], Pumps = pumps.ToArray(), PumpShares = shares, RatePerMinute = rate });
                     }

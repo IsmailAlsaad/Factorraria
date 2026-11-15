@@ -136,8 +136,8 @@ namespace Factorraria.Common.Networks.Flow
             return false;
         }
 
-        // The fraction of a route's flow that its q-th pump supplies. Pumps in series split the flow by strength, so together they
-        // can carry the sum of their strengths while no pump is ever asked for more than its own budget.
+        // Pump budget that one unit of a route's flow uses on its q-th pump. A climb makes it more than the pump's plain share, so routes
+        // sharing pumps share one total instead of each getting its own climb-reduced rate out of the same pumps.
         static float Share(FlowRoute route, int q) =>
             route.PumpShares == null || q >= route.PumpShares.Length || route.PumpShares[q] <= 0f ? 1f : route.PumpShares[q];
 

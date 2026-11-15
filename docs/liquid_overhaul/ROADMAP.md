@@ -20,7 +20,7 @@ Replace the per-tile "flow field" in the pipe system with a simple model that be
 - **One liquid type at a time per network.** It takes the first type it sees from its sources, silently ignores other types until that one runs out (or nothing can take it), then moves to the next. Mixed networks show no error. The active type is memory only: not saved, not reset on a power flip.
 - **Global cap = the weakest pipe tier in the network.** The bottleneck is intentional. An OFF motor counts as a plain pipe at its `PipeEquivalentMaxFlowRate` (so that property stays, contrary to the first draft of the plan).
 - **Climb penalty kept:** 0.5 units/tick per climbed tile. Physics fixed: only where liquid really rises (source below the pump pays on the intake side; the discharge side pays where it goes up). A source above the pump pays nothing.
-- **Series pumps add up (changed 2026-11-16).** Route rate = min(network cap, sum of the pumps' strengths - climbs x decay). Each pump supplies strength / sum of the flow (`FlowRoute.PumpShares`), so no pump is overdriven.
+- **Series pumps add up (changed 2026-11-16).** Route rate = min(network cap, sum of the pumps' strengths - climbs x decay). `FlowRoute.PumpShares` = strength / (sum - climb loss): the pump budget one unit of flow uses, so branches sharing pumps share one total (outlets only split it).
 - **Empty tanks forget their liquid type** (remove `MinTankKeep`).
 - **Debug is fully visual under the existing `EnableDebugs` config toggle**; `/fpipes` and `/fflow` print the same data as text.
 - World liquid keeps moving in whole-tile chunks (255) with banking, infinite-source detection stays, `FindSinkSlot` and `ResolveIncomingLiquid` semantics stay.
@@ -66,7 +66,7 @@ One line per step. `[ ]` not started, `[~]` applied untested, `[x]` tested and d
 - [x] 5 Visual debug overlay on `FlowNetworks`, `/fpipes` reads `FlowNetworks` (`patch_flow_debug.ps1`; applied untested)
 - [x] 6 Cleanup: old `LiquidNetwork`, `ResolveFlow`, saved network types removed (`patch_flow_cleanup.ps1`; applied untested; delete `Common\Networks\LiquidNetwork.cs` by hand afterwards)
 
-- [~] 7 Series pumps add up (`patch_series_pumps.ps1`; applied untested): rate = sum of strengths - climb loss, capped by the network cap; `FlowRoute.PumpShares`; sandbox tests 9 and t6 updated
+- [~] 7 Series pumps add up (`patch_series_pumps.ps1`; applied untested): rate = sum of strengths - climb loss, capped by the network cap; `FlowRoute.PumpShares`; sandbox tests 9 and t6 updated; 7b `patch_pump_branches.ps1`: branches share the pumps' total
 
 Steps 3-6 passed Ismail's single-player tests (flow, motors and power, world liquid, overlay, /fflow, /fpipes), 2026-10-25. Open: multiplayer R9 (a network a client builds on a dedicated server does not pump until a reload), see docs/multiplayer/ROADMAP.md verification item 25.
 
