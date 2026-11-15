@@ -709,7 +709,9 @@ namespace Factorraria.Common.Cosmic
         // Screen-space part: the counters and the heatmap curve (every color's weight across the whole world, the player's column marked).
         void DrawDebugInterface(SpriteBatch sb)
         {
-            if (Main.dedServ || Main.gameMenu || !DebugOn)
+            bool ShowCosmicParticlesDebugPanel = false;
+
+            if (Main.dedServ || Main.gameMenu || !DebugOn || !ShowCosmicParticlesDebugPanel)
                 return;
 
             CosmicRadiationSystem system = CosmicRadiationSystem.Instance;
