@@ -20,7 +20,7 @@ Replace the per-tile "flow field" in the pipe system with a simple model that be
 - **One liquid type at a time per network.** It takes the first type it sees from its sources, silently ignores other types until that one runs out (or nothing can take it), then moves to the next. Mixed networks show no error. The active type is memory only: not saved, not reset on a power flip.
 - **Global cap = the weakest pipe tier in the network.** The bottleneck is intentional. An OFF motor counts as a plain pipe at its `PipeEquivalentMaxFlowRate` (so that property stays, contrary to the first draft of the plan).
 - **Climb penalty kept:** 0.5 units/tick per climbed tile. Physics fixed: only where liquid really rises (source below the pump pays on the intake side; the discharge side pays where it goes up). A source above the pump pays nothing.
-- **Series pumps supported.** Route rate = the weakest pump's rate; pumps in series add their strength to the climb budget.
+- **Series pumps add up (changed 2026-11-16).** Route rate = min(network cap, sum of the pumps' strengths - climbs x decay). Each pump supplies strength / sum of the flow (`FlowRoute.PumpShares`), so no pump is overdriven.
 - **Empty tanks forget their liquid type** (remove `MinTankKeep`).
 - **Debug is fully visual under the existing `EnableDebugs` config toggle**; `/fpipes` and `/fflow` print the same data as text.
 - World liquid keeps moving in whole-tile chunks (255) with banking, infinite-source detection stays, `FindSinkSlot` and `ResolveIncomingLiquid` semantics stay.
@@ -31,7 +31,7 @@ Replace the per-tile "flow field" in the pipe system with a simple model that be
 | File | What it does |
 |---|---|
 | `FlowTypes.cs` | `FlowDir` (same order as `Direction`: Up, Down, Left, Right), `FlowNode` (tile, motor on/off, facing, strength), `FlowPort` (attach point: node, mouth, owner), `FlowRoute` (src, dst, climbs, pumps, `RatePerMinute`), `FlowTransfer` (route, src, dst, type, amount). |
-| `FlowRouteFinder.cs` | `Build(nodes, sources, sinks, decayPerClimb, cap)`: Dijkstra per source attach point over (node, passedAnOnPump) states. An ON motor passes only forward, an OFF motor passes both ways on its axis and only counts as a route if some ON pump is on the route. Climb = a step to a smaller Y. Rate = min(weakest pump, sum of pump strengths minus climbs x decay), then min with cap. Never routes a machine into itself (same `Owner`). |
+| `FlowRouteFinder.cs` | `Build(nodes, sources, sinks, decayPerClimb, cap)`: Dijkstra per source attach point over (node, passedAnOnPump) states. An ON motor passes only forward, an OFF motor passes both ways on its axis and only counts as a route if some ON pump is on the route. Climb = a step to a smaller Y. Rate = min(cap, sum of pump strengths minus climbs x decay); `PumpShares` = each pump's strength / sum. Never routes a machine into itself (same `Owner`). |
 | `FlowRouteMerger.cs` | Step 2. `FlowLinks` (structural link rule: pipes on every side, motors on their axis only) and `Merge(raw, srcPortsOfAttach, dstPortsOfAttach)`: turns attach-level routes into port-level routes, one per (source port, sink port), best rate then fewest climbs. |
 | `FlowSolver.cs` | `Solve(routes, sourceOffer[], sourceType[], sinkCount, sinkSpace(sink, type), pumpBudget[], output)`. One active type (`ActiveType`), proportional sharing of sources, sinks and pumps, 3 rounds, never over-draws or over-fills. `pumpBudget` is indexed by node and consumed in place (units per tick). |
 
@@ -65,6 +65,8 @@ One line per step. `[ ]` not started, `[~]` applied untested, `[x]` tested and d
 - [x] 4 Motors: `flowNeedsRecalculating`, `wasOn` and the old reset deleted; `FlowNetwork.Tick` detects power flips (`patch_flow_motors.ps1`; applied untested)
 - [x] 5 Visual debug overlay on `FlowNetworks`, `/fpipes` reads `FlowNetworks` (`patch_flow_debug.ps1`; applied untested)
 - [x] 6 Cleanup: old `LiquidNetwork`, `ResolveFlow`, saved network types removed (`patch_flow_cleanup.ps1`; applied untested; delete `Common\Networks\LiquidNetwork.cs` by hand afterwards)
+
+- [~] 7 Series pumps add up (`patch_series_pumps.ps1`; applied untested): rate = sum of strengths - climb loss, capped by the network cap; `FlowRoute.PumpShares`; sandbox tests 9 and t6 updated
 
 Steps 3-6 passed Ismail's single-player tests (flow, motors and power, world liquid, overlay, /fflow, /fpipes), 2026-10-25. Open: multiplayer R9 (a network a client builds on a dedicated server does not pump until a reload), see docs/multiplayer/ROADMAP.md verification item 25.
 

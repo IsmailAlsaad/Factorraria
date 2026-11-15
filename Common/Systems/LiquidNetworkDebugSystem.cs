@@ -245,10 +245,10 @@ namespace Factorraria.Common.Systems
                 Vector2 worldPos = new Vector2(tile.X, tile.Y) * 16f;
                 if (!BaseMachine.IsOnScreen(worldPos)) continue;
 
-                float weakest = float.MaxValue;
+                float pumpTotal = 0f;
                 foreach (int pump in route.Pumps)
-                    weakest = System.Math.Min(weakest, network.Nodes[pump].Strength);
-                float lost = System.Math.Max(0f, System.Math.Min(weakest, network.Cap) - route.RatePerMinute) / 3600f;
+                    pumpTotal += network.Nodes[pump].Strength;
+                float lost = System.Math.Max(0f, System.Math.Min(pumpTotal, network.Cap) - route.RatePerMinute) / 3600f;
 
                 string text = $"<- {route.RatePerMinute / 3600f:0.##}/tick, climbs {route.Climbs}, lost {lost:0.##}/tick";
                 Utils.DrawBorderString(sb, text, worldPos - Main.screenPosition + new Vector2(0f, -22f), Color.LightGray, 0.5f);

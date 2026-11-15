@@ -66,13 +66,13 @@ namespace Factorraria.Common.Networks.Flow
                 {
                     FlowRoute route = routes[r];
                     float w = Math.Min(Math.Min(srcRem[route.Src], dstRem[route.Dst]), routeRem[r]);
-                    foreach (int p in route.Pumps) w = Math.Min(w, pumpBudget[p]);
+                    for (int q = 0; q < route.Pumps.Length; q++) w = Math.Min(w, pumpBudget[route.Pumps[q]] / Share(route, q));
                     if (w < Epsilon) { want[r] = 0f; continue; }
 
                     want[r] = w;
                     srcDem[route.Src] += w;
                     dstDem[route.Dst] += w;
-                    foreach (int p in route.Pumps) pumpDem[p] += w;
+                    for (int q = 0; q < route.Pumps.Length; q++) pumpDem[route.Pumps[q]] += w * Share(route, q);
                     any = true;
                 }
                 if (!any) break;
@@ -90,7 +90,7 @@ namespace Factorraria.Common.Networks.Flow
                     if (srcDem[route.Src] > srcRem[route.Src]) scale = Math.Min(scale, srcRem[route.Src] / srcDem[route.Src]);
                     if (dstDem[route.Dst] > dstRem[route.Dst]) scale = Math.Min(scale, dstRem[route.Dst] / dstDem[route.Dst]);
                     foreach (int p in route.Pumps)
-                        if (pumpDem[p] > pumpBudget[p]) scale = Math.Min(scale, pumpBudget[p] / pumpDem[p]);
+                        if (pumpDem[p] > pumpBudget[p]) scale = Math.Min(scale, pumpBudget[p] / pumpDem[p]);   // demand is already per share
 
                     amount[r] = want[r] * scale;
                 }
@@ -103,7 +103,11 @@ namespace Factorraria.Common.Networks.Flow
                     routeRem[r] -= amount[r];
                     srcRem[route.Src] = Math.Max(0f, srcRem[route.Src] - amount[r]);
                     dstRem[route.Dst] = Math.Max(0f, dstRem[route.Dst] - amount[r]);
-                    foreach (int p in route.Pumps) pumpBudget[p] = Math.Max(0f, pumpBudget[p] - amount[r]);
+                    for (int q = 0; q < route.Pumps.Length; q++)
+                    {
+                        int p = route.Pumps[q];
+                        pumpBudget[p] = Math.Max(0f, pumpBudget[p] - amount[r] * Share(route, q));
+                    }
                 }
             }
 
@@ -131,6 +135,11 @@ namespace Factorraria.Common.Networks.Flow
             }
             return false;
         }
+
+        // The fraction of a route's flow that its q-th pump supplies. Pumps in series split the flow by strength, so together they
+        // can carry the sum of their strengths while no pump is ever asked for more than its own budget.
+        static float Share(FlowRoute route, int q) =>
+            route.PumpShares == null || q >= route.PumpShares.Length || route.PumpShares[q] <= 0f ? 1f : route.PumpShares[q];
 
         static void Ensure(ref float[] array, int size)
         {

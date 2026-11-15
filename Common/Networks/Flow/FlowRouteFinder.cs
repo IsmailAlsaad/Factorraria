@@ -107,20 +107,18 @@ namespace Factorraria.Common.Networks.Flow
                         }
                         pumps.Sort();
 
-                        float minStrength = float.MaxValue, sumStrength = 0f;
-                        foreach (int p in pumps)
-                        {
-                            minStrength = Math.Min(minStrength, nodes[p].Strength);
-                            sumStrength += nodes[p].Strength;
-                        }
+                        float sumStrength = 0f;
+                        foreach (int p in pumps) sumStrength += nodes[p].Strength;
 
-                        // Same rule as before the overhaul: a lone pump loses decayPerClimb per climbed tile; pumps in series add
-                        // their strength to the climb budget, but the pipe still only carries the weakest one's rate.
-                        float rate = Math.Min(minStrength, sumStrength - dist[goal] * decayPerClimb);
-                        rate = Math.Min(rate, cap);
+                        // Pumps in series add up: the route carries the sum of their strengths minus decayPerClimb per climbed tile,
+                        // never more than the network cap. Each pump supplies its share of that flow (strength / sum), see PumpShares.
+                        float rate = Math.Min(sumStrength - dist[goal] * decayPerClimb, cap);
                         if (rate <= 0f) continue;
 
-                        routes.Add(new FlowRoute { Src = s, Dst = k, Climbs = dist[goal], Pumps = pumps.ToArray(), RatePerMinute = rate });
+                        var shares = new float[pumps.Count];
+                        for (int q = 0; q < shares.Length; q++) shares[q] = nodes[pumps[q]].Strength / sumStrength;
+
+                        routes.Add(new FlowRoute { Src = s, Dst = k, Climbs = dist[goal], Pumps = pumps.ToArray(), PumpShares = shares, RatePerMinute = rate });
                     }
                 }
             }

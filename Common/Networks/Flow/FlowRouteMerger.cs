@@ -47,7 +47,7 @@ namespace Factorraria.Common.Networks.Flow
                             order.Add(key);
                         }
 
-                        best[key] = new FlowRoute { Src = ps, Dst = pd, Climbs = r.Climbs, Pumps = r.Pumps, RatePerMinute = r.RatePerMinute };
+                        best[key] = new FlowRoute { Src = ps, Dst = pd, Climbs = r.Climbs, Pumps = r.Pumps, PumpShares = r.PumpShares, RatePerMinute = r.RatePerMinute };
                     }
                 }
             }

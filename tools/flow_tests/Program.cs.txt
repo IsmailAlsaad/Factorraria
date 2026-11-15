@@ -123,13 +123,13 @@ static class Program
             w2.Src(w2.At(0, 0), FlowDir.Left, Big, 0); w2.Sink(w2.At(2, -10), FlowDir.Up, Big);
             T.Check(w2.Routes().Count == 0, "8 10 climbs: pump too weak, no route");
         }
-        // 9. Series pumps: the second pump adds climb budget; rate is capped by the weakest pump.
+        // 9. Series pumps add up: rate = sum of strengths minus the climb loss (before the cap).
         {
             var w = new World(); w.Motor(0, 0, FlowDir.Right); w.Pipe(1, 0); w.Motor(2, 0, FlowDir.Right); w.Pipe(3, 0);
             for (int y = -1; y >= -12; y--) w.Pipe(3, y);   // 12 climbs
             w.Src(w.At(0, 0), FlowDir.Left, Big, 0); w.Sink(w.At(3, -12), FlowDir.Up, Big);
             var r = w.Routes(); T.Check(r.Count == 1 && r[0].Pumps.Length == 2, "9 two pumps on route");
-            T.Near(r[0].RatePerMinute, Math.Min(5 * 3600f, 10 * 3600f - 12 * 0.5f * 3600f), "9 series rate");
+            T.Near(r[0].RatePerMinute, 10 * 3600f - 12 * 0.5f * 3600f, "9 series rate");
             var (l, budget) = w.Tick(new FlowSolver(), r); T.Check(l.Count == 1, "9 moves");
         }
         // 10. Off pump in series acts as a pipe when another pump on the route is ON.

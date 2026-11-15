@@ -939,7 +939,7 @@ tModLoader/other bases -> project types:
   struct FlowPort
     +Node:int +Mouth:FlowDir +Owner:int
   sealed class FlowRoute
-    +Dst:int Src, +Climbs:int +Pumps:int +RatePerMinute:float +RatePerTick:float
+    +Dst:int Src, +Climbs:int +Pumps:int +PumpShares:float +RatePerMinute:float +RatePerTick:float
   struct FlowTransfer
     +Type:int Route, Src, Dst, +Amount:float
 

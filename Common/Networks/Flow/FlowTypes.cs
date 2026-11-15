@@ -48,6 +48,7 @@ namespace Factorraria.Common.Networks.Flow
         public int Src, Dst;
         public int Climbs;           // tiles the liquid has to rise along the cheapest route
         public int[] Pumps;          // node indices of the ON motors on the route
+        public float[] PumpShares;   // parallel to Pumps: the fraction of the flow each pump supplies (strength / sum of strengths); null = 1 each
         public float RatePerMinute;  // after climb loss and the network cap
         public float RatePerTick => RatePerMinute / 3600f;
     }

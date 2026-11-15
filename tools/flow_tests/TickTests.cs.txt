@@ -82,12 +82,12 @@ static class TickTests
             m.isOn = false; Ticks(n, banks, 10);
             T.Check(Near(b.InputLiquids[0].Amount, 50), "t5 off again, frozen");
         }
-        // 6. Series pumps: the weakest one sets the rate.
+        // 6. Series pumps add up: 5 + 3 deliver 8/tick.
         {
             var w = new W(); var a = w.Machine(0, 50); w.Row(1, 2, 50); w.Motor(3, 50, Direction.Right, true, 5 * 3600f); w.Pipe(4, 50); w.Motor(5, 50, Direction.Right, true, 3 * 3600f); w.Row(6, 7, 50); var b = w.Machine(8, 50);
             Fill(a.OutputLiquids[0], Water, 100);
             var n = w.Build()[0]; Ticks(n, banks, 10);
-            T.Check(Near(b.InputLiquids[0].Amount, 30), "t6 series pumps 5 and 3 deliver 3/tick (" + b.InputLiquids[0].Amount + ")");
+            T.Check(Near(b.InputLiquids[0].Amount, 80), "t6 series pumps 5 and 3 deliver 8/tick (" + b.InputLiquids[0].Amount + ")");
         }
         // 7. A machine between two pumps passes liquid through: first pump fills its input, second drains its output.
         {
