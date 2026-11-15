@@ -228,8 +228,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
                     float w = RecipeBookLayout.PanelWidth * k, h = RecipeBookLayout.PanelHeight * k;
                     float px = RecipeBookLayout.ListArea.X + 4 - (RecipeBookLayout.PanelWidth - w) / 2f;
                     float py = RecipeBookLayout.ListArea.Y + RecipeBookLayout.HeaderRowHeight / 2 - (RecipeBookLayout.PanelHeight - h) / 2f;
-                    int x = Microsoft.Xna.Framework.MathHelper.Clamp((int)(px / w * tex.Width), 0, tex.Width - 1);
-                    int y = Microsoft.Xna.Framework.MathHelper.Clamp((int)(py / h * tex.Height), 0, tex.Height - 1);
+                    int x = (int)MathHelper.Clamp((int)(px / w * tex.Width), 0, tex.Width - 1);
+                    int y = (int)MathHelper.Clamp((int)(py / h * tex.Height), 0, tex.Height - 1);
                     var pixel = new Color[1];
                     tex.GetData(0, new Rectangle(x, y, 1, 1), pixel, 0, 1);
                     if (pixel[0].A == 255) result = pixel[0];
