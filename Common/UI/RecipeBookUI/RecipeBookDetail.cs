@@ -29,7 +29,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         int shortArrowLength = 13;     // the original arrow, used when the machine has no fuels
         int fuelCycleTicks = 60;       // the shown fuel changes this often (60 = once a second)
         int fuelBoxOffsetX = 12;       // gap between the arrow's centre line and the fuel cell
-        int fuelRowStep = 60;          // distance between two stacked fuel cells (room for the "or" between them)
+        int fuelRowStep = 46;          // distance between two stacked fuel cells (room for the "or" between them)
         int fuelLabelHeight = 18;      // room above the top fuel cell for the single "Fuel" label
 
         // Clickable ingredient boxes of the recipe drawn this frame (box, catalog key to jump to). Refilled every draw.
@@ -440,7 +440,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 // The only "Fuel" label: centered above the top-most fuel slot.
                 string label = RecipeBookLayout.Text("Fuel");
                 Vector2 labelSize = FontAssets.MouseText.Value.MeasureString(label) * 0.9f;
-                BookDraw.Text(sb, label, new Vector2(box.Center.X - labelSize.X / 2f, box.Y - fuelLabelHeight + 2f), RecipeBookLayout.PageBorder, 0.9f);
+                BookDraw.Text(sb, label, new Vector2(box.Center.X - labelSize.X / 2f, box.Y - fuelLabelHeight - 2f), RecipeBookLayout.PageBorder, 0.9f);
             }
             else
             {
@@ -448,7 +448,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 string orText = RecipeBookLayout.Text("Or");
                 Vector2 orSize = FontAssets.MouseText.Value.MeasureString(orText) * 0.85f;
                 float gapCenter = box.Y - (fuelRowStep - size) / 2f;
-                BookDraw.Text(sb, orText, new Vector2(box.Center.X - orSize.X / 2f, gapCenter - RecipeBookTabTipOverlay.InkCenterY * 0.85f), RecipeBookLayout.PageBorder, 0.85f);
+                BookDraw.Text(sb, orText, new Vector2(box.Right + 4, gapCenter - RecipeBookTabTipOverlay.InkCenterY * 1.1f), RecipeBookLayout.PageBorder, 0.85f);
             }
         }
 
