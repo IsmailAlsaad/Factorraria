@@ -22,8 +22,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static Color RowTint = new Color(214, 178, 48);   // same gold as the favorite row, but it pulses
         public static int MarkGap = 4;                           // pixels between the end of the name and the "!"
         public static int PlaceholderMarkWidth = 7;              // width reserved for the code-drawn "!" until RecipeBookNew.png exists
-        public static Vector2 EntryMarkOffset = Vector2.Zero;    // extra shift of the "!" next to a recipe name, in pixels: +x right, +y down (MarkGap is the base gap)
-        public static Vector2 TabMarkOffset = new Vector2(6f,0f);      // the same for the "!" next to a machine tab name
+        public static Vector2 EntryMarkOffset = new Vector2(4f, 0f);    // extra shift of the "!" next to a recipe name, in pixels: +x right, +y down (MarkGap is the base gap)
+        public static Vector2 TabMarkOffset = new Vector2(4f,0f);      // the same for the "!" next to a machine tab name
 
         public static string TabKey(string tab) => "tab|" + tab;
 

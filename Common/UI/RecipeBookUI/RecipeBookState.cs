@@ -207,7 +207,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             // names match, so "#Wood" does not also pull in Boreal Wood. Otherwise it falls back to a partial match.
             bool exactIngredient = byIngredient && filtering && listed.Any(x => x.e.Group != null && UsesIngredient(x.e.Group, x.state, filter, true));
 
-            foreach (var (e, state) in listed.OrderBy(x => machineOrder[RecipeCatalog.TabOf(x.e.Machine)]).ThenBy(x => x.e.Station ? 1 : 0).ThenBy(x => favorites.IsFavorite(x.e.Key) ? 0 : x.state == RecipeState.Crafted ? 1 : 2))
+            foreach (var (e, state) in listed.OrderBy(x => machineOrder[RecipeCatalog.TabOf(x.e.Machine)]).ThenBy(x => x.e.Station ? 1 : 0).ThenBy(x => favorites.IsFavorite(x.e.Key) ? 0 : favorites.IsNew(x.e.Key) ? 2 : x.state == RecipeState.Crafted ? 1 : 3))
             {
                 any = true;
 
