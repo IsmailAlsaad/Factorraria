@@ -64,6 +64,7 @@ namespace Factorraria.Common.Cosmic
             public uint Born;
             public float X, Y, DirX, DirY, Length, Speed, Life;
             public float Phase;   // C9c: random start phase of the trail wave (radians), so the waves of different particles are out of step
+            public bool Hit;      // C11: this particle already counted as a radiation hit on the local player
         }
 
         struct Glow
@@ -200,6 +201,7 @@ namespace Factorraria.Common.Cosmic
             p.Speed = speed;
             p.Life = (length + trail) / speed + 2f;
             p.Phase = (float)Main.rand.NextDouble() * MathHelper.TwoPi;   // C9c: client random, nothing is synced
+            p.Hit = false;
             Spawned++;
         }
 
@@ -432,6 +434,9 @@ namespace Factorraria.Common.Cosmic
             // C7: the ambient local simulation and the light of lightning bolts (both client only, nothing here touches a counter)
             UpdateAmbient(now);
             UpdateBoltLight(now);
+
+            // C11: radiation hits on the local player (client only)
+            CheckRadiation(now);
         }
 
         // ------------------------------------------------------------ draw (client only)

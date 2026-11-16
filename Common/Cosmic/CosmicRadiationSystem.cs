@@ -101,6 +101,23 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("Cooldown after a discharge before those cloud blocks can be ionized again; 0 = off (used from C4).", "ticks")]
         public int RefractoryTicks = 0;
 
+        // ------------------------------------------------------------ radiation on the player (C11)
+
+        [CosmicParam("A cosmic particle counts as a hit on the player when its head comes this close to the player (each particle hits at most once). Each client counts the particles it sees for its own player (C11).", "tiles")]
+        public float RadiationRadiusTiles = 4f;
+
+        [CosmicParam("Life loss per radiation level, in lifeRegen units (half a heart point per second: 2 = 1 HP/s). The level rises by the particle's multiplier on every hit and is 0 again when the radiation debuff ends.", "lifeRegen/level")]
+        public float RadiationLifeRegenPerLevel = 1f;
+
+        [CosmicParam("Geiger counter clicks per second for each radiation level (a click is at most every other tick).", "clicks/s per level")]
+        public float RadiationClicksPerLevel = 1.5f;
+
+        [CosmicParam("The highest radiation level a player can reach.", "level")]
+        public float RadiationMaxLevel = 30f;
+
+        [CosmicParam("The longest the radiation debuff can last. Each hit adds seconds equal to the particle's multiplier, up to this.", "seconds")]
+        public float RadiationMaxSeconds = 120f;
+
         // ------------------------------------------------------------ strike and grid (C5)
 
         [CosmicParam("How far from the thunder a machine can be and still be struck. The nearest electric machine (poles count) inside this radius takes the strike.", "tiles")]
@@ -257,6 +274,11 @@ namespace Factorraria.Common.Cosmic
             CloudAbsorbChance = Fix(CloudAbsorbChance, 0f, 1f);
             IonizedLifetimeTicks = Math.Clamp(IonizedLifetimeTicks, 1, 36000);
             RefractoryTicks = Math.Clamp(RefractoryTicks, 0, 36000);
+            RadiationRadiusTiles = Fix(RadiationRadiusTiles, 0f, 100f);
+            RadiationLifeRegenPerLevel = Fix(RadiationLifeRegenPerLevel, 0f, 1000f);
+            RadiationClicksPerLevel = Fix(RadiationClicksPerLevel, 0f, 1000f);
+            RadiationMaxLevel = Fix(RadiationMaxLevel, 0f, 100000f);
+            RadiationMaxSeconds = Fix(RadiationMaxSeconds, 1f, 36000f);
             StrikeRadiusTiles = Fix(StrikeRadiusTiles, 0f, 5000f);
             SurgePowerPerDecade = Fix(SurgePowerPerDecade, 0f, 1000000f);
             SurgeDurationTicks = Math.Clamp(SurgeDurationTicks, 1, 36000);

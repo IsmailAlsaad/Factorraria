@@ -260,6 +260,27 @@ namespace Factorraria.Content.Configs
         [Range(0, 3600)]
         public int RefractoryTicks = 0;
 
+        [Header("Radiation")]
+        [DefaultValue(4f)]
+        [Range(0f, 100f)]
+        public float RadiationRadiusTiles = 4f;
+
+        [DefaultValue(1f)]
+        [Range(0f, 1000f)]
+        public float RadiationLifeRegenPerLevel = 1f;
+
+        [DefaultValue(1.5f)]
+        [Range(0f, 1000f)]
+        public float RadiationClicksPerLevel = 1.5f;
+
+        [DefaultValue(30f)]
+        [Range(0f, 100000f)]
+        public float RadiationMaxLevel = 30f;
+
+        [DefaultValue(120f)]
+        [Range(1f, 36000f)]
+        public float RadiationMaxSeconds = 120f;
+
         [Header("Strike")]
         [DefaultValue(30f)]
         [Range(0f, 500f)]
@@ -325,6 +346,11 @@ namespace Factorraria.Content.Configs
             s.CloudAbsorbChance = CloudAbsorbChance;
             s.IonizedLifetimeTicks = IonizedLifetimeTicks;
             s.RefractoryTicks = RefractoryTicks;
+            s.RadiationRadiusTiles = RadiationRadiusTiles;
+            s.RadiationLifeRegenPerLevel = RadiationLifeRegenPerLevel;
+            s.RadiationClicksPerLevel = RadiationClicksPerLevel;
+            s.RadiationMaxLevel = RadiationMaxLevel;
+            s.RadiationMaxSeconds = RadiationMaxSeconds;
             s.StrikeRadiusTiles = StrikeRadiusTiles;
             s.SurgePowerPerDecade = SurgePowerPerDecade;
             s.SurgeDurationTicks = SurgeDurationTicks;

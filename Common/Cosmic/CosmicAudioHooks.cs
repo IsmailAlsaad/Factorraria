@@ -49,7 +49,7 @@ namespace Factorraria.Common.Cosmic
             SoundEngine.PlaySound(style with { PitchVariance = 0.15f, MaxInstances = 3 }, new Vector2(ax, ay) * 16f);
         }
 
-        static void PlayGeigerCounterClick(float tileX, float tileY)
+        public static void PlayGeigerCounterClick(float tileX, float tileY)
         {
             int soundIndex = Main.rand.Next(1, 11);
             string soundPath = $"Factorraria/Assets/Sounds/GeigerCounterClick/GeigerCounterClick{soundIndex}";

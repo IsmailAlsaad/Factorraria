@@ -269,6 +269,7 @@ namespace Factorraria.Common.Cosmic
             p.Speed = speed;
             p.Life = life;
             p.Phase = (float)ambientRng.NextDouble() * MathHelper.TwoPi;   // C9c: random wave phase
+            p.Hit = false;
             AmbientSpawned++;
 
             // C10: the ambient particles split by themselves too, with the same chance as the real ones, so the decor looks like the real sky.
@@ -352,6 +353,7 @@ namespace Factorraria.Common.Cosmic
                 c.Speed = speed;
                 c.Life = (length + trail) / speed + 2f;
                 c.Phase = (float)ambientRng.NextDouble() * MathHelper.TwoPi;
+                c.Hit = false;
                 AmbientSpawned++;
 
                 if (s.SpontaneousSplitChance > 0f && CosmicColors.HasNext(next)

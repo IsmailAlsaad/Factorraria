@@ -301,6 +301,7 @@ Configs: {
 			Spawning: Spawning and flight
 			Cascade: Cascade angles
 			Clouds: Cloud and ionization
+			Radiation: Radiation on the player
 			Strike: Strike and grid
 			Limits: Safety limits and network
 		}
@@ -548,6 +549,31 @@ Configs: {
 		RefractoryTicks: {
 			Label: Refractory Ticks
 			Tooltip: Cooldown after a discharge before those cloud blocks can be ionized again; 0 = off. Unit: ticks. Default: 0.
+		}
+
+		RadiationRadiusTiles: {
+			Label: Radiation Radius Tiles
+			Tooltip: A cosmic particle counts as a hit on the player when its head comes this close to the player (each particle hits at most once). Each client counts the particles it sees for its own player. Unit: tiles. Default: 4.
+		}
+
+		RadiationLifeRegenPerLevel: {
+			Label: Radiation Life Regen Per Level
+			Tooltip: Life loss per radiation level, in lifeRegen units (half a heart point per second: 2 = 1 HP/s). The level rises by the particle's multiplier on every hit and is 0 again when the radiation debuff ends. Unit: lifeRegen/level. Default: 1.
+		}
+
+		RadiationClicksPerLevel: {
+			Label: Radiation Clicks Per Level
+			Tooltip: Geiger counter clicks per second for each radiation level (a click is at most every other tick). Unit: clicks/s per level. Default: 1.5.
+		}
+
+		RadiationMaxLevel: {
+			Label: Radiation Max Level
+			Tooltip: The highest radiation level a player can reach. Unit: level. Default: 30.
+		}
+
+		RadiationMaxSeconds: {
+			Label: Radiation Max Seconds
+			Tooltip: The longest the radiation debuff can last. Each hit adds seconds equal to the particle's multiplier, up to this. Unit: seconds. Default: 120.
 		}
 
 		StrikeRadiusTiles: {
@@ -1022,7 +1048,16 @@ Story: {
 	MechanicsBagTooltip: Filled with tools and tangled wire
 }
 
+CosmicRadiation: {
+	LeadSetBonus: Shields from ionizing radiation
+}
+
 Buffs: {
+	RadiationBuff: {
+		DisplayName: Radiation
+		Description: Your cellular machinery is overwhelmed with DNA sequence breaks.
+	}
+
 	MechSuitBuff: {
 		DisplayName: Mech suit
 		Description: The mech suit will not fight for you (Although that would be cool)
