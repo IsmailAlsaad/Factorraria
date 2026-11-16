@@ -1926,6 +1926,7 @@ tModLoader/other bases -> project types:
 - docs/multiplayer/: ROADMAP.md, SURVEY_APPENDIX.md
 - docs/npcs/: ROADMAP.md
 - docs/poles/: ROADMAP.md
+- docs/recipe_book/: ROADMAP.md
 - docs/super_weapons/: ROADMAP.md
 - docs/weapon_overhaul/: ROADMAP.md
 - tools/: patch_engine.ps1
