@@ -288,7 +288,9 @@ namespace Factorraria.Common.Net
                 bool validLiquid = type < 0 && LiquidBiomeVisits.IsValidMarker(type);
                 // A discovered recipe book tab (RecipeTabDiscovery): only if the sender really holds one of its items or stands near its tile.
                 bool validTab = RecipeKnowledgeSystem.IsTabMarker(type) && RecipeTabDiscovery.ServerAccepts(Main.player[sender], type);
-                if (!validItem && !validLiquid && !validTab)
+                // A station/machine item the sender really holds (it only picks the sprites a tab cycles through).
+                bool validStationItem = RecipeKnowledgeSystem.IsStationItemMarker(type) && RecipeTabDiscovery.ServerAcceptsItem(Main.player[sender], type);
+                if (!validItem && !validLiquid && !validTab && !validStationItem)
                     continue;
 
                 if (validTab && !RecipeKnowledgeSystem.IsSeen(type))

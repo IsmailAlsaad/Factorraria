@@ -51,6 +51,9 @@ namespace Factorraria.Common.Knowledge
 
         static readonly int[] NoItems = new int[0];
 
+        static readonly HashSet<string> unlockedMachines = new HashSet<string>();   // catalog names that own a parchment-unlocked recipe
+        static int unlockedVersion = int.MinValue;
+
         public static IReadOnlyCollection<Tab> All => byName.Values;
 
         public static void Clear()
@@ -59,6 +62,8 @@ namespace Factorraria.Common.Knowledge
             byId.Clear();
             byTile.Clear();
             byItem.Clear();
+            unlockedMachines.Clear();
+            unlockedVersion = int.MinValue;
         }
 
         /// <summary>
@@ -162,9 +167,9 @@ namespace Factorraria.Common.Knowledge
         public static bool IsDiscovered(string tabName)
         {
             if (tabName == null || !byName.TryGetValue(tabName, out Tab tab)) return true;
-            if (RecipeKnowledgeSystem.IsSeen(tab.Marker)) return true;
+            if (Hit(tab)) return true;
             foreach (Tab sub in tab.Inherits)
-                if (RecipeKnowledgeSystem.IsSeen(sub.Marker)) return true;
+                if (Hit(sub)) return true;
             return false;
         }
 
@@ -173,7 +178,7 @@ namespace Factorraria.Common.Knowledge
 
         /// <summary>True if the tab's own machine/station was discovered (not just a station it inherits from). Tabs without a tile count as discovered.</summary>
         public static bool IsOwnDiscovered(string tabName) =>
-            tabName == null || !byName.TryGetValue(tabName, out Tab tab) || RecipeKnowledgeSystem.IsSeen(tab.Marker);
+            tabName == null || !byName.TryGetValue(tabName, out Tab tab) || Hit(tab);
 
         /// <summary>
         /// Which catalog names the book header is titled after right now. Normally just the tab itself. A tab that inherits from stations
@@ -181,14 +186,39 @@ namespace Factorraria.Common.Knowledge
         /// </summary>
         public static string[] HeaderStations(string tabName)
         {
-            if (tabName == null || !byName.TryGetValue(tabName, out Tab tab) || tab.Inherits.Count == 0 || RecipeKnowledgeSystem.IsSeen(tab.Marker))
+            if (tabName == null || !byName.TryGetValue(tabName, out Tab tab) || tab.Inherits.Count == 0 || Hit(tab))
                 return new[] { tabName };
 
             var shown = new List<string>();
             foreach (Tab sub in tab.Inherits)
-                if (RecipeKnowledgeSystem.IsSeen(sub.Marker)) shown.Add(sub.Name);
+                if (Hit(sub)) shown.Add(sub.Name);
             if (shown.Count == 0) shown.Add(tabName);
             return shown.ToArray();
+        }
+
+        // One tile (a machine, or one vanilla station) counts as discovered when its marker is in the world's seen set, OR a parchment has
+        // unlocked a recipe that names it (the key's machine part). A crafted recipe does not count (obtaining a product would
+        // otherwise reveal every station that makes it). Computed, never saved.
+        static bool Hit(Tab tab)
+        {
+            if (RecipeKnowledgeSystem.IsSeen(tab.Marker)) return true;
+            HashSet<string> machines = UnlockedMachines();
+            if (machines.Contains(tab.Name)) return true;
+            return !tab.Inherited && tab.Tile >= 0 && machines.Contains(VanillaStationBooks.NameFor(tab.Tile));   // the vanilla twin of a machine
+        }
+
+        static HashSet<string> UnlockedMachines()
+        {
+            if (unlockedVersion == RecipeKnowledgeSystem.Version) return unlockedMachines;
+
+            unlockedVersion = RecipeKnowledgeSystem.Version;
+            unlockedMachines.Clear();
+            foreach (string key in RecipeKnowledgeSystem.UnlockedKeys)
+            {
+                string machine = RecipeCatalog.MachineOf(key);
+                if (machine != null) unlockedMachines.Add(machine);
+            }
+            return unlockedMachines;
         }
 
         /// <summary>Every inherited station of the tab (discovered or not), for the "Inherits from ..." hover tip. Empty for most tabs.</summary>
@@ -201,8 +231,18 @@ namespace Factorraria.Common.Knowledge
         }
 
         /// <summary>Item types whose sprites stand for this tab (every item that places its tile, sorted). Empty for By Hand and Notes.</summary>
-        public static int[] ItemsOf(string catalogName) =>
-            catalogName != null && byName.TryGetValue(catalogName, out Tab tab) ? tab.ItemList : NoItems;
+        public static int[] ItemsOf(string catalogName)
+        {
+            if (catalogName == null || !byName.TryGetValue(catalogName, out Tab tab) || tab.ItemList.Length == 0) return NoItems;
+
+            // Only the items the world has held (the Wooden Work Bench, then the Cactus Work Bench once someone has it). A tab that was
+            // discovered without holding anything (stood near it, parchment) shows its first item so it still has a sprite.
+            List<int> known = null;
+            foreach (int type in tab.ItemList)
+                if (RecipeKnowledgeSystem.IsSeen(RecipeKnowledgeSystem.StationItemMarker(type)))
+                    (known ??= new List<int>()).Add(type);
+            return known != null ? known.ToArray() : new[] { tab.ItemList[0] };
+        }
 
         /// <summary>The items of several tabs together, in order.</summary>
         public static int[] ItemsOf(string[] catalogNames)
@@ -243,8 +283,10 @@ namespace Factorraria.Common.Knowledge
         static void ScanItem(Item item)
         {
             if (item == null || item.IsAir) return;
-            if (byItem.TryGetValue(item.type, out Tab tab) && !RecipeKnowledgeSystem.IsSeen(tab.Marker))
-                Report(tab);
+            if (!byItem.TryGetValue(item.type, out Tab tab)) return;
+            if (!RecipeKnowledgeSystem.IsSeen(tab.Marker)) Report(tab);
+            int itemMarker = RecipeKnowledgeSystem.StationItemMarker(item.type);
+            if (!RecipeKnowledgeSystem.IsSeen(itemMarker)) RecipeKnowledgeNet.ReportSeen(itemMarker);
         }
 
         // Marks the tab here at once (the book reacts without waiting); a multiplayer client also queues it for the server.
@@ -277,6 +319,19 @@ namespace Factorraria.Common.Knowledge
                     if (tile.HasTile && tile.TileType == tab.Tile) return true;
                 }
 
+            return false;
+        }
+
+        /// <summary>Server: does the sender really hold this station/machine item (and is it one a tab uses)?</summary>
+        public static bool ServerAcceptsItem(Player player, int marker)
+        {
+            if (player == null || !player.active || player.dead) return false;
+            int type = RecipeKnowledgeSystem.StationItemOf(marker);
+            if (!byItem.ContainsKey(type)) return false;
+
+            foreach (Item item in player.inventory)
+                if (item != null && !item.IsAir && item.type == type)
+                    return true;
             return false;
         }
 

@@ -104,9 +104,20 @@ namespace Factorraria.Common.Knowledge
 
         public static int TabMarker(int tabId) => -(TabMarkerBase + tabId);
 
-        public static bool IsTabMarker(int marker) => marker <= -TabMarkerBase;
+        public static bool IsTabMarker(int marker) => marker <= -TabMarkerBase && marker > -StationItemMarkerBase;
 
         public static int TabIdOf(int marker) => -marker - TabMarkerBase;
+
+        // A station/machine ITEM the world has held (the Iron Anvil, the Cactus Work Bench ...) is a marker in the same set, in a third
+        // negative range below the tab markers: -(StationItemMarkerBase + item type). Only the sprites a recipe book tab cycles through
+        // come from it (RecipeTabDiscovery.ItemsOf). Saved by item name (SeenStationItems), so it survives a changed item id.
+        public const int StationItemMarkerBase = 2000000;
+
+        public static int StationItemMarker(int itemType) => -(StationItemMarkerBase + itemType);
+
+        public static bool IsStationItemMarker(int marker) => marker <= -StationItemMarkerBase;
+
+        public static int StationItemOf(int marker) => -marker - StationItemMarkerBase;
 
         public static IReadOnlyCollection<int> SeenItems => seenItems;
 
@@ -127,7 +138,7 @@ namespace Factorraria.Common.Knowledge
         /// <summary>Forgets only the discovered-tab markers (debug: /recipes tabs forget). Tabs that have a crafted or unlocked recipe stay discovered.</summary>
         public static void ResetTabMarkers()
         {
-            if (seenItems.RemoveWhere(IsTabMarker) > 0) SeenVersion++;
+            if (seenItems.RemoveWhere(m => IsTabMarker(m) || IsStationItemMarker(m)) > 0) SeenVersion++;
         }
 
 
@@ -157,11 +168,19 @@ namespace Factorraria.Common.Knowledge
             List<string> seenNames = new List<string>();
             List<int> seenLiquidIds = new List<int>();   // liquid markers (negative in the set) are saved as plain liquid ids
             List<int> seenTabIds = new List<int>();      // tab markers are saved as plain tab ids
+            List<string> seenStationItems = new List<string>();   // station item markers are saved by item name
             foreach (int type in seenItems)
             {
                 if (IsTabMarker(type))
                 {
                     seenTabIds.Add(TabIdOf(type));
+                    continue;
+                }
+
+                if (IsStationItemMarker(type))
+                {
+                    string stationItem = ItemID.Search.GetName(StationItemOf(type));
+                    if (!string.IsNullOrEmpty(stationItem)) seenStationItems.Add(stationItem);
                     continue;
                 }
 
@@ -177,6 +196,7 @@ namespace Factorraria.Common.Knowledge
             tag["SeenItemKeys"] = seenNames;
             tag["SeenLiquidIds"] = seenLiquidIds;
             tag["SeenTabIds"] = seenTabIds;
+            tag["SeenStationItems"] = seenStationItems;
         }
 
         public override void LoadWorldData(TagCompound tag)
@@ -197,6 +217,9 @@ namespace Factorraria.Common.Knowledge
                 foreach (int liquidId in tag.Get<List<int>>("SeenLiquidIds")) seenItems.Add(LiquidMarker(liquidId));
             if (tag.ContainsKey("SeenTabIds"))
                 foreach (int tabId in tag.Get<List<int>>("SeenTabIds")) seenItems.Add(TabMarker(tabId));
+            if (tag.ContainsKey("SeenStationItems"))
+                foreach (string name in tag.Get<List<string>>("SeenStationItems"))
+                    if (ItemID.Search.TryGetId(name, out int stationItemType)) seenItems.Add(StationItemMarker(stationItemType));
             // Legacy "KnownRecipeKeys" (the old show-everything system) is intentionally ignored.
         }
 

@@ -129,9 +129,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             string name = BookDraw.Fit(faded ? RecipeBookLayout.UnknownName : group.Key.DisplayName, r.Width - 70, 1.15f, out _);
             BookDraw.Text(sb, name, new Vector2(r.X + 64, r.Y + 6), RecipeBookLayout.TextColor, 1.15f);
-            BookDraw.Text(sb, BookDraw.Fit(StationLine(), r.Width - 70, 0.9f, out _), new Vector2(r.X + 64, r.Y + 34), RecipeBookLayout.PageBorder, 0.9f);
+            List<string> stationRows = StationLines(r.Width - 70);
+            headerExtra = (stationRows.Count - 1) * StationLineStep;
+            for (int s = 0; s < stationRows.Count; s++)
+                BookDraw.Text(sb, stationRows[s], new Vector2(r.X + 64, r.Y + 34 + s * StationLineStep), RecipeBookLayout.PageBorder, 0.9f);
 
-            BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
+            BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66 + headerExtra, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
 
 
             if (group.Recipes.Count == 0) return;
@@ -140,22 +143,59 @@ namespace Factorraria.Common.UI.RecipeBookUI
         }
 
         RecipeOutputGroup stationGroup;
-        string stationMachine, stationLine;
+        string stationMachine;
+        int stationVersion = -1, stationSeenVersion = -1;
+        float stationWidth = -1f;
+        List<string> stationLines = new List<string>();
+        int headerExtra;                              // px the wrapped station line pushes the recipe body down
 
-        // "Autohammer or Anvils": every station of the selected tab that can make this product (RecipeCatalog.StationsFor).
-        // A plain machine or station shows just its own name, as before. Cached per selection.
-        string StationLine()
+        /// <summary>Pixels between two wrapped lines of the "Autohammer or Anvils" text. Not const, so hot reload can tweak it.</summary>
+        public static int StationLineStep = 20;
+
+        // "Autohammer or Anvils": the stations of the selected tab that can make this product (RecipeCatalog.StationsFor) and that are
+        // discovered, wrapped to maxWidth. If none of them is discovered yet (a parchment recipe of a machine nobody found) all are named.
+        // Cached per selection and per discovery change.
+        List<string> StationLines(float maxWidth)
         {
-            if (stationLine == null || !ReferenceEquals(stationGroup, book.SelectedGroup) || stationMachine != book.SelectedMachine)
+            if (stationLines.Count == 0 || !ReferenceEquals(stationGroup, book.SelectedGroup) || stationMachine != book.SelectedMachine
+                || stationVersion != RecipeKnowledgeSystem.Version || stationSeenVersion != RecipeKnowledgeSystem.SeenVersion || stationWidth != maxWidth)
             {
                 stationGroup = book.SelectedGroup;
                 stationMachine = book.SelectedMachine;
+                stationVersion = RecipeKnowledgeSystem.Version;
+                stationSeenVersion = RecipeKnowledgeSystem.SeenVersion;
+                stationWidth = maxWidth;
+
+                List<string> names = RecipeCatalog.StationsFor(stationMachine, stationGroup.Key);
+                List<string> unlocked = names.FindAll(RecipeTabDiscovery.IsOwnDiscovered);
+                if (unlocked.Count == 0) unlocked = names;
+
                 var parts = new List<string>();
-                foreach (string station in RecipeCatalog.StationsFor(stationMachine, stationGroup.Key))
-                    parts.Add(RecipeBookLayout.MachineName(station));
-                stationLine = string.Join(" " + RecipeBookLayout.Text("Or") + " ", parts);
+                foreach (string station in unlocked) parts.Add(RecipeBookLayout.MachineName(station));
+                stationLines = Wrap(string.Join(" " + RecipeBookLayout.Text("Or") + " ", parts), maxWidth, 0.9f);
+                if (stationLines.Count == 0) stationLines.Add("");
             }
-            return stationLine;
+            return stationLines;
+        }
+
+        // Greedy word wrap with the book font. A single word wider than the line stays on its own line.
+        static List<string> Wrap(string text, float maxWidth, float scale)
+        {
+            var font = FontAssets.MouseText.Value;
+            var lines = new List<string>();
+            string current = "";
+            foreach (string word in text.Split(' '))
+            {
+                string test = current.Length == 0 ? word : current + " " + word;
+                if (current.Length > 0 && font.MeasureString(test).X * scale > maxWidth)
+                {
+                    lines.Add(current);
+                    current = word;
+                }
+                else current = test;
+            }
+            if (current.Length > 0) lines.Add(current);
+            return lines;
         }
 
         void DrawRecipe(SpriteBatch sb, CustomRecipe recipe, bool outputsHidden)
@@ -165,6 +205,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Rectangle self = GetDimensions().ToRectangle();
             Rectangle detail = RecipeBookLayout.DetailArea;
             area.Offset(self.X - detail.X, self.Y - detail.Y);
+            area.Y += headerExtra;        // the wrapped station line above pushes everything down
+            area.Height -= headerExtra;
 
             float y = area.Y;
 

@@ -4,7 +4,7 @@ generated 2026-11-16 | 402 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(82) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(34) PacketDirection(31) RecipeBook(26) Cart(22) Factorraria(20) MachineUIStateBase(18) MachineUIElementEntry(17) LiquidStack(17) CustomRecipe(17) TileEntityHelper(16) JoinSync(16) CartSystem(15) CartModule(15) RecipeCatalog(14) VirtualItemSystem(13) PowerPoleTileEntityBase(13) LiquidNetworkSystem(13)
+FactorrariaNet(82) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(34) PacketDirection(31) RecipeBook(26) Cart(22) Factorraria(20) MachineUIStateBase(18) MachineUIElementEntry(17) LiquidStack(17) CustomRecipe(17) TileEntityHelper(16) JoinSync(16) CartSystem(15) CartModule(15) RecipeCatalog(14) VirtualItemSystem(13) RecipeKnowledgeSystem(13) PowerPoleTileEntityBase(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -368,13 +368,13 @@ tModLoader/other bases -> project types:
     +For(RecipeOutputGroup)[s] +For(RecipeOutputKey)[s]
 **RecipeKnowledgeSystem.cs** uses: RecipeCatalog
   class RecipeKnowledgeSystem : ModSystem
-    +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +TabMarkerBase:int[c] +TabMarker(int)[s] +IsTabMarker(int)[s] +TabIdOf(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ResetTabMarkers()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
+    +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +TabMarkerBase:int[c] +TabMarker(int)[s] +IsTabMarker(int)[s] +TabIdOf(int)[s] +StationItemMarkerBase:int[c] +StationItemMarker(int)[s] +IsStationItemMarker(int)[s] +StationItemOf(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ResetTabMarkers()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
 **RecipeTabDefinitions.cs** uses: MechanicalAssemblerTile, VanillaStationBooks
   static class RecipeTabDefinitions
     +Twins:KeyValuePair<string, string>[s] +ExtraMachineTiles:KeyValuePair<string, Func<int>>[s] +Inherits:KeyValuePair<string, int >[s]
 **RecipeTabDiscovery.cs** uses: Entry, RecipeCatalog, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeTabDefinitions, VanillaStationBooks
   static class RecipeTabDiscovery
-    +ExtraIdBase:int[c] +ScanTicks:int[s] +NearTilesX:int[s] +NearTilesY:int[s] +ServerNearExtra:int[s] +All:IReadOnlyCollection<Tab>[s] +Clear()[s] +Build()[s] +IsDiscovered(string)[s] +IsDiscoveredKey(string)[s] +IsOwnDiscovered(string)[s] +HeaderStations(string)[s] +InheritedNames(string)[s] +ItemsOf(string)[s] +ItemsOf(string)[s] +ScanLocalPlayer(Player)[s] +ServerAccepts(Player,int)[s] +NameOfMarker(int)[s]
+    +ExtraIdBase:int[c] +ScanTicks:int[s] +NearTilesX:int[s] +NearTilesY:int[s] +ServerNearExtra:int[s] +All:IReadOnlyCollection<Tab>[s] +Clear()[s] +Build()[s] +IsDiscovered(string)[s] +IsDiscoveredKey(string)[s] +IsOwnDiscovered(string)[s] +HeaderStations(string)[s] +InheritedNames(string)[s] +ItemsOf(string)[s] +ItemsOf(string)[s] +ScanLocalPlayer(Player)[s] +ServerAccepts(Player,int)[s] +ServerAcceptsItem(Player,int)[s] +NameOfMarker(int)[s]
     class Tab
       +Name:string +Id:int +Tile:int +Items:HashSet<int> +ItemList:int +Inherited:bool +Owner:string +Inherits:List<Tab> +Marker:int
   class RecipeTabDiscoverySystem : ModSystem
@@ -1292,15 +1292,15 @@ tModLoader/other bases -> project types:
 **RecipeBookCloseButton.cs** uses: BookDraw, RecipeBookArt, RecipeBookLayout, RecipeBookSystem
   class RecipeBookCloseButton : UIElement
     +LeftClick(UIMouseEvent)[ov] +Update(GameTime)[ov] #DrawSelf(SpriteBatch)[ov]
-**RecipeBookDetail.cs** uses: BookDraw, CustomRecipe, Entry, FuelEntry, LiquidIngredient, LiquidTypeRegistry, RecipeArtRegistry, RecipeBookLayout, RecipeBookState, RecipeCatalog, RecipeIcon, RecipeIngredient, RecipeOutputGroup, RecipeOutputKey, RecipeState, RecipeVisibility
+**RecipeBookDetail.cs** uses: BookDraw, CustomRecipe, Entry, FuelEntry, LiquidIngredient, LiquidTypeRegistry, RecipeArtRegistry, RecipeBookLayout, RecipeBookState, RecipeCatalog, RecipeIcon, RecipeIngredient, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeState, RecipeTabDiscovery, RecipeVisibility
   class RecipeBookDetail : UIElement
-    +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
+    +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov] +StationLineStep:int[s]
     struct Cell
       +Icon:RecipeOutputKey +Count:string +Name:string +ItemType:int +Stack:int +Hidden:bool +NavKey:string +SearchName:string
 **RecipeBookDragHandle.cs** uses: BookDraw, RecipeBookLayout, RecipeBookState
   class RecipeBookDragHandle : UIElement
     +LeftMouseDown(UIMouseEvent)[ov] +RightClick(UIMouseEvent)[ov] +Update(GameTime)[ov] #DrawSelf(SpriteBatch)[ov]
-**RecipeBookElements.cs** uses: Entry, RecipeArtRegistry, RecipeBookArt, RecipeBookLayout, RecipeBookPlayer, RecipeBookTabTip, RecipeIcon, RecipeOutputGroup, RecipeOutputKey, RecipeState, RecipeTabDiscovery, State
+**RecipeBookElements.cs** uses: Entry, RecipeArtRegistry, RecipeBookArt, RecipeBookLayout, RecipeBookPlayer, RecipeBookTabTip, RecipeIcon, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeState, RecipeTabDiscovery, State
   static class BookDraw
     +Rect(SpriteBatch,Rectangle,Color)[s] +Frame(SpriteBatch,Rectangle,Color,Color,int)[s] +Fit(string,float,float,out bool)[s] +Text(SpriteBatch,string,Vector2,Color,float)[s]
   class RecipeBookButton : UIElement

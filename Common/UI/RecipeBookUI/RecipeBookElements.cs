@@ -94,9 +94,24 @@ namespace Factorraria.Common.UI.RecipeBookUI
     /// </summary>
     public class RecipeBookHeaderRow : UIElement
     {
-        readonly string text;
-        readonly int[] items;          // sprites shown left of the name, cycled; none for By Hand / Notes
-        readonly string[] inherited;   // stations listed in the hover tip (only once the tab's own machine is discovered)
+        string text;
+        int[] items;                   // sprites shown left of the name, cycled (only the ones the world has held); none for By Hand / Notes
+        string[] inherited;            // stations listed in the hover tip (only once the tab's own machine is discovered)
+        int builtVersion = -1, builtSeenVersion = -1;
+
+        // Title, sprites and tip depend on what has been discovered, which can change while the book is open (a held item bumps SeenVersion).
+        void Refresh()
+        {
+            builtVersion = RecipeKnowledgeSystem.Version;
+            builtSeenVersion = RecipeKnowledgeSystem.SeenVersion;
+
+            string[] shown = RecipeTabDiscovery.HeaderStations(Machine);
+            var names = new string[shown.Length];
+            for (int i = 0; i < shown.Length; i++) names[i] = RecipeBookLayout.MachineName(shown[i]);
+            text = string.Join(" / ", names);
+            items = RecipeTabDiscovery.ItemsOf(shown);
+            inherited = RecipeTabDiscovery.IsOwnDiscovered(Machine) ? RecipeTabDiscovery.InheritedNames(Machine) : new string[0];
+        }
         public readonly string Machine;
         /// <summary>Seconds each sprite stays up when a tab has several (Iron Anvil, Lead Anvil ...). Not const, so hot reload can tweak it.</summary>
         public static float IconSeconds = 1f;
@@ -110,12 +125,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Machine = machine;
             Collapsed = collapsed;
             this.onToggle = onToggle;
-            string[] shown = RecipeTabDiscovery.HeaderStations(machine);
-            var names = new string[shown.Length];
-            for (int i = 0; i < shown.Length; i++) names[i] = RecipeBookLayout.MachineName(shown[i]);
-            text = string.Join(" / ", names);
-            items = RecipeTabDiscovery.ItemsOf(shown);
-            inherited = RecipeTabDiscovery.IsOwnDiscovered(machine) ? RecipeTabDiscovery.InheritedNames(machine) : new string[0];
+            Refresh();
             Width.Set(0f, 1f);
             Height.Set(RecipeBookLayout.HeaderRowHeight, 0f);
         }
@@ -151,6 +161,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 else BookDraw.Rect(sb, new Rectangle(cx - 4 + i, cy - 2 + i, 9 - 2 * i, 1), c);
             }
 
+            if (builtVersion != RecipeKnowledgeSystem.Version || builtSeenVersion != RecipeKnowledgeSystem.SeenVersion) Refresh();
             int textX = r.X + 20;
             if (items.Length > 0)
             {

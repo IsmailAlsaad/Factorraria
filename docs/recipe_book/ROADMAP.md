@@ -10,7 +10,8 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 
 - [~] R0 Tab names without "(Vanilla)", machine and vanilla twin tabs merged (applied, untested)
 - [~] R1 Tab discovery (a tab unlocks when its station or machine item is held or the station is near; applied, untested)
-- [~] R1.1 Tab discovery tweak (recipes no longer discover tabs; machines inherit station tabs; By Hand first; station sprites and hover tip; applied, untested)
+- [~] R1.1 Tab discovery tweak (machines inherit station tabs; By Hand first; station sprites and hover tip; applied, untested)
+- [~] R1.2 R1.1 follow-up (detail page names only discovered stations and wraps; sprite cycling only held items; a parchment discovers its machine; applied, untested)
 - [ ] R2 New-recipe highlight
 - [ ] R3 "New machine discovered!" pop-up
 - [ ] R4 Show/hide each tab
@@ -63,12 +64,17 @@ Implemented (R1, applied, untested): new `Common/Knowledge/RecipeTabDiscovery.cs
 
 Decided 2026-11-16. Applied, untested.
 
-- Rule 3 is gone: unlocking a recipe (parchment) or crafting one never discovers a tab. Only holding the station/machine item or standing within crafting reach does. `RecipeTabDiscovery.IsDiscovered` no longer reads the crafted/unlocked sets. Old worlds: no tab marker was ever migrated, so a tab that was only visible through rule 3 comes back the next time the player holds or stands near its station (open question: add a one-time migration if that annoys).
+- Rule 3 changed: crafting a recipe never discovers a tab (obtaining a product would reveal every station that makes it). A parchment-unlocked recipe discovers exactly the machine/station its key names (`Hit` in `RecipeTabDiscovery`, computed from `UnlockedKeys`, never saved). Otherwise only holding the station/machine item or standing within crafting reach does. Old worlds: no tab marker was ever migrated, so a tab that was only visible through rule 3 comes back the next time the player holds or stands near its station (open question: add a one-time migration if that annoys).
 - "By Hand" is always the first tab (`RecipeBookState.Rebuild`, order -1).
 - Inheritance: `RecipeTabDefinitions.Inherits` lists the machines that import recipes from a different vanilla tile (Autohammer: Anvils; Mechanical Assembler: Work Benches, Heavy Work Bench). `RecipeCatalog.TabOf` folds that station's tab into the machine's tab (twins win, so Furnaces stays with the Furnace; Hellforge also imports Furnaces but is not listed). Each inherited station has its own discovery marker (its TileID, the same marker the old standalone tab used). A tab is shown when its own machine OR any inherited station is discovered.
 - Title: until the machine itself is discovered the header is titled after the discovered inherited station(s) ("Anvils", "Work Benches / Heavy Work Bench"); after that it is the machine's name. A sprite sits left of the title: the discovered machine/station item, cycling every `RecipeBookHeaderRow.IconSeconds` (1) when several items place the tile (Iron Anvil, Lead Anvil). Hovering the title of a machine whose own tile is discovered shows "Inherits from [icon] Anvils" (`RecipeBookTabTip`, drawn by `RecipeBookTabTipOverlay`).
 - Detail page: the line under the product name lists every station of the tab that makes the product, joined with "or" (`RecipeCatalog.StationsFor`): "Autohammer or Anvils" when the Anvils make it too, just "Autohammer" for its own recipes. Names come from `Machines.<name>` in the hjson, so "Anvils" can be renamed there.
 - Multiplayer: no new packets. Inherited stations use the existing tab markers; `ServerAccepts` already works per tile.
+
+R1.2 (follow-up, applied, untested):
+- Detail page: the "Autohammer or Anvils" line names only discovered stations (`RecipeTabDiscovery.IsOwnDiscovered`); if none of them is discovered yet it names all. It wraps under the product name and pushes the divider and the recipe body down (`StationLineStep`, 20 px per extra line).
+- Header and tip sprites cycle only through items the world has HELD: a third marker range `-(2000000 + item type)` in the seen set (`RecipeKnowledgeSystem.StationItemMarker`), saved as `SeenStationItems` by item name, reported by the same scan, accepted by the server only if the sender holds the item (`ServerAcceptsItem`). A tab discovered without holding anything (stood near it, parchment) shows its first item.
+- A parchment-unlocked recipe of a machine nobody found discovers that machine/station (so its tab appears). This reverses the first R1.1 rule; crafted recipes still never discover a tab.
 
 Test checklist: new world, hold an Iron Anvil: the tab appears titled "Anvils" with the anvil sprite; hold an Autohammer (or stand next to one): it becomes "Autohammer" with the Autohammer sprite and the hover tip lists Anvils; a recipe on both shows "Autohammer or Anvils", an Autohammer-only recipe shows "Autohammer"; read a parchment for a machine you have not found: no tab appears; By Hand is first; Work Bench then Heavy Work Bench: title shows both; a second client gets the tab; relog keeps it.
 
