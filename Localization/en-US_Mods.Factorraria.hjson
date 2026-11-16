@@ -146,7 +146,7 @@ Items: {
 
 	IsmailsCaneItem: {
 		DisplayName: Ismails Cane
-		Tooltip: "Only Ismail is allowed to have it"
+		Tooltip: ""
 	}
 
 	TerrariaLogoItem: {
