@@ -16,6 +16,7 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [x] R1.4 Furnace tab folded into Hellforge's (one tab; one entry per product; recipes merged across machines with a fuel row per machine; tested)
 - [x] R1.5 Fuel rows follow discovery (a machine's fuel row only once that machine is discovered; "or" between rows; one "Fuel" label on top; tested)
 - [~] R2 New-recipe highlight (per-character viewed set seeded once per world after the join sync; pulsing gold row + "!" after the name for new recipes and new tabs; a folded tab shows "!" when a recipe inside is new; closing the book or selecting a recipe clears; machine tab rows now a darker brown band with a warm hover; applied, untested)
+- [~] R2.1 R2 follow-up (machine tab hit area and band 4 px taller on top; "!" offsets are tunables `RecipeBookNew.EntryMarkOffset` / `TabMarkOffset`; a tab keeps its "!" while any recipe in it is new, open or folded; the vanilla inventory ignores the cursor while it is inside the book (`PlayerInput.IgnoreMouseInterface` around the inventory layer); applied, untested)
 - [ ] R3 "New machine discovered!" pop-up
 - [ ] R4 Show/hide each tab
 - [ ] R5 Favorites-only / show-all button

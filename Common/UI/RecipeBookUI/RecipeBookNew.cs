@@ -22,6 +22,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static Color RowTint = new Color(214, 178, 48);   // same gold as the favorite row, but it pulses
         public static int MarkGap = 4;                           // pixels between the end of the name and the "!"
         public static int PlaceholderMarkWidth = 7;              // width reserved for the code-drawn "!" until RecipeBookNew.png exists
+        public static Vector2 EntryMarkOffset = Vector2.Zero;    // extra shift of the "!" next to a recipe name, in pixels: +x right, +y down (MarkGap is the base gap)
+        public static Vector2 TabMarkOffset = new Vector2(6f,0f);      // the same for the "!" next to a machine tab name
 
         public static string TabKey(string tab) => "tab|" + tab;
 
@@ -50,8 +52,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static int MarkWidth => RecipeBookArt.NewMark?.Value.Width ?? PlaceholderMarkWidth;
 
         /// <summary>Draws the "!" with its left edge at x, centered on centerY. Native size art, or a small code-drawn placeholder.</summary>
-        public static void DrawMark(SpriteBatch sb, float x, float centerY)
+        public static void DrawMark(SpriteBatch sb, float x, float centerY, Vector2 offset)
         {
+            x += offset.X;
+            centerY += offset.Y;
             var art = RecipeBookArt.NewMark;
             if (art != null)
             {

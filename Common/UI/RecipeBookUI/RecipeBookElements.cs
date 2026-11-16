@@ -119,7 +119,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// <summary>Set by RecipeBookState while the header is stuck to the top margin: it then fills its own background so rows scrolling under it do not show through.</summary>
         public bool Pinned;
         readonly Action<string> onToggle;
-        readonly System.Collections.Generic.IList<string> childKeys;   // keys of the entries listed under this tab (a folded tab shows "!" when one is new)
+        readonly System.Collections.Generic.IList<string> childKeys;   // keys of the entries listed under this tab (the tab shows "!" while any of them is new, open or folded)
 
         public RecipeBookHeaderRow(string machine, bool collapsed, Action<string> onToggle, System.Collections.Generic.IList<string> childKeys = null)
         {
@@ -138,6 +138,20 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (IsMouseHovering) Main.LocalPlayer.mouseInterface = true;
         }
 
+        // The tab is a few pixels taller on top than what it draws: the hit area (and the band behind the title) reach up RecipeBookLayout.HeaderTopExtra px
+        // over the bottom of the row above. Nothing else moves. A header stuck to the top margin has no room above it, so it gets none.
+        int RoomAbove()
+        {
+            float listTop = Parent != null ? Parent.GetDimensions().Y : GetDimensions().Y;
+            return (int)Math.Max(0f, Math.Min(RecipeBookLayout.HeaderTopExtra, GetDimensions().Y - listTop));
+        }
+
+        public override bool ContainsPoint(Vector2 point)
+        {
+            CalculatedStyle d = GetDimensions();
+            return point.X > d.X && point.X < d.X + d.Width && point.Y > d.Y - RoomAbove() && point.Y < d.Y + d.Height;
+        }
+
         public override void LeftClick(UIMouseEvent evt)
         {
             base.LeftClick(evt);
@@ -153,7 +167,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (Pinned) BookDraw.Rect(sb, r, RecipeBookArt.HeaderBackground());
             bool toggleable = onToggle != null;
             bool tabNew = RecipeBookNew.IsTabNew(Machine);
-            var band = new Rectangle(r.X + 2, r.Y + 2, r.Width - 4, r.Height - 6);
+            int up = Math.Min(RecipeBookLayout.HeaderBandTopExtra, RoomAbove());
+            var band = new Rectangle(r.X + 2, r.Y + 2 - up, r.Width - 4, r.Height - 6 + up);
             BookDraw.Rect(sb, band, RecipeBookLayout.HeaderTint);                       // machine tabs sit a little darker and browner than the page
             if (tabNew) BookDraw.Rect(sb, band, RecipeBookNew.RowColor());
             if (toggleable && IsMouseHovering) BookDraw.Rect(sb, band, RecipeBookLayout.HeaderHoverColor);
@@ -176,10 +191,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 RecipeIcon.Draw(sb, RecipeOutputKey.ForItem(type), new Vector2(r.X + 31, r.Y + 13), 20f);
                 textX = r.X + 46;
             }
-            bool flagged = tabNew || (Collapsed && RecipeBookNew.AnyNew(childKeys));
+            bool flagged = tabNew || RecipeBookNew.AnyNew(childKeys);   // stays until nothing of this tab is new, open or folded
             string shownText = BookDraw.Fit(text, r.Right - 6 - textX - (flagged ? RecipeBookNew.MarkWidth + RecipeBookNew.MarkGap : 0), 1.05f, out bool truncated);
             BookDraw.Text(sb, shownText, new Vector2(textX, r.Y + 4), RecipeBookLayout.PageBorder, 1.05f);
-            if (flagged) RecipeBookNew.DrawMark(sb, textX + FontAssets.MouseText.Value.MeasureString(shownText).X * 1.05f + RecipeBookNew.MarkGap, r.Y + 13);
+            if (flagged) RecipeBookNew.DrawMark(sb, textX + FontAssets.MouseText.Value.MeasureString(shownText).X * 1.05f + RecipeBookNew.MarkGap, r.Y + 13, RecipeBookNew.TabMarkOffset);
 
             // Hover over the title (not the fold arrow): "Inherits from [icon] Anvils and ...", or the full name when it was cut short.
             Vector2 mouse = UserInterface.ActiveInstance.MousePosition;
@@ -274,7 +289,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Vector2 size = FontAssets.MouseText.Value.MeasureString(shown) * 0.95f;
             BookDraw.Text(sb, shown, new Vector2(textX, r.Center.Y - size.Y / 2f + 2f),
                 IsFaded ? RecipeBookLayout.TextFadedColor : RecipeBookLayout.TextColor, 0.95f);
-            if (isNew) RecipeBookNew.DrawMark(sb, textX + size.X + RecipeBookNew.MarkGap, r.Center.Y);
+            if (isNew) RecipeBookNew.DrawMark(sb, textX + size.X + RecipeBookNew.MarkGap, r.Center.Y, RecipeBookNew.EntryMarkOffset);
 
             if (hover && truncated) Main.hoverItemName = ProductName;
 

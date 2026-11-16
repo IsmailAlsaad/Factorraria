@@ -28,6 +28,8 @@ namespace Factorraria.Common.Systems
         bool open;
         bool buttonVisible;
         uint openedAt;
+        bool blockingMouse;       // PlayerInput.IgnoreMouseInterface was raised for the inventory layer this frame
+        bool previousIgnore;
 
         static RecipeBookSystem Instance => ModContent.GetInstance<RecipeBookSystem>();
 
@@ -166,6 +168,39 @@ namespace Factorraria.Common.Systems
             // Insert book first, then button at the same index, so the button ends up before the book.
             layers.Insert(inventoryIndex + 1, bookLayer);
             layers.Insert(inventoryIndex + 1, buttonLayer);
+
+            // While the cursor is inside the open book the vanilla inventory (drawn before the book) must not react to it: with
+            // PlayerInput.IgnoreMouseInterface raised its slots skip hover, clicks and tooltips. Raised just before the inventory layer,
+            // restored right after it, so the book's own layers and everything else see the normal value.
+            var blockLayer = new LegacyGameInterfaceLayer(
+                "Factorraria: Recipe Book Mouse Block",
+                delegate
+                {
+                    blockingMouse = open && bookState != null && bookState.MouseInsidePanel;
+                    if (blockingMouse)
+                    {
+                        previousIgnore = Terraria.GameInput.PlayerInput.IgnoreMouseInterface;
+                        Terraria.GameInput.PlayerInput.IgnoreMouseInterface = true;
+                    }
+                    return true;
+                },
+                InterfaceScaleType.UI);
+
+            var unblockLayer = new LegacyGameInterfaceLayer(
+                "Factorraria: Recipe Book Mouse Unblock",
+                delegate
+                {
+                    if (blockingMouse)
+                    {
+                        Terraria.GameInput.PlayerInput.IgnoreMouseInterface = previousIgnore;
+                        blockingMouse = false;
+                    }
+                    return true;
+                },
+                InterfaceScaleType.UI);
+
+            layers.Insert(inventoryIndex + 1, unblockLayer);
+            layers.Insert(inventoryIndex, blockLayer);
         }
     }
 }

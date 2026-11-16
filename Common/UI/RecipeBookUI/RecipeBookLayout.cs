@@ -159,6 +159,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         // Machine tab rows (the headers on the left page): a slightly darker, browner band over the page. Hover is a warm light instead of plain white.
         public static Color HeaderTint = new Color(120, 78, 40) * 0.22f;
         public static Color HeaderHoverColor = new Color(255, 230, 180) * 0.32f;
+        public static int HeaderTopExtra = 4;       // px the machine tab's hit area reaches above its row (nothing else moves)
+        public static int HeaderBandTopExtra = 4;   // px the tinted band behind the tab reaches above its row (visual only, 0 = old look); never more than HeaderTopExtra
 
         // ---- search bar + scrollbar palette (tweak the numbers here) ----
         public static readonly Color SearchBackground = new Color(200, 176, 128);
