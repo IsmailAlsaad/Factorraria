@@ -19,7 +19,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.DecayChamber
             list.Add(new MachineUIElementEntry(liquidTank, new Vector2(16, -90), new Vector2(16, 84)));
 
             // Bar in -> bar out
-            list.Add(InputSlotEntry(0, new Vector2(-60f, 0f)));
+            AddIngredientSlots(list, DecayChamberRecipeRegistry.Book, 0, new Vector2(-60f, 0f));
             Vector2 productSlotPosition = new Vector2(54f, 0f);
             list.Add(OutputSlotEntry(0, productSlotPosition));
 

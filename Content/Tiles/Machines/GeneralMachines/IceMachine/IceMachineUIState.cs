@@ -19,6 +19,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine
             var LiquidTank = new LiquidTankUIElement(() => Entity.InputLiquids[0]);
             list.Add(new MachineUIElementEntry(LiquidTank, new Vector2(-30, -20), new Vector2(16, 84)));
 
+            // No item-ingredient recipes yet, so this adds nothing; it fills in by itself once a recipe has item inputs.
+            AddIngredientSlots(list, IceMachineRecipeRegistry.Book, 0, new Vector2(-90f, 0f));
+
             list.Add(OutputSlotEntry(0, new Vector2(55f, 0f)));
 
             return list;

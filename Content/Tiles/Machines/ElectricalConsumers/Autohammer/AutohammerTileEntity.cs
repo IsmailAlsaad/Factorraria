@@ -10,7 +10,6 @@ namespace Factorraria.Content.Tiles.Machines.Autohammer
         public override int ValidTileType => TileID.Autohammer;
         public override RecipeBook Recipes => AutohammerRecipeRegistry.Book;
         public override float PowerDemand => 100f;
-        protected override int InputSlotCount => 1;
         protected override int OutputSlotCount => 1;
 
         public override void Update()

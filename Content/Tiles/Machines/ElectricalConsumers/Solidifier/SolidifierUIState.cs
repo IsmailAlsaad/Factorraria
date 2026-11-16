@@ -31,6 +31,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Solidifier
             var LiquidTank2 = new LiquidTankUIElement(() => Entity.InputLiquids[1]);
             list.Add(new MachineUIElementEntry(LiquidTank2, new Vector2(55, -20), new Vector2(16, 84)));
 
+            // Placeholder position. No item-ingredient recipes yet, so this adds nothing; it fills in by itself once a recipe has item inputs.
+            AddIngredientSlots(list, SolidifierRecipeRegistry.Book, 0, new Vector2(-4f, -80f));
+
             list.Add(OutputSlotEntry(0, new Vector2(-4f, 57f)));
 
             list.Add(new MachineUIElementEntry(

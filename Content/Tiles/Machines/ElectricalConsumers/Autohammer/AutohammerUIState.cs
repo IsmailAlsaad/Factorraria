@@ -18,7 +18,7 @@ namespace Factorraria.Content.Tiles.Machines.Autohammer
         {
             var list = new List<MachineUIElementEntry>();
 
-            list.Add(InputSlotEntry(0, new Vector2(-60, 0)));
+            AddIngredientSlots(list, AutohammerRecipeRegistry.Book, 0, new Vector2(-60, 0));
             Vector2 productSlotPosition = new Vector2(54, 0);
             list.Add(OutputSlotEntry(0, productSlotPosition));
 

@@ -1223,7 +1223,7 @@ tModLoader/other bases -> project types:
   interface IZoomScalable
     +SetZoomScale(float)
   abstract class MachineUIStateBase : UIState
-    +CurrentEntity:BaseMachine +Panel:UIElement #BasePanelSize:Vector2[v] +BasePanelOffset:Vector2[v] #BuildElements()[ab] +OnInitialize()[ov] +InitializeUIState() +OnActivate()[ov] #UpdateLayout()[v] +ContentOrigin:Vector2 +SetZoomScale(float) #SlotSize:float[c] #InputSlotEntry(int,Vector2,Func<bool>) #OutputSlotEntry(int,Vector2,Func<bool>) #FuelSlotEntry(int,Vector2) #FuelSlotEntry(Vector2) #FuelTankEntry(int,Vector2) #InputTankEntry(int,Vector2) #OutputTankEntry(int,Vector2) #AddRecipePicker(List<MachineUIElementEntry>,RecipeBook,Vector2,Vector2)
+    +CurrentEntity:BaseMachine +Panel:UIElement #BasePanelSize:Vector2[v] +BasePanelOffset:Vector2[v] #BuildElements()[ab] +OnInitialize()[ov] +InitializeUIState() +OnActivate()[ov] #UpdateLayout()[v] +ContentOrigin:Vector2 +SetZoomScale(float) #SlotSize:float[c] #InputSlotEntry(int,Vector2,Func<bool>) #OutputSlotEntry(int,Vector2,Func<bool>) #FuelSlotEntry(int,Vector2) #FuelSlotEntry(Vector2) #IngredientSlotStep:float #AddIngredientSlots(List<MachineUIElementEntry>,RecipeBook,int,Vector2) #FuelTankEntry(int,Vector2) #InputTankEntry(int,Vector2) #OutputTankEntry(int,Vector2) #AddRecipePicker(List<MachineUIElementEntry>,RecipeBook,Vector2,Vector2)
 **RecipeIcon.cs** uses: LiquidTypeDefinition, LiquidTypeRegistry, RecipeOutputKey
   static class RecipeIcon
     +FadedTint:Color[s] +Clear()[s] +Draw(SpriteBatch,RecipeOutputKey,Vector2,float,float,bool)[s]
@@ -1570,7 +1570,7 @@ tModLoader/other bases -> project types:
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **AutohammerTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.Autohammer uses: AutohammerRecipeRegistry, ElectricConsumerMachine, RecipeBook
   class AutohammerTileEntity : ElectricConsumerMachine
-    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +Update()[ov] #OnAnimationFrameChanged(int,int)[ov]
+    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] +PowerDemand:float[ov] #OutputSlotCount:int[ov] +Update()[ov] #OnAnimationFrameChanged(int,int)[ov]
 **AutohammerUIState.cs** ns!=Factorraria.Content.Tiles.Machines.Autohammer uses: AutohammerRecipeRegistry, AutohammerTileEntity, ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase
   class AutohammerUIState : MachineUIStateBase
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]
@@ -1689,7 +1689,7 @@ tModLoader/other bases -> project types:
 **SolidifierTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.Solidifier uses: ElectricConsumerMachine, RecipeBook, SolidifierRecipeRegistry
   class SolidifierTileEntity : ElectricConsumerMachine
     +ValidTileType:int[ov] +PowerDemand:float[ov] +Recipes:RecipeBook[ov] #InputLiquidCount:int[ov] #OutputSlotCount:int[ov] #OnAnimationFrameChanged(int,int)[ov]
-**SolidifierUIState.cs** uses: ElectricityUIIcon, LiquidTankUIElement, MachineUIElementEntry, MachineUIStateBase, SolidifierTileEntity
+**SolidifierUIState.cs** uses: ElectricityUIIcon, LiquidTankUIElement, MachineUIElementEntry, MachineUIStateBase, SolidifierRecipeRegistry, SolidifierTileEntity
   class SolidifierUIState : MachineUIStateBase
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]
 
@@ -1789,7 +1789,7 @@ tModLoader/other bases -> project types:
 **IceMachineTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine uses: BaseMachine, CustomRecipe, IceMachineRecipeRegistry, MachineBiome, RecipeBook
   class IceMachineTileEntity : BaseMachine
     +ValidTileType:int[ov] +Recipes:RecipeBook[ov] #InputLiquidCount:int[ov] #OutputSlotCount:int[ov] #CanStartCraft(CustomRecipe)[ov] #OnAnimationFrameChanged(int,int)[ov]
-**IceMachineUIState.cs** ns!=Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine uses: IceMachineTileEntity, LiquidTankUIElement, MachineUIElementEntry, MachineUIStateBase
+**IceMachineUIState.cs** ns!=Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine uses: IceMachineRecipeRegistry, IceMachineTileEntity, LiquidTankUIElement, MachineUIElementEntry, MachineUIStateBase
   class IceMachineUIState : MachineUIStateBase
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]
 
@@ -1800,7 +1800,7 @@ tModLoader/other bases -> project types:
 **LiquidDistillatorTileEntity.cs** uses: BaseMachine, LiquidDistillatorRecipeRegistry, RecipeBook
   class LiquidDistillatorTileEntity : BaseMachine
     +ValidTileType:int[ov] +Recipes:RecipeBook[ov] #InputLiquidCount:int[ov] #OutputLiquidCount:int[ov] #OnAnimationFrameChanged(int,int)[ov]
-**LiquidDistillatorUIState.cs** uses: LiquidDistillatorTileEntity, LiquidTankUIElement, MachineUIElementEntry, MachineUIStateBase
+**LiquidDistillatorUIState.cs** uses: LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidTankUIElement, MachineUIElementEntry, MachineUIStateBase
   class LiquidDistillatorUIState : MachineUIStateBase
     #BuildElements()[ov]
 

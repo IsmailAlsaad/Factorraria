@@ -150,6 +150,30 @@ namespace Factorraria.Common.UI
         protected MachineUIElementEntry FuelSlotEntry(int fuelIndex, Vector2 pos) => InputSlotEntry(BaseMachine.FuelSlotIndex + fuelIndex, pos);
         protected MachineUIElementEntry FuelSlotEntry(Vector2 pos) => FuelSlotEntry(0, pos);
 
+        // Horizontal distance between two ingredient slots in the row.
+        protected float IngredientSlotStep => SlotSize + 6f;
+
+        // The ingredient row every recipe machine shares. Builds one slot per ingredient the book can ever need
+        // (book.MaxIngredientCount); each slot shows only while BaseMachine.ActiveIngredientCount covers it, so the row
+        // grows by itself (auto mode: one extra "next available" slot, manual mode: the picked recipe's input count).
+        // firstSlotIndex: BaseMachine.FirstIngredientSlot for machines with a fuel slot, 0 for machines without one.
+        // Slot 0 sits at origin, each further slot goes one step further left. Returns the entries so a UI can re-centre things on them.
+        protected MachineUIElementEntry[] AddIngredientSlots(List<MachineUIElementEntry> list, RecipeBook book, int firstSlotIndex, Vector2 origin)
+        {
+            int max = book.MaxIngredientCount;
+            var entries = new MachineUIElementEntry[max];
+            for (int i = 0; i < max; i++)
+            {
+                int ingredientIndex = i;
+                entries[i] = InputSlotEntry(
+                    firstSlotIndex + i,
+                    origin + new Vector2(-i * IngredientSlotStep, 0),
+                    () => CurrentEntity != null && ingredientIndex < CurrentEntity.ActiveIngredientCount);
+                list.Add(entries[i]);
+            }
+            return entries;
+        }
+
         // Liquid-fuel tank (fuelIndex = the channel). Fuel tanks are the first entries of InputLiquids.
         protected MachineUIElementEntry FuelTankEntry(int fuelIndex, Vector2 pos) =>
             new MachineUIElementEntry(new LiquidTankUIElement(() => CurrentEntity.InputLiquids[fuelIndex]), pos, new Vector2(16, 84));

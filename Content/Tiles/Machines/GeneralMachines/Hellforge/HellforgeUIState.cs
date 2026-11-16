@@ -21,17 +21,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Hellforge
         {
             var list = new List<MachineUIElementEntry>();
 
-            int max = HellforgeRecipeRegistry.Book.MaxIngredientCount;
-            ingredientEntries = new MachineUIElementEntry[max];
-            for (int i = 0; i < max; i++)
-            {
-                int ingredientIndex = i;
-                ingredientEntries[i] = InputSlotEntry(
-                    IngredientSlotStart + i,
-                    new Vector2(i * -60, 0),
-                    () => ingredientIndex < Entity.ActiveIngredientCount);
-                list.Add(ingredientEntries[i]);
-            }
+            ingredientEntries = AddIngredientSlots(list, HellforgeRecipeRegistry.Book, IngredientSlotStart, Vector2.Zero);
 
             // Lava tank under the ingredient row (exact position is set in UpdateLayout).
             fuelTankEntry = FuelTankEntry(0, new Vector2(19, 60));

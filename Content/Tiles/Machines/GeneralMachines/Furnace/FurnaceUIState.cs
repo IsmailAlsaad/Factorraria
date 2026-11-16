@@ -20,17 +20,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.Furnace
         {
             var list = new List<MachineUIElementEntry>();
 
-            int max = FurnaceRecipeRegistry.Book.MaxIngredientCount;
-            ingredientEntries = new MachineUIElementEntry[max];
-            for (int i = 0; i < max; i++)
-            {
-                int ingredientIndex = i;
-                ingredientEntries[i] = InputSlotEntry(
-                    FurnaceTileEntity.FirstIngredientSlot + i,
-                    new Vector2(i * -60, 0),
-                    () => ingredientIndex < Entity.ActiveIngredientCount);
-                list.Add(ingredientEntries[i]);
-            }
+            ingredientEntries = AddIngredientSlots(list, FurnaceRecipeRegistry.Book, FurnaceTileEntity.FirstIngredientSlot, Vector2.Zero);
 
             fireEntry = new MachineUIElementEntry(new FireUIElement(() => Entity.GetFuelBurnFraction()), new Vector2(0, 50), new Vector2(54, 54));
             list.Add(fireEntry);

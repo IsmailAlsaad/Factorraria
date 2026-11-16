@@ -15,12 +15,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
 
             // Ingredient slots on the left: slot 0 stays put, every extra slot goes one step further left.
             // No fuel slot, so the ingredient slots start at index 0.
-            int max = MechanicalAssemblerRecipeRegistry.Book.MaxIngredientCount;
-            for (int i = 0; i < max; i++)
-            {
-                int ingredientIndex = i;
-                list.Add(InputSlotEntry(i, new Vector2(-60 - i * 60, 0), () => ingredientIndex < Entity.ActiveIngredientCount));
-            }
+            AddIngredientSlots(list, MechanicalAssemblerRecipeRegistry.Book, 0, new Vector2(-60, 0));
 
             // Product slot on the right, recipe browser next to it.
             Vector2 productSlotPosition = new Vector2(54, 0);
