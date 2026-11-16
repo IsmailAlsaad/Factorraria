@@ -129,7 +129,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             string name = BookDraw.Fit(faded ? RecipeBookLayout.UnknownName : group.Key.DisplayName, r.Width - 70, 1.15f, out _);
             BookDraw.Text(sb, name, new Vector2(r.X + 64, r.Y + 6), RecipeBookLayout.TextColor, 1.15f);
-            BookDraw.Text(sb, RecipeBookLayout.MachineName(book.SelectedMachine), new Vector2(r.X + 64, r.Y + 34), RecipeBookLayout.PageBorder, 0.9f);
+            BookDraw.Text(sb, RecipeBookLayout.MachineName(RecipeCatalog.TabOf(book.SelectedMachine)), new Vector2(r.X + 64, r.Y + 34), RecipeBookLayout.PageBorder, 0.9f);
 
             BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
 

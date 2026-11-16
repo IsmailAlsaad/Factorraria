@@ -30,7 +30,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         string searchFilter = "";
         bool filterDirty;
         bool layoutDirty;                                    // a header was toggled: rebuild on the next Update (never mid-click)
-        HashSet<string> collapsedMachines = new();           // machine names whose recipe list is folded away (kept while the book object lives)
+        HashSet<string> collapsedMachines = new();           // tab names whose recipe list is folded away (kept while the book object lives)
+        readonly Dictionary<string, string> aliases = new(); // a station recipe hidden because its machine twin lists the same product -> the machine's key (filled by Rebuild)
 
         // Window position: pixels away from the centered spot. Static so the book reopens where the player left it
         // (for the game session). Zero = centered.
@@ -138,6 +139,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             headerIndex.Clear();
             headerRows.Clear();
             entryTop.Clear();
+            aliases.Clear();
 
             string lastMachine = null;
             float y = 0f;
@@ -150,23 +152,44 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (byIngredient) filter = filter.Substring(1).Trim();
             bool filtering = !string.IsNullOrEmpty(filter);
 
-            // Per machine: favorited first, then crafted, then the faded ones. OrderBy is stable, so each tier keeps the catalog's
-            // A-Z order, and machines keep the order they first appear in.
+            // Per tab (a machine, or a vanilla station; a station with a machine twin shares the machine's tab, see RecipeCatalog.TabOf):
+            // the machine's own recipes first, then the station's; inside each of those favorited first, then crafted, then the faded ones.
+            // OrderBy is stable, so each tier keeps the catalog's A-Z order, and tabs keep the catalog order of their first entry
+            // (counted even while nothing in the tab is listed yet, so a merged tab always sits where its machine is).
             var machineOrder = new Dictionary<string, int>();
             var listed = new List<(RecipeCatalog.Entry e, RecipeState state)>();
             foreach (RecipeCatalog.Entry cat in RecipeCatalog.EntriesWithArt())
             {
+                string catTab = RecipeCatalog.TabOf(cat.Machine);
+                if (!machineOrder.ContainsKey(catTab)) machineOrder[catTab] = machineOrder.Count;
+                if (!RecipeTabDiscovery.IsDiscovered(catTab)) continue;   // the tab has not been discovered yet (RecipeTabDiscovery)
                 RecipeState catState = RecipeVisibility.GetState(cat.Key);
                 if (!RecipeVisibility.InBook(catState)) continue;
-                if (!machineOrder.ContainsKey(cat.Machine)) machineOrder[cat.Machine] = machineOrder.Count;
                 listed.Add((cat, catState));
             }
+
+            // A merged tab lists a product once: when the machine already lists it, the twin station's entry for the same product is
+            // left out (the crafted-anywhere rule already treats them as one). The left-out key maps to the machine's key, so a jump,
+            // a parchment or a saved selection that names the station key still lands on the visible entry.
+            var machineProducts = new Dictionary<string, string>();
+            foreach (var (me, _) in listed)
+                if (me.Group != null && !me.Station) machineProducts.TryAdd(RecipeCatalog.TabOf(me.Machine) + "|" + RecipeKey.For(me.Group), me.Key);
+            listed.RemoveAll(x =>
+            {
+                if (x.e.Group == null || !x.e.Station) return false;
+                string tab = RecipeCatalog.TabOf(x.e.Machine);
+                if (tab == x.e.Machine) return false;   // a station tab without a machine twin
+                if (!machineProducts.TryGetValue(tab + "|" + RecipeKey.For(x.e.Group), out string own)) return false;
+                aliases[x.e.Key] = own;
+                return true;
+            });
+            SelectedKey = Resolve(SelectedKey);
 
             // Ingredient search: if some listed recipe takes an ingredient named exactly like the text ("Wood"), only exact
             // names match, so "#Wood" does not also pull in Boreal Wood. Otherwise it falls back to a partial match.
             bool exactIngredient = byIngredient && filtering && listed.Any(x => x.e.Group != null && UsesIngredient(x.e.Group, x.state, filter, true));
 
-            foreach (var (e, state) in listed.OrderBy(x => machineOrder[x.e.Machine]).ThenBy(x => favorites.IsFavorite(x.e.Key) ? 0 : x.state == RecipeState.Crafted ? 1 : 2))
+            foreach (var (e, state) in listed.OrderBy(x => machineOrder[RecipeCatalog.TabOf(x.e.Machine)]).ThenBy(x => x.e.Station ? 1 : 0).ThenBy(x => favorites.IsFavorite(x.e.Key) ? 0 : x.state == RecipeState.Crafted ? 1 : 2))
             {
                 any = true;
 
@@ -192,11 +215,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 shown++;
 
                 // While searching, every match is shown and the headers are not toggleable.
-                bool collapsed = !filtering && collapsedMachines.Contains(e.Machine);
-                if (e.Machine != lastMachine)
+                string tabName = RecipeCatalog.TabOf(e.Machine);
+                bool collapsed = !filtering && collapsedMachines.Contains(tabName);
+                if (tabName != lastMachine)
                 {
-                    lastMachine = e.Machine;
-                    AddRow(new RecipeBookHeaderRow(e.Machine, collapsed, filtering ? (Action<string>)null : ToggleMachine), y, true);
+                    lastMachine = tabName;
+                    AddRow(new RecipeBookHeaderRow(tabName, collapsed, filtering ? (Action<string>)null : ToggleMachine), y, true);
                     y += RecipeBookLayout.HeaderRowHeight;
                 }
                 if (collapsed) continue;
@@ -389,9 +413,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
             layoutDirty = true;
         }
 
+        /// <summary>The key of the visible entry for a recipe key: a station recipe left out of a merged tab maps to its machine's entry.</summary>
+        string Resolve(string key) => key != null && aliases.TryGetValue(key, out string shown) ? shown : key;
+
         void ExpandMachineOf(string key)
         {
-            string machine = RecipeCatalog.MachineOf(key);
+            string machine = RecipeCatalog.TabOf(RecipeCatalog.MachineOf(key));
             if (machine != null && collapsedMachines.Remove(machine)) Rebuild();
         }
 
@@ -408,6 +435,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public void Select(string key, bool scrollTo)
         {
             if (key == null) return;
+            key = Resolve(key);
             ExpandMachineOf(key);   // a jump (ingredient click, parchment) must not land inside a folded machine
             if (!entryTop.ContainsKey(key)) return;
 
@@ -434,6 +462,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public void GoTo(string key)
         {
             if (key == null) return;
+            key = Resolve(key);
             if (!entryTop.ContainsKey(key) && !string.IsNullOrEmpty(searchFilter?.Trim()))
             {
                 ResetSearch();

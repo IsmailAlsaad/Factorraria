@@ -30,6 +30,7 @@ namespace Factorraria.Common.Knowledge
         {
             if (book != null) machines.Add(new KeyValuePair<string, RecipeBook>(machineName, book));
             siblings = null;
+            tabOwner = null;
         }
 
         /// <summary>Registers a vanilla station tab (see VanillaStationBooks). Same as Register, but its entries are flagged Station.</summary>
@@ -42,12 +43,42 @@ namespace Factorraria.Common.Knowledge
 
         public static bool IsStation(string machineName) => machineName != null && stationNames.Contains(machineName);
 
+        // ---- book tabs: a machine and its vanilla twin station share one tab ----
+        static Dictionary<string, string> tabOwner;   // vanilla station catalog name -> the machine whose tab it joins. Built on first use.
+
+        /// <summary>
+        /// The tab a catalog machine name is listed under in the recipe book. A vanilla station that has a machine twin
+        /// (RecipeTabDefinitions.Twins, only when both are registered) returns the machine's name; everything else returns itself.
+        /// Display only: catalog keys, saves and the crafted/seen rules never change.
+        /// </summary>
+        public static string TabOf(string machineName)
+        {
+            if (machineName == null) return null;
+            if (tabOwner == null) BuildTabs();
+            return tabOwner.TryGetValue(machineName, out string owner) ? owner : machineName;
+        }
+
+        static void BuildTabs()
+        {
+            tabOwner = new Dictionary<string, string>();
+            foreach (KeyValuePair<string, string> twin in RecipeTabDefinitions.Twins)
+                if (HasBook(twin.Key) && stationNames.Contains(twin.Value)) tabOwner[twin.Value] = twin.Key;
+        }
+
+        static bool HasBook(string machineName)
+        {
+            foreach (KeyValuePair<string, RecipeBook> m in machines)
+                if (m.Key == machineName) return true;
+            return false;
+        }
+
         public static void Clear()
         {
             machines.Clear();
             fuelsByMachine.Clear();
             stationNames.Clear();
             siblings = null;
+            tabOwner = null;
         }
 
         // ---- the same product made at several stations/machines ----

@@ -97,6 +97,17 @@ namespace Factorraria.Common.Knowledge
 
         public static bool IsLiquidSeen(int liquidType) => seenItems.Contains(LiquidMarker(liquidType));
 
+        // A discovered recipe book tab (RecipeTabDiscovery) is a marker in the same set too, in its own negative range far below the
+        // liquid markers: -(TabMarkerBase + tab id). Tab ids are stable (a vanilla station's tile id, or ExtraIdBase + a position in
+        // RecipeTabDefinitions.ExtraMachineTiles), never an index that changes with the loaded mods. Saved separately (SeenTabIds).
+        public const int TabMarkerBase = 1000000;
+
+        public static int TabMarker(int tabId) => -(TabMarkerBase + tabId);
+
+        public static bool IsTabMarker(int marker) => marker <= -TabMarkerBase;
+
+        public static int TabIdOf(int marker) => -marker - TabMarkerBase;
+
         public static IReadOnlyCollection<int> SeenItems => seenItems;
 
         /// <summary>Marks an item type as seen. Returns true if it was newly marked.</summary>
@@ -111,6 +122,12 @@ namespace Factorraria.Common.Knowledge
         {
             seenItems.Clear();
             SeenVersion++;
+        }
+
+        /// <summary>Forgets only the discovered-tab markers (debug: /recipes tabs forget). Tabs that have a crafted or unlocked recipe stay discovered.</summary>
+        public static void ResetTabMarkers()
+        {
+            if (seenItems.RemoveWhere(IsTabMarker) > 0) SeenVersion++;
         }
 
 
@@ -139,8 +156,15 @@ namespace Factorraria.Common.Knowledge
 
             List<string> seenNames = new List<string>();
             List<int> seenLiquidIds = new List<int>();   // liquid markers (negative in the set) are saved as plain liquid ids
+            List<int> seenTabIds = new List<int>();      // tab markers are saved as plain tab ids
             foreach (int type in seenItems)
             {
+                if (IsTabMarker(type))
+                {
+                    seenTabIds.Add(TabIdOf(type));
+                    continue;
+                }
+
                 if (type < 0)
                 {
                     seenLiquidIds.Add(-type - 1);
@@ -152,6 +176,7 @@ namespace Factorraria.Common.Knowledge
             }
             tag["SeenItemKeys"] = seenNames;
             tag["SeenLiquidIds"] = seenLiquidIds;
+            tag["SeenTabIds"] = seenTabIds;
         }
 
         public override void LoadWorldData(TagCompound tag)
@@ -170,6 +195,8 @@ namespace Factorraria.Common.Knowledge
                     if (ItemID.Search.TryGetId(name, out int seenType)) seenItems.Add(seenType);   // item from a removed mod: silently dropped
             if (tag.ContainsKey("SeenLiquidIds"))
                 foreach (int liquidId in tag.Get<List<int>>("SeenLiquidIds")) seenItems.Add(LiquidMarker(liquidId));
+            if (tag.ContainsKey("SeenTabIds"))
+                foreach (int tabId in tag.Get<List<int>>("SeenTabIds")) seenItems.Add(TabMarker(tabId));
             // Legacy "KnownRecipeKeys" (the old show-everything system) is intentionally ignored.
         }
 

@@ -20,6 +20,8 @@ namespace Factorraria.Common.Knowledge
     ///   /recipes reset        forget every parchment unlock, crafted mark and seen ingredient in this world (single-player only)
     ///   /recipes obtained     toggle "items in your inventory count as crafted" (single-player only). Turn it OFF before /recipes reset to test the hidden states
     ///   /recipes counts       how many unlocked / crafted / seen entries THIS process knows (multiplayer test: compare with the server log)
+    ///   /recipes tabs         list every discoverable recipe book tab: seen marker, shown or hidden, tile, item count
+    ///   /recipes tabs forget  forget the discovered-tab markers (single-player only; tabs with a crafted or unlocked recipe stay discovered)
     ///   /recipes defpos       print the defense icon position (use at 1920x1080, UI scale 100%, to calibrate the book button)
     ///   /recipes btnreset     put the recipe book button back to its default spot (forgets where you dragged it)
     /// </summary>
@@ -27,7 +29,7 @@ namespace Factorraria.Common.Knowledge
     {
         public override string Command => "recipes";
         public override CommandType Type => CommandType.Chat;
-        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | counts | reset | obtained | defpos | btnreset";
+        public override string Usage => "/recipes scroll [pool] [n] | blank [pool] [n] | pools | list | crafted | state | counts | tabs | reset | obtained | defpos | btnreset";
         public override string Description => "Recipe discovery debug tools";
 
         static void Give(CommandCaller caller, int type, string pool, int n, string what)
@@ -46,6 +48,30 @@ namespace Factorraria.Common.Knowledge
         public override void Action(CommandCaller caller, string input, string[] args)
         {
             string sub = args.Length > 0 ? args[0].ToLowerInvariant() : "";
+
+            if (sub == "tabs")
+            {
+                if (args.Length > 1 && args[1].ToLowerInvariant() == "forget")
+                {
+                    if (Main.netMode == NetmodeID.MultiplayerClient)
+                    {
+                        caller.Reply("/recipes tabs forget only works in single-player (the server owns the knowledge in multiplayer).", Color.Yellow);
+                        return;
+                    }
+                    RecipeKnowledgeSystem.ResetTabMarkers();
+                    caller.Reply("Forgot every discovered-tab marker. Tabs with a crafted or unlocked recipe stay discovered (use /recipes reset for a clean test).", Color.LightGreen);
+                    return;
+                }
+
+                caller.Reply($"{RecipeTabDiscovery.All.Count} discoverable tab(s); By Hand and Notes are always shown:", Color.LightGreen);
+                foreach (RecipeTabDiscovery.Tab tab in RecipeTabDiscovery.All)
+                {
+                    string marker = RecipeKnowledgeSystem.IsSeen(tab.Marker) ? "marker" : "-";
+                    string shown = RecipeTabDiscovery.IsDiscovered(tab.Name) ? "SHOWN" : "hidden";
+                    caller.Reply($"  {tab.Name,-22} {marker,-7} {shown,-7} tile {tab.Tile}, {tab.Items.Count} item(s)", Color.White);
+                }
+                return;
+            }
 
             // Optional extra args, any order: a number = count, anything else = scroll pool name (e.g. "scroll Dungeon 3").
             int n = 1;

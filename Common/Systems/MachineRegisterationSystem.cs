@@ -230,6 +230,9 @@ namespace Factorraria.Common.Machines
             int stationTabs = VanillaStationBooks.RegisterAll(out int stationGroups);
             Mod.Logger.Info($"[RecipeBook] {stationTabs} vanilla station tab(s), {stationGroups} recipe group(s)");
 
+            // Which tabs the book hides until discovered, and the items / tiles that discover them (see RecipeTabDiscovery).
+            Mod.Logger.Info($"[RecipeBook] {RecipeTabDiscovery.Build()} discoverable tab(s)");
+
             // Fuels the recipe book shows beside the arrow. Read from each machine's registry tables, not from CustomRecipe.
             // Every wood of the vanilla wood group is shown as ONE fuel entry ("Any Wood", Wood sprite). To change the list, edit woodItems.
             var woodItems = new System.Collections.Generic.List<int>();
@@ -273,6 +276,7 @@ namespace Factorraria.Common.Machines
         public override void Unload()
         {
             RecipeCatalog.Clear();
+            RecipeTabDiscovery.Clear();
             RecipeArtRegistry.Clear();
             LiquidBiomeVisits.Clear();
             RecipeVisibility.ClearIndex();

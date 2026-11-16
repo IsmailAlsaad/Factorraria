@@ -555,6 +555,8 @@ Severity: **B** blocker / **H** high / **M** medium / **L** low.
 - `RevealAllRecipes` (client config) only changes display and never writes to the sets, so it can stay client-side.
 - `RecipeDebugCommand` is `CommandType.Chat`, so it runs on the sending client (replica data). Fine once knowledge is replicated; if you want it to inspect the real data it should become `CommandType.World`/`Server`.
 
+**Update (recipe book R1, applied untested):** the seen set also carries discovered recipe book tabs as markers `-(1000000 + tab id)` (`RecipeKnowledgeSystem.TabMarker`, `RecipeTabDiscovery`). Same save/join/SeenReport/SeenDelta path, saved as `SeenTabIds`; the server validates a tab marker against its own inventory copy and tile data (`RecipeTabDiscovery.ServerAccepts`). The host-and-play host's own `ReportSeen` is now broadcast too.
+
 ### R3 (L) Recipe data (`BaseRecipeRegistery`, `CustomRecipe`, `RecipeOutputKey`, `MachineBiome`)
 Registries are built in `PostAddRecipes` by importing vanilla recipes and adding manual ones; the result is deterministic for the same mod list (tModLoader enforces matching mods on join). Rule for the wire format: always identify recipes by their stable key (`RecipeCatalog.KeyFor`, output item/liquid name), never by list index. `MachineBiome` is a plain enum (the biome detection itself is in `BaseMachine`, step 4 M5).
 

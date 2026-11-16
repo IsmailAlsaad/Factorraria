@@ -216,6 +216,15 @@ namespace Factorraria.Common.Net
 
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 pendingSeen.Add(itemType);
+            else if (Main.netMode == NetmodeID.Server)
+            {
+                // A host-and-play host is the server and has a local player: nobody sends its reveals, so tell everyone else here.
+                FactorrariaNet.Broadcast(FactorrariaPacket.SeenDelta, writer =>
+                {
+                    writer.Write((byte)1);
+                    writer.Write(itemType);
+                });
+            }
         }
 
         /// <summary>Called by LiquidBiomeVisits when the local player stands in a liquid's biome. Same path as a held item: marked here at once, queued for the server.</summary>
@@ -277,8 +286,13 @@ namespace Factorraria.Common.Net
                 // A negative number is a liquid marker (a biome visit, see LiquidBiomeVisits); only liquids that have a biome rule count.
                 bool validItem = type > 0 && type < ItemLoader.ItemCount && RecipeVisibility.IsIngredient(type);
                 bool validLiquid = type < 0 && LiquidBiomeVisits.IsValidMarker(type);
-                if (!validItem && !validLiquid)
+                // A discovered recipe book tab (RecipeTabDiscovery): only if the sender really holds one of its items or stands near its tile.
+                bool validTab = RecipeKnowledgeSystem.IsTabMarker(type) && RecipeTabDiscovery.ServerAccepts(Main.player[sender], type);
+                if (!validItem && !validLiquid && !validTab)
                     continue;
+
+                if (validTab && !RecipeKnowledgeSystem.IsSeen(type))
+                    FactorrariaNet.Log("[Knowledge] " + Main.player[sender].name + " discovered the recipe book tab " + RecipeTabDiscovery.NameOfMarker(type));
 
                 if (RecipeKnowledgeSystem.MarkSeen(type))
                     added.Add(type);

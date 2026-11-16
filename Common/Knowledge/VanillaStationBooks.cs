@@ -30,6 +30,14 @@ namespace Factorraria.Common.Knowledge
             return Prefix + (string.IsNullOrEmpty(name) ? "Tile" + station : name);
         }
 
+        /// <summary>The tile a station tab's catalog name stands for ("VanillaFurnaces" is TileID.Furnaces), or -1 (hand crafts, not a station tab, unknown tile).</summary>
+        public static int TileOf(string catalogName)
+        {
+            if (catalogName == null || catalogName == HandName) return -1;
+            if (catalogName.Length <= Prefix.Length || !catalogName.StartsWith(Prefix, System.StringComparison.Ordinal)) return -1;
+            return TileID.Search.TryGetId(catalogName.Substring(Prefix.Length), out int tile) ? tile : -1;
+        }
+
         /// <summary>Builds and registers every tab that has at least one recipe. Returns the number of tabs; groups = recipe groups over all tabs.</summary>
         public static int RegisterAll(out int groups)
         {

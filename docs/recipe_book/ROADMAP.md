@@ -1,6 +1,6 @@
 ﻿# Recipe book roadmap (tab discovery, new-recipe highlights, tab and favorite filters)
 
-Status: PLAN ONLY. Nothing here is coded yet. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
+Status: R0 and R1 applied (untested); R2 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
 
 Code map: `Common/Knowledge/` (RecipeCatalog, RecipeKnowledgeSystem, VanillaStationBooks, ScrollPools), `Common/Machines/RecipeVisibility.cs` (states), `Common/UI/RecipeBookUI/` (RecipeBookState, RecipeBookElements, RecipeBookPlayer, RecipeBookLayout), `Common/Net/RecipeKnowledgeNet.cs`.
 
@@ -8,8 +8,8 @@ Code map: `Common/Knowledge/` (RecipeCatalog, RecipeKnowledgeSystem, VanillaStat
 
 One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and done.
 
-- [ ] R0 Tab names without "(Vanilla)"
-- [ ] R1 Tab discovery (a tab unlocks when its station or machine item is held or the station is near)
+- [~] R0 Tab names without "(Vanilla)", machine and vanilla twin tabs merged (applied, untested)
+- [~] R1 Tab discovery (a tab unlocks when its station or machine item is held or the station is near; applied, untested)
 - [ ] R2 New-recipe highlight
 - [ ] R3 "New machine discovered!" pop-up
 - [ ] R4 Show/hide each tab
@@ -33,7 +33,7 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 
 Change: `RecipeBookLayout.MachineName` stops appending " (Vanilla)"; hjson `Machines.VanillaHand` becomes "By Hand". Tiny, no sync.
 
-Collision to decide before coding: a machine tab and its vanilla tile tab can end up with the SAME label: Hellforge (machine) and Hellforge (vanilla), Autohammer and Autohammer, and Furnace / Furnaces, Anvils. Options: (a) accept it, the contents differ; (b) keep a suffix only on a collision; (c) merge the machine tab and its vanilla tile tab into one tab (machine recipes first; the crafted-anywhere rule already treats the same product as one). Default if you do not decide: (b).
+Collision decision (taken 2026-11-16): option (c), merge. A machine and its vanilla twin tile share ONE tab under the machine's name, machine recipes first, then the station's recipes for products the machine does not list (one entry per product; the crafted-anywhere rule already treats them as one). Display only: catalog keys and saves are unchanged. The pairs live in `Common/Knowledge/RecipeTabDefinitions.cs` (`Twins`): Furnace + Furnaces, Hellforge, Solidifier, Ice Machine, Liquid Distillator + Imbuing Station, Decay Chamber + Lesion Station, Autohammer. Mechanical Assembler and Anvils are not twins (they import another tile's recipes) and stay separate. `RecipeCatalog.TabOf(machine)` gives the tab; `RecipeBookState` uses it for headers, folding, order and the detail title. A station recipe left out of a merged tab maps to the machine's entry (`aliases`), so jumps and saved selections still land. A favorite stored on a left-out station key is not shown (the machine entry of the same product is the one to star). R1 should discover a merged tab as one id.
 
 ## R1 Tab discovery
 
@@ -55,6 +55,8 @@ Side effect worth having: this removes most of the "holding Wood shows hundreds 
 Open questions: should a discovered machine tab also reveal its vanilla twin (Furnace machine and Furnaces tile share the item/tile)? Default yes, they share the trigger.
 
 Test checklist (to refine when coded): new world: only machine tabs you have held and "By Hand" show; pick up a Work Bench: its tab appears; stand next to a Demon Altar: its tab appears; old world: tabs with crafted recipes are still there; two clients: one discovers, the other's book gets the tab within a second; late joiner has it; restart keeps it.
+
+Implemented (R1, applied, untested): new `Common/Knowledge/RecipeTabDiscovery.cs` (the table, the local scan, the server check) and a `RecipeTabDiscoverySystem` that scans the local player every `ScanTicks` (30). Tab ids are stable, never an index: a vanilla station (or a machine's vanilla twin) uses its TileID, a machine on its own tile uses `ExtraIdBase` (100000) plus its position in `RecipeTabDefinitions.ExtraMachineTiles` (append only). Marker = `RecipeKnowledgeSystem.TabMarker(id)` = `-(1000000 + id)`, saved as `SeenTabIds` (liquids keep `SeenLiquidIds`). Items come from `ContentSamples` (every item whose `createTile` is the tab's tile). "Near" = vanilla's `adjTile` flag OR a tile scan of `NearTilesX/Y` (4 x 3) around the player; the server accepts a marker only when its own copy of the sender holds one of the tab's items or a matching tile is within that range plus `ServerNearExtra` (3). Rule 3 (a crafted or unlocked recipe discovers its tab) uses the raw saved sets, not the crafted-anywhere rule, but note the "obtained items count as crafted" server scan: holding a product (an Iron Bar) marks its recipes crafted in every tab that makes it, which then discovers those tabs. Also fixed here: a host-and-play host's own seen reports were never broadcast (`ReportSeen` now sends a `SeenDelta` when the process is the server). Debug: `/recipes tabs`, `/recipes tabs forget`. The book skips undiscovered tabs in `RecipeBookState.Rebuild`; `FindBookRecipeFor` skips them so an ingredient jump never targets a hidden tab.
 
 ## R2 New-recipe highlight
 
@@ -111,4 +113,4 @@ R0 any time. R1 first (it adds tab discovery, which R3, R4 and R6 use). R2 is in
 
 ## Next chat prompt
 
-"Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md and docs/multiplayer/ROADMAP.md entry 3.2b, then Common/Knowledge/VanillaStationBooks.cs, RecipeCatalog.cs, RecipeKnowledgeSystem.cs, Common/Machines/RecipeVisibility.cs and Common/Net/RecipeKnowledgeNet.cs. State: the plan is written, nothing implemented; patch_vanilla_station_recipes.ps1 is applied. Implement <R0 / R1 / ...>: state the authority/sync design first, then deliver a patch with the changed list, things to test, and a Progress edit."
+"Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md and docs/multiplayer/ROADMAP.md entry 3.2b, then Common/Knowledge/VanillaStationBooks.cs, RecipeCatalog.cs, RecipeKnowledgeSystem.cs, Common/Machines/RecipeVisibility.cs and Common/Net/RecipeKnowledgeNet.cs. State: the plan is written; R0 (tab names, machine and vanilla twin tabs merged, `RecipeTabDefinitions` / `RecipeCatalog.TabOf`) and R1 (tab discovery, `RecipeTabDiscovery`) are applied, untested; patch_vanilla_station_recipes.ps1 is applied. Implement <R0 / R1 / ...>: state the authority/sync design first, then deliver a patch with the changed list, things to test, and a Progress edit."

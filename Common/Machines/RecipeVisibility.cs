@@ -279,6 +279,7 @@ namespace Factorraria.Common.Machines
             foreach (string key in makers)
             {
                 if (key == excludeKey) continue;
+                if (!RecipeTabDiscovery.IsDiscoveredKey(key)) continue;   // that tab is not in the book yet, a jump could not land there
                 RecipeState s = GetState(key);
                 if (s == RecipeState.Crafted) return key;
                 if (fallback == null && InBook(s)) fallback = key;

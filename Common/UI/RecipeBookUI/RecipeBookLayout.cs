@@ -132,7 +132,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
             string key = Prefix + "Machines." + machine;
             if (Language.Exists(key)) return Language.GetTextValue(key);
 
-            // A vanilla station tab ("VanillaFurnaces", see VanillaStationBooks): the spaced tile name plus " (Vanilla)".
+            // A vanilla station tab ("VanillaFurnaces", see VanillaStationBooks): the spaced tile name, no suffix. A station that has a
+            // machine twin never gets its own label: the book merges it into the machine's tab (RecipeCatalog.TabOf).
             bool vanilla = machine.Length > 7 && machine.StartsWith("Vanilla", System.StringComparison.Ordinal);
             string spaced = vanilla ? machine.Substring(7) : machine;
 
@@ -142,7 +143,6 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 if (i > 0 && char.IsUpper(spaced[i])) sb.Append(' ');
                 sb.Append(spaced[i]);
             }
-            if (vanilla) sb.Append(" (Vanilla)");
             return sb.ToString();
         }
 
