@@ -58,11 +58,76 @@ namespace Factorraria.Common.Knowledge
             return tabOwner.TryGetValue(machineName, out string owner) ? owner : machineName;
         }
 
+        static Dictionary<string, List<string>> inherited = new Dictionary<string, List<string>>();   // machine tab -> the station tabs absorbed into it (RecipeTabDefinitions.Inherits). Built with tabOwner.
+        static readonly string[] NoStations = new string[0];
+
         static void BuildTabs()
         {
             tabOwner = new Dictionary<string, string>();
+            inherited = new Dictionary<string, List<string>>();
             foreach (KeyValuePair<string, string> twin in RecipeTabDefinitions.Twins)
                 if (HasBook(twin.Key) && stationNames.Contains(twin.Value)) tabOwner[twin.Value] = twin.Key;
+
+            // Twins first, so a station that is some machine's twin is never taken by an inheriting machine.
+            foreach (KeyValuePair<string, int[]> inherit in RecipeTabDefinitions.Inherits)
+            {
+                if (!HasBook(inherit.Key)) continue;
+                foreach (int tile in inherit.Value)
+                {
+                    string station = VanillaStationBooks.NameFor(tile);
+                    if (!stationNames.Contains(station) || tabOwner.ContainsKey(station)) continue;
+
+                    tabOwner[station] = inherit.Key;
+                    if (!inherited.TryGetValue(inherit.Key, out List<string> list)) inherited[inherit.Key] = list = new List<string>();
+                    list.Add(station);
+                }
+            }
+        }
+
+        /// <summary>The vanilla station tabs (catalog names) absorbed into this machine's tab, in RecipeTabDefinitions.Inherits order. Empty for most tabs.</summary>
+        public static IReadOnlyList<string> InheritedStations(string tabName)
+        {
+            if (tabName == null) return NoStations;
+            if (tabOwner == null) BuildTabs();
+            if (inherited.TryGetValue(tabName, out List<string> list)) return list;
+            return NoStations;
+        }
+
+        /// <summary>
+        /// Who can make this product inside the tab that `catalogMachine` is listed under: the tab's own machine (or its twin station)
+        /// first, then each inherited station that also makes it. Catalog names ("Autohammer", "VanillaAnvils"); the detail page shows
+        /// them joined by "or". Never empty.
+        /// </summary>
+        public static List<string> StationsFor(string catalogMachine, RecipeOutputKey product)
+        {
+            var result = new List<string>();
+            if (catalogMachine == null) return result;
+            if (tabOwner == null) BuildTabs();
+
+            string tab = TabOf(catalogMachine);
+            inherited.TryGetValue(tab, out List<string> inheritedList);
+
+            bool own = false;
+            var hits = new HashSet<string>();
+            foreach (KeyValuePair<string, RecipeBook> m in machines)
+            {
+                if (TabOf(m.Key) != tab || !BookMakes(m.Value, product)) continue;
+                if (inheritedList != null && inheritedList.Contains(m.Key)) hits.Add(m.Key);
+                else own = true;
+            }
+
+            if (own || hits.Count == 0) result.Add(tab);
+            if (inheritedList != null)
+                foreach (string station in inheritedList)
+                    if (hits.Contains(station)) result.Add(station);
+            return result;
+        }
+
+        static bool BookMakes(RecipeBook book, RecipeOutputKey product)
+        {
+            foreach (RecipeOutputGroup group in book.Groups)
+                if (group.Key.Equals(product)) return true;
+            return false;
         }
 
         static bool HasBook(string machineName)

@@ -988,6 +988,9 @@ Projectiles: {
 
 RecipeBook: {
 	ButtonTooltip: Recipe Book
+	InheritsFrom: Inherits from
+	And: and
+	Or: or
 	SearchTooltip: Press {0} on an item to view its recipes
 	KeyUnbound: "[unbound]"
 	InfoTooltip: Show in recipe book

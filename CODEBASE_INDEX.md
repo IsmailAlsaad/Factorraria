@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-16 | 401 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-16 | 402 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -37,7 +37,7 @@ tModLoader/other bases -> project types:
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
 - ModTile (16): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - ModPlayer (14): CartEquipPlayer, CartInteractionPlayer, CartRiderPlayer, CosmicRadiationPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
-- UIElement (13): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
+- UIElement (14): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
 - GlobalNPC (11): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
 - GlobalItem (10): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, MagicMaterializerItemTooltip, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
@@ -351,9 +351,9 @@ tModLoader/other bases -> project types:
     +Machine:string[c] +All:IReadOnlyList<Entry>[s] +Problems:IReadOnlyList<string>[s] +KeyFor(string)[s] +Contains(string)[s] +TryGet(string,out Entry)[s] +Register(string)[s] +Clear()[s]
     class Entry
       +Name:string +TexturePath:string +Key:string +Texture:Texture2D
-**RecipeCatalog.cs** uses: FuelTable, LiquidFuelTable, RecipeArtRegistry, RecipeBook, RecipeKey, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeTabDefinitions
+**RecipeCatalog.cs** uses: FuelTable, LiquidFuelTable, RecipeArtRegistry, RecipeBook, RecipeKey, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeTabDefinitions, VanillaStationBooks
   static class RecipeCatalog
-    +Register(string,RecipeBook)[s] +RegisterStation(string,RecipeBook)[s] +IsStation(string)[s] +TabOf(string)[s] +Clear()[s] +SiblingKeys(string)[s] +RegisterFuels(string,FuelTable,LiquidFuelTable,FuelGroup)[s] +FuelsOf(string)[s] +AllFuelItemTypes()[s] +EntriesWithArt()[s] +Exists(string)[s] +KeyFor(string,RecipeOutputGroup)[s] +KeyFor(string,RecipeOutputKey)[s] +NameOf(RecipeBook)[s] +Entries()[s] +TryResolve(string,out string,out RecipeOutputGroup)[s] +MachineOf(string)[s] +TryRollLocked(UnifiedRandom,out string)[s]
+    +Register(string,RecipeBook)[s] +RegisterStation(string,RecipeBook)[s] +IsStation(string)[s] +TabOf(string)[s] +InheritedStations(string)[s] +StationsFor(string,RecipeOutputKey)[s] +Clear()[s] +SiblingKeys(string)[s] +RegisterFuels(string,FuelTable,LiquidFuelTable,FuelGroup)[s] +FuelsOf(string)[s] +AllFuelItemTypes()[s] +EntriesWithArt()[s] +Exists(string)[s] +KeyFor(string,RecipeOutputGroup)[s] +KeyFor(string,RecipeOutputKey)[s] +NameOf(RecipeBook)[s] +Entries()[s] +TryResolve(string,out string,out RecipeOutputGroup)[s] +MachineOf(string)[s] +TryRollLocked(UnifiedRandom,out string)[s]
     class Entry
       +Machine:string +Group:RecipeOutputGroup +Key:string +Art:Entry +Station:bool
     class FuelEntry
@@ -371,12 +371,12 @@ tModLoader/other bases -> project types:
     +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +TabMarkerBase:int[c] +TabMarker(int)[s] +IsTabMarker(int)[s] +TabIdOf(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ResetTabMarkers()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
 **RecipeTabDefinitions.cs** uses: MechanicalAssemblerTile, VanillaStationBooks
   static class RecipeTabDefinitions
-    +Twins:KeyValuePair<string, string>[s] +ExtraMachineTiles:KeyValuePair<string, Func<int>>[s]
+    +Twins:KeyValuePair<string, string>[s] +ExtraMachineTiles:KeyValuePair<string, Func<int>>[s] +Inherits:KeyValuePair<string, int >[s]
 **RecipeTabDiscovery.cs** uses: Entry, RecipeCatalog, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeTabDefinitions, VanillaStationBooks
   static class RecipeTabDiscovery
-    +ExtraIdBase:int[c] +ScanTicks:int[s] +NearTilesX:int[s] +NearTilesY:int[s] +ServerNearExtra:int[s] +All:IReadOnlyCollection<Tab>[s] +Clear()[s] +Build()[s] +IsDiscovered(string)[s] +IsDiscoveredKey(string)[s] +ScanLocalPlayer(Player)[s] +ServerAccepts(Player,int)[s] +NameOfMarker(int)[s]
+    +ExtraIdBase:int[c] +ScanTicks:int[s] +NearTilesX:int[s] +NearTilesY:int[s] +ServerNearExtra:int[s] +All:IReadOnlyCollection<Tab>[s] +Clear()[s] +Build()[s] +IsDiscovered(string)[s] +IsDiscoveredKey(string)[s] +IsOwnDiscovered(string)[s] +HeaderStations(string)[s] +InheritedNames(string)[s] +ItemsOf(string)[s] +ItemsOf(string)[s] +ScanLocalPlayer(Player)[s] +ServerAccepts(Player,int)[s] +NameOfMarker(int)[s]
     class Tab
-      +Name:string +Id:int +Tile:int +Items:HashSet<int> +Marker:int
+      +Name:string +Id:int +Tile:int +Items:HashSet<int> +ItemList:int +Inherited:bool +Owner:string +Inherits:List<Tab> +Marker:int
   class RecipeTabDiscoverySystem : ModSystem
     +PostUpdateEverything()[ov]
 **ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, IronMotorItem, IronPipeItem, LeadMotorItem, LeadPipeItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, SunCapsuleItem, WoodenPowerPoleItem
@@ -1300,13 +1300,13 @@ tModLoader/other bases -> project types:
 **RecipeBookDragHandle.cs** uses: BookDraw, RecipeBookLayout, RecipeBookState
   class RecipeBookDragHandle : UIElement
     +LeftMouseDown(UIMouseEvent)[ov] +RightClick(UIMouseEvent)[ov] +Update(GameTime)[ov] #DrawSelf(SpriteBatch)[ov]
-**RecipeBookElements.cs** uses: Entry, RecipeArtRegistry, RecipeBookArt, RecipeBookLayout, RecipeBookPlayer, RecipeIcon, RecipeOutputGroup, RecipeState, State
+**RecipeBookElements.cs** uses: Entry, RecipeArtRegistry, RecipeBookArt, RecipeBookLayout, RecipeBookPlayer, RecipeBookTabTip, RecipeIcon, RecipeOutputGroup, RecipeOutputKey, RecipeState, RecipeTabDiscovery, State
   static class BookDraw
     +Rect(SpriteBatch,Rectangle,Color)[s] +Frame(SpriteBatch,Rectangle,Color,Color,int)[s] +Fit(string,float,float,out bool)[s] +Text(SpriteBatch,string,Vector2,Color,float)[s]
   class RecipeBookButton : UIElement
     +OnPressed:Action +MouseInside:bool +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
   class RecipeBookHeaderRow : UIElement
-    +Machine:string +Collapsed:bool +Pinned:bool +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
+    +Machine:string +IconSeconds:float[s] +Collapsed:bool +Pinned:bool +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
   class RecipeBookEntry : UIElement
     +Key:string +Machine:string +Group:RecipeOutputGroup +State:RecipeState +ProductName:string +Favorite:bool +Art:Entry +Selected:bool +OnChosen:Action<string> +IsFaded:bool +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
 **RecipeBookLayout.cs** uses: SearchBarTheme
@@ -1317,11 +1317,16 @@ tModLoader/other bases -> project types:
 **RecipeBookPlayer.cs** uses: LiquidBiomeVisits, RecipeKnowledgeSystem
   class RecipeBookPlayer : ModPlayer
     +ButtonOffset:Vector2? +FavoritesVersion:int +IsFavorite(string) +ToggleFavorite(string) +PostUpdate()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
-**RecipeBookState.cs** uses: BookDraw, BookScrollbar, CustomRecipe, Entry, LiquidIngredient, LiquidTypeRegistry, RecipeArtRegistry, RecipeBookArt, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookKeybindSystem, RecipeBookLayout, RecipeBookPlayer, RecipeCatalog, RecipeIngredient, RecipeKey, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeSearchBar, RecipeState, RecipeTabDiscovery, RecipeVisibility, State
+**RecipeBookState.cs** uses: BookDraw, BookScrollbar, CustomRecipe, Entry, LiquidIngredient, LiquidTypeRegistry, RecipeArtRegistry, RecipeBookArt, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookKeybindSystem, RecipeBookLayout, RecipeBookPlayer, RecipeBookTabTipOverlay, RecipeCatalog, RecipeIngredient, RecipeKey, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeSearchBar, RecipeState, RecipeTabDiscovery, RecipeVisibility, State, VanillaStationBooks
   class RecipeBookState : UIState
     +SelectedKey:string +SelectedMachine:string +SelectedGroup:RecipeOutputGroup +SelectedArt:Entry +SelectedState:RecipeState +IsEmpty:bool +NoResults:bool +MouseInsidePanel:bool +OnInitialize()[ov] +OnActivate()[ov] +Update(GameTime)[ov] +ResetSearch() +SetSearch(string) +PanelOffset:Vector2 +SetPanelOffset(Vector2) +ResetPanelOffset() +ScrollBy(float) +Select(string,bool) +GoTo(string) +GoToAndSearch(string,string)
   class RecipeBookPanel : UIElement
     +MouseInside:bool +Update(GameTime)[ov] +ScrollWheel(UIScrollWheelEvent)[ov] #DrawSelf(SpriteBatch)[ov]
+**RecipeBookTabTip.cs** uses: BookDraw, RecipeBookLayout, RecipeIcon, RecipeOutputKey, RecipeTabDiscovery
+  static class RecipeBookTabTip
+    +Request(string)[s] ~TakePending()[s]
+  class RecipeBookTabTipOverlay : UIElement
+    +TextScale:float[s] +IconBox:int[s] +Pad:int[s] #DrawSelf(SpriteBatch)[ov]
 
 ### Common/VirtualItems/
 **VItemGlobalItem.cs** uses: CoalTile

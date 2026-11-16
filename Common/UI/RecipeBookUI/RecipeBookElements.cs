@@ -95,7 +95,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
     public class RecipeBookHeaderRow : UIElement
     {
         readonly string text;
+        readonly int[] items;          // sprites shown left of the name, cycled; none for By Hand / Notes
+        readonly string[] inherited;   // stations listed in the hover tip (only once the tab's own machine is discovered)
         public readonly string Machine;
+        /// <summary>Seconds each sprite stays up when a tab has several (Iron Anvil, Lead Anvil ...). Not const, so hot reload can tweak it.</summary>
+        public static float IconSeconds = 1f;
         public readonly bool Collapsed;
         /// <summary>Set by RecipeBookState while the header is stuck to the top margin: it then fills its own background so rows scrolling under it do not show through.</summary>
         public bool Pinned;
@@ -106,7 +110,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Machine = machine;
             Collapsed = collapsed;
             this.onToggle = onToggle;
-            text = RecipeBookLayout.MachineName(machine);
+            string[] shown = RecipeTabDiscovery.HeaderStations(machine);
+            var names = new string[shown.Length];
+            for (int i = 0; i < shown.Length; i++) names[i] = RecipeBookLayout.MachineName(shown[i]);
+            text = string.Join(" / ", names);
+            items = RecipeTabDiscovery.ItemsOf(shown);
+            inherited = RecipeTabDiscovery.IsOwnDiscovered(machine) ? RecipeTabDiscovery.InheritedNames(machine) : new string[0];
             Width.Set(0f, 1f);
             Height.Set(RecipeBookLayout.HeaderRowHeight, 0f);
         }
@@ -142,7 +151,23 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 else BookDraw.Rect(sb, new Rectangle(cx - 4 + i, cy - 2 + i, 9 - 2 * i, 1), c);
             }
 
-            BookDraw.Text(sb, text, new Vector2(r.X + 20, r.Y + 4), RecipeBookLayout.PageBorder, 1.05f);
+            int textX = r.X + 20;
+            if (items.Length > 0)
+            {
+                int type = items[(int)(Main.GlobalTimeWrappedHourly / Math.Max(0.1f, IconSeconds)) % items.Length];
+                RecipeIcon.Draw(sb, RecipeOutputKey.ForItem(type), new Vector2(r.X + 31, r.Y + 13), 20f);
+                textX = r.X + 46;
+            }
+            string shownText = BookDraw.Fit(text, r.Right - 6 - textX, 1.05f, out bool truncated);
+            BookDraw.Text(sb, shownText, new Vector2(textX, r.Y + 4), RecipeBookLayout.PageBorder, 1.05f);
+
+            // Hover over the title (not the fold arrow): "Inherits from [icon] Anvils and ...", or the full name when it was cut short.
+            Vector2 mouse = UserInterface.ActiveInstance.MousePosition;
+            if (IsMouseHovering && mouse.X >= r.X + 18 && mouse.Y < r.Bottom - 4)
+            {
+                if (inherited.Length > 0) RecipeBookTabTip.Request(inherited);
+                else if (truncated) Main.hoverItemName = text;
+            }
             BookDraw.Rect(sb, new Rectangle(r.X + 2, r.Bottom - 4, r.Width - 4, 2), RecipeBookLayout.PageBorder * 0.6f);
         }
     }

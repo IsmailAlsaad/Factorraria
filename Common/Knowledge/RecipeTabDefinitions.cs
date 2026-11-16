@@ -41,6 +41,24 @@ namespace Factorraria.Common.Knowledge
             new KeyValuePair<string, Func<int>>("MechanicalAssembler", ModContent.TileType<MechanicalAssemblerTile>),
         };
 
+        /// <summary>
+        /// Machines that INHERIT recipes from vanilla stations of a different tile (their RecipeBook calls ImportVanillaRecipes for it).
+        /// Each listed station's tab is absorbed into the machine's tab (RecipeCatalog.TabOf), so the book has one tab where the old
+        /// station tab and the machine tab were. Until the machine itself is discovered the tab is titled after the discovered
+        /// station(s) ("Anvils"); once the machine is discovered it is titled after the machine. The order here is the order shown
+        /// in the hover tip and in "Autohammer or Anvils" on the detail page. A station that is already a twin of another machine
+        /// (Furnaces / Furnace) is never absorbed a second time.
+        /// Key = catalog machine name, value = vanilla station tiles.
+        /// </summary>
+        public static readonly KeyValuePair<string, int[]>[] Inherits =
+        {
+            Inherit("Autohammer", TileID.Anvils),
+            Inherit("MechanicalAssembler", TileID.WorkBenches, TileID.HeavyWorkBench),
+        };
+
+        static KeyValuePair<string, int[]> Inherit(string machine, params int[] tiles) =>
+            new KeyValuePair<string, int[]>(machine, tiles);
+
         static KeyValuePair<string, string> Twin(string machine, int tile) =>
             new KeyValuePair<string, string>(machine, VanillaStationBooks.NameFor(tile));
     }

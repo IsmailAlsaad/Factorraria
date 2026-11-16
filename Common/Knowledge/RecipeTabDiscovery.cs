@@ -28,6 +28,10 @@ namespace Factorraria.Common.Knowledge
             public int Id;                              // stable discovery id (see RecipeKnowledgeSystem.TabMarkerBase)
             public int Tile;                            // the tile whose item / nearness discovers the tab
             public readonly HashSet<int> Items = new HashSet<int>();   // every item that places that tile
+            public int[] ItemList = new int[0];         // the same items, sorted (the book header cycles through them)
+            public bool Inherited;                      // a vanilla station absorbed into a machine's tab (RecipeTabDefinitions.Inherits)
+            public string Owner;                        // Inherited only: the tab it was absorbed into
+            public readonly List<Tab> Inherits = new List<Tab>();   // a machine tab only: the stations it inherits recipes from
 
             public int Marker => RecipeKnowledgeSystem.TabMarker(Id);
         }
@@ -45,8 +49,7 @@ namespace Factorraria.Common.Knowledge
         static readonly Dictionary<int, Tab> byTile = new Dictionary<int, Tab>();
         static readonly Dictionary<int, Tab> byItem = new Dictionary<int, Tab>();
 
-        static readonly HashSet<string> recipeTabs = new HashSet<string>();   // tabs that own a crafted or unlocked recipe (rule 3)
-        static int recipeTabsVersion = int.MinValue;
+        static readonly int[] NoItems = new int[0];
 
         public static IReadOnlyCollection<Tab> All => byName.Values;
 
@@ -56,8 +59,6 @@ namespace Factorraria.Common.Knowledge
             byId.Clear();
             byTile.Clear();
             byItem.Clear();
-            recipeTabs.Clear();
-            recipeTabsVersion = int.MinValue;
         }
 
         /// <summary>
@@ -82,6 +83,24 @@ namespace Factorraria.Common.Knowledge
                 byTile[tile] = tab;
             }
 
+            // Stations a machine inherits from (the Anvils of the Autohammer): each one is its own discoverable tile with its own
+            // marker, filed under the machine's tab. Holding or standing near it makes the machine's tab appear.
+            foreach (KeyValuePair<string, int[]> inherit in RecipeTabDefinitions.Inherits)
+            {
+                if (!byName.TryGetValue(inherit.Key, out Tab owner)) continue;
+                foreach (string station in RecipeCatalog.InheritedStations(inherit.Key))
+                {
+                    int tile = VanillaStationBooks.TileOf(station);
+                    if (tile < 0 || byId.ContainsKey(tile) || byTile.ContainsKey(tile) || byName.ContainsKey(station)) continue;
+
+                    var sub = new Tab { Name = station, Id = tile, Tile = tile, Inherited = true, Owner = inherit.Key };
+                    byName[station] = sub;
+                    byId[tile] = sub;
+                    byTile[tile] = sub;
+                    owner.Inherits.Add(sub);
+                }
+            }
+
             for (int type = 1; type < ItemLoader.ItemCount; type++)
             {
                 if (!ContentSamples.ItemsByType.TryGetValue(type, out Item sample)) continue;
@@ -90,6 +109,13 @@ namespace Factorraria.Common.Knowledge
                     tab.Items.Add(type);
                     byItem[type] = tab;
                 }
+            }
+
+            foreach (Tab tab in byName.Values)
+            {
+                var sorted = new List<int>(tab.Items);
+                sorted.Sort();
+                tab.ItemList = sorted.ToArray();
             }
 
             return byName.Count;
@@ -128,34 +154,62 @@ namespace Factorraria.Common.Knowledge
 
         // ---------------------------------------------------------------- the question the book asks
 
-        /// <summary>True if the book may list this tab. Tabs that are not discoverable (By Hand, Notes) are always shown.</summary>
+        /// <summary>
+        /// True if the book may list this tab: the tab's own machine/station was discovered (held or stood near), or so was a station
+        /// it inherits recipes from. A crafted or parchment-unlocked recipe does NOT discover a tab. Tabs that are not discoverable
+        /// (By Hand, Notes) are always shown.
+        /// </summary>
         public static bool IsDiscovered(string tabName)
         {
             if (tabName == null || !byName.TryGetValue(tabName, out Tab tab)) return true;
             if (RecipeKnowledgeSystem.IsSeen(tab.Marker)) return true;
-            return RecipeTabs().Contains(tabName);
+            foreach (Tab sub in tab.Inherits)
+                if (RecipeKnowledgeSystem.IsSeen(sub.Marker)) return true;
+            return false;
         }
 
         /// <summary>The same question for a catalog key ("Furnace|i|Terraria/IronBar").</summary>
         public static bool IsDiscoveredKey(string catalogKey) => IsDiscovered(RecipeCatalog.TabOf(RecipeCatalog.MachineOf(catalogKey)));
 
-        // Rule 3, rebuilt only when the crafted/unlocked sets change. Uses the saved sets themselves, not RecipeKnowledgeSystem.IsCrafted,
-        // so crafting a product in one tab does not reveal the other tabs that make it.
-        static HashSet<string> RecipeTabs()
-        {
-            if (recipeTabsVersion == RecipeKnowledgeSystem.Version) return recipeTabs;
+        /// <summary>True if the tab's own machine/station was discovered (not just a station it inherits from). Tabs without a tile count as discovered.</summary>
+        public static bool IsOwnDiscovered(string tabName) =>
+            tabName == null || !byName.TryGetValue(tabName, out Tab tab) || RecipeKnowledgeSystem.IsSeen(tab.Marker);
 
-            recipeTabsVersion = RecipeKnowledgeSystem.Version;
-            recipeTabs.Clear();
-            foreach (string key in RecipeKnowledgeSystem.CraftedKeys) AddKeyTab(key);
-            foreach (string key in RecipeKnowledgeSystem.UnlockedKeys) AddKeyTab(key);
-            return recipeTabs;
+        /// <summary>
+        /// Which catalog names the book header is titled after right now. Normally just the tab itself. A tab that inherits from stations
+        /// and whose own machine is not discovered yet is titled after the inherited stations that are ("Anvils").
+        /// </summary>
+        public static string[] HeaderStations(string tabName)
+        {
+            if (tabName == null || !byName.TryGetValue(tabName, out Tab tab) || tab.Inherits.Count == 0 || RecipeKnowledgeSystem.IsSeen(tab.Marker))
+                return new[] { tabName };
+
+            var shown = new List<string>();
+            foreach (Tab sub in tab.Inherits)
+                if (RecipeKnowledgeSystem.IsSeen(sub.Marker)) shown.Add(sub.Name);
+            if (shown.Count == 0) shown.Add(tabName);
+            return shown.ToArray();
         }
 
-        static void AddKeyTab(string key)
+        /// <summary>Every inherited station of the tab (discovered or not), for the "Inherits from ..." hover tip. Empty for most tabs.</summary>
+        public static string[] InheritedNames(string tabName)
         {
-            string machine = RecipeCatalog.MachineOf(key);
-            if (machine != null) recipeTabs.Add(RecipeCatalog.TabOf(machine));
+            if (tabName == null || !byName.TryGetValue(tabName, out Tab tab) || tab.Inherits.Count == 0) return new string[0];
+            var names = new string[tab.Inherits.Count];
+            for (int i = 0; i < names.Length; i++) names[i] = tab.Inherits[i].Name;
+            return names;
+        }
+
+        /// <summary>Item types whose sprites stand for this tab (every item that places its tile, sorted). Empty for By Hand and Notes.</summary>
+        public static int[] ItemsOf(string catalogName) =>
+            catalogName != null && byName.TryGetValue(catalogName, out Tab tab) ? tab.ItemList : NoItems;
+
+        /// <summary>The items of several tabs together, in order.</summary>
+        public static int[] ItemsOf(string[] catalogNames)
+        {
+            var all = new List<int>();
+            foreach (string name in catalogNames) all.AddRange(ItemsOf(name));
+            return all.ToArray();
         }
 
         // ---------------------------------------------------------------- client scan (rules 1 and 2)

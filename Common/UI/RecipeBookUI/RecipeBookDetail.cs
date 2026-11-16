@@ -129,7 +129,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             string name = BookDraw.Fit(faded ? RecipeBookLayout.UnknownName : group.Key.DisplayName, r.Width - 70, 1.15f, out _);
             BookDraw.Text(sb, name, new Vector2(r.X + 64, r.Y + 6), RecipeBookLayout.TextColor, 1.15f);
-            BookDraw.Text(sb, RecipeBookLayout.MachineName(RecipeCatalog.TabOf(book.SelectedMachine)), new Vector2(r.X + 64, r.Y + 34), RecipeBookLayout.PageBorder, 0.9f);
+            BookDraw.Text(sb, BookDraw.Fit(StationLine(), r.Width - 70, 0.9f, out _), new Vector2(r.X + 64, r.Y + 34), RecipeBookLayout.PageBorder, 0.9f);
 
             BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
 
@@ -137,6 +137,25 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (group.Recipes.Count == 0) return;
             DrawRecipe(sb, group.Recipes[recipeIndex], faded);
             if (group.Recipes.Count > 1) DrawPager(sb, r, group.Recipes.Count);
+        }
+
+        RecipeOutputGroup stationGroup;
+        string stationMachine, stationLine;
+
+        // "Autohammer or Anvils": every station of the selected tab that can make this product (RecipeCatalog.StationsFor).
+        // A plain machine or station shows just its own name, as before. Cached per selection.
+        string StationLine()
+        {
+            if (stationLine == null || !ReferenceEquals(stationGroup, book.SelectedGroup) || stationMachine != book.SelectedMachine)
+            {
+                stationGroup = book.SelectedGroup;
+                stationMachine = book.SelectedMachine;
+                var parts = new List<string>();
+                foreach (string station in RecipeCatalog.StationsFor(stationMachine, stationGroup.Key))
+                    parts.Add(RecipeBookLayout.MachineName(station));
+                stationLine = string.Join(" " + RecipeBookLayout.Text("Or") + " ", parts);
+            }
+            return stationLine;
         }
 
         void DrawRecipe(SpriteBatch sb, CustomRecipe recipe, bool outputsHidden)

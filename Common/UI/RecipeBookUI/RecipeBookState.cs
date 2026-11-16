@@ -94,6 +94,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             BuildSearchBar();
 
             panel.Append(new RecipeBookDetail(this));
+            panel.Append(new RecipeBookTabTipOverlay());   // last: the hover tip of a tab header draws above everything
         }
 
         public override void OnActivate()
@@ -161,7 +162,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             foreach (RecipeCatalog.Entry cat in RecipeCatalog.EntriesWithArt())
             {
                 string catTab = RecipeCatalog.TabOf(cat.Machine);
-                if (!machineOrder.ContainsKey(catTab)) machineOrder[catTab] = machineOrder.Count;
+                if (!machineOrder.ContainsKey(catTab)) machineOrder[catTab] = catTab == VanillaStationBooks.HandName ? -1 : machineOrder.Count;   // By Hand always comes first
                 if (!RecipeTabDiscovery.IsDiscovered(catTab)) continue;   // the tab has not been discovered yet (RecipeTabDiscovery)
                 RecipeState catState = RecipeVisibility.GetState(cat.Key);
                 if (!RecipeVisibility.InBook(catState)) continue;
