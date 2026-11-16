@@ -253,8 +253,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             }
             if (knownRows.Count > 0) fuelRows = knownRows;
             bool hasFuel = fuelRows.Count > 0;
-            int length = hasFuel ? Math.Max(arrowLength, fuelLabelHeight + RecipeBookLayout.DetailCell + (fuelRows.Count - 1) * fuelRowStep + 12) : shortArrowLength;
-            DrawArrow(sb, new Vector2(area.Center.X, y), length);
+            int length = hasFuel ? Math.Max(arrowLength, fuelLabelHeight + RecipeBookLayout.DetailCell + (fuelRows.Count - 1) * fuelRowStep + 12) + 8 : shortArrowLength; DrawArrow(sb, new Vector2(area.Center.X, y), length);
             for (int row = 0; row < fuelRows.Count; row++)
                 DrawFuel(sb, area, y, length, row, fuelRows.Count, fuelRows[row].machine, fuelRows[row].fuels);
             y += length + 7f;     // same 7px gap the short arrow always had
@@ -432,7 +431,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             // DrawCells with a one-cell area draws, highlights, shows the tooltip and records the click box.
             float blockHeight = size + (rows - 1) * fuelRowStep;
-            var box = new Rectangle(area.Center.X + fuelBoxOffsetX, (int)(arrowTop + fuelLabelHeight + (length - fuelLabelHeight - blockHeight) / 2f + row * fuelRowStep), size, size);
+            var box = new Rectangle(area.Center.X + fuelBoxOffsetX, (int)(arrowTop + fuelLabelHeight + (length - fuelLabelHeight - blockHeight) / 2f + row * fuelRowStep - 8), size, size);
             DrawCells(sb, new List<Cell> { cell }, box, box.Y, navHits, searchHits);
 
             if (row == 0)
