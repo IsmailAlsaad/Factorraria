@@ -1048,10 +1048,12 @@ Story: {
 	MechanicsBagTooltip: Filled with tools and tangled wire
 }
 
-CosmicRadiation.LeadSetBonus: Shields from ionizing radiation
-CosmicRadiation.Death1: "{0} suffered from acute radiation syndrome"
-CosmicRadiation.Death2: "{0}'s cells had elevated levels of p53"
-CosmicRadiation.Death3: "{0}'s body mutated beyond the capabilities of DNA Polymerase I"
+CosmicRadiation: {
+	LeadSetBonus: Shields from ionizing radiation
+	Death1: "{0} suffered from acute radiation syndrome"
+	Death2: "{0}'s cells had elevated levels of p53"
+	Death3: "{0}'s body mutated beyond the capabilities of DNA Polymerase I"
+}
 
 Buffs: {
 	RadiationBuff: {

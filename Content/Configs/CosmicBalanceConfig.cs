@@ -269,17 +269,17 @@ namespace Factorraria.Content.Configs
         [Range(0f, 1000f)]
         public float RadiationLifeRegenPerLevel = 5f;
 
-        [DefaultValue(1.5f)]
+        [DefaultValue(3f)]
         [Range(0f, 1000f)]
-        public float RadiationClicksPerLevel = 1.5f;
+        public float RadiationClicksPerLevel = 3f;
 
         [DefaultValue(30f)]
         [Range(0f, 100000f)]
         public float RadiationMaxLevel = 30f;
 
-        [DefaultValue(120f)]
+        [DefaultValue(30f)]
         [Range(1f, 36000f)]
-        public float RadiationMaxSeconds = 120f;
+        public float RadiationMaxSeconds = 30f;
 
         [Header("Strike")]
         [DefaultValue(30f)]
