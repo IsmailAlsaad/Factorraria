@@ -2,6 +2,7 @@
 using Factorraria.Content.Buffs;
 using System;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
@@ -94,6 +95,20 @@ namespace Factorraria.Common.Cosmic
             float chance = Level * Math.Max(0f, CosmicRadiationSystem.Instance.RadiationClicksPerLevel) / 60f;
             if (Main.rand.NextFloat() < Math.Min(chance, 0.5f))
                 CosmicAudioHooks.PlayGeigerCounterClick(Player.Center.X / 16f, Player.Center.Y / 16f);
+        }
+
+        // Death by the radiation drain: swap vanilla's generic damage-over-time message for one of three radiation lines. Only when the
+        // player is irradiated and the death has no attacker (no NPC, projectile, player or custom reason) and comes from vanilla's
+        // damage-over-time source (other index 8), so a monster hit or lava while irradiated keeps its own message.
+        public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genDust, ref PlayerDeathReason damageSource)
+        {
+            bool fromDrain = damageSource.SourceNPCIndex == -1 && damageSource.SourceProjectileLocalIndex == -1 && damageSource.SourcePlayerIndex == -1
+                && damageSource.SourceCustomReason == null && damageSource.SourceOtherIndex == 8;
+
+            if (fromDrain && Level > 0f && Player.HasBuff(ModContent.BuffType<RadiationBuff>()))
+                damageSource = PlayerDeathReason.ByCustomReason(NetworkText.FromKey("Mods.Factorraria.CosmicRadiation.Death" + Main.rand.Next(1, 4), Player.name));
+
+            return true;
         }
 
         // Life loss. lifeRegen is in half HP per second (2 = 1 HP/s). Runs on every client for every player, but Level is only ever
