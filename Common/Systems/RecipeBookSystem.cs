@@ -105,6 +105,8 @@ namespace Factorraria.Common.Systems
             if (!open) return;
             open = false;
             bookInterface?.SetState(null);
+            // R2: whatever the book listed at this moment counts as viewed, even entries that were never scrolled into view.
+            if (!Main.dedServ && !Main.gameMenu && Main.LocalPlayer.active) Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().MarkAllViewed();
             if (playSound && !Main.dedServ) SoundEngine.PlaySound(SoundID.MenuClose);
         }
 

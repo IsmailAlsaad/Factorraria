@@ -195,6 +195,9 @@ namespace Factorraria.Common.Knowledge
         public static bool IsOwnDiscovered(string tabName) =>
             tabName == null || !byName.TryGetValue(tabName, out Tab tab) || Hit(tab);
 
+        /// <summary>True if the tab has to be discovered at all (By Hand and Notes do not, so they are never "new").</summary>
+        public static bool IsDiscoverable(string tabName) => tabName != null && byName.ContainsKey(tabName);
+
         /// <summary>
         /// Which catalog names the book header is titled after right now. Normally just the tab itself. A tab that inherits from stations
         /// and whose own machine is not discovered yet is titled after the inherited stations that are ("Anvils").

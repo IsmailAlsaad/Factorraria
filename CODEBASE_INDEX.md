@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-16 | 402 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-16 | 403 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(82) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(34) PacketDirection(31) RecipeBook(26) Cart(22) Factorraria(20) MachineUIStateBase(18) CustomRecipe(18) MachineUIElementEntry(17) LiquidStack(17) TileEntityHelper(16) JoinSync(16) CartSystem(15) CartModule(15) RecipeCatalog(14) VirtualItemSystem(13) RecipeKnowledgeSystem(13) PowerPoleTileEntityBase(13)
+FactorrariaNet(82) BaseMachine(52) FactorrariaPacket(36) LiquidTypeRegistry(34) PacketDirection(31) RecipeBook(26) Cart(22) Factorraria(20) MachineUIStateBase(18) CustomRecipe(18) MachineUIElementEntry(17) LiquidStack(17) JoinSync(17) TileEntityHelper(16) RecipeCatalog(15) CartSystem(15) CartModule(15) Entry(14) VirtualItemSystem(13) RecipeKnowledgeSystem(13)
 
 ## Inheritance
 Project bases -> derived:
@@ -376,7 +376,7 @@ tModLoader/other bases -> project types:
     +Twins:KeyValuePair<string, string>[s] +ExtraMachineTiles:KeyValuePair<string, Func<int>>[s] +Inherits:KeyValuePair<string, int >[s] +InheritedTabs:KeyValuePair<string, string>[s]
 **RecipeTabDiscovery.cs** uses: Entry, RecipeCatalog, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeTabDefinitions, VanillaStationBooks
   static class RecipeTabDiscovery
-    +ExtraIdBase:int[c] +ScanTicks:int[s] +NearTilesX:int[s] +NearTilesY:int[s] +ServerNearExtra:int[s] +All:IReadOnlyCollection<Tab>[s] +Clear()[s] +Build()[s] +IsDiscovered(string)[s] +IsDiscoveredKey(string)[s] +IsOwnDiscovered(string)[s] +HeaderStations(string)[s] +InheritedNames(string)[s] +ItemsOf(string)[s] +ItemsOf(string)[s] +ScanLocalPlayer(Player)[s] +ServerAccepts(Player,int)[s] +ServerAcceptsItem(Player,int)[s] +NameOfMarker(int)[s]
+    +ExtraIdBase:int[c] +ScanTicks:int[s] +NearTilesX:int[s] +NearTilesY:int[s] +ServerNearExtra:int[s] +All:IReadOnlyCollection<Tab>[s] +Clear()[s] +Build()[s] +IsDiscovered(string)[s] +IsDiscoveredKey(string)[s] +IsOwnDiscovered(string)[s] +IsDiscoverable(string)[s] +HeaderStations(string)[s] +InheritedNames(string)[s] +ItemsOf(string)[s] +ItemsOf(string)[s] +ScanLocalPlayer(Player)[s] +ServerAccepts(Player,int)[s] +ServerAcceptsItem(Player,int)[s] +NameOfMarker(int)[s]
     class Tab
       +Name:string +Id:int +Tile:int +Items:HashSet<int> +ItemList:int +Inherited:bool +Owner:string +Inherits:List<Tab> +Marker:int
   class RecipeTabDiscoverySystem : ModSystem
@@ -1207,7 +1207,7 @@ tModLoader/other bases -> project types:
     +ItemSearchKey:ModKeybind[s] +ToggleKey:ModKeybind[s] +Load()[ov] +Unload()[ov] +ItemSearchKeyName()[s]
   class RecipeBookKeybindPlayer : ModPlayer
     +ProcessTriggers(TriggersSet)[ov]
-**RecipeBookSystem.cs** uses: CartChestUISystem, Factorraria, MachineUISystem, RecipeBookArt, RecipeBookButtonState, RecipeBookState, RecipeIcon
+**RecipeBookSystem.cs** uses: CartChestUISystem, Factorraria, MachineUISystem, RecipeBookArt, RecipeBookButtonState, RecipeBookPlayer, RecipeBookState, RecipeIcon
   class RecipeBookSystem : ModSystem
     +IsOpen:bool[s] +Open()[s] +OpenAt(string)[s] +OpenIngredientSearch(int)[s] +Close(bool)[s] +Toggle()[s] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **RecipeSystem.cs** uses: RecipeBook
@@ -1302,7 +1302,7 @@ tModLoader/other bases -> project types:
 **RecipeBookDragHandle.cs** uses: BookDraw, RecipeBookLayout, RecipeBookState
   class RecipeBookDragHandle : UIElement
     +LeftMouseDown(UIMouseEvent)[ov] +RightClick(UIMouseEvent)[ov] +Update(GameTime)[ov] #DrawSelf(SpriteBatch)[ov]
-**RecipeBookElements.cs** uses: Entry, RecipeArtRegistry, RecipeBookArt, RecipeBookLayout, RecipeBookPlayer, RecipeBookTabTip, RecipeIcon, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeState, RecipeTabDiscovery, State
+**RecipeBookElements.cs** uses: Entry, RecipeArtRegistry, RecipeBookArt, RecipeBookLayout, RecipeBookNew, RecipeBookPlayer, RecipeBookTabTip, RecipeIcon, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeState, RecipeTabDiscovery, State
   static class BookDraw
     +Rect(SpriteBatch,Rectangle,Color)[s] +Frame(SpriteBatch,Rectangle,Color,Color,int)[s] +Fit(string,float,float,out bool)[s] +Text(SpriteBatch,string,Vector2,Color,float)[s]
   class RecipeBookButton : UIElement
@@ -1313,12 +1313,15 @@ tModLoader/other bases -> project types:
     +Key:string +Machine:string +Group:RecipeOutputGroup +State:RecipeState +ProductName:string +Favorite:bool +Art:Entry +Selected:bool +OnChosen:Action<string> +IsFaded:bool +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
 **RecipeBookLayout.cs** uses: SearchBarTheme
   static class RecipeBookLayout
-    +ButtonX:int[c] +ButtonY:int[c] +ButtonSize:int[c] +ReferenceDefenseX:int[c] +ReferenceDefenseY:int[s] +ButtonOffsetX:int[c] +ButtonOffsetY:int[s] +PanelWidth:int[c] +PanelHeight:int[c] +BackgroundScale:float[s] +Margin:int[c] +Gutter:int[c] +TitleHeight:int[c] +UnknownName:string[c] +ScrollbarWidth:int[c] +HeaderRowHeight:int[c] +EntryRowHeight:int[c] +EntryIconBox:int[c] +StarHitSize:int[c] +StarRightPad:int[c] +StarRect(Rectangle)[s] +LeftPage:Rectangle[s] +RightPage:Rectangle[s] +ListArea:Rectangle[s] +ScrollbarArea:Rectangle[s] +DragBar:Rectangle[s] +DragKeepVisible:int[c] +CloseButtonSize:int[s] +CloseButtonPad:int[s] +CloseButton:Rectangle[s] +SearchArea:Rectangle[s] +DetailArea:Rectangle[s] +DetailHeaderHeight:int[c] +DetailCell:int[c] +DetailCellGap:int[c] +DetailPagerHeight:int[c] +DetailRecipeArea:Rectangle[s] +Text(string)[s] +MachineName(string)[s] +PageColor:Color[s] +PageBorder:Color[s] +CoverColor:Color[s] +TextColor:Color[s] +TextFadedColor:Color[s] +FavoriteRowColor:Color[s] +SearchBackground:Color[s] +SearchIdleBorder:Color[s] +SearchFocusBorder:Color[s] +ScrollTrack:Color[s] +ScrollTrackOutline:Color[s] +ScrollThumb:Color[s] +ScrollThumbHover:Color[s] +ScrollThumbDrag:Color[s] +SearchTheme:SearchBarTheme[s]
+    +ButtonX:int[c] +ButtonY:int[c] +ButtonSize:int[c] +ReferenceDefenseX:int[c] +ReferenceDefenseY:int[s] +ButtonOffsetX:int[c] +ButtonOffsetY:int[s] +PanelWidth:int[c] +PanelHeight:int[c] +BackgroundScale:float[s] +Margin:int[c] +Gutter:int[c] +TitleHeight:int[c] +UnknownName:string[c] +ScrollbarWidth:int[c] +HeaderRowHeight:int[c] +EntryRowHeight:int[c] +EntryIconBox:int[c] +StarHitSize:int[c] +StarRightPad:int[c] +StarRect(Rectangle)[s] +LeftPage:Rectangle[s] +RightPage:Rectangle[s] +ListArea:Rectangle[s] +ScrollbarArea:Rectangle[s] +DragBar:Rectangle[s] +DragKeepVisible:int[c] +CloseButtonSize:int[s] +CloseButtonPad:int[s] +CloseButton:Rectangle[s] +SearchArea:Rectangle[s] +DetailArea:Rectangle[s] +DetailHeaderHeight:int[c] +DetailCell:int[c] +DetailCellGap:int[c] +DetailPagerHeight:int[c] +DetailRecipeArea:Rectangle[s] +Text(string)[s] +MachineName(string)[s] +PageColor:Color[s] +PageBorder:Color[s] +CoverColor:Color[s] +TextColor:Color[s] +TextFadedColor:Color[s] +FavoriteRowColor:Color[s] +HeaderTint:Color[s] +HeaderHoverColor:Color[s] +SearchBackground:Color[s] +SearchIdleBorder:Color[s] +SearchFocusBorder:Color[s] +ScrollTrack:Color[s] +ScrollTrackOutline:Color[s] +ScrollThumb:Color[s] +ScrollThumbHover:Color[s] +ScrollThumbDrag:Color[s] +SearchTheme:SearchBarTheme[s]
   static class RecipeBookArt
-    +ButtonPath:string[c] +ButtonHoverPath:string[c] +BackgroundPath:string[c] +StarOffPath:string[c] +StarOffHighlightedPath:string[c] +StarOnPath:string[c] +StarOnHighlightedPath:string[c] +CloseButtonPath:string[s] +CloseButtonHoverPath:string[s] +Button:Asset<Texture2D>[s] +ButtonHover:Asset<Texture2D>[s] +Background:Asset<Texture2D>[s] +CloseButton:Asset<Texture2D>[s] +CloseButtonHover:Asset<Texture2D>[s] +Star(bool,bool)[s] +HeaderBackground()[s] +Clear()[s]
-**RecipeBookPlayer.cs** uses: LiquidBiomeVisits, RecipeKnowledgeSystem
+    +ButtonPath:string[c] +ButtonHoverPath:string[c] +BackgroundPath:string[c] +StarOffPath:string[c] +StarOffHighlightedPath:string[c] +StarOnPath:string[c] +StarOnHighlightedPath:string[c] +CloseButtonPath:string[s] +CloseButtonHoverPath:string[s] +NewMarkPath:string[s] +Button:Asset<Texture2D>[s] +ButtonHover:Asset<Texture2D>[s] +Background:Asset<Texture2D>[s] +CloseButton:Asset<Texture2D>[s] +CloseButtonHover:Asset<Texture2D>[s] +NewMark:Asset<Texture2D>[s] +Star(bool,bool)[s] +HeaderBackground()[s] +Clear()[s]
+**RecipeBookNew.cs** uses: BookDraw, Entry, JoinSync, RecipeBookArt, RecipeBookPlayer, RecipeCatalog, RecipeTabDiscovery, RecipeVisibility
+  static class RecipeBookNew
+    +PulseSeconds:float[s] +PulseMin:float[s] +PulseMax:float[s] +RowTint:Color[s] +MarkGap:int[s] +PlaceholderMarkWidth:int[s] +TabKey(string)[s] +IsNew(string)[s] +IsTabNew(string)[s] +AnyNew(IList<string>)[s] +RowColor()[s] +MarkWidth:int[s] +DrawMark(SpriteBatch,float,float)[s] +BookKeys()[s] +TrySeed(RecipeBookPlayer)[s]
+**RecipeBookPlayer.cs** uses: LiquidBiomeVisits, RecipeBookNew, RecipeKnowledgeSystem
   class RecipeBookPlayer : ModPlayer
-    +ButtonOffset:Vector2? +FavoritesVersion:int +IsFavorite(string) +ToggleFavorite(string) +PostUpdate()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
+    +ButtonOffset:Vector2? +FavoritesVersion:int +IsFavorite(string) +ToggleFavorite(string) +ViewedReady:bool +IsNew(string) +MarkViewed(string) +MarkAllViewed() +IsWorldSeeded(string) +FinishSeeding(string,List<string>) +OnEnterWorld()[ov] +PostUpdate()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
 **RecipeBookState.cs** uses: BookDraw, BookScrollbar, CustomRecipe, Entry, LiquidIngredient, LiquidTypeRegistry, RecipeArtRegistry, RecipeBookArt, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookKeybindSystem, RecipeBookLayout, RecipeBookPlayer, RecipeBookTabTipOverlay, RecipeCatalog, RecipeIngredient, RecipeKey, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeSearchBar, RecipeState, RecipeTabDiscovery, RecipeVisibility, State, VanillaStationBooks
   class RecipeBookState : UIState
     +SelectedKey:string +SelectedMachine:string +SelectedGroup:RecipeOutputGroup +SelectedArt:Entry +SelectedState:RecipeState +IsEmpty:bool +NoResults:bool +MouseInsidePanel:bool +OnInitialize()[ov] +OnActivate()[ov] +Update(GameTime)[ov] +ResetSearch() +SetSearch(string) +PanelOffset:Vector2 +SetPanelOffset(Vector2) +ResetPanelOffset() +ScrollBy(float) +Select(string,bool) +GoTo(string) +GoToAndSearch(string,string)

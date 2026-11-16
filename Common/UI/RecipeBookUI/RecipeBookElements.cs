@@ -119,12 +119,14 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// <summary>Set by RecipeBookState while the header is stuck to the top margin: it then fills its own background so rows scrolling under it do not show through.</summary>
         public bool Pinned;
         readonly Action<string> onToggle;
+        readonly System.Collections.Generic.IList<string> childKeys;   // keys of the entries listed under this tab (a folded tab shows "!" when one is new)
 
-        public RecipeBookHeaderRow(string machine, bool collapsed, Action<string> onToggle)
+        public RecipeBookHeaderRow(string machine, bool collapsed, Action<string> onToggle, System.Collections.Generic.IList<string> childKeys = null)
         {
             Machine = machine;
             Collapsed = collapsed;
             this.onToggle = onToggle;
+            this.childKeys = childKeys;
             Refresh();
             Width.Set(0f, 1f);
             Height.Set(RecipeBookLayout.HeaderRowHeight, 0f);
@@ -139,6 +141,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public override void LeftClick(UIMouseEvent evt)
         {
             base.LeftClick(evt);
+            Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().MarkViewed(RecipeBookNew.TabKey(Machine));
             if (onToggle == null) return;
             SoundEngine.PlaySound(SoundID.MenuTick);
             onToggle(Machine);
@@ -149,7 +152,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
             Rectangle r = GetDimensions().ToRectangle();
             if (Pinned) BookDraw.Rect(sb, r, RecipeBookArt.HeaderBackground());
             bool toggleable = onToggle != null;
-            if (toggleable && IsMouseHovering) BookDraw.Rect(sb, new Rectangle(r.X + 2, r.Y + 2, r.Width - 4, r.Height - 6), Color.White * 0.25f);
+            bool tabNew = RecipeBookNew.IsTabNew(Machine);
+            var band = new Rectangle(r.X + 2, r.Y + 2, r.Width - 4, r.Height - 6);
+            BookDraw.Rect(sb, band, RecipeBookLayout.HeaderTint);                       // machine tabs sit a little darker and browner than the page
+            if (tabNew) BookDraw.Rect(sb, band, RecipeBookNew.RowColor());
+            if (toggleable && IsMouseHovering) BookDraw.Rect(sb, band, RecipeBookLayout.HeaderHoverColor);
 
             // Triangle built from 1px strips (no art needed). Right-pointing when collapsed, down-pointing when expanded.
             Color c = RecipeBookLayout.PageBorder;
@@ -169,8 +176,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 RecipeIcon.Draw(sb, RecipeOutputKey.ForItem(type), new Vector2(r.X + 31, r.Y + 13), 20f);
                 textX = r.X + 46;
             }
-            string shownText = BookDraw.Fit(text, r.Right - 6 - textX, 1.05f, out bool truncated);
+            bool flagged = tabNew || (Collapsed && RecipeBookNew.AnyNew(childKeys));
+            string shownText = BookDraw.Fit(text, r.Right - 6 - textX - (flagged ? RecipeBookNew.MarkWidth + RecipeBookNew.MarkGap : 0), 1.05f, out bool truncated);
             BookDraw.Text(sb, shownText, new Vector2(textX, r.Y + 4), RecipeBookLayout.PageBorder, 1.05f);
+            if (flagged) RecipeBookNew.DrawMark(sb, textX + FontAssets.MouseText.Value.MeasureString(shownText).X * 1.05f + RecipeBookNew.MarkGap, r.Y + 13);
 
             // Hover over the title (not the fold arrow): "Inherits from [icon] Anvils and ...", or the full name when it was cut short.
             Vector2 mouse = UserInterface.ActiveInstance.MousePosition;
@@ -246,11 +255,13 @@ namespace Factorraria.Common.UI.RecipeBookUI
         {
             Rectangle r = GetDimensions().ToRectangle();
             bool hover = IsMouseHovering;
+            bool isNew = !Selected && RecipeBookNew.IsNew(Key);
 
             if (Selected) BookDraw.Frame(sb, r, new Color(214, 178, 48) * 0.55f, new Color(150, 110, 30), 2);
             else
             {
                 if (Favorite) BookDraw.Rect(sb, r, RecipeBookLayout.FavoriteRowColor);   // faint orange
+                if (isNew) BookDraw.Rect(sb, r, RecipeBookNew.RowColor());                // pulsing gold until the recipe is viewed
                 if (hover) BookDraw.Rect(sb, r, Color.White * 0.25f);                     // whitish on top (less orange when favorited)
             }
 
@@ -258,11 +269,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (Art == null) RecipeIcon.Draw(sb, Group.Key, new Vector2(r.X + 6 + box / 2f, r.Center.Y), box, 1f, IsFaded);
 
             float textX = Art == null ? r.X + 6 + box + 8 : r.X + 10;
-            float maxWidth = r.Right - textX - 4 - RecipeBookLayout.StarHitSize - RecipeBookLayout.StarRightPad;
+            float maxWidth = r.Right - textX - 4 - RecipeBookLayout.StarHitSize - RecipeBookLayout.StarRightPad - (isNew ? RecipeBookNew.MarkWidth + RecipeBookNew.MarkGap : 0);
             string shown = BookDraw.Fit(ProductName, maxWidth, 0.95f, out bool truncated);
             Vector2 size = FontAssets.MouseText.Value.MeasureString(shown) * 0.95f;
             BookDraw.Text(sb, shown, new Vector2(textX, r.Center.Y - size.Y / 2f + 2f),
                 IsFaded ? RecipeBookLayout.TextFadedColor : RecipeBookLayout.TextColor, 0.95f);
+            if (isNew) RecipeBookNew.DrawMark(sb, textX + size.X + RecipeBookNew.MarkGap, r.Center.Y);
 
             if (hover && truncated) Main.hoverItemName = ProductName;
 

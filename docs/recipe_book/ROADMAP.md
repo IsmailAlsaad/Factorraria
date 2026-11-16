@@ -1,6 +1,6 @@
 ﻿# Recipe book roadmap (tab discovery, new-recipe highlights, tab and favorite filters)
 
-Status: R0, R1, R1.1, R1.2, R1.3, R1.4 and R1.5 applied (untested); R2 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
+Status: R0 to R1.5 tested and working; R2 applied (untested); R3 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
 
 Code map: `Common/Knowledge/` (RecipeCatalog, RecipeKnowledgeSystem, VanillaStationBooks, ScrollPools), `Common/Machines/RecipeVisibility.cs` (states), `Common/UI/RecipeBookUI/` (RecipeBookState, RecipeBookElements, RecipeBookPlayer, RecipeBookLayout), `Common/Net/RecipeKnowledgeNet.cs`.
 
@@ -8,14 +8,14 @@ Code map: `Common/Knowledge/` (RecipeCatalog, RecipeKnowledgeSystem, VanillaStat
 
 One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and done.
 
-- [~] R0 Tab names without "(Vanilla)", machine and vanilla twin tabs merged (applied, untested)
-- [~] R1 Tab discovery (a tab unlocks when its station or machine item is held or the station is near; applied, untested)
-- [~] R1.1 Tab discovery tweak (machines inherit station tabs; By Hand first; station sprites and hover tip; applied, untested)
-- [~] R1.2 R1.1 follow-up (detail page names only discovered stations and wraps; sprite cycling only held items; a parchment discovers its machine; applied, untested)
-- [~] R1.3 R1.2 follow-up (Hellforge takes over Furnaces; discovered stations only in the tip; tip text centered; a discovered machine discovers its inherited stations; no search bar on an empty book; applied, untested)
-- [~] R1.4 Furnace tab folded into Hellforge's (one tab; one entry per product; recipes merged across machines with a fuel row per machine; applied, untested)
-- [~] R1.5 Fuel rows follow discovery (a machine's fuel row only once that machine is discovered; "or" between rows; one "Fuel" label on top; applied, untested)
-- [ ] R2 New-recipe highlight
+- [x] R0 Tab names without "(Vanilla)", machine and vanilla twin tabs merged (tested)
+- [x] R1 Tab discovery (a tab unlocks when its station or machine item is held or the station is near; tested)
+- [x] R1.1 Tab discovery tweak (machines inherit station tabs; By Hand first; station sprites and hover tip; tested)
+- [x] R1.2 R1.1 follow-up (detail page names only discovered stations and wraps; sprite cycling only held items; a parchment discovers its machine; tested)
+- [x] R1.3 R1.2 follow-up (Hellforge takes over Furnaces; discovered stations only in the tip; tip text centered; a discovered machine discovers its inherited stations; no search bar on an empty book; tested)
+- [x] R1.4 Furnace tab folded into Hellforge's (one tab; one entry per product; recipes merged across machines with a fuel row per machine; tested)
+- [x] R1.5 Fuel rows follow discovery (a machine's fuel row only once that machine is discovered; "or" between rows; one "Fuel" label on top; tested)
+- [~] R2 New-recipe highlight (per-character viewed set seeded once per world after the join sync; pulsing gold row + "!" after the name for new recipes and new tabs; a folded tab shows "!" when a recipe inside is new; closing the book or selecting a recipe clears; machine tab rows now a darker brown band with a warm hover; applied, untested)
 - [ ] R3 "New machine discovered!" pop-up
 - [ ] R4 Show/hide each tab
 - [ ] R5 Favorites-only / show-all button
@@ -126,7 +126,14 @@ Per character, client-only, saved in `RecipeBookPlayer` next to favorites: a set
 
 Multiplayer: no new packets. The server only changes world knowledge; each client decides "new" locally from its own viewed set.
 
-Decision to confirm: "closing the book clears the highlight of all current recipes" also clears entries that were never scrolled into view. Alternative: only clear the entries that were actually on screen. Default: as you wrote it (clear all).
+Decision (confirmed 2026-11-16): closing the book marks every recipe that was listed at that moment as viewed, even entries that were never scrolled into view.
+
+Look (Ismail's notes, applied in R2):
+- Machine tab rows on the left page are a slightly darker, browner band than the page (`RecipeBookLayout.HeaderTint`); the hover highlight is a warm light (`HeaderHoverColor`) so it reads on that band.
+- A new recipe is a temporary background colour like a favorite (gold, pulsing; `RecipeBookNew.RowColor`) plus a "!" at the right edge of the name. A new tab does the same on its row. A folded tab shows only the "!" when something inside is new.
+- Art (Ismail): `Common/UI/CustomUIElements/RecipeBookNew.png`, the "!". Drawn at native size, vertically centered, right after the name (entry rows are 36 px tall, tab rows 28 px, so keep it at most about 24 px tall). Until it exists a code-drawn red "!" is used.
+
+How it works: `RecipeBookPlayer` keeps the viewed set (catalog keys and "tab|Name" keys) and the worlds it was seeded for, saved as `viewedKeys` / `viewedWorlds`. `RecipeBookNew.TrySeed` runs from `PostUpdate` after `JoinSync.Completed` (always true in single-player) and, the first time this character sees this world (`Main.ActiveWorldFileData.UniqueId`), marks everything already in the book as viewed. `IsNew` is false until that ran. Selecting an entry, clicking a tab row, or closing the book marks viewed. No packets.
 
 Test checklist: a parchment unlocks a recipe: opening the book shows it highlighted; clicking it clears only that one; closing and reopening clears the rest; a recipe unlocked while the book is open lights up; old character shows no highlights on first load; a second player's viewed state is separate.
 
@@ -158,7 +165,7 @@ Test: star a few recipes, toggle, scroll, search inside favorites, relog (rememb
 
 `RecipeBookButton` draws an outline while anything is new (a new recipe from R2 or a new tab from R1) and the book is closed; it goes away when the book is opened and everything has been cleared by R2's rules (that is, after the book is closed again, or immediately if you choose "clear on open"; default: stays until the new items are cleared).
 
-Art needed (yours): `Common/UI/CustomUIElements/RecipeBookButton_New.png`, 36x36 (same size as `RecipeBookButton.png`), transparent except the outline; drawn over the normal button. Until it exists the code falls back to a code-drawn pulsing border (use `ModContent.RequestIfExists`, no crash).
+Art needed (yours): `Common/UI/CustomUIElements/RecipeBookButton_New.png`, 36x36 (same size as `RecipeBookButton.png`), a WHITE outline on a transparent background, drawn over the normal button. Colour (Ismail, 2026-11-16): the code tints the white outline and cycles its hue slowly through all RGB colours (HSV hue sweep, full saturation; the period is a tunable, not const). Until the PNG exists the code falls back to a code-drawn border with the same hue cycling (use `ModContent.RequestIfExists`, no crash). Same "new" rule as the "!" marks of R2: the outline shows while anything is new (a new recipe or a new tab, from `RecipeBookPlayer.IsNew`).
 
 Test: unlock a recipe with the book closed: outline shows; open: outline stays until cleared per the rules; hidden tab recipes do not light it.
 
@@ -168,4 +175,4 @@ R0 any time. R1 first (it adds tab discovery, which R3, R4 and R6 use). R2 is in
 
 ## Next chat prompt
 
-"Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md and docs/multiplayer/ROADMAP.md entry 3.2b, then Common/Knowledge/VanillaStationBooks.cs, RecipeCatalog.cs, RecipeKnowledgeSystem.cs, Common/Machines/RecipeVisibility.cs and Common/Net/RecipeKnowledgeNet.cs. State: the plan is written; R0 (tab names, machine and vanilla twin tabs merged, `RecipeTabDefinitions` / `RecipeCatalog.TabOf`) R1 (tab discovery, `RecipeTabDiscovery`) and R1.1 (recipes no longer discover tabs, machines inherit station tabs, By Hand first, `RecipeTabDefinitions.Inherits`) are applied, untested; patch_vanilla_station_recipes.ps1 is applied. Implement <R0 / R1 / ...>: state the authority/sync design first, then deliver a patch with the changed list, things to test, and a Progress edit."
+"Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md (R2, R3 and the Progress list), then Common/UI/RecipeBookUI/RecipeBookNew.cs, RecipeBookPlayer.cs and Common/Knowledge/RecipeTabDiscovery.cs. State: R0 to R1.5 are tested; R2 (new-recipe highlight, viewed set, tab band colour, the '!' art path RecipeBookNew.png) is applied; test results: <paste>. Log them in Progress, then implement R3 (state the authority/sync design first, then deliver a patch with the changed list, things to test, and a Progress edit)."

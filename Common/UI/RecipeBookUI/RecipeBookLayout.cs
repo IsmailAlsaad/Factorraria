@@ -156,6 +156,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// <summary>Background of a favorited recipe row: the selection orange, but much fainter.</summary>
         public static readonly Color FavoriteRowColor = new Color(214, 178, 48) * 0.25f;
 
+        // Machine tab rows (the headers on the left page): a slightly darker, browner band over the page. Hover is a warm light instead of plain white.
+        public static Color HeaderTint = new Color(120, 78, 40) * 0.22f;
+        public static Color HeaderHoverColor = new Color(255, 230, 180) * 0.32f;
+
         // ---- search bar + scrollbar palette (tweak the numbers here) ----
         public static readonly Color SearchBackground = new Color(200, 176, 128);
         public static readonly Color SearchIdleBorder = PageBorder;
@@ -193,9 +197,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public const string StarOnHighlightedPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookStar_On_Highlighted";
         public static string CloseButtonPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookClose";
         public static string CloseButtonHoverPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookClose_Hover";
+        public static string NewMarkPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookNew";
 
         static Asset<Texture2D> button, buttonHover, background;
         static Asset<Texture2D> closeButton, closeButtonHover;
+        static Asset<Texture2D> newMark;
         static Asset<Texture2D> starOff, starOffHighlighted, starOn, starOnHighlighted;
         static bool loaded;
 
@@ -205,6 +211,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// <summary>Close X art, or null until the PNG exists (the button then draws a placeholder X). Drawn at native size, centered.</summary>
         public static Asset<Texture2D> CloseButton { get { Load(); return closeButton; } }
         public static Asset<Texture2D> CloseButtonHover { get { Load(); return closeButtonHover; } }
+        /// <summary>The "!" shown after the name of a new recipe or tab, or null until the PNG exists (a code-drawn placeholder is used). Drawn at native size.</summary>
+        public static Asset<Texture2D> NewMark { get { Load(); return newMark; } }
 
         /// <summary>Favorite star art for a state, or null if that PNG does not exist yet (the entry then draws a placeholder).</summary>
         public static Asset<Texture2D> Star(bool on, bool highlighted)
@@ -258,6 +266,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             starOnHighlighted = TryRequest(StarOnHighlightedPath);
             closeButton = TryRequest(CloseButtonPath);
             closeButtonHover = TryRequest(CloseButtonHoverPath);
+            newMark = TryRequest(NewMarkPath);
         }
 
         static Asset<Texture2D> TryRequest(string path) =>
@@ -267,6 +276,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         {
             button = buttonHover = background = null;
             closeButton = closeButtonHover = null;
+            newMark = null;
             starOff = starOffHighlighted = starOn = starOnHighlighted = null;
             headerBg = null;
             loaded = false;

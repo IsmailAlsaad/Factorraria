@@ -144,6 +144,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             string lastMachine = null;
             float y = 0f;
+            var tabKeys = new Dictionary<string, List<string>>();   // keys listed under each tab (a folded tab header shows "!" for a new one)
             bool foundSelected = false;
             bool any = false;
             int shown = 0;
@@ -234,10 +235,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 // While searching, every match is shown and the headers are not toggleable.
                 string tabName = RecipeCatalog.TabOf(e.Machine);
                 bool collapsed = !filtering && collapsedMachines.Contains(tabName);
+                if (!tabKeys.TryGetValue(tabName, out List<string> childKeys)) tabKeys[tabName] = childKeys = new List<string>();
+                childKeys.Add(e.Key);
                 if (tabName != lastMachine)
                 {
                     lastMachine = tabName;
-                    AddRow(new RecipeBookHeaderRow(tabName, collapsed, filtering ? (Action<string>)null : ToggleMachine), y, true);
+                    AddRow(new RecipeBookHeaderRow(tabName, collapsed, filtering ? (Action<string>)null : ToggleMachine, childKeys), y, true);
                     y += RecipeBookLayout.HeaderRowHeight;
                 }
                 if (collapsed) continue;
@@ -467,6 +470,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (!entryTop.ContainsKey(key)) return;
 
             SelectedKey = key;
+            Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().MarkViewed(key);   // opened by a click or a jump: no longer new
             foreach (UIElement row in rows)
             {
                 if (row is not RecipeBookEntry entry) continue;
