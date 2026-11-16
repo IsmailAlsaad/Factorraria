@@ -200,6 +200,7 @@ namespace Factorraria.Common.Machines
         public override void PostAddRecipes()
         {
             // Register every machine's Recipes here
+            RecipeBook.MachineDisabled.Clear();
             FurnaceRecipeRegistry.BuildRecipes();
             HellforgeRecipeRegistry.BuildRecipes();
             SolidifierRecipeRegistry.BuildRecipes();
@@ -223,6 +224,11 @@ namespace Factorraria.Common.Machines
             RecipeCatalog.Register("DecayChamber", DecayChamberRecipeRegistry.Book);
             RecipeCatalog.Register("Autohammer", AutohammerRecipeRegistry.Book);
             RecipeCatalog.Register("MechanicalAssembler", MechanicalAssemblerRecipeRegistry.Book);
+
+            // One recipe book tab per vanilla crafting station (and one for hand crafts), after every machine book: they read Main.recipe,
+            // including the vanilla recipes the machine books switched off. Deterministic, so the server and every client build the same tabs.
+            int stationTabs = VanillaStationBooks.RegisterAll(out int stationGroups);
+            Mod.Logger.Info($"[RecipeBook] {stationTabs} vanilla station tab(s), {stationGroups} recipe group(s)");
 
             // Fuels the recipe book shows beside the arrow. Read from each machine's registry tables, not from CustomRecipe.
             // Every wood of the vanilla wood group is shown as ONE fuel entry ("Any Wood", Wood sprite). To change the list, edit woodItems.
@@ -270,6 +276,7 @@ namespace Factorraria.Common.Machines
             RecipeArtRegistry.Clear();
             LiquidBiomeVisits.Clear();
             RecipeVisibility.ClearIndex();
+            RecipeBook.MachineDisabled.Clear();
             ScrollPools.Clear();
             MachineVisualRegistry.Definitions.Clear();
         }

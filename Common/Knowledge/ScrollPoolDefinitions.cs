@@ -27,7 +27,9 @@ namespace Factorraria.Common.Knowledge
     ///       .AddLiquid("Solidifier", LiquidTypeRegistry.Oil);        liquid products use the LiquidTypeRegistry ids
     ///       .AddArt("ExampleNote");                                  a recipe book art PNG (registered in RecipeArtDefinitions), by file name
     ///
-    /// Machine names: Furnace, Hellforge, Solidifier, IceMachine, LiquidDistillator, Autohammer.
+    /// Machine names: Furnace, Hellforge, Solidifier, IceMachine, LiquidDistillator, Autohammer, DecayChamber, MechanicalAssembler.
+    /// Vanilla station tabs: "Vanilla" + the tile name (VanillaDemonAltar, VanillaFurnaces, VanillaAnvils, ...) and VanillaHand for hand crafts.
+    /// A pool entry can target them, but the whole-book fallback roll never picks one (there are thousands; they would drown the machine recipes).
     /// Entries that match no recipe are logged as warnings at load (Logs\client.log, search "[ScrollPools]") and skipped.
     /// Register() runs in PostAddRecipes, so ModContent.ItemType and LiquidTypeRegistry ids are safe to use here.
     ///
@@ -105,10 +107,11 @@ namespace Factorraria.Common.Knowledge
                 .Add("IceMachine", ItemID.Obsidian)
                 .AddLiquid("LiquidDistillator", LiquidTypeRegistry.Fuel)             // fuel liquid
                 .Add("DecayChamber", ItemID.CrimtaneBar)
-                .Add("DecayChamber", ItemID.DemoniteBar);
+                .Add("DecayChamber", ItemID.DemoniteBar)
+                .Add("VanillaDemonAltar", ItemID.LesionStation);   // the Decay Chamber item itself
 
-            // NOT IN THE POOL: the Decay Chamber item itself (Lesion Station). Its recipe is a hand-craft at the
-            // Demon Altar (RecipeSystem.cs), and no machine book contains it, so there is no catalog recipe to teach.
+            // The Decay Chamber item (Lesion Station) is a hand-craft at the Demon Altar (RecipeSystem.cs), so no machine book has it. It is in
+            // the pool through the vanilla Demon Altar tab (VanillaStationBooks): "VanillaDemonAltar" is that tab's catalog name.
         }
 
         // ==========================================================================================

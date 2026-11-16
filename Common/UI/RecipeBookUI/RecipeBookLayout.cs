@@ -132,12 +132,17 @@ namespace Factorraria.Common.UI.RecipeBookUI
             string key = Prefix + "Machines." + machine;
             if (Language.Exists(key)) return Language.GetTextValue(key);
 
+            // A vanilla station tab ("VanillaFurnaces", see VanillaStationBooks): the spaced tile name plus " (Vanilla)".
+            bool vanilla = machine.Length > 7 && machine.StartsWith("Vanilla", System.StringComparison.Ordinal);
+            string spaced = vanilla ? machine.Substring(7) : machine;
+
             var sb = new StringBuilder();
-            for (int i = 0; i < machine.Length; i++)
+            for (int i = 0; i < spaced.Length; i++)
             {
-                if (i > 0 && char.IsUpper(machine[i])) sb.Append(' ');
-                sb.Append(machine[i]);
+                if (i > 0 && char.IsUpper(spaced[i])) sb.Append(' ');
+                sb.Append(spaced[i]);
             }
+            if (vanilla) sb.Append(" (Vanilla)");
             return sb.ToString();
         }
 

@@ -40,7 +40,44 @@ namespace Factorraria.Common.Machines
                     Add(converted);
                 imported.Add(recipe);
 
-                if (disableOriginals && ShouldDisableOriginal(recipe)) recipe.DisableRecipe();
+                if (disableOriginals && ShouldDisableOriginal(recipe))
+                {
+                    recipe.DisableRecipe();
+                    MachineDisabled.Add(recipe);   // the vanilla station tabs of the recipe book still list it
+                }
+            }
+        }
+
+        // Vanilla recipes that a machine book copied AND switched off (disableOriginals). The vanilla station tabs of the recipe book
+        // (VanillaStationBooks) still list them: they are real vanilla recipes, only their hand crafting is off. Cleared by the
+        // registration hub before the machine books are built.
+        public static readonly HashSet<Recipe> MachineDisabled = new();
+
+        public const int HandStation = -1;   // ImportStationRecipes: the recipes that need no crafting station
+
+        // True for the recipes the vanilla station tabs list: vanilla ones (Mod == null) and this mod's own, except the ones disabled
+        // for good (a replaced recipe such as the old Lesion Station). Recipes added by other mods are never listed.
+        public static bool IsStationRecipe(Recipe recipe)
+        {
+            if (recipe == null || recipe.createItem == null || recipe.createItem.IsAir) return false;
+            if (recipe.Mod != null && recipe.Mod.Name != "Factorraria") return false;
+            return !recipe.Disabled || MachineDisabled.Contains(recipe);
+        }
+
+        // Copies every listed recipe that needs this vanilla station tile (HandStation = no station) into the book.
+        // Unlike ImportVanillaRecipes it never disables anything and also takes the recipes a machine book switched off.
+        public void ImportStationRecipes(int station)
+        {
+            for (int i = 0; i < Main.recipe.Length; i++)
+            {
+                Recipe recipe = Main.recipe[i];
+                if (!IsStationRecipe(recipe)) continue;
+
+                bool atStation = station == HandStation ? recipe.requiredTile.Count == 0 : recipe.requiredTile.Contains(station);
+                if (!atStation) continue;
+
+                foreach (CustomRecipe converted in ConvertVanillaRecipe(recipe))
+                    Add(converted);
             }
         }
 

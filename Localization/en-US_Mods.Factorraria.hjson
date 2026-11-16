@@ -1021,6 +1021,7 @@ RecipeBook: {
 		DecayChamber: Decay Chamber
 		Autohammer: Autohammer
 		MechanicalAssembler: Mechanical Assembler
+		VanillaHand: By Hand (Vanilla)
 		Art: Notes
 	}
 }

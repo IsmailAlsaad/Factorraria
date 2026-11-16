@@ -19,19 +19,73 @@ namespace Factorraria.Common.Knowledge
             public RecipeOutputGroup Group;
             public string Key;
             public RecipeArtRegistry.Entry Art;   // art entries only (Group is null then); returned by EntriesWithArt(), never by Entries()
+            public bool Station;                  // a vanilla station tab (VanillaStationBooks): never picked by a whole-book scroll roll
         }
 
         static readonly List<KeyValuePair<string, RecipeBook>> machines = new List<KeyValuePair<string, RecipeBook>>();
 
+        static readonly HashSet<string> stationNames = new HashSet<string>();
+
         public static void Register(string machineName, RecipeBook book)
         {
             if (book != null) machines.Add(new KeyValuePair<string, RecipeBook>(machineName, book));
+            siblings = null;
         }
+
+        /// <summary>Registers a vanilla station tab (see VanillaStationBooks). Same as Register, but its entries are flagged Station.</summary>
+        public static void RegisterStation(string stationName, RecipeBook book)
+        {
+            if (book == null) return;
+            stationNames.Add(stationName);
+            Register(stationName, book);
+        }
+
+        public static bool IsStation(string machineName) => machineName != null && stationNames.Contains(machineName);
 
         public static void Clear()
         {
             machines.Clear();
             fuelsByMachine.Clear();
+            stationNames.Clear();
+            siblings = null;
+        }
+
+        // ---- the same product made at several stations/machines ----
+        static Dictionary<string, string[]> siblings;   // catalog key -> keys of the OTHER groups that make the same product (only keys that have any). Built on first use.
+
+        /// <summary>
+        /// Catalog keys of the other recipe groups (any machine or vanilla station) that make the same product, or null if there are none.
+        /// RecipeKnowledgeSystem.IsCrafted uses it: crafting a product anywhere counts as crafted everywhere.
+        /// </summary>
+        public static string[] SiblingKeys(string catalogKey)
+        {
+            if (string.IsNullOrEmpty(catalogKey)) return null;
+            if (siblings == null) BuildSiblings();
+            return siblings.TryGetValue(catalogKey, out string[] others) ? others : null;
+        }
+
+        static void BuildSiblings()
+        {
+            var byProduct = new Dictionary<string, List<string>>();
+            foreach (Entry e in Entries())
+            {
+                string product = RecipeKey.For(e.Group);
+                if (!byProduct.TryGetValue(product, out List<string> members)) byProduct[product] = members = new List<string>();
+                members.Add(e.Key);
+            }
+
+            siblings = new Dictionary<string, string[]>();
+            foreach (List<string> members in byProduct.Values)
+            {
+                if (members.Count < 2) continue;
+                foreach (string key in members)
+                {
+                    var others = new List<string>(members.Count - 1);
+                    foreach (string other in members)
+                        if (other != key) others.Add(other);
+                    siblings[key] = others.ToArray();
+                }
+            }
         }
 
         // ---- fuels shown by the recipe book (read from each machine's registry tables, never from a CustomRecipe) ----
@@ -142,7 +196,7 @@ namespace Factorraria.Common.Knowledge
         {
             foreach (KeyValuePair<string, RecipeBook> m in machines)
                 foreach (RecipeOutputGroup group in m.Value.Groups)
-                    yield return new Entry { Machine = m.Key, Group = group, Key = KeyFor(m.Key, group) };
+                    yield return new Entry { Machine = m.Key, Group = group, Key = KeyFor(m.Key, group), Station = stationNames.Contains(m.Key) };
         }
 
         /// <summary>Resolves a saved key. False if the recipe no longer exists (removed or renamed in a later version).</summary>
@@ -176,7 +230,10 @@ namespace Factorraria.Common.Knowledge
         {
             var pool = new List<Entry>();
             foreach (Entry e in Entries())
+            {
+                if (e.Station) continue;   // thousands of vanilla recipes would drown the machine recipes; a pool entry can still target one
                 if (!RecipeKnowledgeSystem.IsUnlocked(e.Key) && !RecipeKnowledgeSystem.IsCrafted(e.Key)) pool.Add(e);
+            }
 
             if (pool.Count == 0) { catalogKey = null; return false; }
             catalogKey = pool[rand.Next(pool.Count)].Key;

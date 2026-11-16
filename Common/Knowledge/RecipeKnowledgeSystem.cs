@@ -32,7 +32,22 @@ namespace Factorraria.Common.Knowledge
         /// </summary>
         public static int Version { get; private set; }
 
-        public static bool IsCrafted(string catalogKey) => catalogKey != null && crafted.Contains(catalogKey);
+        /// <summary>
+        /// True if this recipe was crafted, OR the same product was crafted by a recipe of another machine or vanilla station
+        /// (Furnace machine and the vanilla Furnaces tab share Iron Bar: crafting it in either counts for both). The saved set only
+        /// holds the keys that were actually marked, so a station added later still counts for old worlds.
+        /// </summary>
+        public static bool IsCrafted(string catalogKey)
+        {
+            if (catalogKey == null) return false;
+            if (crafted.Contains(catalogKey)) return true;
+
+            string[] siblings = RecipeCatalog.SiblingKeys(catalogKey);
+            if (siblings == null) return false;
+            for (int i = 0; i < siblings.Length; i++)
+                if (crafted.Contains(siblings[i])) return true;
+            return false;
+        }
 
         /// <summary>Marks one recipe as crafted by catalog key. Returns true if it was newly marked.</summary>
         public static bool MarkCrafted(string catalogKey)
