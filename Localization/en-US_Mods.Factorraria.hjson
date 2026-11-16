@@ -974,13 +974,18 @@ Dialogue: {
 
 Keybinds: {
 	RecipeBookItemSearchDisplayName: Recipe Book - Show Recipes Using Hovered Item
+	RecipeBookItemSearch.DisplayName: Recipe Book Item Search
 	RecipeBookToggleDisplayName: Recipe Book - Open / Close
+	RecipeBookToggle.DisplayName: Recipe Book Toggle
 }
 
 Projectiles: {
 	MechanicalArmProjectileDisplayName: Mechanical Arm Projectile
+	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
 	MechSuitArmProjectileDisplayName: Mech Suit Arm Projectile
+	MechSuitArmProjectile.DisplayName: Mech Suit Arm Projectile
 	SuperWeaponMissileDisplayName: Super Weapon Missile
+	SuperWeaponMissile.DisplayName: Super Weapon Missile
 	IceBoomerangProjectileDisplayName: Ice Boomerang Projectile
 	IceCrystalProjectileDisplayName: Ice Crystal Projectile
 	IceCrystalBlastProjectileDisplayName: Ice Crystal Blast Projectile
@@ -1031,18 +1036,31 @@ RecipeBook: {
 
 Tiles: {
 	PureSiliconTileMapEntry: Pure Silicon
+	PureSiliconTile.MapEntry: Pure Silicon Tile
 	SiliconOreTileMapEntry: Silicon Ore
+	SiliconOreTile.MapEntry: Silicon Ore Tile
 	CoalTileMapEntry: Coal
+	CoalTile.MapEntry: Coal Tile
 	MechanicalAssemblerTileMapEntry: Mechanical Assembler
+	MechanicalAssemblerTile.MapEntry: Mechanical Assembler Tile
 	RoboticArmTileMapEntry: Robotic Arm
+	RoboticArmTile.MapEntry: Robotic Arm Tile
 	WoodenPowerPoleTileMapEntry: Wooden Power Pole
+	WoodenPowerPoleTile.MapEntry: Wooden Power Pole Tile
 	PlatinumPowerPoleTileMapEntry: Platinum Power Pole
+	PlatinumPowerPoleTile.MapEntry: Platinum Power Pole Tile
 	MeteorHeadStatueTileMapEntry: Meteor Head Statue
+	MeteorHeadStatueTile.MapEntry: Meteor Head Statue Tile
 	MissileDrillTileMapEntry: Missile Drill
+	MissileDrillTile.MapEntry: Missile Drill Tile
 	MissileTankTileMapEntry: Missile Fuel Tank
+	MissileTankTile.MapEntry: Missile Tank Tile
 	MissileThrusterTileMapEntry: Missile Thruster
+	MissileThrusterTile.MapEntry: Missile Thruster Tile
 	BeeWheelTileMapEntry: Bee Wheel Tile
+	BeeWheelTile.MapEntry: Bee Wheel Tile
 	SunCapsuleTileMapEntry: Sun Capsule Tile
+	SunCapsuleTile.MapEntry: Sun Capsule Tile
 }
 
 Story: {
