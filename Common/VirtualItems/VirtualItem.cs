@@ -65,8 +65,11 @@ namespace Factorraria.Content.VirtualItems
         int MaxConveyorPriority;
         bool FoundValidPath;
         bool FoundConveyor;
-        Dictionary<int,Vector2> totalPushDictionary = new Dictionary<int, Vector2>();
-        Vector2 totalPush;
+        // Per conveyor priority: which of the 4 directions have a valid path (bit d = direction d, see DirX/DirY). Same direction twice is one path; opposite directions no longer cancel.
+        Dictionary<int,int> pathMasks = new Dictionary<int, int>();
+
+        // True on a vItem created by an auto-split while it slides from its parent's position into its own tile. No conveyor logic runs until it has arrived.
+        bool settlingFromSplit;
 
         static readonly Dictionary<(int, int), Vector2> ClockwiseConveyorPushTable = new Dictionary<(int, int), Vector2>
         {
@@ -374,12 +377,9 @@ namespace Factorraria.Content.VirtualItems
                             MaxConveyorPriority = conveyorPriority;
                         }
 
-                        if (!totalPushDictionary.ContainsKey(conveyorPriority))
-                        {
-                            totalPushDictionary.Add(conveyorPriority, Vector2.Zero);
-                        }
-
-                        totalPushDictionary[conveyorPriority] += push;
+                        // Each valid conveyor adds its direction to the set of paths for its priority
+                        pathMasks.TryGetValue(conveyorPriority, out int existingMask);
+                        pathMasks[conveyorPriority] = existingMask | PushToDirectionBit(push);
                     }
                 }
             }
@@ -387,69 +387,29 @@ namespace Factorraria.Content.VirtualItems
 
         void CalculateMovementPath()
         {
+            // A split-off vItem is still sliding out of its parent's tile (MoveVirtualItem clears this on arrival)
+            if (settlingFromSplit)
+            {
+                return;
+            }
+
             if (currentTileX == targetTileX && currentTileY == targetTileY)
             {
                 MaxConveyorPriority = 0;
                 FoundConveyor = false;
                 FoundValidPath = false;
-                totalPush = Vector2.Zero;
-                totalPushDictionary.Clear();
+                pathMasks.Clear();
 
                 // Scan 3x3 neighborhood
                 ScanNeighborsForConveyors();
 
-                if (totalPushDictionary.Count > 0)
+                int pathMask = 0;
+                if (pathMasks.Count > 0)
                 {
-                    totalPush = totalPushDictionary[MaxConveyorPriority];
+                    pathMasks.TryGetValue(MaxConveyorPriority, out pathMask);
                 }
 
-                if (IsTilePassable(currentTileX + (int)totalPush.X, currentTileY) && totalPush.X != 0)
-                {
-                    totalPush = new Vector2(totalPush.X, 0);
-                }
-                else if (IsTilePassable(currentTileX, currentTileY + (int)totalPush.Y) && totalPush.Y != 0)
-                {
-                    totalPush = new Vector2(0, totalPush.Y);
-                }
-
-                int dx = Math.Sign(totalPush.X);
-                int dy = Math.Sign(totalPush.Y);
-
-                bool movedOrMergedX = false;
-
-                // --- 1. ALWAYS TRY X MOVEMENT FIRST ---
-                if (dx != 0)
-                {
-                    int nextX = currentTileX + dx;
-                    VirtualItem targetItemX = VirtualItemSystem.GetVirtualItemAtTile(nextX, currentTileY, this);
-
-                    if (targetItemX != null)
-                    {
-                        TryMergeWithVirtualItem(targetItemX);
-                        movedOrMergedX = true;
-                    }
-                    else if (IsTileClear(nextX, currentTileY))
-                    {
-                        SetTargetTile(nextX, currentTileY);
-                        movedOrMergedX = true;
-                    }
-                }
-
-                // --- 2. TRY Y MOVEMENT ONLY IF X WAS ZERO OR BLOCKED ---
-                if (!movedOrMergedX && dy != 0)
-                {
-                    int nextY = currentTileY + dy;
-                    VirtualItem targetItemY = VirtualItemSystem.GetVirtualItemAtTile(currentTileX, nextY, this);
-
-                    if (targetItemY != null)
-                    {
-                        TryMergeWithVirtualItem(targetItemY);
-                    }
-                    else if (IsTileClear(currentTileX, nextY))
-                    {
-                        SetTargetTile(currentTileX, nextY);
-                    }
-                }
+                MoveAlongPaths(pathMask);
             }
 
             // --- GRAVITY CHECK ---
@@ -476,6 +436,152 @@ namespace Factorraria.Content.VirtualItems
             }
         }
 
+        // Directions: 0 = +X, 1 = -X, 2 = +Y, 3 = -Y (bit d of a path mask). X is listed first so a lone item still prefers X like before.
+        int DirX(int d)
+        {
+            return d == 0 ? 1 : (d == 1 ? -1 : 0);
+        }
+
+        int DirY(int d)
+        {
+            return d == 2 ? 1 : (d == 3 ? -1 : 0);
+        }
+
+        int PushToDirectionBit(Vector2 push)
+        {
+            if (push.X > 0) return 1;
+            if (push.X < 0) return 2;
+            if (push.Y > 0) return 4;
+            if (push.Y < 0) return 8;
+            return 0;
+        }
+
+        // Same checks TryMergeWithVirtualItem makes: could this stack put at least one item into target right now?
+        bool CanMergeInto(VirtualItem target)
+        {
+            if (target == null || !target.active || target == this)
+            {
+                return false;
+            }
+
+            if (!VItemStacking.CanMerge(target.Payload, Payload))
+            {
+                return false;
+            }
+
+            if (Vector2.Distance(worldPosition, target.worldPosition) > 17f)
+            {
+                return false;
+            }
+
+            return target.Payload.maxStack - target.stackSize > 0;
+        }
+
+        // Server / single-player only (Update never runs on a client). Splits the stack over every available path of the highest priority.
+        void MoveAlongPaths(int pathMask)
+        {
+            if (pathMask == 0 || stackSize <= 0)
+            {
+                return;
+            }
+
+            // A path is available when its tile is free, or holds a stack this one can merge into
+            Span<int> available = stackalloc int[4];
+            int availableCount = 0;
+
+            for (int d = 0; d < 4; d++)
+            {
+                if ((pathMask & (1 << d)) == 0)
+                {
+                    continue;
+                }
+
+                int nextX = currentTileX + DirX(d);
+                int nextY = currentTileY + DirY(d);
+                VirtualItem occupant = VirtualItemSystem.GetVirtualItemAtTile(nextX, nextY, this);
+
+                bool isAvailable = occupant != null ? CanMergeInto(occupant) : IsTileClear(nextX, nextY);
+                if (isAvailable)
+                {
+                    available[availableCount] = d;
+                    availableCount++;
+                }
+            }
+
+            if (availableCount == 0)
+            {
+                return;
+            }
+
+            // Can't split a stack into more parts than it has items. A stack of 1 just takes the first available path.
+            int pathsUsed = Math.Min(availableCount, stackSize);
+            int total = stackSize;
+            int baseShare = total / pathsUsed;
+            int remainder = total % pathsUsed;
+
+            // Children first (paths 1..n-1); this vItem keeps whatever is left and takes path 0
+            for (int i = 1; i < pathsUsed; i++)
+            {
+                int d = available[i];
+                int amount = baseShare + (i < remainder ? 1 : 0);
+                SendPartTo(currentTileX + DirX(d), currentTileY + DirY(d), amount);
+            }
+
+            int firstX = currentTileX + DirX(available[0]);
+            int firstY = currentTileY + DirY(available[0]);
+            VirtualItem firstOccupant = VirtualItemSystem.GetVirtualItemAtTile(firstX, firstY, this);
+
+            if (firstOccupant != null)
+            {
+                TryMergeWithVirtualItem(firstOccupant);
+            }
+            else
+            {
+                SetTargetTile(firstX, firstY);
+            }
+        }
+
+        // Moves "amount" items of this stack into the neighbouring tile: merged into the stack standing there, or a new vItem that slides out of this one.
+        void SendPartTo(int tileX, int tileY, int amount)
+        {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            VirtualItem occupant = VirtualItemSystem.GetVirtualItemAtTile(tileX, tileY, this);
+
+            if (occupant != null)
+            {
+                int moved = Math.Min(amount, occupant.Payload.maxStack - occupant.stackSize);
+                if (moved > 0)
+                {
+                    occupant.stackSize += moved;
+                    stackSize -= moved;
+                }
+
+                return;
+            }
+
+            Item part = Payload.Clone();
+            part.stack = amount;
+
+            VirtualItem child = VirtualItemSystem.SpawnVirtualItem(part, tileX, tileY);
+            if (child == null)
+            {
+                return;
+            }
+
+            stackSize -= amount;
+
+            // Spawned logically on its own tile, but visually starts where this vItem is and slides over (replicas get the same position + target)
+            child.worldPosition = worldPosition;
+            child.pickupCooldown = pickupCooldown;
+            child.cartGrabCooldown = cartGrabCooldown;
+            child.CurrentFallVelocity = 1f;
+            child.settlingFromSplit = true;
+        }
+
         public void MoveVirtualItem()
         {
             CalculateMovementPath();
@@ -494,6 +600,12 @@ namespace Factorraria.Content.VirtualItems
                     currentTileX = targetTileX;
                     currentTileY = targetTileY;
                     worldPosition = targetPixelPosition;
+                }
+                else if (settlingFromSplit)
+                {
+                    // A split-off vItem has arrived at its own tile
+                    worldPosition = targetPixelPosition;
+                    settlingFromSplit = false;
                 }
             }
             else
