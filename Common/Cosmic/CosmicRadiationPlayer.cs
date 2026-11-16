@@ -103,7 +103,7 @@ namespace Factorraria.Common.Cosmic
         public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genDust, ref PlayerDeathReason damageSource)
         {
             bool fromDrain = damageSource.SourceNPCIndex == -1 && damageSource.SourceProjectileLocalIndex == -1 && damageSource.SourcePlayerIndex == -1
-                && damageSource.SourceCustomReason == null && damageSource.SourceOtherIndex == 8;
+                && damageSource.CustomReason == null && damageSource.SourceOtherIndex == 8;
 
             if (fromDrain && Level > 0f && Player.HasBuff(ModContent.BuffType<RadiationBuff>()))
                 damageSource = PlayerDeathReason.ByCustomReason(NetworkText.FromKey("Mods.Factorraria.CosmicRadiation.Death" + Main.rand.Next(1, 4), Player.name));

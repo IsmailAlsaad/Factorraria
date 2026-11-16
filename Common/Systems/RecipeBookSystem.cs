@@ -28,8 +28,8 @@ namespace Factorraria.Common.Systems
         bool open;
         bool buttonVisible;
         uint openedAt;
-        bool blockingMouse;       // PlayerInput.IgnoreMouseInterface was raised for the inventory layer this frame
-        bool previousIgnore;
+        bool blockingMouse;       // the mouse buttons were cleared for the inventory layer this frame (restored right after it)
+        bool prevLeft, prevLeftRelease, prevRight, prevRightRelease;
 
         static RecipeBookSystem Instance => ModContent.GetInstance<RecipeBookSystem>();
 
@@ -169,9 +169,9 @@ namespace Factorraria.Common.Systems
             layers.Insert(inventoryIndex + 1, bookLayer);
             layers.Insert(inventoryIndex + 1, buttonLayer);
 
-            // While the cursor is inside the open book the vanilla inventory (drawn before the book) must not react to it: with
-            // PlayerInput.IgnoreMouseInterface raised its slots skip hover, clicks and tooltips. Raised just before the inventory layer,
-            // restored right after it, so the book's own layers and everything else see the normal value.
+            // While the cursor is inside the open book the vanilla inventory (drawn before the book) must not react to it. The inventory handles
+            // its clicks while it draws, so the mouse buttons are cleared just before its layer and restored right after it (the book's own
+            // input already ran in UpdateUI). Its hover tooltip and cursor override are wiped too, so nothing under the book shows through.
             var blockLayer = new LegacyGameInterfaceLayer(
                 "Factorraria: Recipe Book Mouse Block",
                 delegate
@@ -179,8 +179,14 @@ namespace Factorraria.Common.Systems
                     blockingMouse = open && bookState != null && bookState.MouseInsidePanel;
                     if (blockingMouse)
                     {
-                        previousIgnore = Terraria.GameInput.PlayerInput.IgnoreMouseInterface;
-                        Terraria.GameInput.PlayerInput.IgnoreMouseInterface = true;
+                        prevLeft = Main.mouseLeft;
+                        prevLeftRelease = Main.mouseLeftRelease;
+                        prevRight = Main.mouseRight;
+                        prevRightRelease = Main.mouseRightRelease;
+                        Main.mouseLeft = false;
+                        Main.mouseLeftRelease = false;
+                        Main.mouseRight = false;
+                        Main.mouseRightRelease = false;
                     }
                     return true;
                 },
@@ -192,7 +198,13 @@ namespace Factorraria.Common.Systems
                 {
                     if (blockingMouse)
                     {
-                        Terraria.GameInput.PlayerInput.IgnoreMouseInterface = previousIgnore;
+                        Main.mouseLeft = prevLeft;
+                        Main.mouseLeftRelease = prevLeftRelease;
+                        Main.mouseRight = prevRight;
+                        Main.mouseRightRelease = prevRightRelease;
+                        Main.HoverItem = new Item();
+                        Main.hoverItemName = "";
+                        Main.cursorOverride = -1;
                         blockingMouse = false;
                     }
                     return true;
