@@ -265,9 +265,9 @@ namespace Factorraria.Content.Configs
         [Range(0f, 100f)]
         public float RadiationRadiusTiles = 4f;
 
-        [DefaultValue(1f)]
+        [DefaultValue(5f)]
         [Range(0f, 1000f)]
-        public float RadiationLifeRegenPerLevel = 1f;
+        public float RadiationLifeRegenPerLevel = 5f;
 
         [DefaultValue(1.5f)]
         [Range(0f, 1000f)]

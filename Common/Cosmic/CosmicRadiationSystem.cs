@@ -107,7 +107,7 @@ namespace Factorraria.Common.Cosmic
         public float RadiationRadiusTiles = 4f;
 
         [CosmicParam("Life loss per radiation level, in lifeRegen units (half a heart point per second: 2 = 1 HP/s). The level rises by the particle's multiplier on every hit and is 0 again when the radiation debuff ends.", "lifeRegen/level")]
-        public float RadiationLifeRegenPerLevel = 1f;
+        public float RadiationLifeRegenPerLevel = 5f;
 
         [CosmicParam("Geiger counter clicks per second for each radiation level (a click is at most every other tick).", "clicks/s per level")]
         public float RadiationClicksPerLevel = 1.5f;

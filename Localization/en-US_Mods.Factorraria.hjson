@@ -1048,14 +1048,12 @@ Story: {
 	MechanicsBagTooltip: Filled with tools and tangled wire
 }
 
-CosmicRadiation: {
-	LeadSetBonus: Shields from ionizing radiation
-}
+CosmicRadiation.LeadSetBonus: Shields from ionizing radiation
 
 Buffs: {
 	RadiationBuff: {
 		DisplayName: Radiation
-		Description: Your cellular machinery is overwhelmed with DNA sequence breaks.
+		Description: Your cellular machinery is overwhelmed with DNA sequence breaks
 	}
 
 	MechSuitBuff: {
