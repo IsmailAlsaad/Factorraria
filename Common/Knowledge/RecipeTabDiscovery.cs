@@ -88,6 +88,8 @@ namespace Factorraria.Common.Knowledge
                 byTile[tile] = tab;
             }
 
+            var sharedSubs = new List<(Tab sub, Tab holder)>();
+
             // Stations a machine inherits from (the Anvils of the Autohammer): each one is its own discoverable tile with its own
             // marker, filed under the machine's tab. Holding or standing near it makes the machine's tab appear.
             foreach (KeyValuePair<string, int[]> inherit in RecipeTabDefinitions.Inherits)
@@ -96,12 +98,22 @@ namespace Factorraria.Common.Knowledge
                 foreach (string station in RecipeCatalog.InheritedStations(inherit.Key))
                 {
                     int tile = VanillaStationBooks.TileOf(station);
-                    if (tile < 0 || byId.ContainsKey(tile) || byTile.ContainsKey(tile) || byName.ContainsKey(station)) continue;
+                    if (tile < 0 || byName.ContainsKey(station)) continue;
 
                     var sub = new Tab { Name = station, Id = tile, Tile = tile, Inherited = true, Owner = inherit.Key };
+                    if (byTile.TryGetValue(tile, out Tab holder))
+                    {
+                        // Another tab already discovers through this tile (the Furnace machine, RecipeTabDefinitions.DiscoveryTiles):
+                        // the station shares its marker and its items instead of claiming the tile.
+                        if (holder.Id != tile) continue;
+                        sharedSubs.Add((sub, holder));
+                    }
+                    else
+                    {
+                        byId[tile] = sub;
+                        byTile[tile] = sub;
+                    }
                     byName[station] = sub;
-                    byId[tile] = sub;
-                    byTile[tile] = sub;
                     owner.Inherits.Add(sub);
                 }
             }
@@ -115,6 +127,9 @@ namespace Factorraria.Common.Knowledge
                     byItem[type] = tab;
                 }
             }
+
+            foreach ((Tab sub, Tab holder) in sharedSubs)
+                foreach (int type in holder.Items) sub.Items.Add(type);
 
             foreach (Tab tab in byName.Values)
             {
@@ -142,6 +157,14 @@ namespace Factorraria.Common.Knowledge
             {
                 if (twin.Key != name) continue;
                 tile = VanillaStationBooks.TileOf(twin.Value);
+                id = tile;
+                return tile >= 0;
+            }
+
+            foreach (KeyValuePair<string, int> shared in RecipeTabDefinitions.DiscoveryTiles)
+            {
+                if (shared.Key != name) continue;
+                tile = shared.Value;
                 id = tile;
                 return tile >= 0;
             }
@@ -202,6 +225,10 @@ namespace Factorraria.Common.Knowledge
         static bool Hit(Tab tab)
         {
             if (RecipeKnowledgeSystem.IsSeen(tab.Marker)) return true;
+
+            // A machine that is discovered (held, near, or unlocked by a parchment) also discovers every station it inherits recipes
+            // from (Autohammer -> Anvils). The owner is never itself inherited, so this cannot loop. Computed, never saved.
+            if (tab.Inherited && byName.TryGetValue(tab.Owner, out Tab owner) && Hit(owner)) return true;
             HashSet<string> machines = UnlockedMachines();
             if (machines.Contains(tab.Name)) return true;
             return !tab.Inherited && tab.Tile >= 0 && machines.Contains(VanillaStationBooks.NameFor(tab.Tile));   // the vanilla twin of a machine
@@ -221,13 +248,14 @@ namespace Factorraria.Common.Knowledge
             return unlockedMachines;
         }
 
-        /// <summary>Every inherited station of the tab (discovered or not), for the "Inherits from ..." hover tip. Empty for most tabs.</summary>
+        /// <summary>The inherited stations of the tab that are discovered, for the "Inherits from ..." hover tip. Empty (no tip) when there are none, and for most tabs.</summary>
         public static string[] InheritedNames(string tabName)
         {
             if (tabName == null || !byName.TryGetValue(tabName, out Tab tab) || tab.Inherits.Count == 0) return new string[0];
-            var names = new string[tab.Inherits.Count];
-            for (int i = 0; i < names.Length; i++) names[i] = tab.Inherits[i].Name;
-            return names;
+            var names = new List<string>();
+            foreach (Tab sub in tab.Inherits)
+                if (Hit(sub)) names.Add(sub.Name);
+            return names.ToArray();
         }
 
         /// <summary>Item types whose sprites stand for this tab (every item that places its tile, sorted). Empty for By Hand and Notes.</summary>

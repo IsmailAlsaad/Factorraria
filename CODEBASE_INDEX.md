@@ -371,7 +371,7 @@ tModLoader/other bases -> project types:
     +IsUnlocked(string)[s] +Version:int[s] +IsCrafted(string)[s] +MarkCrafted(string)[s] +CraftedKeys:IReadOnlyCollection<string>[s] +ResetCrafted()[s] +Unlock(string)[s] +UnlockedKeys:IReadOnlyCollection<string>[s] +ResetUnlocked()[s] +SeenVersion:int[s] +IsSeen(int)[s] +LiquidMarker(int)[s] +IsLiquidSeen(int)[s] +TabMarkerBase:int[c] +TabMarker(int)[s] +IsTabMarker(int)[s] +TabIdOf(int)[s] +StationItemMarkerBase:int[c] +StationItemMarker(int)[s] +IsStationItemMarker(int)[s] +StationItemOf(int)[s] +SeenItems:IReadOnlyCollection<int>[s] +MarkSeen(int)[s] +ResetSeen()[s] +ResetTabMarkers()[s] +ReplaceAll(IEnumerable<string>,IEnumerable<string>,IEnumerable<int>)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
 **RecipeTabDefinitions.cs** uses: MechanicalAssemblerTile, VanillaStationBooks
   static class RecipeTabDefinitions
-    +Twins:KeyValuePair<string, string>[s] +ExtraMachineTiles:KeyValuePair<string, Func<int>>[s] +Inherits:KeyValuePair<string, int >[s]
+    +Twins:KeyValuePair<string, string>[s] +DiscoveryTiles:KeyValuePair<string, int>[s] +ExtraMachineTiles:KeyValuePair<string, Func<int>>[s] +Inherits:KeyValuePair<string, int >[s]
 **RecipeTabDiscovery.cs** uses: Entry, RecipeCatalog, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeTabDefinitions, VanillaStationBooks
   static class RecipeTabDiscovery
     +ExtraIdBase:int[c] +ScanTicks:int[s] +NearTilesX:int[s] +NearTilesY:int[s] +ServerNearExtra:int[s] +All:IReadOnlyCollection<Tab>[s] +Clear()[s] +Build()[s] +IsDiscovered(string)[s] +IsDiscoveredKey(string)[s] +IsOwnDiscovered(string)[s] +HeaderStations(string)[s] +InheritedNames(string)[s] +ItemsOf(string)[s] +ItemsOf(string)[s] +ScanLocalPlayer(Player)[s] +ServerAccepts(Player,int)[s] +ServerAcceptsItem(Player,int)[s] +NameOfMarker(int)[s]
@@ -1326,7 +1326,7 @@ tModLoader/other bases -> project types:
   static class RecipeBookTabTip
     +Request(string)[s] ~TakePending()[s]
   class RecipeBookTabTipOverlay : UIElement
-    +TextScale:float[s] +IconBox:int[s] +Pad:int[s] #DrawSelf(SpriteBatch)[ov]
+    +TextScale:float[s] +IconBox:int[s] +Pad:int[s] +InkCenterY:float[s] #DrawSelf(SpriteBatch)[ov]
 
 ### Common/VirtualItems/
 **VItemGlobalItem.cs** uses: CoalTile

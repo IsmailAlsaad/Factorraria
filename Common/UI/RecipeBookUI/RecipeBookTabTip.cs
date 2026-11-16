@@ -34,6 +34,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static float TextScale = 0.9f;
         public static int IconBox = 22;
         public static int Pad = 8;
+        /// <summary>
+        /// Distance from the top of a drawn line of MouseText to the middle of its letters, at scale 1. The font's LineSpacing includes
+        /// empty room above and below the letters, so centering by it left the text too high. 8.5 is taken from the header row, where
+        /// text drawn 4 px from the row top (scale 1.05) lines up with an icon centered 13 px from it. Nudge it if the tip looks off.
+        /// </summary>
+        public static float InkCenterY = 8.5f;
 
         public RecipeBookTabTipOverlay()
         {
@@ -78,7 +84,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             var box = new Rectangle((int)x, (int)y, (int)width, (int)height);
             BookDraw.Frame(sb, box, RecipeBookLayout.PageColor, RecipeBookLayout.PageBorder, 2);
 
-            float textY = box.Center.Y - font.LineSpacing * TextScale / 2f;
+            float textY = box.Center.Y - InkCenterY * TextScale;
             float cursor = box.X + Pad;
             BookDraw.Text(sb, lead, new Vector2(cursor, textY), RecipeBookLayout.TextColor, TextScale);
             cursor += leadWidth;

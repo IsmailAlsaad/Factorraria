@@ -1,6 +1,6 @@
 ﻿# Recipe book roadmap (tab discovery, new-recipe highlights, tab and favorite filters)
 
-Status: R0, R1 and R1.1 applied (untested); R2 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
+Status: R0, R1, R1.1, R1.2 and R1.3 applied (untested); R2 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
 
 Code map: `Common/Knowledge/` (RecipeCatalog, RecipeKnowledgeSystem, VanillaStationBooks, ScrollPools), `Common/Machines/RecipeVisibility.cs` (states), `Common/UI/RecipeBookUI/` (RecipeBookState, RecipeBookElements, RecipeBookPlayer, RecipeBookLayout), `Common/Net/RecipeKnowledgeNet.cs`.
 
@@ -12,6 +12,7 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [~] R1 Tab discovery (a tab unlocks when its station or machine item is held or the station is near; applied, untested)
 - [~] R1.1 Tab discovery tweak (machines inherit station tabs; By Hand first; station sprites and hover tip; applied, untested)
 - [~] R1.2 R1.1 follow-up (detail page names only discovered stations and wraps; sprite cycling only held items; a parchment discovers its machine; applied, untested)
+- [~] R1.3 R1.2 follow-up (Hellforge takes over Furnaces; discovered stations only in the tip; tip text centered; a discovered machine discovers its inherited stations; no search bar on an empty book; applied, untested)
 - [ ] R2 New-recipe highlight
 - [ ] R3 "New machine discovered!" pop-up
 - [ ] R4 Show/hide each tab
@@ -77,6 +78,18 @@ R1.2 (follow-up, applied, untested):
 - A parchment-unlocked recipe of a machine nobody found discovers that machine/station (so its tab appears). This reverses the first R1.1 rule; crafted recipes still never discover a tab.
 
 Test checklist: new world, hold an Iron Anvil: the tab appears titled "Anvils" with the anvil sprite; hold an Autohammer (or stand next to one): it becomes "Autohammer" with the Autohammer sprite and the hover tip lists Anvils; a recipe on both shows "Autohammer or Anvils", an Autohammer-only recipe shows "Autohammer"; read a parchment for a machine you have not found: no tab appears; By Hand is first; Work Bench then Heavy Work Bench: title shows both; a second client gets the tab; relog keeps it.
+
+## R1.3 R1.2 follow-up
+
+Decided 2026-11-16. Applied, untested. No new packets: everything is computed from the markers the book already has (`Hit` in `RecipeTabDiscovery`), nothing new is saved.
+
+- Hover tip "Inherits from [icon] X and [icon] Y" lists only stations that are discovered (`RecipeTabDiscovery.InheritedNames` now filters by `Hit`). None discovered: no tip. The machine itself not discovered: no tip, as before.
+- Tip text is centered on the icon: `RecipeBookTabTipOverlay.InkCenterY` (8.5 px from the top of a drawn line at scale 1, copied from the header row's proven alignment) replaces `font.LineSpacing`. The font-metrics API was not verified, so this is a tunable, not a measurement.
+- Hellforge takes the Furnaces station over, the same pattern as Mechanical Assembler and the Work Benches: `Inherit("Hellforge", TileID.Furnaces)`, and the `Twin("Furnace", TileID.Furnaces)` pair is gone. The Furnace machine keeps its own tab with only its own recipes (it no longer lists the vanilla Furnaces recipes). `RecipeTabDefinitions.DiscoveryTiles` keeps the Furnace tab discoverable through the Furnaces tile (same marker id = the tile, so old worlds keep it); the Hellforge tab's Furnaces station is a second `Tab` that shares that marker and its items (`sharedSubs` in `Build`).
+- `Hit` of an inherited station is true when its owner machine is discovered (held, near, or unlocked by a parchment). So a parchment for an Autohammer recipe discovers the Anvils too, Mechanical Assembler discovers Work Benches and Heavy Work Bench, and Hellforge discovers Furnaces. Computed, never saved.
+- The search bar is not built while the right page says "The pages are blank" (`IsEmpty`); `Rebuild` rebuilds it as soon as something is listed.
+
+Test checklist: see the patch reply. Next chat: "Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md (R1 to R1.3 and the Progress list), then Common/Knowledge/RecipeTabDiscovery.cs and RecipeTabDefinitions.cs. State: R0 to R1.3 are applied; test results: <paste>. Log them in Progress, then implement R2."
 
 ## R2 New-recipe highlight
 

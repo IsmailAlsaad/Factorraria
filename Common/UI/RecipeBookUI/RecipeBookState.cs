@@ -244,6 +244,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             IsEmpty = !any;
             NoResults = any && shown == 0;
+            if ((searchBar != null) == IsEmpty)
+            {
+                BuildSearchBar();
+                if (searchBar != null && !string.IsNullOrEmpty(searchFilter)) searchBar.SetText(searchFilter);
+            }
             if (!foundSelected) ClearSelection();
 
             totalHeight = y;
@@ -258,7 +263,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
         void BuildSearchBar()
         {
             if (panel == null) return;
-            if (searchBar != null) panel.RemoveChild(searchBar);
+            if (searchBar != null)
+            {
+                panel.RemoveChild(searchBar);
+                searchBar = null;
+            }
+            if (IsEmpty) return;   // "The pages are blank": nothing to search, so no bar (Rebuild brings it back once something is listed)
 
             Rectangle s = RecipeBookLayout.SearchArea;
             searchBar = new RecipeSearchBar(text =>
