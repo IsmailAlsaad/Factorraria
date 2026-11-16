@@ -59,6 +59,10 @@ namespace Factorraria.Common.Carts
         public const float ChainSpacing = HitboxWidth + 14f; // rail distance from one cart's centre to the next (the 14 px gap shows the chain)
         public const float ChainSampleStep = 2f;            // the motor records its trail every this many px of rail driven (matches MaxStep)
         public const float ChainCloseGapSpeed = 3f;         // px per tick a carriage glides forward to close the gap left by a picked-up carriage
+        public static float ChainMaxStretch = 1.6f;         // a derailed carriage may be at most this many ChainSpacings (centre to centre) from the cart in front of it
+        public static float ChainLeashPull = 0.5f;          // 0..1: share of the over-stretch removed per tick, so a taut link pulls the carriage in softly
+        public static float ChainRejoinEase = 0.12f;        // 0..1 per tick: how fast a carriage that rerailed glides from where it landed to its slot on the trail
+        public static float ChainRejoinMaxOffset = 96f;     // px: a landing further than this from its slot starts the glide this far away (no endless slide)
         public const float CouplingMaxRelativeSpeed = 24f;  // a free cart touching a motor / carriage hooks on if the two are closing slower than this. 24 = any touch couples (top speed is 12 each way); lower it to make hard hits collide instead
 
         public const float MotorSpeedCap = 6f;           // top speed a motor cart reaches under its own power (boosters and collisions can still exceed it)
@@ -723,6 +727,18 @@ namespace Factorraria.Common.Carts
         /// <summary>Extra distance behind its slot a carriage is lagging, in px. Grows when a carriage in front is removed and shrinks to 0.</summary>
         public float ChainSlack;
 
+        /// <summary>
+        /// Server only, never saved or synced. True while a carriage has left its motor's trail and runs its own physics: it fell off the rail
+        /// where the motor derailed, or it landed on a rail but its slot on the trail is still in the air. CartChain sets and clears it.
+        /// </summary>
+        public bool ChainFree;
+
+        /// <summary>Where a carriage that just rerailed currently is, relative to its slot on the trail. Eases to zero (the glide back to following).</summary>
+        public Vector2 ChainBlendOffset;
+
+        /// <summary>Same glide for the tilt: the carriage's rotation minus the trail's, eased to zero.</summary>
+        public float ChainBlendRotation;
+
         /// <summary>Highest trail sample whose bump this carriage has already replayed.</summary>
         public int ReplayScanIndex;
 
@@ -966,6 +982,137 @@ namespace Factorraria.Common.Carts
             }
         }
 
+        #region Chain-free carriages (derailed links)
+
+        /// <summary>
+        /// Called by CartChain when a carriage's slot on the trail reaches the part where the motor was airborne. The carriage leaves the trail
+        /// at its slot pose with the velocity it was moving at (px per tick) and from then on falls with its own gravity and tile collisions.
+        /// </summary>
+        public void BeginChainFree(Vector2 position, float rotation, Vector2 velocity)
+        {
+            float maxSpeed = 2f * CartPhysics.MaxSpeed;
+            if (velocity.LengthSquared() > maxSpeed * maxSpeed)
+            {
+                velocity *= maxSpeed / velocity.Length();
+            }
+
+            Position = position;
+            Rotation = rotation;
+            Velocity = velocity;
+            Speed = 0f;
+            OnTrack = false;
+            rerailCooldown = CartPhysics.RerailDelay;
+            derailPosition = position;
+            ChainFree = true;
+            ChainBlendOffset = Vector2.Zero;
+            ChainBlendRotation = 0f;
+        }
+
+        /// <summary>
+        /// One tick of a chain-free carriage. In the air it is a derailed cart (gravity, tiles, rail catch) whose link only acts as a distance
+        /// check against anchor, the cart in front of it. Once it lands on a rail it rolls like a free cart until CartChain sees that its slot
+        /// on the trail is on the rail again.
+        /// </summary>
+        public void UpdateChainFree(Vector2 anchor)
+        {
+            if (!Active)
+            {
+                return;
+            }
+
+            if (OnTrack)
+            {
+                UpdateOnTrack();
+            }
+            else
+            {
+                UpdateDerailed();
+
+                if (!OnTrack)
+                {
+                    LimitDistanceTo(anchor);
+                }
+            }
+
+            if (Position.X < 32f || Position.X > (Main.maxTilesX - 2) * 16f || Position.Y > (Main.maxTilesY - 3) * 16f)
+            {
+                Active = false; // fell out of the world (Update does this for free carts, a carriage never runs Update)
+            }
+        }
+
+        /// <summary>The link as a rope: no pull while the carriage is within ChainMaxStretch spacings of the anchor, a soft pull back beyond that.</summary>
+        private void LimitDistanceTo(Vector2 anchor)
+        {
+            float max = CartPhysics.ChainSpacing * CartPhysics.ChainMaxStretch;
+            Vector2 offset = Position - anchor;
+            float distance = offset.Length();
+
+            if (distance <= max || distance < 0.001f)
+            {
+                return;
+            }
+
+            Vector2 direction = offset / distance;
+
+            float outward = Vector2.Dot(Velocity, direction);
+            if (outward > 0f)
+            {
+                Velocity -= direction * outward; // taut: it cannot keep moving away from the cart in front
+            }
+
+            Vector2 pull = -direction * (distance - max) * CartPhysics.ChainLeashPull;
+            Vector2 topLeft = new Vector2(Position.X - CartPhysics.HitboxWidth / 2f, Position.Y - CartPhysics.HitboxHeight);
+            Position += Collision.TileCollision(topLeft, pull, CartPhysics.HitboxWidth, CartPhysics.HitboxHeight); // the pull still stops at solid blocks
+        }
+
+        /// <summary>
+        /// The carriage is back on a rail and its slot on the trail is on the rail too: it follows the trail again. Instead of snapping to the slot
+        /// it keeps its offset (at most ChainRejoinMaxOffset) and EaseChainBlend shrinks it every tick.
+        /// </summary>
+        public void EndChainFree(Vector2 trailPosition, float trailRotation)
+        {
+            ChainFree = false;
+
+            Vector2 offset = Position - trailPosition;
+            float length = offset.Length();
+            if (length > CartPhysics.ChainRejoinMaxOffset)
+            {
+                offset *= CartPhysics.ChainRejoinMaxOffset / length;
+            }
+
+            ChainBlendOffset = offset;
+            ChainBlendRotation = MathHelper.WrapAngle(Rotation - trailRotation);
+        }
+
+        /// <summary>One tick of the glide back onto the trail.</summary>
+        public void EaseChainBlend()
+        {
+            float keep = 1f - MathHelper.Clamp(CartPhysics.ChainRejoinEase, 0f, 1f);
+
+            ChainBlendOffset *= keep;
+            ChainBlendRotation *= keep;
+
+            if (ChainBlendOffset.LengthSquared() < 0.25f)
+            {
+                ChainBlendOffset = Vector2.Zero;
+            }
+
+            if (Math.Abs(ChainBlendRotation) < 0.01f)
+            {
+                ChainBlendRotation = 0f;
+            }
+        }
+
+        /// <summary>The cart leaves its chain (picked up, chain broken): forget the chain-free state, it is a plain cart again.</summary>
+        public void ResetChainFree()
+        {
+            ChainFree = false;
+            ChainBlendOffset = Vector2.Zero;
+            ChainBlendRotation = 0f;
+        }
+
+        #endregion
+
         /// <summary>The motor bounced off a bumper earlier and this carriage has now reached that spot on the trail: fire Bumped for it.</summary>
         public void ReplayBump()
         {
@@ -1113,9 +1260,9 @@ namespace Factorraria.Common.Carts
                 Rotation = (float)Math.Atan2(yRight - yLeft, 2f * half);
                 slope = (yRight - yLeft) / (2f * half);
 
-                if (Chain != null)
+                if (Chain != null && Chain.Motor == this)
                 {
-                    Chain.Record(Position, Rotation); // carriages follow this trail
+                    Chain.Record(Position, Rotation); // carriages follow this trail (a rolling chain-free carriage must not write to it)
                 }
 
                 boost = (leftSurface && left.BoostDirection != 0) ? left.BoostDirection : (rightSurface ? right.BoostDirection : 0);

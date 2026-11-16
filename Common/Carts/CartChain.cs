@@ -10,7 +10,10 @@ namespace Factorraria.Common.Carts
     /// indexed by distance driven (odometer), not by time, so a carriage always sits ChainSpacing * slot pixels behind the
     /// motor along the rail and the gaps stay constant when the motor slows, stops or reverses. Bumps are stored in the
     /// trail too, so a carriage only reacts to a bumper when it reaches it (a chest carriage spills there, not earlier).
-    /// Carriages never simulate physics: CartSystem asks the chain to place them every tick after the motor has moved.
+    /// A carriage on the rail never simulates physics: CartSystem asks the chain to place them every tick after the motor has moved.
+    /// When a carriage's slot reaches the part of the trail where the motor was airborne it leaves the trail (Cart.ChainFree): it then falls with
+    /// its own gravity, the link only limits how far it may stray from the cart in front, and once it has landed on a rail and its slot is back
+    /// on the rail it glides onto the trail again instead of snapping.
     /// </summary>
     public class CartChain
     {
@@ -151,6 +154,7 @@ namespace Factorraria.Common.Carts
             Carriages.Add(cart);
             cart.Chain = this;
             cart.ChainSlack = 0f;
+            cart.ResetChainFree();
             cart.OnTrack = true;
             cart.Velocity = Vector2.Zero;
             cart.Speed = 0f;
@@ -199,6 +203,7 @@ namespace Factorraria.Common.Carts
             Carriages.RemoveAt(index);
             cart.Chain = null;
             cart.ChainSlack = 0f;
+            cart.ResetChainFree();
 
             for (int i = index; i < Carriages.Count; i++)
             {
@@ -218,6 +223,7 @@ namespace Factorraria.Common.Carts
             {
                 Carriages[i].Chain = null;
                 Carriages[i].ChainSlack = 0f;
+                Carriages[i].ResetChainFree();
             }
 
             Carriages.Clear();
@@ -354,9 +360,42 @@ namespace Factorraria.Common.Carts
                 bool air;
                 Read(odometer - (i + 1) * CartPhysics.ChainSpacing - cart.ChainSlack, out position, out rotation, out direction, out index, out air);
 
+                if (cart.ChainFree)
+                {
+                    // Off the trail: own gravity and collisions, the link only keeps it within reach of the cart in front.
+                    // Bumps its slot passes in the meantime are skipped, not replayed later.
+                    cart.ReplayScanIndex = Math.Max(cart.ReplayScanIndex, index);
+                    cart.UpdateChainFree(i == 0 ? Motor.Position : Carriages[i - 1].Position);
+
+                    if (cart.Active && cart.OnTrack && !air)
+                    {
+                        cart.EndChainFree(position, rotation); // landed on a rail and its slot is on the rail again: it glides back (below)
+                    }
+                    else
+                    {
+                        cart.TickCarriage();
+                        continue;
+                    }
+                }
+                else if (air)
+                {
+                    // Its slot reached the part of the trail where the motor was airborne: it leaves the trail here with the speed it had.
+                    cart.BeginChainFree(position, rotation, position - cart.Position);
+
+                    if (direction != 0)
+                    {
+                        cart.Facing = direction;
+                    }
+
+                    cart.ReplayScanIndex = Math.Max(cart.ReplayScanIndex, index);
+                    cart.TickCarriage();
+                    continue;
+                }
+
                 float previousX = cart.Position.X;
-                cart.Position = position;
-                cart.Rotation = rotation;
+                cart.EaseChainBlend();
+                cart.Position = position + cart.ChainBlendOffset;
+                cart.Rotation = rotation + cart.ChainBlendRotation;
                 cart.OnTrack = !air;
                 cart.Velocity = Vector2.Zero;
                 cart.Speed = MathHelper.Clamp(position.X - previousX, -Motor.SpeedLimit, Motor.SpeedLimit);

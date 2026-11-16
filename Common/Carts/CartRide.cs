@@ -68,7 +68,7 @@ namespace Factorraria.Common.Carts
                 return false;
             }
 
-            Cart body = cart.Body;
+            Cart body = cart.ChainFree ? cart : cart.Body; // a carriage that fell off the trail moves on its own, not with its motor
             Vector2 velocity;
 
             if (body.OnTrack)
