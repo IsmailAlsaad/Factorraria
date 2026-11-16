@@ -29,7 +29,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         int shortArrowLength = 13;     // the original arrow, used when the machine has no fuels
         int fuelCycleTicks = 60;       // the shown fuel changes this often (60 = once a second)
         int fuelBoxOffsetX = 12;       // gap between the arrow's centre line and the fuel cell
-        int fuelRowStep = 46;          // distance between two stacked fuel cells (one row per machine that makes the recipe: Furnace, then Hellforge)
+        int fuelRowStep = 60;          // distance between two stacked fuel cells (room for the "or" between them)
+        int fuelLabelHeight = 18;      // room above the top fuel cell for the single "Fuel" label
 
         // Clickable ingredient boxes of the recipe drawn this frame (box, catalog key to jump to). Refilled every draw.
         readonly List<(Rectangle box, string key, string text)> navHits = new List<(Rectangle box, string key, string text)>();
@@ -239,14 +240,20 @@ namespace Factorraria.Common.UI.RecipeBookUI
             y += 4f;
             // One fuel row per machine that makes THIS recipe and burns something: the Furnace's items first, the Hellforge's lava below.
             // A recipe only the Hellforge has shows only the lava row. Stations and machines without fuels add no row.
+            // A machine's row appears only once that machine is discovered (the Hellforge's lava shows up when the Hellforge is found, not
+            // before). If none of the machines is discovered yet (a parchment recipe of a machine nobody found), all of them show.
             var fuelRows = new List<(string machine, List<RecipeCatalog.FuelEntry> fuels)>();
+            var knownRows = new List<(string machine, List<RecipeCatalog.FuelEntry> fuels)>();
             foreach (string machine in machines)
             {
                 List<RecipeCatalog.FuelEntry> machineFuels = RecipeCatalog.FuelsOf(machine);
-                if (machineFuels != null && machineFuels.Count > 0) fuelRows.Add((machine, machineFuels));
+                if (machineFuels == null || machineFuels.Count == 0) continue;
+                fuelRows.Add((machine, machineFuels));
+                if (RecipeTabDiscovery.IsOwnDiscovered(machine)) knownRows.Add((machine, machineFuels));
             }
+            if (knownRows.Count > 0) fuelRows = knownRows;
             bool hasFuel = fuelRows.Count > 0;
-            int length = hasFuel ? Math.Max(arrowLength, RecipeBookLayout.DetailCell + (fuelRows.Count - 1) * fuelRowStep + 12) : shortArrowLength;
+            int length = hasFuel ? Math.Max(arrowLength, fuelLabelHeight + RecipeBookLayout.DetailCell + (fuelRows.Count - 1) * fuelRowStep + 12) : shortArrowLength;
             DrawArrow(sb, new Vector2(area.Center.X, y), length);
             for (int row = 0; row < fuelRows.Count; row++)
                 DrawFuel(sb, area, y, length, row, fuelRows.Count, fuelRows[row].machine, fuelRows[row].fuels);
@@ -424,12 +431,25 @@ namespace Factorraria.Common.UI.RecipeBookUI
             };
 
             // DrawCells with a one-cell area draws, highlights, shows the tooltip and records the click box.
-            var box = new Rectangle(area.Center.X + fuelBoxOffsetX, (int)(arrowTop + length / 2f + (row - (rows - 1) / 2f) * fuelRowStep - size / 2f), size, size);
+            float blockHeight = size + (rows - 1) * fuelRowStep;
+            var box = new Rectangle(area.Center.X + fuelBoxOffsetX, (int)(arrowTop + fuelLabelHeight + (length - fuelLabelHeight - blockHeight) / 2f + row * fuelRowStep), size, size);
             DrawCells(sb, new List<Cell> { cell }, box, box.Y, navHits, searchHits);
 
-            string label = RecipeBookLayout.Text("Fuel");
-            Vector2 labelSize = FontAssets.MouseText.Value.MeasureString(label) * 0.9f;
-            BookDraw.Text(sb, label, new Vector2(box.Right + 6, box.Center.Y - labelSize.Y / 2f + 2f), RecipeBookLayout.PageBorder, 0.9f);
+            if (row == 0)
+            {
+                // The only "Fuel" label: centered above the top-most fuel slot.
+                string label = RecipeBookLayout.Text("Fuel");
+                Vector2 labelSize = FontAssets.MouseText.Value.MeasureString(label) * 0.9f;
+                BookDraw.Text(sb, label, new Vector2(box.Center.X - labelSize.X / 2f, box.Y - fuelLabelHeight + 2f), RecipeBookLayout.PageBorder, 0.9f);
+            }
+            else
+            {
+                // "or" in the gap between this slot and the one above it, centered on the slot column.
+                string orText = RecipeBookLayout.Text("Or");
+                Vector2 orSize = FontAssets.MouseText.Value.MeasureString(orText) * 0.85f;
+                float gapCenter = box.Y - (fuelRowStep - size) / 2f;
+                BookDraw.Text(sb, orText, new Vector2(box.Center.X - orSize.X / 2f, gapCenter - RecipeBookTabTipOverlay.InkCenterY * 0.85f), RecipeBookLayout.PageBorder, 0.85f);
+            }
         }
 
         /// <summary>Art entry page: the PNG centered in the detail area, shrunk to fit, never enlarged.</summary>

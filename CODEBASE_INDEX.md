@@ -1294,7 +1294,7 @@ tModLoader/other bases -> project types:
 **RecipeBookCloseButton.cs** uses: BookDraw, RecipeBookArt, RecipeBookLayout, RecipeBookSystem
   class RecipeBookCloseButton : UIElement
     +LeftClick(UIMouseEvent)[ov] +Update(GameTime)[ov] #DrawSelf(SpriteBatch)[ov]
-**RecipeBookDetail.cs** uses: BookDraw, CustomRecipe, Entry, FuelEntry, LiquidIngredient, LiquidTypeRegistry, MergedRecipe, RecipeArtRegistry, RecipeBookLayout, RecipeBookState, RecipeCatalog, RecipeIcon, RecipeIngredient, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeState, RecipeTabDiscovery, RecipeVisibility
+**RecipeBookDetail.cs** uses: BookDraw, CustomRecipe, Entry, FuelEntry, LiquidIngredient, LiquidTypeRegistry, MergedRecipe, RecipeArtRegistry, RecipeBookLayout, RecipeBookState, RecipeBookTabTipOverlay, RecipeCatalog, RecipeIcon, RecipeIngredient, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeState, RecipeTabDiscovery, RecipeVisibility
   class RecipeBookDetail : UIElement
     +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov] +StationLineStep:int[s]
     struct Cell

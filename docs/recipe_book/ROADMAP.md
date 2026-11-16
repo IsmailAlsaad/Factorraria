@@ -1,6 +1,6 @@
 ﻿# Recipe book roadmap (tab discovery, new-recipe highlights, tab and favorite filters)
 
-Status: R0, R1, R1.1, R1.2, R1.3 and R1.4 applied (untested); R2 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
+Status: R0, R1, R1.1, R1.2, R1.3, R1.4 and R1.5 applied (untested); R2 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
 
 Code map: `Common/Knowledge/` (RecipeCatalog, RecipeKnowledgeSystem, VanillaStationBooks, ScrollPools), `Common/Machines/RecipeVisibility.cs` (states), `Common/UI/RecipeBookUI/` (RecipeBookState, RecipeBookElements, RecipeBookPlayer, RecipeBookLayout), `Common/Net/RecipeKnowledgeNet.cs`.
 
@@ -14,6 +14,7 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [~] R1.2 R1.1 follow-up (detail page names only discovered stations and wraps; sprite cycling only held items; a parchment discovers its machine; applied, untested)
 - [~] R1.3 R1.2 follow-up (Hellforge takes over Furnaces; discovered stations only in the tip; tip text centered; a discovered machine discovers its inherited stations; no search bar on an empty book; applied, untested)
 - [~] R1.4 Furnace tab folded into Hellforge's (one tab; one entry per product; recipes merged across machines with a fuel row per machine; applied, untested)
+- [~] R1.5 Fuel rows follow discovery (a machine's fuel row only once that machine is discovered; "or" between rows; one "Fuel" label on top; applied, untested)
 - [ ] R2 New-recipe highlight
 - [ ] R3 "New machine discovered!" pop-up
 - [ ] R4 Show/hide each tab
@@ -103,6 +104,14 @@ Decided 2026-11-16. Applied, untested. Supersedes the Furnace bullet of R1.3 (th
 - Not changed: the ingredient search (`#Name`) only looks at the kept entry's own recipes.
 
 Next chat: "Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md (R1 to R1.4 and the Progress list). State: R0 to R1.4 are applied; test results: <paste>. Log them in Progress, then implement R2."
+
+## R1.5 Fuel rows follow discovery
+
+Decided 2026-11-16. Applied, untested. Client-only drawing, no packets, nothing saved.
+
+- A machine's fuel row (R1.4) is drawn only when that machine is discovered (`RecipeTabDiscovery.IsOwnDiscovered`): the Hellforge's lava row appears when the Hellforge is discovered, not before; before that only the Furnace's row shows. If none of the recipe's machines is discovered (parchment of a machine nobody found), all rows show so the fuel is not lost.
+- An "or" sits between two rows, centered on the slot column (`fuelRowStep` 60 leaves the gap).
+- One "Fuel" label, centered above the top-most slot (`fuelLabelHeight` 18 px; the arrow is longer by that much whenever a recipe has fuel).
 
 ## R2 New-recipe highlight
 
