@@ -308,317 +308,317 @@ Configs: {
 
 		WhiteBaseEnergy: {
 			Label: White: base energy
-			Tooltip: Base energy of one particle per color. Halves per step down, so the cascade keeps the total. This is the White entry. Unit: energy. Default: 128.
+			Tooltip: Base energy of one particle per color Halves per step down, so the cascade keeps the total This is the White entry Unit: energy Default: 128
 		}
 
 		WhiteMultiplier: {
 			Label: White: multiplier
-			Tooltip: Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this. This is the White entry. Unit: x. Default: 3.
+			Tooltip: Ionization multiplier per cloud block per color Every ionized block multiplies the thunder energy by this This is the White entry Unit: x Default: 3
 		}
 
 		WhiteClusterMin: {
 			Label: White: cluster min
-			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color. This is the White entry. Unit: blocks. Default: 1.
+			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color This is the White entry Unit: blocks Default: 1
 		}
 
 		WhiteClusterMax: {
 			Label: White: cluster max
-			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color. This is the White entry. Unit: blocks. Default: 1.
+			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color This is the White entry Unit: blocks Default: 1
 		}
 
 		VioletBaseEnergy: {
 			Label: Violet: base energy
-			Tooltip: Base energy of one particle per color. Halves per step down, so the cascade keeps the total. This is the Violet entry. Unit: energy. Default: 64.
+			Tooltip: Base energy of one particle per color Halves per step down, so the cascade keeps the total This is the Violet entry Unit: energy Default: 64
 		}
 
 		VioletMultiplier: {
 			Label: Violet: multiplier
-			Tooltip: Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this. This is the Violet entry. Unit: x. Default: 2.6.
+			Tooltip: Ionization multiplier per cloud block per color Every ionized block multiplies the thunder energy by this This is the Violet entry Unit: x Default: 26
 		}
 
 		VioletClusterMin: {
 			Label: Violet: cluster min
-			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color. This is the Violet entry. Unit: blocks. Default: 1.
+			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color This is the Violet entry Unit: blocks Default: 1
 		}
 
 		VioletClusterMax: {
 			Label: Violet: cluster max
-			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color. This is the Violet entry. Unit: blocks. Default: 2.
+			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color This is the Violet entry Unit: blocks Default: 2
 		}
 
 		BlueBaseEnergy: {
 			Label: Blue: base energy
-			Tooltip: Base energy of one particle per color. Halves per step down, so the cascade keeps the total. This is the Blue entry. Unit: energy. Default: 32.
+			Tooltip: Base energy of one particle per color Halves per step down, so the cascade keeps the total This is the Blue entry Unit: energy Default: 32
 		}
 
 		BlueMultiplier: {
 			Label: Blue: multiplier
-			Tooltip: Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this. This is the Blue entry. Unit: x. Default: 2.25.
+			Tooltip: Ionization multiplier per cloud block per color Every ionized block multiplies the thunder energy by this This is the Blue entry Unit: x Default: 225
 		}
 
 		BlueClusterMin: {
 			Label: Blue: cluster min
-			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color. This is the Blue entry. Unit: blocks. Default: 2.
+			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color This is the Blue entry Unit: blocks Default: 2
 		}
 
 		BlueClusterMax: {
 			Label: Blue: cluster max
-			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color. This is the Blue entry. Unit: blocks. Default: 3.
+			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color This is the Blue entry Unit: blocks Default: 3
 		}
 
 		GreenBaseEnergy: {
 			Label: Green: base energy
-			Tooltip: Base energy of one particle per color. Halves per step down, so the cascade keeps the total. This is the Green entry. Unit: energy. Default: 16.
+			Tooltip: Base energy of one particle per color Halves per step down, so the cascade keeps the total This is the Green entry Unit: energy Default: 16
 		}
 
 		GreenMultiplier: {
 			Label: Green: multiplier
-			Tooltip: Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this. This is the Green entry. Unit: x. Default: 1.95.
+			Tooltip: Ionization multiplier per cloud block per color Every ionized block multiplies the thunder energy by this This is the Green entry Unit: x Default: 195
 		}
 
 		GreenClusterMin: {
 			Label: Green: cluster min
-			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color. This is the Green entry. Unit: blocks. Default: 3.
+			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color This is the Green entry Unit: blocks Default: 3
 		}
 
 		GreenClusterMax: {
 			Label: Green: cluster max
-			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color. This is the Green entry. Unit: blocks. Default: 4.
+			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color This is the Green entry Unit: blocks Default: 4
 		}
 
 		YellowBaseEnergy: {
 			Label: Yellow: base energy
-			Tooltip: Base energy of one particle per color. Halves per step down, so the cascade keeps the total. This is the Yellow entry. Unit: energy. Default: 8.
+			Tooltip: Base energy of one particle per color Halves per step down, so the cascade keeps the total This is the Yellow entry Unit: energy Default: 8
 		}
 
 		YellowMultiplier: {
 			Label: Yellow: multiplier
-			Tooltip: Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this. This is the Yellow entry. Unit: x. Default: 1.69.
+			Tooltip: Ionization multiplier per cloud block per color Every ionized block multiplies the thunder energy by this This is the Yellow entry Unit: x Default: 169
 		}
 
 		YellowClusterMin: {
 			Label: Yellow: cluster min
-			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color. This is the Yellow entry. Unit: blocks. Default: 5.
+			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color This is the Yellow entry Unit: blocks Default: 5
 		}
 
 		YellowClusterMax: {
 			Label: Yellow: cluster max
-			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color. This is the Yellow entry. Unit: blocks. Default: 5.
+			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color This is the Yellow entry Unit: blocks Default: 5
 		}
 
 		OrangeBaseEnergy: {
 			Label: Orange: base energy
-			Tooltip: Base energy of one particle per color. Halves per step down, so the cascade keeps the total. This is the Orange entry. Unit: energy. Default: 4.
+			Tooltip: Base energy of one particle per color Halves per step down, so the cascade keeps the total This is the Orange entry Unit: energy Default: 4
 		}
 
 		OrangeMultiplier: {
 			Label: Orange: multiplier
-			Tooltip: Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this. This is the Orange entry. Unit: x. Default: 1.47.
+			Tooltip: Ionization multiplier per cloud block per color Every ionized block multiplies the thunder energy by this This is the Orange entry Unit: x Default: 147
 		}
 
 		OrangeClusterMin: {
 			Label: Orange: cluster min
-			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color. This is the Orange entry. Unit: blocks. Default: 7.
+			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color This is the Orange entry Unit: blocks Default: 7
 		}
 
 		OrangeClusterMax: {
 			Label: Orange: cluster max
-			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color. This is the Orange entry. Unit: blocks. Default: 8.
+			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color This is the Orange entry Unit: blocks Default: 8
 		}
 
 		RedBaseEnergy: {
 			Label: Red: base energy
-			Tooltip: Base energy of one particle per color. Halves per step down, so the cascade keeps the total. This is the Red entry. Unit: energy. Default: 2.
+			Tooltip: Base energy of one particle per color Halves per step down, so the cascade keeps the total This is the Red entry Unit: energy Default: 2
 		}
 
 		RedMultiplier: {
 			Label: Red: multiplier
-			Tooltip: Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this. This is the Red entry. Unit: x. Default: 1.27.
+			Tooltip: Ionization multiplier per cloud block per color Every ionized block multiplies the thunder energy by this This is the Red entry Unit: x Default: 127
 		}
 
 		RedClusterMin: {
 			Label: Red: cluster min
-			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color. This is the Red entry. Unit: blocks. Default: 10.
+			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color This is the Red entry Unit: blocks Default: 10
 		}
 
 		RedClusterMax: {
 			Label: Red: cluster max
-			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color. This is the Red entry. Unit: blocks. Default: 12.
+			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color This is the Red entry Unit: blocks Default: 12
 		}
 
 		GreyBaseEnergy: {
 			Label: Grey: base energy
-			Tooltip: Base energy of one particle per color. Halves per step down, so the cascade keeps the total. This is the Grey entry. Unit: energy. Default: 1.
+			Tooltip: Base energy of one particle per color Halves per step down, so the cascade keeps the total This is the Grey entry Unit: energy Default: 1
 		}
 
 		GreyMultiplier: {
 			Label: Grey: multiplier
-			Tooltip: Ionization multiplier per cloud block per color. Every ionized block multiplies the thunder energy by this. This is the Grey entry. Unit: x. Default: 1.1.
+			Tooltip: Ionization multiplier per cloud block per color Every ionized block multiplies the thunder energy by this This is the Grey entry Unit: x Default: 11
 		}
 
 		GreyClusterMin: {
 			Label: Grey: cluster min
-			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color. This is the Grey entry. Unit: blocks. Default: 14.
+			Tooltip: Smallest cluster of cloud blocks one hit ionizes, per color This is the Grey entry Unit: blocks Default: 14
 		}
 
 		GreyClusterMax: {
 			Label: Grey: cluster max
-			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color. This is the Grey entry. Unit: blocks. Default: 16.
+			Tooltip: Largest cluster of cloud blocks one hit ionizes, per color This is the Grey entry Unit: blocks Default: 16
 		}
 
 		HeatSigmaFraction: {
 			Label: Heat Sigma Fraction
-			Tooltip: How wide each color's hot spot is, as a fraction of its section (1/8 of the world). Bigger = more bleed into neighbors. Unit: fraction of section. Default: 0.35.
+			Tooltip: How wide each color's hot spot is, as a fraction of its section (1/8 of the world) Bigger = more bleed into neighbors Unit: fraction of section Default: 035
 		}
 
 		HeatFloor: {
 			Label: Heat Floor
-			Tooltip: Constant chance every color keeps everywhere, relative to its hot spot peak of 1. 0 = a color never appears outside its bump. Unit: relative weight. Default: 0.04.
+			Tooltip: Constant chance every color keeps everywhere, relative to its hot spot peak of 1 0 = a color never appears outside its bump Unit: relative weight Default: 004
 		}
 
 		RateDensity: {
 			Label: Rate Density
-			Tooltip: Particles per tile^2 per second at the very top of the world, before heat and altitude. Unit: particles/tile^2/s. Default: 0.00025.
+			Tooltip: Particles per tile^2 per second at the very top of the world, before heat and altitude Unit: particles/tile^2/s Default: 000025
 		}
 
 		SpawnSpreadDeg: {
 			Label: Spawn Spread Deg
-			Tooltip: Random tilt of a new particle away from straight down. Unit: degrees. Default: 15.
+			Tooltip: Random tilt of a new particle away from straight down Unit: degrees Default: 15
 		}
 
 		ParticleSpeed: {
 			Label: Particle Speed
-			Tooltip: How fast a particle flies. Unit: tiles/tick. Default: 0.8.
+			Tooltip: How fast a particle flies Unit: tiles/tick Default: 08
 		}
 
 		ParticleRange: {
 			Label: Particle Range
-			Tooltip: How far a particle flies before it dies. Unit: tiles. Default: 160.
+			Tooltip: How far a particle flies before it dies Unit: tiles Default: 160
 		}
 
 		SampleStepTicks: {
 			Label: Sample Step Ticks
-			Tooltip: How often the server samples new particles for each sky rig. Unit: ticks. Default: 10.
+			Tooltip: How often the server samples new particles for each sky rig Unit: ticks Default: 10
 		}
 
 		SpaceBottomFraction: {
 			Label: Space Bottom Fraction
-			Tooltip: Where the particle band ends, as a fraction of the world surface depth (vanilla's space layer ends at 0.35). Particles start between the top of the world and this depth, and get rarer the lower they start. Unit: fraction of worldSurface. Default: 0.35.
+			Tooltip: Where the particle band ends, as a fraction of the world surface depth (vanilla's space layer ends at 035) Particles start between the top of the world and this depth, and get rarer the lower they start Unit: fraction of worldSurface Default: 035
 		}
 
 		ScanStripsPerTick: {
 			Label: Scan Strips Per Tick
-			Tooltip: How many 8-tile-wide strips of the sky the receiver scan reads per tick while the world is first indexed. Unit: strips/tick. Default: 10.
+			Tooltip: How many 8-tile-wide strips of the sky the receiver scan reads per tick while the world is first indexed Unit: strips/tick Default: 10
 		}
 
 		ResyncStripsPerTick: {
 			Label: Resync Strips Per Tick
-			Tooltip: How many strips the slow re-check reads per tick afterwards. It repairs the receiver index when a tile changes without a hook (gemspark wire toggles, other mods). 0 = off. Unit: strips/tick. Default: 1.
+			Tooltip: How many strips the slow re-check reads per tick afterwards It repairs the receiver index when a tile changes without a hook (gemspark wire toggles, other mods) 0 = off Unit: strips/tick Default: 1
 		}
 
 		ReemitAngleMinDeg: {
 			Label: Reemit Angle Min Deg
-			Tooltip: Smallest angle between a re-emitted particle and the path it came along. Unit: degrees. Default: 5.
+			Tooltip: Smallest angle between a re-emitted particle and the path it came along Unit: degrees Default: 5
 		}
 
 		ReemitAngleMaxDeg: {
 			Label: Reemit Angle Max Deg
-			Tooltip: Largest angle between a re-emitted particle and the path it came along. Unit: degrees. Default: 10.
+			Tooltip: Largest angle between a re-emitted particle and the path it came along Unit: degrees Default: 10
 		}
 
 		ReemitVariation: {
 			Label: Reemit Variation
-			Tooltip: Each re-emitted particle gets its own random speed and lifespan, up to this fraction faster or slower and longer or shorter than the plain values. Unit: fraction. Default: 0.2 (20%).
+			Tooltip: Each re-emitted particle gets its own random speed and lifespan, up to this fraction faster or slower and longer or shorter than the plain values Unit: fraction Default: 02 (20%)
 		}
 
 		SpontaneousSplitChance: {
 			Label: Spontaneous Split Chance
-			Tooltip: Chance that a particle splits all by itself during a flight of ParticleRange tiles, as if a gemspark had absorbed it and re-emitted two particles of the next color (the same angles and variation as a gemspark). It is turned into a constant chance per tile flown, so a longer flight splits more often. Grey never splits. 0 = off. Unit: chance 0-1. Default: 0.05.
+			Tooltip: Chance that a particle splits all by itself during a flight of ParticleRange tiles, as if a gemspark had absorbed it and re-emitted two particles of the next color (the same angles and variation as a gemspark) It is turned into a constant chance per tile flown, so a longer flight splits more often Grey never splits 0 = off Unit: chance 0-1 Default: 005
 		}
 
 		CloudAbsorbChance: {
 			Label: Cloud Absorb Chance
-			Tooltip: Chance a particle passing through one cloud block is absorbed by it (same for every color). Unit: chance 0-1. Default: 0.5.
+			Tooltip: Chance a particle passing through one cloud block is absorbed by it (same for every color) Unit: chance 0-1 Default: 05
 		}
 
 		IonizedLifetimeTicks: {
 			Label: Ionized Lifetime Ticks
-			Tooltip: How long a block stays ionized before the whole cluster discharges. Unit: ticks. Default: 60.
+			Tooltip: How long a block stays ionized before the whole cluster discharges Unit: ticks Default: 60
 		}
 
 		RefractoryTicks: {
 			Label: Refractory Ticks
-			Tooltip: Cooldown after a discharge before those cloud blocks can be ionized again; 0 = off. Unit: ticks. Default: 0.
+			Tooltip: Cooldown after a discharge before those cloud blocks can be ionized again; 0 = off Unit: ticks Default: 0
 		}
 
 		RadiationRadiusTiles: {
 			Label: Radiation Radius Tiles
-			Tooltip: A cosmic particle counts as a hit on the player when its head comes this close to the player (each particle hits at most once). Each client counts the particles it sees for its own player. Unit: tiles. Default: 4.
+			Tooltip: A cosmic particle counts as a hit on the player when its head comes this close to the player (each particle hits at most once) Each client counts the particles it sees for its own player Unit: tiles Default: 4
 		}
 
 		RadiationLifeRegenPerLevel: {
 			Label: Radiation Life Regen Per Level
-			Tooltip: Life loss per radiation level, in lifeRegen units (half a heart point per second: 2 = 1 HP/s). The level rises by the particle's multiplier on every hit and is 0 again when the radiation debuff ends. Unit: lifeRegen/level. Default: 1.
+			Tooltip: Life loss per radiation level, in lifeRegen units (half a heart point per second: 2 = 1 HP/s) The level rises by the particle's multiplier on every hit and is 0 again when the radiation debuff ends Unit: lifeRegen/level Default: 1
 		}
 
 		RadiationClicksPerLevel: {
 			Label: Radiation Clicks Per Level
-			Tooltip: Geiger counter clicks per second for each radiation level (a click is at most every other tick). Unit: clicks/s per level. Default: 1.5.
+			Tooltip: Geiger counter clicks per second for each radiation level (a click is at most every other tick) Unit: clicks/s per level Default: 15
 		}
 
 		RadiationMaxLevel: {
 			Label: Radiation Max Level
-			Tooltip: The highest radiation level a player can reach. Unit: level. Default: 30.
+			Tooltip: The highest radiation level a player can reach Unit: level Default: 30
 		}
 
 		RadiationMaxSeconds: {
 			Label: Radiation Max Seconds
-			Tooltip: The longest the radiation debuff can last. Each hit adds seconds equal to the particle's multiplier, up to this. Unit: seconds. Default: 120.
+			Tooltip: The longest the radiation debuff can last Each hit adds seconds equal to the particle's multiplier, up to this Unit: seconds Default: 120
 		}
 
 		StrikeRadiusTiles: {
 			Label: Strike Radius Tiles
-			Tooltip: How far from the thunder a machine can be and still be struck. The nearest electric machine (poles count) inside this radius takes the strike. Unit: tiles. Default: 30.
+			Tooltip: How far from the thunder a machine can be and still be struck The nearest electric machine (poles count) inside this radius takes the strike Unit: tiles Default: 30
 		}
 
 		SurgePowerPerDecade: {
 			Label: Surge Power Per Decade
-			Tooltip: Grid power added per decade (power of ten) of thunder energy during a surge: surge power = this x log10(energy). One white hit is 192 energy (2.3 decades), a power pole draws 5 to 15, an Autohammer 100. The thunder energy itself stays unbounded; only the number sent to the grid is logarithmic, so it never gets astronomical. Unit: power/decade. Default: 100.
+			Tooltip: Grid power added per decade (power of ten) of thunder energy during a surge: surge power = this x log10(energy) One white hit is 192 energy (23 decades), a power pole draws 5 to 15, an Autohammer 100 The thunder energy itself stays unbounded; only the number sent to the grid is logarithmic, so it never gets astronomical Unit: power/decade Default: 100
 		}
 
 		SurgeDurationTicks: {
 			Label: Surge Duration Ticks
-			Tooltip: How long one strike's power spike lasts on the grid. Strikes on the same machine inside this window stack their power and restart it. Unit: ticks. Default: 30.
+			Tooltip: How long one strike's power spike lasts on the grid Strikes on the same machine inside this window stack their power and restart it Unit: ticks Default: 30
 		}
 
 		MaxSurgePower: {
 			Label: Max Surge Power
-			Tooltip: The most surge power one machine can hold (stacked strikes add up to this). With the logarithmic surge one strike is at most about 308 decades x SurgePowerPerDecade, so this only matters for many stacked strikes; lower it for a gameplay cap. Unit: power. Default: 1000000.
+			Tooltip: The most surge power one machine can hold (stacked strikes add up to this) With the logarithmic surge one strike is at most about 308 decades x SurgePowerPerDecade, so this only matters for many stacked strikes; lower it for a gameplay cap Unit: power Default: 1000000
 		}
 
 		MaxRaysPerTick: {
 			Label: Max Rays Per Tick
-			Tooltip: Most rays the server resolves in one tick; the rest wait. Unit: rays. Default: 200.
+			Tooltip: Most rays the server resolves in one tick; the rest wait Unit: rays Default: 200
 		}
 
 		MaxQueuedEvents: {
 			Label: Max Queued Events
-			Tooltip: Most queued events; beyond this new ones are dropped and counted. Unit: events. Default: 20000.
+			Tooltip: Most queued events; beyond this new ones are dropped and counted Unit: events Default: 20000
 		}
 
 		NetInterestRadiusTiles: {
 			Label: Net Interest Radius Tiles
-			Tooltip: Players farther than this from an event get no packet for it. Unit: tiles. Default: 120.
+			Tooltip: Players farther than this from an event get no packet for it Unit: tiles Default: 120
 		}
 
 		NetMaxRaysPerTick: {
 			Label: Net Max Rays Per Tick
-			Tooltip: Most rays one player is sent per server tick; beyond this they are dropped (cosmetic only). Unit: rays. Default: 300.
+			Tooltip: Most rays one player is sent per server tick; beyond this they are dropped (cosmetic only) Unit: rays Default: 300
 		}
 
 		NetMaxEventsPerTick: {
 			Label: Net Max Events Per Tick
-			Tooltip: Most events (absorb, ionize, discharge, strike, spit) one player is sent per server tick; beyond this they are dropped (cosmetic only). Unit: events. Default: 150.
+			Tooltip: Most events (absorb, ionize, discharge, strike, spit) one player is sent per server tick; beyond this they are dropped (cosmetic only) Unit: events Default: 150
 		}
 	}
 
@@ -635,147 +635,147 @@ Configs: {
 
 		ClientParticlePool: {
 			Label: Client Particle Pool
-			Tooltip: Most particles the client draws at once. Unit: particles. Default: 1500.
+			Tooltip: Most particles the client draws at once Unit: particles Default: 1500
 		}
 
 		ClientDrawBudget: {
 			Label: Client Draw Budget
-			Tooltip: Pixel quads (trail cells and heads) the client draws per frame before it simplifies: past this a trail loses its sine wave and is drawn as one plain line, past twice this only the heads are drawn. Real particles are drawn before the ambient ones, so the ambient ones simplify first. /fcosmic fx shows the quads drawn (client only, C8, C9b, C9c, C9d). Unit: quads. Default: 6000.
+			Tooltip: Pixel quads (trail cells and heads) the client draws per frame before it simplifies: past this a trail loses its sine wave and is drawn as one plain line, past twice this only the heads are drawn Real particles are drawn before the ambient ones, so the ambient ones simplify first /fcosmic fx shows the quads drawn (client only, C8, C9b, C9c, C9d) Unit: quads Default: 6000
 		}
 
 		ClientHeadSizeMinPx: {
 			Label: Client Head Size Min Px
-			Tooltip: Diameter of the head of the lowest frequency particle (Grey) on screen. The head size grows with the frequency up to ClientHeadSizeMaxPx for White, the colors in between are interpolated by their order (client only, C9c). Unit: pixels. Default: 3.
+			Tooltip: Diameter of the head of the lowest frequency particle (Grey) on screen The head size grows with the frequency up to ClientHeadSizeMaxPx for White, the colors in between are interpolated by their order (client only, C9c) Unit: pixels Default: 3
 		}
 
 		ClientHeadSizeMaxPx: {
 			Label: Client Head Size Max Px
-			Tooltip: Diameter of the head of the highest frequency particle (White) on screen. The head is a hard-edged, fully opaque disc (or the optional Content/Particles/CosmicParticle.png scaled to it). Grey uses ClientHeadSizeMinPx, the colors in between are interpolated by their order (client only, C9c). Unit: pixels. Default: 5.
+			Tooltip: Diameter of the head of the highest frequency particle (White) on screen The head is a hard-edged, fully opaque disc (or the optional Content/Particles/CosmicParticlepng scaled to it) Grey uses ClientHeadSizeMinPx, the colors in between are interpolated by their order (client only, C9c) Unit: pixels Default: 5
 		}
 
 		ClientHeadGrowTicks: {
 			Label: Client Head Grow Ticks
-			Tooltip: How long a new particle takes to grow from size zero to full size (its head and the swing of its trail). 0 = it appears at full size at once (client only, C9c). Unit: ticks. Default: 10.
+			Tooltip: How long a new particle takes to grow from size zero to full size (its head and the swing of its trail) 0 = it appears at full size at once (client only, C9c) Unit: ticks Default: 10
 		}
 
 		ClientHaloScale: {
 			Label: Client Halo Scale
-			Tooltip: Width of the soft halo around the head of a particle, as a multiple of the head's diameter. The halo is steady (it does not pulse), grows in and fades out together with the head. 0 = no halo (client only, C10). Unit: x head. Default: 3.5.
+			Tooltip: Width of the soft halo around the head of a particle, as a multiple of the head's diameter The halo is steady (it does not pulse), grows in and fades out together with the head 0 = no halo (client only, C10) Unit: x head Default: 35
 		}
 
 		ClientHaloBrightness: {
 			Label: Client Halo Brightness
-			Tooltip: How bright the halo is, in the particle's color, as a multiple of the particle's brightness (client only, C10). 0 = no halo. Unit: x. Default: 0.6.
+			Tooltip: How bright the halo is, in the particle's color, as a multiple of the particle's brightness (client only, C10) 0 = no halo Unit: x Default: 06
 		}
 
 		ClientFadeOutStart: {
 			Label: Client Fade Out Start
-			Tooltip: When the head of a particle starts to fade out, as a fraction of its flight time (ray length / speed). 0.8 = the head fades smoothly over the last fifth of the flight and is invisible on arrival. The trail does not fade: it stays where it is and drains away from its rear end until it has caught up with the spot where the head died. 1 = the head vanishes on arrival (client only, C9e). Unit: fraction. Default: 0.8.
+			Tooltip: When the head of a particle starts to fade out, as a fraction of its flight time (ray length / speed) 08 = the head fades smoothly over the last fifth of the flight and is invisible on arrival The trail does not fade: it stays where it is and drains away from its rear end until it has caught up with the spot where the head died 1 = the head vanishes on arrival (client only, C9e) Unit: fraction Default: 08
 		}
 
 		ClientBrightness: {
 			Label: Client Brightness
-			Tooltip: Brightness multiplier of the particles and their trails. Unit: x. Default: 1.
+			Tooltip: Brightness multiplier of the particles and their trails Unit: x Default: 1
 		}
 
 		ClientTrailTiles: {
 			Label: Client Trail Tiles
-			Tooltip: Length of the fading trail behind a particle on screen. Unit: tiles. Default: 5.
+			Tooltip: Length of the fading trail behind a particle on screen Unit: tiles Default: 5
 		}
 
 		ClientTrailPixelPx: {
 			Label: Client Trail Pixel Px
-			Tooltip: Size of one pixel of a particle's trail, in world pixels. The trail is drawn on this grid, snapped like the power pole wire (client only, C9b). Unit: pixels. Default: 2.
+			Tooltip: Size of one pixel of a particle's trail, in world pixels The trail is drawn on this grid, snapped like the power pole wire (client only, C9b) Unit: pixels Default: 2
 		}
 
 		ClientWaveAmplitudePx: {
 			Label: Client Wave Amplitude Px
-			Tooltip: How far the trail's sine wave swings to each side, for the White particle (the highest frequency). Lower frequencies swing less, in even steps down to Grey, whose trail is a plain straight line. The swing is the same along the whole trail and never exceeds half the particle's head width, so the trail does not stick out past the head. 0 = straight trails for every color (client only, C9b, C9d). Unit: pixels. Default: 4.
+			Tooltip: How far the trail's sine wave swings to each side, for the White particle (the highest frequency) Lower frequencies swing less, in even steps down to Grey, whose trail is a plain straight line The swing is the same along the whole trail and never exceeds half the particle's head width, so the trail does not stick out past the head 0 = straight trails for every color (client only, C9b, C9d) Unit: pixels Default: 4
 		}
 
 		ClientWaveLengthTiles: {
 			Label: Client Wave Length Tiles
-			Tooltip: Distance between two peaks of the trail's sine wave. The wave stands still in the world while the particle flies through it, so the peaks seem to slide back along the trail at exactly the particle's speed (client only, C9b). Unit: tiles. Default: 1.25.
+			Tooltip: Distance between two peaks of the trail's sine wave The wave stands still in the world while the particle flies through it, so the peaks seem to slide back along the trail at exactly the particle's speed (client only, C9b) Unit: tiles Default: 125
 		}
 
 		BoltLifeTicks: {
 			Label: Bolt Life Ticks
-			Tooltip: How long a lightning bolt (strike or spit) stays on screen. Unit: ticks. Default: 14.
+			Tooltip: How long a lightning bolt (strike or spit) stays on screen Unit: ticks Default: 14
 		}
 
 		BoltBaseWidthPx: {
 			Label: Bolt Base Width Px
-			Tooltip: Width of a lightning bolt's core at the lowest energy (client only, C6b). Unit: px. Default: 1.5.
+			Tooltip: Width of a lightning bolt's core at the lowest energy (client only, C6b) Unit: px Default: 15
 		}
 
 		BoltWidthPerDecadePx: {
 			Label: Bolt Width Per Decade Px
-			Tooltip: Extra bolt core width per decade (power of ten) of thunder energy, so a stronger strike is a thicker bolt (client only, C6b). 192 energy is 2.3 decades, 1e10 is 10. Unit: px/decade. Default: 1.2.
+			Tooltip: Extra bolt core width per decade (power of ten) of thunder energy, so a stronger strike is a thicker bolt (client only, C6b) 192 energy is 23 decades, 1e10 is 10 Unit: px/decade Default: 12
 		}
 
 		BoltMaxWidthPx: {
 			Label: Bolt Max Width Px
-			Tooltip: The thickest a bolt core can get (client only, C6b). The glow around it is 3 times as wide. Unit: px. Default: 30.
+			Tooltip: The thickest a bolt core can get (client only, C6b) The glow around it is 3 times as wide Unit: px Default: 30
 		}
 
 		BoltLightIntensity: {
 			Label: Bolt Light Intensity
-			Tooltip: How much light a lightning bolt gives off at both ends while it is on screen. 0 = no light (client only, C7). Unit: x. Default: 1.2.
+			Tooltip: How much light a lightning bolt gives off at both ends while it is on screen 0 = no light (client only, C7) Unit: x Default: 12
 		}
 
 		StrikeFlashSizePx: {
 			Label: Strike Flash Size Px
-			Tooltip: Size of the short flash where lightning starts and lands, in its first 6 ticks. 0 = no flash (client only, C7). Unit: pixels. Default: 40.
+			Tooltip: Size of the short flash where lightning starts and lands, in its first 6 ticks 0 = no flash (client only, C7) Unit: pixels Default: 40
 		}
 
 		IonizedLightIntensity: {
 			Label: Ionized Light Intensity
-			Tooltip: How much light a flashing (ionized) cloud block gives off, in its own color, as a multiple of its tint strength (client only, C6e). 0 = no light. Unit: x. Default: 0.9.
+			Tooltip: How much light a flashing (ionized) cloud block gives off, in its own color, as a multiple of its tint strength (client only, C6e) 0 = no light Unit: x Default: 09
 		}
 
 		LocalSimEnabled: {
 			Label: Local Sim Enabled
-			Tooltip: Ambient local simulation (C7): simulate the cosmic particles that fall through empty sky around the local player, client only, never counted or sent. It switches itself off near any receiver (cloud or lit gemspark), where the real particles are. false = no ambient particles at all. Unit: on/off. Default: true.
+			Tooltip: Ambient local simulation (C7): simulate the cosmic particles that fall through empty sky around the local player, client only, never counted or sent It switches itself off near any receiver (cloud or lit gemspark), where the real particles are false = no ambient particles at all Unit: on/off Default: true
 		}
 
 		LocalSimDensityBoost: {
 			Label: Local Sim Density Boost
-			Tooltip: Ambient density relative to the real sky (it uses the same RateDensity, heatmap and altitude). 1 = the same as the real sky, 2 = twice as many (client only, C7). Unit: x. Default: 1.
+			Tooltip: Ambient density relative to the real sky (it uses the same RateDensity, heatmap and altitude) 1 = the same as the real sky, 2 = twice as many (client only, C7) Unit: x Default: 1
 		}
 
 		LocalSimHalfWidthTiles: {
 			Label: Local Sim Half Width Tiles
-			Tooltip: Half the width of the area around the player where ambient particles start (client only, C7). Unit: tiles. Default: 100.
+			Tooltip: Half the width of the area around the player where ambient particles start (client only, C7) Unit: tiles Default: 100
 		}
 
 		LocalSimHalfHeightTiles: {
 			Label: Local Sim Half Height Tiles
-			Tooltip: Half the height of the area around the player that ambient particles must pass through (client only, C7). Particles start up to ParticleRange above it. Unit: tiles. Default: 60.
+			Tooltip: Half the height of the area around the player that ambient particles must pass through (client only, C7) Particles start up to ParticleRange above it Unit: tiles Default: 60
 		}
 
 		LocalSimMaxParticles: {
 			Label: Local Sim Max Particles
-			Tooltip: The most ambient particles alive at once. When the pool is full new ones are skipped (client only, C7). Unit: particles. Default: 400.
+			Tooltip: The most ambient particles alive at once When the pool is full new ones are skipped (client only, C7) Unit: particles Default: 400
 		}
 
 		LocalSimOffRadiusTiles: {
 			Label: Local Sim Off Radius Tiles
-			Tooltip: The ambient simulation switches off when a receiver (cloud block or lit gemspark) is within this many tiles of the player in both directions. The server only simulates near receivers, so there the real particles fill the sky (client only, C7). Unit: tiles. Default: 120.
+			Tooltip: The ambient simulation switches off when a receiver (cloud block or lit gemspark) is within this many tiles of the player in both directions The server only simulates near receivers, so there the real particles fill the sky (client only, C7) Unit: tiles Default: 120
 		}
 
 		LocalSimBrightness: {
 			Label: Local Sim Brightness
-			Tooltip: Brightness of the ambient particles relative to the real ones (client only, C7). Unit: x. Default: 0.7.
+			Tooltip: Brightness of the ambient particles relative to the real ones (client only, C7) Unit: x Default: 07
 		}
 
 		LocalSimFadeSeconds: {
 			Label: Local Sim Fade Seconds
-			Tooltip: How long the ambient local simulation takes to fade all the way in or out when it switches (near a receiver, off or on, after a teleport). 0 = switch at once (client only, C7b). Unit: seconds. Default: 2.
+			Tooltip: How long the ambient local simulation takes to fade all the way in or out when it switches (near a receiver, off or on, after a teleport) 0 = switch at once (client only, C7b) Unit: seconds Default: 2
 		}
 
 		ThunderBigTier: {
 			Label: Thunder Big Tier
-			Tooltip: Thunder at or above this energy tier (log10 of the energy x 4, the number that also sets the bolt width) plays the big SoundID.Thunder, weaker thunder plays the small bug zap. Tiers are whole numbers; /fcosmic stats shows the biggest energy, tier = log10(energy) x 4 (client only, C7b). Unit: tier. Default: 20.
+			Tooltip: Thunder at or above this energy tier (log10 of the energy x 4, the number that also sets the bolt width) plays the big SoundIDThunder, weaker thunder plays the small bug zap Tiers are whole numbers; /fcosmic stats shows the biggest energy, tier = log10(energy) x 4 (client only, C7b) Unit: tier Default: 20
 		}
 	}
 
@@ -834,7 +834,7 @@ Configs: {
 
 		RevealAllRecipes: {
 			Label: Reveal All Recipes
-			Tooltip: Recipe Discovery debug: show EVERY recipe in machine browsers instead of only learned ones.
+			Tooltip: Recipe Discovery debug: show EVERY recipe in machine browsers instead of only learned ones
 		}
 	}
 
@@ -843,57 +843,57 @@ Configs: {
 
 		ReachSlackTiles: {
 			Label: Reach Slack (tiles)
-			Tooltip: Extra tiles on top of the vanilla build range that the server allows when it checks a player's request.
+			Tooltip: Extra tiles on top of the vanilla build range that the server allows when it checks a player's request
 		}
 
 		RequestsPerSecond: {
 			Label: Requests Per Second
-			Tooltip: How many requests per second each player may send to the server (token bucket refill). 0 turns the limiter off.
+			Tooltip: How many requests per second each player may send to the server (token bucket refill) 0 turns the limiter off
 		}
 
 		RequestBurst: {
 			Label: Request Burst
-			Tooltip: How many requests a player can send at once before the rate limiter starts dropping them.
+			Tooltip: How many requests a player can send at once before the rate limiter starts dropping them
 		}
 
 		JoinChunkSize: {
 			Label: Join Sync Chunk Size
-			Tooltip: Bytes per packet when the server sends the full world state to a joining player.
+			Tooltip: Bytes per packet when the server sends the full world state to a joining player
 		}
 
 		JoinMaxProviderBytes: {
 			Label: Join Sync Max Bytes Per System
-			Tooltip: Largest state one system may send during join sync. Bigger states are skipped.
+			Tooltip: Largest state one system may send during join sync Bigger states are skipped
 		}
 
 		JoinRequestCooldownTicks: {
 			Label: Join Sync Cooldown (ticks)
-			Tooltip: Minimum time between two full-state requests from the same player.
+			Tooltip: Minimum time between two full-state requests from the same player
 		}
 
 		CartUpdatesPerSecond: {
 			Label: Cart Updates Per Second
-			Tooltip: Reserved for the cart phase: how often the server sends cart positions.
+			Tooltip: Reserved for the cart phase: how often the server sends cart positions
 		}
 
 		CartInterestRadiusTiles: {
 			Label: Cart Interest Radius (tiles)
-			Tooltip: Reserved for the cart phase: players farther than this from a cart do not receive its updates.
+			Tooltip: Reserved for the cart phase: players farther than this from a cart do not receive its updates
 		}
 
 		CartInterpolationBufferMs: {
 			Label: Cart Interpolation Buffer (ms)
-			Tooltip: Reserved for the cart phase: how far behind the server clients draw carts to keep movement smooth.
+			Tooltip: Reserved for the cart phase: how far behind the server clients draw carts to keep movement smooth
 		}
 
 		MachineStateUpdatesPerSecond: {
 			Label: Machine State Updates Per Second
-			Tooltip: Reserved for the machine sync phase: maximum light and state updates per machine per second.
+			Tooltip: Reserved for the machine sync phase: maximum light and state updates per machine per second
 		}
 
 		LiquidBroadcastsPerTick: {
 			Label: Liquid Broadcasts Per Tick
-			Tooltip: Reserved for the liquid phase: maximum world-liquid updates the server sends per tick.
+			Tooltip: Reserved for the liquid phase: maximum world-liquid updates the server sends per tick
 		}
 
 		VItemInterestHalfWidthTiles: {
@@ -954,36 +954,36 @@ Configs: {
 
 Dialogue: {
 	Dryad: {
-		RescueMechanic.Text: oh {PlayerName}... thank you for saving me, I was trying to rescue someone proficient in machines, she was lost underground... can you help rescue her?
-		RescueMechanicOther.Text: I was trying to rescue someone proficient in machines, she was lost underground... can you help rescue her?
-		PlanWithMechanic.Text: The Mechanic and I talked, {PlayerName}. She has a plan for you. Go and see her.
+		RescueMechanicText: oh {PlayerName} thank you for saving me, I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
+		RescueMechanicOtherText: I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
+		PlanWithMechanicText: The Mechanic and I talked, {PlayerName} She has a plan for you Go and see her
 		RescueReminder: Did you find the lost mechanic?
 	}
 
 	Mechanic: {
-		RescuedEye.Text: Thanks! I was stuck down here for a long time trying to find where my backpack went.
-		SuperWeaponIntro.Text: So you are the one the Dryad told me about, {PlayerName}. I have come up with a plan to weaken the wall of flesh. Here are the blueprints you need. This would require a lot of parts, so I would recommend automating the process.
+		RescuedEyeText: Thanks! I was stuck down here for a long time trying to find where my backpack went
+		SuperWeaponIntroText: So you are the one the Dryad told me about, {PlayerName} I have come up with a plan to weaken the wall of flesh Here are the blueprints you need This would require a lot of parts, so I would recommend automating the process
 
 		Bag: {
 			Text: Have you found my bag?
 			Button1: Give the bag
-			Thanks: You did find it! Thanks a lot for getting it back.
+			Thanks: You did find it! Thanks a lot for getting it back
 		}
 	}
 }
 
 Keybinds: {
-	RecipeBookItemSearch.DisplayName: Recipe Book - Show Recipes Using Hovered Item
-	RecipeBookToggle.DisplayName: Recipe Book - Open / Close
+	RecipeBookItemSearchDisplayName: Recipe Book - Show Recipes Using Hovered Item
+	RecipeBookToggleDisplayName: Recipe Book - Open / Close
 }
 
 Projectiles: {
-	MechanicalArmProjectile.DisplayName: Mechanical Arm Projectile
-	MechSuitArmProjectile.DisplayName: Mech Suit Arm Projectile
-	SuperWeaponMissile.DisplayName: Super Weapon Missile
-	IceBoomerangProjectile.DisplayName: Ice Boomerang Projectile
-	IceCrystalProjectile.DisplayName: Ice Crystal Projectile
-	IceCrystalBlastProjectile.DisplayName: Ice Crystal Blast Projectile
+	MechanicalArmProjectileDisplayName: Mechanical Arm Projectile
+	MechSuitArmProjectileDisplayName: Mech Suit Arm Projectile
+	SuperWeaponMissileDisplayName: Super Weapon Missile
+	IceBoomerangProjectileDisplayName: Ice Boomerang Projectile
+	IceCrystalProjectileDisplayName: Ice Crystal Projectile
+	IceCrystalBlastProjectileDisplayName: Ice Crystal Blast Projectile
 }
 
 RecipeBook: {
@@ -1002,11 +1002,11 @@ RecipeBook: {
 		The pages are blank
 		Try crafting something!
 		'''
-	NothingSelected: Select a recipe on the left page.
-	NoResults: No recipes match your search.
+	NothingSelected: Select a recipe on the left page
+	NoResults: No recipes match your search
 	StatusCrafted: Crafted
-	StatusParchment: Learned from a parchment. Not crafted yet.
-	DetailsComing: Recipe details are coming soon.
+	StatusParchment: Learned from a parchment, Not crafted yet
+	DetailsComing: Recipe details are coming soon
 	Inputs: Inputs
 	Outputs: Outputs
 	AnyWater: Any Water
@@ -1030,24 +1030,24 @@ RecipeBook: {
 }
 
 Tiles: {
-	PureSiliconTile.MapEntry: Pure Silicon
-	SiliconOreTile.MapEntry: Silicon Ore
-	CoalTile.MapEntry: Coal
-	MechanicalAssemblerTile.MapEntry: Mechanical Assembler
-	RoboticArmTile.MapEntry: Robotic Arm
-	WoodenPowerPoleTile.MapEntry: Wooden Power Pole
-	PlatinumPowerPoleTile.MapEntry: Platinum Power Pole
-	MeteorHeadStatueTile.MapEntry: Meteor Head Statue
-	MissileDrillTile.MapEntry: Missile Drill
-	MissileTankTile.MapEntry: Missile Fuel Tank
-	MissileThrusterTile.MapEntry: Missile Thruster
-	BeeWheelTile.MapEntry: Bee Wheel Tile
-	SunCapsuleTile.MapEntry: Sun Capsule Tile
+	PureSiliconTileMapEntry: Pure Silicon
+	SiliconOreTileMapEntry: Silicon Ore
+	CoalTileMapEntry: Coal
+	MechanicalAssemblerTileMapEntry: Mechanical Assembler
+	RoboticArmTileMapEntry: Robotic Arm
+	WoodenPowerPoleTileMapEntry: Wooden Power Pole
+	PlatinumPowerPoleTileMapEntry: Platinum Power Pole
+	MeteorHeadStatueTileMapEntry: Meteor Head Statue
+	MissileDrillTileMapEntry: Missile Drill
+	MissileTankTileMapEntry: Missile Fuel Tank
+	MissileThrusterTileMapEntry: Missile Thruster
+	BeeWheelTileMapEntry: Bee Wheel Tile
+	SunCapsuleTileMapEntry: Sun Capsule Tile
 }
 
 Story: {
 	HerBackpackName: Mechanic's Backpack
-	MechanicShopUnlocked: Mods.Factorraria.Story.MechanicShopUnlocked
+	MechanicShopUnlocked: ModsFactorrariaStoryMechanicShopUnlocked
 	MechanicsBagName: The Mechanic's Bag
 	MechanicsBagTooltip: Filled with tools and tangled wire
 }
