@@ -1,6 +1,6 @@
 ﻿# Recipe book roadmap (tab discovery, new-recipe highlights, tab and favorite filters)
 
-Status: R0, R1, R1.1, R1.2 and R1.3 applied (untested); R2 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
+Status: R0, R1, R1.1, R1.2, R1.3 and R1.4 applied (untested); R2 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
 
 Code map: `Common/Knowledge/` (RecipeCatalog, RecipeKnowledgeSystem, VanillaStationBooks, ScrollPools), `Common/Machines/RecipeVisibility.cs` (states), `Common/UI/RecipeBookUI/` (RecipeBookState, RecipeBookElements, RecipeBookPlayer, RecipeBookLayout), `Common/Net/RecipeKnowledgeNet.cs`.
 
@@ -13,6 +13,7 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [~] R1.1 Tab discovery tweak (machines inherit station tabs; By Hand first; station sprites and hover tip; applied, untested)
 - [~] R1.2 R1.1 follow-up (detail page names only discovered stations and wraps; sprite cycling only held items; a parchment discovers its machine; applied, untested)
 - [~] R1.3 R1.2 follow-up (Hellforge takes over Furnaces; discovered stations only in the tip; tip text centered; a discovered machine discovers its inherited stations; no search bar on an empty book; applied, untested)
+- [~] R1.4 Furnace tab folded into Hellforge's (one tab; one entry per product; recipes merged across machines with a fuel row per machine; applied, untested)
 - [ ] R2 New-recipe highlight
 - [ ] R3 "New machine discovered!" pop-up
 - [ ] R4 Show/hide each tab
@@ -90,6 +91,18 @@ Decided 2026-11-16. Applied, untested. No new packets: everything is computed fr
 - The search bar is not built while the right page says "The pages are blank" (`IsEmpty`); `Rebuild` rebuilds it as soon as something is listed.
 
 Test checklist: see the patch reply. Next chat: "Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md (R1 to R1.3 and the Progress list), then Common/Knowledge/RecipeTabDiscovery.cs and RecipeTabDefinitions.cs. State: R0 to R1.3 are applied; test results: <paste>. Log them in Progress, then implement R2."
+
+## R1.4 One Furnace/Hellforge tab, merged recipes, fuel rows
+
+Decided 2026-11-16. Applied, untested. Supersedes the Furnace bullet of R1.3 (the Furnace no longer has a tab of its own; the Hellforge no longer inherits only the vanilla Furnaces station). No packets, nothing saved.
+
+- `RecipeTabDefinitions.InheritedTabs`: Hellforge inherits the whole Furnace tab. `Twin("Furnace", Furnaces)` is back, so the Furnace machine and the vanilla Furnaces station are one unit; the unit joins the Hellforge tab (`RecipeCatalog.BuildTabs`, `unitOf`, `InheritingTabs()`). `DiscoveryTiles` (R1.3) is gone. Until the Hellforge is discovered the tab is titled "Furnace" (the unit is discovered through the Furnaces tile; same marker id as before, so old worlds keep it); after that "Hellforge", with the tip "Inherits from [icon] Furnace". The detail line reads "Hellforge or Furnace" for products both make.
+- One entry per product per tab (`RecipeBookState.Rebuild`): when several machines of a tab list the same product, the first machine's entry stays and the others become aliases of it (as stations already were).
+- The right page cycles `RecipeCatalog.MergedRecipes(machine, group)`: the recipes of that product across every machine of the tab, identical ones (same inputs, liquids and outputs) merged into one entry that remembers which machines do it. A recipe only the Hellforge has stays its own page.
+- Fuel: one fuel cell per machine that makes the shown recipe and has fuels, stacked beside the arrow (Furnace items cycling on top, Hellforge lava below; `fuelRowStep`). A Hellforge-only recipe shows only the lava; the arrow grows for the extra row.
+- Not changed: the ingredient search (`#Name`) only looks at the kept entry's own recipes.
+
+Next chat: "Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md (R1 to R1.4 and the Progress list). State: R0 to R1.4 are applied; test results: <paste>. Log them in Progress, then implement R2."
 
 ## R2 New-recipe highlight
 

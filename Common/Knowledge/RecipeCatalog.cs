@@ -58,13 +58,15 @@ namespace Factorraria.Common.Knowledge
             return tabOwner.TryGetValue(machineName, out string owner) ? owner : machineName;
         }
 
-        static Dictionary<string, List<string>> inherited = new Dictionary<string, List<string>>();   // machine tab -> the station tabs absorbed into it (RecipeTabDefinitions.Inherits). Built with tabOwner.
+        static Dictionary<string, List<string>> inherited = new Dictionary<string, List<string>>();   // machine tab -> the inherited units absorbed into it (a vanilla station, or a whole machine tab, RecipeTabDefinitions.Inherits / InheritedTabs). Built with tabOwner.
+        static Dictionary<string, string> unitOf = new Dictionary<string, string>();                    // catalog name of a member (station, machine, or the machine's twin station) -> its inherited unit. Built with tabOwner.
         static readonly string[] NoStations = new string[0];
 
         static void BuildTabs()
         {
             tabOwner = new Dictionary<string, string>();
             inherited = new Dictionary<string, List<string>>();
+            unitOf = new Dictionary<string, string>();
             foreach (KeyValuePair<string, string> twin in RecipeTabDefinitions.Twins)
                 if (HasBook(twin.Key) && stationNames.Contains(twin.Value)) tabOwner[twin.Value] = twin.Key;
 
@@ -78,10 +80,36 @@ namespace Factorraria.Common.Knowledge
                     if (!stationNames.Contains(station) || tabOwner.ContainsKey(station)) continue;
 
                     tabOwner[station] = inherit.Key;
+                    unitOf[station] = station;
                     if (!inherited.TryGetValue(inherit.Key, out List<string> list)) inherited[inherit.Key] = list = new List<string>();
                     list.Add(station);
                 }
             }
+
+            // Whole tabs (Hellforge inherits the Furnace): the machine, and its twin station, join the owner's tab as ONE unit.
+            foreach (KeyValuePair<string, string> pair in RecipeTabDefinitions.InheritedTabs)
+            {
+                string owner = pair.Key, unit = pair.Value;
+                if (!HasBook(owner) || !HasBook(unit) || tabOwner.ContainsKey(unit)) continue;
+
+                tabOwner[unit] = owner;
+                unitOf[unit] = unit;
+                foreach (KeyValuePair<string, string> twin in RecipeTabDefinitions.Twins)
+                    if (twin.Key == unit && tabOwner.TryGetValue(twin.Value, out string twinOwner) && twinOwner == unit)
+                    {
+                        tabOwner[twin.Value] = owner;
+                        unitOf[twin.Value] = unit;
+                    }
+                if (!inherited.TryGetValue(owner, out List<string> list)) inherited[owner] = list = new List<string>();
+                list.Add(unit);
+            }
+        }
+
+        /// <summary>The tabs (catalog names) that inherit something, in no particular order.</summary>
+        public static IEnumerable<string> InheritingTabs()
+        {
+            if (tabOwner == null) BuildTabs();
+            return inherited.Keys;
         }
 
         /// <summary>The vanilla station tabs (catalog names) absorbed into this machine's tab, in RecipeTabDefinitions.Inherits order. Empty for most tabs.</summary>
@@ -112,7 +140,7 @@ namespace Factorraria.Common.Knowledge
             foreach (KeyValuePair<string, RecipeBook> m in machines)
             {
                 if (TabOf(m.Key) != tab || !BookMakes(m.Value, product)) continue;
-                if (inheritedList != null && inheritedList.Contains(m.Key)) hits.Add(m.Key);
+                if (inheritedList != null && unitOf.TryGetValue(m.Key, out string unit) && inheritedList.Contains(unit)) hits.Add(unit);
                 else own = true;
             }
 
@@ -121,6 +149,69 @@ namespace Factorraria.Common.Knowledge
                 foreach (string station in inheritedList)
                     if (hits.Contains(station)) result.Add(station);
             return result;
+        }
+
+        /// <summary>One recipe of a product as the detail page lists it, with every machine of the tab that can do it (registration order).</summary>
+        public class MergedRecipe
+        {
+            public CustomRecipe Recipe;
+            public readonly List<string> Machines = new List<string>();
+        }
+
+        /// <summary>
+        /// The recipes of one product inside the tab that `catalogMachine` is listed under: the machine's own group first, then the
+        /// groups of the other machines and stations of the tab that make the same product. Identical recipes (same inputs, liquids and
+        /// outputs) are ONE entry that remembers every machine that does it (the Furnace and the Hellforge both smelt an Iron Bar);
+        /// a recipe only one machine has stays its own entry. The detail page cycles these and shows each machine's fuel.
+        /// </summary>
+        public static List<MergedRecipe> MergedRecipes(string catalogMachine, RecipeOutputGroup selected)
+        {
+            var result = new List<MergedRecipe>();
+            if (catalogMachine == null || selected == null) return result;
+
+            var bySignature = new Dictionary<string, MergedRecipe>();
+            void Take(string machine, RecipeOutputGroup group)
+            {
+                foreach (CustomRecipe recipe in group.Recipes)
+                {
+                    string signature = Signature(recipe);
+                    if (!bySignature.TryGetValue(signature, out MergedRecipe merged))
+                    {
+                        merged = new MergedRecipe { Recipe = recipe };
+                        bySignature[signature] = merged;
+                        result.Add(merged);
+                    }
+                    if (!merged.Machines.Contains(machine)) merged.Machines.Add(machine);
+                }
+            }
+
+            string tab = TabOf(catalogMachine);
+            Take(catalogMachine, selected);
+            foreach (KeyValuePair<string, RecipeBook> m in machines)
+            {
+                if (m.Key == catalogMachine || TabOf(m.Key) != tab) continue;
+                foreach (RecipeOutputGroup group in m.Value.Groups)
+                    if (group.Key.Equals(selected.Key)) Take(m.Key, group);
+            }
+
+            var order = new List<string>();
+            foreach (KeyValuePair<string, RecipeBook> m in machines) order.Add(m.Key);
+            foreach (MergedRecipe merged in result)
+                merged.Machines.Sort((a, b) => order.IndexOf(a).CompareTo(order.IndexOf(b)));
+            return result;
+        }
+
+        static string Signature(CustomRecipe recipe)
+        {
+            var parts = new List<string>();
+            foreach (RecipeIngredient i in recipe.Inputs) parts.Add("i" + i.Type + ":" + i.Stack);
+            foreach (LiquidIngredient l in recipe.LiquidInputs) parts.Add("li" + l.LiquidType + ":" + l.Amount);
+            parts.Sort(System.StringComparer.Ordinal);
+            var outs = new List<string>();
+            foreach (RecipeIngredient o in recipe.Outputs) outs.Add("o" + o.Type + ":" + o.Stack);
+            foreach (LiquidIngredient l in recipe.LiquidOutputs) outs.Add("lo" + l.LiquidType + ":" + l.Amount);
+            outs.Sort(System.StringComparer.Ordinal);
+            return string.Join(",", parts) + ">" + string.Join(",", outs);
         }
 
         static bool BookMakes(RecipeBook book, RecipeOutputKey product)

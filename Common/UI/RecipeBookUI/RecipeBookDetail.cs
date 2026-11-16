@@ -29,12 +29,31 @@ namespace Factorraria.Common.UI.RecipeBookUI
         int shortArrowLength = 13;     // the original arrow, used when the machine has no fuels
         int fuelCycleTicks = 60;       // the shown fuel changes this often (60 = once a second)
         int fuelBoxOffsetX = 12;       // gap between the arrow's centre line and the fuel cell
+        int fuelRowStep = 46;          // distance between two stacked fuel cells (one row per machine that makes the recipe: Furnace, then Hellforge)
 
         // Clickable ingredient boxes of the recipe drawn this frame (box, catalog key to jump to). Refilled every draw.
         readonly List<(Rectangle box, string key, string text)> navHits = new List<(Rectangle box, string key, string text)>();
 
         // Revealed ingredient boxes that have NO recipe in the book (box, name to type in the search bar). Refilled every draw.
         readonly List<(Rectangle box, string text)> searchHits = new List<(Rectangle box, string text)>();
+
+        // The recipes of the selected product across the machines of its tab (RecipeCatalog.MergedRecipes), cached per selection.
+        List<RecipeCatalog.MergedRecipe> merged = new List<RecipeCatalog.MergedRecipe>();
+        RecipeOutputGroup mergedGroup;
+        string mergedMachine;
+        int mergedVersion = -1;
+
+        List<RecipeCatalog.MergedRecipe> Merged()
+        {
+            if (!ReferenceEquals(mergedGroup, book.SelectedGroup) || mergedMachine != book.SelectedMachine || mergedVersion != RecipeKnowledgeSystem.Version)
+            {
+                mergedGroup = book.SelectedGroup;
+                mergedMachine = book.SelectedMachine;
+                mergedVersion = RecipeKnowledgeSystem.Version;
+                merged = RecipeCatalog.MergedRecipes(mergedMachine, mergedGroup);
+            }
+            return merged;
+        }
 
         public RecipeBookDetail(RecipeBookState book)
         {
@@ -81,12 +100,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 return;
             }
 
-            RecipeOutputGroup g = book.SelectedGroup;
-            if (g == null || g.Recipes.Count < 2) return;
+            if (book.SelectedGroup == null || Merged().Count < 2) return;
 
             Rectangle r = GetDimensions().ToRectangle();
             Point mouse = Main.MouseScreen.ToPoint();
-            int count = g.Recipes.Count;
+            int count = Merged().Count;
             if (PrevRect(r).Contains(mouse)) recipeIndex = (recipeIndex + count - 1) % count;
             else if (NextRect(r).Contains(mouse)) recipeIndex = (recipeIndex + 1) % count;
             else return;
@@ -122,7 +140,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 shownGroup = group;
                 recipeIndex = 0;          // new selection starts on its first recipe
             }
-            recipeIndex = Math.Clamp(recipeIndex, 0, Math.Max(0, group.Recipes.Count - 1));
+            List<RecipeCatalog.MergedRecipe> recipes = Merged();
+            recipeIndex = Math.Clamp(recipeIndex, 0, Math.Max(0, recipes.Count - 1));
 
             bool faded = book.SelectedState != RecipeState.Crafted;
             RecipeIcon.Draw(sb, group.Key, new Vector2(r.X + 30, r.Y + 30), 44f, 1f, faded);
@@ -137,9 +156,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
             BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66 + headerExtra, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
 
 
-            if (group.Recipes.Count == 0) return;
-            DrawRecipe(sb, group.Recipes[recipeIndex], faded);
-            if (group.Recipes.Count > 1) DrawPager(sb, r, group.Recipes.Count);
+            if (recipes.Count == 0) return;
+            DrawRecipe(sb, recipes[recipeIndex].Recipe, faded, recipes[recipeIndex].Machines);
+            if (recipes.Count > 1) DrawPager(sb, r, recipes.Count);
         }
 
         RecipeOutputGroup stationGroup;
@@ -198,7 +217,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             return lines;
         }
 
-        void DrawRecipe(SpriteBatch sb, CustomRecipe recipe, bool outputsHidden)
+        void DrawRecipe(SpriteBatch sb, CustomRecipe recipe, bool outputsHidden, List<string> machines)
         {
             Rectangle area = RecipeBookLayout.DetailRecipeArea;
             // DetailRecipeArea is panel-relative; the element's own origin gives the panel offset.
@@ -218,11 +237,19 @@ namespace Factorraria.Common.UI.RecipeBookUI
             y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, book.SelectedState, book.SelectedKey), area, y, navHits, searchHits);
 
             y += 4f;
-            List<RecipeCatalog.FuelEntry> fuels = RecipeCatalog.FuelsOf(book.SelectedMachine);
-            bool hasFuel = fuels != null && fuels.Count > 0;
-            int length = hasFuel ? arrowLength : shortArrowLength;
+            // One fuel row per machine that makes THIS recipe and burns something: the Furnace's items first, the Hellforge's lava below.
+            // A recipe only the Hellforge has shows only the lava row. Stations and machines without fuels add no row.
+            var fuelRows = new List<(string machine, List<RecipeCatalog.FuelEntry> fuels)>();
+            foreach (string machine in machines)
+            {
+                List<RecipeCatalog.FuelEntry> machineFuels = RecipeCatalog.FuelsOf(machine);
+                if (machineFuels != null && machineFuels.Count > 0) fuelRows.Add((machine, machineFuels));
+            }
+            bool hasFuel = fuelRows.Count > 0;
+            int length = hasFuel ? Math.Max(arrowLength, RecipeBookLayout.DetailCell + (fuelRows.Count - 1) * fuelRowStep + 12) : shortArrowLength;
             DrawArrow(sb, new Vector2(area.Center.X, y), length);
-            if (hasFuel) DrawFuel(sb, area, y, fuels);
+            for (int row = 0; row < fuelRows.Count; row++)
+                DrawFuel(sb, area, y, length, row, fuelRows.Count, fuelRows[row].machine, fuelRows[row].fuels);
             y += length + 7f;     // same 7px gap the short arrow always had
 
             y = DrawLabel(sb, RecipeBookLayout.Text("Outputs"), area, y);
@@ -374,7 +401,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// One of the machine's fuels (from RecipeCatalog.FuelsOf, i.e. the machine's registry) beside the middle of the arrow,
         /// cycling through all of them. Same reveal rule, hover tooltip and click-to-jump as an ingredient cell.
         /// </summary>
-        void DrawFuel(SpriteBatch sb, Rectangle area, float arrowTop, List<RecipeCatalog.FuelEntry> fuels)
+        void DrawFuel(SpriteBatch sb, Rectangle area, float arrowTop, int length, int row, int rows, string machine, List<RecipeCatalog.FuelEntry> fuels)
         {
             int size = RecipeBookLayout.DetailCell;
             int index = (int)((Main.GameUpdateCount / (uint)Math.Max(1, fuelCycleTicks)) % (uint)fuels.Count);
@@ -382,7 +409,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             // Not tied to the selected recipe: once any recipe of this machine was crafted, every fuel of the machine shows.
             // Before that, a fuel shows once it was held (any member, for a group like Any Wood).
-            bool hidden = !RecipeVisibility.IsFuelRevealed(book.SelectedMachine, fuel);
+            bool hidden = !RecipeVisibility.IsFuelRevealed(machine, fuel);
             bool single = fuel.LabelKey == null;
 
             var cell = new Cell
@@ -397,7 +424,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             };
 
             // DrawCells with a one-cell area draws, highlights, shows the tooltip and records the click box.
-            var box = new Rectangle(area.Center.X + fuelBoxOffsetX, (int)(arrowTop + arrowLength / 2f - size / 2f), size, size);
+            var box = new Rectangle(area.Center.X + fuelBoxOffsetX, (int)(arrowTop + length / 2f + (row - (rows - 1) / 2f) * fuelRowStep - size / 2f), size, size);
             DrawCells(sb, new List<Cell> { cell }, box, box.Y, navHits, searchHits);
 
             string label = RecipeBookLayout.Text("Fuel");

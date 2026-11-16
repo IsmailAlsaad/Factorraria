@@ -21,6 +21,7 @@ namespace Factorraria.Common.Knowledge
     {
         public static readonly KeyValuePair<string, string>[] Twins =
         {
+            Twin("Furnace", TileID.Furnaces),
             Twin("Hellforge", TileID.Hellforge),
             Twin("Solidifier", TileID.Solidifier),
             Twin("IceMachine", TileID.IceMachine),
@@ -29,15 +30,7 @@ namespace Factorraria.Common.Knowledge
             Twin("Autohammer", TileID.Autohammer),
         };
 
-        /// <summary>
-        /// Machine tabs that are NOT a twin of their tile (their tile's station tab belongs to another machine, see Inherits) but are
-        /// still discovered through it: the Furnace machine sits on the Furnaces tile, which Hellforge inherits. The tab reuses that
-        /// tile's marker (id = tile), so a world that already found Furnaces keeps the Furnace tab. Key = catalog machine name.
-        /// </summary>
-        public static readonly KeyValuePair<string, int>[] DiscoveryTiles =
-        {
-            new KeyValuePair<string, int>("Furnace", TileID.Furnaces),
-        };
+
 
         /// <summary>
         /// Machine tabs with no vanilla twin: the machine sits on its own tile, and holding the item that places it (or standing near
@@ -63,7 +56,17 @@ namespace Factorraria.Common.Knowledge
         {
             Inherit("Autohammer", TileID.Anvils),
             Inherit("MechanicalAssembler", TileID.WorkBenches, TileID.HeavyWorkBench),
-            Inherit("Hellforge", TileID.Furnaces),
+        };
+
+        /// <summary>
+        /// Machines that inherit a WHOLE tab: key = the machine that takes over, value = the machine whose tab (with its vanilla twin
+        /// station) is absorbed. The absorbed machine has no tab of its own any more; until the owner is discovered the tab is titled
+        /// after the absorbed one ("Furnace"), afterwards after the owner ("Hellforge"). Its recipes stay listed once per product:
+        /// a product both machines make is one entry whose right page cycles the recipes, each with the fuels of the machines that do it.
+        /// </summary>
+        public static readonly KeyValuePair<string, string>[] InheritedTabs =
+        {
+            new KeyValuePair<string, string>("Hellforge", "Furnace"),
         };
 
         static KeyValuePair<string, int[]> Inherit(string machine, params int[] tiles) =>

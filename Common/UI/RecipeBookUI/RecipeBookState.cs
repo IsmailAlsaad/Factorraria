@@ -184,6 +184,22 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 aliases[x.e.Key] = own;
                 return true;
             });
+
+            // Several machines of one tab (Furnace and Hellforge share the Hellforge tab) list a product once: the first machine's entry
+            // stays, the others map to it. The detail page merges their recipes (RecipeCatalog.MergedRecipes), each with its own fuel.
+            var firstOfProduct = new Dictionary<string, string>();
+            listed.RemoveAll(x =>
+            {
+                if (x.e.Group == null || x.e.Station) return false;
+                string id = RecipeCatalog.TabOf(x.e.Machine) + "|" + RecipeKey.For(x.e.Group);
+                if (!firstOfProduct.TryGetValue(id, out string first))
+                {
+                    firstOfProduct[id] = x.e.Key;
+                    return false;
+                }
+                aliases[x.e.Key] = first;
+                return true;
+            });
             SelectedKey = Resolve(SelectedKey);
 
             // Ingredient search: if some listed recipe takes an ingredient named exactly like the text ("Wood"), only exact

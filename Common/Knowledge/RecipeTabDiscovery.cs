@@ -88,32 +88,21 @@ namespace Factorraria.Common.Knowledge
                 byTile[tile] = tab;
             }
 
-            var sharedSubs = new List<(Tab sub, Tab holder)>();
-
             // Stations a machine inherits from (the Anvils of the Autohammer): each one is its own discoverable tile with its own
             // marker, filed under the machine's tab. Holding or standing near it makes the machine's tab appear.
-            foreach (KeyValuePair<string, int[]> inherit in RecipeTabDefinitions.Inherits)
+            // A unit is a vanilla station (the Anvils) or a whole machine tab (the Furnace, discovered through its twin tile, Furnaces).
+            foreach (string ownerName in RecipeCatalog.InheritingTabs())
             {
-                if (!byName.TryGetValue(inherit.Key, out Tab owner)) continue;
-                foreach (string station in RecipeCatalog.InheritedStations(inherit.Key))
+                if (!byName.TryGetValue(ownerName, out Tab owner)) continue;
+                foreach (string station in RecipeCatalog.InheritedStations(ownerName))
                 {
-                    int tile = VanillaStationBooks.TileOf(station);
-                    if (tile < 0 || byName.ContainsKey(station)) continue;
+                    int tile = TileOfUnit(station);
+                    if (tile < 0 || byId.ContainsKey(tile) || byTile.ContainsKey(tile) || byName.ContainsKey(station)) continue;
 
-                    var sub = new Tab { Name = station, Id = tile, Tile = tile, Inherited = true, Owner = inherit.Key };
-                    if (byTile.TryGetValue(tile, out Tab holder))
-                    {
-                        // Another tab already discovers through this tile (the Furnace machine, RecipeTabDefinitions.DiscoveryTiles):
-                        // the station shares its marker and its items instead of claiming the tile.
-                        if (holder.Id != tile) continue;
-                        sharedSubs.Add((sub, holder));
-                    }
-                    else
-                    {
-                        byId[tile] = sub;
-                        byTile[tile] = sub;
-                    }
+                    var sub = new Tab { Name = station, Id = tile, Tile = tile, Inherited = true, Owner = ownerName };
                     byName[station] = sub;
+                    byId[tile] = sub;
+                    byTile[tile] = sub;
                     owner.Inherits.Add(sub);
                 }
             }
@@ -128,8 +117,7 @@ namespace Factorraria.Common.Knowledge
                 }
             }
 
-            foreach ((Tab sub, Tab holder) in sharedSubs)
-                foreach (int type in holder.Items) sub.Items.Add(type);
+
 
             foreach (Tab tab in byName.Values)
             {
@@ -139,6 +127,16 @@ namespace Factorraria.Common.Knowledge
             }
 
             return byName.Count;
+        }
+
+        // The tile that discovers an inherited unit: a vanilla station's own tile, or a machine's twin tile (Furnace -> Furnaces).
+        static int TileOfUnit(string name)
+        {
+            int tile = VanillaStationBooks.TileOf(name);
+            if (tile >= 0) return tile;
+            foreach (KeyValuePair<string, string> twin in RecipeTabDefinitions.Twins)
+                if (twin.Key == name) return VanillaStationBooks.TileOf(twin.Value);
+            return -1;
         }
 
         static bool TryFindTile(string name, out int tile, out int id)
@@ -161,13 +159,7 @@ namespace Factorraria.Common.Knowledge
                 return tile >= 0;
             }
 
-            foreach (KeyValuePair<string, int> shared in RecipeTabDefinitions.DiscoveryTiles)
-            {
-                if (shared.Key != name) continue;
-                tile = shared.Value;
-                id = tile;
-                return tile >= 0;
-            }
+
 
             for (int i = 0; i < RecipeTabDefinitions.ExtraMachineTiles.Length; i++)
             {
@@ -231,7 +223,7 @@ namespace Factorraria.Common.Knowledge
             if (tab.Inherited && byName.TryGetValue(tab.Owner, out Tab owner) && Hit(owner)) return true;
             HashSet<string> machines = UnlockedMachines();
             if (machines.Contains(tab.Name)) return true;
-            return !tab.Inherited && tab.Tile >= 0 && machines.Contains(VanillaStationBooks.NameFor(tab.Tile));   // the vanilla twin of a machine
+            return tab.Tile >= 0 && machines.Contains(VanillaStationBooks.NameFor(tab.Tile));   // the vanilla twin of a machine
         }
 
         static HashSet<string> UnlockedMachines()
