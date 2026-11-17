@@ -21,21 +21,44 @@ namespace Factorraria.Common.UI.RecipeBookUI
     {
         public static string Folder = "Factorraria/Common/UI/CustomUIElements/StationIcons/StationIcon_";
 
-        static readonly Dictionary<string, Asset<Texture2D>> custom = new Dictionary<string, Asset<Texture2D>>();
+        static readonly Dictionary<string, Asset<Texture2D>[]> custom = new Dictionary<string, Asset<Texture2D>[]>();
+        static readonly Asset<Texture2D>[] NoArt = new Asset<Texture2D>[0];
 
-        /// <summary>The custom PNG for a vanilla station tab name ("VanillaDemonAltar"), or null.</summary>
-        public static Asset<Texture2D> Custom(string stationName)
+        /// <summary>
+        /// Stations that cycle between several PNGs, by TileID name: the file names (without 'StationIcon_' and '.png') in cycle order.
+        /// The Demon Altar and the Crimson Altar are the same tile, so the one tab shows both. Any station not listed uses just its own file.
+        /// Not readonly, so hot reload can change it.
+        /// </summary>
+        public static Dictionary<string, string[]> Variants = new Dictionary<string, string[]>
         {
-            if (stationName == null) return null;
-            if (custom.TryGetValue(stationName, out Asset<Texture2D> known)) return known;
+            { "DemonAltar", new[] { "DemonAltar", "CrimsonAltar" } },
+        };
 
-            Asset<Texture2D> found = null;
+        /// <summary>Every custom PNG that exists for a vanilla station tab name ('VanillaDemonAltar'), in cycle order. Empty if none.</summary>
+        public static Asset<Texture2D>[] CustomAll(string stationName)
+        {
+            if (stationName == null) return NoArt;
+            if (custom.TryGetValue(stationName, out Asset<Texture2D>[] known)) return known;
+
+            var found = new List<Asset<Texture2D>>();
             int tile = VanillaStationBooks.TileOf(stationName);
             string tileName = tile >= 0 ? TileID.Search.GetName(tile) : null;
-            if (!string.IsNullOrEmpty(tileName) && ModContent.HasAsset(Folder + tileName))
-                found = ModContent.Request<Texture2D>(Folder + tileName);
-            custom[stationName] = found;
-            return found;
+            if (!string.IsNullOrEmpty(tileName))
+            {
+                string[] files = Variants.TryGetValue(tileName, out string[] list) ? list : new[] { tileName };
+                foreach (string file in files)
+                    if (ModContent.HasAsset(Folder + file)) found.Add(ModContent.Request<Texture2D>(Folder + file));
+            }
+            Asset<Texture2D>[] result = found.Count > 0 ? found.ToArray() : NoArt;
+            custom[stationName] = result;
+            return result;
+        }
+
+        /// <summary>The first custom PNG of a station, or null.</summary>
+        public static Asset<Texture2D> Custom(string stationName)
+        {
+            Asset<Texture2D>[] all = CustomAll(stationName);
+            return all.Length > 0 ? all[0] : null;
         }
 
         public static bool Has(string stationName) => RecipeTabDiscovery.ItemsOf(stationName).Length > 0 || Custom(stationName) != null;
@@ -51,9 +74,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 return true;
             }
 
-            Asset<Texture2D> art = Custom(stationName);
-            if (art == null) return false;
-            Texture2D tex = art.Value;
+            Asset<Texture2D>[] arts = CustomAll(stationName);
+            if (arts.Length == 0) return false;
+            Texture2D tex = arts[(int)(Main.GlobalTimeWrappedHourly / Math.Max(0.1f, RecipeBookHeaderRow.IconSeconds)) % arts.Length].Value;
             float scale = Math.Min(1f, size / Math.Max(tex.Width, tex.Height));
             sb.Draw(tex, center, null, Color.White, 0f, tex.Size() / 2f, scale, SpriteEffects.None, 0f);
             return true;
