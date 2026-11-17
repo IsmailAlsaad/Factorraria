@@ -22,6 +22,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Assets\Atlases\" />
+	  <Folder Include="Assets\Sounds\AshGrow\" />
 	  <Folder Include="Common\Liquids\LiquidIcons\" />
 	  <Folder Include="Common\UI\CartMap\" />
 	  <Folder Include="Common\UI\CustomUIElements\StationIcons\" />
