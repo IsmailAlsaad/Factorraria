@@ -1331,7 +1331,7 @@ tModLoader/other bases -> project types:
     +MouseInside:bool +Update(GameTime)[ov] +ScrollWheel(UIScrollWheelEvent)[ov] #DrawSelf(SpriteBatch)[ov]
 **RecipeBookStationIcon.cs** uses: RecipeBookHeaderRow, RecipeIcon, RecipeOutputKey, RecipeTabDiscovery, VanillaStationBooks
   static class RecipeBookStationIcon
-    +Folder:string[s] +Custom(string)[s] +Has(string)[s] +Draw(SpriteBatch,string,Vector2,float)[s]
+    +Folder:string[s] +Variants:Dictionary<string, string >[s] +CustomAll(string)[s] +Custom(string)[s] +Has(string)[s] +Draw(SpriteBatch,string,Vector2,float)[s]
 **RecipeBookTabTip.cs** uses: BookDraw, RecipeBookLayout, RecipeIcon, RecipeOutputKey, RecipeTabDiscovery
   static class RecipeBookTabTip
     +Request(string)[s] ~TakePending()[s]
