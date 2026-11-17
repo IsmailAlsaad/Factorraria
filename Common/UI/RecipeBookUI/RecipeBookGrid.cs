@@ -61,7 +61,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             {
                 BookDraw.Rect(sb, r, RecipeBookLayout.GridCellFill);
                 Outline(sb, r, RecipeBookLayout.GridCellBorder, 1);
-                if (isNew) BookDraw.Rect(sb, r, RecipeBookNew.RowColor());   // pulsing gold, like a new row
+                if (isNew || Favorite) BookDraw.Rect(sb, r, RecipeBookLayout.FavoriteRowColor);   // new and favorited squares share the plain favorite tint
                 if (hover) BookDraw.Rect(sb, r, Color.White * 0.25f);
             }
 

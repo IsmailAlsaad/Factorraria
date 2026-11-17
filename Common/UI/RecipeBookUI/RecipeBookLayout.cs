@@ -42,7 +42,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
         /// <summary>Shown instead of a product's name until the product has been crafted (or its ingredient is held, in the machine browser).</summary>
         public const string UnknownName = "???";
-        public const int ScrollbarWidth = 20;
+        public const int ScrollbarWidth = 24;
 
         // List rows
         public const int HeaderRowHeight = 28;
@@ -75,7 +75,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static int GridColumns => System.Math.Max(1, (ListArea.Width + GridGap) / (GridCellSize + GridGap));
 
         /// <summary>x of the first square of a grid row, relative to the list area (a row is centered).</summary>
-        public static float GridLeft(int columns) => (ListArea.Width - (columns * GridCellSize + (columns - 1) * GridGap)) / 2f;
+        public static float GridLeft(int columns) => columns > 1 ? 0f : (ListArea.Width - GridCellSize) / 2f;
+
+        /// <summary>Horizontal distance between two squares of a row: the row is spread so the first square touches the left edge and the last the right edge (GridGap is the minimum gap).</summary>
+        public static float GridGapFor(int columns) => columns > 1 ? (ListArea.Width - columns * GridCellSize) / (float)(columns - 1) : 0f;
 
         /// <summary>The Rows / Grid button: right of the search bar, its right edge on the scrollbar's right edge.</summary>
         public static Rectangle ModeButton

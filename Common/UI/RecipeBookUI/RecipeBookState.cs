@@ -154,6 +154,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             int gridStep = RecipeBookLayout.GridCellSize + RecipeBookLayout.GridGap;
             int gridCols = RecipeBookLayout.GridColumns;
             float gridX0 = RecipeBookLayout.GridLeft(gridCols);
+            float gridStepX = RecipeBookLayout.GridCellSize + RecipeBookLayout.GridGapFor(gridCols);
             int gridCol = 0;
 
             string lastMachine = null;
@@ -276,7 +277,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 entryTop[e.Key] = y;
                 if (grid)
                 {
-                    entry.Left.Set(gridX0 + gridCol * gridStep, 0f);
+                    entry.Left.Set(gridX0 + (float)Math.Round(gridCol * gridStepX), 0f);
                     AddRow(entry, y);
                     if (++gridCol >= gridCols) { gridCol = 0; y += gridStep; }
                 }
