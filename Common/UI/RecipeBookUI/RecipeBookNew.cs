@@ -76,6 +76,28 @@ namespace Factorraria.Common.UI.RecipeBookUI
             BookDraw.Rect(sb, new Rectangle((int)x + 2, (int)centerY + 4, 3, 3), c);
         }
 
+        /// <summary>R1.8: notes, for this character and this world, every tab the book lists that has no place in the unlock sequence yet (appended in catalog order). Does nothing until the join sync is done.</summary>
+        public static void RecordTabOrder(RecipeBookPlayer p)
+        {
+            if (!p.ViewedReady) return;
+            foreach (string key in BookKeys())
+                if (key.StartsWith("tab|", StringComparison.Ordinal)) p.RecordTab(key.Substring(4));
+        }
+
+        static int polledKnowledge = -1, polledSeen = -1, polledHeld = -1;
+
+        /// <summary>Per second from RecipeBookPlayer.PostUpdate (book open or not): records new tabs, but only when the world's knowledge or the held items changed since the last look.</summary>
+        public static void PollTabOrder(RecipeBookPlayer p)
+        {
+            if (!p.ViewedReady) return;
+            RecipeVisibility.Poll();
+            if (polledKnowledge == RecipeKnowledgeSystem.Version && polledSeen == RecipeKnowledgeSystem.SeenVersion && polledHeld == RecipeVisibility.HeldVersion) return;
+            polledKnowledge = RecipeKnowledgeSystem.Version;
+            polledSeen = RecipeKnowledgeSystem.SeenVersion;
+            polledHeld = RecipeVisibility.HeldVersion;
+            RecordTabOrder(p);
+        }
+
         /// <summary>Every key the book lists right now: recipe keys of discovered tabs that are in the book, plus one tab key per such tab.</summary>
         public static List<string> BookKeys()
         {
@@ -92,7 +114,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             return keys;
         }
 
-        static string WorldKey()
+        public static string WorldKey()
         {
             Guid id = Main.ActiveWorldFileData != null ? Main.ActiveWorldFileData.UniqueId : Guid.Empty;
             return id != Guid.Empty ? id.ToString() : "world" + Main.worldID;

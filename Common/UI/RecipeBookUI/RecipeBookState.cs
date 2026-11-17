@@ -158,6 +158,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             // the machine's own recipes first, then the station's; inside each of those favorited first, then crafted, then the faded ones.
             // OrderBy is stable, so each tier keeps the catalog's A-Z order, and tabs keep the catalog order of their first entry
             // (counted even while nothing in the tab is listed yet, so a merged tab always sits where its machine is).
+            RecipeBookNew.RecordTabOrder(favorites);   // R1.8: a tab found since the last poll gets its place in the unlock sequence before the list is sorted
             var machineOrder = new Dictionary<string, int>();
             var listed = new List<(RecipeCatalog.Entry e, RecipeState state)>();
             foreach (RecipeCatalog.Entry cat in RecipeCatalog.EntriesWithArt())
@@ -207,7 +208,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             // names match, so "#Wood" does not also pull in Boreal Wood. Otherwise it falls back to a partial match.
             bool exactIngredient = byIngredient && filtering && listed.Any(x => x.e.Group != null && UsesIngredient(x.e.Group, x.state, filter, true));
 
-            foreach (var (e, state) in listed.OrderBy(x => machineOrder[RecipeCatalog.TabOf(x.e.Machine)]).ThenBy(x => x.e.Station ? 1 : 0).ThenBy(x => favorites.IsFavorite(x.e.Key) ? 0 : favorites.IsNew(x.e.Key) ? 2 : x.state == RecipeState.Crafted ? 1 : 3))
+            foreach (var (e, state) in listed.OrderBy(x => TabSort(favorites, RecipeCatalog.TabOf(x.e.Machine))).ThenBy(x => machineOrder[RecipeCatalog.TabOf(x.e.Machine)]).ThenBy(x => x.e.Station ? 1 : 0).ThenBy(x => favorites.IsFavorite(x.e.Key) ? 0 : favorites.IsNew(x.e.Key) ? 2 : x.state == RecipeState.Crafted ? 1 : 3))
             {
                 any = true;
 
@@ -275,6 +276,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
             scrollbar.SetBookView(viewH, Math.Max(totalHeight, viewH));
             ApplyScroll(true);
         }
+
+        /// <summary>R1.8: By Hand first, then the tabs in the order this character found them in this world (unrecorded ones last, in catalog order).</summary>
+        static int TabSort(RecipeBookPlayer player, string tab) => tab == VanillaStationBooks.HandName ? int.MinValue : player.TabRank(tab);
 
         // ------------------------------------------------------------------------------------------
         // Search

@@ -994,7 +994,7 @@ Projectiles: {
 RecipeBook: {
 	ButtonTooltip: Recipe Book
 	InheritsFrom: Inherits from
-	NewTabDiscovered: New machine discovered!
+	NewTabDiscovered: New recipes unlocked!
 	And: and
 	Or: or
 	SearchTooltip: Press {0} on an item to view its recipes

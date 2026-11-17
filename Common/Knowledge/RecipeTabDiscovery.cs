@@ -196,6 +196,17 @@ namespace Factorraria.Common.Knowledge
         public static bool IsOwnDiscovered(string tabName) =>
             tabName == null || !byName.TryGetValue(tabName, out Tab tab) || Hit(tab);
 
+        /// <summary>The tiles that stand for this tab: its own tile plus the tiles of the stations it inherits from. The detail page names any OTHER tile a recipe needs.</summary>
+        public static HashSet<int> TilesOfTab(string tabName)
+        {
+            var tiles = new HashSet<int>();
+            if (tabName == null || !byName.TryGetValue(tabName, out Tab tab)) return tiles;
+            if (tab.Tile >= 0) tiles.Add(tab.Tile);
+            foreach (Tab sub in tab.Inherits)
+                if (sub.Tile >= 0) tiles.Add(sub.Tile);
+            return tiles;
+        }
+
         /// <summary>True if the tab has to be discovered at all (By Hand and Notes do not, so they are never "new").</summary>
         public static bool IsDiscoverable(string tabName) => tabName != null && byName.ContainsKey(tabName);
 
@@ -370,7 +381,7 @@ namespace Factorraria.Common.Knowledge
 
         static readonly Queue<string> popUps = new Queue<string>();   // tabs discovered by this client, waiting for their text (one per scan, so several at once do not overlap)
 
-        /// <summary>Client, once per scan: shows one "New machine discovered!" text above the local player (CombatText, local only, no sound). Works with the book closed.</summary>
+        /// <summary>Client, once per scan: shows one "New recipes unlocked!" text above the local player (CombatText, local only, no sound). Works with the book closed.</summary>
         public static void ShowNextPopUp()
         {
             if (Main.dedServ || popUps.Count == 0) return;

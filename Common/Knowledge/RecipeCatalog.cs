@@ -72,6 +72,13 @@ namespace Factorraria.Common.Knowledge
 
         static HashSet<string> splitStations = new HashSet<string>();   // inherited stations that stay their own tab until their owner is discovered (RecipeTabDefinitions.SplitUntilOwnerDiscovered). Built with tabOwner.
 
+        /// <summary>The stations of this tab that are currently split off as tabs of their own (R1.6). Empty for most tabs.</summary>
+        public static IEnumerable<string> SplitStationsOf(string tab)
+        {
+            foreach (string station in InheritedStations(tab))
+                if (splitStations.Contains(station)) yield return station;
+        }
+
         /// <summary>True for a vanilla station that is its own tab until the machine inheriting it is discovered (Work Benches, Heavy Work Bench).</summary>
         public static bool IsSplitStation(string stationName)
         {
@@ -174,6 +181,19 @@ namespace Factorraria.Common.Knowledge
                 foreach (string station in inheritedList)
                     if (hits.Contains(station)) result.Add(station);
             return result;
+        }
+
+        /// <summary>
+        /// The name the detail page shows for a catalog machine inside its tab: the inherited unit it belongs to ("VanillaAnvils" for the Autohammer
+        /// tab's Anvils, "Furnace" for the Hellforge tab's Furnace and Furnaces), otherwise the tab itself (a machine and its vanilla twin are one name).
+        /// </summary>
+        public static string UnitOf(string catalogMachine)
+        {
+            if (catalogMachine == null) return null;
+            if (tabOwner == null) BuildTabs();
+            string tab = TabOf(catalogMachine);
+            if (inherited.TryGetValue(tab, out List<string> list) && unitOf.TryGetValue(catalogMachine, out string unit) && list.Contains(unit)) return unit;
+            return tab;
         }
 
         /// <summary>One recipe of a product as the detail page lists it, with every machine of the tab that can do it (registration order).</summary>

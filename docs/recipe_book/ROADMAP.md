@@ -19,6 +19,8 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [~] R2.1 R2 follow-up (machine tab hit area and band 4 px taller on top; "!" offsets are tunables `RecipeBookNew.EntryMarkOffset` / `TabMarkOffset`; a tab keeps its "!" while any recipe in it is new, open or folded; the vanilla inventory ignores the cursor while it is inside the book (`PlayerInput.IgnoreMouseInterface` around the inventory layer); applied, untested)
 - [~] R2.2 R2.1 fix (`PlayerInput.IgnoreMouseInterface` is read-only, so the vanilla inventory is blocked another way: the mouse buttons are cleared for the inventory layer while the cursor is inside the book, then restored, and the inventory's hover tooltip and cursor override are wiped; applied, untested)
 - [~] R1.6 Heavy Work Bench gets its own tab (Work Benches and Heavy Work Bench are two tabs, each discovered by its own item or tile, until the Mechanical Assembler is discovered; then they merge into its tab; one-time world migration keeps tabs the world crafted in; characters that viewed the old merged tab see nothing new; Autohammer / Anvils unchanged; applied, untested)
+- [~] R1.7 Detail page station block (one row per alternative station with its sprite; recipes that need several stations show "[sprite] A & [sprite] B" wrapped on one row; vanilla conditions after the stations; own PNG for a station with no item, Demon Altar; applied, untested)
+- [~] R1.8 Tabs ordered by unlock sequence (per character and world, By Hand first; a merged tab takes the earliest place of its stations; applied, untested)
 - [~] R3 "New machine discovered!" pop-up (client that made the discovery only; local CombatText, no sound; one text for machines and stations; works with the book closed; once per discovery, not after relog; applied, untested)
 - [ ] R4 Show/hide each tab
 - [ ] R5 Favorites-only / show-all button
@@ -130,6 +132,27 @@ Decided 2026-11-16. Applied, untested. No packets; the only saved addition is a 
 - Sort: a merged tab sits where the Mechanical Assembler is in the catalog; a split tab sits where its station is, so the tab moves when the merge happens.
 
 Test checklist: see the patch reply.
+
+## R1.7 Detail page station block
+
+Asked 2026-11-16. Applied, untested. Client-only drawing, no packets, nothing saved.
+
+- Replaces the "Autohammer or Anvils" text under the product name (`RecipeBookDetail.StationBlock` / `DrawStationBlock`). It is now built for the recipe SHOWN (the pager cycles recipes), not for the whole product: each machine or station that makes that recipe is one row, `[sprite] Name`, an alternative always starts a new row. Only discovered stations are named (all of them if none is yet), as before (`RecipeCatalog.UnitOf` gives the name of a machine inside its tab).
+- A vanilla recipe that needs several stations at once (the Watch: Tables and Chairs) is already listed in every station tab it needs (`ImportStationRecipes`), and machine books import by `requiredTile.Contains`. The row now reads `[sprite] Tables & [sprite] Chairs`: the tab's own station first, then every other required tile (`RecipeTabDiscovery.TilesOfTab` says which tiles the tab already stands for). The row wraps at a station, with the "&" kept on the end of the previous piece. Extra stations are always named even if undiscovered (you need them to craft).
+- Conditions: `CustomRecipe.Source` now remembers the vanilla `Recipe` it was converted from (not saved or sent). Its `Conditions` descriptions (`Condition.Description.Value`: "Near water", "In the Graveyard", ...) are listed one per row after the stations. Hand-written machine recipes have no Source, so no extra stations and no conditions.
+- Station art: `RecipeBookStationIcon`. A station with items shows the item (cycling); a station with none uses `Common/UI/CustomUIElements/StationIcons/StationIcon_<TileID name>.png` (Demon Altar: `StationIcon_DemonAltar.png`, about 20x20, bigger is scaled down). Used by the tab header and the station rows. Missing PNG = no sprite, no crash.
+- Unverified API (not in the repo, check against the local tModLoader source when it builds): `Recipe.Conditions` (`List<Condition>`) and `Condition.Description` (`LocalizedText`).
+
+Test checklist: see the patch reply.
+
+## R1.8 Tabs ordered by unlock sequence
+
+Asked 2026-11-16. Applied, untested. Client-only, nothing synced.
+
+- Order: By Hand first, then the tabs in the order they first appeared in this character's book in this world (`RecipeBookPlayer.TabRank`, saved as `tabOrders`: one list per world key). `RecipeBookNew.PollTabOrder` records a new tab within a second of its discovery (book open or closed); `Rebuild` records too, so the list is never sorted with a missing tab.
+- Why per character and not world-wide: the order is a personal UI choice like favorites and the viewed set (working rule 2), so it needs no packet and no world save. Two players see the tabs in the order each of them found them. A world-wide order would need an ordered, synced list; say so if you want it.
+- Migration: a character that already has tabs in a world gets them in the old catalog order the first time (the real order was never recorded); everything found afterwards is appended.
+- A tab whose rank is not recorded yet (for example before the join sync) sorts after the recorded ones, in catalog order. A merged tab (R1.6) takes the earliest rank of the stations that were its own tabs, so the Mechanical Assembler tab keeps the Work Benches' place.
 
 ## R2 New-recipe highlight
 

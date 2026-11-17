@@ -149,10 +149,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             string name = BookDraw.Fit(faded ? RecipeBookLayout.UnknownName : group.Key.DisplayName, r.Width - 70, 1.15f, out _);
             BookDraw.Text(sb, name, new Vector2(r.X + 64, r.Y + 6), RecipeBookLayout.TextColor, 1.15f);
-            List<string> stationRows = StationLines(r.Width - 70);
-            headerExtra = (stationRows.Count - 1) * StationLineStep;
-            for (int s = 0; s < stationRows.Count; s++)
-                BookDraw.Text(sb, stationRows[s], new Vector2(r.X + 64, r.Y + 34 + s * StationLineStep), RecipeBookLayout.PageBorder, 0.9f);
+            if (recipes.Count > 0) DrawStationBlock(sb, r, recipes[recipeIndex]);
+            else headerExtra = 0;
 
             BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66 + headerExtra, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
 
@@ -162,40 +160,127 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (recipes.Count > 1) DrawPager(sb, r, recipes.Count);
         }
 
-        RecipeOutputGroup stationGroup;
-        string stationMachine;
-        int stationVersion = -1, stationSeenVersion = -1;
-        float stationWidth = -1f;
-        List<string> stationLines = new List<string>();
-        int headerExtra;                              // px the wrapped station line pushes the recipe body down
-
-        /// <summary>Pixels between two wrapped lines of the "Autohammer or Anvils" text. Not const, so hot reload can tweak it.</summary>
-        public static int StationLineStep = 20;
-
-        // "Autohammer or Anvils": the stations of the selected tab that can make this product (RecipeCatalog.StationsFor) and that are
-        // discovered, wrapped to maxWidth. If none of them is discovered yet (a parchment recipe of a machine nobody found) all are named.
-        // Cached per selection and per discovery change.
-        List<string> StationLines(float maxWidth)
+        // ---- Station block (R1.7), under the product name ----
+        // One row per alternative station ("[sprite] Autohammer", then "[sprite] Anvils"): an alternative always starts a new row. A recipe that needs
+        // several stations at once joins them with "&" in ONE row that wraps ("[sprite] Tables & [sprite] Chairs"). After the stations come the
+        // vanilla conditions of the recipe ("In the Graveyard", ...), one per row. Built for the recipe shown and cached.
+        class StationPart
         {
-            if (stationLines.Count == 0 || !ReferenceEquals(stationGroup, book.SelectedGroup) || stationMachine != book.SelectedMachine
-                || stationVersion != RecipeKnowledgeSystem.Version || stationSeenVersion != RecipeKnowledgeSystem.SeenVersion || stationWidth != maxWidth)
+            public string Station;   // not null: sprite + this station's name; null: plain text ("&" or a condition line)
+            public string Text;
+            public float X;          // pixels from the left edge of the block
+        }
+
+        readonly List<List<StationPart>> stationRows = new List<List<StationPart>>();
+        RecipeCatalog.MergedRecipe stationFor;
+        string stationMachine;
+        int stationSeenVersion = -1;
+        float stationWidth = -1f;
+        int headerExtra;                              // px the extra station rows push the recipe body down
+
+        /// <summary>Pixels between two rows of the station block. Not const, so hot reload can tweak it.</summary>
+        public static int StationLineStep = 20;
+        public static int StationIconWidth = 24;      // room taken by a station sprite and the gap after it
+        public static float StationIconSize = 20f;
+        public static int StationAmpGap = 4;          // pixels before the "&"; the same again after it
+
+        List<List<StationPart>> StationBlock(RecipeCatalog.MergedRecipe recipe, float maxWidth)
+        {
+            if (ReferenceEquals(stationFor, recipe) && stationMachine == book.SelectedMachine && stationSeenVersion == RecipeKnowledgeSystem.SeenVersion && stationWidth == maxWidth)
+                return stationRows;
+
+            stationFor = recipe;
+            stationMachine = book.SelectedMachine;
+            stationSeenVersion = RecipeKnowledgeSystem.SeenVersion;
+            stationWidth = maxWidth;
+            stationRows.Clear();
+
+            float scale = 0.9f;
+            var font = Terraria.GameContent.FontAssets.MouseText.Value;
+
+            // The alternatives: every station or machine of the tab that makes THIS recipe, only the discovered ones (all if none is yet).
+            var units = new List<string>();
+            foreach (string machine in recipe.Machines)
             {
-                stationGroup = book.SelectedGroup;
-                stationMachine = book.SelectedMachine;
-                stationVersion = RecipeKnowledgeSystem.Version;
-                stationSeenVersion = RecipeKnowledgeSystem.SeenVersion;
-                stationWidth = maxWidth;
-
-                List<string> names = RecipeCatalog.StationsFor(stationMachine, stationGroup.Key);
-                List<string> unlocked = names.FindAll(RecipeTabDiscovery.IsOwnDiscovered);
-                if (unlocked.Count == 0) unlocked = names;
-
-                var parts = new List<string>();
-                foreach (string station in unlocked) parts.Add(RecipeBookLayout.MachineName(station));
-                stationLines = Wrap(string.Join(" " + RecipeBookLayout.Text("Or") + " ", parts), maxWidth, 0.9f);
-                if (stationLines.Count == 0) stationLines.Add("");
+                string unit = RecipeCatalog.UnitOf(machine);
+                if (unit != null && !units.Contains(unit)) units.Add(unit);
             }
-            return stationLines;
+            if (units.Count == 0) units.Add(RecipeCatalog.TabOf(book.SelectedMachine));
+            List<string> known = units.FindAll(RecipeTabDiscovery.IsOwnDiscovered);
+            if (known.Count == 0) known = units;
+
+            // Stations the vanilla recipe needs at the same time that the tab does not already stand for (the Chairs of the Table's Watch).
+            var extras = new List<string>();
+            Recipe source = recipe.Recipe.Source;
+            if (source != null)
+            {
+                HashSet<int> own = RecipeTabDiscovery.TilesOfTab(RecipeCatalog.TabOf(book.SelectedMachine));
+                foreach (int tile in source.requiredTile)
+                    if (tile >= 0 && tile < TileID.Count && !own.Contains(tile)) extras.Add(VanillaStationBooks.NameFor(tile));
+            }
+
+            float ampWidth = font.MeasureString("&").X * scale;
+            foreach (string unit in known)
+            {
+                var row = new List<StationPart>();
+                stationRows.Add(row);
+                float x = 0f;
+                var names = new List<string> { unit };
+                names.AddRange(extras);
+
+                for (int i = 0; i < names.Count; i++)
+                {
+                    bool last = i == names.Count - 1;
+                    string text = RecipeBookLayout.MachineName(names[i]);
+                    float width = (RecipeBookStationIcon.Has(names[i]) ? StationIconWidth : 0f) + font.MeasureString(text).X * scale;
+                    float tail = last ? 0f : StationAmpGap + ampWidth;
+                    if (x > 0f && x + width + tail > maxWidth)
+                    {
+                        row = new List<StationPart>();
+                        stationRows.Add(row);
+                        x = 0f;
+                    }
+
+                    row.Add(new StationPart { Station = names[i], Text = text, X = x });
+                    x += width;
+                    if (last) continue;
+                    x += StationAmpGap;
+                    row.Add(new StationPart { Text = "&", X = x });
+                    x += ampWidth + StationAmpGap;
+                }
+            }
+
+            // The conditions vanilla puts on the recipe, after the stations.
+            if (source != null)
+            {
+                var seen = new HashSet<string>();
+                foreach (Condition condition in source.Conditions)
+                {
+                    string text = condition?.Description?.Value;
+                    if (string.IsNullOrEmpty(text) || !seen.Add(text)) continue;
+                    foreach (string line in Wrap(text, maxWidth, scale))
+                        stationRows.Add(new List<StationPart> { new StationPart { Text = line, X = 0f } });
+                }
+            }
+
+            return stationRows;
+        }
+
+        void DrawStationBlock(SpriteBatch sb, Rectangle r, RecipeCatalog.MergedRecipe recipe)
+        {
+            List<List<StationPart>> rows = StationBlock(recipe, r.Width - 70);
+            headerExtra = Math.Max(0, rows.Count - 1) * StationLineStep;
+            for (int row = 0; row < rows.Count; row++)
+            {
+                float y = r.Y + 34 + row * StationLineStep;
+                foreach (StationPart part in rows[row])
+                {
+                    float x = r.X + 64 + part.X;
+                    if (part.Station != null && RecipeBookStationIcon.Draw(sb, part.Station, new Vector2(x + StationIconSize / 2f, y + 9f), StationIconSize))
+                        x += StationIconWidth;
+                    BookDraw.Text(sb, part.Text, new Vector2(x, y), RecipeBookLayout.PageBorder, 0.9f);
+                }
+            }
         }
 
         // Greedy word wrap with the book font. A single word wider than the line stays on its own line.

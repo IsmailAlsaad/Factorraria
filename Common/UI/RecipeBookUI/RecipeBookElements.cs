@@ -97,6 +97,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         string text;
         int[] items;                   // sprites shown left of the name, cycled (only the ones the world has held); none for By Hand / Notes
         string[] inherited;            // stations listed in the hover tip (only once the tab's own machine is discovered)
+        string iconStation;            // a station with no item (Demon Altar) whose own PNG is shown instead (RecipeBookStationIcon); null otherwise
         int builtVersion = -1, builtSeenVersion = -1;
 
         // Title, sprites and tip depend on what has been discovered, which can change while the book is open (a held item bumps SeenVersion).
@@ -110,6 +111,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             for (int i = 0; i < shown.Length; i++) names[i] = RecipeBookLayout.MachineName(shown[i]);
             text = string.Join(" / ", names);
             items = RecipeTabDiscovery.ItemsOf(shown);
+            iconStation = items.Length == 0 && shown.Length == 1 && RecipeBookStationIcon.Custom(shown[0]) != null ? shown[0] : null;
             inherited = RecipeTabDiscovery.IsOwnDiscovered(Machine) ? RecipeTabDiscovery.InheritedNames(Machine) : new string[0];
         }
         public readonly string Machine;
@@ -189,6 +191,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
             {
                 int type = items[(int)(Main.GlobalTimeWrappedHourly / Math.Max(0.1f, IconSeconds)) % items.Length];
                 RecipeIcon.Draw(sb, RecipeOutputKey.ForItem(type), new Vector2(r.X + 31, r.Y + 13), 20f);
+                textX = r.X + 46;
+            }
+            else if (iconStation != null)
+            {
+                RecipeBookStationIcon.Draw(sb, iconStation, new Vector2(r.X + 31, r.Y + 13), 20f);
                 textX = r.X + 46;
             }
             bool flagged = tabNew || RecipeBookNew.AnyNew(childKeys);   // stays until nothing of this tab is new, open or folded

@@ -68,13 +68,57 @@ namespace Factorraria.Common.UI.RecipeBookUI
             ViewedReady = true;
         }
 
-        public override void OnEnterWorld() => ViewedReady = false;
+        public override void OnEnterWorld()
+        {
+            ViewedReady = false;
+            rankWorld = null;   // the unlock sequence is per world: rebuild the lookup for this one
+        }
+
+        // R1.8: the order the tabs appeared in the book, per world. Per character and client-only like the viewed set, nothing is synced:
+        // the book is a personal UI and every player sees the tabs in the order THEY found them. A character that already has tabs gets them
+        // in catalog order the first time (the real order was never recorded), everything found afterwards is appended.
+        readonly Dictionary<string, List<string>> tabOrders = new();
+        Dictionary<string, int> ranks = new();
+        string rankWorld;
+
+        Dictionary<string, int> Ranks()
+        {
+            string world = RecipeBookNew.WorldKey();
+            if (rankWorld == world) return ranks;
+            rankWorld = world;
+            ranks = new Dictionary<string, int>();
+            if (tabOrders.TryGetValue(world, out List<string> order))
+                for (int i = 0; i < order.Count; i++) ranks[order[i]] = i;
+            return ranks;
+        }
+
+        /// <summary>Position of a tab in this world's unlock sequence (smaller = found earlier), int.MaxValue if not recorded yet. A merged tab takes the earliest position of the stations that were its own tabs before the merge.</summary>
+        public int TabRank(string tab)
+        {
+            if (string.IsNullOrEmpty(tab)) return int.MaxValue;
+            Dictionary<string, int> r = Ranks();
+            int best = r.TryGetValue(tab, out int own) ? own : int.MaxValue;
+            foreach (string station in RecipeCatalog.SplitStationsOf(tab))
+                if (r.TryGetValue(station, out int rank) && rank < best) best = rank;
+            return best;
+        }
+
+        public bool RecordTab(string tab)
+        {
+            Dictionary<string, int> r = Ranks();
+            if (string.IsNullOrEmpty(tab) || r.ContainsKey(tab)) return false;
+            if (!tabOrders.TryGetValue(rankWorld, out List<string> order)) tabOrders[rankWorld] = order = new List<string>();
+            r[tab] = order.Count;
+            order.Add(tab);
+            return true;
+        }
 
         /// <summary>Local player only: notes the biomes the player stands in, which reveals the liquids found there (see LiquidBiomeVisits).</summary>
         public override void PostUpdate()
         {
             if (Main.dedServ || Player.whoAmI != Main.myPlayer) return;
             RecipeBookNew.TrySeed(this);
+            if (Main.GameUpdateCount % 60 == 0) RecipeBookNew.PollTabOrder(this);
             if (Main.GameUpdateCount % (uint)System.Math.Max(1, LiquidBiomeVisits.PollTicks) != 0) return;
             LiquidBiomeVisits.Poll(Player);
         }
@@ -96,6 +140,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             if (viewed.Count > 0) tag["viewedKeys"] = new List<string>(viewed);
             if (seededWorlds.Count > 0) tag["viewedWorlds"] = new List<string>(seededWorlds);
+
+            var orders = new List<TagCompound>();
+            foreach (KeyValuePair<string, List<string>> kv in tabOrders)
+                if (kv.Value.Count > 0) orders.Add(new TagCompound { ["world"] = kv.Key, ["tabs"] = new List<string>(kv.Value) });
+            if (orders.Count > 0) tag["tabOrders"] = orders;
         }
 
         public override void LoadData(TagCompound tag)
@@ -113,6 +162,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
             ViewedReady = false;
             if (tag.ContainsKey("viewedKeys")) foreach (string key in tag.Get<List<string>>("viewedKeys")) viewed.Add(key);
             if (tag.ContainsKey("viewedWorlds")) foreach (string key in tag.Get<List<string>>("viewedWorlds")) seededWorlds.Add(key);
+            tabOrders.Clear();
+            rankWorld = null;
+            if (tag.ContainsKey("tabOrders"))
+                foreach (TagCompound entry in tag.GetList<TagCompound>("tabOrders"))
+                    tabOrders[entry.GetString("world")] = new List<string>(entry.GetList<string>("tabs"));
             FavoritesVersion++;
         }
     }

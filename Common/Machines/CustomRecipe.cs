@@ -102,6 +102,7 @@ namespace Factorraria.Common.Machines
         public List<LiquidIngredient> LiquidInputs { get; } = new();
         public List<LiquidIngredient> LiquidOutputs { get; } = new();
         public int? DurationTicks { get; set; }          // null = the machine's WorkDuration
+        public Recipe Source { get; set; }               // the vanilla recipe this was converted from (required stations, conditions); null for hand-written recipes. Never saved or sent.
 
         // Old API kept so RecipeOutputGroup / RecipeBrowserPanel still compile.
         public RecipeIngredient Output => Outputs.Count > 0 ? Outputs[0] : default;

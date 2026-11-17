@@ -138,7 +138,7 @@ namespace Factorraria.Common.Machines
                 for (int i = 0; i < picked.Length; i++)
                     inputs.Add(new RecipeIngredient(picked[i], stacks[i]));
 
-                result.Add(new CustomRecipe(inputs, new RecipeIngredient(recipe.createItem.type, recipe.createItem.stack)));
+                result.Add(new CustomRecipe(inputs, new RecipeIngredient(recipe.createItem.type, recipe.createItem.stack)) { Source = recipe });
                 return;
             }
 
