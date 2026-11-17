@@ -680,9 +680,9 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **HellstoneGrowNet.cs** uses: FactorrariaNet, FactorrariaPacket, HellstoneGrowthSystem, PacketDirection
   class HellstoneGrowNetSystem : ModSystem
-    +NearbyTiles:float +MaxPerTick:int +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Announce(int,int) +PostUpdateEverything()[ov]
+    +NearbyTiles:float +MaxPerTick:int +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Announce(int,int,bool) +PostUpdateEverything()[ov]
     struct GrowBlock
-      +X:int +Y:int
+      +X:int +Y:int +Ash:bool
 **JoinSync.cs** uses: Factorraria, FactorrariaNet, FactorrariaPacket, NetworkConfig
   static class JoinSync
     +ChunkSize:int[s] +MaxProviderBytes:int[s] +RequestCooldownTicks:uint[s] +Completed:bool[s] +AnnounceInChat:bool[s] +JoinCompleted:event Action[s] +Register(string,Action<BinaryWriter>,Action<BinaryReader>)[s] +RegisterDisconnectHook(Action<int>)[s] +Clear()[s] +RequestFullState()[s] +HandleRequest(BinaryReader,int)[s] +ServerTick()[s] +HandleChunk(BinaryReader,int)[s] +HandleDone(BinaryReader,int)[s] +OnPlayerDisconnect(int)[s]
@@ -1163,7 +1163,7 @@ tModLoader/other bases -> project types:
     +AllWireTypes:CustomWireType[s] +WireGrid:Dictionary<Point16,CustomWireType>[s] +GetVisibleTileRect(out int,out int,out int,out int)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +HasWire(int,int,CustomWireType)[s] +AddWire(int,int,CustomWireType)[s] +RemoveWire(int,int,CustomWireType)[s] +WireAt(int,int)[s] +SetWireAt(int,int,CustomWireType)[s] +ReplaceAll(List<KeyValuePair<Point16, CustomWireType>>)[s] +PostDrawTiles()[ov]
 **HellstoneGrowthSystem.cs** uses: BaseMachine, HellstoneGrowNetSystem
   class HellstoneGrowthSystem : ModSystem
-    +Enabled:bool +MaxDistance:int +BaseSecondsToConvert:float +DistanceSlowdown:float +MinLavaAmount:int +SamplesPerPlayerPerTick:int +AreaHalfWidth:int +AreaHalfHeight:int +SoundVariants:int +SoundVolume:float +SoundPitchVariance:float +SoundMaxInstances:int +LavaDustCount:int +EmberDustCount:int +SmokeDustCount:int +DustCullMargin:float +PostUpdateWorld()[ov] +PlayEffect(int,int)
+    +Enabled:bool +MaxDistance:int +BaseSecondsToConvert:float +DistanceSlowdown:float +MinLavaAmount:int +AshLayerDepth:int +AshSecondsToConvert:float +AshDustCount:int +AshSoundVolume:float +AshSoundPitchVariance:float +SamplesPerPlayerPerTick:int +AreaHalfWidth:int +AreaHalfHeight:int +SoundVariants:int +SoundVolume:float +SoundPitchVariance:float +SoundMaxInstances:int +LavaDustCount:int +EmberDustCount:int +SmokeDustCount:int +DustCullMargin:float +PostUpdateWorld()[ov] +PlayEffect(int,int,bool)
 **LiquidNetworkDebugSystem.cs** uses: BaseMachine, Direction, FlowDir, FlowNetwork, FlowPort, FlowRoute, FlowSink, FlowSource, FlowTransfer, FurnaceOffsetConfig, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry
   class LiquidNetworkDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
@@ -1959,6 +1959,7 @@ tModLoader/other bases -> project types:
 - .cursor/tml/: EXAMPLEMOD_INDEX.md, TML_API_INDEX.md, TML_MAP.md
 - Assets/Atlases/: Particles_Atlas.json
 - Assets/Sounds/GeigerCounterClick/: GeigerCounterClick1.wav, GeigerCounterClick10.wav, GeigerCounterClick2.wav, GeigerCounterClick3.wav, GeigerCounterClick4.wav, GeigerCounterClick5.wav, GeigerCounterClick6.wav, GeigerCounterClick7.wav, GeigerCounterClick8.wav, GeigerCounterClick9.wav
+- Assets/Sounds/HellstoneGrow/: HellstoneGrow1.wav, HellstoneGrow2.wav, HellstoneGrow3.wav
 - Assets/Sounds/InstantThunder/: InstantThunder1.wav, InstantThunder2.wav, InstantThunder3.wav
 - Localization/: en-US.hjson, en-US_Mods.Factorraria.hjson
 - Properties/: launchSettings.json

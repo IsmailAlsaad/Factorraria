@@ -26,6 +26,7 @@ namespace Factorraria.Common.Net
         {
             public int X;
             public int Y;
+            public bool Ash;
         }
 
         public override void Load()
@@ -45,7 +46,7 @@ namespace Factorraria.Common.Net
         }
 
         // Server and single player only.
-        public void Announce(int x, int y)
+        public void Announce(int x, int y, bool ash = false)
         {
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return;
@@ -66,25 +67,27 @@ namespace Factorraria.Common.Net
                 {
                     writer.Write(x);
                     writer.Write(y);
+                    writer.Write(ash ? (byte)1 : (byte)0);
                 });
 
                 // A host that also plays is not a connected client of itself, so it plays the effect directly.
                 if (!Main.dedServ)
-                    ModContent.GetInstance<HellstoneGrowthSystem>().PlayEffect(x, y);
+                    ModContent.GetInstance<HellstoneGrowthSystem>().PlayEffect(x, y, ash);
                 return;
             }
 
-            ModContent.GetInstance<HellstoneGrowthSystem>().PlayEffect(x, y);
+            ModContent.GetInstance<HellstoneGrowthSystem>().PlayEffect(x, y, ash);
         }
 
         void HandleGrow(System.IO.BinaryReader reader, int sender)
         {
             int x = reader.ReadInt32();
             int y = reader.ReadInt32();
+            bool ash = reader.ReadByte() == 1;
             if (x < 0 || y < 0 || x >= Main.maxTilesX || y >= Main.maxTilesY)
                 return;
 
-            incoming.Enqueue(new GrowBlock { X = x, Y = y });
+            incoming.Enqueue(new GrowBlock { X = x, Y = y, Ash = ash });
         }
 
         // Client, main thread.
@@ -95,7 +98,7 @@ namespace Factorraria.Common.Net
 
             int budget = 8; // never more than a handful of effects in one tick
             while (budget-- > 0 && incoming.TryDequeue(out GrowBlock block))
-                ModContent.GetInstance<HellstoneGrowthSystem>().PlayEffect(block.X, block.Y);
+                ModContent.GetInstance<HellstoneGrowthSystem>().PlayEffect(block.X, block.Y, block.Ash);
         }
     }
 }

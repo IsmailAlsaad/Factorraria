@@ -19,7 +19,8 @@
     {
         public static void Register()
         {
-             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Placeholder");
+            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Placeholder");
+            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/UnderworldLavaConversion");
         }
     }
 }

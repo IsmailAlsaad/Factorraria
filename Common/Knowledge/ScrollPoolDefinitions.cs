@@ -62,6 +62,7 @@ namespace Factorraria.Common.Knowledge
         static void DefaultPool()
         {
             ScrollPools.Define("PlaceholderArt", "Placeholder art").AddArt("Placeholder", weight: 1f);
+            ScrollPools.Define("UnderworldShadowChests", "The paper is barely readable from all the burn marks").AddArt("UnderworldLavaConversion", weight: 1f);
 
             ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a factory.")
                 // Hellforge
