@@ -41,11 +41,14 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// <summary>False until the seeding for the current world ran. IsNew is always false before that, so nothing flashes while the join sync is still arriving.</summary>
         public bool ViewedReady { get; private set; }
 
+        /// <summary>Bumped whenever the viewed set changes (R6 reads it to know when to look again at what is new).</summary>
+        public int ViewedVersion { get; private set; }
+
         public bool IsNew(string key) => ViewedReady && !string.IsNullOrEmpty(key) && !viewed.Contains(key);
 
         public void MarkViewed(string key)
         {
-            if (!string.IsNullOrEmpty(key)) viewed.Add(key);
+            if (!string.IsNullOrEmpty(key) && viewed.Add(key)) ViewedVersion++;
         }
 
         /// <summary>Everything the book lists right now counts as viewed (called when the book closes).</summary>
@@ -53,6 +56,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         {
             if (!ViewedReady) return;
             foreach (string key in RecipeBookNew.BookKeys()) viewed.Add(key);
+            ViewedVersion++;
         }
 
         public bool IsWorldSeeded(string worldKey) => seededWorlds.Contains(worldKey);
@@ -66,6 +70,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 seededWorlds.Add(worldKey);
             }
             ViewedReady = true;
+            ViewedVersion++;
         }
 
         public override void OnEnterWorld()

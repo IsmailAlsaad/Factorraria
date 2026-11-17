@@ -83,6 +83,21 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 BookDraw.Rect(sb, new Rectangle(r.X + 13, r.Y + 20, r.Width - 27, 3), RecipeBookLayout.PageColor);
             }
 
+            // R6: something in the book is new: a white outline (the PNG, tinted) whose hue cycles; a plain border until the PNG exists.
+            if (RecipeBookNew.AnyNewInBook())
+            {
+                Color outline = RecipeBookNew.OutlineColor();
+                var discovered = RecipeBookArt.Discovered;
+                if (discovered != null) sb.Draw(discovered.Value, r, outline);
+                else
+                {
+                    BookDraw.Rect(sb, new Rectangle(r.X, r.Y, r.Width, 2), outline);
+                    BookDraw.Rect(sb, new Rectangle(r.X, r.Bottom - 2, r.Width, 2), outline);
+                    BookDraw.Rect(sb, new Rectangle(r.X, r.Y, 2, r.Height), outline);
+                    BookDraw.Rect(sb, new Rectangle(r.Right - 2, r.Y, 2, r.Height), outline);
+                }
+            }
+
             if (hover) Main.hoverItemName = RecipeBookLayout.Text("ButtonTooltip");
         }
     }

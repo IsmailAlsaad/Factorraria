@@ -50,6 +50,61 @@ namespace Factorraria.Common.UI.RecipeBookUI
             return false;
         }
 
+        // ---- R6: the book button outline ----
+        public static float OutlineHuePeriod = 6f;     // seconds for the outline colour to sweep through every hue
+
+        static int anyVersion = -1, anySeen = -1, anyHeld = -1, anyViewed = -1;
+        static uint anyTick;
+        static bool anyNew;
+
+        /// <summary>
+        /// True while anything the book lists is new for this character (a recipe, or a tab by the same rule as the tab \"!\"). Cheap to call every
+        /// frame: it only looks again when the world's knowledge, the held items or the viewed set changed, or once a second.
+        /// </summary>
+        public static bool AnyNewInBook()
+        {
+            RecipeBookPlayer p = Me;
+            if (p == null || !p.ViewedReady) return false;
+
+            bool changed = anyVersion != RecipeKnowledgeSystem.Version || anySeen != RecipeKnowledgeSystem.SeenVersion
+                || anyHeld != RecipeVisibility.HeldVersion || anyViewed != p.ViewedVersion;
+            if (!changed && Main.GameUpdateCount - anyTick < 60) return anyNew;
+
+            RecipeVisibility.Poll();
+            anyTick = Main.GameUpdateCount;
+            anyVersion = RecipeKnowledgeSystem.Version;
+            anySeen = RecipeKnowledgeSystem.SeenVersion;
+            anyHeld = RecipeVisibility.HeldVersion;
+            anyViewed = p.ViewedVersion;
+
+            anyNew = false;
+            foreach (string key in BookKeys())
+            {
+                bool isNew = key.StartsWith("tab|", StringComparison.Ordinal) ? IsTabNew(key.Substring(4)) : p.IsNew(key);
+                if (!isNew) continue;
+                anyNew = true;
+                break;
+            }
+            return anyNew;
+        }
+
+        /// <summary>The outline colour: full saturation, the hue sweeping slowly through every colour.</summary>
+        public static Color OutlineColor()
+        {
+            float x = Main.GlobalTimeWrappedHourly / Math.Max(0.5f, OutlineHuePeriod) % 1f * 6f;
+            int i = (int)x;
+            byte up = (byte)(255 * (x - i)), down = (byte)(255 - up);
+            switch (i % 6)
+            {
+                case 0: return new Color((byte)255, up, (byte)0);
+                case 1: return new Color(down, (byte)255, (byte)0);
+                case 2: return new Color((byte)0, (byte)255, up);
+                case 3: return new Color((byte)0, down, (byte)255);
+                case 4: return new Color(up, (byte)0, (byte)255);
+                default: return new Color((byte)255, (byte)0, down);
+            }
+        }
+
         /// <summary>Soft gold background that fades in and out, drawn behind a new row.</summary>
         public static Color RowColor()
         {

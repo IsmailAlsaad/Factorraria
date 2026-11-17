@@ -200,10 +200,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static string CloseButtonPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookClose";
         public static string CloseButtonHoverPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookClose_Hover";
         public static string NewMarkPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookNew";
+        public static string DiscoveredPath = "Factorraria/Common/UI/CustomUIElements/RecipebookIcon_Discovered";   // R6: white outline drawn over the book button while something is new
 
         static Asset<Texture2D> button, buttonHover, background;
         static Asset<Texture2D> closeButton, closeButtonHover;
-        static Asset<Texture2D> newMark;
+        static Asset<Texture2D> newMark, discovered;
         static Asset<Texture2D> starOff, starOffHighlighted, starOn, starOnHighlighted;
         static bool loaded;
 
@@ -215,6 +216,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static Asset<Texture2D> CloseButtonHover { get { Load(); return closeButtonHover; } }
         /// <summary>The "!" shown after the name of a new recipe or tab, or null until the PNG exists (a code-drawn placeholder is used). Drawn at native size.</summary>
         public static Asset<Texture2D> NewMark { get { Load(); return newMark; } }
+        /// <summary>The white outline PNG of the book button (R6), or null until it exists (a code-drawn border is used then). Tinted with a cycling hue.</summary>
+        public static Asset<Texture2D> Discovered { get { Load(); return discovered; } }
 
         /// <summary>Favorite star art for a state, or null if that PNG does not exist yet (the entry then draws a placeholder).</summary>
         public static Asset<Texture2D> Star(bool on, bool highlighted)
@@ -269,6 +272,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             closeButton = TryRequest(CloseButtonPath);
             closeButtonHover = TryRequest(CloseButtonHoverPath);
             newMark = TryRequest(NewMarkPath);
+            discovered = TryRequest(DiscoveredPath);
         }
 
         static Asset<Texture2D> TryRequest(string path) =>
@@ -278,7 +282,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         {
             button = buttonHover = background = null;
             closeButton = closeButtonHover = null;
-            newMark = null;
+            newMark = discovered = null;
             starOff = starOffHighlighted = starOn = starOnHighlighted = null;
             headerBg = null;
             loaded = false;
