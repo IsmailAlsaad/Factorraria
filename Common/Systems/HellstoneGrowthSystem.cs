@@ -11,7 +11,8 @@ namespace Factorraria.Common.Systems
     // Lava slowly turns stone into hellstone in the underworld.
     // Multiplayer: PostUpdateWorld never runs on a client, so only the server (or single player) decides anything. A converted tile
     // is replicated with a vanilla tile square, so there is no packet of our own. Only players' surroundings are sampled
-    // (like vanilla random tile updates), so nothing grows in places no one is near.
+    // (like vanilla random tile updates), plus a sparse background sample of the WHOLE underworld (GlobalSamplesPerTick), so everything keeps
+    // converting even when no player is near; far from players it is just slower (about one pick per block every area / GlobalSamplesPerTick ticks).
     // Growth rule: a stone block becomes hellstone when it touches lava (distance 1), or when it is within MaxDistance of lava
     // AND a neighbouring hellstone block is closer to the lava than it is. That makes the hellstone grow outward from the contact
     // point instead of appearing at random. Distance is counted in orthogonal steps (a diamond, not a square).
@@ -41,12 +42,13 @@ namespace Factorraria.Common.Systems
         public int SamplesPerPlayerPerTick = 40;
         public int AreaHalfWidth = 100;
         public int AreaHalfHeight = 60;
+        public int GlobalSamplesPerTick = 2000; // background samples over the whole underworld, wherever the players are. 0 = only near players
 
         // Sound: files Assets/Sounds/HellstoneGrow/HellstoneGrow1.wav (or .ogg) ... HellstoneGrow<SoundVariants>. 0 = no custom files yet, a vanilla placeholder plays.
         public int SoundVariants = 3;
         public float SoundVolume = 0.7f;
         public float SoundPitchVariance = 0.15f;
-        public int SoundMaxInstances = 4;
+        public int SoundMaxInstances = 6;
 
         // Particles (client only). Lava dust drips and falls, embers float up, smoke drifts. Set a count to 0 to drop that part.
         public int LavaDustCount = 10;
@@ -60,6 +62,7 @@ namespace Factorraria.Common.Systems
         int[] boxBottom = new int[Main.maxPlayers];
         float[] boxSampleRate = new float[Main.maxPlayers];
         int boxCount;
+        float globalSampleRate;
 
         public override void PostUpdateWorld()
         {
@@ -68,6 +71,11 @@ namespace Factorraria.Common.Systems
 
             boxCount = 0;
             int bottomLimit = Main.maxTilesY - 3;
+
+            globalSampleRate = 0f;
+            int globalTop = Main.UnderworldLayer;
+            if (GlobalSamplesPerTick > 0 && bottomLimit >= globalTop && Main.maxTilesX > 6)
+                globalSampleRate = GlobalSamplesPerTick / (float)((Main.maxTilesX - 4) * (bottomLimit - globalTop + 1));
             for (int p = 0; p < Main.maxPlayers; p++)
             {
                 Player player = Main.player[p];
@@ -97,6 +105,17 @@ namespace Factorraria.Common.Systems
                 {
                     int x = Main.rand.Next(boxLeft[b], boxRight[b] + 1);
                     int y = Main.rand.Next(boxTop[b], boxBottom[b] + 1);
+                    TryGrow(x, y);
+                }
+            }
+
+            // Whole underworld, no matter where the players are.
+            if (globalSampleRate > 0f)
+            {
+                for (int s = 0; s < GlobalSamplesPerTick; s++)
+                {
+                    int x = Main.rand.Next(2, Main.maxTilesX - 2);
+                    int y = Main.rand.Next(globalTop, bottomLimit + 1);
                     TryGrow(x, y);
                 }
             }
@@ -153,7 +172,7 @@ namespace Factorraria.Common.Systems
         // so the expected time stays the same however many samples or players there are.
         bool Roll(int x, int y, float seconds)
         {
-            float sampleRate = 0f;
+            float sampleRate = globalSampleRate;
             for (int b = 0; b < boxCount; b++)
             {
                 if (x >= boxLeft[b] && x <= boxRight[b] && y >= boxTop[b] && y <= boxBottom[b])
@@ -277,7 +296,18 @@ namespace Factorraria.Common.Systems
         // Stone -> ash: the lava/water hiss and a few ash dust.
         void PlayAshEffect(Vector2 center, int x, int y)
         {
-            SoundEngine.PlaySound(SoundID.LiquidsWaterLava with { Volume = AshSoundVolume, PitchVariance = AshSoundPitchVariance, MaxInstances = SoundMaxInstances }, center);
+            SoundStyle style;
+            if (SoundVariants > 0)
+            {
+                int index = Main.rand.Next(1, SoundVariants + 1);
+                style = new SoundStyle($"Factorraria/Assets/Sounds/AshGrow/AshGrow{index}");
+            }
+            else
+            {
+                style = SoundID.LiquidsWaterLava;
+            }
+
+            SoundEngine.PlaySound(style with { Volume = AshSoundVolume, PitchVariance = AshSoundPitchVariance, MaxInstances = SoundMaxInstances }, center);
 
             if (!BaseMachine.IsOnScreen(center, DustCullMargin))
                 return;
