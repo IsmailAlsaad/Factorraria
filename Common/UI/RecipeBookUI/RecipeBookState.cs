@@ -151,10 +151,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
             bool modeChanged = grid != builtGrid;
             builtGrid = grid;
             entryHeight = grid ? RecipeBookLayout.GridCellSize : RecipeBookLayout.EntryRowHeight;
-            int gridStep = RecipeBookLayout.GridCellSize + RecipeBookLayout.GridGap;
             int gridCols = RecipeBookLayout.GridColumns;
             float gridX0 = RecipeBookLayout.GridLeft(gridCols);
             float gridStepX = RecipeBookLayout.GridCellSize + RecipeBookLayout.GridGapFor(gridCols);
+            float gridStep = (float)Math.Round(gridStepX);   // vertical step = horizontal step, so the gaps match
             int gridCol = 0;
 
             string lastMachine = null;

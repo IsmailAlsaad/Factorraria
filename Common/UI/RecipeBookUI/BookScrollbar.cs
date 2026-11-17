@@ -23,8 +23,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
         public BookScrollbar()
         {
-            Width.Set(RecipeBookLayout.ScrollbarWidth, 0f);
-            MaxWidth.Set(RecipeBookLayout.ScrollbarWidth, 0f);
+            Width.Set(RecipeBookLayout.ScrollbarWidth + RecipeBookLayout.ScrollbarGrow, 0f);
+            MaxWidth.Set(RecipeBookLayout.ScrollbarWidth + RecipeBookLayout.ScrollbarGrow, 0f);
             PaddingTop = PaddingBottom = 0f;
         }
 
