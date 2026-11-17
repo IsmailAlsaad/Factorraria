@@ -1,0 +1,611 @@
+Harvester Box probe 2026-11-17T15:08:02
+TmlRoot: C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0
+WorldGen sources: C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\WorldGen.cs.patch
+TileObject sources: C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\TileObject.cs.patch | C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\ObjectData\TileObjectData.cs.patch
+Item sources: C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\Item.cs.patch | C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\ID\ItemID.cs.patch | C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\test\HookListPerformance\Item.cs
+
+=================== C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\WorldGen.cs.patch ===================
+--- C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\WorldGen.cs.patch:828
+ 	public static bool GrowTree(int i, int y)
+ 	{
+ 		int j;
+-		for (j = y; Main.tile[i, j].type == 20; j++) {
++		for (j = y; TileID.Sets.TreeSapling[Main.tile[i, j].type]; j++) {
+ 		}
+ 
+ 		if ((Main.tile[i - 1, j - 1].liquid != 0 || Main.tile[i, j - 1].liquid != 0 || Main.tile[i + 1, j - 1].liquid != 0) && !notTheBees)
+@@ -18172,7 +_,7 @@
+ 
+ 	public static bool DefaultTreeWallTest(int wallType)
+ 	{
+-		if (wallType >= 0 && wallType < WallID.Count && WallID.Sets.AllowsPlantsToGrow[wallType])
++		if (wallType >= 0 && WallID.Sets.AllowsPlantsToGrow[wallType])
+ 			return true;
+ 
+ 		return false;
+@@ -18921,10 +_,12 @@
+ 		int num6 = genRand.Next(3);
+ 		bool flag3 = false;
+ 		bool flag4 = false;
++
++		//TML: Again, two CanGrowModTree inserted as ORs after 'type == 23'.
+-		if (Main.tile[i - 1, y].nactive() && !Main.tile[i - 1, y].halfBrick() && Main.tile[i - 1, y].slope() == 0 && (Main.tile[i - 1, y].type == 2 || Main.tile[i - 1, y].type == 23 || Main.tile[i - 1, y].type == 60 || Main.tile[i - 1, y].type == 109 || Main.tile[i - 1, y].type == 147))
++		if (Main.tile[i - 1, y].nactive() && !Main.tile[i - 1, y].halfBrick() && Main.tile[i - 1, y].slope() == 0 && (Main.tile[i - 1, y].type == 2 || Main.tile[i - 1, y].type == 23 || Main.tile[i - 1, y].type == 60 || Main.tile[i - 1, y].type == 109 || Main.tile[i - 1, y].type == 147 || TileLoader.CanGrowModTree(Main.tile[i - 1, y].type)))
+ 			flag3 = true;
+ 
+-		if (Main.tile[i + 1, y].nactive() && !Main.tile[i + 1, y].halfBrick() && Main.tile[i + 1, y].slope() == 0 && (Main.tile[i + 1, y].type == 2 || Main.tile[i + 1, y].type == 23 || Main.tile[i + 1, y].type == 60 || Main.tile[i + 1, y].type == 109 || Main.tile[i + 1, y].type == 147))
++		if (Main.tile[i + 1, y].nactive() && !Main.tile[i + 1, y].halfBrick() && Main.tile[i + 1, y].slope() == 0 && (Main.tile[i + 1, y].type == 2 || Main.tile[i + 1, y].type == 23 || Main.tile[i + 1, y].type == 60 || Main.tile[i + 1, y].type == 109 || Main.tile[i + 1, y].type == 147 || TileLoader.CanGrowModTree(Main.tile[i + 1, y].type)))
+ 			flag4 = true;
+ 
+ 		if (!flag3) {
+@@ -19251,9 +_,11 @@
+ 				}
+ 
+ 				if (flag) {
++					// Extra patch context.
+ 					if (TileID.Sets.CommonSapling[Main.tile[i, j].type])
+ 						break;
+ 
++					/*
+ 					switch (Main.tile[i, j].type) {
+ 						case 3:
+ 						case 24:
+@@ -19280,6 +_,11 @@
+ 						case 655:
+ 							continue;
+ 					}
++					*/
++
++					// Be sure to keep this set updated with IDs from the above.
++					if (TileID.Sets.IgnoredByGrowingSaplings[Main.tile[i, j].type])
++						continue;
+ 
+ 					return false;
+ 				}
+@@ -19325,6 +_,9 @@
+ 
+ 	public static void smCallBack(object threadContext)
+ 	{
++		// Parts of this method will be converted to tasks/passes.
++		var hardmodeTasks = new List<GenPass>();
++
+ 		IsGeneratingHardMode = true;
+ 		TryProtectingSpawnedItems();
+ 		if (Main.rand == null)
+@@ -19358,7 +_,8 @@
+ 			num3 = (int)((double)Main.maxTilesX * (1.0 - num2));
+ 		}
+ 
+-		if (Main.remixWorld) {
++		void HardmodeGoodRemixTask(GenerationProgress progress, GameConfiguration configuration)
++		{
+ 			int num7 = Main.maxTilesX / 7;
+ 			int num8 = Main.maxTilesX / 14;
+ 			if (Main.dungeonX < Main.maxTilesX / 2) {
+@@ -19382,11 +_,44 @@
+ 				}
+ 			}
+ 		}
+-		else {
++
++		void HardmodeGoodTask(GenerationProgress progress, GameConfiguration configuration)
++		{
+ 			GERunner(num3, 0, 3 * num5, 5.0);
++		}
++
++		void HardmodeEvilTask(GenerationProgress progress, GameConfiguration configuration)
++		{
+ 			GERunner(num4, 0, 3 * -num5, 5.0, good: false);
+ 		}
+ 
++		var HardmodeGoodRemixPass = new PassLegacy("Hardmode Good Remix", HardmodeGoodRemixTask);
++		var HardmodeGoodPass = new PassLegacy("Hardmode Good", HardmodeGoodTask);
++		var HardmodeEvilPass = new PassLegacy("Hardmode Evil", HardmodeEvilTask);
++
++		hardmodeTasks.Add(HardmodeGoodRemixPass);
++		hardmodeTasks.Add(HardmodeGoodPass);
++		hardmodeTasks.Add(HardmodeEvilPass);
++
++		// Main.remixWorld checks removed from Pass code, we want all passes present in the list no matter what and disable those that don't apply for consistency with other tModLoader approaches and modder expectations. #3606 discussion
++		if (Main.remixWorld) {
++			HardmodeGoodPass.Disable();
++			HardmodeEvilPass.Disable();
++		}
++		else {
++			HardmodeGoodRemixPass.Disable();
++		}
++
++		hardmodeTasks.Add(new PassLegacy("Hardmode Walls", HardmodeWallsTask));
++		hardmodeTasks.Add(new PassLegacy("Hardmode Announcement", HardmodeAnnouncementTask));
++
++		// Call the split end portion of the method.
++		smCallback_End(hardmodeTasks);
++	}
++
++	// Split from smCallback
++	private static void HardmodeWallsTask(GenerationProgress progress, GameConfiguration configuration)
++	{
+ 		double num9 = (double)Main.maxTilesX / 4200.0;
+ 		int num10 = (int)(25.0 * num9);
+ 		ShapeData shapeData = new ShapeData();
+@@ -19416,13 +_,28 @@
+ 				shapeData.Clear();
+ 			}
+ 		}
++	}
+ 
++	// Split from smCallback
++	private static void HardmodeAnnouncementTask(GenerationProgress progress, GameConfiguration configuration)
++	{
+ 		if (Main.netMode == 0)
+ 			Main.NewText(Lang.misc[15].Value, 50, byte.MaxValue, 130);
+ 		else if (Main.netMode == 2)
+ 			ChatHelper.BroadcastChatMessage(NetworkText.FromKey(Lang.misc[15].Key), new Color(50, 255, 130));
+ 
+ 		AchievementsHelper.NotifyProgressionEvent(9);
++	}
++
++	// Split from smCallback
++	private static void smCallback_End(List<GenPass> hardmodeTasks)
++	{
++		SystemLoader.ModifyHardmodeTasks(hardmodeTasks);
++
++		foreach (GenPass task in hardmodeTasks) {
++			task.Apply(null, null);
++		}
++
+ 		if (Main.netMode == 2)
+ 			Netplay.ResetSections();
+ 
+@@ -19470,7 +_,7 @@
+ 
+ 		int frameX = Main.tile[i, j].frameX;
+ 		Tile tile = Main.tile[i, j];
+-		if (tile.type != 11)
++		if (TileLoader.CloseDoorID(Main.tile[i, j]) < 0)
+ 			return false;
+ 
+ 		int num4 = tile.frameY;
+@@ -19517,13 +_,15 @@
+ 			}
+ 		}
+
+--- C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\WorldGen.cs.patch:2707
+ 	public static TreeTypes GetTreeType(int tileType)
+ 	{
++		TreeTypes modType = PlantLoader.GetModTreeType(tileType);
++		if (modType != TreeTypes.None)
++			return modType;
++
+ 		switch (tileType) {
+ 			case 2:
+ 			case 477:
+@@ -45086,6 +_,10 @@
+ 		if (!IsTileALeafyTreeTop(x, y) || Collision.SolidTiles(x - 2, x + 2, y - 2, y + 2))
+ 			return;
+ 
++		bool createLeaves = true;
++
++		if (TileLoader.GlobalShakeTree(x, y, treeType)) { } else
++		if (!PlantLoader.ShakeTree(x, y, Main.tile[x, num].type, ref createLeaves)) { } else
+ 		if (Main.getGoodWorld && genRand.Next(17) == 0) {
+ 			Projectile.NewProjectile(GetProjectileSource_ShakeTree(x, y), x * 16, y * 16, (float)Main.rand.Next(-100, 101) * 0.002f, 0f, 28, 0, 0f, Main.myPlayer, 16f, 16f);
+ 		}
+@@ -45310,11 +_,20 @@
+ 			Item.NewItem(Type: (genRand.Next(2) != 0) ? 5278 : 5277, source: GetItemSource_FromTreeShake(x, y), X: x * 16, Y: y * 16, Width: 16, Height: 16);
+ 		}
+ 
++		NPCLoader.blockLoot.Clear(); // Clear PreShakeTree values
++
++		if (!createLeaves)
++			return;
++
+ 		int treeHeight = 0;
+ 		int treeFrame = 0;
+ 		int passStyle = 0;
+ 		GetTreeLeaf(x, Main.tile[x, y], Main.tile[x, num], ref treeHeight, out treeFrame, out passStyle);
++
++		/*
+ 		if (passStyle != -1) {
++		*/
++		if (passStyle > 0) {
+ 			if (Main.netMode == 2)
+ 				NetMessage.SendData(112, -1, -1, null, 1, x, y, 1f, passStyle);
+ 
+@@ -45336,6 +_,7 @@
+ 		}
+ 	}
+ 
++	/// <summary> If given a tree tile coordinate, will output the coordinates of the tree tile at the bottom of the tree. </summary>
+ 	public static void GetTreeBottom(int i, int j, out int x, out int y)
+ 	{
+ 		x = i;
+@@ -45397,6 +_,17 @@
+ 		fossilBreak = false;
+ 	}
+ 
++	/// <summary>
++	/// Attempts to destroy the tile at the provided tile coordinates.<para/>
++	/// Callers can use <paramref name="fail"/>, <paramref name="effectOnly"/>, and <paramref name="noItem"/> to dictate if the intention is to not actually kill the tile, only spawn kill tile effects, and not drop items respectively. For example, worms typically use <c>fail: true, effectOnly: true</c> to spawn dust indicating the worm burrowing through the ground. <para/>
++	/// <see cref="ModTile.KillTile(int, int, ref bool, ref bool, ref bool)"/> and <see cref="GlobalTile.KillTile(int, int, int, ref bool, ref bool, ref bool)"/> will be called to modify those values.<para/>
++	/// Note that this method will destroy a single tile and then call the tile framing code. The <paramref name="noItem"/> parameter is only relevant for 1x1 tiles, not multi-tiles. The tile framing code is what triggers multi-tiles to destroy all of their remaining tiles and drop their placement item. <see cref="GlobalTile.Drop(int, int, int)"/> must be used by the caller if the intention is to prevent item drops from a multi-tile.<para/>
++	/// </summary>
++	/// <param name="i"></param>
++	/// <param name="j"></param>
++	/// <param name="fail">Prevents the tile from being destroyed, but still plays a hit sound</param>
++	/// <param name="effectOnly">Prevents the tile from being destroyed but still spawns hit dust and prevents the hit sound.</param>
++	/// <param name="noItem">Prevents the item from dropping. Only relevant for 1x1 tiles.</param>
+ 	public static void KillTile(int i, int j, bool fail = false, bool effectOnly = false, bool noItem = false)
+ 	{
+ 		if (i < 0 || j < 0 || i >= Main.maxTilesX || j >= Main.maxTilesY)
+@@ -45415,11 +_,15 @@
+ 			Main.tile[i, j - 1] = new Tile();
+ 
+ 		int num = CheckTileBreakability(i, j);
++		// Extra patch context.
+ 		if (num == 1)
+ 			fail = true;
+ 
+ 		if (num == 2)
+ 			return;
++
++		// Placed before gen check on purpose.
++		TileLoader.KillTile(i, j, tile.type, ref fail, ref effectOnly, ref noItem);
+ 
+ 		if (gen)
+ 			noItem = true;
+@@ -45562,7 +_,7 @@
+ 		if ((tile.type == 470 && (CheckTileBreakability2_ShouldTileSurvive(i, j) || fail)) || (tile.type == 475 && (CheckTileBreakability2_ShouldTileSurvive(i, j) || fail)))
+ 			return;
+ 
+-		int num16 = KillTile_GetTileDustAmount(fail, tile);
++		int num16 = KillTile_GetTileDustAmount(fail, tile, i, j);
+ 		for (int k = 0; k < num16; k++) {
+ 			KillTile_MakeTileDust(i, j, tile);
+ 		}
+@@ -45754,11 +_,23 @@
+ 		}
+ 	}
+
+--- C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\WorldGen.cs.patch:737
+ 	public static bool GrowPalmTree(int i, int y)
+@@ -15357,7 +_,7 @@
+ 		if (!InWorld(i, y))
+ 			return false;
+ 
+-		while (Main.tile[i, num].type == 20) {
++		while (TileID.Sets.TreeSapling[Main.tile[i, num].type]) {
+ 			num++;
+ 			if (Main.tile[i, num] == null)
+ 				return false;
+@@ -15377,7 +_,11 @@
+ 		if (tile2.wall != 0 || tile2.liquid != 0)
+ 			return false;
+ 
++		bool vanillaCanGrow = true;
+ 		if (tile.type != 53 && tile.type != 234 && tile.type != 116 && tile.type != 112)
++			vanillaCanGrow = false;
++
++		if (!vanillaCanGrow && !TileLoader.CanGrowModPalmTree(tile.type))
+ 			return false;
+ 
+ 		if (!EmptyTileCheck(i, i, num - 2, num - 1, 20))
+@@ -15442,10 +_,11 @@
+ 	public static bool GrowEpicTree(int i, int y)
+ 	{
+ 		int j;
+-		for (j = y; Main.tile[i, j].type == 20; j++) {
++		for (j = y; TileID.Sets.TreeSapling[Main.tile[i, j].type]; j++) {
+ 		}
+ 
++		//TML: Two CanGrowModTree inserted as ORs after 'type == 23'.
+-		if (Main.tile[i, j].active() && !Main.tile[i, j].halfBrick() && Main.tile[i, j].slope() == 0 && Main.tile[i, j].type == 2 && Main.tile[i, j - 1].wall == 0 && Main.tile[i, j - 1].liquid == 0 && ((Main.tile[i - 1, j].active() && (Main.tile[i - 1, j].type == 2 || Main.tile[i - 1, j].type == 23 || Main.tile[i - 1, j].type == 60 || Main.tile[i - 1, j].type == 109)) || (Main.tile[i + 1, j].active() && (Main.tile[i + 1, j].type == 2 || Main.tile[i + 1, j].type == 23 || Main.tile[i + 1, j].type == 60 || Main.tile[i + 1, j].type == 109)))) {
++		if (Main.tile[i, j].active() && !Main.tile[i, j].halfBrick() && Main.tile[i, j].slope() == 0 && Main.tile[i, j].type == 2 && Main.tile[i, j - 1].wall == 0 && Main.tile[i, j - 1].liquid == 0 && ((Main.tile[i - 1, j].active() && (Main.tile[i - 1, j].type == 2 || Main.tile[i - 1, j].type == 23 || Main.tile[i - 1, j].type == 60 || Main.tile[i - 1, j].type == 109 || TileLoader.CanGrowModTree(Main.tile[i - 1, j].type))) || (Main.tile[i + 1, j].active() && (Main.tile[i + 1, j].type == 2 || Main.tile[i + 1, j].type == 23 || Main.tile[i + 1, j].type == 60 || Main.tile[i + 1, j].type == 109 || TileLoader.CanGrowModTree(Main.tile[i + 1, j].type))))) {
+ 			int num = 2;
+ 			if (EmptyTileCheck(i - num, i + num, j - 55, j - 1, 20)) {
+ 				bool flag = false;
+@@ -15672,10 +_,12 @@
+ 				int num5 = genRand.Next(3);
+ 				bool flag3 = false;
+ 				bool flag4 = false;
++
++				//TML: Again, two CanGrowModTree inserted as ORs after 'type == 23'.
+-				if (Main.tile[i - 1, j].active() && !Main.tile[i - 1, j].halfBrick() && Main.tile[i - 1, j].slope() == 0 && (Main.tile[i - 1, j].type == 2 || Main.tile[i - 1, j].type == 23 || Main.tile[i - 1, j].type == 60 || Main.tile[i - 1, j].type == 109))
++				if (Main.tile[i - 1, j].active() && !Main.tile[i - 1, j].halfBrick() && Main.tile[i - 1, j].slope() == 0 && (Main.tile[i - 1, j].type == 2 || Main.tile[i - 1, j].type == 23 || Main.tile[i - 1, j].type == 60 || Main.tile[i - 1, j].type == 109 || TileLoader.CanGrowModTree(Main.tile[i - 1, j].type)))
+ 					flag3 = true;
+ 
+-				if (Main.tile[i + 1, j].active() && !Main.tile[i + 1, j].halfBrick() && Main.tile[i + 1, j].slope() == 0 && (Main.tile[i + 1, j].type == 2 || Main.tile[i + 1, j].type == 23 || Main.tile[i + 1, j].type == 60 || Main.tile[i + 1, j].type == 109))
++				if (Main.tile[i + 1, j].active() && !Main.tile[i + 1, j].halfBrick() && Main.tile[i + 1, j].slope() == 0 && (Main.tile[i + 1, j].type == 2 || Main.tile[i + 1, j].type == 23 || Main.tile[i + 1, j].type == 60 || Main.tile[i + 1, j].type == 109 || TileLoader.CanGrowModTree(Main.tile[i + 1, j].type)))
+ 					flag4 = true;
+ 
+ 				if (!flag3) {
+@@ -17443,7 +_,7 @@
+ 	{
+ 		int treeHeight = 1;
+ 		int passStyle = -1;
+-		Tile topTile = null;
++		Tile topTile = default;
+ 		for (int num = -1; num > -100; num--) {
+ 			Tile tile = Main.tile[x, y + num];
+ 			if (!tile.active() || !TileID.Sets.GetsCheckedForLeaves[tile.type])
+@@ -17655,14 +_,19 @@
+ 						case 17:
+ 							passStyle = num2 + 8;
+ 							break;
++							// Extra extra patch context.
+ 					}
+ 				}
+ 
+ 				passStyle += num;
+ 				treeHeight += 5;
++				// Extra patch context.
+ 				break;
+ 			}
+ 		}
++
++		// TODO: Need treeHeight parameter to support spawning leaves from really tall tree tops.
++		PlantLoader.GetTreeLeaf(t.type, ref passStyle);
+ 	}
+ 
+ 	public static void TreeGrowFX(int x, int y, int height, int treeGore, bool hitTree = false)
+@@ -17752,14 +_,17 @@
+ 			case 662:
+ 				return true;
+ 			default:
++				/*
+ 				return false;
++				*/
++				return TileLoader.CanGrowModTree(type);
+ 		}
+ 	}
+ 
+ 	public static bool GrowTree(int i, int y)
+ 	{
+ 		int j;
+-		for (j = y; Main.tile[i, j].type == 20; j++) {
++		for (j = y; TileID.Sets.TreeSapling[Main.tile[i, j].type]; j++) {
+ 		}
+ 
+ 		if ((Main.tile[i - 1, j - 1].liquid != 0 || Main.tile[i, j - 1].liquid != 0 || Main.tile[i + 1, j - 1].liquid != 0) && !notTheBees)
+@@ -18172,7 +_,7 @@
+ 
+ 	public static bool DefaultTreeWallTest(int wallType)
+ 	{
+-		if (wallType >= 0 && wallType < WallID.Count && WallID.Sets.AllowsPlantsToGrow[wallType])
++		if (wallType >= 0 && WallID.Sets.AllowsPlantsToGrow[wallType])
+ 			return true;
+ 
+ 		return false;
+@@ -18921,10 +_,12 @@
+ 		int num6 = genRand.Next(3);
+ 		bool flag3 = false;
+ 		bool flag4 = false;
++
++		//TML: Again, two CanGrowModTree inserted as ORs after 'type == 23'.
+-		if (Main.tile[i - 1, y].nactive() && !Main.tile[i - 1, y].halfBrick() && Main.tile[i - 1, y].slope() == 0 && (Main.tile[i - 1, y].type == 2 || Main.tile[i - 1, y].type == 23 || Main.tile[i - 1, y].type == 60 || Main.tile[i - 1, y].type == 109 || Main.tile[i - 1, y].type == 147))
++		if (Main.tile[i - 1, y].nactive() && !Main.tile[i - 1, y].halfBrick() && Main.tile[i - 1, y].slope() == 0 && (Main.tile[i - 1, y].type == 2 || Main.tile[i - 1, y].type == 23 || Main.tile[i - 1, y].type == 60 || Main.tile[i - 1, y].type == 109 || Main.tile[i - 1, y].type == 147 || TileLoader.CanGrowModTree(Main.tile[i - 1, y].type)))
+ 			flag3 = true;
+ 
+-		if (Main.tile[i + 1, y].nactive() && !Main.tile[i + 1, y].halfBrick() && Main.tile[i + 1, y].slope() == 0 && (Main.tile[i + 1, y].type == 2 || Main.tile[i + 1, y].type == 23 || Main.tile[i + 1, y].type == 60 || Main.tile[i + 1, y].type == 109 || Main.tile[i + 1, y].type == 147))
++		if (Main.tile[i + 1, y].nactive() && !Main.tile[i + 1, y].halfBrick() && Main.tile[i + 1, y].slope() == 0 && (Main.tile[i + 1, y].type == 2 || Main.tile[i + 1, y].type == 23 || Main.tile[i + 1, y].type == 60 || Main.tile[i + 1, y].type == 109 || Main.tile[i + 1, y].type == 147 || TileLoader.CanGrowModTree(Main.tile[i + 1, y].type)))
+ 			flag4 = true;
+ 
+ 		if (!flag3) {
+@@ -19251,9 +_,11 @@
+ 				}
+ 
+ 				if (flag) {
++					// Extra patch context.
+ 					if (TileID.Sets.CommonSapling[Main.tile[i, j].type])
+ 						break;
+ 
++					/*
+ 					switch (Main.tile[i, j].type) {
+ 						case 3:
+ 						case 24:
+@@ -19280,6 +_,11 @@
+ 						case 655:
+ 							continue;
+ 					}
++					*/
++
++					// Be sure to keep this set updated with IDs from the above.
++					if (TileID.Sets.IgnoredByGrowingSaplings[Main.tile[i, j].type])
++						continue;
+ 
+ 					return false;
+ 				}
+@@ -19325,6 +_,9 @@
+ 
+ 	public static void smCallBack(object threadContext)
+ 	{
++		// Parts of this method will be converted to tasks/passes.
++		var hardmodeTasks = new List<GenPass>();
++
+ 		IsGeneratingHardMode = true;
+ 		TryProtectingSpawnedItems();
+ 		if (Main.rand == null)
+@@ -19358,7 +_,8 @@
+ 			num3 = (int)((double)Main.maxTilesX * (1.0 - num2));
+ 		}
+ 
+-		if (Main.remixWorld) {
++		void HardmodeGoodRemixTask(GenerationProgress progress, GameConfiguration configuration)
++		{
+ 			int num7 = Main.maxTilesX / 7;
+ 			int num8 = Main.maxTilesX / 14;
+ 			if (Main.dungeonX < Main.maxTilesX / 2) {
+@@ -19382,11 +_,44 @@
+ 				}
+ 			}
+ 		}
+-		else {
++
++		void HardmodeGoodTask(GenerationProgress progress, GameConfiguration configuration)
++		{
+ 			GERunner(num3, 0, 3 * num5, 5.0);
++		}
++
++		void HardmodeEvilTask(GenerationProgress progress, GameConfiguration configuration)
++		{
+ 			GERunner(num4, 0, 3 * -num5, 5.0, good: false);
+ 		}
+ 
++		var HardmodeGoodRemixPass = new PassLegacy("Hardmode Good Remix", HardmodeGoodRemixTask);
++		var HardmodeGoodPass = new PassLegacy("Hardmode Good", HardmodeGoodTask);
++		var HardmodeEvilPass = new PassLegacy("Hardmode Evil", HardmodeEvilTask);
++
++		hardmodeTasks.Add(HardmodeGoodRemixPass);
++		hardmodeTasks.Add(HardmodeGoodPass);
++		hardmodeTasks.Add(HardmodeEvilPass);
++
++		// Main.remixWorld checks removed from Pass code, we want all passes present in the list no matter what and disable those that don't apply for consistency with other tModLoader approaches and modder expectations. #3606 discussion
++		if (Main.remixWorld) {
++			HardmodeGoodPass.Disable();
++			HardmodeEvilPass.Disable();
++		}
++		else {
++			HardmodeGoodRemixPass.Disable();
++		}
++
++		hardmodeTasks.Add(new PassLegacy("Hardmode Walls", HardmodeWallsTask));
++		hardmodeTasks.Add(new PassLegacy("Hardmode Announcement", HardmodeAnnouncementTask));
++
++		// Call the split end portion of the method.
++		smCallback_End(hardmodeTasks);
++	}
++
++	// Split from smCallback
++	private static void HardmodeWallsTask(GenerationProgress progress, GameConfiguration configuration)
++	{
+ 		double num9 = (double)Main.maxTilesX / 4200.0;
+ 		int num10 = (int)(25.0 * num9);
+ 		ShapeData shapeData = new ShapeData();
+@@ -19416,13 +_,28 @@
+ 				shapeData.Clear();
+ 			}
+ 		}
++	}
+ 
++	// Split from smCallback
++	private static void HardmodeAnnouncementTask(GenerationProgress progress, GameConfiguration configuration)
++	{
+ 		if (Main.netMode == 0)
+ 			Main.NewText(Lang.misc[15].Value, 50, byte.MaxValue, 130);
+ 		else if (Main.netMode == 2)
+ 			ChatHelper.BroadcastChatMessage(NetworkText.FromKey(Lang.misc[15].Key), new Color(50, 255, 130));
+ 
+ 		AchievementsHelper.NotifyProgressionEvent(9);
++	}
++
++	// Split from smCallback
++	private static void smCallback_End(List<GenPass> hardmodeTasks)
++	{
++		SystemLoader.ModifyHardmodeTasks(hardmodeTasks);
++
++		foreach (GenPass task in hardmodeTasks) {
++			task.Apply(null, null);
++		}
++
+ 		if (Main.netMode == 2)
+ 			Netplay.ResetSections();
+ 
+@@ -19470,7 +_,7 @@
+ 
+ 		int frameX = Main.tile[i, j].frameX;
+ 		Tile tile = Main.tile[i, j];
+-		if (tile.type != 11)
++		if (TileLoader.CloseDoorID(Main.tile[i, j]) < 0)
+ 			return false;
+ 
+ 		int num4 = tile.frameY;
+@@ -19517,13 +_,15 @@
+ 			}
+ 		}
+ 
++		ushort closeDoorID = (ushort)TileLoader.CloseDoorID(tile);
++
+ 		for (int l = num7; l < num7 + 2; l++) {
+ 			for (int m = num3; m < num3 + 3; m++) {
+ 				if (l == num2) {
+
+##### matches for ImmatureHerbs
+##### matches for MatureHerbs
+##### matches for BloomingHerbs
+##### matches for PlanterBox
+##### matches for TileID\.Saplings
+--- C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\WorldGen.cs.patch:1155
++			int newType = TileID.Saplings;
+ 			int num5 = Main.tile[x, num].frameX / 54;
+ 			int type2 = Main.tile[x, num + 2].type;
+ 			int num6 = -1;
+@@ -28861,12 +_,21 @@
+ 				case 633:
+
+--- C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\WorldGen.cs.patch:2436
++							int dummyType = TileID.Saplings;
++							int dummyStyle = 0;
+-							if (Main.tile[i, j + 1].active() && (type == 2 || type == 109 || type == 147 || type == 60 || type == 23 || type == 199 || type == 661 || type == 662 || type == 53 || type == 234 || type == 116 || type == 112)) {
++							if (Main.tile[i, j + 1].active() && (type == 2 || type == 109 || type == 147 || type == 60 || type == 23 || type == 199 || type == 661 || type == 662 || type == 53 || type == 234 || type == 116 || type == 112 || TileLoader.SaplingGrowthType(type, ref dummyType, ref dummyStyle))) {
+-								Place1x2(i, j, (ushort)num, style);
++								Place1x2(i, j, (ushort)dummyType, dummyStyle);
+
+##### matches for Gemcorn
+##### matches for case 380
+=================== C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\TileObject.cs.patch ===================
+##### matches for PlanterBox
+##### matches for ImmatureHerbs
+##### matches for MatureHerbs
+##### matches for BloomingHerbs
+##### matches for Saplings
+=================== C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\ObjectData\TileObjectData.cs.patch ===================
+##### matches for PlanterBox
+##### matches for ImmatureHerbs
+--- C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\ObjectData\TileObjectData.cs.patch:677
++	/// Similar to <see cref="CopyFrom(TileObjectData)"/>, except subtile data will also be copied. This is useful for inheriting subtile specific data, such as how each herb tile type (ImmatureHerbs, MatureHerbs, BloomingHerbs) share the same water placement and lava death properties for their Fireblossom and Moonglow styles.
++	/// </summary>
++	/// <param name="copy"></param>
+ 	public void FullCopyFrom(TileObjectData copy)
+ 	{
+ 		if (copy != null) {
+@@ -1372,6 +_,19 @@
+ 			if (_liquidDeath.water)
+ 				WaterPlacement = LiquidPlacement.NotAllowed;
+
+##### matches for MatureHerbs
+--- C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\ObjectData\TileObjectData.cs.patch:677
++	/// Similar to <see cref="CopyFrom(TileObjectData)"/>, except subtile data will also be copied. This is useful for inheriting subtile specific data, such as how each herb tile type (ImmatureHerbs, MatureHerbs, BloomingHerbs) share the same water placement and lava death properties for their Fireblossom and Moonglow styles.
++	/// </summary>
++	/// <param name="copy"></param>
+ 	public void FullCopyFrom(TileObjectData copy)
+ 	{
+ 		if (copy != null) {
+@@ -1372,6 +_,19 @@
+ 			if (_liquidDeath.water)
+ 				WaterPlacement = LiquidPlacement.NotAllowed;
+
+##### matches for BloomingHerbs
+--- C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\ObjectData\TileObjectData.cs.patch:677
++	/// Similar to <see cref="CopyFrom(TileObjectData)"/>, except subtile data will also be copied. This is useful for inheriting subtile specific data, such as how each herb tile type (ImmatureHerbs, MatureHerbs, BloomingHerbs) share the same water placement and lava death properties for their Fireblossom and Moonglow styles.
++	/// </summary>
++	/// <param name="copy"></param>
+ 	public void FullCopyFrom(TileObjectData copy)
+ 	{
+ 		if (copy != null) {
+@@ -1372,6 +_,19 @@
+ 			if (_liquidDeath.water)
+ 				WaterPlacement = LiquidPlacement.NotAllowed;
+
+##### matches for Saplings
+=================== C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\Item.cs.patch ===================
+##### matches for PlanterBox
+##### matches for Gemcorn
+##### matches for Acorn
+=================== C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\patches\tModLoader\Terraria\ID\ItemID.cs.patch ===================
+##### matches for PlanterBox
+##### matches for Gemcorn
+##### matches for Acorn
+=================== C:\Users\ismai\OneDrive\Documents\My Games\Terraria\tModLoader-2026.08.3.0\test\HookListPerformance\Item.cs ===================
+##### matches for PlanterBox
+##### matches for Gemcorn
+##### matches for Acorn
