@@ -48,6 +48,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
         int builtVersion = int.MinValue;
         int builtHeldVersion = int.MinValue;
         int builtFavVersion = int.MinValue;
+        bool builtGrid;                                      // R7: the mode the list was built in (Rows = false)
+        float entryHeight = RecipeBookLayout.EntryRowHeight; // R7: height of one entry in the built mode (a row, or a grid square)
 
         // Selection is a catalog key so it survives rebuilds.
         public string SelectedKey { get; private set; }
@@ -92,6 +94,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             panel.Append(scrollbar);
 
             BuildSearchBar();
+            panel.Append(new RecipeBookModeButton(this));   // R7: Rows / Grid, right of the search bar
 
             panel.Append(new RecipeBookDetail(this));
             panel.Append(new RecipeBookTabTipOverlay());   // last: the hover tip of a tab header draws above everything
@@ -117,7 +120,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (filterDirty && scrollbar != null) scrollbar.ViewPosition = 0f;   // new search starts at the top
             RecipeVisibility.Poll();    // HeldVersion only moves if someone scans; the book is visible, so keep it current
             if (RecipeKnowledgeSystem.Version != builtVersion || RecipeVisibility.HeldVersion != builtHeldVersion || filterDirty || layoutDirty
-                || Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().FavoritesVersion != builtFavVersion) Rebuild();
+                || Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().FavoritesVersion != builtFavVersion
+                || Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().GridMode != builtGrid) Rebuild();
             ApplyScroll(false);
             base.Update(gameTime);
         }
@@ -141,6 +145,16 @@ namespace Factorraria.Common.UI.RecipeBookUI
             headerRows.Clear();
             entryTop.Clear();
             aliases.Clear();
+
+            // R7: Rows = one row per entry. Grid = squares that flow left to right and then down, restarting under every tab header.
+            bool grid = favorites.GridMode;
+            bool modeChanged = grid != builtGrid;
+            builtGrid = grid;
+            entryHeight = grid ? RecipeBookLayout.GridCellSize : RecipeBookLayout.EntryRowHeight;
+            int gridStep = RecipeBookLayout.GridCellSize + RecipeBookLayout.GridGap;
+            int gridCols = RecipeBookLayout.GridColumns;
+            float gridX0 = RecipeBookLayout.GridLeft(gridCols);
+            int gridCol = 0;
 
             string lastMachine = null;
             float y = 0f;
@@ -241,20 +255,39 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 if (tabName != lastMachine)
                 {
                     lastMachine = tabName;
+                    if (gridCol > 0) { gridCol = 0; y += gridStep; }   // R7: a half-filled grid row ends where the next tab starts
                     AddRow(new RecipeBookHeaderRow(tabName, collapsed, filtering ? (Action<string>)null : ToggleMachine, childKeys), y, true);
                     y += RecipeBookLayout.HeaderRowHeight;
                 }
                 if (collapsed) continue;
 
-                RecipeBookEntry entry = e.Art != null
-                    ? new RecipeBookEntry(e.Key, e.Machine, e.Art, favorites.IsFavorite(e.Key))
-                    : new RecipeBookEntry(e.Key, e.Machine, e.Group, state, favorites.IsFavorite(e.Key));
+                bool isFavorite = favorites.IsFavorite(e.Key);
+                RecipeBookEntry entry;
+                if (grid)
+                    entry = e.Art != null
+                        ? new RecipeBookGridCell(e.Key, e.Machine, e.Art, isFavorite)
+                        : new RecipeBookGridCell(e.Key, e.Machine, e.Group, state, isFavorite);
+                else
+                    entry = e.Art != null
+                        ? new RecipeBookEntry(e.Key, e.Machine, e.Art, isFavorite)
+                        : new RecipeBookEntry(e.Key, e.Machine, e.Group, state, isFavorite);
                 entry.OnChosen = key => Select(key, false);
                 entry.Selected = isSelected;
                 entryTop[e.Key] = y;
-                AddRow(entry, y);
-                y += RecipeBookLayout.EntryRowHeight;
+                if (grid)
+                {
+                    entry.Left.Set(gridX0 + gridCol * gridStep, 0f);
+                    AddRow(entry, y);
+                    if (++gridCol >= gridCols) { gridCol = 0; y += gridStep; }
+                }
+                else
+                {
+                    AddRow(entry, y);
+                    y += RecipeBookLayout.EntryRowHeight;
+                }
             }
+
+            if (gridCol > 0) y += gridStep;   // R7: the last grid row of the last tab
 
             // Headers go in last so they draw above the entries (a pinned header must cover the rows that scroll under it).
             foreach (UIElement header in headerRows) listArea.Append(header);
@@ -275,6 +308,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             float viewH = RecipeBookLayout.ListArea.Height;
             scrollbar.SetBookView(viewH, Math.Max(totalHeight, viewH));
             ApplyScroll(true);
+            if (modeChanged) ScrollToSelected();   // R7: the list changed height, so bring the selected recipe back into view
         }
 
         /// <summary>R1.8: By Hand first, then the tabs in the order this character found them in this world (unrecorded ones last, in catalog order).</summary>
@@ -528,7 +562,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             float viewH = RecipeBookLayout.ListArea.Height;
             float view = scrollbar.ViewPosition;
             if (top - RecipeBookLayout.HeaderRowHeight < view) scrollbar.ViewPosition = top - RecipeBookLayout.HeaderRowHeight;
-            else if (top + RecipeBookLayout.EntryRowHeight > view + viewH) scrollbar.ViewPosition = top + RecipeBookLayout.EntryRowHeight - viewH;
+            else if (top + entryHeight > view + viewH) scrollbar.ViewPosition = top + entryHeight - viewH;
             ApplyScroll(false);
         }
     }

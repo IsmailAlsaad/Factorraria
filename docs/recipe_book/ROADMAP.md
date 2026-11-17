@@ -1,6 +1,6 @@
 ﻿# Recipe book roadmap (tab discovery, new-recipe highlights, tab and favorite filters)
 
-Status: R0 to R3 tested and working (incl. R1.6 to R1.8); R4 and R5 dropped; R6 applied (untested). Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
+Status: R0 to R3 tested and working (incl. R1.6 to R1.8); R4 and R5 dropped; R6 and R1.9 applied (untested); R7 applied (untested). Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
 
 Code map: `Common/Knowledge/` (RecipeCatalog, RecipeKnowledgeSystem, VanillaStationBooks, ScrollPools), `Common/Machines/RecipeVisibility.cs` (states), `Common/UI/RecipeBookUI/` (RecipeBookState, RecipeBookElements, RecipeBookPlayer, RecipeBookLayout), `Common/Net/RecipeKnowledgeNet.cs`.
 
@@ -26,6 +26,7 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [-] R5 Favorites-only / show-all button (dropped by Ismail 2026-11-16)
 - [~] R1.9 Fuel options side by side (the fuel cells of the machines that make a recipe sit in one row to the right of the arrow with "or" between them; the recipe slides left when there is no room; applied, untested)
 - [~] R6 Recipe book button outline for new recipes (the book button gets a white outline PNG, tinted with a slowly cycling hue, while anything in the book is new; applied, untested)
+- [~] R7 Rows / Grid mode for the left page (a button right of the search bar switches between today's rows and small item squares; the mode is saved per character; Left Alt favorites in both modes with the vanilla favorite cursor; applied, untested)
 
 ## Working rules
 
@@ -231,6 +232,19 @@ Implemented (R6, applied, untested). Client-only drawing, no packets, nothing sa
 - The button only exists while the inventory is open, so the outline is seen there.
 
 Test: unlock a recipe with the book closed: outline shows; open: outline stays until cleared per the rules; hidden tab recipes do not light it (R4 was dropped, so ignore that part).
+
+## R7 Rows / Grid mode
+
+Asked 2026-11-17. Applied, untested. Client-only, no packets, one saved bool.
+
+Authority/sync: the mode is a personal UI choice like favorites and the viewed set (working rule 2): `RecipeBookPlayer.GridMode`, saved as `bookGridMode` (written only when true, so old characters load in Rows). Nothing is synced, the server never knows. Single-player behaves the same.
+
+- Button (`RecipeBookModeButton`, `RecipeBookGrid.cs`): right of the search bar, its right edge on the scrollbar's right edge (`RecipeBookLayout.ModeButton`; the search bar got `ModeButtonSize + ModeButtonGap` narrower). Hidden while the book is empty. Art, all in `Common/UI/CustomUIElements/`: `SwitchRecipeBookMode_Rows.png`, `_Grid.png`, `_Rows_Highlight.png`, `_Grid_Highlight.png`, 24x24 (`ModeButtonSize`; drawn at native size, centered; a missing PNG draws a code glyph). The button shows the art of the mode a click switches TO (Rows mode shows the Grid art); `RecipeBookLayout.ModeIconShowsTarget = false` shows the current mode instead. Hover text keys `Mods.Factorraria.RecipeBook.ModeToRows` / `ModeToGrid` are registered in code with defaults (add them to the hjson to translate).
+- Grid (`RecipeBookGridCell : RecipeBookEntry`): the squares flow left to right then down, as many per row as fit the list width (`RecipeBookLayout.GridColumns`, centered by `GridLeft`), restarting under every tab header. Same sort as rows. Icon only; hover shows the name or "???" while faded. A new recipe: pulsing gold square plus the "!" at its top right (`GridMarkOffset`). A favorite: `RecipeBookStar_On` at the top left, scaled by `GridStarScale` (`GridStarPad`), not clickable. Selection frame, search, folding, pinned headers, scroll and the scrollbar height, jumps (Select / scroll-to) all go through the same code as rows; `RecipeBookState.entryHeight` is the height of one entry in the built mode. Switching mode rebuilds on the next Update and scrolls the selected recipe back into view. An art entry (no product item) shows its PNG shrunk into the square.
+- Favorite key (rows and grid): holding `Main.FavoriteKey` (Left Alt) over an entry turns the cursor into `CursorOverrideID.FavoriteStar` (what the vanilla inventory does in `ItemSlot.OverrideHover`) and a click toggles the favorite WITHOUT selecting. Without the key a click selects as before; in Rows the star is still clickable.
+- Tunables (`RecipeBookLayout`, not const): `GridCellSize` 36, `GridGap` 4, `GridIconInset` 4, `GridStarScale`, `GridStarPad`, `GridMarkOffset`, `GridCellFill`, `GridCellBorder`, `ModeButtonSize`, `ModeButtonGap`, `ModeIconShowsTarget`.
+
+Next chat prompt: "Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md (Progress list and R7), then Common/UI/RecipeBookUI/RecipeBookGrid.cs, RecipeBookState.cs and RecipeBookLayout.cs. State: R0 to R3 and R1.6 to R1.8 are tested; R1.9, R6 and R7 are applied; test results: <paste>. Log them in Progress first, then fix what failed."
 
 ## Order and dependencies
 

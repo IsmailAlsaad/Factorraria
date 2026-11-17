@@ -279,14 +279,19 @@ namespace Factorraria.Common.UI.RecipeBookUI
         {
             base.LeftClick(evt);
             SoundEngine.PlaySound(SoundID.MenuTick);
-            if (RecipeBookLayout.StarRect(GetDimensions().ToRectangle()).Contains(evt.MousePosition.ToPoint()))
+            if (RecipeBookFavoriteMode.Held || StarClicked(evt))
             {
                 // Toggle only; the book re-sorts on its next Update (never mid-click). The row is not selected.
+                // R7: holding the vanilla favorite key (Left Alt) does the same anywhere on the entry, in Rows and in Grid mode.
                 Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().ToggleFavorite(Key);
                 return;
             }
             OnChosen?.Invoke(Key);
         }
+
+        /// <summary>Did this click land on the row's star? A grid square has no clickable star (it favorites with the favorite key only).</summary>
+        protected virtual bool StarClicked(UIMouseEvent evt) =>
+            RecipeBookLayout.StarRect(GetDimensions().ToRectangle()).Contains(evt.MousePosition.ToPoint());
 
         protected override void DrawSelf(SpriteBatch sb)
         {
@@ -319,6 +324,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             bool starHover = hover && star.Contains(Main.MouseScreen.ToPoint());
             if (Favorite || hover) DrawStar(sb, star, Favorite, starHover);   // the off star only appears while the row is hovered
             if (starHover) Main.hoverItemName = RecipeBookLayout.Text(Favorite ? "FavoriteRemove" : "FavoriteAdd");
+            if (hover && RecipeBookFavoriteMode.Held) RecipeBookFavoriteMode.ApplyCursor();
         }
 
         // Code-made placeholder star, used until the RecipeBookStar_* PNGs exist.
@@ -336,7 +342,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             "-#-------#-",
         };
 
-        static void DrawStar(SpriteBatch sb, Rectangle box, bool on, bool hover)
+        protected static void DrawStar(SpriteBatch sb, Rectangle box, bool on, bool hover)
         {
             var art = RecipeBookArt.Star(on, hover);
             if (art != null)

@@ -20,6 +20,11 @@ namespace Factorraria.Common.UI.RecipeBookUI
         /// <summary>Bumped on every toggle. RecipeBookState compares it each frame to know when to re-sort the list.</summary>
         public int FavoritesVersion { get; private set; }
 
+        // R7: the left page's layout (false = Rows, true = Grid). Per character and client-only: a personal UI choice, nothing is synced.
+        public bool GridMode { get; private set; }
+
+        public void SetGridMode(bool grid) => GridMode = grid;
+
         public bool IsFavorite(string catalogKey)
         {
             if (string.IsNullOrEmpty(catalogKey)) return false;
@@ -143,6 +148,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (starred.Count > 0) tag["favoriteOn"] = starred;
             if (unstarred.Count > 0) tag["favoriteOff"] = unstarred;
 
+            if (GridMode) tag["bookGridMode"] = true;
+
             if (viewed.Count > 0) tag["viewedKeys"] = new List<string>(viewed);
             if (seededWorlds.Count > 0) tag["viewedWorlds"] = new List<string>(seededWorlds);
 
@@ -161,6 +168,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
             favoriteOverrides.Clear();
             if (tag.ContainsKey("favoriteOn")) foreach (string key in tag.Get<List<string>>("favoriteOn")) favoriteOverrides[key] = true;
             if (tag.ContainsKey("favoriteOff")) foreach (string key in tag.Get<List<string>>("favoriteOff")) favoriteOverrides[key] = false;
+
+            GridMode = tag.ContainsKey("bookGridMode") && tag.GetBool("bookGridMode");
 
             viewed.Clear();
             seededWorlds.Clear();

@@ -58,6 +58,35 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static Rectangle StarRect(Rectangle row) =>
             new Rectangle(row.Right - StarRightPad - StarHitSize, row.Center.Y - StarHitSize / 2, StarHitSize, StarHitSize);
 
+        // ---- R7: Rows / Grid mode of the left page (tunables are not const, so hot reload can change them) ----
+        public static int GridCellSize = 36;           // side of one grid square, px
+        public static int GridGap = 4;                 // space between squares, px
+        public static int GridIconInset = 4;           // padding between a square's border and its item icon, px
+        public static float GridStarScale = 0.6f;      // favorite star at the top left of a square (1 = native art size)
+        public static Point GridStarPad = new Point(2, 2);               // star offset from the square's top left corner
+        public static Vector2 GridMarkOffset = new Vector2(-1f, 1f);     // the "!" of a new recipe: shift from the square's top right corner (+x right, +y down)
+        public static Color GridCellFill = new Color(98, 68, 38) * 0.10f;
+        public static Color GridCellBorder = new Color(98, 68, 38) * 0.35f;
+        public static int ModeButtonSize = 24;         // the Rows / Grid button's square, px; its art is drawn at native size, centered
+        public static int ModeButtonGap = 4;           // gap between the search bar and the button
+        public static bool ModeIconShowsTarget = true; // true: the button shows the art of the mode a click switches TO; false: the art of the current mode
+
+        /// <summary>How many squares fit in one grid row of the list.</summary>
+        public static int GridColumns => System.Math.Max(1, (ListArea.Width + GridGap) / (GridCellSize + GridGap));
+
+        /// <summary>x of the first square of a grid row, relative to the list area (a row is centered).</summary>
+        public static float GridLeft(int columns) => (ListArea.Width - (columns * GridCellSize + (columns - 1) * GridGap)) / 2f;
+
+        /// <summary>The Rows / Grid button: right of the search bar, its right edge on the scrollbar's right edge.</summary>
+        public static Rectangle ModeButton
+        {
+            get
+            {
+                Rectangle p = LeftPage;
+                return new Rectangle(p.Right - 10 - ModeButtonSize, p.Y + 8 + (24 - ModeButtonSize) / 2, ModeButtonSize, ModeButtonSize);
+            }
+        }
+
         public static Rectangle LeftPage => new Rectangle(Margin, Margin, PanelWidth / 2 - Margin - Gutter, PanelHeight - 2 * Margin);
         public static Rectangle RightPage => new Rectangle(PanelWidth / 2 + Gutter, Margin, PanelWidth / 2 - Margin - Gutter, PanelHeight - 2 * Margin);
 
@@ -92,7 +121,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             get
             {
                 Rectangle p = LeftPage;
-                return new Rectangle(p.X + 10, p.Y + 8, p.Width - 20, 24);
+                return new Rectangle(p.X + 10, p.Y + 8, p.Width - 20 - ModeButtonSize - ModeButtonGap, 24);
             }
         }
 
@@ -200,11 +229,16 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static string CloseButtonPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookClose";
         public static string CloseButtonHoverPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookClose_Hover";
         public static string NewMarkPath = "Factorraria/Common/UI/CustomUIElements/RecipeBookNew";
-        public static string DiscoveredPath = "Factorraria/Common/UI/CustomUIElements/RecipebookIcon_Discovered";   // R6: white outline drawn over the book button while something is new
+        public static string DiscoveredPath = "Factorraria/Common/UI/CustomUIElements/RecipebookIcon_Discovered";
+        public static string ModeRowsPath = "Factorraria/Common/UI/CustomUIElements/SwitchRecipeBookMode_Rows";                 // R7: the Rows / Grid button
+        public static string ModeGridPath = "Factorraria/Common/UI/CustomUIElements/SwitchRecipeBookMode_Grid";
+        public static string ModeRowsHighlightPath = "Factorraria/Common/UI/CustomUIElements/SwitchRecipeBookMode_Rows_Highlight";
+        public static string ModeGridHighlightPath = "Factorraria/Common/UI/CustomUIElements/SwitchRecipeBookMode_Grid_Highlight";   // R6: white outline drawn over the book button while something is new
 
         static Asset<Texture2D> button, buttonHover, background;
         static Asset<Texture2D> closeButton, closeButtonHover;
         static Asset<Texture2D> newMark, discovered;
+        static Asset<Texture2D> modeRows, modeGrid, modeRowsHighlight, modeGridHighlight;
         static Asset<Texture2D> starOff, starOffHighlighted, starOn, starOnHighlighted;
         static bool loaded;
 
@@ -218,6 +252,13 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static Asset<Texture2D> NewMark { get { Load(); return newMark; } }
         /// <summary>The white outline PNG of the book button (R6), or null until it exists (a code-drawn border is used then). Tinted with a cycling hue.</summary>
         public static Asset<Texture2D> Discovered { get { Load(); return discovered; } }
+
+        /// <summary>R7: art of the Rows / Grid button for a mode (grid = the Grid art), or null if that PNG does not exist yet (the button then draws a code-made glyph). The highlighted one is the hover state.</summary>
+        public static Asset<Texture2D> Mode(bool grid, bool highlighted)
+        {
+            Load();
+            return grid ? (highlighted ? modeGridHighlight : modeGrid) : (highlighted ? modeRowsHighlight : modeRows);
+        }
 
         /// <summary>Favorite star art for a state, or null if that PNG does not exist yet (the entry then draws a placeholder).</summary>
         public static Asset<Texture2D> Star(bool on, bool highlighted)
@@ -273,6 +314,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
             closeButtonHover = TryRequest(CloseButtonHoverPath);
             newMark = TryRequest(NewMarkPath);
             discovered = TryRequest(DiscoveredPath);
+            modeRows = TryRequest(ModeRowsPath);
+            modeGrid = TryRequest(ModeGridPath);
+            modeRowsHighlight = TryRequest(ModeRowsHighlightPath);
+            modeGridHighlight = TryRequest(ModeGridHighlightPath);
         }
 
         static Asset<Texture2D> TryRequest(string path) =>
@@ -283,6 +328,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             button = buttonHover = background = null;
             closeButton = closeButtonHover = null;
             newMark = discovered = null;
+            modeRows = modeGrid = modeRowsHighlight = modeGridHighlight = null;
             starOff = starOffHighlighted = starOn = starOnHighlighted = null;
             headerBg = null;
             loaded = false;
