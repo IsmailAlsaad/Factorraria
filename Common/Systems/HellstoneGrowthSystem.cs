@@ -1,4 +1,8 @@
-﻿using Terraria;
+﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Net;
+using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -12,6 +16,8 @@ namespace Factorraria.Common.Systems
     // AND a neighbouring hellstone block is closer to the lava than it is. That makes the hellstone grow outward from the contact
     // point instead of appearing at random. Distance is counted in orthogonal steps (a diamond, not a square).
     // Expected time per block = BaseSecondsToConvert * DistanceSlowdown^(distance - 1). All values are plain fields, so hot reload can tweak them.
+    // Effects: when a block converts, the server tells nearby clients (HellstoneGrowNetSystem, packet HellstoneGrow) and PlayEffect runs on
+    // every client (and in single player): a random sound from Assets/Sounds/HellstoneGrow plus a burst of lava dust. Purely cosmetic.
     public class HellstoneGrowthSystem : ModSystem
     {
         public bool Enabled = true;
@@ -23,6 +29,18 @@ namespace Factorraria.Common.Systems
         public int SamplesPerPlayerPerTick = 40;
         public int AreaHalfWidth = 100;
         public int AreaHalfHeight = 60;
+
+        // Sound: files Assets/Sounds/HellstoneGrow/HellstoneGrow1.wav (or .ogg) ... HellstoneGrow<SoundVariants>. 0 = no custom files yet, a vanilla placeholder plays.
+        public int SoundVariants = 3;
+        public float SoundVolume = 0.7f;
+        public float SoundPitchVariance = 0.15f;
+        public int SoundMaxInstances = 4;
+
+        // Particles (client only). Lava dust drips and falls, embers float up, smoke drifts. Set a count to 0 to drop that part.
+        public int LavaDustCount = 10;
+        public int EmberDustCount = 8;
+        public int SmokeDustCount = 3;
+        public float DustCullMargin = 200f; // no dust when the block is further than this off the screen (the sound still plays)
 
         int[] boxLeft = new int[Main.maxPlayers];
         int[] boxRight = new int[Main.maxPlayers];
@@ -160,6 +178,57 @@ namespace Factorraria.Common.Systems
             // Neighbours can change frame too (stone and hellstone merge), so send the 3x3 around it.
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.SendTileSquare(-1, x - 1, y - 1, 3, 3);
+
+            // Cosmetic only: single player plays it here, a server tells the nearby clients, a client never gets here.
+            ModContent.GetInstance<HellstoneGrowNetSystem>().Announce(x, y);
+        }
+
+        // Client and single player: the sound and the lava burst for the block at tile (x, y). Called by HellstoneGrowNetSystem.
+        public void PlayEffect(int x, int y)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 center = new Vector2(x * 16f + 8f, y * 16f + 8f);
+
+            SoundStyle style;
+            if (SoundVariants > 0)
+            {
+                int index = Main.rand.Next(1, SoundVariants + 1);
+                style = new SoundStyle($"Factorraria/Assets/Sounds/HellstoneGrow/HellstoneGrow{index}");
+            }
+            else
+            {
+                style = SoundID.LiquidsHoneyLava; // placeholder until the custom sounds exist
+            }
+            SoundEngine.PlaySound(style with { Volume = SoundVolume, PitchVariance = SoundPitchVariance, MaxInstances = SoundMaxInstances }, center);
+
+            if (!BaseMachine.IsOnScreen(center, DustCullMargin))
+                return;
+
+            Vector2 corner = new Vector2(x * 16f, y * 16f);
+            for (int i = 0; i < LavaDustCount; i++)
+            {
+                Vector2 position = corner + new Vector2(Main.rand.NextFloat(16f), Main.rand.NextFloat(16f));
+                Vector2 velocity = new Vector2(Main.rand.NextFloat(-2.5f, 2.5f), Main.rand.NextFloat(-4.5f, -1f));
+                Dust.NewDustPerfect(position, DustID.Lava, velocity, 0, default, Main.rand.NextFloat(1.2f, 1.9f));
+            }
+
+            for (int i = 0; i < EmberDustCount; i++)
+            {
+                Vector2 position = corner + new Vector2(Main.rand.NextFloat(16f), Main.rand.NextFloat(16f));
+                Vector2 velocity = new Vector2(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-3f, -0.5f));
+                Dust ember = Dust.NewDustPerfect(position, DustID.Torch, velocity, 0, default, Main.rand.NextFloat(1.5f, 2.2f));
+                ember.noGravity = true;
+            }
+
+            for (int i = 0; i < SmokeDustCount; i++)
+            {
+                Vector2 position = corner + new Vector2(Main.rand.NextFloat(16f), Main.rand.NextFloat(16f));
+                Vector2 velocity = new Vector2(Main.rand.NextFloat(-0.8f, 0.8f), Main.rand.NextFloat(-1.6f, -0.4f));
+                Dust smoke = Dust.NewDustPerfect(position, DustID.Smoke, velocity, 120, default, Main.rand.NextFloat(1.0f, 1.5f));
+                smoke.noGravity = true;
+            }
         }
     }
 }

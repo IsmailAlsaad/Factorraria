@@ -67,6 +67,7 @@ namespace Factorraria.Common.Net
         StoryFlagChanged = 58,        // server -> all clients: "NPC story flag <key> is now on / off" (NPC story patch N1.1; the full set goes out with the join sync provider "story-flags")
         StoryActionRequest = 59,      // client -> server: "I do this story action": kind byte (0 = take the Mechanic's Bag from Her Backpack, 1 = turn the Bag in to the Mechanic), then the NPC index (NPC story patches N4.2 and N5.1; later kind: claim the scrolls)
         StoryActionResult = 60,       // server -> the requesting client: "your story action was accepted / refused": kind byte, accepted flag, failure byte (NPC story patch N4.2)
+        HellstoneGrow = 61,           // server -> nearby clients: "the stone block at tile (x, y) just turned into hellstone": sound and lava dust, cosmetic only (side feature hellstone growth effects)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

@@ -865,6 +865,12 @@ Not part of the ten survey steps; see the roadmap Progress entry 'Side feature (
 
 ---
 
+## Hellstone growth effects (side feature, 2026-11-17)
+
+- **Problem:** HellstoneGrowthSystem only runs on the server (or single player) and a dedicated server has no audio or dust, so an effect played inside Transform would never be seen or heard in multiplayer.
+- **Design:** one cosmetic packet, `HellstoneGrow` (61), server -> nearby clients, payload tile x and y. `HellstoneGrowNetSystem.Announce` (Common/Net/HellstoneGrowNet.cs) is called from `Transform`; single player plays directly, a client never calls it. The server caps it at 6 per tick and sends it only within 80 tiles; clients play at most 8 per tick. The tile itself still goes out with the existing `SendTileSquare`.
+- **Known limits:** a lost packet only loses the effect; a host that plays hears it locally (it is not a connected client of itself); with `SoundVariants` above 0 the files `HellstoneGrow1..N` must exist or the sound fails to load.
+
 ## Riding carts (side feature, 2026-11-05)
 - **Rule:** Shift + Right click picks up any cart. A plain Right click on a cart that has no chest, terrarium or motor (`CartRide.CanMount`) mounts the player on it: a vanilla mount of the skin item's `mountType`, started at the cart's rail point with the cart's velocity and direction. The cart-equip slot (`miscEquips[2]`) is never touched. A passenger NPC is released first and keeps the cart's velocity (`CartPassengers.ReleaseWithVelocity`).
 - **Design:** the server owns the carts. `CartInputNet` `Mount` request (cart id): the server checks reach, that the player is not already riding (`ridingSkin[sender]`) and the 10-tick cooldown, then `CartRide.Take` (release the passenger, leave the chain, remove the cart; clients hear it through CartDelta) and answers with the skin, position, velocity and facing. The owner client then calls `CartRide.Apply` (vanilla syncs a player's own mount). Single-player runs `CartRide.MountHere` directly. `CartMountBlocker.AllowCartMount` lets that one SetMount past the track-click block.
