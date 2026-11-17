@@ -29,7 +29,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
         int shortArrowLength = 13;     // the original arrow, used when the machine has no fuels
         int fuelCycleTicks = 60;       // the shown fuel changes this often (60 = once a second)
         int fuelBoxOffsetX = 12;       // gap between the arrow's centre line and the fuel cell
-        int fuelRowStep = 46;          // distance between two stacked fuel cells (room for the "or" between them)
+        int fuelOrPadding = 6;         // pixels between a fuel cell and the "or" on each side of it
+        int fuelRightMargin = 6;       // the last fuel cell may come this close to the right edge of the page before the recipe is pushed left
+        int fuelMaxShift = 140;        // the most the recipe (ingredients, arrow, products) is pushed left to make room for the fuels
+        int fuelBoxOffsetY = -8;       // vertical nudge of the fuel cells (0 = centered between the label and the arrow end)
+        int fuelOrOffsetY = 0;         // vertical nudge of the "or" next to a fuel cell (+ = down)
+        float fuelOrScale = 0.85f;     // text size of the "or" between fuel cells
         int fuelLabelHeight = 18;      // room above the top fuel cell for the single "Fuel" label
 
         // Clickable ingredient boxes of the recipe drawn this frame (box, catalog key to jump to). Refilled every draw.
@@ -313,20 +318,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
             area.Y += headerExtra;        // the wrapped station line above pushes everything down
             area.Height -= headerExtra;
 
-            float y = area.Y;
-
-            // Products stay "???" until crafted. Ingredients follow the reveal rule below.
-            y = DrawLabel(sb, RecipeBookLayout.Text("Inputs"), area, y);
-            // An ingredient the player neither holds right now nor has crafted before stays a silhouette with "???", even
-            // when a parchment taught the recipe (keeps recipe trees honest). A Crafted recipe shows everything.
-            // Recipes known only from holding an input (FadedIngredient) hide every liquid that is not revealed yet (biome visited or crafted).
-            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, book.SelectedState, book.SelectedKey), area, y, navHits, searchHits);
-
-            y += 4f;
-            // One fuel row per machine that makes THIS recipe and burns something: the Furnace's items first, the Hellforge's lava below.
-            // A recipe only the Hellforge has shows only the lava row. Stations and machines without fuels add no row.
-            // A machine's row appears only once that machine is discovered (the Hellforge's lava shows up when the Hellforge is found, not
-            // before). If none of the machines is discovered yet (a parchment recipe of a machine nobody found), all of them show.
+            // Fuel options (R1.9): ONE row of cells to the right of the arrow, one cell per machine that makes THIS recipe and burns something, in
+            // machine order, with an "or" between them (the Furnace's items, then the Hellforge's lava). Stations and machines without fuels add
+            // nothing. A machine's fuels show only once that machine is discovered; if none is discovered yet (a parchment recipe of a machine
+            // nobody found), all of them show.
             var fuelRows = new List<(string machine, List<RecipeCatalog.FuelEntry> fuels)>();
             var knownRows = new List<(string machine, List<RecipeCatalog.FuelEntry> fuels)>();
             foreach (string machine in machines)
@@ -338,9 +333,23 @@ namespace Factorraria.Common.UI.RecipeBookUI
             }
             if (knownRows.Count > 0) fuelRows = knownRows;
             bool hasFuel = fuelRows.Count > 0;
-            int length = hasFuel ? Math.Max(arrowLength, fuelLabelHeight + RecipeBookLayout.DetailCell + (fuelRows.Count - 1) * fuelRowStep + 12) + 8 : shortArrowLength; DrawArrow(sb, new Vector2(area.Center.X, y), length);
+
+            // Not enough room right of the arrow: the whole recipe below the station rows (ingredients, arrow, products, time) slides left.
+            if (hasFuel) area.X -= FuelShift(area, fuelRows.Count);
+
+            float y = area.Y;
+
+            // Products stay "???" until crafted. Ingredients follow the reveal rule below.
+            y = DrawLabel(sb, RecipeBookLayout.Text("Inputs"), area, y);
+            // An ingredient the player neither holds right now nor has crafted before stays a silhouette with "???", even
+            // when a parchment taught the recipe (keeps recipe trees honest). A Crafted recipe shows everything.
+            // Recipes known only from holding an input (FadedIngredient) hide every liquid that is not revealed yet (biome visited or crafted).
+            y = DrawCells(sb, BuildCells(recipe.Inputs, recipe.LiquidInputs, false, book.SelectedState, book.SelectedKey), area, y, navHits, searchHits);
+
+            y += 4f;
+            int length = hasFuel ? Math.Max(arrowLength, fuelLabelHeight + RecipeBookLayout.DetailCell + 12) + 8 : shortArrowLength; DrawArrow(sb, new Vector2(area.Center.X, y), length);
             for (int row = 0; row < fuelRows.Count; row++)
-                DrawFuel(sb, area, y, length, row, fuelRows.Count, fuelRows[row].machine, fuelRows[row].fuels);
+                DrawFuel(sb, area, y, length, row, fuelRows[row].machine, fuelRows[row].fuels);
             y += length + 7f;     // same 7px gap the short arrow always had
 
             y = DrawLabel(sb, RecipeBookLayout.Text("Outputs"), area, y);
@@ -488,15 +497,29 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 BookDraw.Rect(sb, new Rectangle(x - (4 - i), y + stem + i, (4 - i) * 2 + 1, 1), c);
         }
 
+        float FuelOrWidth() => FontAssets.MouseText.Value.MeasureString(RecipeBookLayout.Text("Or")).X * fuelOrScale;
+
+        // Distance from the left edge of one fuel cell to the left edge of the next: the cell, the "or" and its padding on both sides.
+        float FuelStep() => RecipeBookLayout.DetailCell + FuelOrWidth() + 2 * fuelOrPadding;
+
+        /// <summary>How many pixels the recipe has to slide left so the whole row of fuel cells fits to the right of the arrow (0 when it already fits).</summary>
+        int FuelShift(Rectangle area, int fuelCount)
+        {
+            float needed = fuelBoxOffsetX + RecipeBookLayout.DetailCell + (fuelCount - 1) * FuelStep() + fuelRightMargin;
+            float available = area.Right - area.Center.X;
+            return (int)Math.Clamp(Math.Ceiling(needed - available), 0, fuelMaxShift);
+        }
+
         /// <summary>
-        /// One of the machine's fuels (from RecipeCatalog.FuelsOf, i.e. the machine's registry) beside the middle of the arrow,
-        /// cycling through all of them. Same reveal rule, hover tooltip and click-to-jump as an ingredient cell.
+        /// One machine's fuel (from RecipeCatalog.FuelsOf, i.e. the machine's registry), cycling through all of its fuels. The cells sit in one row
+        /// to the right of the arrow: the first machine's cell next to the arrow, then "or", then the next machine's cell. Same reveal rule,
+        /// hover tooltip and click-to-jump as an ingredient cell.
         /// </summary>
-        void DrawFuel(SpriteBatch sb, Rectangle area, float arrowTop, int length, int row, int rows, string machine, List<RecipeCatalog.FuelEntry> fuels)
+        void DrawFuel(SpriteBatch sb, Rectangle area, float arrowTop, int length, int index, string machine, List<RecipeCatalog.FuelEntry> fuels)
         {
             int size = RecipeBookLayout.DetailCell;
-            int index = (int)((Main.GameUpdateCount / (uint)Math.Max(1, fuelCycleTicks)) % (uint)fuels.Count);
-            RecipeCatalog.FuelEntry fuel = fuels[index];
+            int cycle = (int)((Main.GameUpdateCount / (uint)Math.Max(1, fuelCycleTicks)) % (uint)fuels.Count);
+            RecipeCatalog.FuelEntry fuel = fuels[cycle];
 
             // Not tied to the selected recipe: once any recipe of this machine was crafted, every fuel of the machine shows.
             // Before that, a fuel shows once it was held (any member, for a group like Any Wood).
@@ -515,24 +538,23 @@ namespace Factorraria.Common.UI.RecipeBookUI
             };
 
             // DrawCells with a one-cell area draws, highlights, shows the tooltip and records the click box.
-            float blockHeight = size + (rows - 1) * fuelRowStep;
-            var box = new Rectangle(area.Center.X + fuelBoxOffsetX, (int)(arrowTop + fuelLabelHeight + (length - fuelLabelHeight - blockHeight) / 2f + row * fuelRowStep - 8), size, size);
+            int x = area.Center.X + fuelBoxOffsetX + (int)Math.Round(index * FuelStep());
+            var box = new Rectangle(x, (int)(arrowTop + fuelLabelHeight + (length - fuelLabelHeight - size) / 2f + fuelBoxOffsetY), size, size);
             DrawCells(sb, new List<Cell> { cell }, box, box.Y, navHits, searchHits);
 
-            if (row == 0)
+            if (index == 0)
             {
-                // The only "Fuel" label: centered above the top-most fuel slot.
+                // The only "Fuel" label: centered above the first fuel cell.
                 string label = RecipeBookLayout.Text("Fuel");
                 Vector2 labelSize = FontAssets.MouseText.Value.MeasureString(label) * 0.9f;
                 BookDraw.Text(sb, label, new Vector2(box.Center.X - labelSize.X / 2f, box.Y - fuelLabelHeight - 2f), RecipeBookLayout.PageBorder, 0.9f);
             }
             else
             {
-                // "or" in the gap between this slot and the one above it, centered on the slot column.
+                // "or" between the previous cell and this one, vertically centered on the cells.
                 string orText = RecipeBookLayout.Text("Or");
-                Vector2 orSize = FontAssets.MouseText.Value.MeasureString(orText) * 0.85f;
-                float gapCenter = box.Y - (fuelRowStep - size) / 2f;
-                BookDraw.Text(sb, orText, new Vector2(box.Right + 4, gapCenter - RecipeBookTabTipOverlay.InkCenterY * 1.1f), RecipeBookLayout.PageBorder, 0.85f);
+                float orX = box.X - fuelOrPadding - FuelOrWidth();
+                BookDraw.Text(sb, orText, new Vector2(orX, box.Center.Y - RecipeBookTabTipOverlay.InkCenterY * 1.1f + fuelOrOffsetY), RecipeBookLayout.PageBorder, fuelOrScale);
             }
         }
 

@@ -24,6 +24,7 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [x] R3 "New machine discovered!" pop-up (client that made the discovery only; local CombatText, no sound; one text for machines and stations; works with the book closed; once per discovery, not after relog; tested)
 - [-] R4 Show/hide each tab (dropped by Ismail 2026-11-16)
 - [-] R5 Favorites-only / show-all button (dropped by Ismail 2026-11-16)
+- [~] R1.9 Fuel options side by side (the fuel cells of the machines that make a recipe sit in one row to the right of the arrow with "or" between them; the recipe slides left when there is no room; applied, untested)
 - [~] R6 Recipe book button outline for new recipes (the book button gets a white outline PNG, tinted with a slowly cycling hue, while anything in the book is new; applied, untested)
 
 ## Working rules
@@ -153,6 +154,14 @@ Asked 2026-11-16. Applied, untested. Client-only, nothing synced.
 - Why per character and not world-wide: the order is a personal UI choice like favorites and the viewed set (working rule 2), so it needs no packet and no world save. Two players see the tabs in the order each of them found them. A world-wide order would need an ordered, synced list; say so if you want it.
 - Migration: a character that already has tabs in a world gets them in the old catalog order the first time (the real order was never recorded); everything found afterwards is appended.
 - A tab whose rank is not recorded yet (for example before the join sync) sorts after the recorded ones, in catalog order. A merged tab (R1.6) takes the earliest rank of the stations that were its own tabs, so the Mechanical Assembler tab keeps the Work Benches' place.
+
+## R1.9 Fuel options side by side
+
+Asked 2026-11-16. Applied, untested. Client-only drawing. Replaces the stacked fuel layout of R1.4 / R1.5 (same rules for WHICH fuels show).
+
+- One "Fuel" label above the first cell. The first machine's fuel cell (the Furnace) sits to the right of the arrow, then "or" to the right of it, vertically centered on the cell, then the next machine's cell (the Hellforge's lava). The arrow no longer grows with the number of machines.
+- When the row does not fit between the arrow and the right edge of the page, the whole recipe below the station rows (ingredients, arrow, products, time) slides left by the missing amount (`FuelShift`, at most `fuelMaxShift`). The station block, product header and pager do not move.
+- Tunables (instance fields at the top of `RecipeBookDetail`): `fuelBoxOffsetX` (arrow centre to the first cell), `fuelBoxOffsetY` (cells up/down), `fuelOrPadding` (space each side of "or"), `fuelOrOffsetY`, `fuelOrScale`, `fuelRightMargin` (how close the last cell may get to the page edge), `fuelMaxShift`, `fuelLabelHeight`, `arrowLength`, `fuelCycleTicks`.
 
 ## R2 New-recipe highlight
 
