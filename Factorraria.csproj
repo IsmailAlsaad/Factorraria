@@ -24,6 +24,7 @@
 	  <Folder Include="Assets\Atlases\" />
 	  <Folder Include="Common\Liquids\LiquidIcons\" />
 	  <Folder Include="Common\UI\CartMap\" />
+	  <Folder Include="Common\UI\CustomUIElements\StationIcons\" />
 	  <Folder Include="Content\NPCs\Overrides\" />
 	  <Folder Include="Content\Tiles\Machines\GeneralMachines\MagicMaterializer\Statues\" />
 	</ItemGroup>
