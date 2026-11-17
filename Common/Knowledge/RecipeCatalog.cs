@@ -54,8 +54,30 @@ namespace Factorraria.Common.Knowledge
         public static string TabOf(string machineName)
         {
             if (machineName == null) return null;
+            string full = FullTabOf(machineName);
+            if (full == machineName || splitStations.Count == 0 || !splitStations.Contains(machineName)) return full;
+
+            // R1.6: a split station is its own tab until the machine that inherits it is discovered. Depends on the discovery state,
+            // so this is no longer constant: never cache the result across frames.
+            return RecipeTabDiscovery.IsOwnDiscovered(full) ? full : machineName;
+        }
+
+        /// <summary>The tab with every inherited station already merged in (what TabOf returned before R1.6). Static; discovery ids and tables are built from it.</summary>
+        public static string FullTabOf(string machineName)
+        {
+            if (machineName == null) return null;
             if (tabOwner == null) BuildTabs();
             return tabOwner.TryGetValue(machineName, out string owner) ? owner : machineName;
+        }
+
+        static HashSet<string> splitStations = new HashSet<string>();   // inherited stations that stay their own tab until their owner is discovered (RecipeTabDefinitions.SplitUntilOwnerDiscovered). Built with tabOwner.
+
+        /// <summary>True for a vanilla station that is its own tab until the machine inheriting it is discovered (Work Benches, Heavy Work Bench).</summary>
+        public static bool IsSplitStation(string stationName)
+        {
+            if (stationName == null) return false;
+            if (tabOwner == null) BuildTabs();
+            return splitStations.Contains(stationName);
         }
 
         static Dictionary<string, List<string>> inherited = new Dictionary<string, List<string>>();   // machine tab -> the inherited units absorbed into it (a vanilla station, or a whole machine tab, RecipeTabDefinitions.Inherits / InheritedTabs). Built with tabOwner.
@@ -67,6 +89,7 @@ namespace Factorraria.Common.Knowledge
             tabOwner = new Dictionary<string, string>();
             inherited = new Dictionary<string, List<string>>();
             unitOf = new Dictionary<string, string>();
+            splitStations = new HashSet<string>();
             foreach (KeyValuePair<string, string> twin in RecipeTabDefinitions.Twins)
                 if (HasBook(twin.Key) && stationNames.Contains(twin.Value)) tabOwner[twin.Value] = twin.Key;
 
@@ -74,6 +97,7 @@ namespace Factorraria.Common.Knowledge
             foreach (KeyValuePair<string, int[]> inherit in RecipeTabDefinitions.Inherits)
             {
                 if (!HasBook(inherit.Key)) continue;
+                bool split = System.Array.IndexOf(RecipeTabDefinitions.SplitUntilOwnerDiscovered, inherit.Key) >= 0;
                 foreach (int tile in inherit.Value)
                 {
                     string station = VanillaStationBooks.NameFor(tile);
@@ -81,6 +105,7 @@ namespace Factorraria.Common.Knowledge
 
                     tabOwner[station] = inherit.Key;
                     unitOf[station] = station;
+                    if (split) splitStations.Add(station);
                     if (!inherited.TryGetValue(inherit.Key, out List<string> list)) inherited[inherit.Key] = list = new List<string>();
                     list.Add(station);
                 }

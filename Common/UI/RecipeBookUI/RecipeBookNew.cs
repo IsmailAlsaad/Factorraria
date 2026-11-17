@@ -32,7 +32,15 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public static bool IsNew(string key) => Me?.IsNew(key) ?? false;
 
         /// <summary>A tab is new only if it can be discovered at all (By Hand and Notes never are).</summary>
-        public static bool IsTabNew(string tab) => RecipeTabDiscovery.IsDiscoverable(tab) && IsNew(TabKey(tab));
+        public static bool IsTabNew(string tab)
+        {
+            if (!RecipeTabDiscovery.IsDiscoverable(tab) || !IsNew(TabKey(tab))) return false;
+
+            // R1.6: before the split the Work Benches and the Heavy Work Bench were ONE tab saved as "tab|MechanicalAssembler". A character that
+            // already viewed that tab keeps both split tabs (and the merged tab later) quiet instead of lighting them up.
+            string owner = RecipeCatalog.FullTabOf(tab);
+            return owner == tab || IsNew(TabKey(owner));
+        }
 
         public static bool AnyNew(IList<string> keys)
         {

@@ -1,6 +1,6 @@
 ﻿# Recipe book roadmap (tab discovery, new-recipe highlights, tab and favorite filters)
 
-Status: R0 to R1.5 tested and working; R2 applied (untested); R3 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
+Status: R0 to R1.5 tested and working; R2 to R2.2 applied (test results pending); R1.6 applied (untested); R3 to R6 are plan only. Written from Ismail's notes of 2026-11-16, on top of patch `patch_vanilla_station_recipes.ps1` (3.2b in docs/multiplayer/ROADMAP.md: vanilla station tabs, crafted-at-any-station rule, Decay Chamber in the Default pool). That patch must be applied first.
 
 Code map: `Common/Knowledge/` (RecipeCatalog, RecipeKnowledgeSystem, VanillaStationBooks, ScrollPools), `Common/Machines/RecipeVisibility.cs` (states), `Common/UI/RecipeBookUI/` (RecipeBookState, RecipeBookElements, RecipeBookPlayer, RecipeBookLayout), `Common/Net/RecipeKnowledgeNet.cs`.
 
@@ -18,7 +18,8 @@ One line per patch. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [~] R2 New-recipe highlight (per-character viewed set seeded once per world after the join sync; pulsing gold row + "!" after the name for new recipes and new tabs; a folded tab shows "!" when a recipe inside is new; closing the book or selecting a recipe clears; machine tab rows now a darker brown band with a warm hover; applied, untested)
 - [~] R2.1 R2 follow-up (machine tab hit area and band 4 px taller on top; "!" offsets are tunables `RecipeBookNew.EntryMarkOffset` / `TabMarkOffset`; a tab keeps its "!" while any recipe in it is new, open or folded; the vanilla inventory ignores the cursor while it is inside the book (`PlayerInput.IgnoreMouseInterface` around the inventory layer); applied, untested)
 - [~] R2.2 R2.1 fix (`PlayerInput.IgnoreMouseInterface` is read-only, so the vanilla inventory is blocked another way: the mouse buttons are cleared for the inventory layer while the cursor is inside the book, then restored, and the inventory's hover tooltip and cursor override are wiped; applied, untested)
-- [ ] R3 "New machine discovered!" pop-up
+- [~] R1.6 Heavy Work Bench gets its own tab (Work Benches and Heavy Work Bench are two tabs, each discovered by its own item or tile, until the Mechanical Assembler is discovered; then they merge into its tab; one-time world migration keeps tabs the world crafted in; characters that viewed the old merged tab see nothing new; Autohammer / Anvils unchanged; applied, untested)
+- [~] R3 "New machine discovered!" pop-up (client that made the discovery only; local CombatText, no sound; one text for machines and stations; works with the book closed; once per discovery, not after relog; applied, untested)
 - [ ] R4 Show/hide each tab
 - [ ] R5 Favorites-only / show-all button
 - [ ] R6 Recipe book button outline for new recipes
@@ -115,6 +116,21 @@ Decided 2026-11-16. Applied, untested. Client-only drawing, no packets, nothing 
 - An "or" sits between two rows, centered on the slot column (`fuelRowStep` 60 leaves the gap).
 - One "Fuel" label, centered above the top-most slot (`fuelLabelHeight` 18 px; the arrow is longer by that much whenever a recipe has fuel).
 
+## R1.6 Heavy Work Bench gets its own tab
+
+Decided 2026-11-16. Applied, untested. No packets; the only saved addition is a world flag.
+
+- Config: `RecipeTabDefinitions.SplitUntilOwnerDiscovered` lists the owners whose `Inherits` stations stay separate tabs until the owner is discovered. Only `MechanicalAssembler` is listed. Autohammer / Anvils and Hellforge / Furnace are NOT listed, so they merge at once as before (open question to Ismail: should Anvils follow the same rule? Add `"Autohammer"` to the list to do it).
+- `RecipeCatalog.TabOf` is no longer constant: a split station returns its own name until `RecipeTabDiscovery.IsOwnDiscovered(owner)`, then the owner's name. `RecipeCatalog.FullTabOf` is the old static answer; discovery ids and tables are built from it, so markers and `/recipes tabs` are unchanged. Never cache `TabOf` across frames.
+- `RecipeTabDiscovery.IsDiscovered(owner)` ignores split stations, so discovering a Work Bench no longer shows the Mechanical Assembler's own recipes. Each split station is discoverable by its own marker (its tile id, as before).
+- Folded tabs (`collapsedMachines`), viewed keys ("tab|Name") and the header's `childKeys` all use `TabOf`, so they follow the split. A stale folded entry for a station after the merge is harmless (the set lives only while the book object lives). The merged tab starts unfolded.
+- New-ness: recipe keys do not depend on tabs, so merging lights up nothing that was already viewed (only the Mechanical Assembler's own recipes and its tab, which are genuinely new). A character that viewed the old merged tab ("tab|MechanicalAssembler") gets the two split tabs without a "!" (`RecipeBookNew.IsTabNew`).
+- Migration (rule 3): a world saved before this patch had one merged tab. On load, once (world flag `TabSplitMigrated`), if that merged tab was visible, every split station the world already crafted in gets its own marker (`RecipeTabDiscovery.LegacySplitMarkers`, raw crafted keys), so no tab the world crafted in vanishes. Server / single-player only; clients get the markers through the join sync.
+- Detail page: `StationsFor` / `MergedRecipes` / the fuel rows go through `TabOf`, so a split tab names only its own station and the "or" naming returns once merged.
+- Sort: a merged tab sits where the Mechanical Assembler is in the catalog; a split tab sits where its station is, so the tab moves when the merge happens.
+
+Test checklist: see the patch reply.
+
 ## R2 New-recipe highlight
 
 Per character, client-only, saved in `RecipeBookPlayer` next to favorites: a set of catalog keys the player has already looked at ("viewed").
@@ -147,6 +163,14 @@ When a tab is discovered (R1), show text above the player ("New machine discover
 No sound by default; a short one can be added. Needs a localization key in `RecipeBook` in the hjson.
 
 Test: pick up a Hellforge: the text appears once, not again after relog; a second client does/does not see it per the chosen rule; discovering a tab while the book is closed still shows the text.
+
+Implemented (R3, applied, untested; decisions 2026-11-16: only the discovering client, no sound, one key):
+- Authority/sync: no packets. The client that reports a tab marker (`RecipeTabDiscovery.Report`, called by the local scan) knows the marker was not in its seen set yet, so it queues the text. Everyone else just receives the marker as a `SeenDelta` and never passes through `Report`. Single-player and a host-and-play host behave the same (the host's own scan). A dedicated server never shows anything.
+- Once: the marker is saved in the world (`SeenTabIds`), so a relog finds it already seen and nothing is queued. The scan (and so the pop-up) waits for `JoinSync.Completed`, otherwise a joining client would see its own already-discovered tabs as new before the join sync arrived.
+- Text: one key, `Mods.Factorraria.RecipeBook.NewTabDiscovered` ("New machine discovered!"), the same for machines and vanilla stations (open question to Ismail: add a second key "New station discovered!" for vanilla stations?). Shown with `CombatText.NewText` above the player (local only, no sound), at most one per scan (`ScanTicks`, 30) so several tabs found at once do not overlap. Tunables: `PopUpColor`, `PopUpDramatic`. Works with the book closed (it does not touch the UI).
+- Not covered: a tab revealed by a parchment (computed, no marker) or by a machine discovering its inherited stations shows no text; a tab migrated by R1.6 shows no text; two clients that find the same tab within the sync delay each see the text once.
+
+Next chat: "Continue Factorraria recipe book work. Clone the repo, read docs/recipe_book/ROADMAP.md (R1.6, R2 to R2.2, R3 and the Progress list). State: R0 to R1.5 are tested; R1.6, R2, R2.1, R2.2 and R3 are applied; test results: <paste>. Log them in Progress, then implement R4 (show/hide each tab; state the authority/sync design first)."
 
 ## R4 Show/hide each tab
 

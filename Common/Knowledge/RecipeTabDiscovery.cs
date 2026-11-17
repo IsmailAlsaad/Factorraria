@@ -30,6 +30,7 @@ namespace Factorraria.Common.Knowledge
             public readonly HashSet<int> Items = new HashSet<int>();   // every item that places that tile
             public int[] ItemList = new int[0];         // the same items, sorted (the book header cycles through them)
             public bool Inherited;                      // a vanilla station absorbed into a machine's tab (RecipeTabDefinitions.Inherits)
+            public bool Split;                          // Inherited only: its own tab until the owner is discovered (RecipeTabDefinitions.SplitUntilOwnerDiscovered)
             public string Owner;                        // Inherited only: the tab it was absorbed into
             public readonly List<Tab> Inherits = new List<Tab>();   // a machine tab only: the stations it inherits recipes from
 
@@ -77,7 +78,7 @@ namespace Factorraria.Common.Knowledge
             var seen = new HashSet<string>();
             foreach (RecipeCatalog.Entry e in RecipeCatalog.Entries())
             {
-                string name = RecipeCatalog.TabOf(e.Machine);
+                string name = RecipeCatalog.FullTabOf(e.Machine);   // the merged name: the table is the same whether or not a station is split right now
                 if (!seen.Add(name)) continue;
                 if (!TryFindTile(name, out int tile, out int id)) continue;   // By Hand and tabs with no known tile are always shown
                 if (byId.ContainsKey(id) || byTile.ContainsKey(tile)) continue;
@@ -99,7 +100,7 @@ namespace Factorraria.Common.Knowledge
                     int tile = TileOfUnit(station);
                     if (tile < 0 || byId.ContainsKey(tile) || byTile.ContainsKey(tile) || byName.ContainsKey(station)) continue;
 
-                    var sub = new Tab { Name = station, Id = tile, Tile = tile, Inherited = true, Owner = ownerName };
+                    var sub = new Tab { Name = station, Id = tile, Tile = tile, Inherited = true, Owner = ownerName, Split = RecipeCatalog.IsSplitStation(station) };
                     byName[station] = sub;
                     byId[tile] = sub;
                     byTile[tile] = sub;
@@ -184,7 +185,7 @@ namespace Factorraria.Common.Knowledge
             if (tabName == null || !byName.TryGetValue(tabName, out Tab tab)) return true;
             if (Hit(tab)) return true;
             foreach (Tab sub in tab.Inherits)
-                if (Hit(sub)) return true;
+                if (!sub.Split && Hit(sub)) return true;   // a split station is its own tab; it does not show the owner's tab
             return false;
         }
 
@@ -212,6 +213,45 @@ namespace Factorraria.Common.Knowledge
                 if (Hit(sub)) shown.Add(sub.Name);
             if (shown.Count == 0) shown.Add(tabName);
             return shown.ToArray();
+        }
+
+        /// <summary>
+        /// R1.6 migration, run once per world by RecipeKnowledgeSystem.LoadWorldData (flag "TabSplitMigrated"). Before R1.6 the Work Benches and the
+        /// Heavy Work Bench were one tab with the Mechanical Assembler: any of them discovered showed all recipes of all of them. Now they are
+        /// separate tabs, so a station the world already CRAFTED in, whose merged tab used to be visible, gets its own marker, and its tab does not
+        /// vanish. Returns the markers to add. Uses the raw crafted keys on purpose (no sibling rule) and only ever runs on old data.
+        /// </summary>
+        public static List<int> LegacySplitMarkers(IEnumerable<string> craftedKeys)
+        {
+            var result = new List<int>();
+            HashSet<string> craftedTabs = null;
+            foreach (Tab owner in byName.Values)
+            {
+                if (owner.Inherited || owner.Inherits.Count == 0) continue;
+                bool anySplit = false, anyHit = false;
+                foreach (Tab sub in owner.Inherits)
+                {
+                    if (sub.Split) anySplit = true;
+                    if (Hit(sub)) anyHit = true;
+                }
+                if (!anySplit || !anyHit) continue;   // the merged tab was not visible before, nothing to keep
+
+                foreach (Tab sub in owner.Inherits)
+                {
+                    if (!sub.Split || Hit(sub)) continue;
+                    if (craftedTabs == null)
+                    {
+                        craftedTabs = new HashSet<string>();
+                        foreach (string key in craftedKeys)
+                        {
+                            string machine = RecipeCatalog.MachineOf(key);
+                            if (machine != null) craftedTabs.Add(machine);
+                        }
+                    }
+                    if (craftedTabs.Contains(sub.Name)) result.Add(sub.Marker);
+                }
+            }
+            return result;
         }
 
         // One tile (a machine, or one vanilla station) counts as discovered when its marker is in the world's seen set, OR a parchment has
@@ -313,7 +353,34 @@ namespace Factorraria.Common.Knowledge
         }
 
         // Marks the tab here at once (the book reacts without waiting); a multiplayer client also queues it for the server.
-        static void Report(Tab tab) => RecipeKnowledgeNet.ReportSeen(tab.Marker);
+        static void Report(Tab tab)
+        {
+            // R3: the marker is NEW to this process only on the first report, so the pop-up shows once per discovery, for the client that made it.
+            // Later discoveries by other players arrive as a SeenDelta and never pass through here. Saved markers (relog) are already seen.
+            bool isNew = !RecipeKnowledgeSystem.IsSeen(tab.Marker);
+            RecipeKnowledgeNet.ReportSeen(tab.Marker);
+            if (isNew && !Main.dedServ) popUps.Enqueue(tab.Name);
+        }
+
+        // ---------------------------------------------------------------- R3 pop-up
+
+        // Tunables (not const, so hot reload can change them).
+        public static Microsoft.Xna.Framework.Color PopUpColor = new Microsoft.Xna.Framework.Color(255, 220, 90);
+        public static bool PopUpDramatic = true;       // CombatText "dramatic": bigger and stays longer
+
+        static readonly Queue<string> popUps = new Queue<string>();   // tabs discovered by this client, waiting for their text (one per scan, so several at once do not overlap)
+
+        /// <summary>Client, once per scan: shows one "New machine discovered!" text above the local player (CombatText, local only, no sound). Works with the book closed.</summary>
+        public static void ShowNextPopUp()
+        {
+            if (Main.dedServ || popUps.Count == 0) return;
+            popUps.Dequeue();
+            Player player = Main.LocalPlayer;
+            if (player == null || !player.active || player.dead) return;
+            CombatText.NewText(player.Hitbox, PopUpColor, Terraria.Localization.Language.GetTextValue("Mods.Factorraria.RecipeBook.NewTabDiscovered"), PopUpDramatic);
+        }
+
+        public static void ClearPopUps() => popUps.Clear();
 
         // ---------------------------------------------------------------- server check
 
@@ -368,9 +435,13 @@ namespace Factorraria.Common.Knowledge
         public override void PostUpdateEverything()
         {
             if (Main.dedServ || Main.gameMenu) return;
+            if (!JoinSync.Completed) return;   // R3: until the world's knowledge has arrived, everything already discovered would look new to this client
             if (Main.GameUpdateCount % (uint)Math.Max(1, RecipeTabDiscovery.ScanTicks) != 0) return;
 
             RecipeTabDiscovery.ScanLocalPlayer(Main.LocalPlayer);
+            RecipeTabDiscovery.ShowNextPopUp();
         }
+
+        public override void OnWorldUnload() => RecipeTabDiscovery.ClearPopUps();
     }
 }

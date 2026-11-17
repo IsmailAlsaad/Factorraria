@@ -197,6 +197,7 @@ namespace Factorraria.Common.Knowledge
             tag["SeenLiquidIds"] = seenLiquidIds;
             tag["SeenTabIds"] = seenTabIds;
             tag["SeenStationItems"] = seenStationItems;
+            tag["TabSplitMigrated"] = true;   // R1.6: the one-time Work Benches / Heavy Work Bench split migration has run (see LoadWorldData)
         }
 
         public override void LoadWorldData(TagCompound tag)
@@ -220,6 +221,10 @@ namespace Factorraria.Common.Knowledge
             if (tag.ContainsKey("SeenStationItems"))
                 foreach (string name in tag.Get<List<string>>("SeenStationItems"))
                     if (ItemID.Search.TryGetId(name, out int stationItemType)) seenItems.Add(StationItemMarker(stationItemType));
+            // R1.6 migration: a world saved before the Work Benches / Heavy Work Bench split keeps the tabs it already crafted in. Runs once (flag saved above).
+            if (!tag.GetBool("TabSplitMigrated"))
+                foreach (int marker in RecipeTabDiscovery.LegacySplitMarkers(crafted))
+                    if (seenItems.Add(marker)) SeenVersion++;
             // Legacy "KnownRecipeKeys" (the old show-everything system) is intentionally ignored.
         }
 

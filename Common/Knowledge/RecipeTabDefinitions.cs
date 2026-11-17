@@ -59,6 +59,18 @@ namespace Factorraria.Common.Knowledge
         };
 
         /// <summary>
+        /// R1.6: owners (catalog machine names) whose inherited stations stay SEPARATE tabs until the owner itself is discovered
+        /// (held or stood near, or unlocked by a parchment). Before that each station is its own tab, discovered by its own item or tile
+        /// ("Work Benches", "Heavy Work Bench"); after that they merge into the owner's tab, as every Inherits entry does from the start.
+        /// Only applies to the stations listed in Inherits (not to InheritedTabs). An owner that is not listed here (Autohammer) merges
+        /// its stations at once, as before.
+        /// </summary>
+        public static readonly string[] SplitUntilOwnerDiscovered =
+        {
+            "MechanicalAssembler",
+        };
+
+        /// <summary>
         /// Machines that inherit a WHOLE tab: key = the machine that takes over, value = the machine whose tab (with its vanilla twin
         /// station) is absorbed. The absorbed machine has no tab of its own any more; until the owner is discovered the tab is titled
         /// after the absorbed one ("Furnace"), afterwards after the owner ("Hellforge"). Its recipes stay listed once per product:
