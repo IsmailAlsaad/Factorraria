@@ -45,8 +45,8 @@ namespace Factorraria.Common.Harvester
             // MUST be called after setting AnchorBottom
             TileObjectData.addTile(Type);
 
-            DustType = DustID.WoodFurniture;
-            HitSound = SoundID.Dig;
+            DustType = DustID.Silver;
+            HitSound = SoundID.Tink;
             AddMapEntry(new Color(160, 110, 60), CreateMapEntryName());
             RegisterItemDrop(ModContent.ItemType<TItem>());
 
