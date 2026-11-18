@@ -563,7 +563,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         {
             string title = BookDraw.Fit(art.Name, r.Width - 12, 1.15f, out _);
             BookDraw.Text(sb, title, new Vector2(r.X + 6, r.Y + 6), RecipeBookLayout.TextColor, 1.15f);
-            BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
+            BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 36, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
             var body = new Rectangle(r.X, r.Y + 68, r.Width, r.Height - 68);
 
             Texture2D tex = art.Texture;

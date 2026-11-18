@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-18 | 418 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-18 | 419 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(83) BaseMachine(55) FactorrariaPacket(37) LiquidTypeRegistry(34) PacketDirection(32) RecipeBook(26) Cart(22) Factorraria(20) MachineUIStateBase(18) JoinSync(18) CustomRecipe(18) MachineUIElementEntry(17) LiquidStack(17) TileEntityHelper(16) RecipeCatalog(16) Entry(15) CartSystem(15) CartModule(15) RecipeKnowledgeSystem(14) VirtualItemSystem(13)
+FactorrariaNet(83) BaseMachine(56) FactorrariaPacket(37) LiquidTypeRegistry(34) PacketDirection(32) RecipeBook(26) Cart(22) Factorraria(20) MachineUIStateBase(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) MachineUIElementEntry(17) LiquidStack(17) RecipeCatalog(16) CartSystem(16) Entry(15) CartModule(15) RecipeKnowledgeSystem(14) MachineVisualRegistry(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -35,7 +35,7 @@ Project bases -> derived:
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 - RecipeBookEntry: RecipeBookGridCell
 tModLoader/other bases -> project types:
-- ModSystem (109): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, HarvesterBoxHerbHooks, HellstoneGrowNetSystem, HellstoneGrowthSystem, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitDebugSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RecipeTabDiscoverySystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
+- ModSystem (110): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, HarvesterBoxHerbHooks, HellstoneGrowNetSystem, HellstoneGrowthSystem, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineSmartOutlineSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitDebugSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RecipeTabDiscoverySystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
 - ModItem (46): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, HarvesterBoxItemBase, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenMinecartItem, WoodenPowerPoleItem
 - byte (32): AssemblyIssue, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
@@ -530,6 +530,15 @@ tModLoader/other bases -> project types:
 **MachineOverhangSystem.cs** uses: BaseMachine, LiquidOverlayLayer, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineCanvas, MachineTransition, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
     +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
+**MachineSmartOutlineSystem.cs** uses: BaseMachine, CartSystem, MachineCanvas, MachineDetailSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, TileEntityHelper
+  class MachineSmartOutlineSystem : ModSystem
+    +HighlightColor:Color +SelectedColor:Color +AlphaThreshold:int +MaxCachedOutlines:int +ScreenMarginPixels:float +OnWorldUnload()[ov] +Unload()[ov] +PostDrawTiles()[ov]
+    struct SpriteCell
+      +Texture:Texture2D +Source:Rectangle +X:int +Y:int +Quarter:int
+    class Outline
+      +OriginX:int +OriginY:int +Runs:List<Rectangle>
+    class CachedOutline
+      +Signature:ulong +Data:Outline
 **MachineTransitionSystem.cs** uses: BaseMachine, MachineVisualDefinition, MachineVisualRegistry
   class MachineTransitionSystem : ModSystem
     +PostUpdateEverything()[ov]
@@ -1007,13 +1016,13 @@ tModLoader/other bases -> project types:
 **AwakenedSpawnSystem.cs** uses: AwakenedSpawnGlobalNPC, AwakenedStatue, AwakenedStatueSystem, Entry, IStatueAwakener
   class AwakenedSpawnSystem : ModSystem
     +MaxEnemiesPerStatue:int +SpawnPassTicks:int +RefillDelayTicks:int +NpcSlotMargin:int +SpawnOffset:Vector2 +PostUpdateNPCs()[ov]
-**AwakenedStatueDrawSystem.cs** uses: AwakenedStatue, AwakenedStatueSystem, BaseMachine, Entry
+**AwakenedStatueDrawSystem.cs** uses: AwakenedStatue, AwakenedStatueSystem, BaseMachine, Entry, Outline
   class AwakenedStatueDrawSystem : ModSystem
     +OutlinePulseSpeed:float +OutlineScaleAmplitude:float +OutlineMinOpacity:float +PadLeft:int +PadRight:int +PadTop:int +PadBottom:int +Load()[ov] +Unload()[ov]
 **AwakenedStatueGlobalTile.cs** uses: AwakenedStatueRegistry, AwakenedStatueSystem
   class AwakenedStatueGlobalTile : GlobalTile
     +PreHitWire(int,int,int)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov]
-**AwakenedStatueRegistry.cs** uses: AwakenedStatueEntries
+**AwakenedStatueRegistry.cs** uses: AwakenedStatueEntries, Outline
   class AwakenedLootDrop
     +ItemType:int +Chance:float +Min:int +Max:int
   class AwakenedStatueEntry
@@ -1352,7 +1361,7 @@ tModLoader/other bases -> project types:
     +Machine:string +IconSeconds:float[s] +Collapsed:bool +Pinned:bool +Update(GameTime)[ov] +ContainsPoint(Vector2)[ov] +LeftClick(UIMouseEvent)[ov] #DrawSelf(SpriteBatch)[ov]
   class RecipeBookEntry : UIElement
     +Key:string +Machine:string +Group:RecipeOutputGroup +State:RecipeState +ProductName:string +Favorite:bool +Art:Entry +Selected:bool +OnChosen:Action<string> +IsFaded:bool +Update(GameTime)[ov] +LeftClick(UIMouseEvent)[ov] #StarClicked(UIMouseEvent)[v] #DrawSelf(SpriteBatch)[ov] #DrawStar(SpriteBatch,Rectangle,bool,bool)[s]
-**RecipeBookGrid.cs** uses: BookDraw, Entry, RecipeArtRegistry, RecipeBookArt, RecipeBookEntry, RecipeBookLayout, RecipeBookNew, RecipeBookPlayer, RecipeBookState, RecipeIcon, RecipeOutputGroup, RecipeState
+**RecipeBookGrid.cs** uses: BookDraw, Entry, Outline, RecipeArtRegistry, RecipeBookArt, RecipeBookEntry, RecipeBookLayout, RecipeBookNew, RecipeBookPlayer, RecipeBookState, RecipeIcon, RecipeOutputGroup, RecipeState
   static class RecipeBookFavoriteMode
     +Held:bool[s] +ApplyCursor()[s]
   class RecipeBookGridCell : RecipeBookEntry
