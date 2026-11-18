@@ -532,7 +532,7 @@ tModLoader/other bases -> project types:
     +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
 **MachineSmartOutlineSystem.cs** uses: BaseMachine, CartSystem, MachineCanvas, MachineDetailSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, TileEntityHelper
   class MachineSmartOutlineSystem : ModSystem
-    +HighlightColor:Color +SelectedColor:Color +OutlineScale:int +SmartRadiusPixels:float +AlphaThreshold:int +MaxCachedOutlines:int +ScreenMarginPixels:float +Load()[ov] +OnWorldUnload()[ov] +Unload()[ov] +PostUpdateInput()[ov]
+    +HighlightColor:Color +SelectedColor:Color +OutlineInside:bool +OutlineInFront:bool +OutlineScale:int +SmartRadiusPixels:float +AlphaThreshold:int +MaxCachedOutlines:int +ScreenMarginPixels:float +Load()[ov] +OnWorldUnload()[ov] +Unload()[ov] +PostUpdateInput()[ov] +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
     struct SpriteCell
       +Texture:Texture2D +Source:Rectangle +X:int +Y:int +Quarter:int
     class Outline

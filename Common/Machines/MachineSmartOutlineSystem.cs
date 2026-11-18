@@ -27,6 +27,8 @@ namespace Factorraria.Common.Machines
         // TUNING: instance fields (not const/static) so they can be tweaked with hot reload.
         public Color HighlightColor = new Color(125,125,125);               // outline of a machine you can use (R, G, B, A)
         public Color SelectedColor = new Color(252, 252, 84);    // outline of the machine the smart cursor is targeting
+        public bool OutlineInside = true;       // true: the outline is the sprite's own border pixels (like vanilla); false: an extra layer just outside the sprite
+        public bool OutlineInFront = true;      // true: drawn over the tiles (PostDrawTiles); false: drawn under every tile (behind-tiles pass)
         public int OutlineScale = 2;            // size of one outline pixel in world pixels (Terraria art pixels are 2x2)
         public float SmartRadiusPixels = 60f * 16f;   // how far from the cursor a machine can be and still be targeted (16 = one tile)
         public int AlphaThreshold = 8;          // a sprite pixel counts as solid above this alpha
@@ -92,8 +94,14 @@ namespace Factorraria.Common.Machines
 
         public override void PostUpdateInput()
         {
-            UpdateTarget();
             HandleNearbyRightClick();
+        }
+
+        // The target is chosen at the end of the tick, after vanilla has chosen its own smart-interact target for this tick, so the two can be
+        // compared by distance (see UpdateTarget). The click code and the draw pass read the result.
+        public override void PostUpdateEverything()
+        {
+            UpdateTarget();
         }
 
         bool TryGetMachineInfo(BaseMachine machine, out Tile tile, out MachineVisualDefinition def, out TileObjectData data)
@@ -151,8 +159,51 @@ namespace Factorraria.Common.Machines
                 found = true;
             }
 
+            if (found)
+            {
+                // Vanilla found its own target (chest, crystal ball, NPC...): the closer one to the cursor wins, a tie goes to vanilla.
+                if (GetVanillaTargetDistance(mouse) <= bestDistance)
+                {
+                    found = false;
+                }
+                else if (Main.SmartInteractShowingGenuine)
+                {
+                    // The machine wins: hide vanilla's own highlight so only one target is shown.
+                    Main.SmartInteractShowingGenuine = false;
+                    Main.SmartInteractTileCoords.Clear();
+                }
+            }
+
             hasTarget = found;
             targetDirect = found && bestDistance <= 0f;
+        }
+
+        // Distance from the cursor to the thing vanilla's smart interact currently targets (float.MaxValue = vanilla has no target).
+        static float GetVanillaTargetDistance(Vector2 mouse)
+        {
+            if (!Main.SmartInteractShowingGenuine)
+                return float.MaxValue;
+
+            float best = float.MaxValue;
+
+            int npcIndex = Main.SmartInteractNPC;
+            if (npcIndex >= 0 && npcIndex < Main.maxNPCs && Main.npc[npcIndex].active)
+                best = DistanceToRect(mouse, Main.npc[npcIndex].Hitbox);
+
+            foreach (Point coord in Main.SmartInteractTileCoords)
+                best = Math.Min(best, DistanceToRect(mouse, new Rectangle(coord.X * 16, coord.Y * 16, 16, 16)));
+
+            if (best == float.MaxValue && Main.SmartInteractX >= 0 && Main.SmartInteractY >= 0)
+                best = DistanceToRect(mouse, new Rectangle(Main.SmartInteractX * 16, Main.SmartInteractY * 16, 16, 16));
+
+            return best == float.MaxValue ? 0f : best;   // a target we cannot measure (a projectile): vanilla keeps it
+        }
+
+        static float DistanceToRect(Vector2 point, Rectangle rect)
+        {
+            float dx = Math.Max(Math.Max(rect.Left - point.X, 0f), point.X - rect.Right);
+            float dy = Math.Max(Math.Max(rect.Top - point.Y, 0f), point.Y - rect.Bottom);
+            return (float)Math.Sqrt(dx * dx + dy * dy);
         }
 
         // Right-click while the target is not directly under the cursor: open it ourselves. A cursor that is directly over a machine is left to
@@ -225,10 +276,22 @@ namespace Factorraria.Common.Machines
         // throws), so this draws straight into it. Drawing before orig puts the outline under every tile.
         private void DrawBehindTilesPass(On_Main.orig_DrawNPCs orig, Main self, bool behindTiles)
         {
-            if (behindTiles)
+            if (behindTiles && !OutlineInFront)
                 DrawOutlines();
 
             orig(self, behindTiles);
+        }
+
+        // OutlineInFront: drawn after all tiles. This pass owns its own SpriteBatch (the behind-tiles pass above draws into vanilla's).
+        public override void PostDrawTiles()
+        {
+            if (!OutlineInFront || Main.dedServ || Main.gameMenu || !Main.SmartCursorIsUsed || MachineVisualRegistry.Definitions.Count == 0)
+                return;
+
+            SpriteBatch spriteBatch = Main.spriteBatch;
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            DrawOutlines();
+            spriteBatch.End();
         }
 
         void DrawOutlines()
@@ -290,6 +353,7 @@ namespace Factorraria.Common.Machines
             signature = Mix(signature, tile.TileType);
             signature = Mix(signature, AlphaThreshold);
             signature = Mix(signature, OutlineScale);
+            signature = Mix(signature, OutlineInside ? 1 : 0);
             foreach (SpriteCell cell in scratchCells)
             {
                 signature = Mix(signature, System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(cell.Texture));
@@ -536,11 +600,15 @@ namespace Factorraria.Common.Machines
                     if (x < width)
                     {
                         int index = y * width + x;
-                        edge = !solid[index]
-                            && ((x > 0 && solid[index - 1])
-                                || (x < width - 1 && solid[index + 1])
-                                || (y > 0 && solid[index - width])
-                                || (y < height - 1 && solid[index + width]));
+                        bool nLeft = x > 0 && solid[index - 1];
+                        bool nRight = x < width - 1 && solid[index + 1];
+                        bool nUp = y > 0 && solid[index - width];
+                        bool nDown = y < height - 1 && solid[index + width];
+
+                        // Inside: a solid cell with at least one empty neighbour (the sprite's own border). Outside: an empty cell touching a solid one.
+                        edge = OutlineInside
+                            ? solid[index] && !(nLeft && nRight && nUp && nDown)
+                            : !solid[index] && (nLeft || nRight || nUp || nDown);
                     }
 
                     if (edge)
