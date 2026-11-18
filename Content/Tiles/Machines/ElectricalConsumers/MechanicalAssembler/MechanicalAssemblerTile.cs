@@ -24,7 +24,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.MechanicalAssem
 
             AddMapEntry(new Color(160, 160, 170), CreateMapEntryName());
 
-            DustType = DustID.Iron;
+            DustType = DustID.Gold;
             RegisterItemDrop(ModContent.ItemType<MechanicalAssemblerItem>());
         }
     }
