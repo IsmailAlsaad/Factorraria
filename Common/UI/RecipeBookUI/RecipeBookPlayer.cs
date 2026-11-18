@@ -25,6 +25,20 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
         public void SetGridMode(bool grid) => GridMode = grid;
 
+        // Tabs the player folded on the left page (tab names). Per character and client-only like GridMode, saved with the character.
+        readonly HashSet<string> collapsedTabs = new();
+
+        public bool IsTabCollapsed(string tab) => !string.IsNullOrEmpty(tab) && collapsedTabs.Contains(tab);
+
+        /// <summary>Folds or opens a tab. Returns true if the state changed.</summary>
+        public bool SetTabCollapsed(string tab, bool collapsed)
+        {
+            if (string.IsNullOrEmpty(tab)) return false;
+            return collapsed ? collapsedTabs.Add(tab) : collapsedTabs.Remove(tab);
+        }
+
+        public void ToggleTabCollapsed(string tab) => SetTabCollapsed(tab, !IsTabCollapsed(tab));
+
         public bool IsFavorite(string catalogKey)
         {
             if (string.IsNullOrEmpty(catalogKey)) return false;
@@ -149,6 +163,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (unstarred.Count > 0) tag["favoriteOff"] = unstarred;
 
             if (GridMode) tag["bookGridMode"] = true;
+            if (collapsedTabs.Count > 0) tag["bookCollapsedTabs"] = new List<string>(collapsedTabs);
 
             if (viewed.Count > 0) tag["viewedKeys"] = new List<string>(viewed);
             if (seededWorlds.Count > 0) tag["viewedWorlds"] = new List<string>(seededWorlds);
@@ -170,6 +185,8 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (tag.ContainsKey("favoriteOff")) foreach (string key in tag.Get<List<string>>("favoriteOff")) favoriteOverrides[key] = false;
 
             GridMode = tag.ContainsKey("bookGridMode") && tag.GetBool("bookGridMode");
+            collapsedTabs.Clear();
+            if (tag.ContainsKey("bookCollapsedTabs")) foreach (string tab in tag.Get<List<string>>("bookCollapsedTabs")) collapsedTabs.Add(tab);
 
             viewed.Clear();
             seededWorlds.Clear();

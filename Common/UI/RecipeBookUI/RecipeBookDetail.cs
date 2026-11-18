@@ -558,20 +558,25 @@ namespace Factorraria.Common.UI.RecipeBookUI
             }
         }
 
-        /// <summary>Art entry page: the PNG centered in the detail area, shrunk to fit, never enlarged.</summary>
+        /// <summary>Art entry page: the same header text and separator line as a recipe page, then the PNG centered below it, shrunk to fit, never enlarged.</summary>
         void DrawArt(SpriteBatch sb, Rectangle r, RecipeArtRegistry.Entry art)
         {
+            string title = BookDraw.Fit(art.Name, r.Width - 12, 1.15f, out _);
+            BookDraw.Text(sb, title, new Vector2(r.X + 6, r.Y + 6), RecipeBookLayout.TextColor, 1.15f);
+            BookDraw.Rect(sb, new Rectangle(r.X, r.Y + 66, r.Width, 2), RecipeBookLayout.PageBorder * 0.6f);
+            var body = new Rectangle(r.X, r.Y + 68, r.Width, r.Height - 68);
+
             Texture2D tex = art.Texture;
             if (tex == null)
             {
-                DrawWrapped(sb, "Missing art: " + art.TexturePath, new Vector2(r.X + 8, r.Center.Y - 30), r.Width - 16, RecipeBookLayout.TextFadedColor, 1f);
+                DrawWrapped(sb, "Missing art: " + art.TexturePath, new Vector2(body.X + 8, body.Center.Y - 30), body.Width - 16, RecipeBookLayout.TextFadedColor, 1f);
                 return;
             }
 
-            float fit = Math.Min(1f, Math.Min(r.Width / (float)tex.Width, r.Height / (float)tex.Height));
+            float fit = Math.Min(1f, Math.Min(body.Width / (float)tex.Width, body.Height / (float)tex.Height));
             int w = Math.Max(1, (int)(tex.Width * fit));
             int h = Math.Max(1, (int)(tex.Height * fit));
-            sb.Draw(tex, new Rectangle(r.Center.X - w / 2, r.Center.Y - h / 2, w, h), Color.White);
+            sb.Draw(tex, new Rectangle(body.Center.X - w / 2, body.Center.Y - h / 2, w, h), Color.White);
         }
 
         void DrawPager(SpriteBatch sb, Rectangle r, int count)

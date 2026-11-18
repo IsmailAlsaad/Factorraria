@@ -30,7 +30,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         string searchFilter = "";
         bool filterDirty;
         bool layoutDirty;                                    // a header was toggled: rebuild on the next Update (never mid-click)
-        HashSet<string> collapsedMachines = new();           // tab names whose recipe list is folded away (kept while the book object lives)
+        // Folded tabs and the Rows/Grid choice live on RecipeBookPlayer (saved with the character).
         readonly Dictionary<string, string> aliases = new(); // a station recipe hidden because its machine twin lists the same product -> the machine's key (filled by Rebuild)
 
         // Window position: pixels away from the centered spot. Static so the book reopens where the player left it
@@ -248,23 +248,24 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 }
                 shown++;
 
-                // While searching, every match is shown and the headers are not toggleable.
+                // Headers stay toggleable while searching: a folded tab hides its matches until it is opened again.
                 string tabName = RecipeCatalog.TabOf(e.Machine);
-                bool collapsed = !filtering && collapsedMachines.Contains(tabName);
+                bool collapsed = favorites.IsTabCollapsed(tabName);
                 if (!tabKeys.TryGetValue(tabName, out List<string> childKeys)) tabKeys[tabName] = childKeys = new List<string>();
                 childKeys.Add(e.Key);
                 if (tabName != lastMachine)
                 {
                     lastMachine = tabName;
                     if (gridCol > 0) { gridCol = 0; y += gridStep; }   // R7: a half-filled grid row ends where the next tab starts
-                    AddRow(new RecipeBookHeaderRow(tabName, collapsed, filtering ? (Action<string>)null : ToggleMachine, childKeys), y, true);
+                    AddRow(new RecipeBookHeaderRow(tabName, collapsed, ToggleMachine, childKeys), y, true);
                     y += RecipeBookLayout.HeaderRowHeight;
                 }
                 if (collapsed) continue;
 
                 bool isFavorite = favorites.IsFavorite(e.Key);
+                bool cellGrid = grid && e.Art == null;   // art entries (Notes tab) always stay in rows, whatever the layout button says
                 RecipeBookEntry entry;
-                if (grid)
+                if (cellGrid)
                     entry = e.Art != null
                         ? new RecipeBookGridCell(e.Key, e.Machine, e.Art, isFavorite)
                         : new RecipeBookGridCell(e.Key, e.Machine, e.Group, state, isFavorite);
@@ -275,7 +276,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 entry.OnChosen = key => Select(key, false);
                 entry.Selected = isSelected;
                 entryTop[e.Key] = y;
-                if (grid)
+                if (cellGrid)
                 {
                     entry.Left.Set(gridX0 + (float)Math.Round(gridCol * gridStepX), 0f);
                     AddRow(entry, y);
@@ -478,7 +479,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         // ------------------------------------------------------------------------------------------
         void ToggleMachine(string machine)
         {
-            if (!collapsedMachines.Remove(machine)) collapsedMachines.Add(machine);
+            Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().ToggleTabCollapsed(machine);
             layoutDirty = true;
         }
 
@@ -488,7 +489,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         void ExpandMachineOf(string key)
         {
             string machine = RecipeCatalog.TabOf(RecipeCatalog.MachineOf(key));
-            if (machine != null && collapsedMachines.Remove(machine)) Rebuild();
+            if (machine != null && Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().SetTabCollapsed(machine, false)) Rebuild();
         }
 
         void ClearSelection()
@@ -562,8 +563,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
             if (SelectedKey == null || !entryTop.TryGetValue(SelectedKey, out float top)) return;
             float viewH = RecipeBookLayout.ListArea.Height;
             float view = scrollbar.ViewPosition;
+            float h = SelectedArt != null ? RecipeBookLayout.EntryRowHeight : entryHeight;   // art entries are rows even in Grid
             if (top - RecipeBookLayout.HeaderRowHeight < view) scrollbar.ViewPosition = top - RecipeBookLayout.HeaderRowHeight;
-            else if (top + entryHeight > view + viewH) scrollbar.ViewPosition = top + entryHeight - viewH;
+            else if (top + h > view + viewH) scrollbar.ViewPosition = top + h - viewH;
             ApplyScroll(false);
         }
     }

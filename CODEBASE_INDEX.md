@@ -1193,7 +1193,7 @@ tModLoader/other bases -> project types:
     +AllWireTypes:CustomWireType[s] +WireGrid:Dictionary<Point16,CustomWireType>[s] +GetVisibleTileRect(out int,out int,out int,out int)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +HasWire(int,int,CustomWireType)[s] +AddWire(int,int,CustomWireType)[s] +RemoveWire(int,int,CustomWireType)[s] +WireAt(int,int)[s] +SetWireAt(int,int,CustomWireType)[s] +ReplaceAll(List<KeyValuePair<Point16, CustomWireType>>)[s] +PostDrawTiles()[ov]
 **HellstoneGrowthSystem.cs** uses: BaseMachine, HellstoneGrowNetSystem
   class HellstoneGrowthSystem : ModSystem
-    +Enabled:bool +MaxDistance:int +BaseSecondsToConvert:float +DistanceSlowdown:float +MinLavaAmount:int +AshLayerDepth:int +AshSecondsToConvert:float +AshDustCount:int +AshSoundVolume:float +AshSoundPitchVariance:float +SamplesPerPlayerPerTick:int +AreaHalfWidth:int +AreaHalfHeight:int +GlobalSamplesPerTick:int +SoundVariants:int +SoundVolume:float +SoundPitchVariance:float +SoundMaxInstances:int +LavaDustCount:int +EmberDustCount:int +SmokeDustCount:int +DustCullMargin:float +PostUpdateWorld()[ov] +PlayEffect(int,int,bool)
+    +Enabled:bool +MaxDistance:int +BaseSecondsToConvert:float +DistanceSlowdown:float +MinLavaAmount:int +AshLayerDepth:int +AshSecondsToConvert:float +AshDustCount:int +AshSoundVolume:float +AshSoundPitchVariance:float +SamplesPerTick:int +ScanColumnsPerTick:int +RescanDelayTicks:int +MaxCandidates:int +MaxExtraConversionsPerPick:int +SoundVariants:int +SoundVolume:float +SoundPitchVariance:float +SoundMaxInstances:int +LavaDustCount:int +EmberDustCount:int +SmokeDustCount:int +DustCullMargin:float +ClearWorld()[ov] +PostUpdateWorld()[ov] +PlayEffect(int,int,bool)
 **LiquidNetworkDebugSystem.cs** uses: BaseMachine, Direction, FlowDir, FlowNetwork, FlowPort, FlowRoute, FlowSink, FlowSource, FlowTransfer, FurnaceOffsetConfig, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry
   class LiquidNetworkDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
@@ -1249,7 +1249,7 @@ tModLoader/other bases -> project types:
 **RecipeBookSystem.cs** uses: CartChestUISystem, Factorraria, MachineUISystem, RecipeBookArt, RecipeBookButtonState, RecipeBookPlayer, RecipeBookState, RecipeIcon
   class RecipeBookSystem : ModSystem
     +IsOpen:bool[s] +Open()[s] +OpenAt(string)[s] +OpenIngredientSearch(int)[s] +Close(bool)[s] +Toggle()[s] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
-**RecipeSystem.cs** uses: HarvesterBoxRegistration, RecipeBook
+**RecipeSystem.cs** uses: RecipeBook
   class RecipeSystem : ModSystem
     +AddRecipes()[ov]
 **SkeletronHandDropGlobalItem.cs**
@@ -1369,7 +1369,7 @@ tModLoader/other bases -> project types:
     +PulseSeconds:float[s] +PulseMin:float[s] +PulseMax:float[s] +RowTint:Color[s] +MarkGap:int[s] +PlaceholderMarkWidth:int[s] +EntryMarkOffset:Vector2[s] +TabMarkOffset:Vector2[s] +TabKey(string)[s] +IsNew(string)[s] +IsTabNew(string)[s] +AnyNew(IList<string>)[s] +OutlineHuePeriod:float[s] +AnyNewInBook()[s] +OutlineColor()[s] +RowColor()[s] +MarkWidth:int[s] +DrawMark(SpriteBatch,float,float,Vector2)[s] +RecordTabOrder(RecipeBookPlayer)[s] +PollTabOrder(RecipeBookPlayer)[s] +BookKeys()[s] +WorldKey()[s] +TrySeed(RecipeBookPlayer)[s]
 **RecipeBookPlayer.cs** uses: LiquidBiomeVisits, RecipeBookNew, RecipeCatalog, RecipeKnowledgeSystem
   class RecipeBookPlayer : ModPlayer
-    +ButtonOffset:Vector2? +FavoritesVersion:int +GridMode:bool +SetGridMode(bool) +IsFavorite(string) +ToggleFavorite(string) +ViewedReady:bool +ViewedVersion:int +IsNew(string) +MarkViewed(string) +MarkAllViewed() +IsWorldSeeded(string) +FinishSeeding(string,List<string>) +OnEnterWorld()[ov] +TabRank(string) +RecordTab(string) +PostUpdate()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
+    +ButtonOffset:Vector2? +FavoritesVersion:int +GridMode:bool +SetGridMode(bool) +IsTabCollapsed(string) +SetTabCollapsed(string,bool) +ToggleTabCollapsed(string) +IsFavorite(string) +ToggleFavorite(string) +ViewedReady:bool +ViewedVersion:int +IsNew(string) +MarkViewed(string) +MarkAllViewed() +IsWorldSeeded(string) +FinishSeeding(string,List<string>) +OnEnterWorld()[ov] +TabRank(string) +RecordTab(string) +PostUpdate()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
 **RecipeBookState.cs** uses: BookDraw, BookScrollbar, CustomRecipe, Entry, LiquidIngredient, LiquidTypeRegistry, RecipeArtRegistry, RecipeBookArt, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookGridCell, RecipeBookHeaderRow, RecipeBookKeybindSystem, RecipeBookLayout, RecipeBookModeButton, RecipeBookNew, RecipeBookPlayer, RecipeBookTabTipOverlay, RecipeCatalog, RecipeIngredient, RecipeKey, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeSearchBar, RecipeState, RecipeTabDiscovery, RecipeVisibility, State, VanillaStationBooks
   class RecipeBookState : UIState
     +SelectedKey:string +SelectedMachine:string +SelectedGroup:RecipeOutputGroup +SelectedArt:Entry +SelectedState:RecipeState +IsEmpty:bool +NoResults:bool +MouseInsidePanel:bool +OnInitialize()[ov] +OnActivate()[ov] +Update(GameTime)[ov] +ResetSearch() +SetSearch(string) +PanelOffset:Vector2 +SetPanelOffset(Vector2) +ResetPanelOffset() +ScrollBy(float) +Select(string,bool) +GoTo(string) +GoToAndSearch(string,string)
@@ -1648,9 +1648,9 @@ tModLoader/other bases -> project types:
     +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/
-**AutohammerRecipeRegistry.cs** uses: BeeWheelItem, ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, PlatinumPowerPoleItem, RecipeBook, RoyalHoneyItem, SimpleCircuitItem, SunCapsuleItem, TinWireItem, WoodenMinecartItem, WoodenPowerPoleItem
+**AutohammerRecipeRegistry.cs** uses: BeeWheelItem, BlinkrootHarvesterBoxItem, ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CorruptHarvesterBoxItem, CounterClockwisePriorityConveyor, CrimsonHarvesterBoxItem, CrimtaneSheetItem, CustomRecipe, DaybloomHarvesterBoxItem, DemoniteSheetItem, FireblossomHarvesterBoxItem, GoldPlateItem, GoldWireItem, HarvesterBoxKind, HarvesterBoxKinds, IronCutterItem, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MoonglowHarvesterBoxItem, PlatinumPowerPoleItem, RecipeBook, RoyalHoneyItem, ShiverthornHarvesterBoxItem, SimpleCircuitItem, SunCapsuleItem, TinWireItem, WaterleafHarvesterBoxItem, WoodenMinecartItem, WoodenPowerPoleItem
   class AutohammerRecipeRegistry
-    +Book:RecipeBook[s] +BuildRecipes()[s]
+    +Book:RecipeBook[s] +BuildRecipes()[s] +AddHarvesterRecipes()[s]
 **AutohammerTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.Autohammer uses: AutohammerRecipeRegistry, ElectricConsumerMachine, RecipeBook
   class AutohammerTileEntity : ElectricConsumerMachine
     +ValidTileType:int[ov] +Recipes:RecipeBook[ov] +PowerDemand:float[ov] #OutputSlotCount:int[ov] +Update()[ov] #OnAnimationFrameChanged(int,int)[ov]
@@ -1694,9 +1694,9 @@ tModLoader/other bases -> project types:
     #Kind:HarvesterBoxKind[ov]
   class FireblossomHarvesterBoxItem : HarvesterBoxItemBase<FireblossomHarvesterBoxTile>
     #Kind:HarvesterBoxKind[ov]
-**HarvesterBoxRegistration.cs** uses: BaseMachine, BlinkrootHarvesterBoxItem, BlinkrootHarvesterBoxTile, BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxItem, CorruptHarvesterBoxTile, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxItem, CrimsonHarvesterBoxTile, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxItem, DaybloomHarvesterBoxTile, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxItem, FireblossomHarvesterBoxTile, FireblossomHarvesterBoxTileEntity, HarvesterBoxKind, HarvesterBoxKinds, MachineVisualRegistry, MoonglowHarvesterBoxItem, MoonglowHarvesterBoxTile, MoonglowHarvesterBoxTileEntity, ShiverthornHarvesterBoxItem, ShiverthornHarvesterBoxTile, ShiverthornHarvesterBoxTileEntity, WaterleafHarvesterBoxItem, WaterleafHarvesterBoxTile, WaterleafHarvesterBoxTileEntity
+**HarvesterBoxRegistration.cs** uses: BaseMachine, BlinkrootHarvesterBoxTile, BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxTile, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxTile, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxTile, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxTile, FireblossomHarvesterBoxTileEntity, MachineVisualRegistry, MoonglowHarvesterBoxTile, MoonglowHarvesterBoxTileEntity, ShiverthornHarvesterBoxTile, ShiverthornHarvesterBoxTileEntity, WaterleafHarvesterBoxTile, WaterleafHarvesterBoxTileEntity
   static class HarvesterBoxRegistration
-    +RegisterVisuals()[s] +AddRecipes()[s]
+    +RegisterVisuals()[s]
 **HarvesterBoxTileEntities.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, HarvesterBoxTileEntityBase, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile, WaterleafHarvesterBoxTile
   class DaybloomHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<DaybloomHarvesterBoxTile>
   class MoonglowHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<MoonglowHarvesterBoxTile>
