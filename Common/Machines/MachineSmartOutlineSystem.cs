@@ -25,10 +25,10 @@ namespace Factorraria.Common.Machines
     public class MachineSmartOutlineSystem : ModSystem
     {
         // TUNING: instance fields (not const/static) so they can be tweaked with hot reload.
-        public Color HighlightColor = new Color(125f,125f,125f);               // outline of a machine you can use (R, G, B, A)
-        public Color SelectedColor = new Color(252f, 252f, 84f);    // outline of the machine the smart cursor is targeting
+        public Color HighlightColor = new Color(125,125,125);               // outline of a machine you can use (R, G, B, A)
+        public Color SelectedColor = new Color(252, 252, 84);    // outline of the machine the smart cursor is targeting
         public int OutlineScale = 2;            // size of one outline pixel in world pixels (Terraria art pixels are 2x2)
-        public float SmartRadiusPixels = 56f;   // how far from the cursor a machine can be and still be targeted (16 = one tile)
+        public float SmartRadiusPixels = 60f * 16f;   // how far from the cursor a machine can be and still be targeted (16 = one tile)
         public int AlphaThreshold = 8;          // a sprite pixel counts as solid above this alpha
         public int MaxCachedOutlines = 512;
         public float ScreenMarginPixels = 192f; // extra cull margin so overhang art still counts as on screen
@@ -68,6 +68,7 @@ namespace Factorraria.Common.Machines
         {
             if (Main.dedServ) return; // no screen on a dedicated server
             On_Main.DrawNPCs += DrawBehindTilesPass;
+            On_Player.TileInteractionsUse += RedirectClickToTarget;
         }
 
         public override void OnWorldUnload()
@@ -79,7 +80,10 @@ namespace Factorraria.Common.Machines
         public override void Unload()
         {
             if (!Main.dedServ)
+            {
                 On_Main.DrawNPCs -= DrawBehindTilesPass;
+                On_Player.TileInteractionsUse -= RedirectClickToTarget;
+            }
 
             outlineCache.Clear();
             alphaCache.Clear();
@@ -171,7 +175,50 @@ namespace Factorraria.Common.Machines
             if (!tile.HasTile)
                 return;
 
+            fallbackHandledTick = Main.GameUpdateCount;
             ModContent.GetInstance<MachineVisualOverride>().RightClick(targetPosition.X, targetPosition.Y, tile.TileType);
+        }
+
+        uint fallbackHandledTick = uint.MaxValue;   // the tick HandleNearbyRightClick already used this press
+
+        // Vanilla's own smart interact only knows its fixed list of tiles (crystal ball, chests, ...). Machines are vanilla tile types, so
+        // they are never in that list, and tModLoader only offers the smart-interact hooks to ModTiles. When vanilla has picked something
+        // else (Main.SmartInteractShowingGenuine) it calls TileInteractionsUse with THAT tile, so the click went to the crystal ball no
+        // matter which machine we had highlighted. Here the click is pointed at our target machine instead, which then goes through the
+        // normal tile right-click (MachineVisualOverride.RightClick). Exception: the cursor is directly over some other interactable
+        // vanilla tile, then that tile wins (you are clearly pointing at it).
+        private void RedirectClickToTarget(On_Player.orig_TileInteractionsUse orig, Player self, int myX, int myY)
+        {
+            if (!Main.dedServ && self.whoAmI == Main.myPlayer && hasTarget && Main.SmartCursorIsUsed && !self.mouseInterface)
+            {
+                if (fallbackHandledTick == Main.GameUpdateCount)
+                {
+                    // PostUpdateInput already opened the machine for this press: consume it so vanilla does not also use the crystal ball.
+                    self.tileInteractionHappened = true;
+                    if (self.controlUseTile && self.releaseUseTile)
+                    {
+                        self.tileInteractAttempted = true;
+                        self.releaseUseTile = false;
+                    }
+                    return;
+                }
+
+                bool redirect = targetDirect;
+                if (!redirect)
+                {
+                    Vector2 mouse = CartSystem.GetZoomCorrectedMouseWorld();
+                    Tile under = Framing.GetTileSafely((int)Math.Floor(mouse.X / 16f), (int)Math.Floor(mouse.Y / 16f));
+                    redirect = !(under.HasTile && TileID.Sets.HasOutlines[under.TileType]);
+                }
+
+                if (redirect && Framing.GetTileSafely(targetPosition.X, targetPosition.Y).HasTile)
+                {
+                    myX = targetPosition.X;
+                    myY = targetPosition.Y;
+                }
+            }
+
+            orig(self, myX, myY);
         }
 
         // Vanilla calls DrawNPCs(behindTiles: true) after the walls and before any tile, with a SpriteBatch already open (a Begin there
