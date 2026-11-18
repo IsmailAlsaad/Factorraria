@@ -138,7 +138,7 @@ Items: {
 		DisplayName: Daybloom Harvester Box
 		Tooltip:
 			'''
-			Automatically harvests plants
+			Consumes power to automatically harvests plants
 			'''
 	}
 
@@ -146,7 +146,7 @@ Items: {
 		DisplayName: Moonglow Harvester Box
 		Tooltip:
 			'''
-			Automatically harvests plants
+			Consumes power to automatically harvests plants
 			'''
 	}
 
@@ -154,7 +154,7 @@ Items: {
 		DisplayName: Corrupt Harvester Box
 		Tooltip:
 			'''
-			Automatically harvests plants
+			Consumes power to automatically harvests plants
 			'''
 	}
 
@@ -162,7 +162,7 @@ Items: {
 		DisplayName: Crimson Harvester Box
 		Tooltip:
 			'''
-			Automatically harvests plants
+			Consumes power to automatically harvests plants
 			'''
 	}
 
@@ -170,7 +170,7 @@ Items: {
 		DisplayName: Blinkroot Harvester Box
 		Tooltip:
 			'''
-			Automatically harvests plants
+			Consumes power to automatically harvests plants
 			'''
 	}
 
@@ -178,7 +178,7 @@ Items: {
 		DisplayName: Waterleaf Harvester Box
 		Tooltip:
 			'''
-			Automatically harvests plants
+			Consumes power to automatically harvests plants
 			'''
 	}
 
@@ -186,7 +186,7 @@ Items: {
 		DisplayName: Shiverthorn Harvester Box
 		Tooltip:
 			'''
-			Automatically harvests plants
+			Consumes power to automatically harvests plants
 			'''
 	}
 
@@ -194,7 +194,7 @@ Items: {
 		DisplayName: Fireblossom Harvester Box
 		Tooltip:
 			'''
-			Automatically harvests plants
+			Consumes power to automatically harvests plants
 			'''
 	}
 
