@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
+using Terraria.GameInput;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -14,15 +16,19 @@ namespace Factorraria.Common.Machines
 {
     // Smart cursor outlines for right-clickable machines (client-only, purely visual: nothing is synced).
     // While Main.SmartCursorIsUsed, every registered machine the local player can right-click right now (same reach rule as
-    // MachineVisualOverride.RightClick) gets a 1px outline just outside its sprite: white = can be used, gold = the cursor is over it.
+    // MachineVisualOverride.RightClick) gets an outline just outside its sprite: white = can be used, gold = the machine the smart cursor
+    // is targeting (the one under the cursor, or else the nearest one within SmartRadiusPixels; right-click then opens that one).
     // The outline is computed from the pixels that are actually drawn (same texture / frame choice as MachineVisualOverride.PreDraw and
-    // MachineOverhangSystem), cached per machine, and drawn after the tiles so it sits on top of the machine.
+    // MachineOverhangSystem) on a grid of OutlineScale x OutlineScale world pixels (Terraria art pixels are 2x2), cached per machine, and
+    // drawn in the behind-tiles pass (same hook as MachineOverhangSystem), so tiles cover it.
     // Not outlined: the moving parts drawn by IMachineDynamicDraw (arm, wheel, ...) and the liquid layers; only the base sprite.
     public class MachineSmartOutlineSystem : ModSystem
     {
-        // Instance fields (not const/static) so they can be tweaked with hot reload.
-        public Color HighlightColor = Color.White;
-        public Color SelectedColor = new Color(255, 200, 40);
+        // TUNING: instance fields (not const/static) so they can be tweaked with hot reload.
+        public Color HighlightColor = new Color(125f,125f,125f);               // outline of a machine you can use (R, G, B, A)
+        public Color SelectedColor = new Color(252f, 252f, 84f);    // outline of the machine the smart cursor is targeting
+        public int OutlineScale = 2;            // size of one outline pixel in world pixels (Terraria art pixels are 2x2)
+        public float SmartRadiusPixels = 56f;   // how far from the cursor a machine can be and still be targeted (16 = one tile)
         public int AlphaThreshold = 8;          // a sprite pixel counts as solid above this alpha
         public int MaxCachedOutlines = 512;
         public float ScreenMarginPixels = 192f; // extra cull margin so overhang art still counts as on screen
@@ -53,19 +59,132 @@ namespace Factorraria.Common.Machines
         readonly Dictionary<Texture2D, byte[]> alphaCache = new Dictionary<Texture2D, byte[]>();
         readonly List<SpriteCell> scratchCells = new List<SpriteCell>();
 
+        // The machine the smart cursor targets this tick (client only). Updated in PostUpdateInput, read by the draw pass.
+        bool hasTarget;
+        bool targetDirect;      // the cursor is directly over the machine's footprint
+        Point16 targetPosition;
+
+        public override void Load()
+        {
+            if (Main.dedServ) return; // no screen on a dedicated server
+            On_Main.DrawNPCs += DrawBehindTilesPass;
+        }
+
         public override void OnWorldUnload()
         {
             outlineCache.Clear();
+            hasTarget = false;
         }
 
         public override void Unload()
         {
+            if (!Main.dedServ)
+                On_Main.DrawNPCs -= DrawBehindTilesPass;
+
             outlineCache.Clear();
             alphaCache.Clear();
             scratchCells.Clear();
         }
 
-        public override void PostDrawTiles()
+        public override void PostUpdateInput()
+        {
+            UpdateTarget();
+            HandleNearbyRightClick();
+        }
+
+        bool TryGetMachineInfo(BaseMachine machine, out Tile tile, out MachineVisualDefinition def, out TileObjectData data)
+        {
+            def = null;
+            data = null;
+            Point16 corner = machine.Position;
+            tile = Framing.GetTileSafely(corner.X, corner.Y);
+            if (!tile.HasTile || !MachineVisualRegistry.Definitions.TryGetValue(tile.TileType, out def))
+                return false;
+
+            data = TileObjectData.GetTileData(tile.TileType, 0);
+            return data != null;
+        }
+
+        // Closest machine to the cursor (distance 0 = the cursor is over it) that is within SmartRadiusPixels and that the player can reach.
+        void UpdateTarget()
+        {
+            hasTarget = false;
+            targetDirect = false;
+
+            if (Main.dedServ || Main.gameMenu || Main.mapFullscreen || !Main.SmartCursorIsUsed || MachineVisualRegistry.Definitions.Count == 0)
+                return;
+
+            Player player = Main.LocalPlayer;
+            if (player == null || !player.active || player.dead || player.mouseInterface)
+                return;
+
+            Vector2 mouse = CartSystem.GetZoomCorrectedMouseWorld();
+            float bestDistance = SmartRadiusPixels;
+            bool found = false;
+
+            foreach (TileEntity entity in TileEntity.ByPosition.Values)
+            {
+                if (entity is not BaseMachine machine)
+                    continue;
+
+                if (!TryGetMachineInfo(machine, out _, out _, out TileObjectData data))
+                    continue;
+
+                Point16 corner = machine.Position;
+                float left = corner.X * 16f;
+                float top = corner.Y * 16f;
+                float dx = Math.Max(Math.Max(left - mouse.X, 0f), mouse.X - (left + data.Width * 16f));
+                float dy = Math.Max(Math.Max(top - mouse.Y, 0f), mouse.Y - (top + data.Height * 16f));
+                float distance = (float)Math.Sqrt(dx * dx + dy * dy);
+                if (distance > bestDistance || (found && distance >= bestDistance))
+                    continue;
+
+                if (!MachineDetailSystem.WithinReach(player, machine, 0f))
+                    continue;
+
+                bestDistance = distance;
+                targetPosition = corner;
+                found = true;
+            }
+
+            hasTarget = found;
+            targetDirect = found && bestDistance <= 0f;
+        }
+
+        // Right-click while the target is not directly under the cursor: open it ourselves. A cursor that is directly over a machine is left to
+        // the normal tile right-click (MachineVisualOverride.RightClick), and so is anything vanilla's own smart interact picked.
+        void HandleNearbyRightClick()
+        {
+            if (!hasTarget || targetDirect || !PlayerInput.Triggers.JustPressed.MouseRight)
+                return;
+
+            Player player = Main.LocalPlayer;
+            if (player.mouseInterface || Main.SmartInteractShowingGenuine)
+                return;
+
+            Vector2 mouse = CartSystem.GetZoomCorrectedMouseWorld();
+            Tile under = Framing.GetTileSafely((int)Math.Floor(mouse.X / 16f), (int)Math.Floor(mouse.Y / 16f));
+            if (under.HasTile && TileID.Sets.HasOutlines[under.TileType])
+                return;
+
+            Tile tile = Framing.GetTileSafely(targetPosition.X, targetPosition.Y);
+            if (!tile.HasTile)
+                return;
+
+            ModContent.GetInstance<MachineVisualOverride>().RightClick(targetPosition.X, targetPosition.Y, tile.TileType);
+        }
+
+        // Vanilla calls DrawNPCs(behindTiles: true) after the walls and before any tile, with a SpriteBatch already open (a Begin there
+        // throws), so this draws straight into it. Drawing before orig puts the outline under every tile.
+        private void DrawBehindTilesPass(On_Main.orig_DrawNPCs orig, Main self, bool behindTiles)
+        {
+            if (behindTiles)
+                DrawOutlines();
+
+            orig(self, behindTiles);
+        }
+
+        void DrawOutlines()
         {
             if (Main.dedServ || Main.gameMenu || !Main.SmartCursorIsUsed || MachineVisualRegistry.Definitions.Count == 0)
                 return;
@@ -74,29 +193,17 @@ namespace Factorraria.Common.Machines
             if (player == null || !player.active || player.dead)
                 return;
 
-            Vector2 mouse = CartSystem.GetZoomCorrectedMouseWorld();
-            int mouseTileX = (int)Math.Floor(mouse.X / 16f);
-            int mouseTileY = (int)Math.Floor(mouse.Y / 16f);
-            bool cursorFree = !player.mouseInterface;
-            bool selectedTaken = false;
-
             SpriteBatch spriteBatch = Main.spriteBatch;
-            bool batchBegun = false;
 
             foreach (TileEntity entity in TileEntity.ByPosition.Values)
             {
                 if (entity is not BaseMachine machine)
                     continue;
 
+                if (!TryGetMachineInfo(machine, out Tile tile, out MachineVisualDefinition def, out TileObjectData data))
+                    continue;
+
                 Point16 corner = machine.Position;
-                Tile tile = Framing.GetTileSafely(corner.X, corner.Y);
-                if (!tile.HasTile || !MachineVisualRegistry.Definitions.TryGetValue(tile.TileType, out var def))
-                    continue;
-
-                TileObjectData data = TileObjectData.GetTileData(tile.TileType, 0);
-                if (data == null)
-                    continue;
-
                 Vector2 center = new Vector2(corner.X * 16 + data.Width * 8, corner.Y * 16 + data.Height * 8);
                 if (!BaseMachine.IsOnScreen(center, Math.Max(data.Width, data.Height) * 8f + ScreenMarginPixels))
                     continue;
@@ -109,23 +216,9 @@ namespace Factorraria.Common.Machines
                 if (outline == null || outline.Runs.Count == 0)
                     continue;
 
-                bool hovered = cursorFree && !selectedTaken
-                    && mouseTileX >= corner.X && mouseTileX < corner.X + data.Width
-                    && mouseTileY >= corner.Y && mouseTileY < corner.Y + data.Height;
-                if (hovered)
-                    selectedTaken = true;
-
-                if (!batchBegun)
-                {
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-                    batchBegun = true;
-                }
-
-                DrawOutline(spriteBatch, outline, hovered ? SelectedColor : HighlightColor);
+                bool selected = hasTarget && targetPosition == corner;
+                DrawOutline(spriteBatch, outline, selected ? SelectedColor : HighlightColor);
             }
-
-            if (batchBegun)
-                spriteBatch.End();
         }
 
         // MagicPixel is probably not 1x1, so the source is always an explicit 1x1 rectangle.
@@ -136,7 +229,7 @@ namespace Factorraria.Common.Machines
             foreach (Rectangle run in outline.Runs)
             {
                 Vector2 position = new Vector2(outline.OriginX + run.X, outline.OriginY + run.Y) - Main.screenPosition;
-                spriteBatch.Draw(pixel, position, source, color, 0f, Vector2.Zero, new Vector2(run.Width, 1f), SpriteEffects.None, 0f);
+                spriteBatch.Draw(pixel, position, source, color, 0f, Vector2.Zero, new Vector2(run.Width, run.Height), SpriteEffects.None, 0f);
             }
         }
 
@@ -149,6 +242,7 @@ namespace Factorraria.Common.Machines
             ulong signature = 14695981039346656037UL;
             signature = Mix(signature, tile.TileType);
             signature = Mix(signature, AlphaThreshold);
+            signature = Mix(signature, OutlineScale);
             foreach (SpriteCell cell in scratchCells)
             {
                 signature = Mix(signature, System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(cell.Texture));
@@ -324,9 +418,15 @@ namespace Factorraria.Common.Machines
             return alpha;
         }
 
-        // Solid mask of all cells, then every empty pixel that touches a solid one (up, down, left, right) is an outline pixel.
+        static int FloorTo(int value, int step) => (int)Math.Floor(value / (double)step) * step;
+        static int CeilTo(int value, int step) => (int)Math.Ceiling(value / (double)step) * step;
+
+        // Solid mask of all cells on a grid of OutlineScale x OutlineScale world pixels (a grid cell is solid if any pixel in it is), then every
+        // empty grid cell that touches a solid one (up, down, left, right) is an outline cell, drawn as one OutlineScale-sized block.
+        // The grid is aligned to world coordinates, so the blocks line up with the 2x2 art pixels.
         Outline BuildOutline(List<SpriteCell> cells)
         {
+            int scale = Math.Max(1, OutlineScale);
             int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
             foreach (SpriteCell cell in cells)
             {
@@ -336,9 +436,12 @@ namespace Factorraria.Common.Machines
                 maxY = Math.Max(maxY, cell.Y + cell.Source.Height);
             }
 
-            minX--; minY--; maxX++; maxY++;   // one pixel of room for the outline
-            int width = maxX - minX;
-            int height = maxY - minY;
+            minX = FloorTo(minX, scale) - scale;   // one grid cell of room for the outline
+            minY = FloorTo(minY, scale) - scale;
+            maxX = CeilTo(maxX, scale) + scale;
+            maxY = CeilTo(maxY, scale) + scale;
+            int width = (maxX - minX) / scale;     // in grid cells
+            int height = (maxY - minY) / scale;
             bool[] solid = new bool[width * height];
 
             foreach (SpriteCell cell in cells)
@@ -369,7 +472,9 @@ namespace Factorraria.Common.Machines
                             default: dx = sx; dy = sy; break;
                         }
 
-                        solid[(cell.Y + dy - minY) * width + (cell.X + dx - minX)] = true;
+                        int gridX = (cell.X + dx - minX) / scale;
+                        int gridY = (cell.Y + dy - minY) / scale;
+                        solid[gridY * width + gridX] = true;
                     }
                 }
             }
@@ -398,7 +503,7 @@ namespace Factorraria.Common.Machines
                     }
                     else if (runStart >= 0)
                     {
-                        outline.Runs.Add(new Rectangle(runStart, y, x - runStart, 1));
+                        outline.Runs.Add(new Rectangle(runStart * scale, y * scale, (x - runStart) * scale, scale));
                         runStart = -1;
                     }
                 }
