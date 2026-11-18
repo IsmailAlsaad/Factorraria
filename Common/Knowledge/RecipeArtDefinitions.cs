@@ -20,7 +20,11 @@
         public static void Register()
         {
             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Placeholder");
-            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/UnderworldLavaConversion");
+            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Underworld lava");
+            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Cascade");
+            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Shimmer statue");
+            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Thunder cloud");
+            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Trains");
         }
     }
 }

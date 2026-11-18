@@ -15,8 +15,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.MagicMaterializer
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
-            tooltips.Add(new TooltipLine(Mod, "FactorrariaMaterializerUI", "Right click to open the shimmer tank"));
-            tooltips.Add(new TooltipLine(Mod, "FactorrariaMaterializerToggle", "Shift + Right click to turn the shimmer background on or off"));
+            tooltips.Add(new TooltipLine(Mod, "FactorrariaMaterializerUI", "May have a weird effect on nearby statues"));
+            tooltips.Add(new TooltipLine(Mod, "FactorrariaMaterializerToggle", "Shift + Right click to toggle the background"));
         }
     }
 }

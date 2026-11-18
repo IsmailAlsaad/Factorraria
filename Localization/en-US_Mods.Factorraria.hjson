@@ -33,6 +33,7 @@ Items: {
 		DisplayName: Priority Conveyor Belt (Clockwise)
 		Tooltip:
 			'''
+			Can filter items in and out of chests
 			Right click on the conveyor tile while holding an item to set a filter
 			Shift + Right click in inventory to swap direction
 			'''
@@ -42,6 +43,7 @@ Items: {
 		DisplayName: Priority Conveyor Belt (Counter Clockwise)
 		Tooltip:
 			'''
+			Can filter items in and out of chests
 			Right click on the conveyor tile while holding an item to set a filter
 			Shift + Right click in inventory to swap direction
 			'''

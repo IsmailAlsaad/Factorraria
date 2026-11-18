@@ -66,7 +66,8 @@ namespace Factorraria.Content.Items.Conveyors
             }
 
             // 2. Add custom tooltip line
-            tooltips.Add(new TooltipLine(Mod, "ConveyorSwapHint", "Shift + Right click in inventory to swap direction"));
+            tooltips.Add(new TooltipLine(Mod, "ConveyorSwapHint1", "Can insert and extract items from chests"));
+            tooltips.Add(new TooltipLine(Mod, "ConveyorSwapHint2", "Shift + Right click in inventory to swap direction"));
         }
     }
 }

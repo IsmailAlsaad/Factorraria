@@ -62,7 +62,12 @@ namespace Factorraria.Common.Knowledge
         static void DefaultPool()
         {
             ScrollPools.Define("PlaceholderArt", "Placeholder art").AddArt("Placeholder", weight: 1f);
+
             ScrollPools.Define("UnderworldShadowChests", "The paper is barely readable from all the burn marks").AddArt("Underworld lava", weight: 1f);
+
+            ScrollPools.Define("SkyislandChests", "This was probably written using a feather from the local wildlife")
+                .AddArt("Thunder Cloud", weight: 1f)
+                .AddArt("Cascade", weight: 1f);
 
             ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a factory.")
                 // Hellforge
@@ -109,8 +114,10 @@ namespace Factorraria.Common.Knowledge
                 .AddLiquid("LiquidDistillator", LiquidTypeRegistry.Fuel)             // fuel liquid
                 .Add("DecayChamber", ItemID.CrimtaneBar)
                 .Add("DecayChamber", ItemID.DemoniteBar)
-                .Add("VanillaDemonAltar", ItemID.LesionStation);   // the Decay Chamber item itself
+                .Add("VanillaDemonAltar", ItemID.LesionStation)   // the Decay Chamber item itself
 
+                .AddArt("ShimmerStatue", weight: 1f)   // the Shimmer Statue art (registered in RecipeArtDefinitions)
+                .AddArt("Trains", weight: 1f);          // the Trains art (registered in RecipeArtDefinitions)
             // The Decay Chamber item (Lesion Station) is a hand-craft at the Demon Altar (RecipeSystem.cs), so no machine book has it. It is in
             // the pool through the vanilla Demon Altar tab (VanillaStationBooks): "VanillaDemonAltar" is that tab's catalog name.
         }
