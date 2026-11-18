@@ -1,0 +1,1782 @@
+Dll: C:\GOG Games\Terraria\tModLoader\tModLoader.dll
+Terraria.WorldGen: 2124 KB
+Terraria.ObjectData.TileObjectData: 172 KB
+Terraria.TileObject: 34 KB
+Terraria.Item: 1092 KB
+Terraria.ID.ItemID: 426 KB
+Terraria.Player: 1937 KB
+Terraria.Main: 3727 KB
+Terraria.GameContent.Drawing.TileDrawing: 502 KB
+=================== A. PLANTER BOX (tile 380) ===================
+##### A1. ItemID names and ids of the planter boxes (the id order is the style order: style = id - first id, to be confirmed by A2)
+# 8 hit(s) shown for 'PlanterBox' in Terraria.ID.ItemID.cs
+--- Terraria.ID.ItemID.cs:9218
+>>> 	public const short DayBloomPlanterBox = 3215;
+
+--- Terraria.ID.ItemID.cs:9220
+>>> 	public const short MoonglowPlanterBox = 3216;
+
+--- Terraria.ID.ItemID.cs:9222
+>>> 	public const short CorruptPlanterBox = 3217;
+
+--- Terraria.ID.ItemID.cs:9224
+>>> 	public const short CrimsonPlanterBox = 3218;
+
+--- Terraria.ID.ItemID.cs:9226
+>>> 	public const short BlinkrootPlanterBox = 3219;
+
+--- Terraria.ID.ItemID.cs:9228
+>>> 	public const short WaterleafPlanterBox = 3220;
+
+--- Terraria.ID.ItemID.cs:9230
+>>> 	public const short ShiverthornPlanterBox = 3221;
+
+--- Terraria.ID.ItemID.cs:9232
+>>> 	public const short FireBlossomPlanterBox = 3222;
+
+##### A2. Item.SetDefaults: every item that places tile 380 (createTile, placeStyle)
+# 1 hit(s) shown for 'createTile = 380\b' in Terraria.Item.cs
+--- Terraria.Item.cs:33728
+			useTurn = true;
+			useAnimation = 15;
+			useTime = 10;
+			autoReuse = true;
+			maxStack = CommonMaxStack;
+			consumable = true;
+>>> 			createTile = 380;
+			placeStyle = type - 3215;
+			width = 24;
+			height = 20;
+			value = buyPrice(0, 0, 1);
+			return;
+		case 3223:
+
+##### A3. WorldGen.PlaceTile / KillTile / TileFrame: how tile 380 is placed, which item it drops, how its frames are set
+# 4 hit(s) shown for 'case 380:|if \(num == 380\)' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:55234
+											tile.active(active: true);
+											tile.type = (ushort)num;
+											break;
+>>> 										case 380:
+											tile.frameY = (short)(18 * style);
+											tile.active(active: true);
+											tile.type = (ushort)num;
+											break;
+										case 314:
+											Minecart.PlaceTrack(tile, style);
+											break;
+										default:
+											if (num >= TileID.Count && TileObjectData.GetTileData(num, style) != null)
+											{
+												PlaceObject(i, j, (ushort)num, mute, style);
+												break;
+											}
+											tile.active(active: true);
+											tile.type = (ushort)num;
+											if (Main.tenthAnniversaryWorld && !Main.remixWorld && (num == 53 || num == 396 || num == 397))
+											{
+												tile.color(7);
+											}
+											break;
+										}
+										break;
+
+--- Terraria.WorldGen.cs:59998
+				dropItem = 3467;
+			}
+			break;
+>>> 		case 380:
+			num = tileCache.frameY / 18;
+			dropItem = 3215 + num;
+			break;
+		case 5:
+		case 596:
+		case 616:
+		case 634:
+		{
+			bool bonusWood = false;
+			KillTile_GetTreeDrops(x, y, tileCache, ref bonusWood, ref dropItem, ref secondaryItem);
+			if (bonusWood)
+			{
+				dropItemStack++;
+			}
+			break;
+		}
+		case 323:
+		{
+			dropItem = 2504;
+			if (Main.tenthAnniversaryWorld)
+			{
+				dropItemStack += genRand.Next(2, 5);
+
+--- Terraria.WorldGen.cs:75766
+			case 137:
+			case 138:
+			case 232:
+>>> 			case 380:
+			case 387:
+			case 388:
+			case 476:
+			case 484:
+			case 664:
+			case 665:
+				break;
+			default:
+				if (gen)
+				{
+					if (Main.tile[x, y].type == 190)
+					{
+						return false;
+					}
+					if (Main.tile[x, y].type == 30)
+					{
+						return false;
+					}
+				}
+				if (Main.tile[x, y - 1].active())
+				{
+					ushort type2 = Main.tile[x, y - 1].type;
+
+--- Terraria.WorldGen.cs:76777
+												}
+												break;
+											}
+>>> 											if (num == 380)
+											{
+												Tile tile4 = Main.tile[i - 1, j];
+												if (tile4 == null)
+												{
+													break;
+												}
+												Tile tile5 = Main.tile[i + 1, j];
+												if (!(tile5 == null) && !(Main.tile[i - 1, j + 1] == null) && !(Main.tile[i + 1, j + 1] == null) && !(Main.tile[i - 1, j - 1] == null) && Main.tile[i + 1, j - 1] != null)
+												{
+													int num3 = -1;
+													int num4 = -1;
+													if (tile4 != null && tile4.active())
+													{
+														num4 = (Main.tileStone[tile4.type] ? 1 : tile4.type);
+													}
+													if (tile5 != null && tile5.active())
+													{
+														num3 = (Main.tileStone[tile5.type] ? 1 : tile5.type);
+													}
+													if (num3 >= 0 && !Main.tileSolid[num3])
+													{
+														num3 = -1;
+
+##### A4. other lines that mention 380 in WorldGen (short)
+# 33 hit(s) shown for '\b380\b' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:1206
+>>> 	public static readonly int beachDistance = 380;
+
+--- Terraria.WorldGen.cs:16405
+>>> 			int num5 = 380;
+
+--- Terraria.WorldGen.cs:24649
+>>> 					if (i < 380)
+
+--- Terraria.WorldGen.cs:24656
+>>> 					else if (i > Main.maxTilesX - 380 && genRand.NextDouble() < num2 && Main.tile[i, j].liquid == 0)
+
+--- Terraria.WorldGen.cs:34722
+>>> 				if (type != 531 && tileSafely.type == 380)
+
+--- Terraria.WorldGen.cs:38536
+>>> 				if (Main.tile[x, y + 1].type != 2 && Main.tile[x, y + 1].type != 477 && Main.tile[x, y + 1].type != 492 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 109)
+
+--- Terraria.WorldGen.cs:38546
+>>> 				if (Main.tile[x, y + 1].type != 60 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+
+--- Terraria.WorldGen.cs:38556
+>>> 				if (Main.tile[x, y + 1].type != 0 && Main.tile[x, y + 1].type != 59 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+
+--- Terraria.WorldGen.cs:38566
+>>> 				if (Main.tile[x, y + 1].type != 661 && Main.tile[x, y + 1].type != 662 && Main.tile[x, y + 1].type != 203 && Main.tile[x, y + 1].type != 199 && Main.tile[x, y + 1].type != 23 && Main.tile[x, y + 1].type != 25 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+
+--- Terraria.WorldGen.cs:38576
+>>> 				if (Main.tile[x, y + 1].type != 53 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 116)
+
+--- Terraria.WorldGen.cs:38586
+>>> 				if (Main.tile[x, y + 1].type != 57 && Main.tile[x, y + 1].type != 633 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+
+--- Terraria.WorldGen.cs:38596
+>>> 				if (Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 147 && Main.tile[x, y + 1].type != 161 && Main.tile[x, y + 1].type != 163 && Main.tile[x, y + 1].type != 164 && Main.tile[x, y + 1].type != 200)
+
+--- Terraria.WorldGen.cs:39053
+>>> 				if (Main.tile[x, y + 1].type != 109 && Main.tile[x, y + 1].type != 2 && Main.tile[x, y + 1].type != 477 && Main.tile[x, y + 1].type != 492 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+
+--- Terraria.WorldGen.cs:39063
+>>> 				if (Main.tile[x, y + 1].type != 60 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+
+--- Terraria.WorldGen.cs:39073
+>>> 				if (Main.tile[x, y + 1].type != 0 && Main.tile[x, y + 1].type != 59 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+
+--- Terraria.WorldGen.cs:39083
+>>> 				if (Main.tile[x, y + 1].type != 661 && Main.tile[x, y + 1].type != 662 && Main.tile[x, y + 1].type != 199 && Main.tile[x, y + 1].type != 203 && Main.tile[x, y + 1].type != 23 && Main.tile[x, y + 1].type != 25 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+
+--- Terraria.WorldGen.cs:39093
+>>> 				if (Main.tile[x, y + 1].type != 53 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 116)
+
+--- Terraria.WorldGen.cs:39103
+>>> 				if (Main.tile[x, y + 1].type != 57 && Main.tile[x, y + 1].type != 633 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+
+--- Terraria.WorldGen.cs:39132
+>>> 				if (Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 147 && Main.tile[x, y + 1].type != 161 && Main.tile[x, y + 1].type != 163 && Main.tile[x, y + 1].type != 164 && Main.tile[x, y + 1].type != 200)
+
+--- Terraria.WorldGen.cs:39200
+>>> 		if (TileID.Sets.Platforms[tile.type] || tile.type == 380)
+
+--- Terraria.WorldGen.cs:39810
+>>> 		bool flag3 = Main.tile[x, num - 1].active() && (TileID.Sets.Platforms[Main.tile[x, num - 1].type] || Main.tile[x, num - 1].type == 380);
+
+--- Terraria.WorldGen.cs:53012
+>>> 			if (((tile.type != 2 && tile.type != 78 && tile.type != 380 && tile.type != 477 && tile.type != 579) || typeAttemptedToPlace != 3) && ((tile.type != 23 && tile.type != 661) || typeAttemptedToPlace != 24) && ((tile.type != 109 && tile.type != 492) || typeAttemptedToPlace != 110) && ((tile.type != 199 && tile.type != 662) || typeAttemptedToPlace != 201))
+
+--- Terraria.WorldGen.cs:54265
+>>> 				bool num = Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 579;
+
+--- Terraria.WorldGen.cs:54512
+>>> 						else if (Main.tile[i, j + 1].type == 78 || Main.tile[i, j + 1].type == 380 || Main.tile[i, j + 1].type == 579)
+
+--- Terraria.WorldGen.cs:54799
+>>> 								if (tile.wall > 0 || (tile3.active() && (tile3.slope() == 0 || tile3.slope() % 2 != 1) && ((Main.tileSolid[tile3.type] && !Main.tileSolidTop[tile3.type] && !TileID.Sets.NotReallySolid[tile3.type]) || TileID.Sets.IsBeam[tile3.type] || (IsTreeType(tile3.type) && IsTreeType(Main.tile[i - 1, j - 1].type) && IsTreeType(Main.tile[i - 1, j + 1].type)))) || (tile4.active() && (tile4.slope() == 0 || tile4.slope() % 2 != 0) && ((Main.tileSolid[tile4.type] && !Main.tileSolidTop[tile4.type] && !TileID.Sets.NotReallySolid[tile4.type]) || TileID.Sets.IsBeam[tile4.type] || (IsTreeType(tile4.type) && IsTreeType(Main.tile[i + 1, j - 1].type) && IsTreeType(Main.tile[i + 1, j + 1].type)))) || (tile5.active() && Main.tileSolid[tile5.type] && ((TileID.Sets.Platforms[tile5.type] && TopEdgeCanBeAttachedTo(i, j + 1)) || ((!Main.tileSolidTop[tile5.type] || (tile5.type == 380 && tile5.slope() == 0)) && !TileID.Sets.NotReallySolid[tile5.type] && !tile5.halfBrick() && tile5.slope() == 0))))
+
+--- Terraria.WorldGen.cs:55234
+>>> 										case 380:
+
+--- Terraria.WorldGen.cs:59998
+>>> 		case 380:
+
+--- Terraria.WorldGen.cs:64965
+>>> 			if (tile.active() && (Main.tileSolid[tile.type] || tile.type == 380) && (!tile.bottomSlope() || (TileID.Sets.Platforms[tile.type] && tile.halfBrick())) && !tile.inActive())
+
+--- Terraria.WorldGen.cs:66984
+>>> 			else if (Main.tile[i, j].type == 78 || Main.tile[i, j].type == 380 || Main.tile[i, j].type == 579)
+
+--- Terraria.WorldGen.cs:75635
+>>> 		if ((num2 != 3 || num == 2 || num == 477 || num == 78 || num == 380 || num == 579) && (num2 != 73 || num == 2 || num == 477 || num == 78 || num == 380 || num == 579) && (num2 != 24 || num == 23 || num == 661) && (num2 != 61 || num == 60) && (num2 != 74 || num == 60) && (num2 != 71 || num == 70) && (num2 != 110 || num == 109 || num == 492) && (num2 != 113 || num == 109 || num == 492) && (num2 != 201 || num == 199 || num == 662) && (num2 != 637 || num == 633))
+
+--- Terraria.WorldGen.cs:75766
+>>> 			case 380:
+
+--- Terraria.WorldGen.cs:76777
+>>> 											if (num == 380)
+
+--- Terraria.WorldGen.cs:81822
+>>> 		if (Main.tile[x, y + 1] != null && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 579)
+
+##### A5. TileObjectData: the tile 380 entry, if there is one
+# 5 hit(s) shown for '\b380\b|PlanterBox' in Terraria.ObjectData.TileObjectData.cs
+--- Terraria.ObjectData.TileObjectData.cs:2597
+		newAlternate.Direction = TileObjectDirection.PlaceRight;
+		addAlternate(1);
+		addTile(453);
+		newTile.Width = 1;
+		newTile.Height = 2;
+		newTile.Origin = new Point16(0, 0);
+>>> 		newTile.AnchorTop = new AnchorData(AnchorType.SolidTile | AnchorType.SolidSide | AnchorType.PlanterBox, newTile.Width, 0);
+		newTile.UsesCustomCanPlace = true;
+		newTile.CoordinateHeights = new int[2] { 16, 16 };
+		newTile.CoordinateWidth = 16;
+		newTile.CoordinatePadding = 2;
+		newTile.LavaDeath = true;
+		addBaseTile(out Style1x2Top);
+		newTile.CopyFrom(Style1x2Top);
+		newTile.DrawYOffset = -2;
+		newAlternate.CopyFrom(newTile);
+		newAlternate.AnchorTop = new AnchorData(AnchorType.Platform, newTile.Width, 0);
+		newAlternate.DrawYOffset = -10;
+		addAlternate(0);
+		addTile(270);
+		newTile.CopyFrom(Style1x2Top);
+
+--- Terraria.ObjectData.TileObjectData.cs:2659
+		addSubTile(46);
+		addTile(42);
+		newTile.CopyFrom(Style1x2Top);
+		newTile.Height = 3;
+		newTile.CoordinateHeights = new int[3] { 16, 16, 16 };
+		newTile.StyleHorizontal = true;
+>>> 		newTile.AnchorTop = new AnchorData(AnchorType.SolidTile | AnchorType.SolidSide | AnchorType.SolidBottom | AnchorType.PlanterBox, newTile.Width, 0);
+		newTile.StyleWrapLimit = 111;
+		newTile.DrawYOffset = -2;
+		newAlternate.CopyFrom(newTile);
+		newAlternate.AnchorTop = new AnchorData(AnchorType.Platform, newTile.Width, 0);
+		newAlternate.DrawYOffset = -10;
+		addAlternate(0);
+		addTile(91);
+		newTile.Width = 4;
+		newTile.Height = 2;
+		newTile.Origin = new Point16(1, 1);
+		newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide, newTile.Width, 0);
+		newTile.UsesCustomCanPlace = true;
+		newTile.CoordinateHeights = new int[2] { 16, 18 };
+		newTile.CoordinateWidth = 16;
+
+--- Terraria.ObjectData.TileObjectData.cs:3004
+		newTile.DrawYOffset = 2;
+		addTile(560);
+		newTile.CopyFrom(Style2xX);
+		newTile.Height = 3;
+		newTile.Origin = new Point16(0, 0);
+		newTile.AnchorBottom = default;
+>>> 		newTile.AnchorTop = new AnchorData(AnchorType.SolidTile | AnchorType.SolidSide | AnchorType.SolidBottom | AnchorType.PlanterBox, newTile.Width, 0);
+		newTile.LavaDeath = true;
+		newTile.DrawYOffset = -2;
+		newAlternate.CopyFrom(newTile);
+		newAlternate.AnchorTop = new AnchorData(AnchorType.PlatformNonHammered, newTile.Width, 0);
+		newAlternate.DrawYOffset = -10;
+		addAlternate(0);
+		addTile(465);
+		newTile.CopyFrom(Style2xX);
+		newTile.Height = 3;
+		newTile.Origin = new Point16(0, 0);
+		newTile.AnchorBottom = default;
+		newTile.AnchorTop = new AnchorData(AnchorType.SolidTile | AnchorType.SolidSide | AnchorType.SolidBottom, newTile.Width, 0);
+		newTile.LavaDeath = true;
+		addTile(531);
+
+--- Terraria.ObjectData.TileObjectData.cs:3103
+		addAlternate(1);
+		addTile(470);
+		newTile.CopyFrom(Style2xX);
+		newTile.Height = 3;
+		newTile.Origin = new Point16(0, 0);
+		newTile.AnchorBottom = default;
+>>> 		newTile.AnchorTop = new AnchorData(AnchorType.SolidTile | AnchorType.SolidSide | AnchorType.SolidBottom | AnchorType.PlanterBox, newTile.Width, 0);
+		newTile.LavaDeath = true;
+		newTile.DrawYOffset = -2;
+		newAlternate.CopyFrom(newTile);
+		newAlternate.AnchorTop = new AnchorData(AnchorType.PlatformNonHammered, newTile.Width, 0);
+		newAlternate.DrawYOffset = -10;
+		addAlternate(0);
+		addTile(591);
+		newTile.CopyFrom(Style2xX);
+		newTile.Height = 3;
+		newTile.Origin = new Point16(0, 0);
+		newTile.AnchorBottom = default;
+		newTile.AnchorTop = new AnchorData(AnchorType.SolidTile | AnchorType.SolidSide | AnchorType.SolidBottom | AnchorType.PlanterBox, newTile.Width, 0);
+		newTile.LavaDeath = true;
+		newTile.DrawYOffset = -2;
+
+--- Terraria.ObjectData.TileObjectData.cs:3115
+		addAlternate(0);
+		addTile(591);
+		newTile.CopyFrom(Style2xX);
+		newTile.Height = 3;
+		newTile.Origin = new Point16(0, 0);
+		newTile.AnchorBottom = default;
+>>> 		newTile.AnchorTop = new AnchorData(AnchorType.SolidTile | AnchorType.SolidSide | AnchorType.SolidBottom | AnchorType.PlanterBox, newTile.Width, 0);
+		newTile.LavaDeath = true;
+		newTile.DrawYOffset = -2;
+		newAlternate.CopyFrom(newTile);
+		newAlternate.AnchorTop = new AnchorData(AnchorType.PlatformNonHammered, newTile.Width, 0);
+		newAlternate.DrawYOffset = -10;
+		addAlternate(0);
+		addTile(592);
+		newTile.Width = 3;
+		newTile.Height = 3;
+		newTile.Origin = new Point16(1, 2);
+		newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.Table | AnchorType.SolidSide, newTile.Width, 0);
+		newTile.UsesCustomCanPlace = true;
+		newTile.CoordinateHeights = new int[3] { 16, 16, 16 };
+		newTile.CoordinateWidth = 16;
+
+##### A6. TileDrawing (how a planter box is drawn: frames, offsets, platform-like top)
+# 0 hit(s) shown for '\b380\b|PlanterBox' in Terraria.GameContent.Drawing.TileDrawing.cs
+##### A7. Main: tile flag arrays that mention the planter box
+# 10 hit(s) shown for '\b380\b|PlanterBox' in Terraria.Main.cs
+--- Terraria.Main.cs:7933
+		tileMergeDirt[483] = true;
+>>> 		tileFrameImportant[380] = true;
+		tileFrameImportant[201] = true;
+		tileFrameImportant[3] = true;
+
+--- Terraria.Main.cs:8052
+		tileTable[376] = true;
+>>> 		tileTable[380] = true;
+		tileFrameImportant[583] = true;
+		tileFrameImportant[584] = true;
+
+--- Terraria.Main.cs:8878
+		projFrames[379] = 4;
+>>> 		projFrames[380] = 4;
+		projFrames[601] = 2;
+		projFrames[602] = 4;
+
+--- Terraria.Main.cs:9006
+		projPet[375] = true;
+>>> 		projPet[380] = true;
+		projPet[387] = true;
+		projPet[388] = true;
+
+--- Terraria.Main.cs:9901
+		tileSolidTop[239] = true;
+>>> 		tileSolid[380] = true;
+		tileSolidTop[380] = true;
+		tileFrameImportant[358] = true;
+
+--- Terraria.Main.cs:9902
+		tileSolid[380] = true;
+>>> 		tileSolidTop[380] = true;
+		tileFrameImportant[358] = true;
+		tileFrameImportant[359] = true;
+
+--- Terraria.Main.cs:52499
+						}
+>>> 						npcChatText = Lang.dialog(rand.Next(380, 382));
+						player[myPlayer].taxMoney = 0;
+					}
+
+--- Terraria.Main.cs:54565
+					int num70 = 80 + num69 * 40;
+>>> 					int num71 = 380 + num52;
+					double num72 = inventoryBack.A + 50;
+					double num73 = 255.0;
+
+--- Terraria.Main.cs:72891
+			}
+>>> 			else if ((double)(screenPosition.Y / 16f) < worldSurface + 10.0 && (num2 < 380 || num2 > maxTilesX - 380))
+			{
+				num = 10;
+
+--- Terraria.Main.cs:77239
+		case 272:
+>>> 			return -380;
+		case 277:
+			return -260;
+
+=================== B. GEMCORNS AND ACORNS ===================
+##### B1. ItemID names (acorn / gemcorn / sapling / seed-like names)
+# 12 hit(s) shown for 'Acorn|Gemcorn|GemTree|Sapling' in Terraria.ID.ItemID.cs
+--- Terraria.ID.ItemID.cs:2842
+>>> 	public const short Acorn = 27;
+
+--- Terraria.ID.ItemID.cs:6462
+>>> 	public const short CursedSapling = 1837;
+
+--- Terraria.ID.ItemID.cs:8898
+>>> 	public const short PaintingAcorns = 3055;
+
+--- Terraria.ID.ItemID.cs:12490
+>>> 	public const short GemTreeTopazSeed = 4851;
+
+--- Terraria.ID.ItemID.cs:12492
+>>> 	public const short GemTreeAmethystSeed = 4852;
+
+--- Terraria.ID.ItemID.cs:12494
+>>> 	public const short GemTreeSapphireSeed = 4853;
+
+--- Terraria.ID.ItemID.cs:12496
+>>> 	public const short GemTreeEmeraldSeed = 4854;
+
+--- Terraria.ID.ItemID.cs:12498
+>>> 	public const short GemTreeRubySeed = 4855;
+
+--- Terraria.ID.ItemID.cs:12500
+>>> 	public const short GemTreeDiamondSeed = 4856;
+
+--- Terraria.ID.ItemID.cs:12502
+>>> 	public const short GemTreeAmberSeed = 4857;
+
+--- Terraria.ID.ItemID.cs:13378
+>>> 	public const short AcornAxe = 5295;
+
+--- Terraria.ID.ItemID.cs:13735
+>>> 			{ "Acorn", 27 },
+
+##### B2. Item.SetDefaults: items with createTile 590 (gem sapling?), 595, 615 and 20 (plain sapling), with their placeStyle
+##### createTile = 590
+# 0 hit(s) shown for 'createTile = 590\b' in Terraria.Item.cs
+##### createTile = 595
+# 0 hit(s) shown for 'createTile = 595\b' in Terraria.Item.cs
+##### createTile = 615
+# 0 hit(s) shown for 'createTile = 615\b' in Terraria.Item.cs
+##### createTile = 20
+# 1 hit(s) shown for 'createTile = 20\b' in Terraria.Item.cs
+--- Terraria.Item.cs:3924
+		case 27:
+			useTurn = true;
+			useStyle = 1;
+			useAnimation = 15;
+			useTime = 10;
+			maxStack = CommonMaxStack;
+			consumable = true;
+			autoReuse = true;
+>>> 			createTile = 20;
+			width = 18;
+			height = 18;
+			value = 10;
+			break;
+		case 28:
+			UseSound = SoundID.Item3;
+
+##### B3. Item.SetDefaults: the item ids that GetTreeType / gem tree growth read (placeStyle on saplings)
+# 0 hit(s) shown for 'Gemcorn|Acorn' in Terraria.Item.cs
+##### B4. WorldGen: how the sapling tile style picks the tree (gem trees)
+# 30 hit(s) shown for 'GrowGemTree|GemTree|\b(590)\b' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:879
+		public delegate bool IsWallTypeFitForTreeBack(int wallType);
+
+		public static class Profiles
+		{
+>>> 			public static GrowTreeSettings GemTree_Ruby = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 587,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:881
+		public static class Profiles
+		{
+			public static GrowTreeSettings GemTree_Ruby = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 587,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+
+--- Terraria.WorldGen.cs:882
+		{
+			public static GrowTreeSettings GemTree_Ruby = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 587,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 588,
+
+--- Terraria.WorldGen.cs:887
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 587,
+				TreeTopPaddingNeeded = 4,
+>>> 				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 588,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+
+--- Terraria.WorldGen.cs:890
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+>>> 			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 588,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:892
+			};
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 588,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+
+--- Terraria.WorldGen.cs:893
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 588,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 583,
+
+--- Terraria.WorldGen.cs:898
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 588,
+				TreeTopPaddingNeeded = 4,
+>>> 				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 583,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+
+--- Terraria.WorldGen.cs:901
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+>>> 			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 583,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:903
+			};
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 583,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+
+--- Terraria.WorldGen.cs:904
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 583,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 584,
+
+--- Terraria.WorldGen.cs:909
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 583,
+				TreeTopPaddingNeeded = 4,
+>>> 				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 584,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+
+--- Terraria.WorldGen.cs:912
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+>>> 			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 584,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:914
+			};
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 584,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+
+--- Terraria.WorldGen.cs:915
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 584,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 585,
+
+--- Terraria.WorldGen.cs:920
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 584,
+				TreeTopPaddingNeeded = 4,
+>>> 				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 585,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+
+--- Terraria.WorldGen.cs:923
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+>>> 			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 585,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:925
+			};
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 585,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+
+--- Terraria.WorldGen.cs:926
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 585,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 586,
+
+--- Terraria.WorldGen.cs:931
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 585,
+				TreeTopPaddingNeeded = 4,
+>>> 				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 586,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amber = new GrowTreeSettings
+
+--- Terraria.WorldGen.cs:934
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+>>> 			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 586,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amber = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:936
+			};
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 586,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amber = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+
+--- Terraria.WorldGen.cs:937
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 586,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amber = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 589,
+
+--- Terraria.WorldGen.cs:942
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 586,
+				TreeTopPaddingNeeded = 4,
+>>> 				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amber = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 589,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings VanityTree_Sakura = new GrowTreeSettings
+
+--- Terraria.WorldGen.cs:945
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+>>> 			public static GrowTreeSettings GemTree_Amber = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 589,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings VanityTree_Sakura = new GrowTreeSettings
+			{
+				GroundTest = VanityTreeGroundTest,
+				WallTest = DefaultTreeWallTest,
+
+--- Terraria.WorldGen.cs:947
+			};
+
+			public static GrowTreeSettings GemTree_Amber = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 589,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings VanityTree_Sakura = new GrowTreeSettings
+			{
+				GroundTest = VanityTreeGroundTest,
+				WallTest = DefaultTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+
+--- Terraria.WorldGen.cs:948
+
+			public static GrowTreeSettings GemTree_Amber = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 589,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings VanityTree_Sakura = new GrowTreeSettings
+			{
+				GroundTest = VanityTreeGroundTest,
+				WallTest = DefaultTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 596,
+
+--- Terraria.WorldGen.cs:953
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 589,
+				TreeTopPaddingNeeded = 4,
+>>> 				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings VanityTree_Sakura = new GrowTreeSettings
+			{
+				GroundTest = VanityTreeGroundTest,
+				WallTest = DefaultTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 596,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 595
+			};
+
+			public static GrowTreeSettings VanityTree_Willow = new GrowTreeSettings
+
+--- Terraria.WorldGen.cs:997
+				default:
+					profile = default;
+					return false;
+				case 4857:
+>>> 					profile = GemTree_Amber;
+					return true;
+				case 4852:
+					profile = GemTree_Amethyst;
+					return true;
+				case 4856:
+					profile = GemTree_Diamond;
+					return true;
+				case 4854:
+					profile = GemTree_Emerald;
+					return true;
+				case 4855:
+					profile = GemTree_Ruby;
+					return true;
+				case 4853:
+
+--- Terraria.WorldGen.cs:1000
+				case 4857:
+					profile = GemTree_Amber;
+					return true;
+				case 4852:
+>>> 					profile = GemTree_Amethyst;
+					return true;
+				case 4856:
+					profile = GemTree_Diamond;
+					return true;
+				case 4854:
+					profile = GemTree_Emerald;
+					return true;
+				case 4855:
+					profile = GemTree_Ruby;
+					return true;
+				case 4853:
+					profile = GemTree_Sappphire;
+					return true;
+				case 4851:
+
+=================== C. CALLERS OF THE TREE TYPE FUNCTIONS ===================
+##### C1. full IsTileTypeFitForTree and GetTreeType (and DefaultTreeWallTest)
+--- Terraria.WorldGen.cs:23033
+	public static bool IsTileTypeFitForTree(ushort type)
+	{
+		switch (type)
+		{
+		case 2:
+		case 23:
+		case 60:
+		case 70:
+		case 109:
+		case 147:
+		case 199:
+		case 477:
+		case 492:
+		case 633:
+		case 661:
+		case 662:
+			return true;
+		default:
+			return TileLoader.CanGrowModTree(type);
+		}
+	}
+
+--- Terraria.WorldGen.cs:57962
+	public static TreeTypes GetTreeType(int tileType)
+	{
+		TreeTypes modTreeType = PlantLoader.GetModTreeType(tileType);
+		if (modTreeType != TreeTypes.None)
+		{
+			return modTreeType;
+		}
+		switch (tileType)
+		{
+		case 2:
+		case 477:
+			return TreeTypes.Forest;
+		case 23:
+			return TreeTypes.Corrupt;
+		case 70:
+			return TreeTypes.Mushroom;
+		case 199:
+			return TreeTypes.Crimson;
+		case 60:
+			return TreeTypes.Jungle;
+		case 147:
+			return TreeTypes.Snow;
+		case 109:
+		case 492:
+			return TreeTypes.Hallowed;
+		case 53:
+			return TreeTypes.Palm;
+		case 112:
+			return TreeTypes.PalmCorrupt;
+		case 234:
+			return TreeTypes.PalmCrimson;
+		case 116:
+			return TreeTypes.PalmHallowed;
+		case 633:
+			return TreeTypes.Ash;
+		default:
+			return TreeTypes.None;
+		}
+	}
+
+--- Terraria.WorldGen.cs:23536
+	public static bool DefaultTreeWallTest(int wallType)
+	{
+		if (wallType >= 0 && WallID.Sets.AllowsPlantsToGrow[wallType])
+		{
+			return true;
+		}
+		return false;
+	}
+
+##### C2. every caller, with the method it sits in
+##### 'GetTreeType\(' in Terraria.WorldGen.cs: 3 line(s) in 3 method(s)
+  1 hit(s) at line(s) 57962  in  public static TreeTypes GetTreeType(int tileType)
+  1 hit(s) at line(s) 58005  in  public static bool IsThisAMushroomTree(int i, int j)
+  1 hit(s) at line(s) 58033  in  private static void ShakeTree(int i, int j)
+
+##### 'IsTileTypeFitForTree\(' in Terraria.WorldGen.cs: 6 line(s) in 3 method(s)
+  1 hit(s) at line(s) 23033  in  public static bool IsTileTypeFitForTree(ushort type)
+  3 hit(s) at line(s) 23065, 23350, 23354  in  public static bool GrowTree(int i, int y)
+  2 hit(s) at line(s) 23958, 23962  in  public static bool GrowTreeWithSettings(int checkedX, int checkedY, GrowTreeSettings settings)
+
+##### 'TreeTypes' in Terraria.WorldGen.cs: 49 line(s) in 3 method(s)
+  16 hit(s) at line(s) 57962, 57964, 57965, 57973, 57975, 57977, 57979, 57981, 57983, 57986, 57988, 57990  in  public static TreeTypes GetTreeType(int tileType)
+  1 hit(s) at line(s) 58005  in  public static bool IsThisAMushroomTree(int i, int j)
+  32 hit(s) at line(s) 58033, 58034, 58065, 58069, 58073, 58077, 58081, 58085, 58089, 58135, 58151, 58160  in  private static void ShakeTree(int i, int j)
+
+##### 'GetTreeFrame|GetTreeBiome|GetTreeStyle' in Terraria.WorldGen.cs: 7 line(s) in 3 method(s)
+  5 hit(s) at line(s) 57788, 57792, 57796, 57827, 57841  in  public static bool GetCommonTreeFoliageData(int i, int j, int xoffset, ref int treeFrame, ref int treeStyle, out int floorY, out int topTextureFrameWidth, out int topTextureFrameHeight)
+  1 hit(s) at line(s) 57936  in  public static int GetHollowTreeFoliageStyle()
+  1 hit(s) at line(s) 57949  in  public static int GetTreeFrame(Tile t)
+
+##### 'GetTreeType\(' in Terraria.Main.cs: 0 line(s) in 0 method(s)
+
+##### 'IsTileTypeFitForTree\(' in Terraria.Main.cs: 0 line(s) in 0 method(s)
+
+##### 'TreeTypes' in Terraria.Main.cs: 0 line(s) in 0 method(s)
+
+##### 'GetTreeFrame|GetTreeBiome|GetTreeStyle' in Terraria.Main.cs: 0 line(s) in 0 method(s)
+
+##### 'GetTreeType\(' in Terraria.GameContent.Drawing.TileDrawing.cs: 0 line(s) in 0 method(s)
+
+##### 'IsTileTypeFitForTree\(' in Terraria.GameContent.Drawing.TileDrawing.cs: 0 line(s) in 0 method(s)
+
+##### 'TreeTypes' in Terraria.GameContent.Drawing.TileDrawing.cs: 0 line(s) in 0 method(s)
+
+##### 'GetTreeFrame|GetTreeBiome|GetTreeStyle' in Terraria.GameContent.Drawing.TileDrawing.cs: 6 line(s) in 6 method(s)
+  1 hit(s) at line(s) 293  in  public void PrepareForAreaDrawing(int firstTileX, int lastTileX, int firstTileY, int lastTileY, bool prepareLazily)
+  1 hit(s) at line(s) 1555  in  public Texture2D GetTileDrawTexture(Tile tile, int tileX, int tileY)
+  1 hit(s) at line(s) 1606  in  public Texture2D GetTileDrawTexture(Tile tile, int tileX, int tileY, int paintOverride)
+  1 hit(s) at line(s) 2147  in  private static int GetTreeBiome(int tileX, int tileY, int tileFrameX, int tileFrameY)
+  1 hit(s) at line(s) 5667  in  public void GetTileDrawData(int x, int y, Tile tileCache, ushort typeCache, ref short tileFrameX, ref short tileFrameY, out int tileWidth, out int tileHeight, out int tileTop, out int halfBrickHeight, out int addFrX, out int addFrY, out SpriteEffects tileSpriteEffect, out Texture2D glowTexture, out Rectangle glowSourceRect, out Color glowColor)
+  1 hit(s) at line(s) 9557  in  private void DrawTrees()
+
+##### 'GetTreeType\(' in Terraria.Player.cs: 0 line(s) in 0 method(s)
+
+##### 'IsTileTypeFitForTree\(' in Terraria.Player.cs: 0 line(s) in 0 method(s)
+
+##### 'TreeTypes' in Terraria.Player.cs: 0 line(s) in 0 method(s)
+
+##### 'GetTreeFrame|GetTreeBiome|GetTreeStyle' in Terraria.Player.cs: 0 line(s) in 0 method(s)
+
+##### 'GetTreeType\(' in Terraria.Item.cs: 0 line(s) in 0 method(s)
+
+##### 'IsTileTypeFitForTree\(' in Terraria.Item.cs: 0 line(s) in 0 method(s)
+
+##### 'TreeTypes' in Terraria.Item.cs: 0 line(s) in 0 method(s)
+
+##### 'GetTreeFrame|GetTreeBiome|GetTreeStyle' in Terraria.Item.cs: 0 line(s) in 0 method(s)
+
+##### 'GetTreeType\(' in Terraria.TileObject.cs: 0 line(s) in 0 method(s)
+
+##### 'IsTileTypeFitForTree\(' in Terraria.TileObject.cs: 0 line(s) in 0 method(s)
+
+##### 'TreeTypes' in Terraria.TileObject.cs: 0 line(s) in 0 method(s)
+
+##### 'GetTreeFrame|GetTreeBiome|GetTreeStyle' in Terraria.TileObject.cs: 0 line(s) in 0 method(s)
+
+=================== D. HERB SEED PLACEMENT (Phase 1 check) ===================
+##### D1. who calls PlaceAlch / CheckAlch / GrowAlch
+##### 'PlaceAlch\(|CheckAlch\(|GrowAlch\(' in Terraria.WorldGen.cs: 14 line(s) in 8 method(s)
+  1 hit(s) at line(s) 38520  in  public static bool PlaceAlch(int x, int y, int style)
+  1 hit(s) at line(s) 38825  in  public static void GrowAlch(int x, int y)
+  7 hit(s) at line(s) 38994, 38998, 39002, 39006, 39010, 39014, 39018  in  public static void PlantAlch()
+  1 hit(s) at line(s) 39027  in  public static void CheckAlch(int x, int y)
+  1 hit(s) at line(s) 55189  in  public static bool PlaceTile(int i, int j, int Type, bool mute = false, bool forced = false, int plr = -1, int style = 0)
+  1 hit(s) at line(s) 66728  in  private static void UpdateWorld_OvergroundTile(int i, int j, bool checkNPCSpawns, int wallDist)
+  1 hit(s) at line(s) 67932  in  private static void UpdateWorld_UndergroundTile(int i, int j, bool checkNPCSpawns, int wallDist)
+  1 hit(s) at line(s) 77341  in  public static void TileFrame(int i, int j, bool resetFrame = false, bool noBreak = false)
+
+##### 'PlaceAlch\(|CheckAlch\(|GrowAlch\(' in Terraria.Player.cs: 0 line(s) in 0 method(s)
+
+##### 'PlaceAlch\(|CheckAlch\(|GrowAlch\(' in Terraria.Main.cs: 0 line(s) in 0 method(s)
+
+##### 'PlaceAlch\(|CheckAlch\(|GrowAlch\(' in Terraria.TileObject.cs: 0 line(s) in 0 method(s)
+
+##### 'PlaceAlch\(|CheckAlch\(|GrowAlch\(' in Terraria.Item.cs: 0 line(s) in 0 method(s)
+
+##### D2. herb seed items: createTile 82 (immature herb) and its placeStyle
+# 7 hit(s) shown for 'createTile = 82\b' in Terraria.Item.cs
+--- Terraria.Item.cs:7413
+			useTurn = true;
+			useStyle = 1;
+			useAnimation = 15;
+			useTime = 10;
+			maxStack = CommonMaxStack;
+			consumable = true;
+>>> 			createTile = 82;
+			placeStyle = 0;
+			width = 12;
+			height = 14;
+			value = 80;
+			break;
+		case 308:
+
+--- Terraria.Item.cs:7427
+			useTurn = true;
+			useStyle = 1;
+			useAnimation = 15;
+			useTime = 10;
+			maxStack = CommonMaxStack;
+			consumable = true;
+>>> 			createTile = 82;
+			placeStyle = 1;
+			width = 12;
+			height = 14;
+			value = 80;
+			break;
+		case 309:
+
+--- Terraria.Item.cs:7441
+			useTurn = true;
+			useStyle = 1;
+			useAnimation = 15;
+			useTime = 10;
+			maxStack = CommonMaxStack;
+			consumable = true;
+>>> 			createTile = 82;
+			placeStyle = 2;
+			width = 12;
+			height = 14;
+			value = 80;
+			break;
+		case 310:
+
+--- Terraria.Item.cs:7455
+			useTurn = true;
+			useStyle = 1;
+			useAnimation = 15;
+			useTime = 10;
+			maxStack = CommonMaxStack;
+			consumable = true;
+>>> 			createTile = 82;
+			placeStyle = 3;
+			width = 12;
+			height = 14;
+			value = 80;
+			break;
+		case 311:
+
+--- Terraria.Item.cs:7469
+			useTurn = true;
+			useStyle = 1;
+			useAnimation = 15;
+			useTime = 10;
+			maxStack = CommonMaxStack;
+			consumable = true;
+>>> 			createTile = 82;
+			placeStyle = 4;
+			width = 12;
+			height = 14;
+			value = 80;
+			break;
+		case 312:
+
+--- Terraria.Item.cs:7483
+			useTurn = true;
+			useStyle = 1;
+			useAnimation = 15;
+			useTime = 10;
+			maxStack = CommonMaxStack;
+			consumable = true;
+>>> 			createTile = 82;
+			placeStyle = 5;
+			width = 12;
+			height = 14;
+			value = 80;
+			break;
+		case 313:
+
+--- Terraria.Item.cs:27353
+					useTurn = true;
+					useStyle = 1;
+					useAnimation = 15;
+					useTime = 10;
+					maxStack = CommonMaxStack;
+					consumable = true;
+>>> 					createTile = 82;
+					placeStyle = 6;
+					width = 12;
+					height = 14;
+					value = 80;
+					return;
+				case 2358:
+
+##### D3. TileObjectData: the herb tiles 82 / 83 / 84 (anchors)
+# 4 hit(s) shown for 'addTile\((82|83|84)\)|ImmatureHerbs|MatureHerbs|BloomingHerbs|Main\.tileAlch' in Terraria.ObjectData.TileObjectData.cs
+--- Terraria.ObjectData.TileObjectData.cs:1884
+			return;
+		}
+		_usesCustomCanPlace = copy._usesCustomCanPlace;
+		_alternates = copy._alternates;
+		_anchor = copy._anchor;
+		_anchorTiles = copy._anchorTiles;
+		_tileObjectBase = copy._tileObjectBase;
+		_liquidDeath = copy._liquidDeath;
+		_liquidPlacement = copy._liquidPlacement;
+		_placementHooks = copy._placementHooks;
+		_tileObjectDraw = copy._tileObjectDraw;
+		_tileObjectStyle = copy._tileObjectStyle;
+		_tileObjectCoords = copy._tileObjectCoords;
+		if (_hasOwnAlternates || _hasOwnAnchor || _hasOwnAnchorTiles || _hasOwnLiquidDeath || _hasOwnLiquidPlacement || _hasOwnPlacementHooks || _hasOwnSubTiles || _hasOwnTileObjectBase || _hasOwnTileObjectDraw || _hasOwnTileObjectStyle || _hasOwnTileObjectCoords)
+		{
+			_hasOwnAlternates = (_hasOwnAnchor = (_hasOwnAnchorTiles = (_hasOwnLiquidDeath = (_hasOwnLiquidPlacement = (_hasOwnPlacementHooks = (_hasOwnSubTiles = (_hasOwnTileObjectBase = (_hasOwnTileObjectDraw = (_hasOwnTileObjectStyle = (_hasOwnTileObjectCoords = false))))))))));
+			if (ModCompile.activelyModding)
+			{
+				Logging.tML.Warn((object)$"Bad TileObjectData values detected.\nLook at this ModTile and the ModTile that would load immediately before this ModTile and ensure that all modifications to TileObjectData.newTile are done between CopyFrom and AddTile.\nThe previous ModTile would typically be alphabetically before the tile in this stack trace.\nSee https://github.com/tModLoader/tModLoader/wiki/Basic-Tile#basic-tileobjectdatanewtile-structure for more information.\n{new StackTrace(fNeedFileInfo: true)}");
+			}
+		}
+	}
+
+	/// <inheritdoc cref="M:Terraria.ObjectData.TileObjectData.FullCopyFrom(Terraria.ObjectData.TileObjectData)" />
+	public void FullCopyFrom(ushort tileType)
+	{
+		FullCopyFrom(GetTileData(tileType, 0));
+	}
+
+	/// <summary>
+>>> 	/// Similar to <see cref="M:Terraria.ObjectData.TileObjectData.CopyFrom(Terraria.ObjectData.TileObjectData)" />, except subtile data will also be copied. This is useful for inheriting subtile specific data, such as how each herb tile type (ImmatureHerbs, MatureHerbs, BloomingHerbs) share the same water placement and lava death properties for their Fireblossom and Moonglow styles.
+	/// </summary>
+	/// <param name="copy"></param>
+	public void FullCopyFrom(TileObjectData copy)
+
+--- Terraria.ObjectData.TileObjectData.cs:4386
+		newTile.AnchorValidTiles = new int[4] { 2, 477, 109, 492 };
+		newTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[1] { 60 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		addSubTile(1);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[2] { 0, 59 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		addSubTile(2);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[4] { 199, 203, 25, 23 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		addSubTile(3);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[2] { 53, 116 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.WaterPlacement = LiquidPlacement.Allowed;
+		addSubTile(4);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[2] { 57, 633 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.LavaPlacement = LiquidPlacement.Allowed;
+		newSubTile.LavaDeath = false;
+		addSubTile(5);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[5] { 147, 161, 163, 164, 200 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.WaterPlacement = LiquidPlacement.Allowed;
+		addSubTile(6);
+>>> 		addTile(82);
+		newTile.FullCopyFrom(82);
+		addTile(83);
+		newTile.FullCopyFrom(83);
+
+--- Terraria.ObjectData.TileObjectData.cs:4388
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[1] { 60 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		addSubTile(1);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[2] { 0, 59 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		addSubTile(2);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[4] { 199, 203, 25, 23 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		addSubTile(3);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[2] { 53, 116 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.WaterPlacement = LiquidPlacement.Allowed;
+		addSubTile(4);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[2] { 57, 633 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.LavaPlacement = LiquidPlacement.Allowed;
+		newSubTile.LavaDeath = false;
+		addSubTile(5);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[5] { 147, 161, 163, 164, 200 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.WaterPlacement = LiquidPlacement.Allowed;
+		addSubTile(6);
+		addTile(82);
+		newTile.FullCopyFrom(82);
+>>> 		addTile(83);
+		newTile.FullCopyFrom(83);
+		addTile(84);
+		newTile.Width = 3;
+
+--- Terraria.ObjectData.TileObjectData.cs:4390
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		addSubTile(1);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[2] { 0, 59 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		addSubTile(2);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[4] { 199, 203, 25, 23 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		addSubTile(3);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[2] { 53, 116 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.WaterPlacement = LiquidPlacement.Allowed;
+		addSubTile(4);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[2] { 57, 633 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.LavaPlacement = LiquidPlacement.Allowed;
+		newSubTile.LavaDeath = false;
+		addSubTile(5);
+		newSubTile.CopyFrom(StyleAlch);
+		newSubTile.AnchorValidTiles = new int[5] { 147, 161, 163, 164, 200 };
+		newSubTile.AnchorAlternateTiles = new int[1] { 78 };
+		newSubTile.WaterPlacement = LiquidPlacement.Allowed;
+		addSubTile(6);
+		addTile(82);
+		newTile.FullCopyFrom(82);
+		addTile(83);
+		newTile.FullCopyFrom(83);
+>>> 		addTile(84);
+		newTile.Width = 3;
+		newTile.Height = 3;
+		newTile.Origin = new Point16(1, 1);
+
+##### D4. TileObjectData: can the anchor lists still be edited after loading? (write checks / read only flag)
+# 4 hit(s) shown for 'LockWrite|readOnlyData|_anchorValidTiles|_anchorAlternateTiles' in Terraria.ObjectData.TileObjectData.cs
+--- Terraria.ObjectData.TileObjectData.cs:75
+
+>>> 	private static bool readOnlyData;
+
+	/// <summary>
+	/// Contains the tile properties for the current tile. This is used to control the behavior, size, and other properties of a non-terrain tiles.
+	/// <para /> Tiles using a TileObjectData are referred to as multitiles.
+
+--- Terraria.ObjectData.TileObjectData.cs:2008
+	{
+>>> 		if (readOnlyData)
+		{
+			throw new FieldAccessException("Tile data is locked and only accessible during startup.");
+		}
+	}
+
+--- Terraria.ObjectData.TileObjectData.cs:2014
+
+>>> 	private void LockWrites()
+	{
+		readOnlyData = true;
+	}
+
+
+--- Terraria.ObjectData.TileObjectData.cs:2016
+	{
+>>> 		readOnlyData = true;
+	}
+
+	public bool LiquidPlace(Tile checkTile, bool checkStay = false)
+	{
+
+##### D5. TileObject.CanPlace: how the anchors are tested
+# 0 hit(s) shown for 'AnchorAlternateTiles|AnchorValidTiles|AnchorInvalidTiles' in Terraria.TileObject.cs
+##### D6. WorldGen.PlaceTile: the case that handles herbs / tileAlch
+# 12 hit(s) shown for 'tileAlch|case 82:' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:37679
+				case 80:
+				case 81:
+>>> 				case 82:
+				case 83:
+				case 84:
+				case 85:
+				case 86:
+				case 87:
+				case 88:
+				case 89:
+				case 90:
+				case 91:
+					Item.NewItem(GetItemSource_FromTileBreak(x, y), x * 16, y * 16, 32, 32, 5218 + num - 76);
+
+--- Terraria.WorldGen.cs:38984
+			for (int j = num8; j <= num9; j++)
+			{
+>>> 				if (Main.tileAlch[Main.tile[i, j].type])
+				{
+					num5++;
+				}
+			}
+		}
+		if (num5 < num4)
+		{
+			if (Main.tile[num, num2].type == 2 || Main.tile[num, num2].type == 109)
+			{
+				PlaceAlch(num, num2 - 1, 0);
+
+--- Terraria.WorldGen.cs:54267
+				bool num = Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 579;
+				bool flag = Main.tile[x, y].type == 3 || Main.tile[x, y].type == 73;
+>>> 				bool flag2 = Main.tileAlch[Main.tile[x, y].type] && IsHarvestableHerbWithSeed(Main.tile[x, y].type, Main.tile[x, y].frameX / 18);
+				bool flag3 = Main.tileAlch[tileType];
+				if (num || ((flag | flag2) & flag3))
+				{
+					KillTile(x, y);
+					if (!Main.tile[x, y].active() && Main.netMode != 0)
+					{
+						NetMessage.SendData(17, -1, -1, null, 0, x, y);
+					}
+					return true;
+				}
+
+--- Terraria.WorldGen.cs:54268
+				bool flag = Main.tile[x, y].type == 3 || Main.tile[x, y].type == 73;
+				bool flag2 = Main.tileAlch[Main.tile[x, y].type] && IsHarvestableHerbWithSeed(Main.tile[x, y].type, Main.tile[x, y].frameX / 18);
+>>> 				bool flag3 = Main.tileAlch[tileType];
+				if (num || ((flag | flag2) & flag3))
+				{
+					KillTile(x, y);
+					if (!Main.tile[x, y].active() && Main.netMode != 0)
+					{
+						NetMessage.SendData(17, -1, -1, null, 0, x, y);
+					}
+					return true;
+				}
+				return false;
+
+--- Terraria.WorldGen.cs:55187
+										break;
+									default:
+>>> 										if (Main.tileAlch[num])
+										{
+											PlaceAlch(i, j, style);
+											break;
+										}
+										switch (num)
+										{
+										case 94:
+										case 95:
+										case 97:
+										case 98:
+
+--- Terraria.WorldGen.cs:60795
+		case 77:
+		case 79:
+>>> 		case 82:
+		case 85:
+		case 86:
+		case 87:
+		case 88:
+		case 89:
+		case 90:
+		case 91:
+		case 92:
+		case 93:
+		case 94:
+
+--- Terraria.WorldGen.cs:61123
+		switch (type)
+		{
+>>> 		case 82:
+			return false;
+		default:
+			return false;
+		case 83:
+		case 84:
+		{
+			bool result = false;
+			if (type == 84)
+			{
+				result = true;
+
+--- Terraria.WorldGen.cs:61472
+				break;
+			default:
+>>> 				if (Main.tileAlch[type] || type == 384 || type == 227 || type == 32 || type == 51 || type == 52 || type == 61 || type == 62 || type == 69 || type == 655 || type == 71 || type == 73 || type == 74 || type == 113 || type == 115 || type == 184 || type == 192 || type == 205 || type == 233 || type == 352 || type == 382 || type == 624 || type == 656)
+				{
+					SoundEngine.PlaySound(6, i * 16, j * 16);
+				}
+				else if (type == 485)
+				{
+					SoundEngine.PlaySound(4, i * 16, j * 16, 11);
+				}
+				else if (type == 201)
+				{
+					SoundEngine.PlaySound(6, i * 16, j * 16);
+
+--- Terraria.WorldGen.cs:63918
+			dust = 49;
+		}
+>>> 		if (Main.tileAlch[tileCache.type])
+		{
+			int num15 = tileCache.frameX / 18;
+			if (num15 == 0)
+			{
+				dust = 3;
+			}
+			if (num15 == 1)
+			{
+				dust = 3;
+			}
+
+--- Terraria.WorldGen.cs:66726
+			TryGrowingAbigailsFlower(i, j);
+		}
+>>> 		else if (Main.tileAlch[Main.tile[i, j].type])
+		{
+			GrowAlch(i, j);
+		}
+		else if ((double)j < Main.worldSurface + 10.0 && (i < beachDistance || i > Main.maxTilesX - beachDistance) && !Main.tile[i, j].active())
+		{
+			int num5 = 3000;
+			num5 -= (int)(Math.Abs(Main.windSpeedCurrent) * 1250f);
+			if (Main.raining)
+			{
+				num5 -= (int)(1250f * Main.maxRaining);
+
+--- Terraria.WorldGen.cs:67930
+			}
+		}
+>>> 		if (Main.tileAlch[Main.tile[i, j].type])
+		{
+			GrowAlch(i, j);
+		}
+		else if (Main.tile[i, j].nactive())
+		{
+			hardUpdateWorld(i, j);
+			if (Main.rand.Next(2500) == 0)
+			{
+				plantDye(i, j);
+			}
+
+--- Terraria.WorldGen.cs:77339
+																		}
+																		default:
+>>> 																			if (Main.tileAlch[num])
+																			{
+																				CheckAlch(i, j);
+																				return;
+																			}
+																			switch (num)
+																			{
+																			case 72:
+																			{
+																				Tile tile12 = Main.tile[i, j - 1];
+																				Tile tile13 = Main.tile[i, j + 1];
+

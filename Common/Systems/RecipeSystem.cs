@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
 using Factorraria.Content.Items.Hooks;
 using Factorraria.Content.Items.Machines;
 using Factorraria.Content.Items.Materials;
@@ -48,6 +49,9 @@ namespace Factorraria.Common.Systems
                 .AddIngredient(ItemID.Lens, 1)
                 .AddTile(TileID.DemonAltar)
                 .Register();
+
+            // Harvester Boxes (placeholder recipes, see HarvesterBoxRegistration)
+            HarvesterBoxRegistration.AddRecipes();
         }
     }
 }

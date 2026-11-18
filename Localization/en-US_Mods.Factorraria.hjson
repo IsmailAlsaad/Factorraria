@@ -134,6 +134,78 @@ Items: {
 		Tooltip: ""
 	}
 
+	DaybloomHarvesterBoxItem: {
+		DisplayName: Daybloom Harvester Box
+		Tooltip:
+			'''
+			Needs power
+			Only Daybloom grows on it
+			'''
+	}
+
+	MoonglowHarvesterBoxItem: {
+		DisplayName: Moonglow Harvester Box
+		Tooltip:
+			'''
+			Needs power
+			Only Moonglow grows on it
+			'''
+	}
+
+	CorruptHarvesterBoxItem: {
+		DisplayName: Corrupt Harvester Box
+		Tooltip:
+			'''
+			Needs power
+			Only Deathweed grows on it
+			'''
+	}
+
+	CrimsonHarvesterBoxItem: {
+		DisplayName: Crimson Harvester Box
+		Tooltip:
+			'''
+			Needs power
+			Only Deathweed grows on it
+			'''
+	}
+
+	BlinkrootHarvesterBoxItem: {
+		DisplayName: Blinkroot Harvester Box
+		Tooltip:
+			'''
+			Needs power
+			Only Blinkroot grows on it
+			'''
+	}
+
+	WaterleafHarvesterBoxItem: {
+		DisplayName: Waterleaf Harvester Box
+		Tooltip:
+			'''
+			Needs power
+			Only Waterleaf grows on it
+			'''
+	}
+
+	ShiverthornHarvesterBoxItem: {
+		DisplayName: Shiverthorn Harvester Box
+		Tooltip:
+			'''
+			Needs power
+			Only Shiverthorn grows on it
+			'''
+	}
+
+	FireblossomHarvesterBoxItem: {
+		DisplayName: Fireblossom Harvester Box
+		Tooltip:
+			'''
+			Needs power
+			Only Fireblossom grows on it
+			'''
+	}
+
 	MechSuitItem: {
 		DisplayName: Mech Suit
 		Tooltip: ""
@@ -1062,6 +1134,14 @@ Tiles: {
 	BeeWheelTile.MapEntry: Bee Wheel Tile
 	SunCapsuleTileMapEntry: Sun Capsule Tile
 	SunCapsuleTile.MapEntry: Sun Capsule Tile
+	DaybloomHarvesterBoxTile.MapEntry: Daybloom Harvester Box
+	MoonglowHarvesterBoxTile.MapEntry: Moonglow Harvester Box
+	CorruptHarvesterBoxTile.MapEntry: Corrupt Harvester Box
+	CrimsonHarvesterBoxTile.MapEntry: Crimson Harvester Box
+	BlinkrootHarvesterBoxTile.MapEntry: Blinkroot Harvester Box
+	WaterleafHarvesterBoxTile.MapEntry: Waterleaf Harvester Box
+	ShiverthornHarvesterBoxTile.MapEntry: Shiverthorn Harvester Box
+	FireblossomHarvesterBoxTile.MapEntry: Fireblossom Harvester Box
 }
 
 Story: {

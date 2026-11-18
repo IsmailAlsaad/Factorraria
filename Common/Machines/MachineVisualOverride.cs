@@ -133,6 +133,10 @@ namespace Factorraria.Common.Machines
         // MachineVisualRegistry.Definitions[tileType].OverhangInFront = true;
         public bool OverhangInFront = false;
 
+        // true: the tile is drawn by the normal tile draw (its own frames) instead of the On / Off sheets. For machine tiles whose look is tile frames, like the Harvester Boxes'
+        // sideways merging. The entity, power and placement stay exactly the same, only the draw override steps aside.
+        public bool DrawNormalTile = false;
+
         // Patch 4.5: what draw and light code call. Lookup only, in every process: entities are created by the placement routes (4.2),
         // by the bootstrap scan (MachineBootstrapSystem) and by MachinePlacement.EnsureEntity, never from draw code.
         public BaseMachine ResolveEntity(int i, int j) => FindEntity?.Invoke(i, j);
@@ -468,6 +472,9 @@ namespace Factorraria.Common.Machines
         public override bool PreDraw(int i, int j, int type, SpriteBatch spriteBatch)
         {
             if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var def))
+                return true;
+
+            if (def.DrawNormalTile)
                 return true;
 
             BaseMachine entity = def.ResolveEntity(i, j);

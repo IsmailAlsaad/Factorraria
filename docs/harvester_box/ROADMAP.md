@@ -22,10 +22,18 @@ Home: `docs/harvester_box/ROADMAP.md`. Written 2026-11-17 by the Phase 0 patch. 
 
 ### Decisions added 2026-11-17
 
-- **Deathweed trees:** Ismail wants the tree chosen at random, ebonwood (corruption) or crimson. NOTE (probe 2): vanilla has TWO Deathweed planter boxes, the Corrupt and the Crimson Planter Box, so 8 boxes not 7. OPEN: is it random for both, or Corrupt = ebonwood and Crimson = crimson tree? Ask Ismail before Phase 5 (see 7c).
+- **Deathweed trees (SUPERSEDED, see "Decisions 2026-11-17 (Phase 1 chat)" below):** Ismail first wanted the tree chosen at random, ebonwood (corruption) or crimson. He dropped the random rule: the Corrupt box always grows corruption trees and the Crimson box always grows crimson trees.
 - **Herbs only grow on their own box.** This applies to the Harvester Boxes and to the vanilla planter boxes, which are reworked to match (a herb survives and grows only on the planter box of its own herb).
 - **Gem acorns (gemcorns) work too.** Assumption: a gemcorn works in any Harvester Box and the item decides the tree (the matching gem tree). Phase 0 confirms the item and tree names.
 - **Future note, not now:** custom growth rules such as a light level requirement. Keep the growth check in one function (`HarvesterBoxRules`) so rules can be added there later.
+
+### Decisions 2026-11-17 (Phase 1 chat, Ismail's answers to the 7c open decisions)
+
+1. **Deathweed trees:** no random rule. The Crimson Planter Box (item name `CrimsonPlanterBox`, 3218 today) always grows crimson trees and the Corrupt Planter Box (`CorruptPlanterBox`, 3217 today) always grows corruption trees. Code finds the planter items BY NAME (`ItemID.Search`), never by id.
+2. **A lone box grows a tree and herbs.** It follows Terraria's rules for acorns: an acorn with one valid block under it grows. An acorn with an open Harvester Box on its left and right can grow into a tree with the three wide trunk base. Phase 5 must therefore relax vanilla's "at least one fit SIDE neighbour" rule in `GrowTree` for boxes (hook, see 7c), while the wide root flare still only appears where the neighbouring boxes exist.
+3. **Gemcorns and everything else reuse vanilla growing rules for now** (no special box exception for the underground rule). Custom rules later, in `HarvesterBoxRules`.
+4. **The Blinkroot box grows a forest tree.**
+5. Vanilla growth conditions (Daybloom by day, Moonglow by night, Blinkroot underground, and so on) stay as they are (unchanged assumption, not objected to).
 
 ### Assumptions (change them if wrong)
 
@@ -78,13 +86,31 @@ Home: `docs/harvester_box/ROADMAP.md`. Written 2026-11-17 by the Phase 0 patch. 
 
 One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and done.
 
-- [x] Phase 0: research done. Probe 2 report received 2026-11-17 and logged in 7c. A short probe 3 (`tools\harvester_probe3.ps1`, written by the next chat) still has to confirm the planter style order and the gemcorn ids before Phase 1 code that depends on them.
-- [ ] Phase 1: tile, item, power, herb-on-own-box rules
+- [x] Phase 0: research done. Probe 2 report received 2026-11-17 and logged in 7c. Probe 3 (`tools\harvester_probe3.ps1`) was written in the Phase 1 chat and run there against the probe 2 decompile cache: planter styles, gemcorn ids, `GrowTree` callers and the seed placement path are answered in 7d. Still open: the callers in `Main` and `TileDrawing` (they were not decompiled yet). Run `harvester_probe3.ps1 -Dll ...` once to fill that in; its report goes in the next chat.
+- [~] Phase 1: tile, item, power, herb-on-own-box rules. Applied 2026-11-17 (patch_harvester_p1), UNTESTED. See 6b for what it built and what to test.
 - [ ] Phase 2: gear visuals
 - [ ] Phase 3: herb harvest and drops
 - [ ] Phase 4: staff, particles, client sync
 - [ ] Phase 5: acorns, trees, gemcorns
 - [ ] Phase 6: polish, MP verification
+
+## 6b. Phase 1 as built (patch_harvester_p1, 2026-11-17, applied UNTESTED)
+
+What exists now:
+- `Common/Harvester/`: `HarvesterBoxKinds` (enums `HerbStyle`, `HarvesterBoxKind`, planter item NAMES, kind to herb), `HarvesterBoxRegistry` (tile type to herb, vanilla planter style to herb, herb anchor list extension), `HarvesterBoxRules.HerbAllowedOnSoil` (THE place for growth rules), `HarvesterBoxHerbHooks` (ModSystem: `On_WorldGen.CheckAlch` and `On_WorldGen.PlaceAlch`), `HarvesterBoxTileBase<TEntity, TItem>`, `HarvesterBoxTileEntityBase<TTile>`, `HarvesterBoxItemBase<TTile>`.
+- `Content/Tiles/Machines/ElectricalConsumers/HarvesterBox/`: 8 tiles, 8 entities, 8 items (`DaybloomHarvesterBox...`, Moonglow, Corrupt, Crimson, Blinkroot, Waterleaf, Shiverthorn, Fireblossom) and `HarvesterBoxRegistration` (visual registration, placeholder recipes).
+- Edits: `MachineVisualDefinition.DrawNormalTile` (the machine draw override steps aside, so the tile draws its own merge frames), `MachineRegisterationSystem` (visuals in PostSetupContent, `HarvesterBoxRegistry.Clear()` in Unload), `RecipeSystem` (calls `HarvesterBoxRegistration.AddRecipes`), hjson names.
+- Tile: 1x1 ModTile, platform-like (solid top), unhammerable, placeable beside a tile or with a wall behind it (motor rule). Frames: `TileFrame` override sets frameX = 18 * cell from the same-type boxes on the left and right (0 lone, 1 left end, 2 middle, 3 right end), frameY 0. Different box types do not merge. Frames are tile data, so nothing is synced.
+- Entity: `ElectricConsumerMachine`, `PowerDemand` 10 (placeholder), `isWorking = true` always. Joins a grid through a custom wire on its own tile. No UI, no recipes, no cycle yet.
+- Herb rules: a herb survives and can be planted only on the box of its own herb. Vanilla planter boxes get the same rule (their style comes from the `placeStyle` of the planter box ITEM found by name, so no style number is hard-coded). Clay pot and normal soils are untouched. A Harvester Box is not in vanilla's hard-coded soil lists, so for the length of one vanilla call the hook makes the soil tile look like a vanilla planter box (the real type is always restored). That keeps vanilla's liquid and lava rules per herb exactly. The hooks read tile data only, so they behave the same on every client and the server and need no packet. No new netcode in Phase 1 (placement goes through the existing `MachinePlacement` route).
+- Herb seeds placed by hand go through `WorldGen.PlaceTile` to `PlaceAlch` (probe 3: `Player.cs:39064` sends every tile except 82 and 227 down the `TileObject` path), so the same hook covers hand planting, natural planting (`PlantAlch`) and survival (`CheckAlch`, called from `TileFrame`). The herb `TileObjectData` anchors are not used for seeds and are left untouched.
+- Existing wrong herbs on vanilla planter boxes are only removed when their tile is next framed (a neighbour change); nothing sweeps the world.
+
+Art for Ismail (all optional: until a PNG exists the tile borrows the vanilla planter box sheet and the item borrows the planter box icon):
+- Tiles: `Content/Tiles/Machines/ElectricalConsumers/HarvesterBox/<Kind>HarvesterBoxTile.png`, 72x16, four 16x16 frames with 2 px gaps at x = 0, 18, 36, 54: lone box, left end, middle, right end. Kinds: Daybloom, Moonglow, Corrupt, Crimson, Blinkroot, Waterleaf, Shiverthorn, Fireblossom.
+- Items: `.../HarvesterBox/<Kind>HarvesterBoxItem.png`, 32x32.
+
+Phase 1 test checklist: see the patch reply (placing and merging, mining, herb planting by hand and by growth, wrong herb rejected on vanilla planters, power, multiplayer).
 
 ## 7. Verify (resolved by the probe, then recorded here)
 
@@ -131,19 +157,45 @@ One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - Growth is driven by the box itself: it plants a sapling of the right tile and style (20 with the style of its tree type, or 590 for a gemcorn) and calls `AttemptToGrowTreeFromSapling` on a timer, passing `underground = false` for normal saplings and `true` for gem saplings (gem trees only grow with that flag).
 - Suggested box to tree mapping: Daybloom Forest, Moonglow Jungle, Blinkroot Forest (dirt and mud), Waterleaf Palm, Shiverthorn Snow (boreal), Fireblossom Ash, Corrupt Corruption (ebonwood), Crimson Crimson tree.
 
-### Open decisions for Ismail
+### Open decisions for Ismail (ANSWERED 2026-11-17, see "Decisions 2026-11-17 (Phase 1 chat)")
 1. Two Deathweed boxes exist. Random tree for both, or fixed (Corrupt = ebonwood, Crimson = crimson tree)? Random per planting needs more than a soil lookup (the type would have to be stored per box and read by drawing and drop code).
 2. A single box in open air cannot grow a vanilla tree (side-neighbour rule). Accept (rows of boxes work) or hook the rule so a lone box works?
 3. Gem trees only grow with `underground = true` in vanilla. In a box they should grow anywhere (assumed yes).
 4. Blinkroot box: Forest tree (assumed).
 5. Keep vanilla growth conditions (Daybloom grows by day and so on) until the custom-rules future note (assumed yes).
 
-### Still unknown (probe 3, small, needs `-Dll "C:\GOG Games\Terraria\tModLoader\tModLoader.dll"`)
+### Still unknown (probe 3, small, needs `-Dll "C:\GOG Games\Terraria\tModLoader\tModLoader.dll"`) PROBE 3 SCRIPT WRITTEN 2026-11-17 (`tools\harvester_probe3.ps1`); ANSWERED in 7d except the callers in Main and TileDrawing.
 - Tile-380 style order: `Item.SetDefaults` for items 3215 to 3222 (`createTile`, `placeStyle`), and the `TileFrame` / `TileObjectData` branch for tile 380 (frames, merging).
 - Gemcorn item ids and the sapling style each places (items whose `createTile` is 590, 595 or 615), plus the vanilla acorn items.
 - Callers of `GetTreeType(`, `IsTileTypeFitForTree(` and `TreeTypes` in `WorldGen`, `Main` and `TileDrawing` (to size the hook work), and the full `IsTileTypeFitForTree`.
 - The vanilla 1x1 platform-like draw rules needed to mimic a planter box when drawn (frames).
 
+## 7d. Probe 3 findings (2026-11-17, run on the probe 2 decompile cache). Facts, not guesses.
+
+- **Planter box items and styles:** `DayBloomPlanterBox` 3215, `MoonglowPlanterBox` 3216, `CorruptPlanterBox` 3217, `CrimsonPlanterBox` 3218, `BlinkrootPlanterBox` 3219, `WaterleafPlanterBox` 3220, `ShiverthornPlanterBox` 3221, `FireBlossomPlanterBox` 3222. `Item.SetDefaults`: `createTile = 380`, `placeStyle = type - 3215` (`Item.cs:33728`). `WorldGen.PlaceTile` case 380 sets `frameY = 18 * style` (`WorldGen.cs:55234`), `KillTile` drops `3215 + frameY / 18` (`WorldGen.cs:59998`). Merging is a `if (num == 380)` branch in `WorldGen.TileFrame` (`WorldGen.cs:76777`). So the style order is the ItemID order above, and Phase 1 reads each style from the item's `placeStyle` by name.
+- **Gemcorns** are the `GemTree<Gem>Seed` items: Topaz 4851, Amethyst 4852, Sapphire 4853, Emerald 4854, Ruby 4855, Diamond 4856, Amber 4857. Each is `DefaultToPlaceableTile(590, style)` with style 0 to 6 in that order (`Item.cs:44193` on): tile 590 is the gem sapling. The plain acorn is `Acorn` 27 with `createTile = 20`. Other saplings: `DefaultToPlaceableTile(595, 0)` (`Item.cs:44255`) and `(615, 0)` (`Item.cs:44402`); the Sakura and Yellow Willow seeds are `VanityTreeSakuraSeed` 4871 and `VanityTreeYellowWillowSeed` 4907 (not checked which of the two uses 595 and 615).
+- **Tree soil rule:** `WorldGen.IsTileTypeFitForTree(ushort)` (`WorldGen.cs:23033`) is a switch over tiles 2, 23, 60, 70, 109, 147, 199, 477, 492, 633, 661, 662 and otherwise returns `TileLoader.CanGrowModTree(type)`, so a mod tile can be made fit through tML instead of a hook (check the exact tML API before Phase 5). Its callers in `WorldGen`: `GrowTree` (the soil under the sapling at 23065, and the left / right neighbour rule at 23350 and 23354) and `GrowTreeWithSettings` (23958 and 23962). `GetTreeType` is called only from `IsThisAMushroomTree` (58005) and `ShakeTree` (58033) in `WorldGen`. No hits in `Player`, `Item` or `TileObject`. `Main` and `TileDrawing` were not decompiled yet: probe 3's caller list for them is the one open item.
+- **Seed placement:** `Player.cs:39064` sends every tile except 82 and 227 down the `TileObject` path, so a seed in the hand goes `WorldGen.PlaceTile` (default case, `Main.tileAlch[num]`, `WorldGen.cs:55187`) to `PlaceAlch`. The herb `TileObjectData` (`AnchorBottom = SolidTile | AlternateTile`, valid tiles per style, alternate 78) is not used for seeds. `CheckAlch` runs from `TileFrame` (`WorldGen.cs:77341`), `GrowAlch` from the overground and underground tile updates, `PlantAlch` is the natural spawn.
+
+## 7e. Probe 3 report (run on Ismail's tModLoader.dll, 2026-11-18): reference for Phase 5 (trees)
+
+Status: everything 7c listed under "Still unknown" is now answered. Nothing is left to run before Phase 5, except the two small dumps named at the end of this section. WorldGen line numbers below are from `Terraria.WorldGen` decompiled from `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (the same numbers as the probe 2 cache). Facts first, then what they mean for Phase 5.
+
+Facts
+- **Who calls `IsTileTypeFitForTree(ushort)`** (`WorldGen.cs:23033`; true for tiles 2, 23, 60, 70, 109, 147, 199, 477, 492, 633, 661, 662, otherwise `TileLoader.CanGrowModTree(type)`): `GrowTree` at 23065 (the soil under the sapling) and 23350 and 23354 (the left / right neighbour rule), and `GrowTreeWithSettings` at 23958 and 23962. Nothing else in `WorldGen`, and zero hits in `Main`, `TileDrawing`, `Player`, `Item` and `TileObject`.
+- **Who calls `GetTreeType(int)`** (`WorldGen.cs:57962`): only `IsThisAMushroomTree` (58005) and `ShakeTree` (58033, which also holds all 32 other `TreeTypes` uses, the drops). Zero hits in `Main`, `TileDrawing`, `Player`, `Item` and `TileObject`. It first asks `PlantLoader.GetModTreeType(tileType)`; otherwise soil tile to `TreeTypes`: 2 and 477 Forest, 23 Corrupt, 199 Crimson, 70 Mushroom, 60 Jungle, 147 Snow, 109 and 492 Hallowed, 53 Palm, 112 PalmCorrupt, 234 PalmCrimson, 116 PalmHallowed, 633 Ash, anything else `None`.
+- **Drawing does not use either function.** `TileDrawing` has its own `GetTreeBiome(tileX, tileY, tileFrameX, tileFrameY)` (`TileDrawing.cs:2147`, private static), used by `DrawTrees` (9557), `GetTileDrawData` (5667), `GetTileDrawTexture` (1555, 1606) and `PrepareForAreaDrawing` (293). `WorldGen.GetTreeFrame(Tile)` is at 57949 and `GetCommonTreeFoliageData` (57788 to 57841) uses it. The bodies of `GetTreeBiome` and `GetTreeFrame` were not dumped.
+- **Planter box tile 380 in `Main`:** `tileFrameImportant[380]`, `tileTable[380]`, `tileSolid[380]` and `tileSolidTop[380]` are true (`Main.cs:7933, 8052, 9901, 9902`). `TileDrawing` has no special case for 380 (0 hits), so it is drawn by the normal tile draw from its frames. That is why the Harvester Box draws as a normal framed tile (`DrawNormalTile`, Phase 1).
+- **Gemcorns:** `GemTreeTopazSeed` 4851, `GemTreeAmethystSeed` 4852, `GemTreeSapphireSeed` 4853, `GemTreeEmeraldSeed` 4854, `GemTreeRubySeed` 4855, `GemTreeDiamondSeed` 4856, `GemTreeAmberSeed` 4857. They use `DefaultToPlaceableTile((ushort)590, style)` with style 0 to 6 in that order, so a text search for `createTile = 590` finds nothing (B2 came back empty for 590, 595 and 615 for that reason). The plain acorn is `Acorn` 27, `createTile = 20` (`Item.cs:3924`). Other sapling items: `DefaultToPlaceableTile((ushort)595, 0)` and `(615, 0)`.
+- **Herb tile data is locked after startup:** `TileObjectData` throws `FieldAccessException("Tile data is locked and only accessible during startup.")` on writes once `readOnlyData` is set. Phase 1 does not edit herb anchors, so this does not matter now.
+
+What this means for Phase 5 (analysis, not yet decided)
+1. A tree grows from a box only if `IsTileTypeFitForTree(boxTile)` is true, and the tree's drops depend on `GetTreeType(boxTile)` (shaking). Two ways to get there: register each box as a mod tree soil through tML (`TileLoader.CanGrowModTree` and `PlantLoader.GetModTreeType`; verify the API before relying on it), or add `On_WorldGen.IsTileTypeFitForTree` and `On_WorldGen.GetTreeType` hooks that map a box to its tree type (Forest for the Daybloom, Moonglow and Blinkroot boxes and the rest, Corrupt for the Corrupt box, Crimson for the Crimson box). Both only touch `WorldGen`, so there are very few places to patch.
+2. Ismail's rule that a lone box grows a tree: the neighbour rule is the one at 23350 and 23354 inside `GrowTree`; it needs the hook design to relax it for boxes. Not yet read in detail.
+3. Because drawing has its own biome function, check how `GetTreeBiome` finds the tree's look before assuming a hook on `GetTreeType` is enough to make a crimson tree look crimson on a Crimson box.
+
+Open dumps before writing Phase 5 (small; the next chat can ask for them in one probe): the bodies of `TileDrawing.GetTreeBiome` (2147) and `WorldGen.GetTreeFrame` (57949), and `WorldGen.GrowTree` from 23350 to 23360.
+
 ## 8. Next-chat prompt
 
-"Continue the Harvester Box. Read `docs/harvester_box/ROADMAP.md` from a fresh clone, especially 7c (probe 2 findings) and the open decisions. Phase 0 research is done. Do a small probe 3 first (section 7c, 'Still unknown'), then implement Phase 1 as a patch script. My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll`; the probe 2 script's auto-search only knows Steam folders, so add `C:\GOG Games` to its search list)."
+"Continue the Harvester Box with Phase 2 (gear visuals). Read `docs/harvester_box/ROADMAP.md` from a fresh clone: section 6 (Progress), 6b (what Phase 1 built and its test checklist) and the \"Decisions 2026-11-17 (Phase 1 chat)\" block. Phase 1 test results: <PASTE what worked and what failed, or say nothing was tested yet>. If a Phase 1 test failed, fix that first. Probe 3 report (`tools\harvester_probe3_report.txt`, only the Main / TileDrawing caller part is still open, see 7d): <PASTE it, or say it has not been run>; it is needed before Phase 5. My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll` to any probe). Phase 2 needs the gear sprite from me: tell me the exact path and size before writing code."

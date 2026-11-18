@@ -22,6 +22,8 @@ using Factorraria.Content.Tiles.Machines.ElectricalProducers.SunCapsule;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles;
 using Factorraria.Content.Tiles.SuperWeapons.MissileTank;
+using Factorraria.Common.Harvester;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
 
 namespace Factorraria.Common.Machines
 {
@@ -195,6 +197,9 @@ namespace Factorraria.Common.Machines
             MachineVisualRegistry.Register<MissileTankTileEntity>(ModContent.TileType<MissileTankTile>(),
                 MissileTankTile.SheetPath(),
                 MissileTankTile.SheetPath());
+
+            // Harvester Boxes (8, one per planter box): static framed tiles, no UI, no recipes. See docs/harvester_box/ROADMAP.md.
+            HarvesterBoxRegistration.RegisterVisuals();
         }
 
         public override void PostAddRecipes()
@@ -283,6 +288,7 @@ namespace Factorraria.Common.Machines
             RecipeBook.MachineDisabled.Clear();
             ScrollPools.Clear();
             MachineVisualRegistry.Definitions.Clear();
+            HarvesterBoxRegistry.Clear();
         }
     }
 }
