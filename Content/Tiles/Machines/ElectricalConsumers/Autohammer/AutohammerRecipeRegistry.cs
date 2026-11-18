@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Liquids;
+﻿using Factorraria.Common.Harvester;
+using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
 using Factorraria.Content.Items.Carts;
 using Factorraria.Content.Items.Conveyors;
@@ -6,6 +7,7 @@ using Factorraria.Content.Items.Hooks;
 using Factorraria.Content.Items.Machines;
 using Factorraria.Content.Items.Materials;
 using Factorraria.Content.Items.Wires;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -249,6 +251,35 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
             // Wooden Minecart
             Recipe.Create(ModContent.ItemType<WoodenMinecartItem>(), 1)
                 .AddRecipeGroup(RecipeGroupID.Wood, 45)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            // Harvester boxes
+            AddHarvesterRecipes();
+        }
+
+        public static void AddHarvesterRecipes()
+        {
+            AddRecipe<DaybloomHarvesterBoxItem>(HarvesterBoxKind.Daybloom);
+            AddRecipe<MoonglowHarvesterBoxItem>(HarvesterBoxKind.Moonglow);
+            AddRecipe<CorruptHarvesterBoxItem>(HarvesterBoxKind.Corrupt);
+            AddRecipe<CrimsonHarvesterBoxItem>(HarvesterBoxKind.Crimson);
+            AddRecipe<BlinkrootHarvesterBoxItem>(HarvesterBoxKind.Blinkroot);
+            AddRecipe<WaterleafHarvesterBoxItem>(HarvesterBoxKind.Waterleaf);
+            AddRecipe<ShiverthornHarvesterBoxItem>(HarvesterBoxKind.Shiverthorn);
+            AddRecipe<FireblossomHarvesterBoxItem>(HarvesterBoxKind.Fireblossom);
+        }
+
+        static void AddRecipe<TItem>(HarvesterBoxKind kind) where TItem : ModItem
+        {
+            if (!ItemID.Search.TryGetId(HarvesterBoxKinds.PlanterItemName(kind), out int planterBox))
+                return;
+
+            Recipe.Create(ModContent.ItemType<TItem>(), 30)
+                .AddIngredient(planterBox, 30)
+                .AddIngredient(ItemID.StaffofRegrowth, 1)
+                .AddIngredient(ItemID.Cog, 12)
+                .AddIngredient(ModContent.ItemType<SimpleCircuitItem>(),5)
                 .AddTile(TileID.Anvils)
                 .Register();
         }

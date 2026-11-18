@@ -30,30 +30,5 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox
             MachineVisualRegistry.Register<TEntity>(type, sheet, sheet);
             MachineVisualRegistry.Definitions[type].DrawNormalTile = true;
         }
-
-        public static void AddRecipes()
-        {
-            AddRecipe<DaybloomHarvesterBoxItem>(HarvesterBoxKind.Daybloom);
-            AddRecipe<MoonglowHarvesterBoxItem>(HarvesterBoxKind.Moonglow);
-            AddRecipe<CorruptHarvesterBoxItem>(HarvesterBoxKind.Corrupt);
-            AddRecipe<CrimsonHarvesterBoxItem>(HarvesterBoxKind.Crimson);
-            AddRecipe<BlinkrootHarvesterBoxItem>(HarvesterBoxKind.Blinkroot);
-            AddRecipe<WaterleafHarvesterBoxItem>(HarvesterBoxKind.Waterleaf);
-            AddRecipe<ShiverthornHarvesterBoxItem>(HarvesterBoxKind.Shiverthorn);
-            AddRecipe<FireblossomHarvesterBoxItem>(HarvesterBoxKind.Fireblossom);
-        }
-
-        // PLACEHOLDER recipe (Ismail decides the real one): the matching vanilla planter box plus iron or lead bars.
-        static void AddRecipe<TItem>(HarvesterBoxKind kind) where TItem : ModItem
-        {
-            if (!ItemID.Search.TryGetId(HarvesterBoxKinds.PlanterItemName(kind), out int planterBox))
-                return;
-
-            Recipe.Create(ModContent.ItemType<TItem>())
-                .AddIngredient(planterBox)
-                .AddRecipeGroup(RecipeGroupID.IronBar, 4)
-                .AddTile(TileID.Anvils)
-                .Register();
-        }
     }
 }

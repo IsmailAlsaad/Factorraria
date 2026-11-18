@@ -49,9 +49,6 @@ namespace Factorraria.Common.Systems
                 .AddIngredient(ItemID.Lens, 1)
                 .AddTile(TileID.DemonAltar)
                 .Register();
-
-            // Harvester Boxes (placeholder recipes, see HarvesterBoxRegistration)
-            HarvesterBoxRegistration.AddRecipes();
         }
     }
 }
