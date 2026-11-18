@@ -1,6 +1,7 @@
 ﻿using Factorraria.Common.Machines;
 using Factorraria.Common.Net;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -10,9 +11,10 @@ namespace Factorraria.Common.Systems
 {
     // Lava slowly turns stone into hellstone in the underworld.
     // Multiplayer: PostUpdateWorld never runs on a client, so only the server (or single player) decides anything. A converted tile
-    // is replicated with a vanilla tile square, so there is no packet of our own. Only players' surroundings are sampled
-    // (like vanilla random tile updates), plus a sparse background sample of the WHOLE underworld (GlobalSamplesPerTick), so everything keeps
-    // converting even when no player is near; far from players it is just slower (about one pick per block every area / GlobalSamplesPerTick ticks).
+    // is replicated with a vanilla tile square, so there is no packet of our own. Sampling: the underworld is scanned for lava
+    // (ScanColumnsPerTick columns per tick, wherever the players are) and every stone/ash block within MaxDistance + AshLayerDepth of a
+    // lava edge goes on a candidate list; each tick SamplesPerTick random candidates are checked. The chance per pick is
+    // 1 / (seconds * 60 * pick rate); anything over 100% becomes extra conversions on other candidates, so a low sample rate never slows the spread.
     // Growth rule: a stone block becomes hellstone when it touches lava (distance 1), or when it is within MaxDistance of lava
     // AND a neighbouring hellstone block is closer to the lava than it is. That makes the hellstone grow outward from the contact
     // point instead of appearing at random. Distance is counted in orthogonal steps (a diamond, not a square).
@@ -39,10 +41,12 @@ namespace Factorraria.Common.Systems
         public float AshSoundVolume = 0.6f;
         public float AshSoundPitchVariance = 0.15f;
 
-        public int SamplesPerPlayerPerTick = 40;
-        public int AreaHalfWidth = 100;
-        public int AreaHalfHeight = 60;
-        public int GlobalSamplesPerTick = 2000; // background samples over the whole underworld, wherever the players are. 0 = only near players
+        // Sampling (server / single player). Only tiles near lava are ever checked, so the speed is the same everywhere in the underworld.
+        public int SamplesPerTick = 300;            // random candidates checked per tick (a throttle on work, not on speed)
+        public int ScanColumnsPerTick = 150;        // columns of the underworld scanned for lava per tick
+        public int RescanDelayTicks = 120;          // pause between two full scans
+        public int MaxCandidates = 200000;
+        public int MaxExtraConversionsPerPick = 64; // cap on the overflow conversions of one pick
 
         // Sound: files Assets/Sounds/HellstoneGrow/HellstoneGrow1.wav (or .ogg) ... HellstoneGrow<SoundVariants>. 0 = no custom files yet, a vanilla placeholder plays.
         public int SoundVariants = 3;
@@ -56,133 +60,191 @@ namespace Factorraria.Common.Systems
         public int SmokeDustCount = 3;
         public float DustCullMargin = 200f; // no dust when the block is further than this off the screen (the sound still plays)
 
-        int[] boxLeft = new int[Main.maxPlayers];
-        int[] boxRight = new int[Main.maxPlayers];
-        int[] boxTop = new int[Main.maxPlayers];
-        int[] boxBottom = new int[Main.maxPlayers];
-        float[] boxSampleRate = new float[Main.maxPlayers];
-        int boxCount;
-        float globalSampleRate;
+        // Stone and ash blocks near lava, packed as x * maxTilesY + y. Rebuilt by a slow column-by-column scan (pending), then swapped in,
+        // so there is never a one-tick lag spike. A block is rechecked fully when it is picked, so a stale entry is harmless.
+        List<int> candidates = new List<int>();
+        HashSet<int> pending = new HashSet<int>();
+        int scanX;
+        int rescanWait;
+
+        public override void ClearWorld()
+        {
+            candidates.Clear();
+            pending.Clear();
+            scanX = 0;
+            rescanWait = 0;
+        }
 
         public override void PostUpdateWorld()
         {
             if (!Enabled || Main.netMode == NetmodeID.MultiplayerClient)
                 return;
 
-            boxCount = 0;
-            int bottomLimit = Main.maxTilesY - 3;
+            ScanForLava();
+            SampleCandidates();
+        }
 
-            globalSampleRate = 0f;
-            int globalTop = Main.UnderworldLayer;
-            if (GlobalSamplesPerTick > 0 && bottomLimit >= globalTop && Main.maxTilesX > 6)
-                globalSampleRate = GlobalSamplesPerTick / (float)((Main.maxTilesX - 4) * (bottomLimit - globalTop + 1));
-            for (int p = 0; p < Main.maxPlayers; p++)
+        void ScanForLava()
+        {
+            if (rescanWait > 0)
             {
-                Player player = Main.player[p];
-                if (!player.active)
-                    continue;
-
-                int cx = (int)(player.Center.X / 16f);
-                int cy = (int)(player.Center.Y / 16f);
-                int left = System.Math.Max(2, cx - AreaHalfWidth);
-                int right = System.Math.Min(Main.maxTilesX - 3, cx + AreaHalfWidth);
-                int top = System.Math.Max(Main.UnderworldLayer, cy - AreaHalfHeight);
-                int bottom = System.Math.Min(bottomLimit, cy + AreaHalfHeight);
-                if (right < left || bottom < top)
-                    continue;
-
-                boxLeft[boxCount] = left;
-                boxRight[boxCount] = right;
-                boxTop[boxCount] = top;
-                boxBottom[boxCount] = bottom;
-                boxSampleRate[boxCount] = SamplesPerPlayerPerTick / (float)((right - left + 1) * (bottom - top + 1));
-                boxCount++;
+                rescanWait--;
+                return;
             }
 
-            for (int b = 0; b < boxCount; b++)
+            int left = 2;
+            int right = Main.maxTilesX - 3;
+            int top = Main.UnderworldLayer;
+            int bottom = Main.maxTilesY - 3;
+            if (right < left || bottom < top)
+                return;
+
+            if (scanX < left)
+                scanX = left;
+
+            int reach = System.Math.Max(1, MaxDistance) + AshLayerDepth;
+            int end = System.Math.Min(right, scanX + System.Math.Max(1, ScanColumnsPerTick) - 1);
+            for (int x = scanX; x <= end; x++)
             {
-                for (int s = 0; s < SamplesPerPlayerPerTick; s++)
+                for (int y = top; y <= bottom; y++)
                 {
-                    int x = Main.rand.Next(boxLeft[b], boxRight[b] + 1);
-                    int y = Main.rand.Next(boxTop[b], boxBottom[b] + 1);
-                    TryGrow(x, y);
+                    if (!IsLava(x, y))
+                        continue;
+
+                    // Only lava edges matter: any block within reach of an inner lava cell is also within reach of an edge cell.
+                    if (IsLava(x + 1, y) && IsLava(x - 1, y) && IsLava(x, y + 1) && IsLava(x, y - 1))
+                        continue;
+
+                    AddCandidatesAround(x, y, reach, left, right, top, bottom);
                 }
             }
 
-            // Whole underworld, no matter where the players are.
-            if (globalSampleRate > 0f)
+            scanX = end + 1;
+            if (scanX > right)
             {
-                for (int s = 0; s < GlobalSamplesPerTick; s++)
+                candidates.Clear();
+                candidates.AddRange(pending);
+                pending.Clear();
+                scanX = 0;
+                rescanWait = RescanDelayTicks;
+            }
+        }
+
+        void AddCandidatesAround(int x, int y, int reach, int left, int right, int top, int bottom)
+        {
+            for (int dx = -reach; dx <= reach; dx++)
+            {
+                int tx = x + dx;
+                if (tx < left || tx > right)
+                    continue;
+
+                int rest = reach - System.Math.Abs(dx);
+                for (int dy = -rest; dy <= rest; dy++)
                 {
-                    int x = Main.rand.Next(2, Main.maxTilesX - 2);
-                    int y = Main.rand.Next(globalTop, bottomLimit + 1);
-                    TryGrow(x, y);
+                    int ty = y + dy;
+                    if (ty < top || ty > bottom)
+                        continue;
+
+                    Tile t = Main.tile[tx, ty];
+                    if (!t.HasUnactuatedTile || (t.TileType != TileID.Stone && t.TileType != TileID.Ash))
+                        continue;
+
+                    if (pending.Count < MaxCandidates)
+                        pending.Add(tx * Main.maxTilesY + ty);
                 }
             }
         }
 
-        void TryGrow(int x, int y)
+        void SampleCandidates()
         {
-            Tile tile = Main.tile[x, y];
-            if (!tile.HasUnactuatedTile)
+            int count = candidates.Count;
+            if (count == 0)
                 return;
 
-            if (tile.TileType == TileID.Stone)
-                TryAsh(x, y);
-            else if (tile.TileType == TileID.Ash)
-                TryHellstone(x, y);
-        }
+            int samples = System.Math.Min(System.Math.Max(1, SamplesPerTick), count);
+            float rate = samples / (float)count; // odds per tick that one given candidate is picked
 
-        // Stone -> ash: touching lava, or a hellstone block within AshLayerDepth steps (that is what keeps the layer between hellstone and stone).
-        void TryAsh(int x, int y)
-        {
-            if (!TouchesLava(x, y))
+            for (int s = 0; s < samples; s++)
             {
-                if (!HasHellstoneWithin(x, y, AshLayerDepth))
-                    return;
-                if (LavaDistance(x, y, AshLayerDepth) <= 0)
-                    return;
+                int key = candidates[Main.rand.Next(count)];
+                TrySample(key / Main.maxTilesY, key % Main.maxTilesY, rate);
             }
-
-            if (!Roll(x, y, AshSecondsToConvert))
-                return;
-
-            Transform(x, y, TileID.Ash);
         }
 
-        // Ash -> hellstone: the lava rules below, plus a stone block reachable through the ash layer.
-        void TryHellstone(int x, int y)
+        // One pick. The chance of a conversion is 1 / (seconds * 60 * rate), so the expected time stays the same whatever the sample rate.
+        // That number can pass 100% when few samples are spread over many candidates. One block cannot convert twice, so the excess
+        // converts other candidates instead; the spread never gets slower than the real-time speed.
+        void TrySample(int x, int y, float rate)
         {
-            int distance = LavaDistance(x, y);
-            if (distance <= 0)
-                return;
-            if (distance > 1 && !HasCloserHellstone(x, y, distance))
-                return;
-            if (!HasReachableStone(x, y, AshLayerDepth))
+            if (!CheckConvert(x, y, out ushort newType, out float seconds))
                 return;
 
-            float seconds = BaseSecondsToConvert * (float)System.Math.Pow(DistanceSlowdown, distance - 1);
-            if (!Roll(x, y, seconds))
+            float expected = 1f / (System.Math.Max(seconds, 0.01f) * 60f * rate);
+            expected = System.Math.Min(expected, MaxExtraConversionsPerPick + 1f);
+
+            int conversions = (int)expected;
+            if (Main.rand.NextFloat() < expected - conversions)
+                conversions++;
+            if (conversions <= 0)
                 return;
 
-            Transform(x, y, TileID.Hellstone);
-        }
+            Transform(x, y, newType);
 
-        // Odds per tick that this block is picked at all (several players' areas can overlap, so add them up),
-        // so the expected time stays the same however many samples or players there are.
-        bool Roll(int x, int y, float seconds)
-        {
-            float sampleRate = globalSampleRate;
-            for (int b = 0; b < boxCount; b++)
+            for (int i = 1; i < conversions; i++)
             {
-                if (x >= boxLeft[b] && x <= boxRight[b] && y >= boxTop[b] && y <= boxBottom[b])
-                    sampleRate += boxSampleRate[b];
+                int key = candidates[Main.rand.Next(candidates.Count)];
+                int ex = key / Main.maxTilesY;
+                int ey = key % Main.maxTilesY;
+                if (CheckConvert(ex, ey, out ushort extraType, out _))
+                    Transform(ex, ey, extraType);
             }
-            if (sampleRate <= 0f)
+        }
+
+        // Can this block convert right now, into what, and what is the expected time in seconds?
+        // Stone -> ash: touching lava, or a hellstone block within AshLayerDepth steps (that keeps the ash layer between hellstone and stone).
+        // Ash -> hellstone: the lava rules, plus a stone block reachable through the ash layer.
+        bool CheckConvert(int x, int y, out ushort newType, out float seconds)
+        {
+            newType = 0;
+            seconds = 0f;
+            if (x < 2 || y < 0 || x > Main.maxTilesX - 3 || y > Main.maxTilesY - 3)
                 return false;
 
-            float chance = 1f / (seconds * 60f * sampleRate);
-            return Main.rand.NextFloat() < chance;
+            Tile tile = Main.tile[x, y];
+            if (!tile.HasUnactuatedTile)
+                return false;
+
+            if (tile.TileType == TileID.Stone)
+            {
+                if (!TouchesLava(x, y))
+                {
+                    if (!HasHellstoneWithin(x, y, AshLayerDepth))
+                        return false;
+                    if (LavaDistance(x, y, AshLayerDepth) <= 0)
+                        return false;
+                }
+
+                newType = TileID.Ash;
+                seconds = AshSecondsToConvert;
+                return true;
+            }
+
+            if (tile.TileType == TileID.Ash)
+            {
+                int distance = LavaDistance(x, y);
+                if (distance <= 0)
+                    return false;
+                if (distance > 1 && !HasCloserHellstone(x, y, distance))
+                    return false;
+                if (!HasReachableStone(x, y, AshLayerDepth))
+                    return false;
+
+                newType = TileID.Hellstone;
+                seconds = BaseSecondsToConvert * (float)System.Math.Pow(DistanceSlowdown, distance - 1);
+                return true;
+            }
+
+            return false;
         }
 
         bool IsTileType(int x, int y, ushort type)
