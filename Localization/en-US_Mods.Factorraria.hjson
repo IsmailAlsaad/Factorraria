@@ -138,8 +138,7 @@ Items: {
 		DisplayName: Daybloom Harvester Box
 		Tooltip:
 			'''
-			Needs power
-			Only Daybloom grows on it
+			Automatically harvests plants
 			'''
 	}
 
@@ -147,8 +146,7 @@ Items: {
 		DisplayName: Moonglow Harvester Box
 		Tooltip:
 			'''
-			Needs power
-			Only Moonglow grows on it
+			Automatically harvests plants
 			'''
 	}
 
@@ -156,8 +154,7 @@ Items: {
 		DisplayName: Corrupt Harvester Box
 		Tooltip:
 			'''
-			Needs power
-			Only Deathweed grows on it
+			Automatically harvests plants
 			'''
 	}
 
@@ -165,8 +162,7 @@ Items: {
 		DisplayName: Crimson Harvester Box
 		Tooltip:
 			'''
-			Needs power
-			Only Deathweed grows on it
+			Automatically harvests plants
 			'''
 	}
 
@@ -174,8 +170,7 @@ Items: {
 		DisplayName: Blinkroot Harvester Box
 		Tooltip:
 			'''
-			Needs power
-			Only Blinkroot grows on it
+			Automatically harvests plants
 			'''
 	}
 
@@ -183,8 +178,7 @@ Items: {
 		DisplayName: Waterleaf Harvester Box
 		Tooltip:
 			'''
-			Needs power
-			Only Waterleaf grows on it
+			Automatically harvests plants
 			'''
 	}
 
@@ -192,8 +186,7 @@ Items: {
 		DisplayName: Shiverthorn Harvester Box
 		Tooltip:
 			'''
-			Needs power
-			Only Shiverthorn grows on it
+			Automatically harvests plants
 			'''
 	}
 
@@ -201,8 +194,7 @@ Items: {
 		DisplayName: Fireblossom Harvester Box
 		Tooltip:
 			'''
-			Needs power
-			Only Fireblossom grows on it
+			Automatically harvests plants
 			'''
 	}
 
