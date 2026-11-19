@@ -192,6 +192,7 @@ namespace Factorraria.Common.Harvester
         public float StaffScale => 1f;
         public float StaffDustChance => 0.35f;                    // per tick per moving staff, only while its tip is on screen
         public int StaffDustType => 2;                            // vanilla grass dust (DustID.Grass)
+        public int TreeGrowTicks => 1200;                         // Phase 5: powered ticks a sapling above the box waits before the box tries to grow it (retries every this long if the space is blocked)
         public int GearActiveFadeTicks => 12;                     // the gear crossfades between its idle and active sprite this fast
 
         enum BoxCycle : byte { Idle, Ready, Strike }
@@ -246,6 +247,8 @@ namespace Factorraria.Common.Harvester
                     case BoxCycle.Idle:
                         if (scan && HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
                             boxes[k] = new BoxState { Cycle = BoxCycle.Ready, Ticks = 0 };
+                        else
+                            TickSapling(k, x, y);   // Phase 5: while Idle, Ticks counts the powered ticks a sapling above has been growing
                         break;
 
                     case BoxCycle.Ready:
@@ -455,6 +458,12 @@ namespace Factorraria.Common.Harvester
         // the same herb for free. Runs on the server / in single-player; tile changes are sent to clients here.
         void HarvestHerb(int x, int y)
         {
+            if (HarvesterBoxTrees.IsGrownTree(x, y, ValidTileType))
+            {
+                HarvestTree(x, y);   // Phase 5: the same cycle fells a grown tree and replants its sapling
+                return;
+            }
+
             int style = Main.tile[x, y].TileFrameX / 18;
             dropTile = new Point(x, y);
 
@@ -467,6 +476,47 @@ namespace Factorraria.Common.Harvester
 
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.SendTileSquare(-1, x, y);
+        }
+
+        // Phase 5. Fells the tree whose trunk base is at x, y: one KillTile on the base brings the whole column down (the Robotic Arm relies on the
+        // same thing), inside the shared drop capture so the wood, acorns and so on are routed like the herb drops. Then the sapling is planted again for free.
+        // Server / single-player only. Clients get the tile changes from the messages below.
+        void HarvestTree(int x, int y)
+        {
+            dropTile = new Point(x, y);
+
+            ModContent.GetInstance<RoboticArmDropCaptureSystem>().Run(this, () => WorldGen.KillTile(x, y, false, false, false));
+
+            if (Main.netMode == NetmodeID.Server)
+            {
+                NetMessage.SendData(MessageID.TileManipulation, -1, -1, null, 0, x, y);
+
+                // The felled column and the tree's top and branches (same area the Robotic Arm sends after chopping a tree).
+                int x0 = Math.Max(0, x - 4);
+                int y0 = Math.Max(0, y - 60);
+                int x1 = Math.Min(Main.maxTilesX - 1, x + 4);
+                int y1 = Math.Min(Main.maxTilesY - 1, y + 2);
+                NetMessage.SendTileSquare(-1, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
+            }
+
+            HarvesterBoxTrees.TryReplant(x, y);
+        }
+
+        // Phase 5. An idle box with one of its own saplings above it counts powered ticks (boxes[k].Ticks is free while Idle) and, every TreeGrowTicks,
+        // asks vanilla to grow the tree. The sapling tile has no random-update growth of its own, so the box is the only thing that grows it.
+        void TickSapling(int k, int x, int y)
+        {
+            if (!HarvesterBoxTrees.IsSapling(x, y, ValidTileType))
+            {
+                boxes[k].Ticks = 0;
+                return;
+            }
+
+            if (++boxes[k].Ticks < Math.Max(1, TreeGrowTicks))
+                return;
+
+            boxes[k].Ticks = 0;
+            HarvesterBoxTrees.TryGrow(x, y);
         }
 
         // The three tiles beside and above the plant: where a conveyor can take the drops, or a vItem can wait.

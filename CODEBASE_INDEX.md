@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-19 | 426 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-19 | 430 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -15,6 +15,7 @@ Project bases -> derived:
 - HarvesterBoxItemBase: BlinkrootHarvesterBoxItem, CorruptHarvesterBoxItem, CrimsonHarvesterBoxItem, DaybloomHarvesterBoxItem, FireblossomHarvesterBoxItem, MoonglowHarvesterBoxItem, ShiverthornHarvesterBoxItem, WaterleafHarvesterBoxItem
 - HarvesterBoxTileBase: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile, WaterleafHarvesterBoxTile
 - HarvesterBoxTileEntityBase: BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxTileEntity, MoonglowHarvesterBoxTileEntity, ShiverthornHarvesterBoxTileEntity, WaterleafHarvesterBoxTileEntity
+- HarvesterBoxTreeBase: BlinkrootHarvesterBoxTree, CorruptHarvesterBoxTree, CrimsonHarvesterBoxTree, DaybloomHarvesterBoxTree, MoonglowHarvesterBoxTree, ShiverthornHarvesterBoxTree
 - ICosmicEventSink: CosmicEventRouter, CosmicNullSink
 - IDropCaptureTarget: HarvesterBoxTileEntityBase, RoboticArmTileEntity
 - IElectricConsumer: ElectricConsumerMachine
@@ -42,7 +43,7 @@ tModLoader/other bases -> project types:
 - ModItem (46): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, HarvesterBoxItemBase, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenMinecartItem, WoodenPowerPoleItem
 - byte (33): AssemblyIssue, BoxCycle, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
-- ModTile (17): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
+- ModTile (18): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxSapling, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - UIElement (15): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookModeButton, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModPlayer (14): CartEquipPlayer, CartInteractionPlayer, CartRiderPlayer, CosmicRadiationPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
 - GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
@@ -67,6 +68,7 @@ tModLoader/other bases -> project types:
 - ModMount (1): MechSuitMount
 - ModNPC (1): HerBackpackNPC
 - ModTileEntity (1): BaseMachine
+- ModTree (1): HarvesterBoxTreeBase
 
 ## Files
 
@@ -357,7 +359,7 @@ tModLoader/other bases -> project types:
     {Daybloom, Moonglow, Corrupt, Crimson, Blinkroot, Waterleaf, Shiverthorn, Fireblossom}
   static class HarvesterBoxKinds
     +PlanterItemName(HarvesterBoxKind)[s] +Herb(HarvesterBoxKind)[s]
-**HarvesterBoxRegistry.cs** uses: HarvesterBoxKind, HarvesterBoxKinds, HerbStyle
+**HarvesterBoxRegistry.cs** uses: HarvesterBoxKind, HarvesterBoxKinds, HarvesterBoxTrees, HerbStyle
   static class HarvesterBoxRegistry
     +BoxHerbs:Dictionary<int, HerbStyle>[s] +PlanterHerbs:Dictionary<int, HerbStyle>[s] +Kinds:List<HarvesterBoxKind>[s] +Register(int,HarvesterBoxKind)[s] +Clear()[s] +ResolvePlanterStyles(Mod)[s]
 **HarvesterBoxRowSystem.cs** uses: BaseMachine, FactorrariaNet, HarvesterBoxRows, IRowMachine, MachinePlacement
@@ -366,19 +368,25 @@ tModLoader/other bases -> project types:
 **HarvesterBoxRows.cs** uses: BaseMachine, HarvesterBoxRegistry, HarvesterBoxRowSystem, IRowMachine
   static class HarvesterBoxRows
     +IsBoxTile(int)[s] +TryGetRun(int,int,out int,out int,out int)[s] +RunLengthFrom(int,int)[s] +TryFindRowEntity(int,int,out TileEntity,out Point16)[s] +HasRowEntityBefore(int,int,int)[s] +RefreshGeometry(BaseMachine)[s] +OnTileKilled(int,int)[s]
-**HarvesterBoxRules.cs** uses: HarvesterBoxRegistry, HerbStyle
+**HarvesterBoxRules.cs** uses: HarvesterBoxRegistry, HarvesterBoxTrees, HerbStyle
   static class HarvesterBoxRules
     +IsReadyToHarvest(int,int,int)[s] +HerbAllowedOnSoil(int,Tile)[s]
 **HarvesterBoxTileBase.cs** uses: BaseMachine, HarvesterBoxKind, HarvesterBoxRegistry
   abstract class HarvesterBoxTileBase<TEntity, TItem> : ModTile
     #Kind:HarvesterBoxKind[ab] +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
-**HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxNetSystem, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxRules, HarvesterBoxUIState, IDropCaptureTarget, IHarvesterBoxRow, IMachineDynamicDraw, IRowMachine, MachineUIRegistry, MachineUIStateBase, MachineUISystem, RoboticArmDropCaptureSystem, VirtualItem, VirtualItemSystem
+**HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxNetSystem, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxRules, HarvesterBoxTrees, HarvesterBoxUIState, IDropCaptureTarget, IHarvesterBoxRow, IMachineDynamicDraw, IRowMachine, MachineUIRegistry, MachineUIStateBase, MachineUISystem, RoboticArmDropCaptureSystem, VirtualItem, VirtualItemSystem
   abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IDropCaptureTarget, IHarvesterBoxRow
-    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +HarvestScanTicks:int +HarvestDelayTicks:int +StaffExtendTicks:int +StaffSweepTicks:int +StaffRetractTicks:int +StaffAbortMarginTicks:int +StaffTexturePath:string +StaffOffset:Vector2 +StaffPivotOffset:Vector2 +StaffSpriteRotationDegrees:float +StaffScale:float +StaffDustChance:float +StaffDustType:int +GearActiveFadeTicks:int +BeginClientStrike(int) +RouteDrop(Item) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
+    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +HarvestScanTicks:int +HarvestDelayTicks:int +StaffExtendTicks:int +StaffSweepTicks:int +StaffRetractTicks:int +StaffAbortMarginTicks:int +StaffTexturePath:string +StaffOffset:Vector2 +StaffPivotOffset:Vector2 +StaffSpriteRotationDegrees:float +StaffScale:float +StaffDustChance:float +StaffDustType:int +TreeGrowTicks:int +GearActiveFadeTicks:int +BeginClientStrike(int) +RouteDrop(Item) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
     enum BoxCycle : byte
       {Idle, Ready, Strike}
     struct BoxState
       +Cycle:BoxCycle +Ticks:int
+**HarvesterBoxTreeBase.cs** uses: HarvesterBoxKind, HarvesterBoxSapling, HarvesterBoxTrees
+  abstract class HarvesterBoxTreeBase<TTile> : ModTree
+    #Kind:HarvesterBoxKind[ab] #TreeKind:TreeTypes[ab] #WoodItem:int[ab] #SaplingRow:int[ab] #TopStyle:int[ab] #TopFrameWidth:int[v] #TopFrameHeight:int[v] #TrunkTexturePath:string[v] +TreeShaderSettings:TreePaintingSettings[ov] +GetTexture()[ov] +GetTopTextures()[ov] +GetBranchTextures()[ov] +CountsAsTreeType:TreeTypes[ov] +DropWood()[ov] +SaplingGrowthType(ref int)[ov] +SetTreeFoliageSettings(int,int,Tile,int,ref int,int,ref int,ref int)[ov]
+**HarvesterBoxTrees.cs** uses: HarvesterBoxSapling
+  static class HarvesterBoxTrees
+    +TreeBoxes:HashSet<int>[s] +Clear()[s] +IsGrownTree(int,int,int)[s] +IsSapling(int,int,int)[s] +TryGrow(int,int)[s] +GrowTree(int,int,int,bool)[s] +TryReplant(int,int)[s]
 **IHarvesterBoxRow.cs**
   interface IHarvesterBoxRow
     +BeginClientStrike(int)
@@ -1731,6 +1739,9 @@ tModLoader/other bases -> project types:
 **HarvesterBoxRegistration.cs** uses: BaseMachine, BlinkrootHarvesterBoxTile, BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxTile, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxTile, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxTile, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxTile, FireblossomHarvesterBoxTileEntity, HarvesterBoxUIState, MachineUIRegistry, MachineVisualRegistry, MoonglowHarvesterBoxTile, MoonglowHarvesterBoxTileEntity, ShiverthornHarvesterBoxTile, ShiverthornHarvesterBoxTileEntity, WaterleafHarvesterBoxTile, WaterleafHarvesterBoxTileEntity
   static class HarvesterBoxRegistration
     +RegisterVisuals()[s]
+**HarvesterBoxSapling.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, HarvesterBoxTrees, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile
+  class HarvesterBoxSapling : ModTile
+    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +GrowSapling(int,int,bool,int,bool)[ov]
 **HarvesterBoxTileEntities.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, HarvesterBoxTileEntityBase, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile, WaterleafHarvesterBoxTile
   class DaybloomHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<DaybloomHarvesterBoxTile>
   class MoonglowHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<MoonglowHarvesterBoxTile>
@@ -1757,6 +1768,19 @@ tModLoader/other bases -> project types:
     #Kind:HarvesterBoxKind[ov]
   class FireblossomHarvesterBoxTile : HarvesterBoxTileBase<FireblossomHarvesterBoxTileEntity, FireblossomHarvesterBoxItem>
     #Kind:HarvesterBoxKind[ov]
+**HarvesterBoxTreeTypes.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, HarvesterBoxKind, HarvesterBoxTreeBase, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile
+  class DaybloomHarvesterBoxTree : HarvesterBoxTreeBase<DaybloomHarvesterBoxTile>
+    #Kind:HarvesterBoxKind[ov] #TreeKind:TreeTypes[ov] #WoodItem:int[ov] #SaplingRow:int[ov] #TopStyle:int[ov]
+  class BlinkrootHarvesterBoxTree : HarvesterBoxTreeBase<BlinkrootHarvesterBoxTile>
+    #Kind:HarvesterBoxKind[ov] #TreeKind:TreeTypes[ov] #WoodItem:int[ov] #SaplingRow:int[ov] #TopStyle:int[ov]
+  class MoonglowHarvesterBoxTree : HarvesterBoxTreeBase<MoonglowHarvesterBoxTile>
+    #Kind:HarvesterBoxKind[ov] #TreeKind:TreeTypes[ov] #WoodItem:int[ov] #SaplingRow:int[ov] #TopStyle:int[ov] #TopFrameWidth:int[ov] #TopFrameHeight:int[ov]
+  class CorruptHarvesterBoxTree : HarvesterBoxTreeBase<CorruptHarvesterBoxTile>
+    #Kind:HarvesterBoxKind[ov] #TreeKind:TreeTypes[ov] #WoodItem:int[ov] #SaplingRow:int[ov] #TopStyle:int[ov]
+  class CrimsonHarvesterBoxTree : HarvesterBoxTreeBase<CrimsonHarvesterBoxTile>
+    #Kind:HarvesterBoxKind[ov] #TreeKind:TreeTypes[ov] #WoodItem:int[ov] #SaplingRow:int[ov] #TopStyle:int[ov]
+  class ShiverthornHarvesterBoxTree : HarvesterBoxTreeBase<ShiverthornHarvesterBoxTile>
+    #Kind:HarvesterBoxKind[ov] #TreeKind:TreeTypes[ov] #WoodItem:int[ov] #SaplingRow:int[ov] #TopStyle:int[ov] #TopFrameWidth:int[ov] #TopFrameHeight:int[ov]
 **HarvesterBoxUIState.cs** uses: ElectricConsumerMachine, ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase
   class HarvesterBoxUIState : MachineUIStateBase
     +PanelShiftX:float +BasePanelOffset:Vector2[ov] #BuildElements()[ov]
@@ -2088,7 +2112,7 @@ tModLoader/other bases -> project types:
 - docs/recipe_book/: ROADMAP.md
 - docs/super_weapons/: ROADMAP.md
 - docs/weapon_overhaul/: ROADMAP.md
-- tools/: harvester_probe.ps1, harvester_probe2.ps1, harvester_probe3.ps1, patch_engine.ps1; harvester_probe2_report.txt, harvester_probe3_report.txt, harvester_probe_report.txt
+- tools/: patch_engine.ps1
 - tools/cosmic_tests/: Program.cs.txt, Program_C2.cs.txt, README.txt
 - tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt
 - tools/sw_tests/: Program.cs.txt, README.txt

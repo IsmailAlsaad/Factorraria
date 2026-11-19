@@ -30,6 +30,7 @@ namespace Factorraria.Common.Harvester
             BoxHerbs.Clear();
             PlanterHerbs.Clear();
             Kinds.Clear();
+            HarvesterBoxTrees.Clear();
         }
 
         // Vanilla stores a planter box's style in frameY / 18 (WorldGen.PlaceTile sets frameY = 18 * style, KillTile drops item 3215 + frameY / 18),
