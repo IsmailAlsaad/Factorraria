@@ -16,7 +16,9 @@ namespace Factorraria.Common.Mounts
     //   Shift + right-click, no drag, while a selection exists = clear it. (With no selection it selects that one tile.)
     // Everything only works while the local player is in the suit. The selection is drawn with the Robotic Arm's area sheet
     // (RoboticArmArea.png, 4x4 cells of 16x16, see RoboticArmAreaEditorSystem for the cell layout). There is no size text.
-    // Holding Shift in the suit also takes the cursor (mouseInterface), so the held item is not used; the next steps need Shift + left click.
+    // Holding Shift in the suit also takes the cursor (mouseInterface), so the held item is not used.
+    // Step 2 (MechSuitHologramSystem draws the hologram): Shift + left click with a selection stores PlaceOrigin, the top-left tile of the
+    // destination (cursor tile = centre of the region). Nothing is sent or built yet; step 3 reads PlaceOrigin.
     public class MechSuitBuilderSystem : ModSystem
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
@@ -24,8 +26,33 @@ namespace Factorraria.Common.Mounts
         public int MaxSelectionHeight = 64;
         public string TexturePath = "Factorraria/Content/Tiles/Machines/ElectricalConsumers/RoboticArm/RoboticArmArea";
 
-        /// <summary>The saved selection in world tile coordinates, or null.</summary>
-        public Rectangle? Selection { get; private set; }
+        Rectangle? selection;
+
+        /// <summary>The saved selection in world tile coordinates, or null. Every change bumps SelectionVersion and clears PlaceOrigin.</summary>
+        public Rectangle? Selection
+        {
+            get => selection;
+            private set
+            {
+                selection = value;
+                SelectionVersion++;
+                PlaceOrigin = null;
+            }
+        }
+
+        /// <summary>Changes whenever the selection is replaced or cleared (the hologram rebuilds its blueprint on a change).</summary>
+        public int SelectionVersion { get; private set; }
+
+        /// <summary>Top-left tile of the destination chosen with Shift + left click, or null. Client-only; step 3 turns it into a build request.</summary>
+        public Point? PlaceOrigin { get; private set; }
+
+        public bool IsDragging => dragging;
+
+        /// <summary>Top-left tile of the destination region when the cursor tile is its centre.</summary>
+        public static Point OriginFor(Rectangle region, Point cursorTile)
+        {
+            return new Point(cursorTile.X - region.Width / 2, cursorTile.Y - region.Height / 2);
+        }
 
         bool dragging;
         bool dragMoved;
@@ -36,10 +63,10 @@ namespace Factorraria.Common.Mounts
         bool texturesRequested;
         bool texturesFound;
 
-        static bool ShiftHeld => Main.keyState.PressingShift();
+        internal static bool ShiftHeld => Main.keyState.PressingShift();
 
         // True while the local player is in the suit (the only time any of this works).
-        static bool Ready(out Player player)
+        internal static bool Ready(out Player player)
         {
             player = Main.LocalPlayer;
             return !Main.dedServ && !Main.gameMenu && player != null && player.active && !player.dead
@@ -131,6 +158,14 @@ namespace Factorraria.Common.Mounts
                 dragStart = Main.MouseWorld.ToTileCoordinates();
                 dragRect = new Rectangle(dragStart.X, dragStart.Y, 1, 1);
                 Main.mouseRightRelease = false;
+            }
+
+            // Shift + left click: the place action. Step 2 only remembers the destination; nothing is sent or built.
+            if (Selection.HasValue && !player.mouseInterface && Main.mouseLeft && Main.mouseLeftRelease)
+            {
+                Main.mouseLeftRelease = false;
+                PlaceOrigin = OriginFor(Selection.Value, Main.MouseWorld.ToTileCoordinates());
+                Mod.Logger.Info("MechSuitBuilderSystem: destination origin stored at " + PlaceOrigin.Value.X + "," + PlaceOrigin.Value.Y + " (nothing is built yet).");
             }
 
             player.mouseInterface = true; // Shift in the suit never swings or places the held item

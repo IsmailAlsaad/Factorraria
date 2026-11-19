@@ -78,6 +78,8 @@ Single-player runs the request handler directly. The job belongs to one player a
 
 M1: not in the suit, Shift + right-click does nothing special. In the suit, hold Shift and right-click drag: the area sheet appears, a drag past 64 stops growing. Release: the selection stays. A new drag replaces it. Shift + right-click without moving clears it. Releasing Shift mid-drag keeps the old selection. Holding Shift does not swing or place the held item. Leaving the world clears it. Taking the suit off hides it, getting back in shows it again.
 
+M2: with a selection saved, in the suit, hold Shift: the hologram of the region follows the cursor (cursor tile = centre) with the box around it. Tiles and walls show at about 50% alpha with the right frames; grass shows nothing. Chests, machines and other multi-tile objects show as whole objects (only if the whole object was inside the selection). Place the hologram over empty air with enough material: all blocks and the box are normal. Drop below the needed amount of one block: the blocks farthest from the cursor turn red first, the nearest stay normal, and the box cells under red blocks switch to the red sheet. Put the hologram over solid ground: blocks over a different block turn red; blocks over the same block disappear (already built). Over its own source it all disappears. Releasing Shift hides it. Not in the suit: nothing shows. Shift + left click does not swing or place the held item and writes one "destination origin stored" line to client.log; a new selection clears the stored origin. A selection partly outside the world shows red box cells there.
+
 ## 7. Art
 
 None needed for M1 and M2 (they reuse `RoboticArmArea.png` and `RoboticArmAreaInvalid.png`). The builder arms (M3) reuse the existing suit arm art unless Ismail draws new ones.
@@ -91,11 +93,11 @@ None needed for M1 and M2 (they reuse `RoboticArmArea.png` and `RoboticArmAreaIn
 ## 9. Progress
 
 - [x] M1 Selection (patch_mech_builder_m1_selection.ps1, tested 2026-11-19, all checks passed; patch_mech_builder_m1b_no_readout.ps1 then removed the "W x H" text because Ismail did not want it)
-- [ ] M2 Hologram
+- [~] M2 Hologram (patch_mech_builder_m2_hologram.ps1, applied, untested)
 - [ ] M3 Server build job and builder arms
 - [ ] M4 Cancel, report, multiplayer pass
 - [ ] M5 Objects, containers, machines
 
 ## 10. Next-chat prompt
 
-"Implement Mech Suit build tool patch M2 (hologram). Clone the repo, read docs/mech_suit_builder/ROADMAP.md (sections 1, 3, 5, 9) and PROJECT_CONTEXT.md. M1 is tested and done (2026-11-19)."
+"Implement Mech Suit build tool patch M3 (server build job and builder arms). Clone the repo, read docs/mech_suit_builder/ROADMAP.md (sections 1, 3, 5, 9) and PROJECT_CONTEXT.md. Also read sections 2 and 4 and docs/multiplayer/ROADMAP.md section 3. M1 and M2 are in the repo: `MechSuitBuilderSystem` (Common/Mounts) holds `Selection` (Rectangle? in world tiles), `PlaceOrigin` (Point?, top-left of the destination, set by Shift + left click, client-only so far) and `OriginFor`; `MechSuitHologramSystem` (same folder) holds the client blueprint scan, the tile/wall to item lookup (`TryGetTileItem`, built from ContentSamples; M3 needs the same on the server, so extract it into a shared helper under Common/Mounts instead of copying), the object rule (multi-tile objects are one item and only copied when the whole footprint is inside the selection) and the material rule (nearest-first from the cursor). M3 turns PlaceOrigin into one request packet in Common/Net/ (source rect + destination origin); the server reads the source region itself and runs the job; M3 also edits the multiplayer ROADMAP.md and SURVEY_APPENDIX.md. M2 test results: <paste>."
