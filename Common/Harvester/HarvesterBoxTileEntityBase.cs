@@ -192,7 +192,7 @@ namespace Factorraria.Common.Harvester
         public float StaffScale => 1f;
         public float StaffDustChance => 0.35f;                    // per tick per moving staff, only while its tip is on screen
         public int StaffDustType => 2;                            // vanilla grass dust (DustID.Grass)
-        public int TreeGrowTicks => 1200;                         // Phase 5: powered ticks a sapling above the box waits before the box tries to grow it (retries every this long if the space is blocked)
+
         public int GearActiveFadeTicks => 12;                     // the gear crossfades between its idle and active sprite this fast
 
         enum BoxCycle : byte { Idle, Ready, Strike }
@@ -247,8 +247,7 @@ namespace Factorraria.Common.Harvester
                     case BoxCycle.Idle:
                         if (scan && HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
                             boxes[k] = new BoxState { Cycle = BoxCycle.Ready, Ticks = 0 };
-                        else
-                            TickSapling(k, x, y);   // Phase 5: while Idle, Ticks counts the powered ticks a sapling above has been growing
+
                         break;
 
                     case BoxCycle.Ready:
@@ -502,22 +501,6 @@ namespace Factorraria.Common.Harvester
             HarvesterBoxTrees.TryReplant(x, y);
         }
 
-        // Phase 5. An idle box with one of its own saplings above it counts powered ticks (boxes[k].Ticks is free while Idle) and, every TreeGrowTicks,
-        // asks vanilla to grow the tree. The sapling tile has no random-update growth of its own, so the box is the only thing that grows it.
-        void TickSapling(int k, int x, int y)
-        {
-            if (!HarvesterBoxTrees.IsSapling(x, y, ValidTileType))
-            {
-                boxes[k].Ticks = 0;
-                return;
-            }
-
-            if (++boxes[k].Ticks < Math.Max(1, TreeGrowTicks))
-                return;
-
-            boxes[k].Ticks = 0;
-            HarvesterBoxTrees.TryGrow(x, y);
-        }
 
         // The three tiles beside and above the plant: where a conveyor can take the drops, or a vItem can wait.
         IEnumerable<Point> DropNeighbours(int x, int y)

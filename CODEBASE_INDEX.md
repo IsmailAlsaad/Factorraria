@@ -376,14 +376,14 @@ tModLoader/other bases -> project types:
     #Kind:HarvesterBoxKind[ab] +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
 **HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxNetSystem, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxRules, HarvesterBoxTrees, HarvesterBoxUIState, IDropCaptureTarget, IHarvesterBoxRow, IMachineDynamicDraw, IRowMachine, MachineUIRegistry, MachineUIStateBase, MachineUISystem, RoboticArmDropCaptureSystem, VirtualItem, VirtualItemSystem
   abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IDropCaptureTarget, IHarvesterBoxRow
-    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +HarvestScanTicks:int +HarvestDelayTicks:int +StaffExtendTicks:int +StaffSweepTicks:int +StaffRetractTicks:int +StaffAbortMarginTicks:int +StaffTexturePath:string +StaffOffset:Vector2 +StaffPivotOffset:Vector2 +StaffSpriteRotationDegrees:float +StaffScale:float +StaffDustChance:float +StaffDustType:int +TreeGrowTicks:int +GearActiveFadeTicks:int +BeginClientStrike(int) +RouteDrop(Item) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
+    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +HarvestScanTicks:int +HarvestDelayTicks:int +StaffExtendTicks:int +StaffSweepTicks:int +StaffRetractTicks:int +StaffAbortMarginTicks:int +StaffTexturePath:string +StaffOffset:Vector2 +StaffPivotOffset:Vector2 +StaffSpriteRotationDegrees:float +StaffScale:float +StaffDustChance:float +StaffDustType:int +GearActiveFadeTicks:int +BeginClientStrike(int) +RouteDrop(Item) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
     enum BoxCycle : byte
       {Idle, Ready, Strike}
     struct BoxState
       +Cycle:BoxCycle +Ticks:int
 **HarvesterBoxTreeBase.cs** uses: HarvesterBoxKind, HarvesterBoxSapling, HarvesterBoxTrees
   abstract class HarvesterBoxTreeBase<TTile> : ModTree
-    #Kind:HarvesterBoxKind[ab] #TreeKind:TreeTypes[ab] #WoodItem:int[ab] #SaplingRow:int[ab] #TopStyle:int[ab] #TopFrameWidth:int[v] #TopFrameHeight:int[v] #TrunkTexturePath:string[v] +TreeShaderSettings:TreePaintingSettings[ov] +GetTexture()[ov] +GetTopTextures()[ov] +GetBranchTextures()[ov] +CountsAsTreeType:TreeTypes[ov] +DropWood()[ov] +SaplingGrowthType(ref int)[ov] +SetTreeFoliageSettings(int,int,Tile,int,ref int,int,ref int,ref int)[ov]
+    #Kind:HarvesterBoxKind[ab] #TreeKind:TreeTypes[ab] #WoodItem:int[ab] #SaplingRow:int[ab] #TopStyle:int[ab] #TopFrameWidth:int[v] #TopFrameHeight:int[v] #TrunkTexturePath:string[v] #TrunkSheetCount:int[v] #TrunkSheetIndex:int[v] +TreeShaderSettings:TreePaintingSettings[ov] +GetTexture()[ov] +GetTopTextures()[ov] +GetBranchTextures()[ov] +CountsAsTreeType:TreeTypes[ov] +DropWood()[ov] +SaplingGrowthType(ref int)[ov] +SetTreeFoliageSettings(int,int,Tile,int,ref int,int,ref int,ref int)[ov]
 **HarvesterBoxTrees.cs** uses: HarvesterBoxSapling
   static class HarvesterBoxTrees
     +TreeBoxes:HashSet<int>[s] +Clear()[s] +IsGrownTree(int,int,int)[s] +IsSapling(int,int,int)[s] +TryGrow(int,int)[s] +GrowTree(int,int,int,bool)[s] +TryReplant(int,int)[s]
@@ -1741,7 +1741,7 @@ tModLoader/other bases -> project types:
     +RegisterVisuals()[s]
 **HarvesterBoxSapling.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, HarvesterBoxTrees, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile
   class HarvesterBoxSapling : ModTile
-    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +GrowSapling(int,int,bool,int,bool)[ov]
+    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +RandomUpdate(int,int)[ov]
 **HarvesterBoxTileEntities.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, HarvesterBoxTileEntityBase, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile, WaterleafHarvesterBoxTile
   class DaybloomHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<DaybloomHarvesterBoxTile>
   class MoonglowHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<MoonglowHarvesterBoxTile>
