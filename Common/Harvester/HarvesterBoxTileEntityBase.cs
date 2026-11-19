@@ -45,8 +45,8 @@ namespace Factorraria.Common.Harvester
         public int GearSpinUpTicks => 30;                 // 0 to full speed
         public int GearSpinDownTicks => 30;               // full speed to 0
         public float GearSyncEase => 0f;                  // 0 = a gear never gets nudged (stops wherever it stops, no startup hiccup). Above 0 (try 0.005) a full-speed gear slowly slides onto the shared clock so rows started at different times mesh with each other
-        public Vector2 GearOffset => new Vector2(0f,2f);        // pixels from the middle of the box tile to the gear's centre
-        public float GearScale => 1f;                     // the draw size is the texture size times this
+        public Vector2 GearOffset => new Vector2(0f,4f);        // pixels from the middle of the box tile to the gear's centre
+        public float GearScale => 0.925f;                     // the draw size is the texture size times this
 
         bool gearInitialized;
         float gearSpeed;       // 0 (stopped) .. 1 (full speed)
@@ -135,7 +135,7 @@ namespace Factorraria.Common.Harvester
                 int x = Position.X + k;
                 Texture2D texture = IsGearActive(k) ? active : idle;   // the draw size comes from the texture itself
                 Vector2 center = new Vector2(x * 16f + 8f, Position.Y * 16f + 8f) + GearOffset;
-                spriteBatch.Draw(texture, center - Main.screenPosition, null, Lighting.GetColor(x, Position.Y), GearAngle(x), texture.Size() / 2f, GearScale, SpriteEffects.None, 0f);
+                spriteBatch.Draw(texture, center - Main.screenPosition, null, Lighting.GetColor(x, Position.Y) * 1f, GearAngle(x), texture.Size() / 2f, GearScale, SpriteEffects.None, 0f);
             }
         }
 
