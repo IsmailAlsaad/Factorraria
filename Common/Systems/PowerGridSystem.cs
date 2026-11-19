@@ -231,12 +231,20 @@ namespace Factorraria.Common.Systems
 
             int width = data != null ? data.Width : 1;
             int height = data != null ? data.Height : 1;
+            int firstX = te.Position.X;
+
+            // A row machine (the Harvester Box row) covers a run of tiles: a wire on any of them connects the whole row.
+            if (te is IRowMachine rowMachine)
+            {
+                firstX = rowMachine.RowFirstX;
+                width = rowMachine.RowLength;
+            }
 
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
-                    Point tilePos = new Point(te.Position.X + x, te.Position.Y + y);
+                    Point tilePos = new Point(firstX + x, te.Position.Y + y);
 
                     foreach (var wireType in CustomWireSystem.AllWireTypes)
                     {

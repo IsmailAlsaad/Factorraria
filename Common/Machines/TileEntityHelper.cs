@@ -29,6 +29,21 @@ namespace Factorraria.Common.Machines
                 return false;
             }
 
+            // A Harvester Box row has ONE entity for all its boxes (at the first one): any box of the row resolves to it, and cornerPosition
+            // is the entity's own position. Box tiles only; every other machine goes on as before.
+            if (global::Factorraria.Common.Harvester.HarvesterBoxRows.IsBoxTile(tile.TileType))
+            {
+                if (global::Factorraria.Common.Harvester.HarvesterBoxRows.TryFindRowEntity(i, j, out entity, out Point16 rowCorner))
+                {
+                    cornerPosition = rowCorner;
+                    return true;
+                }
+
+                entity = null;
+                cornerPosition = new Point16(i, j);
+                return false;
+            }
+
             Point16 position = new Point16(i, j);
             if(TileEntity.ByPosition.TryGetValue(position, out entity))
             {

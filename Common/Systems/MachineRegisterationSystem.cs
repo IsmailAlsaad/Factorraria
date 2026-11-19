@@ -198,7 +198,7 @@ namespace Factorraria.Common.Machines
                 MissileTankTile.SheetPath(),
                 MissileTankTile.SheetPath());
 
-            // Harvester Boxes (8, one per planter box): static framed tiles, no UI, no recipes. See docs/harvester_box/ROADMAP.md.
+            // Harvester Boxes (8, one per planter box): static framed tiles with a small electricity-only right-click panel. See docs/harvester_box/ROADMAP.md.
             HarvesterBoxRegistration.RegisterVisuals();
         }
 

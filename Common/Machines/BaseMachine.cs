@@ -965,6 +965,10 @@ namespace Factorraria.Common.Machines
             return biomeWater != liquidType && Recipes.ConsumesLiquid(biomeWater) ? biomeWater : liquidType;
         }
 
+        // The tile that was right-clicked, set by MachineVisualOverride.RightClick just before OnRightClick (whose i, j are the entity's corner).
+        // Only row machines need it: their entity covers several tiles. It has to be static: the click handler and the machine do not share an object.
+        public static Point16 RightClickedTile;
+
         public virtual void OnRightClick(int i, int j)
         {
             if (MachineUIRegistry.Definitions.ContainsKey(ValidTileType))

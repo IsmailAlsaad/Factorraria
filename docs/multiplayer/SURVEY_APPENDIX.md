@@ -879,6 +879,12 @@ Not part of the ten survey steps; see the roadmap Progress entry 'Side feature (
 - **Unverified (vanilla internals not in the repo):** the exact player position that lets vanilla's minecart physics catch the rider on the rail (`CartRide.MountRailLift`, default 0), and whether the rider keeps rolling on the track at the cart's speed.
 - **Known limits:** the returned cart is stationary; a plain cart in a chain leaves the chain when ridden.
 
+## Harvester Box rows (side feature, Harvester Box Phase 1b, 2026-11-18)
+- **Rule:** a row of same-kind Harvester Boxes touching left and right has ONE tile entity, at its leftmost box. A wire on any box powers the row; the wire switch toggles the row; the right-click panel (electricity icon only) opens on the clicked tile.
+- **Design:** the server (or single-player) owns the entities. Place, mine and world load mark a position dirty (`HarvesterBoxRowSystem.MarkDirty`); one tick later the reconcile kills extra entities, creates a missing one at the left end with `MachinePlacement.ServerPlace` (message 86) and carries the wire switch state. No packet. `TileEntityHelper.TryGetEntityFromTile` resolves any box of a row to its entity.
+- **Clients:** create nothing. They drop the replica on a mined tile, and every 20 ticks any replica that has another replica to its left in the same run; they refresh the row geometry from tiles (no `Update` on a client).
+- **Known limits:** server-side entity kills are not broadcast (item 14), so a stale replica can exist for up to 20 ticks; left-extending a row recreates the entity (open panel closes). Untested.
+
 ## Wall of Flesh shield (side feature, super weapons S1.1, 2026-10-29)
 - **Why it needs more than a hook:** the server applies a client's hit (`MessageID.StrikeNPC`, case 28 in MessageBuffer) through `StrikeNPC(HitInfo, fromNet: true)` without running `ModifyIncomingHit`, damage over time goes through `UpdateLifeRegen`, and other mods may edit `life` directly. A shield that only edits the hit calculation leaks.
 - **Design:** `WallShieldGlobalNPC` (Common/SuperWeapons/): ModifyIncomingHit zeroes damage and knockback, UpdateLifeRegen zeroes damage over time, CheckDead returns false, PostAI puts the mouth's life back on every side. ShieldUp is synced by SendExtraAI / ReceiveExtraAI and set in SetDefaults (OnSpawn runs after the first sync). No packet.

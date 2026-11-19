@@ -22,6 +22,10 @@ namespace Factorraria.Common.Net
     {
         public static void OnTileKilled(int x, int y)
         {
+            // A Harvester Box row keeps ONE entity for several tiles, so mining one box must not kill the row's entity: it has its own path.
+            if (global::Factorraria.Common.Harvester.HarvesterBoxRows.OnTileKilled(x, y))
+                return;
+
             if (!TileEntityHelper.TryGetEntityFromTile(x, y, out TileEntity entity, out Point16 corner) || entity is not BaseMachine machine)
                 return;
 

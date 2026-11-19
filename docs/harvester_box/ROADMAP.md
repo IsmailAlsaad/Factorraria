@@ -42,7 +42,7 @@ Home: `docs/harvester_box/ROADMAP.md`. Written 2026-11-17 by the Phase 0 patch. 
 - Gears mesh with any adjacent Harvester Box, whatever its type.
 - "Nearby" means about one screen from any player.
 - The box has no inventory: drops appear at the box (real items) or become vItems (conveyors can pick them up).
-- Each box needs its own custom wire on its tile to join a power grid (machines bridge wire types, adjacent boxes do not conduct to each other). Bridging along a row can be added later.
+- A custom wire on ANY box of a row connects the whole row to the grid (Phase 1b, see 6c); rows of different kinds do not join. (Phase 1 needed one wire per box.)
 
 ## 2. Design decisions
 
@@ -54,6 +54,8 @@ Home: `docs/harvester_box/ROADMAP.md`. Written 2026-11-17 by the Phase 0 patch. 
 6. **Server-authoritative cycle:** `Idle -> Ready -> Extending -> Sweeping -> Retracting -> Idle`.
 
 ## 3. Multiplayer design (rule 9)
+
+Update 2026-11-18: a row of same-kind boxes has ONE entity (at its leftmost box) and the server reconciles it after every place or mine; the lifecycle and the client side are in 6c. Rows below that say "per box" mean per tile.
 
 | Thing | Authority | Sync |
 |---|---|---|
@@ -87,7 +89,8 @@ Home: `docs/harvester_box/ROADMAP.md`. Written 2026-11-17 by the Phase 0 patch. 
 One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and done.
 
 - [x] Phase 0: research done. Probe 2 report received 2026-11-17 and logged in 7c. Probe 3 (`tools\harvester_probe3.ps1`) was written in the Phase 1 chat and run there against the probe 2 decompile cache: planter styles, gemcorn ids, `GrowTree` callers and the seed placement path are answered in 7d. Still open: the callers in `Main` and `TileDrawing` (they were not decompiled yet). Run `harvester_probe3.ps1 -Dll ...` once to fill that in; its report goes in the next chat.
-- [~] Phase 1: tile, item, power, herb-on-own-box rules. Applied 2026-11-17 (patch_harvester_p1), UNTESTED. See 6b for what it built and what to test.
+- [x] Phase 1: tile, item, power, herb-on-own-box rules. Applied 2026-11-17 (patch_harvester_p1), TESTED 2026-11-18 (Ismail: everything passed). See 6b.
+- [~] Phase 1b: row power sharing (one entity per row) and the right-click electricity panel. Applied 2026-11-18 (patch_harvester_rows), UNTESTED. See 6c for the design and the test list. Test it before Phase 2.
 - [ ] Phase 2: gear visuals
 - [ ] Phase 3: herb harvest and drops
 - [ ] Phase 4: staff, particles, client sync
@@ -111,6 +114,38 @@ Art for Ismail (all optional: until a PNG exists the tile borrows the vanilla pl
 - Items: `.../HarvesterBox/<Kind>HarvesterBoxItem.png`, 32x32.
 
 Phase 1 test checklist: see the patch reply (placing and merging, mining, herb planting by hand and by growth, wrong herb rejected on vanilla planters, power, multiplayer).
+
+## 6c. Phase 1b: row power sharing and the right-click panel (patch_harvester_rows, 2026-11-18, applied UNTESTED)
+
+Decisions (Ismail, 2026-11-18, after Phase 1 passed testing):
+1. A row is Harvester Boxes of the SAME kind touching left and right (the same rule the tile merge frames use). Powering one box powers the whole row.
+2. ONE merged tile entity per row. The alternative (one entity per box, with PowerGridSystem treating a touching row as one connection) was compared and recommended: it needs no save change and no entity create/kill code. Ismail chose the merged entity.
+3. A vanilla wire switch toggles the WHOLE row (it is the one entity's `WireToggle`).
+4. Power demand is per box: `PowerDemand` = 10 x row length (the 10 is still a placeholder). Each box will run its own gear and staff, so power should grow with work.
+5. Right-click on a box opens a small panel that shows only the electricity icon, on the tile that was clicked (not on the row's first box).
+
+How it works
+- Invariant (server and single-player): every maximal run of same-kind box tiles has exactly ONE entity, at the run's leftmost box. Row length, `cornerPosition`, `MachineWidth`, `MachineCenter` and the demand are worked out from the tiles and never saved, so the save format did not change. `Common/Harvester/HarvesterBoxRows.cs` has the stateless helpers (run, entity of a run, geometry, the kill path); `Common/Harvester/HarvesterBoxRowSystem.cs` has the reconcile. `Common/Machines/IRowMachine.cs` is the small interface the entity implements.
+- Lookup: `TileEntityHelper.TryGetEntityFromTile` is row-aware for box tiles only, so draw, light, wire, right-click, the bootstrap scan and the power grid resolve any box of a row to the row's entity (the corner it returns is the entity's position).
+- Lifecycle: placing a box (`Hook_AfterPlacement`, or a client's request through `NetPlaceEntityAttempt`, which creates nothing when the row already has an entity), mining a box (`MachineRemoval.OnTileKilled` hands box tiles to `HarvesterBoxRows.OnTileKilled`) and world load only MARK a position dirty. `HarvesterBoxRowSystem.PostUpdateWorld` reconciles the marked runs one tick later (the kill hook runs before the tile is gone): it kills extra entities, creates a missing one at the left end through `MachinePlacement.ServerPlace` (which shares it), and carries the wire switch state over (off wins when rows join; a split-off part inherits it). Every 300 ticks a cheap check marks any entity that is not at its run's left end or that shares its run with another entity. World load marks every entity once, which folds the one-entity-per-box rows of Phase 1 worlds into one entity per row.
+- Power: `PowerGridSystem.EnqueueMachineWires` reads the whole span of an `IRowMachine`, so a custom wire on any box connects the row. `PowerDemand` = 10 x `RowLength`.
+- Panel: `MachineVisualOverride.RightClick` records the clicked tile in `BaseMachine.RightClickedTile`; the box's `OnRightClick` calls `MachineUISystem.OpenUI` at that tile with the row entity. `HarvesterBoxUIState` is the pole panel's twin: only `ElectricityUIIcon`, 40x40 at offset (-12, -60), art `Common/UI/CustomUIElements/Lightning_*.png`, nothing new. Registered for all 8 tiles in `HarvesterBoxRegistration`. Before this patch a right-click on a box did nothing: `MachineVisualOverride.RightClick` only checks the visual registry (`DrawNormalTile` is read only in `PreDraw`), reached `BaseMachine.OnRightClick`, found no entry in `MachineUIRegistry` and returned silently.
+
+Multiplayer design (rule 9)
+- Authority: the server and single-player decide when row entities are created or removed. A client never creates one; it gets them through message 86 (`MachinePlacement.Share`) or with the section data.
+- Synced: nothing new, no new packet. `isOn`, `isWorking`, `WireToggle` and the power readout ride the existing per-entity snapshot and light sync. Tile frames are tile data.
+- Removal: nothing broadcasts a server-side entity kill (multiplayer verification item 14 is still open), so a client (a) removes the replica on a tile it sees mined, as before, and (b) every 20 ticks removes any replica that has another replica to its left in the same run, and refreshes the geometry of the rest (a client never runs `Update`).
+- The dirty queue is locked because `NetPlaceEntityAttempt` may run on the network thread.
+- Single-player runs the same reconcile.
+
+Consequences for later phases
+- Phases 2 to 4 want PER-BOX state (gear parity, the harvest cycle, the plant above each box). The entity is now per row, so that state must be derived from the tiles (x parity for the gears) or kept in an array indexed by `x - Position.X` that is rebuilt from the tiles whenever the row changes. A merge, a split or a new left end kills and recreates the entity, so such state must not be saved only on the entity. Decide this before Phase 2.
+- Extending a row at its left end moves the entity (kill, create at the new left end): an open panel closes and entity-only state resets.
+
+Known limits
+- Not compiled or run. The entity create/kill churn and the client cleanup are new code: test them in multiplayer.
+- `MachineDetailSystem.WithinReach` measures to the nearest box of the row.
+- A wireless row of two or more boxes now reads "No power" on hover (it forms a grid), a lone box still reads Off.
 
 ## 7. Verify (resolved by the probe, then recorded here)
 
@@ -198,4 +233,4 @@ Open dumps before writing Phase 5 (small; the next chat can ask for them in one 
 
 ## 8. Next-chat prompt
 
-"Continue the Harvester Box with Phase 2 (gear visuals). Read `docs/harvester_box/ROADMAP.md` from a fresh clone: section 6 (Progress), 6b (what Phase 1 built and its test checklist) and the \"Decisions 2026-11-17 (Phase 1 chat)\" block. Phase 1 test results: <PASTE what worked and what failed, or say nothing was tested yet>. If a Phase 1 test failed, fix that first. Probe 3 report (`tools\harvester_probe3_report.txt`, only the Main / TileDrawing caller part is still open, see 7d): <PASTE it, or say it has not been run>; it is needed before Phase 5. My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll` to any probe). Phase 2 needs the gear sprite from me: tell me the exact path and size before writing code."
+"Continue the Harvester Box with Phase 2 (gear visuals). Read `docs/harvester_box/ROADMAP.md` from a fresh clone: section 6 (Progress), 6b (what Phase 1 built), 6c (row power sharing) and the \"Decisions 2026-11-17 (Phase 1 chat)\" block. Phase 1 passed testing. Phase 1b (row power sharing, one entity per row, right-click electricity panel, see 6c) test results: <PASTE what worked and what failed, or say nothing was tested yet>. If a Phase 1b test failed, fix that first. Read 6c before Phase 2: the per-box state question there must be decided first. Probe 3 report (`tools\harvester_probe3_report.txt`, only the Main / TileDrawing caller part is still open, see 7d): <PASTE it, or say it has not been run>; it is needed before Phase 5. My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll` to any probe). Phase 2 needs the gear sprite from me: tell me the exact path and size before writing code."

@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Harvester;
 using Factorraria.Common.Machines;
+using Factorraria.Common.UI;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -29,6 +30,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox
             string sheet = ModContent.GetInstance<TTile>().Texture;
             MachineVisualRegistry.Register<TEntity>(type, sheet, sheet);
             MachineVisualRegistry.Definitions[type].DrawNormalTile = true;
+
+            // The right-click panel: only the electric icon, on the clicked box (HarvesterBoxUIState).
+            MachineUIRegistry.Register(type, new HarvesterBoxUIState());
         }
     }
 }

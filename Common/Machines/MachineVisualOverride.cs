@@ -568,6 +568,9 @@ namespace Factorraria.Common.Machines
             if (!MachineVisualRegistry.Definitions.TryGetValue(type, out var visualDef))
                 return; // not a registered machine, ignore
 
+            // OnRightClick gets the entity's corner; a row machine needs the tile that was actually clicked (the Harvester Box panel).
+            BaseMachine.RightClickedTile = new Point16(i, j);
+
             // Patch 4.5: single-player creates a missing entity here (a safety net behind the bootstrap scan); a multiplayer client only looks up.
             BaseMachine machine = MachinePlacement.EnsureEntity(i, j);
             if (machine == null)
