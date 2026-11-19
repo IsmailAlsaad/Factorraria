@@ -68,7 +68,7 @@ Single-player runs the request handler directly. The job belongs to one player a
 
 | Patch | What | Netcode |
 |---|---|---|
-| M1 | Selection: Shift + right-click drag, size cap, saved region, area sheet overlay, "W x H" readout (`MechSuitBuilderSystem`) | none |
+| M1 | Selection: Shift + right-click drag, size cap, saved region, area sheet overlay, no size text (`MechSuitBuilderSystem`) | none |
 | M2 | Hologram of the saved region at the cursor, the placement box, red states (collision, missing material), Shift + left click sends nothing yet | none |
 | M3 | Shared placement helper extracted from `RoboticArmWorker`; server build job; two builder arms (visuals, retract and grab); `MaxArms` 3 / 4 and 2 anchors while building | start, cancel, arm state |
 | M4 | Esc cancel, job end report, progress and remaining-material readout, multiplayer pass | cancel packet |
@@ -76,7 +76,7 @@ Single-player runs the request handler directly. The job belongs to one player a
 
 ## 6. Test checklists
 
-M1: not in the suit, Shift + right-click does nothing special. In the suit, hold Shift and right-click drag: the area sheet appears, the "W x H" readout follows the drag, a drag past 64 stops growing. Release: the selection stays. A new drag replaces it. Shift + right-click without moving clears it. Releasing Shift mid-drag keeps the old selection. Holding Shift does not swing or place the held item. Leaving the world clears it. Taking the suit off hides it, getting back in shows it again.
+M1: not in the suit, Shift + right-click does nothing special. In the suit, hold Shift and right-click drag: the area sheet appears, a drag past 64 stops growing. Release: the selection stays. A new drag replaces it. Shift + right-click without moving clears it. Releasing Shift mid-drag keeps the old selection. Holding Shift does not swing or place the held item. Leaving the world clears it. Taking the suit off hides it, getting back in shows it again.
 
 ## 7. Art
 
@@ -84,12 +84,13 @@ None needed for M1 and M2 (they reuse `RoboticArmArea.png` and `RoboticArmAreaIn
 
 ## 8. Open items (defaults used until Ismail decides)
 
-- Chest, machine and container contents: default is that the object is placed empty and its contents and settings (recipe, area, filters) are not copied, so items are never duplicated. Decide before M5.
+- DECIDED 2026-11-19: chests, machines and containers are placed EMPTY. Their contents and settings (recipe, area, filters) are not copied, so items are never duplicated.
+- DECIDED 2026-11-19: the selection shows no size text.
 - What the readout looks like during a build (M4).
 
 ## 9. Progress
 
-- [~] M1 Selection (patch_mech_builder_m1_selection.ps1, applied, untested)
+- [x] M1 Selection (patch_mech_builder_m1_selection.ps1, tested 2026-11-19, all checks passed; patch_mech_builder_m1b_no_readout.ps1 then removed the "W x H" text because Ismail did not want it)
 - [ ] M2 Hologram
 - [ ] M3 Server build job and builder arms
 - [ ] M4 Cancel, report, multiplayer pass
@@ -97,4 +98,4 @@ None needed for M1 and M2 (they reuse `RoboticArmArea.png` and `RoboticArmAreaIn
 
 ## 10. Next-chat prompt
 
-"Implement Mech Suit build tool patch M2 (hologram). Clone the repo, read docs/mech_suit_builder/ROADMAP.md (sections 1, 3, 5, 9) and PROJECT_CONTEXT.md. M1 results: <paste>."
+"Implement Mech Suit build tool patch M2 (hologram). Clone the repo, read docs/mech_suit_builder/ROADMAP.md (sections 1, 3, 5, 9) and PROJECT_CONTEXT.md. M1 is tested and done (2026-11-19)."

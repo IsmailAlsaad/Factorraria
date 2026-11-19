@@ -15,7 +15,7 @@ namespace Factorraria.Common.Mounts
     //   Shift + right-click drag  = select a region of tiles (it is saved and stays on screen).
     //   Shift + right-click, no drag, while a selection exists = clear it. (With no selection it selects that one tile.)
     // Everything only works while the local player is in the suit. The selection is drawn with the Robotic Arm's area sheet
-    // (RoboticArmArea.png, 4x4 cells of 16x16, see RoboticArmAreaEditorSystem for the cell layout) and a small "W x H" readout above it.
+    // (RoboticArmArea.png, 4x4 cells of 16x16, see RoboticArmAreaEditorSystem for the cell layout). There is no size text.
     // Holding Shift in the suit also takes the cursor (mouseInterface), so the held item is not used; the next steps need Shift + left click.
     public class MechSuitBuilderSystem : ModSystem
     {
@@ -178,9 +178,6 @@ namespace Factorraria.Common.Mounts
                     spriteBatch.Draw(sheet, position, source, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
                 }
             }
-
-            Vector2 textPosition = new Vector2(tiles.X * 16f, tiles.Y * 16f - 22f) - Main.screenPosition;
-            Utils.DrawBorderString(spriteBatch, tiles.Width + " x " + tiles.Height, textPosition, Color.White, 0.8f);
         }
     }
 }
