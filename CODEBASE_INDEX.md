@@ -4,7 +4,7 @@ generated 2026-11-19 | 423 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(84) BaseMachine(58) FactorrariaPacket(37) LiquidTypeRegistry(34) PacketDirection(32) RecipeBook(26) Factorraria(22) Cart(22) MachineUIStateBase(19) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) RecipeCatalog(16) CartSystem(16) Entry(15) CartModule(15) RecipeKnowledgeSystem(14) MachineVisualRegistry(14)
+FactorrariaNet(84) BaseMachine(58) FactorrariaPacket(37) LiquidTypeRegistry(34) PacketDirection(32) RecipeBook(26) Factorraria(22) Cart(22) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) RecipeCatalog(16) CartSystem(16) Entry(15) CartModule(15) RecipeKnowledgeSystem(14) MachineVisualRegistry(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -19,7 +19,7 @@ Project bases -> derived:
 - IElectricConsumer: ElectricConsumerMachine
 - IElectricProducer: ElectricProducerMachine, IElectricStorage
 - IElectricStorage: SunCapsuleTileEntity
-- IMachineDynamicDraw: BeeWheelTileEntity, ExtractinatorTileEntity, MissileTankTileEntity, RoboticArmTileEntity, SunCapsuleTileEntity
+- IMachineDynamicDraw: BeeWheelTileEntity, ExtractinatorTileEntity, HarvesterBoxTileEntityBase, MissileTankTileEntity, RoboticArmTileEntity, SunCapsuleTileEntity
 - IMachineTileUnderlay: MissileTankTileEntity
 - IMotorTile: MotorTileBase
 - IRowMachine: HarvesterBoxTileEntityBase
@@ -370,9 +370,9 @@ tModLoader/other bases -> project types:
 **HarvesterBoxTileBase.cs** uses: BaseMachine, HarvesterBoxKind, HarvesterBoxRegistry
   abstract class HarvesterBoxTileBase<TEntity, TItem> : ModTile
     #Kind:HarvesterBoxKind[ab] +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
-**HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxRowSystem, HarvesterBoxRows, IRowMachine, MachineUIRegistry, MachineUISystem
-  abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine
-    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
+**HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxUIState, IMachineDynamicDraw, IRowMachine, MachineUIRegistry, MachineUIStateBase, MachineUISystem
+  abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw
+    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSnapEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
 
 ### Common/Knowledge/
 **LiquidBiomeVisits.cs** uses: LiquidTypeRegistry, MachineBiome, RecipeKnowledgeNet, RecipeKnowledgeSystem
@@ -1744,7 +1744,7 @@ tModLoader/other bases -> project types:
     #Kind:HarvesterBoxKind[ov]
 **HarvesterBoxUIState.cs** uses: ElectricConsumerMachine, ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase
   class HarvesterBoxUIState : MachineUIStateBase
-    #BuildElements()[ov]
+    +PanelShiftX:float +BasePanelOffset:Vector2[ov] #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/MechanicalAssembler/
 **MechanicalAssemblerRecipeRegistry.cs** uses: ByriteAlloyItem, ByriteAlloySlabItem, CopperWireItem, CrimtaneSheetItem, CustomRecipe, DemoniteSheetItem, GoldPlateItem, GoldWireItem, IronMotorItem, IronPipeItem, LeadMotorItem, LeadPipeItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PureSiliconItem, RecipeBook, SimpleCircuitItem, SteelBarItem, SteelScrewItem, TinWireItem

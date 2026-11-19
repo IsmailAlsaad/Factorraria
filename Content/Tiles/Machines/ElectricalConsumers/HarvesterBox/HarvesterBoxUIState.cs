@@ -12,6 +12,11 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox
     {
         ElectricConsumerMachine Entity => (ElectricConsumerMachine)CurrentEntity;
 
+        // Set by the entity right before the panel opens: half a tile (8) for an even-length row, so the icon sits between the two middle boxes.
+        public float PanelShiftX;
+
+        public override Vector2 BasePanelOffset => new Vector2(PanelShiftX, 0f);
+
         protected override List<MachineUIElementEntry> BuildElements()
         {
             var list = new List<MachineUIElementEntry>();

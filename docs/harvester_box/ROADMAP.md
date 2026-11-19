@@ -90,8 +90,8 @@ One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 
 - [x] Phase 0: research done. Probe 2 report received 2026-11-17 and logged in 7c. Probe 3 (`tools\harvester_probe3.ps1`) was written in the Phase 1 chat and run there against the probe 2 decompile cache: planter styles, gemcorn ids, `GrowTree` callers and the seed placement path are answered in 7d. Still open: the callers in `Main` and `TileDrawing` (they were not decompiled yet). Run `harvester_probe3.ps1 -Dll ...` once to fill that in; its report goes in the next chat.
 - [x] Phase 1: tile, item, power, herb-on-own-box rules. Applied 2026-11-17 (patch_harvester_p1), TESTED 2026-11-18 (Ismail: everything passed). See 6b.
-- [~] Phase 1b: row power sharing (one entity per row) and the right-click electricity panel. Applied 2026-11-18 (patch_harvester_rows), UNTESTED. See 6c for the design and the test list. Test it before Phase 2.
-- [ ] Phase 2: gear visuals
+- [x] Phase 1b: row power sharing (one entity per row) and the right-click electricity panel. Applied 2026-11-18 (patch_harvester_rows), TESTED 2026-11-19 (Ismail: done and tested). See 6c.
+- [~] Phase 2: gear visuals. Applied 2026-11-19 (patch_harvester_gears), UNTESTED. See 6d. Needs the gear PNGs from Ismail (6d).
 - [ ] Phase 3: herb harvest and drops
 - [ ] Phase 4: staff, particles, client sync
 - [ ] Phase 5: acorns, trees, gemcorns
@@ -147,6 +147,27 @@ Known limits
 - `MachineDetailSystem.WithinReach` measures to the nearest box of the row.
 - The smart-cursor outline (`MachineSmartOutlineSystem`) uses the row length as the footprint width, so one outline covers the whole row; the "nearby" right-click fallback (cursor not over the row) opens the panel on the row's first box.
 - A wireless row of two or more boxes now reads "No power" on hover (it forms a grid), a lone box still reads Off.
+
+## 6d. Phase 2: gear visuals (patch_harvester_gears, 2026-11-19, applied UNTESTED)
+
+Decisions (Ismail, 2026-11-19):
+1. Gear direction comes ONLY from the parity of the world tile x (even one way, odd the other). Nothing is stored, so any two touching gears mesh, whatever the row or kind.
+2. Per-box state for Phases 3 and 4 (harvest cycle, plant above): an array indexed by `x - Position.X`, rebuilt from the tiles whenever the row changes (a merge, a split or a new left end rebuilds the entity), never saved only on the entity.
+3. The right-click electricity panel always opens in the MIDDLE of the row (supersedes 6c decision 5, "on the tile that was clicked"): middle box of an odd row, between the two middle boxes of an even row (`HarvesterBoxUIState.PanelShiftX` = 8 px), whichever box was clicked. Clicking any box of an open row closes it.
+4. The gear draw size is read from the texture. The sprite has 4 teeth, on the corners. The mesh offset (degrees) and the speed are tunable properties.
+
+As built (all in `HarvesterBoxTileEntityBase`, client only, never saved or sent)
+- The row entity implements `IMachineDynamicDraw`. `DynamicUpdate` runs on clients and single-player only; `DynamicDraw` draws one gear per box in front of the tiles, so in front of the plant.
+- Tunables, expression-bodied so hot reload works: `GearTexturePath`, `GearActiveTexturePath`, `GearSpeedDegreesPerTick` (3), `GearMeshOffsetDegrees` (90), `GearTeeth` (4), `GearSpinUpTicks` / `GearSpinDownTicks` (30), `GearSnapEase`, `GearOffset` (0, from the middle of the box tile), `GearScale`.
+- Angle: even world x = `phase`, odd world x = `-phase + GearMeshOffsetDegrees`.
+- One shared clock: `GearClock` is a pure function of `Main.GameUpdateCount`, so every gear on a client agrees with no state. The clock is NOT synced between clients (cosmetic). Phase 4 times the staff strike from the server's cycle start tick, not from this clock.
+- Spin-up and spin-down: each row eases a `gearSpeed` 0..1 with `isOn` (the wire switch is already folded into `isOn`). At full speed the row's phase slides onto the clock; stopped, it settles on the nearest tooth step, so all stopped gears also mesh. While easing, a gear can be briefly out of mesh with a neighbour in a different state (a powered next to an unpowered row).
+- A new entity (row change) starts at full speed if powered, so a merge shows no spin-up blip.
+- `IsGearActive(boxIndex)` is the hook Phase 4 overrides for the active-gear sprite (false now; the idle sprite stands in while the active PNG does not exist).
+- No gear PNG yet means nothing is drawn (`RequestIfExists`).
+- Netcode: none, so no `docs/multiplayer` edit.
+
+Art for Ismail: `Content/Tiles/Machines/ElectricalConsumers/HarvesterBox/HarvesterBoxGear.png` (idle) and `HarvesterBoxGear_Active.png` (same size, same centre), each a single frame with the gear centred.
 
 ## 7. Verify (resolved by the probe, then recorded here)
 
@@ -234,4 +255,4 @@ Open dumps before writing Phase 5 (small; the next chat can ask for them in one 
 
 ## 8. Next-chat prompt
 
-"Continue the Harvester Box with Phase 2 (gear visuals). Read `docs/harvester_box/ROADMAP.md` from a fresh clone: section 6 (Progress), 6b (what Phase 1 built), 6c (row power sharing) and the \"Decisions 2026-11-17 (Phase 1 chat)\" block. Phase 1 passed testing. Phase 1b (row power sharing, one entity per row, right-click electricity panel, see 6c) test results: <PASTE what worked and what failed, or say nothing was tested yet>. If a Phase 1b test failed, fix that first. Read 6c before Phase 2: the per-box state question there must be decided first. Probe 3 report (`tools\harvester_probe3_report.txt`, only the Main / TileDrawing caller part is still open, see 7d): <PASTE it, or say it has not been run>; it is needed before Phase 5. My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll` to any probe). Phase 2 needs the gear sprite from me: tell me the exact path and size before writing code."
+"Continue the Harvester Box with Phase 3 (herb harvest: server state machine, replant, shared drop capture, drops as items near a player or vItems when culled). Read `docs/harvester_box/ROADMAP.md` from a fresh clone: section 6 (Progress), 6c (row entity) and 6d (gears, per-box state decision). Phase 2 (gear visuals, patch_harvester_gears) test results: <PASTE what worked and what failed, or say nothing was tested yet>. If a Phase 2 test failed, fix that first. Per-box state (harvest cycle, the plant above each box) is an array indexed by `x - Position.X`, rebuilt from the tiles whenever the row changes, never saved only on the entity. State the multiplayer design first (server runs the cycle, one small TE sync per state change). Probe 3 report (`tools\harvester_probe3_report.txt`, only the Main / TileDrawing caller part is still open, see 7d) is needed before Phase 5. My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll` to any probe)."
