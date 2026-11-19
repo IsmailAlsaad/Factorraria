@@ -44,18 +44,13 @@ namespace Factorraria.Common.Harvester
             return plant.HasTile && plant.TileType == ModContent.TileType<HarvesterBoxSapling>();
         }
 
-        // Grows the sapling whose bottom tile is x, y (same call as ExampleMod's sapling RandomUpdate, through the lone-box trick). A box grows anywhere.
+        // Asks vanilla to grow the sapling whose bottom tile is x, y (it calls HarvesterBoxSapling.GrowSapling). Not underground-only: a box grows anywhere.
         public static bool TryGrow(int x, int y)
         {
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return false;
 
-            bool grew = GrowTree(x, y, 0, false);
-
-            if (grew && WorldGen.PlayerLOS(x, y))
-                WorldGen.TreeGrowFXCheck(x, y);
-
-            return grew;
+            return WorldGen.AttemptToGrowTreeFromSapling(x, y, underground: false, treeHeightAddon: 0, ignoreWalls: false);
         }
 
         // Vanilla's GrowTree wants at least one SIDE neighbour of the soil that is a tree-fit tile (a lone box has none). The gate only reads "active and fit
@@ -71,7 +66,7 @@ namespace Factorraria.Common.Harvester
                 return false;
 
             if (SideIsFit(i - 1, soilY) || SideIsFit(i + 1, soilY))
-                return WorldGen.GrowTree(i, j);
+                return WorldGen.GrowTree(i, j, treeHeightAddon, ignoreWalls);
 
             Tile cell = Main.tile[i - 1, soilY];
             bool hadTile = cell.HasTile;
@@ -85,7 +80,7 @@ namespace Factorraria.Common.Harvester
                 cell.TileType = TileID.Grass;
                 cell.IsHalfBlock = true;
                 cell.HasTile = true;
-                return WorldGen.GrowTree(i, j);
+                return WorldGen.GrowTree(i, j, treeHeightAddon, ignoreWalls);
             }
             finally
             {

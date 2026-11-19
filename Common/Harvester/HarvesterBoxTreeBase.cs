@@ -45,7 +45,7 @@ namespace Factorraria.Common.Harvester
             HarvesterBoxTrees.TreeBoxes.Add(box);
 
             if (!ModContent.RequestIfExists<Texture2D>(TrunkTexturePath, out trunk, AssetRequestMode.AsyncLoad))
-                trunk = ModContent.Request<Texture2D>("Terraria/Images/Tiles_" + TileID.Trees, AssetRequestMode.AsyncLoad);
+                trunk = ModContent.Request<Texture2D>("Terraria/Images/Tile_" + TileID.Trees, AssetRequestMode.AsyncLoad);
 
             tops = ModContent.Request<Texture2D>("Terraria/Images/Tree_Tops_" + TopStyle, AssetRequestMode.AsyncLoad);
             branches = ModContent.Request<Texture2D>("Terraria/Images/Tree_Branches_" + TopStyle, AssetRequestMode.AsyncLoad);

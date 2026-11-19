@@ -21,7 +21,7 @@ namespace Factorraria.Common.Harvester
     {
         protected abstract HarvesterBoxKind Kind { get; }
 
-        public override string Texture => ModContent.HasAsset(base.Texture) ? base.Texture : "Terraria/Images/Tiles_" + TileID.PlanterBox;
+        public override string Texture => ModContent.HasAsset(base.Texture) ? base.Texture : "Terraria/Images/Tile_" + TileID.PlanterBox;
 
         public override void SetStaticDefaults()
         {
