@@ -12,10 +12,6 @@ namespace Factorraria.Common.Harvester
         // Change this one function to change when boxes harvest (for example to wait for the blooming stage).
         public static bool IsReadyToHarvest(int herbX, int herbY, int boxTileType)
         {
-            // Phase 5: a grown tree standing on a box that grows trees is ready too (the trunk base sits where a herb would).
-            if (HarvesterBoxTrees.IsGrownTree(herbX, herbY, boxTileType))
-                return true;
-
             if (!WorldGen.InWorld(herbX, herbY, 1) || !HarvesterBoxRegistry.BoxHerbs.TryGetValue(boxTileType, out HerbStyle boxHerb))
                 return false;
 
