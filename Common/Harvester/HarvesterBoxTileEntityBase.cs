@@ -40,12 +40,12 @@ namespace Factorraria.Common.Harvester
         public string GearTexturePath => "Factorraria/Content/Tiles/Machines/ElectricalConsumers/HarvesterBox/HarvesterBoxGear";   // idle sprite
         public string GearActiveTexturePath => GearTexturePath + "_Active";   // sprite once the plant above is ripe (Phase 4 turns it on; falls back to the idle one)
         public float GearSpeedDegreesPerTick => 3f;       // full speed, shared by every gear
-        public float GearMeshOffsetDegrees => 90f;        // extra turn of the ODD-x gears so their teeth fall between the even-x gears' teeth
+        public float GearMeshOffsetDegrees => 45f;        // extra turn of the ODD-x gears so their teeth fall between the even-x gears' teeth
         public int GearTeeth => 4;                        // teeth on the sprite: gears settle on multiples of 360 / this, so neighbours always mesh
         public int GearSpinUpTicks => 30;                 // 0 to full speed
         public int GearSpinDownTicks => 30;               // full speed to 0
-        public float GearSnapEase => 0.12f;               // 0..1 per tick, how fast a gear slides onto the shared clock / its rest angle
-        public Vector2 GearOffset => Vector2.Zero;        // pixels from the middle of the box tile to the gear's centre
+        public float GearSyncEase => 0f;                  // 0 = a gear never gets nudged (stops wherever it stops, no startup hiccup). Above 0 (try 0.005) a full-speed gear slowly slides onto the shared clock so rows started at different times mesh with each other
+        public Vector2 GearOffset => new Vector2(0f,2f);        // pixels from the middle of the box tile to the gear's centre
         public float GearScale => 1f;                     // the draw size is the texture size times this
 
         bool gearInitialized;
@@ -85,12 +85,10 @@ namespace Factorraria.Common.Harvester
 
             gearPhase += gearSpeed * step;
 
-            // At full speed slide onto the shared clock; stopped, settle on the nearest tooth step. Either way all gears end up in
-            // matching orientations, so touching rows mesh. In between (spinning up or down) the gear is left alone.
-            if (gearSpeed >= 1f)
+            // A gear slows down and stops wherever it is, and speeds up from there: nothing pulls it anywhere. Only when GearSyncEase is above 0
+            // does a full-speed gear slowly slide onto the shared clock (so separately started rows mesh with each other).
+            if (gearSpeed >= 1f && GearSyncEase > 0f)
                 gearPhase = SnapPhase(gearPhase, clock);
-            else if (gearSpeed <= 0f)
-                gearPhase = SnapPhase(gearPhase, 0f);
 
             gearPhase = MathHelper.WrapAngle(gearPhase);
         }
@@ -100,7 +98,7 @@ namespace Factorraria.Common.Harvester
             float pitch = MathHelper.TwoPi / Math.Max(1, GearTeeth);
             float diff = MathHelper.WrapAngle(phase - origin);
             float snapped = (float)Math.Round(diff / pitch) * pitch;
-            return origin + diff + (snapped - diff) * MathHelper.Clamp(GearSnapEase, 0f, 1f);
+            return origin + diff + (snapped - diff) * MathHelper.Clamp(GearSyncEase, 0f, 1f);
         }
 
         public bool TryGetDynamicBounds(out Vector2 center, out float radius)
