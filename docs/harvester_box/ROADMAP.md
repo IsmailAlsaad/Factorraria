@@ -93,7 +93,7 @@ One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [x] Phase 1b: row power sharing (one entity per row) and the right-click electricity panel. Applied 2026-11-18 (patch_harvester_rows), TESTED 2026-11-19 (Ismail: done and tested). See 6c.
 - [x] Phase 2: gear visuals. Applied 2026-11-19 (patch_harvester_gears and patch_harvester_gears_fix), TESTED 2026-11-19 (Ismail: looks good). See 6d. The gear PNGs are Ismail's art.
 - [~] Phase 3: herb harvest and drops. Applied 2026-11-19 (patch_harvester_harvest), UNTESTED. See 6e.
-- [ ] Phase 4: staff, particles, client sync
+- [~] Phase 4: staff, particles, client sync. Applied 2026-11-19 (patch_harvester_staff), UNTESTED, tested together with Phase 3. See 6f. Needs the staff sprite from Ismail (6f).
 - [ ] Phase 5: acorns, trees, gemcorns
 - [ ] Phase 6: polish, MP verification
 
@@ -193,6 +193,32 @@ Known limits
 - Phase 3 has no animation: the herb simply pops. The gears turn but do not yet react to a ripe plant (`IsGearActive` is still false).
 - A row far from every player keeps running (like every machine) and its drops become vItems; this is the part most worth testing on a dedicated server.
 
+## 6f. Phase 4: staff, particles and the strike packet (patch_harvester_staff, 2026-11-19, applied UNTESTED, tested together with Phase 3)
+
+What exists now
+- The per-box cycle is now `Idle -> Ready -> Strike -> Idle` (the roadmap's Extending, Sweeping and Retracting are the three parts of Strike, told apart by the tick count, so there is one tick counter, not three states). Server and single-player run it in `UpdateHarvest`; every count is in POWERED ticks, so a cut or a brownout freezes it.
+  - Ready: the plant above is Mature or Blooming and the box's own herb. After `HarvestDelayTicks` (now 30) the strike starts, unless a conveyor beside the plant is full (then the box waits, as in Phase 3).
+  - Strike (`StaffExtendTicks` 20, `StaffSweepTicks` 40, `StaffRetractTicks` 20): the staff grows out of the gear, turns at the gear's own speed (`GearSpeedDegreesPerTick`) and in the gear's direction (x parity), and its tip is exactly over the plant at the cross tick (extend + sweep / 2). At that tick the server calls `HarvestHerb` (kill with the shared drop capture, free replant, tile messages). If the plant vanishes before the cross tick the box goes back to Idle.
+- Active gear: `IsGearActive(k)` is true while the box is Ready or in Strike. A client works Ready out from its own tiles (no packet).
+- Staff drawing (client, in `DynamicDraw`, under the gears): the sprite points diagonally to the top right with its pivot at the bottom left corner (Ismail's art); it is turned by `StaffSpriteRotationDegrees` (-45) so it points up at angle 0, and only the rows nearest the base are shown, so it grows out of the gear instead of being stretched. Tunables: `StaffTexturePath`, `StaffOffset`, `StaffPivotOffset` (texture pixels from the bottom left corner), `StaffSpriteRotationDegrees`, `StaffScale`, the four tick counts, `StaffAbortMarginTicks`.
+- Particles: grass dust (`StaffDustType` 2) from the staff tip while it moves, `StaffDustChance` per tick, only when the tip is on screen. No dust and no draw on a dedicated server.
+- Hot-reload tunables only; nothing is saved.
+
+Multiplayer design (rule 9)
+- Authority: the server (and single-player) runs the cycle, the harvest, the replant and the drops, exactly as in Phase 3.
+- ONE new packet, `HarvesterBoxStrike` = 62, server to nearby clients (`Common/Net/HarvesterBoxNet.cs`, `NearbyTiles` 100): payload `int x, int y` of the box. It is sent once per strike, when Ready turns into Strike. It is purely the cosmetic start: a client queues it, and on the main thread starts the strike on the row entity it already has (`IHarvesterBoxRow.BeginClientStrike`), then replays the rest with the same tick counts as the server.
+- Not synced on purpose: Ready (derived from the client's own tiles), the end of the strike, a cancel (a client sees the same plant vanish and aborts after `StaffAbortMarginTicks`), the gears, the dust. No join sync: a strike in progress at join time is simply not drawn.
+- Single-player sends nothing; a host that plays does not need the packet either (its visuals read the entity's own state).
+- Timing: the client starts its strike when the packet arrives and the server's tile messages travel the same way, so the staff crosses the plant at about the moment the herb pops, within the connection's jitter.
+
+Art for Ismail
+- `Content/Tiles/Machines/ElectricalConsumers/HarvesterBox/HarvesterStaffOfRegrowth.png`: the staff of regrowth, one frame, pointing diagonally to the top right with its pivot at the bottom left corner (the gear centre is the pivot, the plant is about 16 px above it, so the staff must reach about 20 px along its axis). Until it exists nothing is drawn and no dust spawns. If the folder differs, change `StaffTexturePath`.
+- `HarvesterBoxGear_Active.png` (6d) is used from now on while a plant is ripe.
+
+Known limits
+- Not compiled or run.
+- A client keeps a strike alive for a few ticks after the plant vanishes (the abort margin). A box whose entity is rebuilt mid-strike (a row change) loses the strike on the server; clients stop theirs when it ends or the plant changes.
+
 ## 7. Verify (resolved by the probe, then recorded here)
 
 - Vanilla herb check: the tile types and the planter style each herb requires (`CheckAlch`, `PlaceAlch`, herb growth). Planter box style order.
@@ -279,4 +305,4 @@ Open dumps before writing Phase 5 (small; the next chat can ask for them in one 
 
 ## 8. Next-chat prompt
 
-"Continue the Harvester Box with Phase 4 (staff and particles, the client state sync, packets plus the `docs/multiplayer` ROADMAP / APPENDIX edits). Read `docs/harvester_box/ROADMAP.md` from a fresh clone: section 6 (Progress), 6d (gears) and 6e (the harvest as built). Phase 3 (herb harvest, patch_harvester_harvest) test results: <PASTE what worked and what failed, or say nothing was tested yet>. If a Phase 3 test failed, fix that first. Phase 4 replaces the plain `HarvestDelayTicks` wait in `UpdateHarvest` with the staff's Extending / Sweeping / Retracting steps and keeps `HarvestHerb` as the one place that harvests. The staff sprite and the active-gear sprite are my art: tell me the exact paths and sizes before writing code. State the multiplayer design first (server owns the per-box cycle; clients get one small sync per state change; `IsGearActive` and the staff read it). Probe 3 report (`tools\harvester_probe3_report.txt`, only the Main / TileDrawing caller part is still open, see 7d) is needed before Phase 5. My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll` to any probe)."
+"Continue the Harvester Box with Phase 5 (acorns and trees: right-click planting, the sapling survival and tree growth hooks, felling the grown tree, replanting the sapling, the tree table, gemcorns). Read `docs/harvester_box/ROADMAP.md` from a fresh clone: section 6 (Progress), 7c, 7d and 7e (the tree findings), and the \"Decisions 2026-11-17 (Phase 1 chat)\" block. Phase 3 (herb harvest, patch_harvester_harvest) and Phase 4 (staff and particles, patch_harvester_staff) test results: <PASTE what worked and what failed, or say nothing was tested yet>. If a Phase 3 or 4 test failed, fix that first. Phase 5 needs the open probe-3 dumps (`TileDrawing.GetTreeBiome` at 2147, `WorldGen.GetTreeFrame` at 57949, `WorldGen.GrowTree` 23350 to 23360, plus the Main / TileDrawing callers): <PASTE the report, or say it has not been run>; if it has not been run, write that probe first and stop. State the multiplayer design first (the server grows and fells the tree; the sapling and tree are tiles the existing sync already carries). My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll` to any probe)."

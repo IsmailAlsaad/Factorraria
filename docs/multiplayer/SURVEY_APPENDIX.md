@@ -885,6 +885,11 @@ Not part of the ten survey steps; see the roadmap Progress entry 'Side feature (
 - **Clients:** create nothing. They drop the replica on a mined tile, and every 20 ticks any replica that has another replica to its left in the same run; they refresh the row geometry from tiles (no `Update` on a client).
 - **Known limits:** server-side entity kills are not broadcast (item 14), so a stale replica can exist for up to 20 ticks; left-extending a row recreates the entity (open panel closes). Untested.
 
+## Harvester Box staff strike (side feature, Harvester Box Phase 4, 2026-11-19)
+- **Rule:** a powered Harvester Box harvests a ripe herb above it with a staff that grows out of its gear, sweeps over the plant and shrinks back; the herb is harvested and replanted at the middle of the sweep.
+- **Design:** the server (or single player) owns the per-box cycle (`HarvesterBoxTileEntityBase.UpdateHarvest`: Idle, Ready, Strike, every count in powered ticks). One cosmetic packet, `HarvesterBoxStrike` (62, server -> players within 100 tiles, payload tile x and y of the box), is sent when a strike starts. A client queues it (the handler may run on the network thread) and starts the strike on the row entity it has; it replays the rest with the same tick counts. Ready is worked out from the client's own tiles and a cancel from the plant vanishing, so nothing else is synced.
+- **Known limits:** a lost packet only loses the animation; the server's harvest still happens. A strike in progress when a client joins is not drawn. A row change rebuilds the entity and ends its strikes.
+
 ## Wall of Flesh shield (side feature, super weapons S1.1, 2026-10-29)
 - **Why it needs more than a hook:** the server applies a client's hit (`MessageID.StrikeNPC`, case 28 in MessageBuffer) through `StrikeNPC(HitInfo, fromNet: true)` without running `ModifyIncomingHit`, damage over time goes through `UpdateLifeRegen`, and other mods may edit `life` directly. A shield that only edits the hit calculation leaks.
 - **Design:** `WallShieldGlobalNPC` (Common/SuperWeapons/): ModifyIncomingHit zeroes damage and knockback, UpdateLifeRegen zeroes damage over time, CheckDead returns false, PostAI puts the mouth's life back on every side. ShieldUp is synced by SendExtraAI / ReceiveExtraAI and set in SetDefaults (OnSpawn runs after the first sync). No packet.

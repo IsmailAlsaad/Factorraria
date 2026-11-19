@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Net;
 using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
@@ -19,7 +20,7 @@ namespace Factorraria.Common.Harvester
     // The powered entity of a Harvester Box ROW: one entity for every box of the same kind touching left and right, at the row's leftmost box
     // (HarvesterBoxRows / HarvesterBoxRowSystem keep that true). It draws power and joins the grid through custom wire on ANY box of the row. The gears, the harvest
     // cycle and the drops come in later phases (docs/harvester_box/ROADMAP.md, 6c).
-    public abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IDropCaptureTarget where TTile : ModTile
+    public abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IDropCaptureTarget, IHarvesterBoxRow where TTile : ModTile
     {
         public override int ValidTileType => ModContent.TileType<TTile>();
 
@@ -63,8 +64,8 @@ namespace Factorraria.Common.Harvester
         // The one shared clock: a pure function of the game tick, so every gear on this client agrees without any state or packet.
         float GearClock => (float)((Main.GameUpdateCount * (double)MathHelper.ToRadians(GearSpeedDegreesPerTick)) % MathHelper.TwoPi);
 
-        // Phase 4 turns this on for the boxes whose plant is ripe.
-        public virtual bool IsGearActive(int boxIndex) => false;
+        // The active gear sprite shows from the moment the plant above is ripe until the strike is over (Ready and Strike).
+        public virtual bool IsGearActive(int boxIndex) => boxIndex >= 0 && boxIndex < boxes.Length && boxes[boxIndex].Cycle != BoxCycle.Idle;
 
         // x is the WORLD tile x of the box.
         float GearAngle(int x)
@@ -74,6 +75,8 @@ namespace Factorraria.Common.Harvester
 
         public void DynamicUpdate()
         {
+            UpdateStrikeVisuals();
+
             float clock = GearClock;
             float step = MathHelper.ToRadians(GearSpeedDegreesPerTick);
 
@@ -128,9 +131,12 @@ namespace Factorraria.Common.Harvester
             return idle != null;
         }
 
-        // In front of the tiles (and so in front of the plant above the box). No gear sprite yet: nothing is drawn.
+        // In front of the tiles (and so in front of the plant above the box). Staffs first, so each one seems to grow out from under its gear.
+        // No sprite yet: nothing is drawn.
         public void DynamicDraw(SpriteBatch spriteBatch)
         {
+            DrawStaffs(spriteBatch);
+
             if (!gearInitialized || !TryGetGearTextures(out Texture2D idle, out Texture2D active))
                 return;
 
@@ -144,38 +150,61 @@ namespace Factorraria.Common.Harvester
             }
         }
 
-        // ---- Herb harvest (Phase 3, docs/harvester_box/ROADMAP.md 6e) ----
-        // Server and single-player only (a multiplayer client never runs Update). The per-box state is an array indexed by x - Position.X,
-        // rebuilt from the row length, never saved: a ripe plant is found again by the next scan, so a reset only restarts its delay.
-        // Phase 4 replaces the plain delay with the staff's Extending / Sweeping / Retracting steps; HarvestHerb stays the one place that harvests.
+        // ---- Herb harvest and staff (Phase 3 and 4, docs/harvester_box/ROADMAP.md 6e and 6f) ----
+        // The server and single-player run the cycle of every box: Idle -> Ready (plant ripe) -> Strike (the staff extends, sweeps over the plant,
+        // retracts; the herb is harvested and replanted at the middle of the sweep) -> Idle. The per-box state is an array indexed by x - Position.X,
+        // rebuilt from the row length and never saved: a ripe plant is found again by the next scan, so a reset only restarts its delay.
+        // A multiplayer client keeps the same array only for the visuals: it works out Ready from its own tiles, and starts a Strike when the server's
+        // HarvesterBoxStrike packet arrives, then replays it with the same tick counts. HarvestHerb stays the one place that harvests.
 
         // Tunables (expression-bodied so hot reload picks changes up)
-        public int HarvestScanTicks => 20;          // how often the row looks at the plant above each idle box
-        public int HarvestDelayTicks => 60;         // powered ticks between "plant is ripe" and the harvest (stand-in for the staff sweep)
+        public int HarvestScanTicks => 20;          // how often an idle box looks at the plant above it
+        public int HarvestDelayTicks => 30;         // powered ticks between "plant is ripe" and the start of the strike
+        public int StaffExtendTicks => 20;          // the staff grows out of the gear
+        public int StaffSweepTicks => 40;           // it turns at the gear's speed; the tip passes straight over the plant at the middle of this
+        public int StaffRetractTicks => 20;         // it shrinks back into the gear (it keeps turning)
+        public int StaffAbortMarginTicks => 3;      // a client keeps its strike this long past a vanished plant (the server's tile message can come a tick early)
+        public string StaffTexturePath => "Factorraria/Content/Tiles/Machines/ElectricalConsumers/HarvesterBox/HarvesterStaffOfRegrowth";   // the sprite points diagonally to the top right, its pivot is the bottom left corner
+        public Vector2 StaffOffset => Vector2.Zero;               // pixels from the gear's centre to the staff's pivot (world offset, not rotated)
+        public Vector2 StaffPivotOffset => Vector2.Zero;          // moves the pivot inside the sprite, in texture pixels from the bottom left corner (x right, y down: (2, -1) = 2 px right of and 1 px above the corner)
+        public float StaffSpriteRotationDegrees => -45f;          // turns the sprite so it points straight up at angle 0 (-45 for a sprite pointing to the top right)
+        public float StaffScale => 1f;
+        public float StaffDustChance => 0.35f;                    // per tick per moving staff, only while its tip is on screen
+        public int StaffDustType => 2;                            // vanilla grass dust (DustID.Grass)
 
-        enum BoxCycle : byte { Idle, Ready }
+        enum BoxCycle : byte { Idle, Ready, Strike }
 
         struct BoxState
         {
             public BoxCycle Cycle;
-            public int Ticks;   // powered ticks spent in Ready
+            public int Ticks;   // Ready: powered ticks waited. Strike: powered ticks since the staff started.
         }
 
         BoxState[] boxes = Array.Empty<BoxState>();
         int nextScanIn;
+        int clientScanIn;
         Point dropTile;     // the herb tile being harvested right now (RouteDrop reads it)
 
+        int StrikeCrossTick => Math.Max(1, StaffExtendTicks) + Math.Max(1, StaffSweepTicks) / 2;   // the tip is over the plant now
+        int StrikeTotalTicks => Math.Max(1, StaffExtendTicks) + Math.Max(1, StaffSweepTicks) + Math.Max(1, StaffRetractTicks);
+
+        void EnsureBoxes(int length)
+        {
+            if (boxes.Length != length)
+                boxes = new BoxState[length];
+        }
+
+        // Server and single-player (a multiplayer client never runs Update).
         void UpdateHarvest()
         {
             if (Main.netMode == NetmodeID.MultiplayerClient || !isOn)
-                return;   // browned out or switched off: the whole cycle freezes (delays only count powered ticks)
+                return;   // browned out or switched off: the whole cycle freezes (every count is in powered ticks)
 
             int length = RowLength;
             if (length <= 0)
                 return;
 
-            if (boxes.Length != length)
-                boxes = new BoxState[length];
+            EnsureBoxes(length);
 
             bool scan = --nextScanIn <= 0;
             if (scan)
@@ -186,31 +215,210 @@ namespace Factorraria.Common.Harvester
             {
                 int x = Position.X + k;
 
-                if (boxes[k].Cycle == BoxCycle.Idle)
+                switch (boxes[k].Cycle)
                 {
-                    if (scan && HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
-                        boxes[k] = new BoxState { Cycle = BoxCycle.Ready, Ticks = 0 };
+                    case BoxCycle.Idle:
+                        if (scan && HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
+                            boxes[k] = new BoxState { Cycle = BoxCycle.Ready, Ticks = 0 };
+                        break;
 
-                    continue;
+                    case BoxCycle.Ready:
+                        if (!HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
+                        {
+                            boxes[k] = default;   // the plant was removed or changed while waiting
+                            break;
+                        }
+
+                        if (++boxes[k].Ticks < HarvestDelayTicks)
+                            break;
+
+                        if (!CanDeliverDrops(x, y))
+                        {
+                            boxes[k].Ticks = HarvestDelayTicks;   // a full belt next to the plant: wait here until it has room (back-pressure, like the arm)
+                            break;
+                        }
+
+                        boxes[k] = new BoxState { Cycle = BoxCycle.Strike, Ticks = 0 };
+                        ModContent.GetInstance<HarvesterBoxNetSystem>().AnnounceStrike(x, Position.Y);
+                        break;
+
+                    case BoxCycle.Strike:
+                        int before = boxes[k].Ticks;
+                        int cross = StrikeCrossTick;
+
+                        if (before < cross && !HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
+                        {
+                            boxes[k] = default;   // the plant vanished before the staff got there
+                            break;
+                        }
+
+                        boxes[k].Ticks = before + 1;
+
+                        if (before < cross && boxes[k].Ticks >= cross)
+                            HarvestHerb(x, y);    // the tip is over the plant
+
+                        if (boxes[k].Ticks >= StrikeTotalTicks)
+                            boxes[k] = default;
+                        break;
                 }
+            }
+        }
 
-                if (!HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
+        // Called from DynamicUpdate (not on a dedicated server): a multiplayer client's copy of the cycle, then the staff dust.
+        void UpdateStrikeVisuals()
+        {
+            int length = RowLength;
+            if (length <= 0)
+                return;
+
+            EnsureBoxes(length);
+
+            if (Main.netMode == NetmodeID.MultiplayerClient && isOn)
+            {
+                bool scan = --clientScanIn <= 0;
+                if (scan)
+                    clientScanIn = Math.Max(1, HarvestScanTicks);
+
+                int y = Position.Y - 1;
+                for (int k = 0; k < length; k++)
                 {
-                    boxes[k] = default;   // the plant was removed or changed while waiting
-                    continue;
+                    int x = Position.X + k;
+                    bool ripe;
+
+                    switch (boxes[k].Cycle)
+                    {
+                        case BoxCycle.Idle:
+                            if (scan && HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
+                                boxes[k] = new BoxState { Cycle = BoxCycle.Ready, Ticks = 0 };
+                            break;
+
+                        case BoxCycle.Ready:
+                            // The server starts the strike (BeginClientStrike); until then the gear is active only while the plant stays ripe.
+                            if (!HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
+                                boxes[k] = default;
+                            break;
+
+                        case BoxCycle.Strike:
+                            boxes[k].Ticks++;
+                            ripe = HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType);
+                            if ((boxes[k].Ticks < StrikeCrossTick - StaffAbortMarginTicks && !ripe) || boxes[k].Ticks >= StrikeTotalTicks)
+                                boxes[k] = default;
+                            break;
+                    }
                 }
+            }
 
-                if (++boxes[k].Ticks < HarvestDelayTicks)
+            SpawnStaffDust(length);
+        }
+
+        // Multiplayer client: the server's HarvesterBoxStrike packet (see HarvesterBoxNetSystem) for the box at world tile x.
+        public void BeginClientStrike(int tileX)
+        {
+            int length = RowLength;
+            int k = tileX - Position.X;
+            if (k < 0 || k >= length)
+                return;
+
+            EnsureBoxes(length);
+            boxes[k] = new BoxState { Cycle = BoxCycle.Strike, Ticks = 0 };
+        }
+
+        // ---- Staff drawing ----
+        bool staffAssetTried;
+        Asset<Texture2D> staffAsset;
+
+        bool TryGetStaffTexture(out Texture2D texture)
+        {
+            if (!staffAssetTried)
+            {
+                staffAssetTried = true;
+                ModContent.RequestIfExists<Texture2D>(StaffTexturePath, out staffAsset, AssetRequestMode.ImmediateLoad);
+            }
+
+            texture = staffAsset?.Value;
+            return texture != null;
+        }
+
+        // 0..1: how much of the staff is out. Grows while extending, full during the sweep, shrinks while retracting.
+        float StaffGrowth(int ticks)
+        {
+            int extend = Math.Max(1, StaffExtendTicks);
+            int sweep = Math.Max(1, StaffSweepTicks);
+            int retract = Math.Max(1, StaffRetractTicks);
+
+            if (ticks < extend)
+                return ticks / (float)extend;
+
+            if (ticks < extend + sweep)
+                return 1f;
+
+            return MathHelper.Clamp(1f - (ticks - extend - sweep) / (float)retract, 0f, 1f);
+        }
+
+        // Radians, 0 = pointing up. Turns at the gear's own speed and in the gear's direction (x parity), and is exactly up at the cross tick.
+        float StaffAngle(int x, int ticks)
+        {
+            float direction = (x & 1) == 0 ? 1f : -1f;
+            return direction * MathHelper.ToRadians(GearSpeedDegreesPerTick) * (ticks - StrikeCrossTick);
+        }
+
+        Vector2 StaffBase(int x) => new Vector2(x * 16f + 8f, Position.Y * 16f + 8f) + GearOffset + StaffOffset;
+
+        void DrawStaffs(SpriteBatch spriteBatch)
+        {
+            int count = Math.Min(RowLength, boxes.Length);
+            Texture2D texture = null;
+
+            for (int k = 0; k < count; k++)
+            {
+                if (boxes[k].Cycle != BoxCycle.Strike)
                     continue;
 
-                if (!CanDeliverDrops(x, y))
-                {
-                    boxes[k].Ticks = HarvestDelayTicks;   // a full belt next to the plant: wait here until it has room (back-pressure, like the arm)
-                    continue;
-                }
+                if (texture == null && !TryGetStaffTexture(out texture))
+                    return;   // no staff sprite yet
 
-                HarvestHerb(x, y);
-                boxes[k] = default;
+                int shown = (int)Math.Round(texture.Height * StaffGrowth(boxes[k].Ticks));
+                if (shown <= 0)
+                    continue;
+
+                // Only the rows nearest the base are shown, so the staff grows out of the gear instead of being stretched.
+                int x = Position.X + k;
+                Rectangle source = new Rectangle(0, texture.Height - shown, texture.Width, shown);
+                float angle = StaffAngle(x, boxes[k].Ticks) + MathHelper.ToRadians(StaffSpriteRotationDegrees);
+                Vector2 origin = new Vector2(0f, shown) + StaffPivotOffset;   // bottom left corner of the shown part, plus the tuning offset
+                spriteBatch.Draw(texture, StaffBase(x) - Main.screenPosition, source, Lighting.GetColor(x, Position.Y), angle, origin, StaffScale, SpriteEffects.None, 0f);
+            }
+        }
+
+        void SpawnStaffDust(int length)
+        {
+            if (Main.dedServ || StaffDustChance <= 0f || !TryGetStaffTexture(out Texture2D texture))
+                return;
+
+            int count = Math.Min(length, boxes.Length);
+            for (int k = 0; k < count; k++)
+            {
+                if (boxes[k].Cycle != BoxCycle.Strike)
+                    continue;
+
+                int ticks = boxes[k].Ticks;
+                float growth = StaffGrowth(ticks);
+                if (growth <= 0f || Main.rand.NextFloat() >= StaffDustChance)
+                    continue;
+
+                int x = Position.X + k;
+                int shown = (int)Math.Round(texture.Height * growth);
+                if (shown <= 0)
+                    continue;
+
+                // The tip is the top right corner of the part that is shown, turned about the pivot like the sprite itself.
+                float angle = StaffAngle(x, ticks) + MathHelper.ToRadians(StaffSpriteRotationDegrees);
+                Vector2 pivot = new Vector2(0f, shown) + StaffPivotOffset;
+                Vector2 tip = StaffBase(x) + (new Vector2(texture.Width, 0f) - pivot).RotatedBy(angle) * StaffScale;
+                if (!IsOnScreen(tip))
+                    continue;
+
+                Dust.NewDustPerfect(tip, StaffDustType, Main.rand.NextVector2Circular(1.2f, 1.2f), 0, default, 1f);
             }
         }
 
