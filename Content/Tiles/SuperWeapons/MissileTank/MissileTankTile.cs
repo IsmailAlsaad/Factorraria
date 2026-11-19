@@ -17,7 +17,7 @@ namespace Factorraria.Content.Tiles.SuperWeapons.MissileTank
         public const string ArtPath = "Factorraria/Content/Tiles/SuperWeapons/MissileTank/MissileTank";
 
         /// <summary>The sheet the tile and its machine registration use: the real art once it exists, else a vanilla placeholder.</summary>
-        public static string SheetPath() => ModContent.HasAsset(ArtPath) ? ArtPath : "Terraria/Images/Tile_" + TileID.Statues;
+        public static string SheetPath() => ModContent.HasAsset(ArtPath) ? ArtPath : "Terraria/Images/Tiles_" + TileID.Statues;
 
         public override string Texture => SheetPath();
 

@@ -19,7 +19,7 @@ namespace Factorraria.Content.Tiles.Statues
         // Until MeteorHeadStatueTile.png exists the tile borrows the vanilla statue sheet, so the mod loads without the art.
         // Sheet: 72x54, left-facing frame at x 0 and right-facing frame at x 36 (each 2x3 tiles, 16px + 2px gap, last row 18px tall).
         string artPath = "Factorraria/Content/Tiles/Statues/MeteorHeadStatueTile";
-        public override string Texture => ModContent.HasAsset(artPath) ? artPath : "Terraria/Images/Tile_" + TileID.Statues;
+        public override string Texture => ModContent.HasAsset(artPath) ? artPath : "Terraria/Images/Tiles_" + TileID.Statues;
 
         public override void SetStaticDefaults()
         {

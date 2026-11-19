@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
@@ -15,10 +16,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox
     // one row per biome (the sapling style). It has no RandomUpdate: only the box grows it (HarvesterBoxTileEntityBase.TickSapling).
     public class HarvesterBoxSapling : ModTile
     {
-        public override string Texture => "Terraria/Images/Tile_" + TileID.Saplings;
+        public override string Texture => "Terraria/Images/Tiles_" + TileID.Saplings;
 
         public override void SetStaticDefaults()
         {
+            // Use vanilla's own loaded sapling sheet; the paint system re-requests the asset by name and fails on a borrowed path.
+            TextureAssets.Tile[Type] = TextureAssets.Tile[TileID.Saplings];
+
             Main.tileFrameImportant[Type] = true;
             Main.tileNoAttach[Type] = true;
             Main.tileLavaDeath[Type] = true;
@@ -52,17 +56,6 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox
         public override void NumDust(int i, int j, bool fail, ref int num)
         {
             num = fail ? 1 : 3;
-        }
-
-        // Called by vanilla (WorldGen.AttemptToGrowTreeFromSapling) when the box asks for growth. The lone-box trick lives in HarvesterBoxTrees.GrowTree.
-        public override bool GrowSapling(int i, int j, bool underground, int treeHeightAddon, bool ignoreWalls)
-        {
-            bool grew = HarvesterBoxTrees.GrowTree(i, j, treeHeightAddon, ignoreWalls);
-
-            if (grew && WorldGen.PlayerLOS(i, j))
-                WorldGen.TreeGrowFXCheck(i, j);
-
-            return grew;
         }
     }
 }
