@@ -57,14 +57,5 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox
         {
             num = fail ? 1 : 3;
         }
-
-        // Vanilla's way (same as ExampleMod): a chance on each random tile update, then WorldGen.GrowTree applies vanilla's own space and neighbour checks.
-        public override void RandomUpdate(int i, int j)
-        {
-            if (!WorldGen.genRand.NextBool(20))
-                return;
-
-            HarvesterBoxTrees.TryGrow(i, j);
-        }
     }
 }
