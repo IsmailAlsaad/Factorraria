@@ -117,6 +117,12 @@ namespace Factorraria.Common.Machines
             return data != null;
         }
 
+        // Width of the machine's footprint in tiles. A row machine (the Harvester Box row) is as wide as its row, so one outline covers the whole row.
+        static int FootprintWidth(BaseMachine machine, TileObjectData data)
+        {
+            return machine is IRowMachine row ? Math.Max(1, row.RowLength) : data.Width;
+        }
+
         // Closest machine to the cursor (distance 0 = the cursor is over it) that is within SmartRadiusPixels and that the player can reach.
         void UpdateTarget()
         {
@@ -145,7 +151,7 @@ namespace Factorraria.Common.Machines
                 Point16 corner = machine.Position;
                 float left = corner.X * 16f;
                 float top = corner.Y * 16f;
-                float dx = Math.Max(Math.Max(left - mouse.X, 0f), mouse.X - (left + data.Width * 16f));
+                float dx = Math.Max(Math.Max(left - mouse.X, 0f), mouse.X - (left + FootprintWidth(machine, data) * 16f));
                 float dy = Math.Max(Math.Max(top - mouse.Y, 0f), mouse.Y - (top + data.Height * 16f));
                 float distance = (float)Math.Sqrt(dx * dx + dy * dy);
                 if (distance > bestDistance || (found && distance >= bestDistance))
@@ -314,8 +320,9 @@ namespace Factorraria.Common.Machines
                     continue;
 
                 Point16 corner = machine.Position;
-                Vector2 center = new Vector2(corner.X * 16 + data.Width * 8, corner.Y * 16 + data.Height * 8);
-                if (!BaseMachine.IsOnScreen(center, Math.Max(data.Width, data.Height) * 8f + ScreenMarginPixels))
+                int footprintWidth = FootprintWidth(machine, data);
+                Vector2 center = new Vector2(corner.X * 16 + footprintWidth * 8, corner.Y * 16 + data.Height * 8);
+                if (!BaseMachine.IsOnScreen(center, Math.Max(footprintWidth, data.Height) * 8f + ScreenMarginPixels))
                     continue;
 
                 // Same reach rule the right-click uses: if the click would be ignored, there is nothing to highlight.
@@ -455,7 +462,7 @@ namespace Factorraria.Common.Machines
                 rotation = MachineVisualOverride.GetMotorRotation(motor.Facing);
             int quarter = ((int)Math.Round(rotation / MathHelper.PiOver2) % 4 + 4) % 4;
 
-            for (int x = corner.X; x < corner.X + data.Width; x++)
+            for (int x = corner.X; x < corner.X + FootprintWidth(machine, data); x++)
             {
                 for (int y = corner.Y; y < corner.Y + data.Height; y++)
                 {

@@ -145,6 +145,7 @@ Consequences for later phases
 Known limits
 - Not compiled or run. The entity create/kill churn and the client cleanup are new code: test them in multiplayer.
 - `MachineDetailSystem.WithinReach` measures to the nearest box of the row.
+- The smart-cursor outline (`MachineSmartOutlineSystem`) uses the row length as the footprint width, so one outline covers the whole row; the "nearby" right-click fallback (cursor not over the row) opens the panel on the row's first box.
 - A wireless row of two or more boxes now reads "No power" on hover (it forms a grid), a lone box still reads Off.
 
 ## 7. Verify (resolved by the probe, then recorded here)
