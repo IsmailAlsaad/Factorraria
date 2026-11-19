@@ -372,7 +372,7 @@ tModLoader/other bases -> project types:
     #Kind:HarvesterBoxKind[ab] +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
 **HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxUIState, IMachineDynamicDraw, IRowMachine, MachineUIRegistry, MachineUIStateBase, MachineUISystem
   abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSnapEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
+    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
 
 ### Common/Knowledge/
 **LiquidBiomeVisits.cs** uses: LiquidTypeRegistry, MachineBiome, RecipeKnowledgeNet, RecipeKnowledgeSystem
