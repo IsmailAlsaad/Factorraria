@@ -258,7 +258,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         }
 
         // Cell index (0 first, 1 middle, 2 last) along one axis of the sheet; a 1-tile-long axis uses the extra 4th cell (3).
-        static int Slot(int index, int count) => count == 1 ? 3 : index == 0 ? 0 : index == count - 1 ? 2 : 1;
+        public static int Slot(int index, int count) => count == 1 ? 3 : index == 0 ? 0 : index == count - 1 ? 2 : 1;
 
         void DrawArea(SpriteBatch spriteBatch)
         {
