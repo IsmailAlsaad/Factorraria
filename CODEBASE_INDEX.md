@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-19 | 423 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-19 | 424 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(84) BaseMachine(58) FactorrariaPacket(37) LiquidTypeRegistry(34) PacketDirection(32) RecipeBook(26) Factorraria(22) Cart(22) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) RecipeCatalog(16) CartSystem(16) Entry(15) CartModule(15) RecipeKnowledgeSystem(14) MachineVisualRegistry(14)
+FactorrariaNet(84) BaseMachine(58) FactorrariaPacket(37) LiquidTypeRegistry(34) PacketDirection(32) RecipeBook(26) Factorraria(22) Cart(22) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) RecipeCatalog(16) CartSystem(16) Entry(15) CartModule(15) VirtualItemSystem(14) RecipeKnowledgeSystem(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -16,6 +16,7 @@ Project bases -> derived:
 - HarvesterBoxTileBase: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile, WaterleafHarvesterBoxTile
 - HarvesterBoxTileEntityBase: BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxTileEntity, MoonglowHarvesterBoxTileEntity, ShiverthornHarvesterBoxTileEntity, WaterleafHarvesterBoxTileEntity
 - ICosmicEventSink: CosmicEventRouter, CosmicNullSink
+- IDropCaptureTarget: HarvesterBoxTileEntityBase, RoboticArmTileEntity
 - IElectricConsumer: ElectricConsumerMachine
 - IElectricProducer: ElectricProducerMachine, IElectricStorage
 - IElectricStorage: SunCapsuleTileEntity
@@ -38,7 +39,7 @@ Project bases -> derived:
 tModLoader/other bases -> project types:
 - ModSystem (111): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, HarvesterBoxHerbHooks, HarvesterBoxRowSystem, HellstoneGrowNetSystem, HellstoneGrowthSystem, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineSmartOutlineSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitDebugSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RecipeTabDiscoverySystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
 - ModItem (46): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, HarvesterBoxItemBase, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenMinecartItem, WoodenPowerPoleItem
-- byte (32): AssemblyIssue, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
+- byte (33): AssemblyIssue, BoxCycle, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
 - ModTile (17): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - UIElement (15): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookModeButton, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
@@ -366,13 +367,17 @@ tModLoader/other bases -> project types:
     +IsBoxTile(int)[s] +TryGetRun(int,int,out int,out int,out int)[s] +RunLengthFrom(int,int)[s] +TryFindRowEntity(int,int,out TileEntity,out Point16)[s] +HasRowEntityBefore(int,int,int)[s] +RefreshGeometry(BaseMachine)[s] +OnTileKilled(int,int)[s]
 **HarvesterBoxRules.cs** uses: HarvesterBoxRegistry, HerbStyle
   static class HarvesterBoxRules
-    +HerbAllowedOnSoil(int,Tile)[s]
+    +IsReadyToHarvest(int,int,int)[s] +HerbAllowedOnSoil(int,Tile)[s]
 **HarvesterBoxTileBase.cs** uses: BaseMachine, HarvesterBoxKind, HarvesterBoxRegistry
   abstract class HarvesterBoxTileBase<TEntity, TItem> : ModTile
     #Kind:HarvesterBoxKind[ab] +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
-**HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxUIState, IMachineDynamicDraw, IRowMachine, MachineUIRegistry, MachineUIStateBase, MachineUISystem
-  abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw
-    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
+**HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxRules, HarvesterBoxUIState, IDropCaptureTarget, IMachineDynamicDraw, IRowMachine, MachineUIRegistry, MachineUIStateBase, MachineUISystem, RoboticArmDropCaptureSystem, VirtualItem, VirtualItemSystem
+  abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IDropCaptureTarget
+    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +HarvestScanTicks:int +HarvestDelayTicks:int +RouteDrop(Item) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
+    enum BoxCycle : byte
+      {Idle, Ready}
+    struct BoxState
+      +Cycle:BoxCycle +Ticks:int
 
 ### Common/Knowledge/
 **LiquidBiomeVisits.cs** uses: LiquidTypeRegistry, MachineBiome, RecipeKnowledgeNet, RecipeKnowledgeSystem
@@ -514,6 +519,9 @@ tModLoader/other bases -> project types:
     +PowerDemand:float[ab] +useFraction:float +GetUseFraction()
   abstract class ElectricProducerMachine : BaseMachine, IElectricProducer
     +PowerSupply:float[ab] +useFraction:float +GetUseFraction()
+**IDropCaptureTarget.cs**
+  interface IDropCaptureTarget
+    +RouteDrop(Item)
 **IElectric.cs**
   interface IElectricConsumer
     +PowerDemand:float +isWorking:bool +isOn:bool +useFraction:float +GetUseFraction()
@@ -1798,9 +1806,9 @@ tModLoader/other bases -> project types:
 **RoboticArmDeferredEdits.cs**
   class RoboticArmDeferredEditSystem : ModSystem
     +Enqueue(Action) +PostUpdateEverything()[ov] +ClearWorld()[ov] +Unload()[ov]
-**RoboticArmDropCapture.cs** uses: RoboticArmTileEntity
+**RoboticArmDropCapture.cs** uses: IDropCaptureTarget
   class RoboticArmDropCaptureSystem : ModSystem
-    +Active:RoboticArmTileEntity +Run(RoboticArmTileEntity,Action) +Unload()[ov]
+    +Active:IDropCaptureTarget +Run(IDropCaptureTarget,Action) +Unload()[ov]
   class RoboticArmDropCapture : GlobalItem
     +OnSpawn(Item,IEntitySource)[ov]
 **RoboticArmMotion.cs**
@@ -1816,8 +1824,8 @@ tModLoader/other bases -> project types:
 **RoboticArmTile.cs** uses: MechanicalArmItem, RoboticArmTileEntity
   class RoboticArmTile : ModTile
     +Texture:string[ov] +Slope(int,int)[ov]
-**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, Factorraria, GhostDiagnostics, IMachineDynamicDraw, MachineSlotKind, RoboticArmMotion, RoboticArmNet, RoboticArmTile, RoboticArmVisual, RoboticArmWorker, Tracker, VirtualItem, VirtualItemSystem
-  class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
+**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, Factorraria, GhostDiagnostics, IDropCaptureTarget, IMachineDynamicDraw, MachineSlotKind, RoboticArmMotion, RoboticArmNet, RoboticArmTile, RoboticArmVisual, RoboticArmWorker, Tracker, VirtualItem, VirtualItemSystem
+  class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw, IDropCaptureTarget
     +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +Motion:RoboticArmMotion +HeldForVisual:Item +ApplyNetState(bool,int,int,int,int) +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaLimit:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsPlaceable(Item) +IsAcceptedItem(Item) +AcceptsSlotItem(global::MachineSlotKind,int,Item)[ov] #IntakeTiles()[ov] #TryGetIntakeSlot(int,out int,out int)[ov] +CanDeliverDrops:bool +RouteDrop(Item) +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
 **RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineSlotBinding, MachineSlotKind, MachineUIElementEntry, MachineUIStateBase, RoboticArmAreaEditorSystem, RoboticArmTileEntity, UIItemSlotWrapper
   class RoboticArmUIState : MachineUIStateBase

@@ -2,12 +2,16 @@
 using Factorraria.Common.Systems;
 using Factorraria.Common.UI;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm;
+using Factorraria.Content.VirtualItems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Factorraria.Common.Harvester
@@ -15,7 +19,7 @@ namespace Factorraria.Common.Harvester
     // The powered entity of a Harvester Box ROW: one entity for every box of the same kind touching left and right, at the row's leftmost box
     // (HarvesterBoxRows / HarvesterBoxRowSystem keep that true). It draws power and joins the grid through custom wire on ANY box of the row. The gears, the harvest
     // cycle and the drops come in later phases (docs/harvester_box/ROADMAP.md, 6c).
-    public abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw where TTile : ModTile
+    public abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IDropCaptureTarget where TTile : ModTile
     {
         public override int ValidTileType => ModContent.TileType<TTile>();
 
@@ -29,6 +33,7 @@ namespace Factorraria.Common.Harvester
         {
             base.Update();
             isWorking = true;   // draws power the whole time it is placed (the Phase 2 gears turn whenever the box is powered)
+            UpdateHarvest();
         }
 
         // ---- Gears (Phase 2, docs/harvester_box/ROADMAP.md 6d) ----
@@ -137,6 +142,182 @@ namespace Factorraria.Common.Harvester
                 Vector2 center = new Vector2(x * 16f + 8f, Position.Y * 16f + 8f) + GearOffset;
                 spriteBatch.Draw(texture, center - Main.screenPosition, null, Lighting.GetColor(x, Position.Y) * 1f, GearAngle(x), texture.Size() / 2f, GearScale, SpriteEffects.None, 0f);
             }
+        }
+
+        // ---- Herb harvest (Phase 3, docs/harvester_box/ROADMAP.md 6e) ----
+        // Server and single-player only (a multiplayer client never runs Update). The per-box state is an array indexed by x - Position.X,
+        // rebuilt from the row length, never saved: a ripe plant is found again by the next scan, so a reset only restarts its delay.
+        // Phase 4 replaces the plain delay with the staff's Extending / Sweeping / Retracting steps; HarvestHerb stays the one place that harvests.
+
+        // Tunables (expression-bodied so hot reload picks changes up)
+        public int HarvestScanTicks => 20;          // how often the row looks at the plant above each idle box
+        public int HarvestDelayTicks => 60;         // powered ticks between "plant is ripe" and the harvest (stand-in for the staff sweep)
+
+        enum BoxCycle : byte { Idle, Ready }
+
+        struct BoxState
+        {
+            public BoxCycle Cycle;
+            public int Ticks;   // powered ticks spent in Ready
+        }
+
+        BoxState[] boxes = Array.Empty<BoxState>();
+        int nextScanIn;
+        Point dropTile;     // the herb tile being harvested right now (RouteDrop reads it)
+
+        void UpdateHarvest()
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient || !isOn)
+                return;   // browned out or switched off: the whole cycle freezes (delays only count powered ticks)
+
+            int length = RowLength;
+            if (length <= 0)
+                return;
+
+            if (boxes.Length != length)
+                boxes = new BoxState[length];
+
+            bool scan = --nextScanIn <= 0;
+            if (scan)
+                nextScanIn = Math.Max(1, HarvestScanTicks);
+
+            int y = Position.Y - 1;   // the plant sits on the tile above the box
+            for (int k = 0; k < length; k++)
+            {
+                int x = Position.X + k;
+
+                if (boxes[k].Cycle == BoxCycle.Idle)
+                {
+                    if (scan && HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
+                        boxes[k] = new BoxState { Cycle = BoxCycle.Ready, Ticks = 0 };
+
+                    continue;
+                }
+
+                if (!HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
+                {
+                    boxes[k] = default;   // the plant was removed or changed while waiting
+                    continue;
+                }
+
+                if (++boxes[k].Ticks < HarvestDelayTicks)
+                    continue;
+
+                if (!CanDeliverDrops(x, y))
+                {
+                    boxes[k].Ticks = HarvestDelayTicks;   // a full belt next to the plant: wait here until it has room (back-pressure, like the arm)
+                    continue;
+                }
+
+                HarvestHerb(x, y);
+                boxes[k] = default;
+            }
+        }
+
+        // Harvests the herb at x, y exactly like breaking it (vanilla yield for its stage, drops captured and routed by RouteDrop), then replants
+        // the same herb for free. Runs on the server / in single-player; tile changes are sent to clients here.
+        void HarvestHerb(int x, int y)
+        {
+            int style = Main.tile[x, y].TileFrameX / 18;
+            dropTile = new Point(x, y);
+
+            ModContent.GetInstance<RoboticArmDropCaptureSystem>().Run(this, () => WorldGen.KillTile(x, y, false, false, false));
+
+            if (Main.netMode == NetmodeID.Server)
+                NetMessage.SendData(MessageID.TileManipulation, -1, -1, null, 0, x, y);
+
+            WorldGen.PlaceAlch(x, y, style);
+
+            if (Main.netMode == NetmodeID.Server)
+                NetMessage.SendTileSquare(-1, x, y);
+        }
+
+        // The three tiles beside and above the plant: where a conveyor can take the drops, or a vItem can wait.
+        IEnumerable<Point> DropNeighbours(int x, int y)
+        {
+            yield return new Point(x, y - 1);
+            yield return new Point(x - 1, y);
+            yield return new Point(x + 1, y);
+        }
+
+        bool HasConveyorAround(int x, int y)
+        {
+            foreach (Point t in DropNeighbours(x, y))
+                if (VirtualItemSystem.IsConveyorTile(t.X, t.Y, out _, out _))
+                    return true;
+
+            return false;
+        }
+
+        bool TryFindFreeConveyorTile(int x, int y, out Point tile)
+        {
+            foreach (Point t in DropNeighbours(x, y))
+            {
+                if (VirtualItemSystem.IsConveyorTile(t.X, t.Y, out _, out _) && !VirtualItemSystem.IsTileOccupied(t.X, t.Y))
+                {
+                    tile = t;
+                    return true;
+                }
+            }
+
+            tile = default;
+            return false;
+        }
+
+        // A free non-solid neighbour: a vItem put there falls to the floor and waits to be picked up.
+        bool TryFindFreeGroundTile(int x, int y, out Point tile)
+        {
+            foreach (Point t in DropNeighbours(x, y))
+            {
+                if (!WorldGen.InWorld(t.X, t.Y))
+                    continue;
+
+                Tile neighbour = Main.tile[t.X, t.Y];
+                if (neighbour.HasTile && Main.tileSolid[neighbour.TileType])
+                    continue;
+
+                if (VirtualItemSystem.IsTileOccupied(t.X, t.Y))
+                    continue;
+
+                tile = t;
+                return true;
+            }
+
+            tile = default;
+            return false;
+        }
+
+        // With a conveyor beside the plant a full belt pauses the harvest. Without one nothing can clog and the box never waits.
+        bool CanDeliverDrops(int x, int y) => !HasConveyorAround(x, y) || TryFindFreeConveyorTile(x, y, out _);
+
+        // Called by the shared drop capture for every item the harvest spawns (IDropCaptureTarget). Same rules as the Robotic Arm:
+        //  - a conveyor beside the plant: onto a free conveyor tile as a vItem;
+        //  - no conveyor and no player near (and not on this screen): onto a free neighbouring tile as a vItem, so unseen drops do not eat the world item cap;
+        //  - no conveyor and someone is near: left alone, so it drops into the world like vanilla.
+        public void RouteDrop(Item item)
+        {
+            if (item.IsAir)
+                return;
+
+            Point tile;
+            bool found;
+
+            if (HasConveyorAround(dropTile.X, dropTile.Y))
+                found = TryFindFreeConveyorTile(dropTile.X, dropTile.Y, out tile);
+            else if (!IsAnyPlayerNear(new Vector2(dropTile.X * 16f + 8f, dropTile.Y * 16f + 8f)) && !IsOnScreen(new Vector2(dropTile.X * 16f + 8f, dropTile.Y * 16f + 8f)))
+                found = TryFindFreeGroundTile(dropTile.X, dropTile.Y, out tile);
+            else
+                return;
+
+            if (!found)
+                return;
+
+            VirtualItem converted = VirtualItemSystem.SpawnVirtualItem(item.Clone(), tile.X, tile.Y);
+            if (converted == null)
+                return;
+
+            item.TurnToAir();
+            item.active = false;
         }
 
         // Single-player and server run this when the placing player is the one running the game (a multiplayer client only sends its request).

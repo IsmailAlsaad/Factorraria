@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Factorraria.Common.Machines;
+using System;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
@@ -9,12 +10,12 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
     // (tModLoader refuses to load it); the GlobalItem below stays stateless and just asks this system.
     public class RoboticArmDropCaptureSystem : ModSystem
     {
-        public RoboticArmTileEntity Active { get; private set; }
+        public IDropCaptureTarget Active { get; private set; }
 
-        // Runs one strike with this arm as the capture target. Never nests; always cleared, even if the strike throws.
-        public void Run(RoboticArmTileEntity arm, Action strike)
+        // Runs one strike with this machine (the arm or a Harvester Box) as the capture target. Never nests; always cleared, even if the strike throws.
+        public void Run(IDropCaptureTarget target, Action strike)
         {
-            Active = arm;
+            Active = target;
             try
             {
                 strike();
@@ -31,7 +32,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         }
     }
 
-    // Catches the items a tile, wall or tree break spawns and hands them to the arm, which turns them into vItems where it should.
+    // Catches the items a tile, wall or tree break spawns and hands them to the machine that is striking (the arm, or a Harvester Box), which turns them into vItems where it should.
     // Scoped: it only listens while an arm's strike is running (RoboticArmDropCaptureSystem.Run), because the drops are all spawned
     // synchronously inside the strike call and the spike showed they are NOT keyed by the target's coordinates (a felled tree reports
     // one source per trunk tile).
@@ -39,7 +40,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
     {
         public override void OnSpawn(Item item, IEntitySource source)
         {
-            RoboticArmTileEntity active = ModContent.GetInstance<RoboticArmDropCaptureSystem>().Active;
+            IDropCaptureTarget active = ModContent.GetInstance<RoboticArmDropCaptureSystem>().Active;
             if (active == null || item.IsAir)
                 return;
 

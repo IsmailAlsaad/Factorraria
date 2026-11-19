@@ -91,8 +91,8 @@ One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [x] Phase 0: research done. Probe 2 report received 2026-11-17 and logged in 7c. Probe 3 (`tools\harvester_probe3.ps1`) was written in the Phase 1 chat and run there against the probe 2 decompile cache: planter styles, gemcorn ids, `GrowTree` callers and the seed placement path are answered in 7d. Still open: the callers in `Main` and `TileDrawing` (they were not decompiled yet). Run `harvester_probe3.ps1 -Dll ...` once to fill that in; its report goes in the next chat.
 - [x] Phase 1: tile, item, power, herb-on-own-box rules. Applied 2026-11-17 (patch_harvester_p1), TESTED 2026-11-18 (Ismail: everything passed). See 6b.
 - [x] Phase 1b: row power sharing (one entity per row) and the right-click electricity panel. Applied 2026-11-18 (patch_harvester_rows), TESTED 2026-11-19 (Ismail: done and tested). See 6c.
-- [~] Phase 2: gear visuals. Applied 2026-11-19 (patch_harvester_gears), UNTESTED. See 6d. Needs the gear PNGs from Ismail (6d).
-- [ ] Phase 3: herb harvest and drops
+- [x] Phase 2: gear visuals. Applied 2026-11-19 (patch_harvester_gears and patch_harvester_gears_fix), TESTED 2026-11-19 (Ismail: looks good). See 6d. The gear PNGs are Ismail's art.
+- [~] Phase 3: herb harvest and drops. Applied 2026-11-19 (patch_harvester_harvest), UNTESTED. See 6e.
 - [ ] Phase 4: staff, particles, client sync
 - [ ] Phase 5: acorns, trees, gemcorns
 - [ ] Phase 6: polish, MP verification
@@ -168,6 +168,30 @@ As built (all in `HarvesterBoxTileEntityBase`, client only, never saved or sent)
 - Netcode: none, so no `docs/multiplayer` edit.
 
 Art for Ismail: `Content/Tiles/Machines/ElectricalConsumers/HarvesterBox/HarvesterBoxGear.png` (idle) and `HarvesterBoxGear_Active.png` (same size, same centre), each a single frame with the gear centred.
+
+## 6e. Phase 3: herb harvest (patch_harvester_harvest, 2026-11-19, applied UNTESTED)
+
+What exists now (all server / single-player; no new packet)
+- `HarvesterBoxTileEntityBase.UpdateHarvest`, called from `Update` (a multiplayer client never runs `Update`). While the row is powered (`isOn`; a wire switch or a brownout freezes the cycle, and the delay only counts powered ticks) it looks every `HarvestScanTicks` (20) at the tile above each idle box. When that plant is ready the box goes `Idle -> Ready`; after `HarvestDelayTicks` (60) powered ticks it calls `HarvestHerb(x, y)`. The delay is a stand-in for the staff sweep: Phase 4 replaces it with Extending / Sweeping / Retracting and keeps `HarvestHerb` as the single place that harvests.
+- Ready means (`HarvesterBoxRules.IsReadyToHarvest`, THE place to change it): tile 83 (Mature) or 84 (Blooming) AND the herb's style is the box's own herb (Ismail's assumption: harvest at Mature and Blooming, with the vanilla yield of the stage found: mature outside its condition gives the herb only, blooming gives herb and seeds). A plant that is removed or changed while waiting sends the box back to Idle.
+- `HarvestHerb`: `WorldGen.KillTile(x, y)` inside the shared drop capture (vanilla yield and sounds), then `WorldGen.PlaceAlch(x, y, style)` (free replant, goes through the Phase 1 hooks), then on a server the tile kill (`MessageID.TileManipulation`) and a tile square are sent to clients. In single-player nothing is sent.
+- Per-box state is `BoxState[]` indexed by `x - Position.X`, rebuilt when the row length changes (a merge, a split or a new left end rebuilds the entity and so resets it), never saved. A reset only restarts a waiting plant's delay.
+- Shared drop capture: new `IDropCaptureTarget` (`Common/Machines/IDropCaptureTarget.cs`, one method `RouteDrop(Item)`), implemented by `RoboticArmTileEntity` and by the box entity. `RoboticArmDropCaptureSystem.Active` and `.Run` now take the interface (the classes keep their names and their file in the arm folder).
+- Drop routing (`RouteDrop`, same rules as the arm, around the harvested plant's tile: the tile above, left and right):
+  1. a conveyor beside the plant: the drop becomes a vItem on a free conveyor tile; a full belt PAUSES the harvest (the box waits, like the arm's back-pressure);
+  2. no conveyor and no player near (`IsAnyPlayerNear`) and not on screen: a vItem on a free non-solid neighbouring tile (it falls and waits to be picked up);
+  3. no conveyor and a player near: left alone, it drops into the world like vanilla.
+- No saves, no new packet. Vanilla item and tile sync carry the result; the vItem system syncs its own objects.
+
+Multiplayer design (rule 9)
+- Authority: the server (and single-player) runs the whole cycle: the scan, the harvest, the replant, the drop routing. Clients never decide anything.
+- Synced: only what vanilla and the vItem system already sync (the killed tile and replanted herb as tile messages, real drops as world items, vItems through VItemNet). The staff and the active gear are Phase 4 and add the one small per-state-change sync then.
+- Single-player runs the same code path (no tile messages sent).
+
+Known limits
+- Not compiled or run.
+- Phase 3 has no animation: the herb simply pops. The gears turn but do not yet react to a ripe plant (`IsGearActive` is still false).
+- A row far from every player keeps running (like every machine) and its drops become vItems; this is the part most worth testing on a dedicated server.
 
 ## 7. Verify (resolved by the probe, then recorded here)
 
@@ -255,4 +279,4 @@ Open dumps before writing Phase 5 (small; the next chat can ask for them in one 
 
 ## 8. Next-chat prompt
 
-"Continue the Harvester Box with Phase 3 (herb harvest: server state machine, replant, shared drop capture, drops as items near a player or vItems when culled). Read `docs/harvester_box/ROADMAP.md` from a fresh clone: section 6 (Progress), 6c (row entity) and 6d (gears, per-box state decision). Phase 2 (gear visuals, patch_harvester_gears) test results: <PASTE what worked and what failed, or say nothing was tested yet>. If a Phase 2 test failed, fix that first. Per-box state (harvest cycle, the plant above each box) is an array indexed by `x - Position.X`, rebuilt from the tiles whenever the row changes, never saved only on the entity. State the multiplayer design first (server runs the cycle, one small TE sync per state change). Probe 3 report (`tools\harvester_probe3_report.txt`, only the Main / TileDrawing caller part is still open, see 7d) is needed before Phase 5. My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll` to any probe)."
+"Continue the Harvester Box with Phase 4 (staff and particles, the client state sync, packets plus the `docs/multiplayer` ROADMAP / APPENDIX edits). Read `docs/harvester_box/ROADMAP.md` from a fresh clone: section 6 (Progress), 6d (gears) and 6e (the harvest as built). Phase 3 (herb harvest, patch_harvester_harvest) test results: <PASTE what worked and what failed, or say nothing was tested yet>. If a Phase 3 test failed, fix that first. Phase 4 replaces the plain `HarvestDelayTicks` wait in `UpdateHarvest` with the staff's Extending / Sweeping / Retracting steps and keeps `HarvestHerb` as the one place that harvests. The staff sprite and the active-gear sprite are my art: tell me the exact paths and sizes before writing code. State the multiplayer design first (server owns the per-box cycle; clients get one small sync per state change; `IsGearActive` and the staff read it). Probe 3 report (`tools\harvester_probe3_report.txt`, only the Main / TileDrawing caller part is still open, see 7d) is needed before Phase 5. My tModLoader.dll is at `C:\GOG Games\Terraria\tModLoader\tModLoader.dll` (pass it with `-Dll` to any probe)."

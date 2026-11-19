@@ -15,7 +15,7 @@ using Terraria.ObjectData;
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 {
     // One input slot (a pickaxe, axe, hammer or a block) and no output slot: drops become vItems or world items. No recipes.
-    public class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw
+    public class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw, IDropCaptureTarget
     {
         public override int ValidTileType => ModContent.TileType<RoboticArmTile>();
         public override float PowerDemand => 100f;
