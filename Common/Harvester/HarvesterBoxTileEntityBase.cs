@@ -144,10 +144,31 @@ namespace Factorraria.Common.Harvester
             for (int k = 0; k < length; k++)
             {
                 int x = Position.X + k;
-                Texture2D texture = IsGearActive(k) ? active : idle;   // the draw size comes from the texture itself
                 Vector2 center = new Vector2(x * 16f + 8f, Position.Y * 16f + 8f) + GearOffset;
-                spriteBatch.Draw(texture, center - Main.screenPosition, null, Lighting.GetColor(x, Position.Y) * 1f, GearAngle(x), texture.Size() / 2f, GearScale, SpriteEffects.None, 0f);
+                Color light = Lighting.GetColor(x, Position.Y);
+                float angle = GearAngle(x);
+                float blend = k < gearBlend.Length ? gearBlend[k] : 0f;
+
+                if (blend <= 0f || ReferenceEquals(active, idle))
+                {
+                    DrawGear(spriteBatch, idle, center, light, angle);   // the draw size comes from the texture itself
+                    continue;
+                }
+
+                // Crossfade: the active sprite fades in over the opaque idle one (first half), then the idle one fades out under it (second half),
+                // so the gear never turns see-through in the middle.
+                float activeAlpha = Math.Min(1f, 2f * blend);
+                float idleAlpha = 1f - Math.Max(0f, 2f * blend - 1f);
+                if (idleAlpha > 0f)
+                    DrawGear(spriteBatch, idle, center, light * idleAlpha, angle);
+
+                DrawGear(spriteBatch, active, center, light * activeAlpha, angle);
             }
+        }
+
+        void DrawGear(SpriteBatch spriteBatch, Texture2D texture, Vector2 center, Color color, float angle)
+        {
+            spriteBatch.Draw(texture, center - Main.screenPosition, null, color, angle, texture.Size() / 2f, GearScale, SpriteEffects.None, 0f);
         }
 
         // ---- Herb harvest and staff (Phase 3 and 4, docs/harvester_box/ROADMAP.md 6e and 6f) ----
@@ -171,6 +192,7 @@ namespace Factorraria.Common.Harvester
         public float StaffScale => 1f;
         public float StaffDustChance => 0.35f;                    // per tick per moving staff, only while its tip is on screen
         public int StaffDustType => 2;                            // vanilla grass dust (DustID.Grass)
+        public int GearActiveFadeTicks => 12;                     // the gear crossfades between its idle and active sprite this fast
 
         enum BoxCycle : byte { Idle, Ready, Strike }
 
@@ -181,6 +203,7 @@ namespace Factorraria.Common.Harvester
         }
 
         BoxState[] boxes = Array.Empty<BoxState>();
+        float[] gearBlend = Array.Empty<float>();   // per box, 0 = idle sprite .. 1 = active sprite (client visual only)
         int nextScanIn;
         int clientScanIn;
         Point dropTile;     // the herb tile being harvested right now (RouteDrop reads it)
@@ -192,6 +215,9 @@ namespace Factorraria.Common.Harvester
         {
             if (boxes.Length != length)
                 boxes = new BoxState[length];
+
+            if (gearBlend.Length != length)
+                gearBlend = new float[length];
         }
 
         // Server and single-player (a multiplayer client never runs Update).
@@ -272,6 +298,13 @@ namespace Factorraria.Common.Harvester
                 return;
 
             EnsureBoxes(length);
+
+            float fadeStep = 1f / Math.Max(1, GearActiveFadeTicks);
+            for (int k = 0; k < length; k++)
+            {
+                float goal = IsGearActive(k) ? 1f : 0f;
+                gearBlend[k] = gearBlend[k] < goal ? Math.Min(goal, gearBlend[k] + fadeStep) : Math.Max(goal, gearBlend[k] - fadeStep);
+            }
 
             if (Main.netMode == NetmodeID.MultiplayerClient && isOn)
             {
@@ -377,16 +410,15 @@ namespace Factorraria.Common.Harvester
                 if (texture == null && !TryGetStaffTexture(out texture))
                     return;   // no staff sprite yet
 
-                int shown = (int)Math.Round(texture.Height * StaffGrowth(boxes[k].Ticks));
-                if (shown <= 0)
+                float growth = StaffGrowth(boxes[k].Ticks);
+                if (growth <= 0f)
                     continue;
 
-                // Only the rows nearest the base are shown, so the staff grows out of the gear instead of being stretched.
+                // The whole sprite is scaled up from its pivot, so it grows along the direction it faces.
                 int x = Position.X + k;
-                Rectangle source = new Rectangle(0, texture.Height - shown, texture.Width, shown);
                 float angle = StaffAngle(x, boxes[k].Ticks) + MathHelper.ToRadians(StaffSpriteRotationDegrees);
-                Vector2 origin = new Vector2(0f, shown) + StaffPivotOffset;   // bottom left corner of the shown part, plus the tuning offset
-                spriteBatch.Draw(texture, StaffBase(x) - Main.screenPosition, source, Lighting.GetColor(x, Position.Y), angle, origin, StaffScale, SpriteEffects.None, 0f);
+                Vector2 origin = new Vector2(0f, texture.Height) + StaffPivotOffset;   // bottom left corner of the sprite, plus the tuning offset
+                spriteBatch.Draw(texture, StaffBase(x) - Main.screenPosition, null, Lighting.GetColor(x, Position.Y), angle, origin, StaffScale * growth, SpriteEffects.None, 0f);
             }
         }
 
@@ -406,19 +438,16 @@ namespace Factorraria.Common.Harvester
                 if (growth <= 0f || Main.rand.NextFloat() >= StaffDustChance)
                     continue;
 
+                // Anywhere along the staff: from the pivot to the top right corner of the sprite, turned and scaled like the sprite itself.
                 int x = Position.X + k;
-                int shown = (int)Math.Round(texture.Height * growth);
-                if (shown <= 0)
-                    continue;
-
-                // The tip is the top right corner of the part that is shown, turned about the pivot like the sprite itself.
                 float angle = StaffAngle(x, ticks) + MathHelper.ToRadians(StaffSpriteRotationDegrees);
-                Vector2 pivot = new Vector2(0f, shown) + StaffPivotOffset;
-                Vector2 tip = StaffBase(x) + (new Vector2(texture.Width, 0f) - pivot).RotatedBy(angle) * StaffScale;
-                if (!IsOnScreen(tip))
+                Vector2 pivot = new Vector2(0f, texture.Height) + StaffPivotOffset;
+                Vector2 along = (new Vector2(texture.Width, 0f) - pivot).RotatedBy(angle) * (StaffScale * growth);
+                Vector2 position = StaffBase(x) + along * Main.rand.NextFloat() + Main.rand.NextVector2Circular(2f, 2f);
+                if (!IsOnScreen(position))
                     continue;
 
-                Dust.NewDustPerfect(tip, StaffDustType, Main.rand.NextVector2Circular(1.2f, 1.2f), 0, default, 1f);
+                Dust.NewDustPerfect(position, StaffDustType, Main.rand.NextVector2Circular(1.2f, 1.2f), 0, default, 1f);
             }
         }
 
