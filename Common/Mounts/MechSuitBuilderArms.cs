@@ -47,6 +47,8 @@ namespace Factorraria.Common.Mounts
         // --- TUNABLES (plain fields so hot reload can change them) ---
         public float UpperArmLength = 56f;
         public float ForearmLength = 56f;
+        public float FoldBeamLength = 14f;   // each beam shrinks to this length when the hand is at the shoulder (grabbing an item, being put away)
+        public float FoldDistance = 80f;     // hand-to-shoulder distance below which the beams start to shrink (full length at and beyond it)
         public float ShoulderOffsetX = 7f;   // the two arms sit this far left and right of the player's centre
         public float ShoulderOffsetY = -2f;
         public int RetireTicks = 30;         // after a job ends the arms fold back this long, then disappear
@@ -128,7 +130,11 @@ namespace Factorraria.Common.Mounts
                         arm.Motion.Update(shoulder, UpperArmLength, ForearmLength, arm.Held, false);
 
                     arm.Visual ??= new RoboticArmVisual();
-                    arm.Visual.Update(arm.Motion, shoulder, UpperArmLength, ForearmLength, arm.Held, false);
+                    // The logic and the reach keep the full lengths; only the drawn beams telescope as the hand nears the shoulder.
+                    float fold = MathHelper.Clamp(Vector2.Distance(arm.Motion.Head, shoulder) / System.MathF.Max(FoldDistance, 1f), 0f, 1f);
+                    float upperShown = MathHelper.Lerp(System.MathF.Min(FoldBeamLength, UpperArmLength), UpperArmLength, fold);
+                    float foreShown = MathHelper.Lerp(System.MathF.Min(FoldBeamLength, ForearmLength), ForearmLength, fold);
+                    arm.Visual.Update(arm.Motion, shoulder, upperShown, foreShown, arm.Held, false);
                 }
             }
 

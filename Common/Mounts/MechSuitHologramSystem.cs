@@ -258,6 +258,18 @@ namespace Factorraria.Common.Mounts
             if (copy.Blocks.Count == 0)
                 return;
 
+            // Same rule as the server: the new copy wins where it overlaps an older one.
+            HashSet<(int, int, bool)> newKeys = new HashSet<(int, int, bool)>();
+            foreach (Block b in copy.Blocks)
+                newKeys.Add((origin.X + b.X, origin.Y + b.Y, b.IsWall));
+
+            foreach (PlacedCopy older in placedCopies)
+            {
+                Point o = older.Origin;
+                older.Blocks.RemoveAll(b => newKeys.Contains((o.X + b.X, o.Y + b.Y, b.IsWall)));
+            }
+
+            placedCopies.RemoveAll(c => c.Blocks.Count == 0);
             placedCopies.Add(copy);
             lastPlacedTick = Main.GameUpdateCount;
             sawBuilding = Main.LocalPlayer.GetModPlayer<MechSuitPlayer>().IsBuilding;
@@ -285,8 +297,6 @@ namespace Factorraria.Common.Mounts
             Rectangle view = new Rectangle((int)Main.screenPosition.X - 96, (int)Main.screenPosition.Y - 96, (int)viewSize.X + 192, (int)viewSize.Y + 192);
             Color valid = Color.White * HologramAlpha;
             Color red = RedTint * HologramAlpha;
-            int left = 0;
-
             for (int pass = 0; pass < 2; pass++)
             {
                 foreach (PlacedCopy copy in placedCopies)
@@ -306,9 +316,6 @@ namespace Factorraria.Common.Mounts
                         if (built)
                             continue;
 
-                        if (pass == 1)
-                            left++;
-
                         if (!view.Contains(x * 16, y * 16))
                             continue;
 
@@ -321,9 +328,6 @@ namespace Factorraria.Common.Mounts
                     }
                 }
             }
-
-            // Small readout above the player: how many blocks are still to be built.
-            Utils.DrawBorderString(spriteBatch, left + " blocks left", player.Top - Main.screenPosition + new Vector2(0f, -36f), Color.White, 0.9f, 0.5f, 1f);
         }
 
         // ---------------------------------------------------------------- drawing

@@ -4,7 +4,7 @@ generated 2026-11-20 | 451 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(258) Item(145) Player(112) FactorrariaNet(87) Tile(75) ItemID(73) WorldGen(70) BaseMachine(58) TextureAssets(41) TileObjectData(40) FactorrariaPacket(40) Sets(39) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(258) Item(145) Player(112) FactorrariaNet(87) Tile(75) ItemID(73) WorldGen(70) BaseMachine(58) TextureAssets(41) TileObjectData(40) FactorrariaPacket(40) Sets(39) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -628,14 +628,14 @@ tModLoader/other bases -> project types:
   class MechSuitBuilderArmSet
     +Arms:MechSuitBuilderArm +Building:bool +RetireTimer:int
   class MechSuitBuilderArms : ModSystem
-    +UpperArmLength:float +ForearmLength:float +ShoulderOffsetX:float +ShoulderOffsetY:float +RetireTicks:int +OnWorldUnload()[ov] +GetOrCreate(int) +TryGet(int,out MechSuitBuilderArmSet) +Shoulder(Player,int) +MarkEnded(int) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+    +UpperArmLength:float +ForearmLength:float +FoldBeamLength:float +FoldDistance:float +ShoulderOffsetX:float +ShoulderOffsetY:float +RetireTicks:int +OnWorldUnload()[ov] +GetOrCreate(int) +TryGet(int,out MechSuitBuilderArmSet) +Shoulder(Player,int) +MarkEnded(int) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
 **MechSuitBuilderSystem.cs** uses: Main, MechSuitBuildNet, MechSuitHologramSystem, MechSuitPlayer, Player, RoboticArmAreaEditorSystem
   class MechSuitBuilderSystem : ModSystem
     +MaxSelectionWidth:int +MaxSelectionHeight:int +CancelKey:Keys +TexturePath:string +Selection:Rectangle? +SelectionVersion:int +PlaceOrigin:Point? +IsDragging:bool +OriginFor(Rectangle,Point)[s] ~ShiftHeld:bool[s] ~Ready(out Player)[s] +OnWorldUnload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **MechSuitDebugSystem.cs** uses: BaseMachine, FurnaceOffsetConfig, Main, MechSuitArmProjectile, MechSuitPlayer, Player, TextureAssets
   class MechSuitDebugSystem : ModSystem
     +PostDrawTiles()[ov]
-**MechSuitHologramSystem.cs** uses: Block, Factorraria, Item, Main, MechSuitBlueprint, MechSuitBuilderSystem, MechSuitPlayer, Player, RoboticArmAreaEditorSystem, TextureAssets, Tile, WorldGen
+**MechSuitHologramSystem.cs** uses: Block, Item, Main, MechSuitBlueprint, MechSuitBuilderSystem, MechSuitPlayer, Player, RoboticArmAreaEditorSystem, TextureAssets, Tile, WorldGen
   class MechSuitHologramSystem : ModSystem
     +HologramAlpha:float +RedTint:Color +EvaluateIntervalTicks:int +TexturePath:string +PlacedGraceTicks:int +OnWorldUnload()[ov] +Unload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +AddPlaced(Rectangle,Point)
     enum BlockState : byte

@@ -29,7 +29,7 @@ namespace Factorraria.Common.Mounts
     public class MechSuitBuildSystem : ModSystem
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
-        public float BuilderReachTiles = 6.5f;     // a builder arm reaches this far from the player's centre
+        public float BuilderReachTiles = 16f;     // a builder arm reaches this far from the player's centre
         public int StrikeTicks = 14;               // one placement strike
         public int RescanTicks = 15;               // an idle arm that found nothing looks again after this long
         public int BlockedCooldownTicks = 180;     // a tile PlaceTile refused (a player or NPC stands there) is skipped this long
@@ -165,12 +165,26 @@ namespace Factorraria.Common.Mounts
 
             if (jobs.TryGetValue(sender, out Job running))
             {
-                if (running.Pending.Count + job.Pending.Count > MaxPendingBlocks)
+                // The new copy wins where it overlaps older pending copies: those blocks are dropped (same tile, same layer), never counted twice.
+                HashSet<(int, int, bool)> newKeys = new HashSet<(int, int, bool)>();
+                foreach (MechSuitBlueprint.Block block in job.Pending)
+                    newKeys.Add((block.X, block.Y, block.IsWall));
+
+                List<MechSuitBlueprint.Block> kept = new List<MechSuitBlueprint.Block>(running.Pending.Count);
+                foreach (MechSuitBlueprint.Block block in running.Pending)
+                {
+                    if (!newKeys.Contains((block.X, block.Y, block.IsWall)))
+                        kept.Add(block);
+                }
+
+                if (kept.Count + job.Pending.Count > MaxPendingBlocks)
                 {
                     Log("request from " + sender + " refused: the running job would hold more than " + MaxPendingBlocks + " blocks");
                     return;
                 }
 
+                running.Pending.Clear();
+                running.Pending.AddRange(kept);
                 running.Pending.AddRange(job.Pending);
                 running.Total += job.Total;
                 running.ObjectBlocksSkipped += job.ObjectBlocksSkipped;
@@ -211,23 +225,8 @@ namespace Factorraria.Common.Mounts
                 player.GetModPlayer<MechSuitPlayer>().SetBuilding(false);
 
             SendState(job, player, false, true);
-            if (player != null && player.active)
-                Report(job, owner, reason);
             Log("player " + owner + "'s build ended (" + reason + "): placed " + job.Placed + " of " + (job.Placed + job.Pending.Count) + ", left " + job.Pending.Count
                 + " (blocked " + job.Blocked + ", out of material " + job.NoMaterial + ", unsupported " + job.Unsupported + ", out of reach " + job.WaitingForReach + ")");
-        }
-
-        // One chat line for the owner when the job ends (server -> that client; single-player prints it directly).
-        void Report(Job job, int owner, string reason)
-        {
-            string text = "Mech Suit build " + reason + ": placed " + job.Placed + ", left " + job.Pending.Count;
-            if (job.Pending.Count > 0)
-                text += " (blocked " + job.Blocked + ", out of material " + job.NoMaterial + ", unsupported " + job.Unsupported + ", out of reach " + job.WaitingForReach + ")";
-
-            if (Main.netMode == NetmodeID.Server)
-                Terraria.Chat.ChatHelper.SendChatMessageToClient(Terraria.Localization.NetworkText.FromLiteral(text), Color.LightGreen, owner);
-            else if (Main.netMode == NetmodeID.SinglePlayer)
-                Main.NewText(text, Color.LightGreen);
         }
 
         // ---------------------------------------------------------------- tick
