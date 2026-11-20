@@ -417,6 +417,7 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.CheckTree += CheckTreeDebugHook;
             On_WorldGen.KillTile += KillTileDebugHook;
             On_WorldGen.KillTile += KillTileTreeHook;
+            On_WorldGen.CheckTree += CheckTreeBoxHook;   // added after the debug CheckTree hook on purpose, so it wraps it
         }
 
         public override void Unload()
@@ -429,6 +430,33 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.CheckTree -= CheckTreeDebugHook;
             On_WorldGen.KillTile -= KillTileDebugHook;
             On_WorldGen.KillTile -= KillTileTreeHook;
+            On_WorldGen.CheckTree -= CheckTreeBoxHook;
+        }
+
+        // THE growth fix (probe 4 + the Fix 5 log). Vanilla's CheckTree compares the RAW type of the tile under a trunk or root piece with the tree type or
+        // soil (2, 23, 60 ...) and kills the piece when it is neither. Whatever re-frames a tree tile calls it, and the log showed it reaching a tree three
+        // columns away from the one growing (a root piece of the neighbour, box under it NOT disguised): that kill cascaded up the neighbour and ended in the
+        // IndexOutOfRange. A fixed window of disguised boxes (x - 2 .. x + 2) can never be wide enough, so instead each CheckTree call disguises the one tile it
+        // reads: when the tile under (i, j) is a tree box it stands in for its vanilla soil for the length of that call. It is the only tile CheckTree reads
+        // the raw type of that matters (the other neighbours are compared with the tree's own type). Reads and swaps tile data only, so it is the same on every side.
+        static void CheckTreeBoxHook(On_WorldGen.orig_CheckTree orig, int i, int j)
+        {
+            if (HarvesterBoxRegistry.BoxTreeSoil.Count > 0 && HarvesterBoxTrees.IsTreeBox(i, j + 1))
+            {
+                HarvesterBoxTrees.Disguise d = HarvesterBoxTrees.Begin(i, j + 1);
+                try
+                {
+                    orig(i, j);
+                }
+                finally
+                {
+                    HarvesterBoxTrees.End(d, false);
+                }
+
+                return;
+            }
+
+            orig(i, j);
         }
 
         // A tree tile broken by anything but our own code (a player's axe or pickaxe, an explosion): vanilla's drop code reads the soil under the tree, and the

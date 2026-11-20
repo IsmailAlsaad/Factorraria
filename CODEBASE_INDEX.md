@@ -392,7 +392,7 @@ tModLoader/other bases -> project types:
       +Cycle:BoxCycle +Ticks:int
 **HarvesterBoxTrees.cs** uses: Factorraria, FurnaceOffsetConfig, HarvesterBoxRegistry, Main, Tile, WorldGen
   static class HarvesterBoxTrees
-    +OwnGrowth:bool[s] +IsTreeBox(int,int)[s] +Begin(int,int)[s] +End(Disguise,bool)[s] +RunAsTreeSoil(int,int,Action)[s] +RunAsTreeSoilWithSides(int,int,Action)[s] +TryFindSoilBelow(int,int,int,out int)[s] +IsSapling(int,int)[s] +CanPlantSapling(int,int)[s] +PlaceSapling(int,int,int)[s] +TryGrowSapling(int,int)[s] +IsTreeReady(int,int)[s]
+    +OwnGrowth:bool[s] +SideDepth:int[s] +IsTreeBox(int,int)[s] +Begin(int,int)[s] +End(Disguise,bool)[s] +RunAsTreeSoil(int,int,Action)[s] +RunAsTreeSoilWithSides(int,int,Action)[s] +TryFindSoilBelow(int,int,int,out int)[s] +TryFindBoxForTreeTile(int,int,out int,out int)[s] +IsSapling(int,int)[s] +CanPlantSapling(int,int)[s] +PlaceSapling(int,int,int)[s] +TryGrowSapling(int,int)[s] +IsTreeReady(int,int)[s]
     struct Disguise
       +Active:bool +Soil:int X, Y, +Real:ushort +FrameY:short FrameX, +Fake:bool
   class HarvesterBoxTreeHooks : ModSystem
