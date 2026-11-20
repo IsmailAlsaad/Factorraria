@@ -392,7 +392,7 @@ tModLoader/other bases -> project types:
       +Cycle:BoxCycle +Ticks:int
 **HarvesterBoxTrees.cs** uses: CheckTreeSettings, Factorraria, FurnaceOffsetConfig, HarvesterBoxRegistry, ItemID, Main, Tile, TileDrawing, WorldGen
   static class HarvesterBoxTrees
-    +OwnGrowth:bool[s] +SideDepth:int[s] +IsTreeBox(int,int)[s] +IsTreeTileType(int)[s] +Begin(int,int)[s] +End(Disguise,bool)[s] +RunAsTreeSoil(int,int,Action)[s] +RunAsTreeSoilWithSides(int,int,Action)[s] +TryFindSoilBelow(int,int,int,out int)[s] +TryFindBoxForTreeTile(int,int,out int,out int)[s] +BeginForPiece(int,int,int)[s] +EndForPiece(List<Disguise>)[s] +IsSapling(int,int)[s] +CanPlantSapling(int,int)[s] +PlaceSapling(int,int,int)[s] +TryGrowSapling(int,int)[s] +IsTreeReady(int,int)[s]
+    +Disguised:HashSet<long>[s] +DisguiseKey(int,int)[s] +OwnGrowth:bool[s] +SideDepth:int[s] +IsTreeBox(int,int)[s] +IsTreeTileType(int)[s] +Begin(int,int)[s] +End(Disguise,bool)[s] +RunAsTreeSoil(int,int,Action)[s] +RunAsTreeSoilWithSides(int,int,Action)[s] +TryFindSoilBelow(int,int,int,out int)[s] +TryFindBoxForTreeTile(int,int,out int,out int)[s] +BeginForPiece(int,int,int)[s] +EndForPiece(List<Disguise>)[s] +IsSapling(int,int)[s] +CanPlantSapling(int,int)[s] +PlaceSapling(int,int,int)[s] +TryGrowSapling(int,int)[s] +IsTreeReady(int,int)[s]
     struct Disguise
       +Active:bool +Soil:int X, Y, +Real:ushort +FrameY:short FrameX, +Fake:bool
   class HarvesterBoxTreeHooks : ModSystem
@@ -2269,7 +2269,7 @@ tModLoader/other bases -> project types:
 - docs/recipe_book/: ROADMAP.md
 - docs/super_weapons/: ROADMAP.md
 - docs/weapon_overhaul/: ROADMAP.md
-- tools/: harvester_probe.ps1, harvester_probe2.ps1, harvester_probe3.ps1, harvester_probe4.ps1, harvester_probe7.ps1, harvester_probe8.ps1, patch_engine.ps1; harvester_probe2_report.txt, harvester_probe3_report.txt, harvester_probe4_report.txt, harvester_probe7_report.txt, harvester_probe8_report.txt, harvester_probe_report.txt
+- tools/: harvester_probe.ps1, harvester_probe2.ps1, harvester_probe3.ps1, harvester_probe4.ps1, harvester_probe7.ps1, harvester_probe8.ps1, harvester_probe9.ps1, patch_engine.ps1; harvester_probe2_report.txt, harvester_probe3_report.txt, harvester_probe4_report.txt, harvester_probe7_report.txt, harvester_probe8_report.txt, harvester_probe9_report.txt, harvester_probe_report.txt
 - tools/cosmic_tests/: Program.cs.txt, Program_C2.cs.txt, README.txt
 - tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt
 - tools/sw_tests/: Program.cs.txt, README.txt

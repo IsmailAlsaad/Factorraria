@@ -26,6 +26,13 @@ namespace Factorraria.Common.Harvester
             public bool Fake;   // a temporary tile made in an empty cell (End takes it away again)
         }
 
+        // The tiles that are disguised as vanilla soil at this moment (a box, a side tile, a fake side cell), keyed by position. Sand (the palm soil) is a
+        // FALLING tile: TileFrame spawns a falling block for a sand tile with nothing solid under it and clears the tile, which broke the real box. The
+        // SpawnFallingBlockProjectile hook reads this set and lets nothing fall from a disguised tile. Entries are removed by End.
+        public static readonly System.Collections.Generic.HashSet<long> Disguised = new System.Collections.Generic.HashSet<long>();
+
+        public static long DisguiseKey(int x, int y) => ((long)x << 32) | (uint)y;
+
         // True only while TryGrowSapling calls vanilla's growth, so the hook below can tell our growth from vanilla's own random tick.
         public static bool OwnGrowth;
 
@@ -79,6 +86,7 @@ namespace Factorraria.Common.Harvester
                 Soil = HarvesterBoxRegistry.BoxTreeSoil[soil.TileType]
             };
             soil.TileType = (ushort)d.Soil;
+            Disguised.Add(DisguiseKey(x, y));
             return d;
         }
 
@@ -88,6 +96,8 @@ namespace Factorraria.Common.Harvester
         {
             if (!d.Active)
                 return;
+
+            Disguised.Remove(DisguiseKey(d.X, d.Y));
 
             Tile soil = Main.tile[d.X, d.Y];
             if (soil.HasTile && soil.TileType == d.Soil)
@@ -180,6 +190,7 @@ namespace Factorraria.Common.Harvester
                 {
                     list.Add(new Disguise { Active = true, X = x, Y = y, Real = tile.TileType, FrameX = tile.TileFrameX, FrameY = tile.TileFrameY, Soil = soil });
                     tile.TileType = (ushort)soil;
+                    Disguised.Add(DisguiseKey(x, y));
                 }
 
                 if (y >= soilY)
@@ -198,6 +209,7 @@ namespace Factorraria.Common.Harvester
                 list.Add(new Disguise { Active = true, Fake = true, X = x, Y = soilY, Real = cell.TileType, FrameX = cell.TileFrameX, FrameY = cell.TileFrameY, Soil = soilType });
                 cell.TileType = (ushort)soilType;
                 cell.HasTile = true;
+                Disguised.Add(DisguiseKey(x, soilY));
             }
         }
 
@@ -372,6 +384,7 @@ namespace Factorraria.Common.Harvester
                     fake.TileType = (ushort)soilType;
                     fake.IsActuated = true;
                     fake.HasTile = true;
+                    Disguised.Add(DisguiseKey(fakeX, soilY));
                 }
 
                 HarvesterBoxTreeHooks.DbgHeader = $"sapling ({x},{bottomY}) soil={soilType} boxTile={Main.tile[x, soilY].TileType} disguised[mid={middle.Active} L={left.Active} R={right.Active} LL={farLeft.Active} RR={farRight.Active}] fakeX={(fakeX == int.MinValue ? "none" : fakeX.ToString())} sideFits[L={SideFits(x - 1, soilY, soilType)} R={SideFits(x + 1, soilY, soilType)}]";
@@ -383,6 +396,7 @@ namespace Factorraria.Common.Harvester
             {
                 if (fakeX != int.MinValue)
                 {
+                    Disguised.Remove(DisguiseKey(fakeX, soilY));
                     fake = Main.tile[fakeX, soilY];
                     fake.HasTile = false;
                     fake.IsActuated = fakeOldActuated;
@@ -453,6 +467,7 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.KillTile_GetTreeDrops += KillTileGetTreeDropsHook;
             On_WorldGen.CheckPalmTree += CheckPalmTreeBoxHook;
             On_TileDrawing.GetPalmTreeVariant += GetPalmTreeVariantHook;
+            On_WorldGen.SpawnFallingBlockProjectile += SpawnFallingBlockHook;
             On_WorldGen.CheckTreeWithSettings += CheckTreeWithSettingsBoxHook;
             On_WorldGen.GetAshTreeFoliageData += GetAshTreeFoliageDataHook;
         }
@@ -471,6 +486,7 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.KillTile_GetTreeDrops -= KillTileGetTreeDropsHook;
             On_WorldGen.CheckPalmTree -= CheckPalmTreeBoxHook;
             On_TileDrawing.GetPalmTreeVariant -= GetPalmTreeVariantHook;
+            On_WorldGen.SpawnFallingBlockProjectile -= SpawnFallingBlockHook;
             On_WorldGen.CheckTreeWithSettings -= CheckTreeWithSettingsBoxHook;
             On_WorldGen.GetAshTreeFoliageData -= GetAshTreeFoliageDataHook;
         }
@@ -646,6 +662,17 @@ namespace Factorraria.Common.Harvester
             }
 
             return orig(i, j, xoffset, ref treeFrame, ref treeStyle, out floorY, out topTextureFrameWidth, out topTextureFrameHeight);
+        }
+
+        // TileFrame calls this for every active falling tile (TileID.Sets.Falling: sand, ebonsand, pearlsand, crimsand ...) and it clears the tile and spawns a
+        // falling block when nothing solid is under it. A box standing in for sand (Waterleaf, palm) has air under it, so it was turned into a falling block and
+        // the real box was lost. Nothing falls from a tile we have disguised; every other tile is untouched (probe 9).
+        static bool SpawnFallingBlockHook(On_WorldGen.orig_SpawnFallingBlockProjectile orig, int i, int j, Tile tileCache, Tile tileTopCache, Tile tileBottomCache, int type)
+        {
+            if (HarvesterBoxTrees.Disguised.Count > 0 && HarvesterBoxTrees.Disguised.Contains(HarvesterBoxTrees.DisguiseKey(i, j)))
+                return false;
+
+            return orig(i, j, tileCache, tileTopCache, tileBottomCache, type);
         }
 
         // Client drawing: the palm's look (which sheet column, oasis or not) comes from the type of the tile under its trunk (GetPalmTreeVariant: sand, hardened

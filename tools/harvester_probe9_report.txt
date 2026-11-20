@@ -1,0 +1,230 @@
+Dll: C:\GOG Games\Terraria\tModLoader\tModLoader.dll
+Terraria.WorldGen: 2124 KB
+##### 1. where WorldGen decides a tile falls
+##### 'Sets\.Falling\[|tileSand\[|SpawnFallingBlockProjectile\(|CheckFalling\(' in Terraria.WorldGen.cs: 5 line(s) in 3 method(s)
+  2 hit(s) at line(s) 11421, 11456  in  internal static void AddGenPasses()
+  2 hit(s) at line(s) 81031, 81033  in  public static void TileFrame(int i, int j, bool resetFrame = false, bool noBreak = false)
+  1 hit(s) at line(s) 81075  in  public static bool SpawnFallingBlockProjectile(int i, int j, Tile tileCache, Tile tileTopCache, Tile tileBottomCache, int type)
+
+# 3 hit(s) shown for 'Sets\.Falling\[|tileSand\[' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:11421
+				if (k == 1)
+				{
+					num4 = -1;
+					num5 = Main.maxTilesX - 5;
+					num6 = 5;
+				}
+				for (int l = num5; l != num6; l += num4)
+				{
+					if (l <= GenVars.UndergroundDesertLocation.Left || l >= GenVars.UndergroundDesertLocation.Right)
+					{
+						for (int m = 10; m < Main.maxTilesY - 10; m++)
+						{
+>>> 							if (Main.tile[l, m].active() && Main.tile[l, m + 1].active() && Main.tileSand[Main.tile[l, m].type] && Main.tileSand[Main.tile[l, m + 1].type])
+							{
+								ushort type = Main.tile[l, m].type;
+								int x = l + num4;
+								int n = m + 1;
+								if (!Main.tile[x, m].active() && !Main.tile[x, n].active())
+								{
+									for (; !Main.tile[x, n].active(); n++)
+									{
+									}
+									n--;
+									Main.tile[l, m].active(active: false);
+									Main.tile[x, n].active(active: true);
+									Main.tile[x, n].type = type;
+								}
+							}
+						}
+					}
+				}
+			}
+		});
+		AddGenerationPass("Gravitating Sand", (GenerationProgress progress, GameConfiguration passConfig) =>
+		{
+
+--- Terraria.WorldGen.cs:11456
+			progress.Message = Lang.gen[24].Value;
+			for (int i = 0; i < Main.maxTilesX; i++)
+			{
+				double value = (double)i / (double)(Main.maxTilesX - 1);
+				progress.Set(value);
+				bool flag = false;
+				int num = 0;
+				for (int num2 = Main.maxTilesY - 1; num2 > 0; num2--)
+				{
+					if (SolidOrSlopedTile(i, num2))
+					{
+						ushort type = Main.tile[i, num2].type;
+>>> 						if (flag && num2 < (int)Main.worldSurface && num2 != num - 1 && TileID.Sets.Falling[type])
+						{
+							for (int j = num2; j < num; j++)
+							{
+								Main.tile[i, j].ResetToType(type);
+							}
+						}
+						flag = true;
+						num = num2;
+					}
+				}
+			}
+		});
+		AddGenerationPass("Create Ocean Caves", (GenerationProgress progress, GameConfiguration passConfig) =>
+		{
+			int maxValue = 3;
+			if (remixWorldGen)
+			{
+				maxValue = 2;
+			}
+			for (int i = 0; i < 2; i++)
+			{
+				if ((i != 0 || GenVars.dungeonSide <= 0) && (i != 1 || GenVars.dungeonSide >= 0) && (genRand.Next(maxValue) == 0 || drunkWorldGen || tenthAnniversaryWorldGen))
+
+--- Terraria.WorldGen.cs:81031
+							}
+							if (num == 638 && up != 633)
+							{
+								flag13 = true;
+							}
+							if (flag13)
+							{
+								KillTile(i, j);
+							}
+						}
+					}
+					bool flag14 = false;
+>>> 					if (!noTileActions && tile.active() && TileID.Sets.Falling[num])
+					{
+						SpawnFallingBlockProjectile(i, j, tile, tile38, tile39, num);
+					}
+					if ((tile.frameX != frameX && tile.frameY != frameY && frameX >= 0 && frameY >= 0) | flag14)
+					{
+						tileReframeCount++;
+						if (tileReframeCount < 25)
+						{
+							bool flag15 = mergeUp;
+							bool flag16 = mergeDown;
+							bool flag17 = mergeLeft;
+							bool flag18 = mergeRight;
+							TileFrame(i - 1, j);
+							TileFrame(i + 1, j);
+							TileFrame(i, j - 1);
+							TileFrame(i, j + 1);
+							mergeUp = flag15;
+							mergeDown = flag16;
+							mergeLeft = flag17;
+							mergeRight = flag18;
+						}
+						tileReframeCount--;
+
+##### 2. the falling block spawn
+--- Terraria.WorldGen.cs:81075
+	public static bool SpawnFallingBlockProjectile(int i, int j, Tile tileCache, Tile tileTopCache, Tile tileBottomCache, int type)
+	{
+		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0205: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
+		if (Main.netMode == 1)
+		{
+			return false;
+		}
+		if (tileCache == null || tileTopCache == null || tileBottomCache == null)
+		{
+			return false;
+		}
+		if (!BlockBelowMakesSandFall(i, j))
+		{
+			return false;
+		}
+		if (!AllowsSandfall(tileTopCache))
+		{
+			return false;
+		}
+		GetSandfallProjData(type, out var projType, out var dmg);
+		tileCache.ClearTile();
+		if (Main.netMode == 0)
+		{
+			int num = Projectile.NewProjectile(GetProjectileSource_TileBreak(i, j), i * 16 + 8, j * 16 + 8, 0f, 0.41f, projType, dmg, 0f, Main.myPlayer);
+			Main.projectile[num].ai[0] = 1f;
+			SquareTileFrame(i, j);
+		}
+		if (Main.netMode == 2)
+		{
+			bool flag = false;
+			for (int k = 0; k < 1000; k++)
+			{
+				if (Main.projectile[k].active && Main.projectile[k].owner == Main.myPlayer && Main.projectile[k].type == projType && Math.Abs(Main.projectile[k].timeLeft - 3600) < 60 && Main.projectile[k].Distance(new Vector2((float)(i * 16 + 8), (float)(j * 16 + 10))) < 4f)
+				{
+					flag = true;
+					break;
+				}
+			}
+			if (!flag)
+			{
+				int num2 = Projectile.NewProjectile(GetProjectileSource_TileBreak(i, j), i * 16 + 8, j * 16 + 8, 0f, 2.5f, projType, dmg, 0f, Main.myPlayer);
+				Main.projectile[num2].velocity.Y = 0.5f;
+				Main.projectile[num2].position.Y += 2f;
+				Main.projectile[num2].netUpdate = true;
+			}
+			SquareTileFrame(i, j);
+			NetMessage.SendTileSquare(-1, i, j);
+			ExploitDestroyQueue.Enqueue(new Point(i, j));
+			ExploitDestroyQueue.Enqueue(new Point(i, j - 1));
+		}
+		return true;
+	}
+
+##### 3. what counts as support under a falling tile
+# 3 hit(s) shown for 'SolidTileAllowBottomSlope\(|static .*\bSolidOrSlopedTile\(' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:34471
+>>> 		if (!SolidTileAllowBottomSlope(x, num5 + num))
+		{
+			flag = true;
+		}
+		if (!flag)
+		{
+			return;
+		}
+		destroyObject = true;
+		bool flag2 = TileLoader.Drop(x, j, type);
+		for (int k = 0; k < num; k++)
+		{
+			if (Main.tile[x, num5 + k].type == type)
+			{
+				KillTile(x, num5 + k);
+
+--- Terraria.WorldGen.cs:34751
+>>> 			if (!SolidTileAllowBottomSlope(num, num6 + num4))
+			{
+				flag = true;
+			}
+			if (!SolidTileAllowBottomSlope(num + 1, num6 + num4))
+			{
+				flag = true;
+			}
+		}
+		if (!flag)
+		{
+			return;
+		}
+		destroyObject = true;
+		bool flag4 = TileLoader.Drop(i, j, type);
+
+--- Terraria.WorldGen.cs:34755
+>>> 			if (!SolidTileAllowBottomSlope(num + 1, num6 + num4))
+			{
+				flag = true;
+			}
+		}
+		if (!flag)
+		{
+			return;
+		}
+		destroyObject = true;
+		bool flag4 = TileLoader.Drop(i, j, type);
+		for (int m = 0; m < num4; m++)
+		{
+			if (Main.tile[num, num6 + m].type == type)
+			{
+
