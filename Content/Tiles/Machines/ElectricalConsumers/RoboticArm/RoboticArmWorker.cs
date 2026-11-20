@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Machines;
 using Factorraria.Common.Net;
+using Factorraria.Common.Systems;
 using Factorraria.Content.Tiles.Ores;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -538,17 +539,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
         bool PlaceWall(Item held)
         {
-            int x = target.X;
-            int y = target.Y;
-            if (!WallLoader.CanPlace(x, y, held.createWall))
-                return false;
-
-            WorldGen.PlaceWall(x, y, held.createWall);
-            if (Framing.GetTileSafely(x, y).WallType != held.createWall)
-                return false;
-
-            WallLoader.PlaceInWorld(x, y, held);
-            return true;
+            return WorldPlacement.PlaceWall(target.X, target.Y, held);
         }
 
         bool PlaceObject(Item held)
@@ -637,13 +628,7 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
 
         bool PlacePlain(Item held)
         {
-            // plr: -1 on purpose. The ghost's whoAmI is 0, which is the real local player in singleplayer.
-            // PlaceTile refuses a tile a player or town NPC stands on (forced stays false), so that is "blocked, retry later".
-            if (!WorldGen.PlaceTile(target.X, target.Y, held.createTile, mute: false, forced: false, plr: -1, style: held.placeStyle))
-                return false;
-
-            TileLoader.PlaceInWorld(target.X, target.Y, held);
-            return true;
+            return WorldPlacement.PlacePlain(target.X, target.Y, held);
         }
 
         // Which way a directional item (chair, bed...) faces: toward the side of the arm the target is on.
@@ -823,27 +808,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             return TryGetObjectPlacement(x, y, held, false, out _, out _);
         }
 
-        // Copy of the rule in Player.PlaceThing_Walls: a wall goes where one of the four neighbours is a tile (any tile) or has a wall.
-        // Replacing a different wall is left out (the target must have no wall). Re-verify after tModLoader updates.
+        // The rule lives in WorldPlacement.CanPlaceWall (shared with the Mech Suit builder arms, patch M3).
         bool CanPlaceWallAt(int x, int y, Item held)
         {
-            if (Framing.GetTileSafely(x, y).WallType != WallID.None)
-                return false;
-
-            if (!WallLoader.CanPlace(x, y, held.createWall))
-                return false;
-
-            for (int i = 0; i < 4; i++)
-            {
-                int nx = x + (i == 0 ? -1 : i == 1 ? 1 : 0);
-                int ny = y + (i == 2 ? -1 : i == 3 ? 1 : 0);
-                Tile neighbour = Framing.GetTileSafely(nx, ny);
-
-                if (neighbour.HasTile || neighbour.WallType > WallID.None)
-                    return true;
-            }
-
-            return false;
+            return WorldPlacement.CanPlaceWall(x, y, held);
         }
 
         // The object route's whole check. TileObject.CanPlace is vanilla's support / anchor / overlap-with-tiles check for TileObjectData
@@ -895,34 +863,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
             return false;
         }
 
-        // Copy of the vanilla rule for plain blocks (Player.PlaceThing_Tiles_BlockPlacementForAssortedThings, final else branch):
-        // WorldGen.PlaceTile does not enforce it. Allowed when the target or one of its four neighbours has a wall, or a neighbour
-        // is an active solid / beam / rope / tile 314. Re-verify this against the decompile after tModLoader updates.
+        // The rule lives in WorldPlacement.HasSupport (shared with the Mech Suit builder arms, patch M3).
         bool HasSupport(int x, int y)
         {
-            if (Framing.GetTileSafely(x, y).WallType > WallID.None)
-                return true;
-
-            for (int i = 0; i < 4; i++)
-            {
-                int nx = x + (i == 0 ? -1 : i == 1 ? 1 : 0);
-                int ny = y + (i == 2 ? -1 : i == 3 ? 1 : 0);
-                Tile neighbour = Framing.GetTileSafely(nx, ny);
-
-                if (neighbour.WallType > WallID.None)
-                    return true;
-
-                if (neighbour.HasTile &&
-                    (Main.tileSolid[neighbour.TileType]
-                    || TileID.Sets.IsBeam[neighbour.TileType]
-                    || Main.tileRope[neighbour.TileType]
-                    || neighbour.TileType == TileID.MinecartTrack))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return WorldPlacement.HasSupport(x, y);
         }
 
         static Vector2 TileCenter(Point tile) => new Vector2(tile.X * 16f + 8f, tile.Y * 16f + 8f);

@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.Items.Mounts;
+﻿using Factorraria.Common.Net;
+using Factorraria.Content.Items.Mounts;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,13 +13,16 @@ using Terraria.UI;
 namespace Factorraria.Common.Mounts
 {
     // Mech Suit build tool, step 1 (docs/mech_suit_builder/ROADMAP.md): selecting a region. Client-only: the selection is never saved or synced.
-    //   Shift + right-click drag  = select a region of tiles (it is saved and stays on screen).
+    //   Shift + right-click drag  = select a region of tiles. The drag rectangle shows while dragging; when the drag ends the region is saved
+    //                               and is NOT drawn any more (design change 2026-11-20: only the placement hologram stays on screen).
     //   Shift + right-click, no drag, while a selection exists = clear it. (With no selection it selects that one tile.)
-    // Everything only works while the local player is in the suit. The selection is drawn with the Robotic Arm's area sheet
+    // Everything only works while the local player is in the suit. The drag rectangle is drawn with the Robotic Arm's area sheet
     // (RoboticArmArea.png, 4x4 cells of 16x16, see RoboticArmAreaEditorSystem for the cell layout). There is no size text.
     // Holding Shift in the suit also takes the cursor (mouseInterface), so the held item is not used.
-    // Step 2 (MechSuitHologramSystem draws the hologram): Shift + left click with a selection stores PlaceOrigin, the top-left tile of the
-    // destination (cursor tile = centre of the region). Nothing is sent or built yet; step 3 reads PlaceOrigin.
+    // Step 2 (MechSuitHologramSystem draws the hologram, the only thing shown with the selection saved): Shift + left click with a selection
+    // stores PlaceOrigin, the top-left tile of the destination (cursor tile = centre of the region).
+    // Step 3 (patch M3): the same click sends ONE request (source rectangle + destination origin, MechSuitBuildNet); the server reads the
+    // source region from the world itself and runs the build job (MechSuitBuildSystem).
     public class MechSuitBuilderSystem : ModSystem
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
@@ -43,7 +47,7 @@ namespace Factorraria.Common.Mounts
         /// <summary>Changes whenever the selection is replaced or cleared (the hologram rebuilds its blueprint on a change).</summary>
         public int SelectionVersion { get; private set; }
 
-        /// <summary>Top-left tile of the destination chosen with Shift + left click, or null. Client-only; step 3 turns it into a build request.</summary>
+        /// <summary>Top-left tile of the destination chosen with Shift + left click, or null. Client-only; the same click sends the build request.</summary>
         public Point? PlaceOrigin { get; private set; }
 
         public bool IsDragging => dragging;
@@ -160,12 +164,13 @@ namespace Factorraria.Common.Mounts
                 Main.mouseRightRelease = false;
             }
 
-            // Shift + left click: the place action. Step 2 only remembers the destination; nothing is sent or built.
+            // Shift + left click: the place action. Remembers the destination and sends the one build request (the server runs the job).
             if (Selection.HasValue && !player.mouseInterface && Main.mouseLeft && Main.mouseLeftRelease)
             {
                 Main.mouseLeftRelease = false;
                 PlaceOrigin = OriginFor(Selection.Value, Main.MouseWorld.ToTileCoordinates());
-                Mod.Logger.Info("MechSuitBuilderSystem: destination origin stored at " + PlaceOrigin.Value.X + "," + PlaceOrigin.Value.Y + " (nothing is built yet).");
+                MechSuitBuildNet.RequestBuild(Selection.Value, PlaceOrigin.Value);
+                Mod.Logger.Info("MechSuitBuilderSystem: build requested, source " + Selection.Value + " -> destination origin " + PlaceOrigin.Value.X + "," + PlaceOrigin.Value.Y + ".");
             }
 
             player.mouseInterface = true; // Shift in the suit never swings or places the held item
@@ -193,7 +198,8 @@ namespace Factorraria.Common.Mounts
             if (!Ready(out _) || !EnsureTexture())
                 return;
 
-            Rectangle? shown = dragging ? dragRect : Selection;
+            // Design change 2026-11-20: the saved selection is not drawn. Only the drag rectangle shows, and only while dragging.
+            Rectangle? shown = dragging ? dragRect : null;
             if (!shown.HasValue)
                 return;
 

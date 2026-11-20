@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Block = Factorraria.Common.Mounts.MechSuitBlueprint.Block;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
@@ -15,6 +16,9 @@ using Terraria.ID;
 namespace Factorraria.Common.Mounts
 {
     // Mech Suit build tool, step 2 (docs/mech_suit_builder/ROADMAP.md): the placement hologram. Client-only, nothing is synced, saved or built.
+    // Patch M3: the blueprint scan and the tile / wall -> item lookup moved to MechSuitBlueprint (shared with the server build job).
+    // Design change 2026-11-20: this hologram and its box are the ONLY thing that stays on screen with a saved selection (the source area is
+    // not drawn any more); it is hidden while a new selection is being dragged.
     // While the local player is in the suit, holds Shift and has a saved selection (MechSuitBuilderSystem.Selection), this draws:
     //   * the selected region's tiles and walls at the cursor (the cursor tile is the centre) as real tile / wall textures at about 50% alpha,
     //   * the placement box around that region (RoboticArmArea.png, or RoboticArmAreaInvalid.png on cells that hold a red block).
@@ -37,19 +41,6 @@ namespace Factorraria.Common.Mounts
 
         enum BlockState : byte { Free, Built, Collision, NoMaterial }
 
-        class Block
-        {
-            public int X, Y;            // offset from the selection's top-left corner
-            public bool IsWall;
-            public ushort Type;
-            public int FrameX, FrameY;
-            public bool Half;
-            public bool Plain;          // no TileObjectData: only the tile type is compared at the destination
-            public int Width = 16, Height = 16, DrawYOffset;
-            public int Item;
-            public int Group;           // index of the block that stands for the whole object (itself for single blocks)
-        }
-
         readonly List<Block> blocks = new();
         readonly List<int> candidates = new();
         readonly Dictionary<int, int> remaining = new();
@@ -67,10 +58,6 @@ namespace Factorraria.Common.Mounts
         Point lastCursor;
         uint lastEvaluate;
 
-        Dictionary<(int, int), int> tileItems;
-        Dictionary<int, int> tileItemsAnyStyle;
-        Dictionary<int, int> wallItems;
-
         Asset<Texture2D> frameTexture;
         Asset<Texture2D> invalidTexture;
         bool texturesRequested;
@@ -83,9 +70,6 @@ namespace Factorraria.Common.Mounts
 
         public override void Unload()
         {
-            tileItems = null;
-            tileItemsAnyStyle = null;
-            wallItems = null;
             ClearBlueprint();
         }
 
@@ -123,133 +107,11 @@ namespace Factorraria.Common.Mounts
             return texturesFound;
         }
 
-        // ---------------------------------------------------------------- item lookup
-
-        void EnsureItemMaps()
-        {
-            if (tileItems != null)
-                return;
-
-            tileItems = new Dictionary<(int, int), int>();
-            tileItemsAnyStyle = new Dictionary<int, int>();
-            wallItems = new Dictionary<int, int>();
-
-            foreach (Item sample in ContentSamples.ItemsByType.Values)
-            {
-                if (sample == null || sample.IsAir)
-                    continue;
-
-                if (sample.createTile >= 0)
-                {
-                    tileItems.TryAdd((sample.createTile, sample.placeStyle), sample.type);
-                    tileItemsAnyStyle.TryAdd(sample.createTile, sample.type);
-                }
-
-                if (sample.createWall >= 0)
-                    wallItems.TryAdd(sample.createWall, sample.type);
-            }
-        }
-
-        // The item that places this tile (type + style), or false for tiles nothing places (grass, trees, ...).
-        bool TryGetTileItem(int type, int style, bool plain, out int item)
-        {
-            if (tileItems.TryGetValue((type, style), out item))
-                return true;
-
-            // Plain blocks have no style to read; take any item that places the type.
-            return plain && tileItemsAnyStyle.TryGetValue(type, out item);
-        }
-
         // ---------------------------------------------------------------- blueprint
 
         void BuildBlueprint(Rectangle selection, int version)
         {
-            EnsureItemMaps();
-            blocks.Clear();
-            HashSet<Point> doneObjects = new();
-
-            for (int x = selection.Left; x < selection.Right; x++)
-            {
-                for (int y = selection.Top; y < selection.Bottom; y++)
-                {
-                    if (!WorldGen.InWorld(x, y, 1))
-                        continue;
-
-                    Tile tile = Main.tile[x, y];
-                    int rx = x - selection.X;
-                    int ry = y - selection.Y;
-
-                    if (tile.WallType > 0 && wallItems.TryGetValue(tile.WallType, out int wallItem))
-                    {
-                        blocks.Add(new Block
-                        {
-                            X = rx, Y = ry, IsWall = true, Type = tile.WallType,
-                            FrameX = tile.WallFrameX, FrameY = tile.WallFrameY,
-                            Item = wallItem, Group = blocks.Count
-                        });
-                    }
-
-                    if (!tile.HasTile)
-                        continue;
-
-                    TileObjectData data = TileObjectData.GetTileData(tile);
-                    if (data == null)
-                    {
-                        if (!TryGetTileItem(tile.TileType, 0, true, out int plainItem))
-                            continue;
-
-                        blocks.Add(new Block
-                        {
-                            X = rx, Y = ry, Type = tile.TileType, FrameX = tile.TileFrameX, FrameY = tile.TileFrameY,
-                            Half = tile.IsHalfBlock, Plain = true, Item = plainItem, Group = blocks.Count
-                        });
-                        continue;
-                    }
-
-                    // Multi-tile object: handle it once, from any of its cells, and only if all of it is inside the selection.
-                    Point16 corner = TileObjectData.TopLeft(x, y);
-                    if (!doneObjects.Add(new Point(corner.X, corner.Y)))
-                        continue;
-
-                    Rectangle footprint = new Rectangle(corner.X, corner.Y, data.Width, data.Height);
-                    if (!selection.Contains(footprint.Left, footprint.Top) || !selection.Contains(footprint.Right - 1, footprint.Bottom - 1))
-                        continue;
-
-                    if (!TryGetTileItem(tile.TileType, TileObjectData.GetTileStyle(tile), false, out int objectItem))
-                        continue;
-
-                    int group = -1;
-                    for (int fx = footprint.Left; fx < footprint.Right; fx++)
-                    {
-                        for (int fy = footprint.Top; fy < footprint.Bottom; fy++)
-                        {
-                            Tile cell = Main.tile[fx, fy];
-                            if (!cell.HasTile || cell.TileType != tile.TileType)
-                                continue;
-
-                            if (group < 0)
-                                group = blocks.Count;
-
-                            // Source rectangle height of this row, the way vanilla's tile drawing finds it.
-                            int rest = cell.TileFrameY % data.CoordinateFullHeight;
-                            int row = 0;
-                            while (row < data.CoordinateHeights.Length - 1 && rest > 0)
-                            {
-                                rest -= data.CoordinateHeights[row] + data.CoordinatePadding;
-                                row++;
-                            }
-
-                            blocks.Add(new Block
-                            {
-                                X = fx - selection.X, Y = fy - selection.Y, Type = cell.TileType,
-                                FrameX = cell.TileFrameX, FrameY = cell.TileFrameY,
-                                Width = data.CoordinateWidth, Height = data.CoordinateHeights[row], DrawYOffset = data.DrawYOffset,
-                                Item = objectItem, Group = group
-                            });
-                        }
-                    }
-                }
-            }
+            ModContent.GetInstance<MechSuitBlueprint>().Scan(selection, blocks);
 
             int n = blocks.Count;
             states = new BlockState[n];

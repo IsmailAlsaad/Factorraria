@@ -1,4 +1,5 @@
-﻿using Factorraria.Content.Items.Mounts;
+﻿using Factorraria.Common.Mounts;
+using Factorraria.Content.Items.Mounts;
 using System.IO;
 using Terraria;
 using Terraria.ModLoader;
@@ -53,6 +54,9 @@ namespace Factorraria.Common.Net
 
             Main.player[sender].GetModPlayer<MechSuitPlayer>().SetReportedState(active);
             SendState(sender, active, -1, sender);
+
+            if (!active)
+                ModContent.GetInstance<MechSuitBuildSystem>().EndJob(sender, "the player left the suit");
         }
 
         // Client.

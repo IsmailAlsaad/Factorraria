@@ -134,6 +134,20 @@ namespace Factorraria.Content.Items.Mounts
 
         public bool IsActive { get; private set; }
 
+        // Patch M3. True while the server runs a build job for this player (owner: told by MechBuildArmState, or set directly in single-player).
+        // While it is true two of the three anchor slots are given to the builder arms: only AnchorArmsWhileBuilding arms anchor the player.
+        public bool IsBuilding { get; private set; }
+        public int AnchorArmsNormal = 3;         // anchors while not building (never more than MaxArms, the slot count)
+        public int AnchorArmsWhileBuilding = 2;  // anchors while building; the other two arms are the builder arms (MechSuitBuilderArms)
+        public int AnchorArmLimit => IsBuilding ? AnchorArmsWhileBuilding : AnchorArmsNormal;
+        /// <summary>Total arms out: 3 while not building, 4 while building (2 anchors + 2 builder arms). The roadmap's "MaxArms 3 / 4".</summary>
+        public int ArmCount => IsBuilding ? AnchorArmsWhileBuilding + 2 : AnchorArmsNormal;
+
+        public void SetBuilding(bool building)
+        {
+            IsBuilding = building;
+        }
+
         // Owner only. How often (in ticks) the owner re-announces its live arms so a client that joined later creates them.
         int ArmResyncTicks = 180;
 
@@ -152,6 +166,7 @@ namespace Factorraria.Content.Items.Mounts
         public void Activate()
         {
             IsActive = true;
+            IsBuilding = false;
             searchCooldown = 0;
             armResyncTimer = ArmResyncTicks;
             posResyncTimer = 0;
@@ -175,6 +190,7 @@ namespace Factorraria.Content.Items.Mounts
         public void DeactivateCore()
         {
             IsActive = false;
+            IsBuilding = false;
             RetractArms();
             MechSuitNet.ReportState(false);
         }
@@ -452,6 +468,19 @@ namespace Factorraria.Content.Items.Mounts
                 if (arms[i].IsLatched) latchedCount++;
             }
 
+            // A build job (patch M3) takes slots away from the anchors: arms beyond the anchor limit reel in.
+            for (int i = AnchorArmLimit; i < MaxArms; i++)
+            {
+                if (!arms[i].IsActive) continue;
+
+                if (arms[i].IsLatched) latchedCount--;
+                activeCount--;
+                if (Main.projectile[arms[i].ProjectileIndex].ModProjectile is MechSuitArmProjectile excessArm)
+                    excessArm.BeginRetract();
+
+                arms[i] = new MechArmSlot { ProjectileIndex = -1 };
+            }
+
             // Cutoff retraction — only ever drop an arm if at least one other stays attached,
             // so the player is never left with zero support mid-check.
             for (int i = 0; i < MaxArms; i++)
@@ -499,7 +528,7 @@ namespace Factorraria.Content.Items.Mounts
 
         int FindFreeSlot()
         {
-            for (int i = 0; i < MaxArms; i++)
+            for (int i = 0; i < AnchorArmLimit; i++)
                 if (!arms[i].IsActive) return i;
             return -1;
         }

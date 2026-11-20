@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-20 | 446 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-20 | 451 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(253) Item(140) Player(109) FactorrariaNet(86) ItemID(73) Tile(72) WorldGen(67) BaseMachine(58) TextureAssets(41) TileObjectData(40) FactorrariaPacket(39) Sets(38) PacketDirection(34) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(258) Item(145) Player(112) FactorrariaNet(87) Tile(75) ItemID(73) WorldGen(70) BaseMachine(58) TextureAssets(41) TileObjectData(40) FactorrariaPacket(40) Sets(39) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -40,9 +40,9 @@ Project bases -> derived:
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 - RecipeBookEntry: RecipeBookGridCell
 tModLoader/other bases -> project types:
-- ModSystem (116): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, HarvesterBoxHerbHooks, HarvesterBoxNetSystem, HarvesterBoxRowSystem, HarvesterBoxTreeHooks, HarvesterBoxTreeNetSystem, HellstoneGrowNetSystem, HellstoneGrowthSystem, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineSmartOutlineSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitBuilderSystem, MechSuitDebugSystem, MechSuitHologramSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RecipeTabDiscoverySystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
+- ModSystem (120): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, HarvesterBoxHerbHooks, HarvesterBoxNetSystem, HarvesterBoxRowSystem, HarvesterBoxTreeHooks, HarvesterBoxTreeNetSystem, HellstoneGrowNetSystem, HellstoneGrowthSystem, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineSmartOutlineSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitBlueprint, MechSuitBuildNetSystem, MechSuitBuildSystem, MechSuitBuilderArms, MechSuitBuilderSystem, MechSuitDebugSystem, MechSuitHologramSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RecipeTabDiscoverySystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
 - ModItem (46): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, HarvesterBoxItemBase, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenMinecartItem, WoodenPowerPoleItem
-- byte (34): AssemblyIssue, BlockState, BoxCycle, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
+- byte (35): AssemblyIssue, BlockState, BoxCycle, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, Phase, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
 - ModTile (17): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - UIElement (15): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookModeButton, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
@@ -608,19 +608,38 @@ tModLoader/other bases -> project types:
     +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float,int)[s] +GetAnimationFrame(Point16,int)[s]
 
 ### Common/Mounts/
-**MechSuitBuilderSystem.cs** uses: Main, MechSuitPlayer, Player, RoboticArmAreaEditorSystem
+**MechSuitBlueprint.cs** uses: Item, Main, Tile, TileObjectData, WorldGen
+  class MechSuitBlueprint : ModSystem
+    +Unload()[ov] +TryGetTileItem(int,int,bool,out int) +Scan(Rectangle,List<Block>)
+    class Block
+      +Y:int X, +IsWall:bool +Type:ushort +FrameY:int FrameX, +Half:bool +Plain:bool +Width:int +Item:int +Group:int
+**MechSuitBuildSystem.cs** uses: ArmState, Block, ConsumedEntry, Item, Main, MechSuitBlueprint, MechSuitBuildNet, MechSuitBuildNetSystem, MechSuitBuilderArm, MechSuitBuilderArmSet, MechSuitBuilderArms, MechSuitBuilderSystem, MechSuitPlayer, Pending, Player, RoboticArmMotion, RoboticArmNet, Tile, WorldGen, WorldPlacement
+  class MechSuitBuildSystem : ModSystem
+    +BuilderReachTiles:float +StrikeTicks:int +RescanTicks:int +BlockedCooldownTicks:int +ReachTimeoutTicks:int +GrabTimeoutTicks:int +SettleTicks:int +IdleTimeoutTicks:int +StatusRefreshTicks:int +ConsumedFlushTicks:int +LogJobs:bool +OnWorldUnload()[ov] +Unload()[ov] +HasJob(int) +StartJob(int,Rectangle,Point) +EndJob(int,string) +PostUpdateEverything()[ov]
+    enum Phase : byte
+      {Idle, Retracting, Reaching, Striking}
+    class Arm
+      +View:MechSuitBuilderArm +Phase:Phase +Target:Block +Tile:Point +Timer:int +Wait:int +ImpactDone:bool +NextType:int +LastHasTarget:bool +LastTile:Point16 +LastStriking:bool +LastHeld:ushort
+    class Job
+      +Owner:int +Source:Rectangle +Origin:Point +Pending:List<Block> +Arms:Arm +Consumed:List<ConsumedEntry> +Placed:int Total, ObjectBlocksSkipped, +ConsumeTimer:int IdleTicks, StatusTimer, +Unsupported:int Placeable, WaitingForReach, Blocked, NoMaterial,
+**MechSuitBuilderArms.cs** uses: Item, Main, Player, RoboticArmMotion, RoboticArmVisual
+  class MechSuitBuilderArm
+    +Motion:RoboticArmMotion +Visual:RoboticArmVisual +Held:Item +HeldType:ushort +SetHeld(int)
+  class MechSuitBuilderArmSet
+    +Arms:MechSuitBuilderArm +Building:bool +RetireTimer:int
+  class MechSuitBuilderArms : ModSystem
+    +UpperArmLength:float +ForearmLength:float +ShoulderOffsetX:float +ShoulderOffsetY:float +RetireTicks:int +OnWorldUnload()[ov] +GetOrCreate(int) +TryGet(int,out MechSuitBuilderArmSet) +Shoulder(Player,int) +MarkEnded(int) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+**MechSuitBuilderSystem.cs** uses: Main, MechSuitBuildNet, MechSuitPlayer, Player, RoboticArmAreaEditorSystem
   class MechSuitBuilderSystem : ModSystem
     +MaxSelectionWidth:int +MaxSelectionHeight:int +TexturePath:string +Selection:Rectangle? +SelectionVersion:int +PlaceOrigin:Point? +IsDragging:bool +OriginFor(Rectangle,Point)[s] ~ShiftHeld:bool[s] ~Ready(out Player)[s] +OnWorldUnload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **MechSuitDebugSystem.cs** uses: BaseMachine, FurnaceOffsetConfig, Main, MechSuitArmProjectile, MechSuitPlayer, Player, TextureAssets
   class MechSuitDebugSystem : ModSystem
     +PostDrawTiles()[ov]
-**MechSuitHologramSystem.cs** uses: Item, Main, MechSuitBuilderSystem, Player, RoboticArmAreaEditorSystem, TextureAssets, Tile, TileObjectData, WorldGen
+**MechSuitHologramSystem.cs** uses: Block, Item, Main, MechSuitBlueprint, MechSuitBuilderSystem, Player, RoboticArmAreaEditorSystem, TextureAssets, Tile, WorldGen
   class MechSuitHologramSystem : ModSystem
     +HologramAlpha:float +RedTint:Color +EvaluateIntervalTicks:int +TexturePath:string +OnWorldUnload()[ov] +Unload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
     enum BlockState : byte
       {Free, Built, Collision, NoMaterial}
-    class Block
-      +Y:int X, +IsWall:bool +Type:ushort +FrameY:int FrameX, +Half:bool +Plain:bool +Width:int +Item:int +Group:int
 **MechanicalArmIK.cs** uses: Main
   static class MechanicalArmIK
     +SolveElbow(Vector2,Vector2,float,float,float,float)[s] +DrawSegment(SpriteBatch,Texture2D,Vector2,Vector2,Color,float)[s]
@@ -750,7 +769,7 @@ tModLoader/other bases -> project types:
     +ReachSlackTiles:float[s] +IsServerSide:bool[s] +HasLocalClient:bool[s] +IsSinglePlayer:bool[s] +IsOwner(Player)[s] +SyncPlayerNow(Player)[s] +SyncInventoryItem(Player,Item)[s] +InReach(Player,int,int)[s] +WriteItem(BinaryWriter,Item)[s] +ReadItem(BinaryReader)[s] +Register(FactorrariaPacket,PacketDirection,PacketHandler,int)[s] +Clear()[s] +Handle(BinaryReader,int)[s] +SendRequest(FactorrariaPacket,Action<BinaryWriter>)[s] +SendToClient(int,FactorrariaPacket,Action<BinaryWriter>)[s] +Broadcast(FactorrariaPacket,Action<BinaryWriter>,int)[s] +SendToNearby(Vector2,float,FactorrariaPacket,Action<BinaryWriter>,int)[s] +Log(string)[s]
     sealed class Route
       +Direction:PacketDirection +Handler:PacketHandler +Cost:int
-**FactorrariaPacket.cs** uses: CartSound, MachineDetail, TilePlaced
+**FactorrariaPacket.cs** uses: ArmState, CartSound, MachineDetail, TilePlaced
   enum FactorrariaPacket : byte
     {Ping, PingReply, JoinRequest, JoinChunk, JoinDone, TilePlaced, MechSuitStateRequest, MechSuitState, WireEditRequest, WireChanged, KnowledgeDelta, SeenDelta, SeenReport, ReadParchmentRequest, ...}
   enum PacketDirection : byte
@@ -880,7 +899,18 @@ tModLoader/other bases -> project types:
     +ServerChanged:int[s] +ServerRefused:int[s] +ClientSent:int[s] +ClientApplied:int[s] +Request(MagicMaterializerTileEntity)[s] +HandleRequest(BinaryReader,int)[s] +HandleChanged(BinaryReader,int)[s] +Update()[s] +Reset()[s] +Describe()[s]
   class MaterializerToggleSystem : ModSystem
     +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov] +Unload()[ov]
-**MechSuitNet.cs** uses: FactorrariaNet, FactorrariaPacket, Main, MechSuitPlayer, PacketDirection
+**MechSuitBuildNet.cs** uses: FactorrariaNet, FactorrariaPacket, Item, Main, MechSuitBuildSystem, MechSuitBuilderArm, MechSuitBuilderArmSet, MechSuitBuilderArms, MechSuitPlayer, PacketDirection, Player
+  class MechSuitBuildNetSystem : ModSystem
+    +NearbyTiles:float +Load()[ov] +Unload()[ov] +Enqueue(StateMessage) +Enqueue(ConsumedEntry) +PostUpdateEverything()[ov]
+    struct ArmState
+      +HasTarget:bool +TargetX:short +TargetY:short +StrikeTicks:byte +HeldType:ushort
+    struct StateMessage
+      +Player:byte +Building:bool +Arms:ArmState
+    struct ConsumedEntry
+      +Slot:byte +Type:ushort +Count:ushort
+  static class MechSuitBuildNet
+    +RequestBuild(Rectangle,Point)[s] +HandleRequest(BinaryReader,int)[s] +SendArmState(Player,bool,ArmState)[s] +SendConsumed(Player,List<ConsumedEntry>)[s] +HandleArmState(BinaryReader,int)[s] +HandleConsumed(BinaryReader,int)[s]
+**MechSuitNet.cs** uses: FactorrariaNet, FactorrariaPacket, Main, MechSuitBuildSystem, MechSuitPlayer, PacketDirection
   class MechSuitNetSystem : ModSystem
     +Load()[ov]
   static class MechSuitNet
@@ -1333,6 +1363,9 @@ tModLoader/other bases -> project types:
 **VisibleTileScan.cs** uses: Main
   static class VisibleTileScan
     +GetRange(int,out int,out int,out int,out int)[s]
+**WorldPlacement.cs** uses: Item, Main, Sets, Tile, TileLoader, WorldGen
+  static class WorldPlacement
+    +CanPlaceWall(int,int,Item)[s] +HasSupport(int,int)[s] +CanPlacePlain(int,int,Item)[s] +PlaceWall(int,int,Item)[s] +PlacePlain(int,int,Item)[s]
 
 ### Common/UI/
 **ChestConveyorModeUI.cs** uses: ChestConveyorEntry, ChestConveyorMode, ChestConveyorSystem, Main, Player
@@ -1639,7 +1672,7 @@ tModLoader/other bases -> project types:
   struct MechArmSlot
     +ProjectileIndex:int +AnchorTile:Point +IsActive:bool +IsLatched:bool
   class MechSuitPlayer : ModPlayer
-    +MaxArms:int[c] +SearchRadiusTiles:float +CutoffRadiusTiles:float +DeadzoneRadiusTiles:float +MoveSpeed:float +SearchCooldownTicks:int +SearchRadiusPixels:float +CutoffRadiusPixels:float +DeadzoneRadiusPixels:float +IsActive:bool +Activate() +Deactivate() +DeactivateCore() +SetReportedState(bool) +PlayerDisconnect()[ov] +Kill(double,int,bool,PlayerDeathReason)[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov] +TryGetClosestLatchedAnchor(out Vector2) +ModifyDrawInfo(ref PlayerDrawSet)[ov]
+    +MaxArms:int[c] +SearchRadiusTiles:float +CutoffRadiusTiles:float +DeadzoneRadiusTiles:float +MoveSpeed:float +SearchCooldownTicks:int +SearchRadiusPixels:float +CutoffRadiusPixels:float +DeadzoneRadiusPixels:float +IsActive:bool +IsBuilding:bool +AnchorArmsNormal:int +AnchorArmsWhileBuilding:int +AnchorArmLimit:int +ArmCount:int +SetBuilding(bool) +Activate() +Deactivate() +DeactivateCore() +SetReportedState(bool) +PlayerDisconnect()[ov] +Kill(double,int,bool,PlayerDeathReason)[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov] +TryGetClosestLatchedAnchor(out Vector2) +ModifyDrawInfo(ref PlayerDrawSet)[ov]
 **MechSuitMount.cs** uses: FactorrariaNet, MechSuitBuff, MechSuitPlayer, Player
   class MechSuitMount : ModMount
     +SetMount(Player,ref bool)[ov] +Dismount(Player,ref bool)[ov]
@@ -1854,7 +1887,7 @@ tModLoader/other bases -> project types:
 **RoboticArmMotion.cs** uses: Item, Main, TextureAssets
   class RoboticArmMotion
     +TrackSmoothTime:float +BendSmoothTime:float +IdleOffsetX:float +IdleOffsetY:float +SideDeadZone:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +GripDistance:float +InPositionDistance:float +Initialized:bool +Side:int +Head:Vector2 +Bend:float +Target:Vector2? +HasTarget:bool +Striking:bool +StrikeDuration:int +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool)
-**RoboticArmNet.cs** uses: FactorrariaNet, FactorrariaPacket, Item, Main, PacketDirection, Player, RoboticArmMotion, RoboticArmTileEntity
+**RoboticArmNet.cs** uses: ArmState, FactorrariaNet, FactorrariaPacket, Item, Main, PacketDirection, Player, RoboticArmMotion, RoboticArmTileEntity
   class RoboticArmNet : ModSystem
     +NearbyTiles:float[c] +Sent:int[s] +Received:int[s] +Missed:int[s] +EffectsSent:int[s] +SoundsPlayed:int[s] +Describe()[s] +Load()[ov] +Unload()[ov] +SendTileAction(Vector2,int,int,int,int)[s] +SendPlaceSound(Vector2,int,int)[s] +PostUpdateEverything()[ov]
     struct State
@@ -1873,7 +1906,7 @@ tModLoader/other bases -> project types:
 **RoboticArmVisual.cs** uses: Item, Main, MechanicalArmIK, RoboticArmMotion, TextureAssets
   class RoboticArmVisual
     +AimSmoothing:float +IdleAimTilt:float +SwingArc:float +SwingEndAngle:float +ClawPivotX:float +ClawPivotY:float +BlockScale:float +BeamThickness:float +JointScale:float +Update(RoboticArmMotion,Vector2,float,float,Item,bool) +DrawBehind(SpriteBatch,Vector2,Item,bool)
-**RoboticArmWorker.cs** uses: BaseMachine, FactorrariaNet, Item, Main, Player, PureSiliconTile, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmMotion, RoboticArmNet, RoboticArmTileEntity, Sets, SiliconOreTile, Tile, TileEntityHelper, TileLoader, TileObject, TileObjectData, WorldGen
+**RoboticArmWorker.cs** uses: BaseMachine, FactorrariaNet, Item, Main, Player, PureSiliconTile, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmMotion, RoboticArmNet, RoboticArmTileEntity, Sets, SiliconOreTile, Tile, TileEntityHelper, TileLoader, TileObject, TileObjectData, WorldGen, WorldPlacement
   class RoboticArmGhostSystem : ModSystem
     +Unload()[ov]
   class RoboticArmWorker
@@ -1949,7 +1982,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/GeneralMachines/DecayChamber/
-**DecayChamberRecipeRegistry.cs** uses: CustomRecipe, ItemID, LiquidTypeRegistry, RecipeBook
+**DecayChamberRecipeRegistry.cs** uses: CustomRecipe, ItemID, LiquidTypeRegistry, PureSiliconItem, RecipeBook
   static class DecayChamberRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **DecayChamberTileEntity.cs** uses: BaseMachine, DecayChamberRecipeRegistry, Item, ItemID, RecipeBook
