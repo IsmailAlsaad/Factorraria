@@ -68,11 +68,11 @@ namespace Factorraria.Common.Net
         StoryActionRequest = 59,      // client -> server: "I do this story action": kind byte (0 = take the Mechanic's Bag from Her Backpack, 1 = turn the Bag in to the Mechanic), then the NPC index (NPC story patches N4.2 and N5.1; later kind: claim the scrolls)
         StoryActionResult = 60,       // server -> the requesting client: "your story action was accepted / refused": kind byte, accepted flag, failure byte (NPC story patch N4.2)
         HellstoneGrow = 61,           // server -> nearby clients: "the stone block at tile (x, y) just turned into hellstone, or into ash when the kind byte is 1": sound and dust, cosmetic only (side feature hellstone growth effects; payload int x, int y, byte kind)
-        HarvesterBoxPlantAcorn = 63,  // client -> server: "plant an acorn on the Harvester Box at tile (x, y)": the server checks reach, the held acorn and the free tiles, then writes the sapling and takes the acorn (Harvester Box patch P5; payload int x, int y)
         HarvesterBoxStrike = 62,      // server -> nearby clients: "the staff of the Harvester Box at tile (x, y) starts its strike": cosmetic replay only, the server already owns the harvest (Harvester Box patch P4; payload int x, int y)
         MechBuildRequest = 63,        // client -> server: "build the copy of the region (x, y, w, h) at destination origin (x, y)": one packet, the server reads the source region from the world itself (Mech Suit build tool patch M3; payload six shorts)
         MechBuildArmState = 64,       // server -> nearby clients: "the builder arms of player <n> are on / off; per arm: target tile or none, strike ticks when a strike started, held item type" (patch M3)
         MechBuildConsumed = 65,       // server -> owner: "the build job took these items from your inventory (slot, item type, count)": the owner's client removes them too, vanilla ignores server writes to the own inventory (patch M3)
+        HarvesterBoxPlantAcorn = 66,  // client -> server: "plant an acorn on the Harvester Box at tile (x, y)": the server checks reach, the held acorn and the free tiles, then writes the sapling and takes the acorn (Harvester Box patch P5; payload int x, int y)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.
