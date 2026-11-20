@@ -54,6 +54,8 @@ namespace Factorraria.Common.Harvester
             HarvesterBoxKind.Corrupt => TileID.CorruptGrass,
             HarvesterBoxKind.Crimson => TileID.CrimsonGrass,
             HarvesterBoxKind.Shiverthorn => TileID.SnowBlock,
+            HarvesterBoxKind.Fireblossom => 633,   // an ash tree (tile 634): AshTreeGroundTest takes ash grass (633) only
+            HarvesterBoxKind.Waterleaf => TileID.Sand,   // a palm tree (tile 323): GrowPalmTree takes sand (53) as its soil
             _ => 0
         };
 
@@ -64,6 +66,8 @@ namespace Factorraria.Common.Harvester
             TileID.JungleGrass => 2,
             TileID.CorruptGrass => 3,
             TileID.CrimsonGrass => 4,
+            633 => 10,   // ash grass: Check1x2 gives style 10, which AttemptToGrowTreeFromSapling grows through TryGrowingTreeByType(634)
+            TileID.Sand => 6,   // Check1x2: sand (53) gives style 6, which AttemptToGrowTreeFromSapling grows with GrowPalmTree
             _ => 0
         };
 

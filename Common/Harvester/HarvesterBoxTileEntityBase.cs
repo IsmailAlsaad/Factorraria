@@ -463,7 +463,7 @@ namespace Factorraria.Common.Harvester
         // the same herb for free. Runs on the server / in single-player; tile changes are sent to clients here.
         void HarvestHerb(int x, int y)
         {
-            if (Main.tile[x, y].TileType == TileID.Trees)
+            if (HarvesterBoxTrees.IsTreeTileType(Main.tile[x, y].TileType))
             {
                 FellTree(x, y);
                 return;
@@ -512,7 +512,7 @@ namespace Factorraria.Common.Harvester
             {
                 WorldGen.KillTile(x, y - 1, false, false, false);
 
-                if (Main.tile[x, y].HasTile && Main.tile[x, y].TileType == TileID.Trees)
+                if (Main.tile[x, y].HasTile && HarvesterBoxTrees.IsTreeTileType(Main.tile[x, y].TileType))
                     WorldGen.KillTile(x, y, false, false, false);
             }));
 

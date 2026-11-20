@@ -1,0 +1,1692 @@
+Dll: C:\GOG Games\Terraria\tModLoader\tModLoader.dll
+Terraria.WorldGen: 2124 KB
+Terraria.GameContent.Drawing.TileDrawing: 502 KB
+##### 1. palm: who checks and kills palm tiles
+--- Terraria.WorldGen.cs:48932
+	public static void CheckPalmTree(int i, int j)
+	{
+		int num = -1;
+		int num2 = -1;
+		int type = Main.tile[i, j].type;
+		int frameX = Main.tile[i, j].frameX;
+		int frameY = Main.tile[i, j].frameY;
+		if (Main.tile[i, j - 1] != null && Main.tile[i, j - 1].active())
+		{
+			num = Main.tile[i, j - 1].type;
+		}
+		if (Main.tile[i, j + 1] != null && Main.tile[i, j + 1].active())
+		{
+			num2 = Main.tile[i, j + 1].type;
+		}
+		if (num2 == 53)
+		{
+			num2 = 53;
+		}
+		if (num2 == 234)
+		{
+			num2 = 53;
+		}
+		if (num2 == 116)
+		{
+			num2 = 53;
+		}
+		if (num2 == 112)
+		{
+			num2 = 53;
+		}
+		if (TileLoader.CanGrowModPalmTree(num2))
+		{
+			num2 = 53;
+		}
+		if (num2 != 53 && num2 != type)
+		{
+			KillTile(i, j);
+		}
+		if ((Main.tile[i, j].frameX == 66 || Main.tile[i, j].frameX == 220) && num2 != 53)
+		{
+			KillTile(i, j);
+		}
+		if (num != type && Main.tile[i, j].frameX <= 44)
+		{
+			Main.tile[i, j].frameX = (short)(genRand.Next(7, 10) * 22);
+		}
+		else if (num != type && Main.tile[i, j].frameX == 66)
+		{
+			Main.tile[i, j].frameX = 220;
+		}
+		if (Main.tile[i, j].frameX != frameX && Main.tile[i, j].frameY != frameY && frameX >= 0 && frameY >= 0)
+		{
+			TileFrame(i - 1, j);
+			TileFrame(i + 1, j);
+			TileFrame(i, j - 1);
+			TileFrame(i, j + 1);
+		}
+	}
+
+##### 'CheckPalmTree\(|type == 323|case 323' in Terraria.WorldGen.cs: 16 line(s) in 11 method(s)
+  3 hit(s) at line(s) 16419, 17686, 17793  in  internal static void AddGenPasses()
+  1 hit(s) at line(s) 18214  in  private static void PaintTheTrees()
+  1 hit(s) at line(s) 23021  in  public static bool IsTileALeafyTreeTop(int i, int j)
+  1 hit(s) at line(s) 48932  in  public static void CheckPalmTree(int i, int j)
+  1 hit(s) at line(s) 57258  in  public static bool IsTileReplacable(int x, int y)
+  1 hit(s) at line(s) 57312  in  public static int CheckTileBreakability(int x, int y)
+  2 hit(s) at line(s) 58330, 58332  in  public static void GetTreeBottom(int i, int j, out int x, out int y)
+  1 hit(s) at line(s) 60015  in  internal static void KillTile_GetItemDrops(int x, int y, Tile tileCache, out int dropItem, out int dropItemStack, out int secondaryItem, out int secondaryItemStack, bool includeLargeObjectDrops = false)
+  1 hit(s) at line(s) 61589  in  public static Nullable GetTileVisualHitbox(int x, int y)
+  2 hit(s) at line(s) 63208, 64108  in  public static int KillTile_MakeTileDust(int i, int j, Tile tileCache)
+  2 hit(s) at line(s) 77418, 77419  in  public static void TileFrame(int i, int j, bool resetFrame = false, bool noBreak = false)
+
+# 2 hit(s) shown for 'case 323' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:60015
+				dropItemStack++;
+			}
+			break;
+		}
+>>> 		case 323:
+		{
+			dropItem = 2504;
+			if (Main.tenthAnniversaryWorld)
+			{
+				dropItemStack += genRand.Next(2, 5);
+			}
+			if (tileCache.frameX <= 132 && tileCache.frameX >= 88)
+			{
+				secondaryItem = 27;
+			}
+			int j;
+			for (j = y; !Main.tile[x, j].active() || !Main.tileSolid[Main.tile[x, j].type]; j++)
+			{
+			}
+			if (Main.tile[x, j].active())
+			{
+				switch (Main.tile[x, j].type)
+				{
+				case 234:
+					dropItem = 911;
+					break;
+				case 116:
+					dropItem = 621;
+					break;
+				case 112:
+					dropItem = 619;
+					break;
+				}
+				TileLoader.DropPalmTreeWood(Main.tile[x, j].type, ref dropItem);
+			}
+			break;
+		}
+		case 171:
+			if (tileCache.frameX >= 10)
+			{
+				dropXmasTree(x, y, 0);
+				dropXmasTree(x, y, 1);
+				dropXmasTree(x, y, 2);
+				dropXmasTree(x, y, 3);
+			}
+
+--- Terraria.WorldGen.cs:77418
+																				{
+																					IsGroundValid = AshTreeGroundTest
+																				});
+																				break;
+>>> 																			case 323:
+																				CheckPalmTree(i, j);
+																				break;
+																			case 567:
+																				CheckGnome(i, j);
+																				break;
+																			case 630:
+																			case 631:
+																				CheckStinkbugBlocker(i, j);
+																				break;
+																			}
+																			TileLoader.CheckModTile(i, j, num);
+																			TileLoader.PostTileFrame(num, i, j, 0, 0, 0, 0, 0, 0, 0, 0);
+																			return;
+																		case 172:
+																		case 360:
+																		case 505:
+																		case 521:
+																		case 522:
+																		case 523:
+																		case 524:
+																		case 525:
+																		case 526:
+																		case 527:
+																		case 543:
+																		case 568:
+																		case 569:
+																		case 570:
+																		case 580:
+																		case 598:
+																		case 620:
+																		case 652:
+																		case 654:
+																			break;
+																		}
+																		break;
+																	case 132:
+																	case 138:
+																	case 142:
+																	case 143:
+																	case 288:
+
+##### 2. palm look: every palm variant / biome function and its callers
+--- Terraria.GameContent.Drawing.TileDrawing.cs:2138
+	private int GetPalmTreeBiome(int tileX, int tileY)
+	{
+		int i;
+		for (i = tileY; Main.tile[tileX, i].active() && Main.tile[tileX, i].type == 323; i++)
+		{
+		}
+		return GetPalmTreeVariant(tileX, i);
+	}
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:4041
+	private int GetPalmTreeVariant(int x, int y)
+	{
+		int num = -1;
+		if (Main.tile[x, y].active() && Main.tile[x, y].type == 53)
+		{
+			num = 0;
+		}
+		if (Main.tile[x, y].active() && Main.tile[x, y].type == 234)
+		{
+			num = 1;
+		}
+		if (Main.tile[x, y].active() && Main.tile[x, y].type == 116)
+		{
+			num = 2;
+		}
+		if (Main.tile[x, y].active() && Main.tile[x, y].type == 112)
+		{
+			num = 3;
+		}
+		if (WorldGen.IsPalmOasisTree(x))
+		{
+			num += 4;
+		}
+		if (Main.tile[x, y].active() && TileLoader.CanGrowModPalmTree(Main.tile[x, y].type))
+		{
+			num = (8 + Main.tile[x, y].type) * ((!WorldGen.IsPalmOasisTree(x)) ? 1 : (-1));
+		}
+		return num;
+	}
+
+##### 'GetPalmTree\w*\(' in Terraria.WorldGen.cs: 0 line(s) in 0 method(s)
+
+##### 'GetPalmTree\w*\(|PalmTree' in Terraria.GameContent.Drawing.TileDrawing.cs: 20 line(s) in 7 method(s)
+  1 hit(s) at line(s) 296  in  public void PrepareForAreaDrawing(int firstTileX, int lastTileX, int firstTileY, int lastTileY, bool prepareLazily)
+  1 hit(s) at line(s) 1558  in  public Texture2D GetTileDrawTexture(Tile tile, int tileX, int tileY)
+  1 hit(s) at line(s) 1609  in  public Texture2D GetTileDrawTexture(Tile tile, int tileX, int tileY, int paintOverride)
+  2 hit(s) at line(s) 2138, 2144  in  private int GetPalmTreeBiome(int tileX, int tileY)
+  2 hit(s) at line(s) 4041, 4064  in  private int GetPalmTreeVariant(int x, int y)
+  4 hit(s) at line(s) 5695, 5696, 5698, 5702  in  public void GetTileDrawData(int x, int y, Tile tileCache, ushort typeCache, ref short tileFrameX, ref short tileFrameY, out int tileWidth, out int tileHeight, out int tileTop, out int halfBrickHeight, out int addFrX, out int addFrY, out SpriteEffects tileSpriteEffect, out Texture2D glowTexture, out Rectangle glowSourceRect, out Color glowColor)
+  9 hit(s) at line(s) 9747, 9748, 9749, 9754, 9758, 9761, 9768, 9770, 9777  in  private void DrawTrees()
+
+# 8 hit(s) shown for 'PalmTree|case 323|== 323' in Terraria.GameContent.Drawing.TileDrawing.cs
+--- Terraria.GameContent.Drawing.TileDrawing.cs:295
+					Main.instance.LoadTiles(tile.type);
+					lookupKey.TileType = tile.type;
+					lookupKey.PaintColor = tile.color();
+					switch (tile.type)
+					{
+					case 5:
+						tileStyle = GetTreeBiome(j, i, tile.frameX, tile.frameY);
+						break;
+>>> 					case 323:
+						tileStyle = GetPalmTreeBiome(j, i);
+						break;
+					}
+					lookupKey.TileStyle = tileStyle;
+					if (lookupKey.PaintColor != 0)
+					{
+						_paintSystem.RequestTile(ref lookupKey);
+					}
+				}
+				if (tile.wall != 0)
+				{
+					Main.instance.LoadWall(tile.wall);
+					lookupKey2.WallType = tile.wall;
+					lookupKey2.PaintColor = tile.wallColor();
+					if (lookupKey2.PaintColor != 0)
+					{
+						_paintSystem.RequestWall(ref lookupKey2);
+					}
+				}
+				if (!prepareLazily)
+				{
+					MakeExtraPreparations(tile, j, i, tileStyle);
+				}
+			}
+		}
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:296
+					lookupKey.TileType = tile.type;
+					lookupKey.PaintColor = tile.color();
+					switch (tile.type)
+					{
+					case 5:
+						tileStyle = GetTreeBiome(j, i, tile.frameX, tile.frameY);
+						break;
+					case 323:
+>>> 						tileStyle = GetPalmTreeBiome(j, i);
+						break;
+					}
+					lookupKey.TileStyle = tileStyle;
+					if (lookupKey.PaintColor != 0)
+					{
+						_paintSystem.RequestTile(ref lookupKey);
+					}
+				}
+				if (tile.wall != 0)
+				{
+					Main.instance.LoadWall(tile.wall);
+					lookupKey2.WallType = tile.wall;
+					lookupKey2.PaintColor = tile.wallColor();
+					if (lookupKey2.PaintColor != 0)
+					{
+						_paintSystem.RequestWall(ref lookupKey2);
+					}
+				}
+				if (!prepareLazily)
+				{
+					MakeExtraPreparations(tile, j, i, tileStyle);
+				}
+			}
+		}
+	}
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:414
+					TextureIndex = treeStyle4,
+					PaintColor = tile.color()
+				};
+				_paintSystem.RequestTreeTop(ref lookupKey5);
+				_paintSystem.RequestTreeBranch(ref lookupKey5);
+			}
+			break;
+		}
+>>> 		case 323:
+		{
+			int num = 15;
+			bool flag = false;
+			if (x >= WorldGen.beachDistance && x <= Main.maxTilesX - WorldGen.beachDistance)
+			{
+				flag = true;
+			}
+			if (flag)
+			{
+				num = 21;
+			}
+			if (Math.Abs(tileStyle) >= 8)
+			{
+				num = Math.Abs(tileStyle) - 8;
+				num *= -2;
+				if (!flag)
+				{
+					num--;
+				}
+			}
+			TilePaintSystemV2.TreeFoliageVariantKey lookupKey = new TilePaintSystemV2.TreeFoliageVariantKey
+			{
+				TextureIndex = num,
+				PaintColor = tile.color()
+			};
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:1313
+			{
+				val.Y += 162;
+			}
+			break;
+		}
+		case 83:
+			drawData.drawTexture = GetTileDrawTexture(drawData.tileCache, tileX, tileY);
+			break;
+>>> 		case 323:
+			if (drawData.tileCache.frameX <= 132 && drawData.tileCache.frameX >= 88)
+			{
+				return;
+			}
+			val2.X += drawData.tileCache.frameY;
+			break;
+		case 114:
+			if (drawData.tileFrameY > 0)
+			{
+				val.Height += 2;
+			}
+			break;
+		}
+		if (drawData.typeCache == 314)
+		{
+			DrawTile_MinecartTrack(screenPosition, screenOffset, tileX, tileY, drawData);
+		}
+		else if (drawData.typeCache == 171)
+		{
+			DrawXmasTree(screenPosition, screenOffset, tileX, tileY, drawData);
+		}
+		else
+		{
+			DrawBasicTile(screenPosition, screenOffset, tileX, tileY, drawData, val, val2);
+		}
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:1557
+		Texture2D result = TextureAssets.Tile[tile.type].Value;
+		int tileStyle = 0;
+		int num = tile.type;
+		switch (tile.type)
+		{
+		case 5:
+			tileStyle = GetTreeBiome(tileX, tileY, tile.frameX, tile.frameY);
+			break;
+>>> 		case 323:
+			tileStyle = GetPalmTreeBiome(tileX, tileY);
+			break;
+		case 83:
+			if (IsAlchemyPlantHarvestable(tile.frameX / 18))
+			{
+				num = 84;
+			}
+			Main.instance.LoadTiles(num);
+			break;
+		case 80:
+		case 227:
+		{
+			WorldGen.GetCactusType(tileX, tileY, tile.frameX, tile.frameY, out var type);
+			if (!TileLoader.CanGrowModCactus(type))
+			{
+				break;
+			}
+			if (num == 80)
+			{
+				tileStyle = type + 1;
+			}
+			else if (tile.frameX == 204 || tile.frameX == 202)
+			{
+				Asset<Texture2D> cactusFruitTexture = PlantLoader.GetCactusFruitTexture(type);
+				if (cactusFruitTexture != null)
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:1558
+		int tileStyle = 0;
+		int num = tile.type;
+		switch (tile.type)
+		{
+		case 5:
+			tileStyle = GetTreeBiome(tileX, tileY, tile.frameX, tile.frameY);
+			break;
+		case 323:
+>>> 			tileStyle = GetPalmTreeBiome(tileX, tileY);
+			break;
+		case 83:
+			if (IsAlchemyPlantHarvestable(tile.frameX / 18))
+			{
+				num = 84;
+			}
+			Main.instance.LoadTiles(num);
+			break;
+		case 80:
+		case 227:
+		{
+			WorldGen.GetCactusType(tileX, tileY, tile.frameX, tile.frameY, out var type);
+			if (!TileLoader.CanGrowModCactus(type))
+			{
+				break;
+			}
+			if (num == 80)
+			{
+				tileStyle = type + 1;
+			}
+			else if (tile.frameX == 204 || tile.frameX == 202)
+			{
+				Asset<Texture2D> cactusFruitTexture = PlantLoader.GetCactusFruitTexture(type);
+				if (cactusFruitTexture != null)
+				{
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:1608
+		Texture2D result = TextureAssets.Tile[tile.type].Value;
+		int tileStyle = 0;
+		int num = tile.type;
+		switch (tile.type)
+		{
+		case 5:
+			tileStyle = GetTreeBiome(tileX, tileY, tile.frameX, tile.frameY);
+			break;
+>>> 		case 323:
+			tileStyle = GetPalmTreeBiome(tileX, tileY);
+			break;
+		case 83:
+			if (IsAlchemyPlantHarvestable(tile.frameX / 18))
+			{
+				num = 84;
+			}
+			Main.instance.LoadTiles(num);
+			break;
+		case 80:
+		case 227:
+		{
+			WorldGen.GetCactusType(tileX, tileY, tile.frameX, tile.frameY, out var type);
+			if (!TileLoader.CanGrowModCactus(type))
+			{
+				break;
+			}
+			if (num == 80)
+			{
+				tileStyle = type + 1;
+			}
+			else if (tile.frameX == 204 || tile.frameX == 202)
+			{
+				Asset<Texture2D> cactusFruitTexture = PlantLoader.GetCactusFruitTexture(type);
+				if (cactusFruitTexture != null)
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:1609
+		int tileStyle = 0;
+		int num = tile.type;
+		switch (tile.type)
+		{
+		case 5:
+			tileStyle = GetTreeBiome(tileX, tileY, tile.frameX, tile.frameY);
+			break;
+		case 323:
+>>> 			tileStyle = GetPalmTreeBiome(tileX, tileY);
+			break;
+		case 83:
+			if (IsAlchemyPlantHarvestable(tile.frameX / 18))
+			{
+				num = 84;
+			}
+			Main.instance.LoadTiles(num);
+			break;
+		case 80:
+		case 227:
+		{
+			WorldGen.GetCactusType(tileX, tileY, tile.frameX, tile.frameY, out var type);
+			if (!TileLoader.CanGrowModCactus(type))
+			{
+				break;
+			}
+			if (num == 80)
+			{
+				tileStyle = type + 1;
+			}
+			else if (tile.frameX == 204 || tile.frameX == 202)
+			{
+				Asset<Texture2D> cactusFruitTexture = PlantLoader.GetCactusFruitTexture(type);
+				if (cactusFruitTexture != null)
+				{
+
+##### 3. ash: profile, GrowTreeWithSettings and the ground rule
+# 1 hit(s) shown for 'struct GrowTreeSettings|class GrowTreeSettings' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:871
+	}
+
+>>> 	public struct GrowTreeSettings
+	{
+		public delegate bool IsTileFitForTreeGroundTest(int tileType);
+
+		public delegate bool IsWallTypeFitForTreeBack(int wallType);
+
+		public static class Profiles
+		{
+			public static GrowTreeSettings GemTree_Ruby = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 587,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 588,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 583,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+
+# 3 hit(s) shown for 'Tree_Ash' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:978
+				SaplingTileType = 615
+			};
+
+>>> 			public static GrowTreeSettings Tree_Ash = new GrowTreeSettings
+			{
+				GroundTest = AshTreeGroundTest,
+				WallTest = DefaultTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 634,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 20
+			};
+
+			public static bool TryGetFromItemId(int itemType, out GrowTreeSettings profile)
+			{
+				switch (itemType)
+				{
+				default:
+					profile = default;
+					return false;
+				case 4857:
+					profile = GemTree_Amber;
+					return true;
+				case 4852:
+					profile = GemTree_Amethyst;
+					return true;
+				case 4856:
+					profile = GemTree_Diamond;
+
+--- Terraria.WorldGen.cs:1061
+					profile = VanityTree_Sakura;
+					return true;
+				case 634:
+>>> 					profile = Tree_Ash;
+					return true;
+				}
+			}
+		}
+
+		public ushort TreeTileType;
+
+		public int TreeHeightMin;
+
+		public int TreeHeightMax;
+
+		public int TreeTopPaddingNeeded;
+
+		public IsTileFitForTreeGroundTest GroundTest;
+
+		public IsWallTypeFitForTreeBack WallTest;
+
+		public ushort SaplingTileType;
+	}
+
+	public struct CheckTreeSettings
+	{
+		public delegate bool GroundValidTest(int groundTileType);
+
+		public GroundValidTest IsGroundValid;
+
+--- Terraria.WorldGen.cs:23655
+			result = GrowTreeWithSettings(checkedX, checkedY, GrowTreeSettings.Profiles.VanityTree_Willow);
+			break;
+		case 634:
+>>> 			result = GrowTreeWithSettings(checkedX, checkedY, GrowTreeSettings.Profiles.Tree_Ash);
+			break;
+		}
+		return result;
+	}
+
+	public static bool GrowTreeWithSettings(int checkedX, int checkedY, GrowTreeSettings settings)
+	{
+		int i;
+		for (i = checkedY; Main.tile[checkedX, i].type == settings.SaplingTileType; i++)
+		{
+		}
+		if (Main.tile[checkedX - 1, i - 1].liquid != 0 || Main.tile[checkedX, i - 1].liquid != 0 || Main.tile[checkedX + 1, i - 1].liquid != 0)
+		{
+			return false;
+		}
+		Tile tile = Main.tile[checkedX, i];
+		if (!tile.nactive() || tile.halfBrick() || tile.slope() != 0)
+		{
+			return false;
+		}
+		bool flag = settings.WallTest(Main.tile[checkedX, i - 1].wall);
+		if (!settings.GroundTest(tile.type) || !flag)
+		{
+			return false;
+		}
+
+--- Terraria.WorldGen.cs:23661
+	public static bool GrowTreeWithSettings(int checkedX, int checkedY, GrowTreeSettings settings)
+	{
+		int i;
+		for (i = checkedY; Main.tile[checkedX, i].type == settings.SaplingTileType; i++)
+		{
+		}
+		if (Main.tile[checkedX - 1, i - 1].liquid != 0 || Main.tile[checkedX, i - 1].liquid != 0 || Main.tile[checkedX + 1, i - 1].liquid != 0)
+		{
+			return false;
+		}
+		Tile tile = Main.tile[checkedX, i];
+		if (!tile.nactive() || tile.halfBrick() || tile.slope() != 0)
+		{
+			return false;
+		}
+		bool flag = settings.WallTest(Main.tile[checkedX, i - 1].wall);
+		if (!settings.GroundTest(tile.type) || !flag)
+		{
+			return false;
+		}
+		if ((!Main.tile[checkedX - 1, i].active() || !settings.GroundTest(Main.tile[checkedX - 1, i].type)) && (!Main.tile[checkedX + 1, i].active() || !settings.GroundTest(Main.tile[checkedX + 1, i].type)))
+		{
+			return false;
+		}
+		TileColorCache cache = Main.tile[checkedX, i].BlockColorAndCoating();
+		if (Main.tenthAnniversaryWorld && !gen && (settings.TreeTileType == 596 || settings.TreeTileType == 616))
+		{
+			cache.Color = (byte)genRand.Next(1, 13);
+		}
+		int num = 2;
+		int num2 = genRand.Next(settings.TreeHeightMin, settings.TreeHeightMax + 1);
+		int num3 = num2 + settings.TreeTopPaddingNeeded;
+		if (!EmptyTileCheck(checkedX - num, checkedX + num, i - num3, i - 1, 20))
+		{
+			return false;
+		}
+		bool flag2 = false;
+		bool flag3 = false;
+		int num4;
+		for (int j = i - num2; j < i; j++)
+		{
+			Tile tile2 = Main.tile[checkedX, j];
+			tile2.frameNumber((byte)genRand.Next(3));
+			tile2.active(active: true);
+			tile2.type = settings.TreeTileType;
+			tile2.UseBlockColors(cache);
+			num4 = genRand.Next(3);
+			int num5 = genRand.Next(10);
+			if (j == i - 1 || j == i - num2)
+			{
+				num5 = 0;
+			}
+			while (((num5 == 5 || num5 == 7) & flag2) || ((num5 == 6 || num5 == 7) & flag3))
+			{
+				num5 = genRand.Next(10);
+			}
+			flag2 = false;
+			flag3 = false;
+			if (num5 == 5 || num5 == 7)
+			{
+				flag2 = true;
+			}
+			if (num5 == 6 || num5 == 7)
+			{
+				flag3 = true;
+			}
+			switch (num5)
+			{
+			case 1:
+				if (num4 == 0)
+				{
+					tile2.frameX = 0;
+					tile2.frameY = 66;
+				}
+				if (num4 == 1)
+				{
+					tile2.frameX = 0;
+					tile2.frameY = 88;
+				}
+				if (num4 == 2)
+				{
+					tile2.frameX = 0;
+					tile2.frameY = 110;
+				}
+				break;
+			case 2:
+				if (num4 == 0)
+				{
+					tile2.frameX = 22;
+					tile2.frameY = 0;
+				}
+				if (num4 == 1)
+				{
+					tile2.frameX = 22;
+					tile2.frameY = 22;
+				}
+				if (num4 == 2)
+				{
+					tile2.frameX = 22;
+					tile2.frameY = 44;
+				}
+				break;
+			case 3:
+				if (num4 == 0)
+				{
+					tile2.frameX = 44;
+					tile2.frameY = 66;
+				}
+				if (num4 == 1)
+				{
+					tile2.frameX = 44;
+					tile2.frameY = 88;
+				}
+				if (num4 == 2)
+				{
+					tile2.frameX = 44;
+					tile2.frameY = 110;
+				}
+				break;
+			case 4:
+				if (num4 == 0)
+				{
+					tile2.frameX = 22;
+					tile2.frameY = 66;
+				}
+				if (num4 == 1)
+				{
+					tile2.frameX = 22;
+					tile2.frameY = 88;
+				}
+				if (num4 == 2)
+				{
+					tile2.frameX = 22;
+					tile2.frameY = 110;
+				}
+				break;
+			case 5:
+				if (num4 == 0)
+				{
+					tile2.frameX = 88;
+					tile2.frameY = 0;
+				}
+				if (num4 == 1)
+				{
+					tile2.frameX = 88;
+					tile2.frameY = 22;
+				}
+				if (num4 == 2)
+				{
+					tile2.frameX = 88;
+					tile2.frameY = 44;
+				}
+				break;
+			case 6:
+				if (num4 == 0)
+				{
+					tile2.frameX = 66;
+					tile2.frameY = 66;
+				}
+				if (num4 == 1)
+				{
+					tile2.frameX = 66;
+					tile2.frameY = 88;
+				}
+				if (num4 == 2)
+				{
+					tile2.frameX = 66;
+					tile2.frameY = 110;
+				}
+				break;
+			case 7:
+				if (num4 == 0)
+				{
+					tile2.frameX = 110;
+					tile2.frameY = 66;
+				}
+				if (num4 == 1)
+				{
+					tile2.frameX = 110;
+					tile2.frameY = 88;
+				}
+				if (num4 == 2)
+				{
+					tile2.frameX = 110;
+					tile2.frameY = 110;
+				}
+				break;
+			default:
+				if (num4 == 0)
+				{
+					tile2.frameX = 0;
+					tile2.frameY = 0;
+				}
+				if (num4 == 1)
+				{
+					tile2.frameX = 0;
+					tile2.frameY = 22;
+				}
+				if (num4 == 2)
+				{
+					tile2.frameX = 0;
+					tile2.frameY = 44;
+				}
+				break;
+			}
+			if (num5 == 5 || num5 == 7)
+			{
+				Tile tile3 = Main.tile[checkedX - 1, j];
+				tile3.active(active: true);
+				tile3.type = settings.TreeTileType;
+				tile3.UseBlockColors(cache);
+				num4 = genRand.Next(3);
+				if (genRand.Next(3) < 2)
+				{
+					if (num4 == 0)
+					{
+						tile3.frameX = 44;
+						tile3.frameY = 198;
+					}
+					if (num4 == 1)
+					{
+						tile3.frameX = 44;
+						tile3.frameY = 220;
+					}
+					if (num4 == 2)
+					{
+						tile3.frameX = 44;
+						tile3.frameY = 242;
+					}
+				}
+				else
+				{
+					if (num4 == 0)
+					{
+						tile3.frameX = 66;
+						tile3.frameY = 0;
+					}
+					if (num4 == 1)
+					{
+						tile3.frameX = 66;
+						tile3.frameY = 22;
+					}
+					if (num4 == 2)
+					{
+						tile3.frameX = 66;
+						tile3.frameY = 44;
+					}
+				}
+			}
+			if (num5 != 6 && num5 != 7)
+			{
+				continue;
+			}
+			Tile tile4 = Main.tile[checkedX + 1, j];
+			tile4.active(active: true);
+			tile4.type = settings.TreeTileType;
+			tile4.UseBlockColors(cache);
+			num4 = genRand.Next(3);
+			if (genRand.Next(3) < 2)
+			{
+				if (num4 == 0)
+				{
+					tile4.frameX = 66;
+					tile4.frameY = 198;
+				}
+				if (num4 == 1)
+				{
+					tile4.frameX = 66;
+					tile4.frameY = 220;
+				}
+				if (num4 == 2)
+				{
+					tile4.frameX = 66;
+					tile4.frameY = 242;
+				}
+			}
+			else
+			{
+				if (num4 == 0)
+				{
+					tile4.frameX = 88;
+					tile4.frameY = 66;
+				}
+				if (num4 == 1)
+				{
+					tile4.frameX = 88;
+					tile4.frameY = 88;
+				}
+				if (num4 == 2)
+				{
+					tile4.frameX = 88;
+					tile4.frameY = 110;
+				}
+			}
+		}
+		bool flag4 = false;
+		bool flag5 = false;
+		if (Main.tile[checkedX - 1, i].nactive() && !Main.tile[checkedX - 1, i].halfBrick() && Main.tile[checkedX - 1, i].slope() == 0 && IsTileTypeFitForTree(Main.tile[checkedX - 1, i].type))
+		{
+			flag4 = true;
+		}
+		if (Main.tile[checkedX + 1, i].nactive() && !Main.tile[checkedX + 1, i].halfBrick() && Main.tile[checkedX + 1, i].slope() == 0 && IsTileTypeFitForTree(Main.tile[checkedX + 1, i].type))
+		{
+			flag5 = true;
+		}
+		if (genRand.Next(3) == 0)
+		{
+			flag4 = false;
+		}
+		if (genRand.Next(3) == 0)
+		{
+			flag5 = false;
+		}
+		if (flag5)
+		{
+			Main.tile[checkedX + 1, i - 1].active(active: true);
+			Main.tile[checkedX + 1, i - 1].type = settings.TreeTileType;
+			Main.tile[checkedX + 1, i - 1].UseBlockColors(cache);
+			num4 = genRand.Next(3);
+			if (num4 == 0)
+			{
+				Main.tile[checkedX + 1, i - 1].frameX = 22;
+				Main.tile[checkedX + 1, i - 1].frameY = 132;
+			}
+			if (num4 == 1)
+			{
+				Main.tile[checkedX + 1, i - 1].frameX = 22;
+				Main.tile[checkedX + 1, i - 1].frameY = 154;
+			}
+			if (num4 == 2)
+			{
+				Main.tile[checkedX + 1, i - 1].frameX = 22;
+				Main.tile[checkedX + 1, i - 1].frameY = 176;
+			}
+		}
+		if (flag4)
+		{
+			Main.tile[checkedX - 1, i - 1].active(active: true);
+			Main.tile[checkedX - 1, i - 1].type = settings.TreeTileType;
+			Main.tile[checkedX - 1, i - 1].UseBlockColors(cache);
+			num4 = genRand.Next(3);
+			if (num4 == 0)
+			{
+				Main.tile[checkedX - 1, i - 1].frameX = 44;
+				Main.tile[checkedX - 1, i - 1].frameY = 132;
+			}
+			if (num4 == 1)
+			{
+				Main.tile[checkedX - 1, i - 1].frameX = 44;
+				Main.tile[checkedX - 1, i - 1].frameY = 154;
+			}
+			if (num4 == 2)
+			{
+				Main.tile[checkedX - 1, i - 1].frameX = 44;
+				Main.tile[checkedX - 1, i - 1].frameY = 176;
+			}
+		}
+		num4 = genRand.Next(3);
+		if (flag4 & flag5)
+		{
+			if (num4 == 0)
+			{
+				Main.tile[checkedX, i - 1].frameX = 88;
+				Main.tile[checkedX, i - 1].frameY = 132;
+			}
+			if (num4 == 1)
+			{
+				Main.tile[checkedX, i - 1].frameX = 88;
+				Main.tile[checkedX, i - 1].frameY = 154;
+			}
+			if (num4 == 2)
+			{
+				Main.tile[checkedX, i - 1].frameX = 88;
+				Main.tile[checkedX, i - 1].frameY = 176;
+			}
+		}
+		else if (flag4)
+		{
+			if (num4 == 0)
+			{
+				Main.tile[checkedX, i - 1].frameX = 0;
+				Main.tile[checkedX, i - 1].frameY = 132;
+			}
+			if (num4 == 1)
+			{
+				Main.tile[checkedX, i - 1].frameX = 0;
+				Main.tile[checkedX, i - 1].frameY = 154;
+			}
+			if (num4 == 2)
+			{
+				Main.tile[checkedX, i - 1].frameX = 0;
+				Main.tile[checkedX, i - 1].frameY = 176;
+			}
+		}
+		else if (flag5)
+		{
+			if (num4 == 0)
+			{
+				Main.tile[checkedX, i - 1].frameX = 66;
+				Main.tile[checkedX, i - 1].frameY = 132;
+
+# 12 hit(s) shown for 'GroundTest|\bTreeTops\b|WallTest' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:873
+
+	public struct GrowTreeSettings
+	{
+>>> 		public delegate bool IsTileFitForTreeGroundTest(int tileType);
+
+		public delegate bool IsWallTypeFitForTreeBack(int wallType);
+
+		public static class Profiles
+		{
+			public static GrowTreeSettings GemTree_Ruby = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 587,
+
+--- Terraria.WorldGen.cs:881
+		{
+			public static GrowTreeSettings GemTree_Ruby = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 587,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:882
+			public static GrowTreeSettings GemTree_Ruby = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 587,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+
+--- Terraria.WorldGen.cs:892
+
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 588,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:893
+			public static GrowTreeSettings GemTree_Diamond = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 588,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+
+--- Terraria.WorldGen.cs:903
+
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 583,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:904
+			public static GrowTreeSettings GemTree_Topaz = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 583,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+
+--- Terraria.WorldGen.cs:914
+
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 584,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:915
+			public static GrowTreeSettings GemTree_Amethyst = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 584,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+
+--- Terraria.WorldGen.cs:925
+
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 585,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+--- Terraria.WorldGen.cs:926
+			public static GrowTreeSettings GemTree_Sappphire = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+>>> 				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 585,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+
+--- Terraria.WorldGen.cs:936
+
+			public static GrowTreeSettings GemTree_Emerald = new GrowTreeSettings
+			{
+>>> 				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 586,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 590
+			};
+
+			public static GrowTreeSettings GemTree_Amber = new GrowTreeSettings
+			{
+				GroundTest = GemTreeGroundTest,
+				WallTest = GemTreeWallTest,
+
+##### 4. ash and palm soil in the tree checks and look
+##### '\b633\b|\b634\b' in Terraria.WorldGen.cs: 58 line(s) in 30 method(s)
+  2 hit(s) at line(s) 984, 1060  in  (outside any method)
+  1 hit(s) at line(s) 2523  in  public static void CheckAchievement_RealEstateAndTownSlimes()
+  11 hit(s) at line(s) 10380, 10388, 10390, 10405, 10416, 10418, 10433, 10441, 10443, 15609, 15907  in  internal static void AddGenPasses()
+  1 hit(s) at line(s) 18648  in  private static void NotTheBees()
+  2 hit(s) at line(s) 22690, 22736  in  public static void GetTreeLeaf(int x, Tile topTile, Tile t, ref int treeHeight, out int treeFrame, out int passStyle)
+  1 hit(s) at line(s) 23046  in  public static bool IsTileTypeFitForTree(ushort type)
+  1 hit(s) at line(s) 23612  in  public static bool AshTreeGroundTest(int tileType)
+  1 hit(s) at line(s) 23654  in  public static bool TryGrowingTreeByType(int treeTileType, int checkedX, int checkedY)
+  1 hit(s) at line(s) 36657  in  public static void Check1x2(int x, int j, ushort type)
+  1 hit(s) at line(s) 38586  in  public static bool PlaceAlch(int x, int y, int style)
+  1 hit(s) at line(s) 39012  in  public static void PlantAlch()
+  1 hit(s) at line(s) 39103  in  public static void CheckAlch(int x, int y)
+  1 hit(s) at line(s) 40385  in  public static void Check2x1(int i, int y, ushort type)
+  1 hit(s) at line(s) 53014  in  public static bool IsFitToPlaceFlowerIn(int x, int y, int typeAttemptedToPlace)
+  2 hit(s) at line(s) 54338, 54372  in  public static bool PlaceTile(int i, int j, int Type, bool mute = false, bool forced = false, int plr = -1, int style = 0)
+  1 hit(s) at line(s) 57593  in  public static bool WouldTileReplacementWork(ushort attemptingToReplaceWith, int x, int y)
+  1 hit(s) at line(s) 57673  in  public static bool GetAshTreeFoliageData(int i, int j, int xoffset, ref int treeFrame, ref int treeStyle, out int floorY, out int topTextureFrameWidth, out int topTextureFrameHeight)
+  1 hit(s) at line(s) 57995  in  public static TreeTypes GetTreeType(int tileType)
+  1 hit(s) at line(s) 58635  in  public static void KillTile(int i, int j, bool fail = false, bool effectOnly = false, bool noItem = false)
+  4 hit(s) at line(s) 58939, 60005, 60334, 60337  in  internal static void KillTile_GetItemDrops(int x, int y, Tile tileCache, out int dropItem, out int dropItemStack, out int secondaryItem, out int secondaryItemStack, bool includeLargeObjectDrops = false)
+  2 hit(s) at line(s) 61186, 61220  in  private static void KillTile_GetTreeDrops(int i, int j, Tile tileCache, ref bool bonusWood, ref int dropItem, ref int secondaryItem)
+  2 hit(s) at line(s) 62093, 62100  in  public static int KillTile_MakeTileDust(int i, int j, Tile tileCache)
+  2 hit(s) at line(s) 67481, 67498  in  private static void UpdateWorld_OvergroundTile(int i, int j, bool checkNPCSpawns, int wallDist)
+  1 hit(s) at line(s) 67549  in  public static bool AttemptToGrowTreeFromSapling(int x, int y, bool underground)
+  1 hit(s) at line(s) 67772  in  private static bool HasValidGroundForAbigailsFlowerBelowSpot(int x, int y)
+  1 hit(s) at line(s) 67842  in  private static bool HasValidGroundForGlowTulipBelowSpot(int x, int y)
+  4 hit(s) at line(s) 68025, 68044, 68608, 68627  in  private static void UpdateWorld_UndergroundTile(int i, int j, bool checkNPCSpawns, int wallDist)
+  3 hit(s) at line(s) 68971, 69188, 69425  in  private static void UpdateWorld_GrassGrowth(int i, int j, int minI, int maxI, int minJ, int maxJ, bool underground)
+  1 hit(s) at line(s) 75635  in  public static void PlantCheck(int x, int y)
+  5 hit(s) at line(s) 77412, 77700, 78108, 80944, 81020  in  public static void TileFrame(int i, int j, bool resetFrame = false, bool noBreak = false)
+
+# 9 hit(s) shown for '\b633\b|\b634\b|TreeTypes\.Ash' in Terraria.GameContent.Drawing.TileDrawing.cs
+--- Terraria.GameContent.Drawing.TileDrawing.cs:394
+				};
+				_paintSystem.RequestTreeTop(ref lookupKey2);
+				_paintSystem.RequestTreeBranch(ref lookupKey2);
+			}
+			break;
+		}
+>>> 		case 634:
+		{
+			int treeFrame4 = 0;
+			int floorY4 = 0;
+			int topTextureFrameWidth4 = 0;
+			int topTextureFrameHeight4 = 0;
+			int treeStyle4 = 0;
+			int xoffset4 = (tile.frameX == 44).ToInt() - (tile.frameX == 66).ToInt();
+			if (WorldGen.GetAshTreeFoliageData(x, y, xoffset4, ref treeFrame4, ref treeStyle4, out floorY4, out topTextureFrameWidth4, out topTextureFrameHeight4))
+			{
+				TilePaintSystemV2.TreeFoliageVariantKey lookupKey5 = new TilePaintSystemV2.TreeFoliageVariantKey
+				{
+					TextureIndex = treeStyle4,
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:1351
+			}
+			double num8 = Main.timeForVisualEffects * 0.08;
+			Color val4 = Color.White;
+			bool flag2 = false;
+			switch (drawData.tileCache.type)
+			{
+>>> 			case 633:
+				val4 = Color.Lerp(Color.White, drawData.finalColor, 0.75f);
+				break;
+			case 659:
+			case 667:
+				val4 = LiquidRenderer.GetShimmerGlitterColor(top: true, tileX, tileY);
+				break;
+			case 350:
+				val4 = new Color(new Vector4((float)((0.0 - Math.Cos(((int)(num8 / 6.283) % 3 == 1) ? num8 : 0.0)) * 0.2 + 0.2)));
+				break;
+			case 381:
+			case 517:
+			case 687:
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:5063
+		case 586:
+		case 587:
+		case 588:
+		case 589:
+		case 596:
+		case 616:
+>>> 		case 634:
+			if (drawDataTileFrameY >= 198 && drawDataTileFrameX >= 22)
+			{
+				AddSpecialPoint(tileX, tileY, TileCounterType.Tree);
+			}
+			break;
+		}
+	}
+
+	private void CacheSpecialDraws_Part2(int tileX, int tileY, TileDrawInfo drawData, bool skipDraw)
+	{
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:5683
+		case 586:
+		case 587:
+		case 588:
+		case 589:
+		case 596:
+		case 616:
+>>> 		case 634:
+			tileWidth = 20;
+			tileHeight = 20;
+			break;
+		case 476:
+			tileWidth = 20;
+			tileHeight = 18;
+			break;
+		case 323:
+		{
+			tileWidth = 20;
+			tileHeight = 20;
+			int palmTreeBiome = GetPalmTreeBiome(x, y);
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:7084
+			break;
+		case 656:
+			glowTexture = TextureAssets.GlowMask[329].Value;
+			glowSourceRect = new Rectangle((int)tileFrameX, tileFrameY + addFrY, tileWidth, tileHeight);
+			glowColor = new Color(255, 255, 255, 0) * ((float)(int)Main.mouseTextColor / 255f);
+			break;
+>>> 		case 634:
+			glowTexture = TextureAssets.GlowMask[315].Value;
+			glowSourceRect = new Rectangle((int)tileFrameX, tileFrameY + addFrY, tileWidth, tileHeight);
+			glowColor = Color.White;
+			break;
+		case 637:
+			glowTexture = TextureAssets.Tile[637].Value;
+			glowSourceRect = new Rectangle(tileFrameX + addFrX, tileFrameY + addFrY, tileWidth, tileHeight);
+			glowColor = Color.Lerp(Color.White, color, 0.75f);
+			break;
+		case 638:
+			glowTexture = TextureAssets.GlowMask[327].Value;
+			glowSourceRect = new Rectangle(tileFrameX + addFrX, tileFrameY + addFrY, tileWidth, tileHeight - halfBrickHeight);
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:9550
+					break;
+				case 596:
+				case 616:
+					flag2 = true;
+					getTreeFoliageDataMethod = WorldGen.GetVanityTreeFoliageData;
+					break;
+>>> 				case 634:
+					flag2 = true;
+					getTreeFoliageDataMethod = WorldGen.GetAshTreeFoliageData;
+					break;
+				}
+				if (flag2 && frameY >= 198 && frameX >= 22)
+				{
+					int treeFrame = WorldGen.GetTreeFrame(tile);
+					int topTextureFrameWidth;
+					int topTextureFrameHeight;
+					switch (frameX)
+					{
+					case 22:
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:9608
+						Color val10 = Lighting.GetColor(x, y);
+						if (tile.fullbrightBlock())
+						{
+							val10 = Color.White;
+						}
+						Main.spriteBatch.Draw(treeTopTexture, val9, (Nullable)new Rectangle(treeFrame * (topTextureFrameWidth2 + 2), 0, topTextureFrameWidth2, topTextureFrameHeight2), val10, num15 * num3, new Vector2((float)(topTextureFrameWidth2 / 2), (float)topTextureFrameHeight2), 1f, (SpriteEffects)0, 0f);
+>>> 						if (type == 634)
+						{
+							Texture2D value3 = TextureAssets.GlowMask[316].Value;
+							Color white3 = Color.White;
+							Main.spriteBatch.Draw(value3, val9, (Nullable)new Rectangle(treeFrame * (topTextureFrameWidth2 + 2), 0, topTextureFrameWidth2, topTextureFrameHeight2), white3, num15 * num3, new Vector2((float)(topTextureFrameWidth2 / 2), (float)topTextureFrameHeight2), 1f, (SpriteEffects)0, 0f);
+						}
+						break;
+					}
+					case 44:
+					{
+						int treeStyle2 = 0;
+						int num9 = x;
+						int floorY2 = y;
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:9663
+						Color val7 = Lighting.GetColor(x, y);
+						if (tile.fullbrightBlock())
+						{
+							val7 = Color.White;
+						}
+						Main.spriteBatch.Draw(treeBranchTexture2, val6, (Nullable)new Rectangle(0, treeFrame * 42, 40, 40), val7, num12 * num4, new Vector2(40f, 24f), 1f, (SpriteEffects)0, 0f);
+>>> 						if (type == 634)
+						{
+							Texture2D value2 = TextureAssets.GlowMask[317].Value;
+							Color white2 = Color.White;
+							Main.spriteBatch.Draw(value2, val6, (Nullable)new Rectangle(0, treeFrame * 42, 40, 40), white2, num12 * num4, new Vector2(40f, 24f), 1f, (SpriteEffects)0, 0f);
+						}
+						break;
+					}
+					case 66:
+					{
+						int treeStyle = 0;
+						int num5 = x;
+						int floorY = y;
+
+--- Terraria.GameContent.Drawing.TileDrawing.cs:9718
+						Color val4 = Lighting.GetColor(x, y);
+						if (tile.fullbrightBlock())
+						{
+							val4 = Color.White;
+						}
+						Main.spriteBatch.Draw(treeBranchTexture, val3, (Nullable)new Rectangle(42, treeFrame * 42, 40, 40), val4, num8 * num4, new Vector2(0f, 30f), 1f, (SpriteEffects)0, 0f);
+>>> 						if (type == 634)
+						{
+							Texture2D value = TextureAssets.GlowMask[317].Value;
+							Color white = Color.White;
+							Main.spriteBatch.Draw(value, val3, (Nullable)new Rectangle(42, treeFrame * 42, 40, 40), white, num8 * num4, new Vector2(0f, 30f), 1f, (SpriteEffects)0, 0f);
+						}
+						break;
+					}
+					}
+				}
+				if (type != 323 || frameX < 88 || frameX > 132)
+				{
+					continue;
+
+##### 5. other soil lists a palm or ash tree reads (sand 53/112/116/234, ash grass 633)
+# 10 hit(s) shown for 'IsTileTypeFitForTree|SoilTest|IsSoil|CanGrowPalm|AshTree' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:980
+
+			public static GrowTreeSettings Tree_Ash = new GrowTreeSettings
+			{
+>>> 				GroundTest = AshTreeGroundTest,
+				WallTest = DefaultTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+				TreeTileType = 634,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 20
+			};
+
+
+--- Terraria.WorldGen.cs:23033
+		return false;
+	}
+
+>>> 	public static bool IsTileTypeFitForTree(ushort type)
+	{
+		switch (type)
+		{
+		case 2:
+		case 23:
+		case 60:
+		case 70:
+		case 109:
+
+--- Terraria.WorldGen.cs:23065
+		{
+			return false;
+		}
+>>> 		if (Main.tile[i, j].nactive() && !Main.tile[i, j].halfBrick() && Main.tile[i, j].slope() == 0 && IsTileTypeFitForTree(Main.tile[i, j].type) && ((Main.remixWorld && (double)j > Main.worldSurface) || Main.tile[i, j - 1].wall == 0 || DefaultTreeWallTest(Main.tile[i, j - 1].wall)) && ((Main.tile[i - 1, j].active() && IsTileTypeFitForTree(Main.tile[i - 1, j].type)) || (Main.tile[i + 1, j].active() && IsTileTypeFitForTree(Main.tile[i + 1, j].type))))
+		{
+			TileColorCache cache = Main.tile[i, j].BlockColorAndCoating();
+			if (Main.tenthAnniversaryWorld && !gen)
+			{
+				cache.Color = (byte)genRand.Next(1, 13);
+			}
+			int num = 2;
+			int num2 = genRand.Next(5, 17);
+
+--- Terraria.WorldGen.cs:23350
+				int num6 = genRand.Next(3);
+				bool flag5 = false;
+				bool flag6 = false;
+>>> 				if (Main.tile[i - 1, j].nactive() && !Main.tile[i - 1, j].halfBrick() && Main.tile[i - 1, j].slope() == 0 && IsTileTypeFitForTree(Main.tile[i - 1, j].type))
+				{
+					flag5 = true;
+				}
+				if (Main.tile[i + 1, j].nactive() && !Main.tile[i + 1, j].halfBrick() && Main.tile[i + 1, j].slope() == 0 && IsTileTypeFitForTree(Main.tile[i + 1, j].type))
+				{
+					flag6 = true;
+				}
+				if (!flag5)
+
+--- Terraria.WorldGen.cs:23354
+				{
+					flag5 = true;
+				}
+>>> 				if (Main.tile[i + 1, j].nactive() && !Main.tile[i + 1, j].halfBrick() && Main.tile[i + 1, j].slope() == 0 && IsTileTypeFitForTree(Main.tile[i + 1, j].type))
+				{
+					flag6 = true;
+				}
+				if (!flag5)
+				{
+					if (num6 == 0)
+					{
+						num6 = 2;
+
+--- Terraria.WorldGen.cs:23606
+		return false;
+	}
+
+>>> 	public static bool AshTreeGroundTest(int tileType)
+	{
+		if (tileType < 0)
+		{
+			return false;
+		}
+		if (tileType == 633)
+		{
+			return true;
+
+--- Terraria.WorldGen.cs:23958
+		}
+		bool flag4 = false;
+		bool flag5 = false;
+>>> 		if (Main.tile[checkedX - 1, i].nactive() && !Main.tile[checkedX - 1, i].halfBrick() && Main.tile[checkedX - 1, i].slope() == 0 && IsTileTypeFitForTree(Main.tile[checkedX - 1, i].type))
+		{
+			flag4 = true;
+		}
+		if (Main.tile[checkedX + 1, i].nactive() && !Main.tile[checkedX + 1, i].halfBrick() && Main.tile[checkedX + 1, i].slope() == 0 && IsTileTypeFitForTree(Main.tile[checkedX + 1, i].type))
+		{
+			flag5 = true;
+		}
+		if (genRand.Next(3) == 0)
+
+--- Terraria.WorldGen.cs:23962
+		{
+			flag4 = true;
+		}
+>>> 		if (Main.tile[checkedX + 1, i].nactive() && !Main.tile[checkedX + 1, i].halfBrick() && Main.tile[checkedX + 1, i].slope() == 0 && IsTileTypeFitForTree(Main.tile[checkedX + 1, i].type))
+		{
+			flag5 = true;
+		}
+		if (genRand.Next(3) == 0)
+		{
+			flag4 = false;
+		}
+		if (genRand.Next(3) == 0)
+
+--- Terraria.WorldGen.cs:57658
+		return TileID.Sets.Platforms[type];
+	}
+
+>>> 	public static bool GetAshTreeFoliageData(int i, int j, int xoffset, ref int treeFrame, ref int treeStyle, out int floorY, out int topTextureFrameWidth, out int topTextureFrameHeight)
+	{
+		_ = Main.tile[i, j];
+		int x = i + xoffset;
+		topTextureFrameWidth = 116;
+		topTextureFrameHeight = 96;
+		floorY = j;
+		for (int k = 0; k < 100; k++)
+		{
+
+--- Terraria.WorldGen.cs:77415
+																			case 634:
+																				CheckTreeWithSettings(i, j, new CheckTreeSettings
+																				{
+>>> 																					IsGroundValid = AshTreeGroundTest
+																				});
+																				break;
+																			case 323:
+																				CheckPalmTree(i, j);
+																				break;
+																			case 567:
+																				CheckGnome(i, j);
+																				break;
+
+##### 6. KillTile_DropItems / drops for tile 323 and 634 (so we know if the box type matters)
+# 2 hit(s) shown for 'dropItem = 2504' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:59692
+			break;
+		case 131:
+			dropItem = 512;
+			break;
+		case 321:
+			dropItem = 2503;
+			break;
+		case 322:
+>>> 			dropItem = 2504;
+			break;
+		case 635:
+			dropItem = 5215;
+			break;
+		case 54:
+			dropItem = 170;
+			break;
+		case 326:
+			dropItem = 2693;
+			break;
+		case 327:
+			dropItem = 2694;
+			break;
+		case 458:
+
+--- Terraria.WorldGen.cs:60017
+			if (bonusWood)
+			{
+				dropItemStack++;
+			}
+			break;
+		}
+		case 323:
+		{
+>>> 			dropItem = 2504;
+			if (Main.tenthAnniversaryWorld)
+			{
+				dropItemStack += genRand.Next(2, 5);
+			}
+			if (tileCache.frameX <= 132 && tileCache.frameX >= 88)
+			{
+				secondaryItem = 27;
+			}
+			int j;
+			for (j = y; !Main.tile[x, j].active() || !Main.tileSolid[Main.tile[x, j].type]; j++)
+			{
+			}
+			if (Main.tile[x, j].active())
+			{
+

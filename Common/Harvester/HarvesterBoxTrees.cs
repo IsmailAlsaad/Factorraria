@@ -55,6 +55,12 @@ namespace Factorraria.Common.Harvester
             return tile.HasTile && HarvesterBoxRegistry.BoxTreeSoil.ContainsKey(tile.TileType);
         }
 
+        // The tile types a tree on a box is made of: forest, corruption, crimson, jungle, snow and hallowed trees are all tile 5, a palm is tile 323.
+        public static bool IsTreeTileType(int type)
+        {
+            return type == TileID.Trees || type == TileID.PalmTree || type == 634;   // 634 = the ash tree
+        }
+
         // Starts a disguise (Active stays false when (x, y) is not a tree box, so End does nothing).
         public static Disguise Begin(int x, int y)
         {
@@ -215,7 +221,7 @@ namespace Factorraria.Common.Harvester
                     return true;
                 }
 
-                if (tile.TileType != TileID.Trees)
+                if (!IsTreeTileType(tile.TileType))
                     return false;
             }
 
@@ -235,7 +241,7 @@ namespace Factorraria.Common.Harvester
                     continue;
 
                 Tile tile = Main.tile[c, j];
-                if (!tile.HasTile || tile.TileType != TileID.Trees)
+                if (!tile.HasTile || !IsTreeTileType(tile.TileType))
                     continue;
 
                 if (TryFindSoilBelow(c, j, 100, out boxY))
@@ -345,9 +351,12 @@ namespace Factorraria.Common.Harvester
             bool fakeOldActuated = false;
             bool grew = false;
 
+            // A palm (sand soil) is a single column: GrowPalmTree reads only the soil under the sapling, so no side soil or fake side cell is needed.
+            bool needsSide = soilType != TileID.Sand;
+
             try
             {
-                if (!SideFits(x - 1, soilY) && !SideFits(x + 1, soilY))
+                if (needsSide && !SideFits(x - 1, soilY, soilType) && !SideFits(x + 1, soilY, soilType))
                 {
                     if (WorldGen.InWorld(x - 1, soilY, 1) && !Main.tile[x - 1, soilY].HasTile)
                         fakeX = x - 1;
@@ -365,9 +374,9 @@ namespace Factorraria.Common.Harvester
                     fake.HasTile = true;
                 }
 
-                HarvesterBoxTreeHooks.DbgHeader = $"sapling ({x},{bottomY}) soil={soilType} boxTile={Main.tile[x, soilY].TileType} disguised[mid={middle.Active} L={left.Active} R={right.Active} LL={farLeft.Active} RR={farRight.Active}] fakeX={(fakeX == int.MinValue ? "none" : fakeX.ToString())} sideFits[L={SideFits(x - 1, soilY)} R={SideFits(x + 1, soilY)}]";
+                HarvesterBoxTreeHooks.DbgHeader = $"sapling ({x},{bottomY}) soil={soilType} boxTile={Main.tile[x, soilY].TileType} disguised[mid={middle.Active} L={left.Active} R={right.Active} LL={farLeft.Active} RR={farRight.Active}] fakeX={(fakeX == int.MinValue ? "none" : fakeX.ToString())} sideFits[L={SideFits(x - 1, soilY, soilType)} R={SideFits(x + 1, soilY, soilType)}]";
 
-                if (fakeX != int.MinValue || SideFits(x - 1, soilY) || SideFits(x + 1, soilY))
+                if (!needsSide || fakeX != int.MinValue || SideFits(x - 1, soilY, soilType) || SideFits(x + 1, soilY, soilType))
                     grew = GrowOwn(x, bottomY);
             }
             finally
@@ -391,13 +400,15 @@ namespace Factorraria.Common.Harvester
             return grew;
         }
 
-        static bool SideFits(int x, int y)
+        // GrowTree wants a soil tile beside the one under the sapling that passes IsTileTypeFitForTree; the ash profile (GrowTreeWithSettings) wants one that
+        // passes AshTreeGroundTest (ash grass 633 only).
+        static bool SideFits(int x, int y, int soilType)
         {
             if (!WorldGen.InWorld(x, y, 1))
                 return false;
 
             Tile tile = Main.tile[x, y];
-            return tile.HasTile && WorldGen.IsTileTypeFitForTree(tile.TileType);
+            return tile.HasTile && (soilType == 633 ? WorldGen.AshTreeGroundTest(tile.TileType) : WorldGen.IsTileTypeFitForTree(tile.TileType));
         }
 
         // ---------------------------------------------------------------- the tree
@@ -413,10 +424,11 @@ namespace Factorraria.Common.Harvester
             {
                 Tile tile = Main.tile[x, bottomY - k];
                 // No top frame: a tall trunk column with air above it is still a (topless) tree and gets felled. A lone root piece of a neighbouring tree is one tile.
-                if (!tile.HasTile || tile.TileType != TileID.Trees)
+                if (!tile.HasTile || !IsTreeTileType(tile.TileType))
                     return k >= 4;
 
-                if (tile.TileFrameX == 22 && tile.TileFrameY >= 198)
+                // A palm's top is the crown tile (frameX 88 to 132, GrowPalmTree) or the cut top CheckPalmTree gives a trunk tile with nothing above it (154 to 198).
+                if (tile.TileType == TileID.PalmTree ? (tile.TileFrameX >= 88 && tile.TileFrameX <= 198) : (tile.TileFrameX == 22 && tile.TileFrameY >= 198))
                     return true;
             }
 
@@ -439,6 +451,10 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.KillTile += KillTileTreeHook;
             On_WorldGen.CheckTree += CheckTreeBoxHook;   // added after the debug CheckTree hook on purpose, so it wraps it
             On_WorldGen.KillTile_GetTreeDrops += KillTileGetTreeDropsHook;
+            On_WorldGen.CheckPalmTree += CheckPalmTreeBoxHook;
+            On_TileDrawing.GetPalmTreeVariant += GetPalmTreeVariantHook;
+            On_WorldGen.CheckTreeWithSettings += CheckTreeWithSettingsBoxHook;
+            On_WorldGen.GetAshTreeFoliageData += GetAshTreeFoliageDataHook;
         }
 
         public override void Unload()
@@ -453,6 +469,10 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.KillTile -= KillTileTreeHook;
             On_WorldGen.CheckTree -= CheckTreeBoxHook;
             On_WorldGen.KillTile_GetTreeDrops -= KillTileGetTreeDropsHook;
+            On_WorldGen.CheckPalmTree -= CheckPalmTreeBoxHook;
+            On_TileDrawing.GetPalmTreeVariant -= GetPalmTreeVariantHook;
+            On_WorldGen.CheckTreeWithSettings -= CheckTreeWithSettingsBoxHook;
+            On_WorldGen.GetAshTreeFoliageData -= GetAshTreeFoliageDataHook;
         }
 
         // The piece-level fix for the IndexOutOfRange. Every tree piece that is killed asks KillTile_GetTreeDrops what it drops, and for tops and branches
@@ -562,6 +582,92 @@ namespace Factorraria.Common.Harvester
             orig(i, j);
         }
 
+        // Palm trees (Waterleaf box). TileFrame calls CheckPalmTree for every palm tile; it reads the raw type of the tile under it (sand 53, 112, 116, 234 count as
+        // soil) and kills the base when that is anything else, which the cascade then carries up the whole palm. Same fix as CheckTreeBoxHook: the box under the
+        // checked tile stands in for its soil (sand) for the length of the call. Reads and swaps tile data only, so it is the same on every side.
+        static void CheckPalmTreeBoxHook(On_WorldGen.orig_CheckPalmTree orig, int i, int j)
+        {
+            if (HarvesterBoxRegistry.BoxTreeSoil.Count > 0 && HarvesterBoxTrees.IsTreeBox(i, j + 1))
+            {
+                HarvesterBoxTrees.Disguise d = HarvesterBoxTrees.Begin(i, j + 1);
+                try
+                {
+                    orig(i, j);
+                }
+                finally
+                {
+                    HarvesterBoxTrees.End(d, false);
+                }
+
+                return;
+            }
+
+            orig(i, j);
+        }
+
+        // Ash trees (Fireblossom box). TileFrame calls CheckTreeWithSettings for every ash tile (probe 8); it reads the raw type of the tile under it through
+        // AshTreeGroundTest (ash grass 633 only) and kills the piece when that is not valid, which then cascades. Same fix as CheckTreeBoxHook: the box under the
+        // checked tile stands in for its soil for the length of the call. Reads and swaps tile data only, so it is the same on every side.
+        static void CheckTreeWithSettingsBoxHook(On_WorldGen.orig_CheckTreeWithSettings orig, int x, int y, WorldGen.CheckTreeSettings settings)
+        {
+            if (HarvesterBoxRegistry.BoxTreeSoil.Count > 0 && HarvesterBoxTrees.IsTreeBox(x, y + 1))
+            {
+                HarvesterBoxTrees.Disguise d = HarvesterBoxTrees.Begin(x, y + 1);
+                try
+                {
+                    orig(x, y, settings);
+                }
+                finally
+                {
+                    HarvesterBoxTrees.End(d, false);
+                }
+
+                return;
+            }
+
+            orig(x, y, settings);
+        }
+
+        // The ash tree's top and branches walk down the trunk's column for the first ash grass tile (GetAshTreeFoliageData) and return false (nothing is drawn)
+        // when they find none, so the box under the trunk stands in for its soil, like GetCommonTreeFoliageDataHook does for the other trees.
+        static bool GetAshTreeFoliageDataHook(On_WorldGen.orig_GetAshTreeFoliageData orig, int i, int j, int xoffset, ref int treeFrame, ref int treeStyle, out int floorY, out int topTextureFrameWidth, out int topTextureFrameHeight)
+        {
+            if (HarvesterBoxRegistry.BoxTreeSoil.Count > 0 && HarvesterBoxTrees.TryFindSoilBelow(i + xoffset, j, 100, out int soilY))
+            {
+                HarvesterBoxTrees.Disguise d = HarvesterBoxTrees.Begin(i + xoffset, soilY);
+                try
+                {
+                    return orig(i, j, xoffset, ref treeFrame, ref treeStyle, out floorY, out topTextureFrameWidth, out topTextureFrameHeight);
+                }
+                finally
+                {
+                    HarvesterBoxTrees.End(d, false);
+                }
+            }
+
+            return orig(i, j, xoffset, ref treeFrame, ref treeStyle, out floorY, out topTextureFrameWidth, out topTextureFrameHeight);
+        }
+
+        // Client drawing: the palm's look (which sheet column, oasis or not) comes from the type of the tile under its trunk (GetPalmTreeVariant: sand, hardened
+        // sand ...; any other tile gives -1). So the box stands in for its soil while vanilla reads it.
+        static int GetPalmTreeVariantHook(On_TileDrawing.orig_GetPalmTreeVariant orig, TileDrawing self, int x, int y)
+        {
+            if (HarvesterBoxRegistry.BoxTreeSoil.Count > 0 && HarvesterBoxTrees.IsTreeBox(x, y))
+            {
+                HarvesterBoxTrees.Disguise d = HarvesterBoxTrees.Begin(x, y);
+                try
+                {
+                    return orig(self, x, y);
+                }
+                finally
+                {
+                    HarvesterBoxTrees.End(d, false);
+                }
+            }
+
+            return orig(self, x, y);
+        }
+
         // A tree tile broken by anything but our own code (a player's axe or pickaxe, an explosion): vanilla's drop code reads the soil under the tree, and the
         // raw box tile gives plain wood, and a branch beside a box walks out of the world (IndexOutOfRange in KillTile_GetTreeDrops). So the break runs with the
         // box and its side columns disguised, exactly like our own felling, and the cascade of the falling tree runs inside the same disguise. Only the final
@@ -570,7 +676,7 @@ namespace Factorraria.Common.Harvester
         static void KillTileTreeHook(On_WorldGen.orig_KillTile orig, int i, int j, bool fail, bool effectOnly, bool noItem)
         {
             if (!fail && !effectOnly && HarvesterBoxTrees.SideDepth == 0 && !HarvesterBoxTrees.OwnGrowth && HarvesterBoxRegistry.BoxTreeSoil.Count > 0
-                && WorldGen.InWorld(i, j, 4) && Main.tile[i, j].HasTile && Main.tile[i, j].TileType == TileID.Trees
+                && WorldGen.InWorld(i, j, 4) && Main.tile[i, j].HasTile && HarvesterBoxTrees.IsTreeTileType(Main.tile[i, j].TileType)
                 && HarvesterBoxTrees.TryFindBoxForTreeTile(i, j, out int boxX, out int boxY))
             {
                 HarvesterBoxTrees.RunAsTreeSoilWithSides(boxX, boxY, () => orig(i, j, fail, effectOnly, noItem));

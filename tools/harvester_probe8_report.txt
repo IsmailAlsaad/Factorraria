@@ -1,0 +1,1492 @@
+Dll: C:\GOG Games\Terraria\tModLoader\tModLoader.dll
+Terraria.WorldGen: 2124 KB
+##### 1. ash: the check that kills ash tree pieces
+--- Terraria.WorldGen.cs:48992
+	public static void CheckTreeWithSettings(int x, int y, CheckTreeSettings settings)
+	{
+		int num = -1;
+		int num2 = -1;
+		int num3 = -1;
+		int num4 = -1;
+		Tile tile = Main.tile[x, y];
+		int type = tile.type;
+		int frameX = tile.frameX;
+		int frameY = tile.frameY;
+		if (Main.tile[x - 1, y] != null && Main.tile[x - 1, y].active())
+		{
+			num2 = Main.tile[x - 1, y].type;
+		}
+		if (Main.tile[x + 1, y] != null && Main.tile[x + 1, y].active())
+		{
+			num3 = Main.tile[x + 1, y].type;
+		}
+		if (Main.tile[x, y - 1] != null && Main.tile[x, y - 1].active())
+		{
+			num = Main.tile[x, y - 1].type;
+		}
+		if (Main.tile[x, y + 1] != null && Main.tile[x, y + 1].active())
+		{
+			num4 = Main.tile[x, y + 1].type;
+		}
+		bool flag = settings.IsGroundValid(num4);
+		bool flag2 = num3 == type;
+		bool flag3 = num2 == type;
+		if (!flag && num4 != type && ((tile.frameX == 0 && tile.frameY <= 130) || (tile.frameX == 22 && tile.frameY <= 130) || (tile.frameX == 44 && tile.frameY <= 130)))
+		{
+			KillTile(x, y);
+		}
+		if (tile.frameX >= 22 && tile.frameX <= 44 && tile.frameY >= 132 && tile.frameY <= 176)
+		{
+			if (!flag)
+			{
+				KillTile(x, y);
+			}
+			else if (!((tile.frameX == 22) & flag3) && !((tile.frameX == 44) & flag2))
+			{
+				KillTile(x, y);
+			}
+		}
+		else if ((tile.frameX == 88 && tile.frameY >= 0 && tile.frameY <= 44) || (tile.frameX == 66 && tile.frameY >= 66 && tile.frameY <= 130) || (tile.frameX == 110 && tile.frameY >= 66 && tile.frameY <= 110) || (tile.frameX == 132 && tile.frameY >= 0 && tile.frameY <= 176))
+		{
+			if (flag3 & flag2)
+			{
+				if (tile.frameNumber() == 0)
+				{
+					tile.frameX = 110;
+					tile.frameY = 66;
+				}
+				if (tile.frameNumber() == 1)
+				{
+					tile.frameX = 110;
+					tile.frameY = 88;
+				}
+				if (tile.frameNumber() == 2)
+				{
+					tile.frameX = 110;
+					tile.frameY = 110;
+				}
+			}
+			else if (flag3)
+			{
+				if (tile.frameNumber() == 0)
+				{
+					tile.frameX = 88;
+					tile.frameY = 0;
+				}
+				if (tile.frameNumber() == 1)
+				{
+					tile.frameX = 88;
+					tile.frameY = 22;
+				}
+				if (tile.frameNumber() == 2)
+				{
+					tile.frameX = 88;
+					tile.frameY = 44;
+				}
+			}
+			else if (flag2)
+			{
+				if (tile.frameNumber() == 0)
+				{
+					tile.frameX = 66;
+					tile.frameY = 66;
+				}
+				if (tile.frameNumber() == 1)
+				{
+					tile.frameX = 66;
+					tile.frameY = 88;
+				}
+				if (tile.frameNumber() == 2)
+				{
+					tile.frameX = 66;
+					tile.frameY = 110;
+				}
+			}
+			else
+			{
+				if (tile.frameNumber() == 0)
+				{
+					tile.frameX = 0;
+					tile.frameY = 0;
+				}
+				if (tile.frameNumber() == 1)
+				{
+					tile.frameX = 0;
+					tile.frameY = 22;
+				}
+				if (tile.frameNumber() == 2)
+				{
+					tile.frameX = 0;
+					tile.frameY = 44;
+				}
+			}
+		}
+		if (tile.frameY >= 132 && tile.frameY <= 176 && (tile.frameX == 0 || tile.frameX == 66 || tile.frameX == 88))
+		{
+			if (!flag)
+			{
+				KillTile(x, y);
+			}
+			if (!flag3 && !flag2)
+			{
+				if (tile.frameNumber() == 0)
+				{
+					tile.frameX = 0;
+					tile.frameY = 0;
+				}
+				if (tile.frameNumber() == 1)
+				{
+					tile.frameX = 0;
+					tile.frameY = 22;
+				}
+				if (tile.frameNumber() == 2)
+				{
+					tile.frameX = 0;
+					tile.frameY = 44;
+				}
+			}
+			else if (!flag3)
+			{
+				if (tile.frameNumber() == 0)
+				{
+					tile.frameX = 0;
+					tile.frameY = 132;
+				}
+				if (tile.frameNumber() == 1)
+				{
+					tile.frameX = 0;
+					tile.frameY = 154;
+				}
+				if (tile.frameNumber() == 2)
+				{
+					tile.frameX = 0;
+					tile.frameY = 176;
+				}
+			}
+			else if (!flag2)
+			{
+				if (tile.frameNumber() == 0)
+				{
+					tile.frameX = 66;
+					tile.frameY = 132;
+				}
+				if (tile.frameNumber() == 1)
+				{
+					tile.frameX = 66;
+					tile.frameY = 154;
+				}
+				if (tile.frameNumber() == 2)
+				{
+					tile.frameX = 66;
+					tile.frameY = 176;
+				}
+			}
+			else
+			{
+				if (tile.frameNumber() == 0)
+				{
+					tile.frameX = 88;
+					tile.frameY = 132;
+				}
+				if (tile.frameNumber() == 1)
+				{
+					tile.frameX = 88;
+					tile.frameY = 154;
+				}
+				if (tile.frameNumber() == 2)
+				{
+					tile.frameX = 88;
+					tile.frameY = 176;
+				}
+			}
+		}
+		if ((tile.frameX == 66 && (tile.frameY == 0 || tile.frameY == 22 || tile.frameY == 44)) || (tile.frameX == 44 && (tile.frameY == 198 || tile.frameY == 220 || tile.frameY == 242)))
+		{
+			if (!flag2)
+			{
+				KillTile(x, y);
+			}
+		}
+		else if ((tile.frameX == 88 && (tile.frameY == 66 || tile.frameY == 88 || tile.frameY == 110)) || (tile.frameX == 66 && (tile.frameY == 198 || tile.frameY == 220 || tile.frameY == 242)))
+		{
+			if (!flag3)
+			{
+				KillTile(x, y);
+			}
+		}
+		else if (num4 == -1)
+		{
+			KillTile(x, y);
+		}
+		else if (num != type && tile.frameY < 198 && ((tile.frameX != 22 && tile.frameX != 44) || tile.frameY < 132))
+		{
+			if (flag3 | flag2)
+			{
+				if (num4 == type)
+				{
+					if (flag3 & flag2)
+					{
+						if (tile.frameNumber() == 0)
+						{
+							tile.frameX = 132;
+							tile.frameY = 132;
+						}
+						if (tile.frameNumber() == 1)
+						{
+							tile.frameX = 132;
+							tile.frameY = 154;
+						}
+						if (tile.frameNumber() == 2)
+						{
+							tile.frameX = 132;
+							tile.frameY = 176;
+						}
+					}
+					else if (flag3)
+					{
+						if (tile.frameNumber() == 0)
+						{
+							tile.frameX = 132;
+							tile.frameY = 0;
+						}
+						if (tile.frameNumber() == 1)
+						{
+							tile.frameX = 132;
+							tile.frameY = 22;
+						}
+						if (tile.frameNumber() == 2)
+						{
+							tile.frameX = 132;
+							tile.frameY = 44;
+						}
+					}
+					else if (flag2)
+					{
+						if (tile.frameNumber() == 0)
+						{
+							tile.frameX = 132;
+							tile.frameY = 66;
+						}
+						if (tile.frameNumber() == 1)
+						{
+							tile.frameX = 132;
+							tile.frameY = 88;
+						}
+						if (tile.frameNumber() == 2)
+						{
+							tile.frameX = 132;
+							tile.frameY = 110;
+						}
+					}
+				}
+				else if (flag3 & flag2)
+				{
+					if (tile.frameNumber() == 0)
+					{
+						tile.frameX = 154;
+						tile.frameY = 132;
+					}
+					if (tile.frameNumber() == 1)
+					{
+						tile.frameX = 154;
+						tile.frameY = 154;
+					}
+					if (tile.frameNumber() == 2)
+					{
+						tile.frameX = 154;
+						tile.frameY = 176;
+					}
+				}
+				else if (flag3)
+				{
+					if (tile.frameNumber() == 0)
+					{
+						tile.frameX = 154;
+						tile.frameY = 0;
+					}
+					if (tile.frameNumber() == 1)
+					{
+						tile.frameX = 154;
+						tile.frameY = 22;
+					}
+					if (tile.frameNumber() == 2)
+					{
+						tile.frameX = 154;
+						tile.frameY = 44;
+					}
+				}
+				else if (flag2)
+				{
+					if (tile.frameNumber() == 0)
+					{
+						tile.frameX = 154;
+						tile.frameY = 66;
+					}
+					if (tile.frameNumber() == 1)
+					{
+						tile.frameX = 154;
+						tile.frameY = 88;
+					}
+					if (tile.frameNumber() == 2)
+					{
+						tile.frameX = 154;
+						tile.frameY = 110;
+					}
+				}
+			}
+			else
+			{
+				if (tile.frameNumber() == 0)
+				{
+					tile.frameX = 110;
+					tile.frameY = 0;
+				}
+				if (tile.frameNumber() == 1)
+				{
+					tile.frameX = 110;
+					tile.frameY = 22;
+				}
+				if (tile.frameNumber() == 2)
+				{
+					tile.frameX = 110;
+					tile.frameY = 44;
+				}
+			}
+		}
+		if (tile.frameX != frameX && tile.frameY != frameY && frameX >= 0 && frameY >= 0)
+		{
+			TileFrame(x - 1, y);
+			TileFrame(x + 1, y);
+			TileFrame(x, y - 1);
+			TileFrame(x, y + 1);
+		}
+	}
+
+##### 'CheckTreeWithSettings\(' in Terraria.WorldGen.cs: 5 line(s) in 2 method(s)
+  1 hit(s) at line(s) 48992  in  public static void CheckTreeWithSettings(int x, int y, CheckTreeSettings settings)
+  4 hit(s) at line(s) 77395, 77401, 77407, 77413  in  public static void TileFrame(int i, int j, bool resetFrame = false, bool noBreak = false)
+
+--- Terraria.WorldGen.cs:23606
+	public static bool AshTreeGroundTest(int tileType)
+	{
+		if (tileType < 0)
+		{
+			return false;
+		}
+		if (tileType == 633)
+		{
+			return true;
+		}
+		return false;
+	}
+
+--- Terraria.WorldGen.cs:23536
+	public static bool DefaultTreeWallTest(int wallType)
+	{
+		if (wallType >= 0 && WallID.Sets.AllowsPlantsToGrow[wallType])
+		{
+			return true;
+		}
+		return false;
+	}
+
+##### 2. ash: look (foliage data) and what it reads under the trunk
+--- Terraria.WorldGen.cs:57658
+	public static bool GetAshTreeFoliageData(int i, int j, int xoffset, ref int treeFrame, ref int treeStyle, out int floorY, out int topTextureFrameWidth, out int topTextureFrameHeight)
+	{
+		_ = Main.tile[i, j];
+		int x = i + xoffset;
+		topTextureFrameWidth = 116;
+		topTextureFrameHeight = 96;
+		floorY = j;
+		for (int k = 0; k < 100; k++)
+		{
+			floorY = j + k;
+			Tile tile = Main.tile[x, floorY];
+			if (tile == null)
+			{
+				return false;
+			}
+			if (tile.type == 633)
+			{
+				treeStyle = 31;
+				return true;
+			}
+		}
+		return false;
+	}
+
+##### 3. KillTile: the 633 / 634 lines
+# 40 hit(s) shown for '\b633\b|\b634\b' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:984
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 615
+			};
+
+			public static GrowTreeSettings Tree_Ash = new GrowTreeSettings
+			{
+				GroundTest = AshTreeGroundTest,
+				WallTest = DefaultTreeWallTest,
+				TreeHeightMax = 12,
+				TreeHeightMin = 7,
+>>> 				TreeTileType = 634,
+				TreeTopPaddingNeeded = 4,
+				SaplingTileType = 20
+			};
+
+			public static bool TryGetFromItemId(int itemType, out GrowTreeSettings profile)
+			{
+				switch (itemType)
+				{
+				default:
+					profile = default;
+
+--- Terraria.WorldGen.cs:1060
+					return true;
+				case 583:
+					profile = GemTree_Topaz;
+					return true;
+				case 616:
+					profile = VanityTree_Willow;
+					return true;
+				case 596:
+					profile = VanityTree_Sakura;
+					return true;
+>>> 				case 634:
+					profile = Tree_Ash;
+					return true;
+				}
+			}
+		}
+
+		public ushort TreeTileType;
+
+		public int TreeHeightMin;
+
+
+--- Terraria.WorldGen.cs:2523
+	public static void CheckAchievement_RealEstateAndTownSlimes()
+	{
+		bool[] array = new bool[NPCID.Count];
+		for (int i = 0; i < 200; i++)
+		{
+			if (Main.npc[i].active && Main.npc[i].type >= 0 && Main.npc[i].type < NPCID.Count)
+			{
+				array[Main.npc[i].type] = true;
+			}
+		}
+>>> 		if (array[38] && array[17] && array[107] && array[19] && array[22] && array[124] && array[228] && array[178] && array[18] && array[229] && array[209] && array[54] && array[108] && array[160] && array[20] && array[369] && array[207] && array[227] && array[208] && array[441] && array[353] && array[550] && array[588] && array[633] && array[663])
+		{
+			AchievementsHelper.NotifyProgressionEvent(17);
+		}
+		if (array[670] && array[678] && array[679] && array[680] && array[681] && array[682] && array[683] && array[684])
+		{
+			AchievementsHelper.NotifyProgressionEvent(26);
+		}
+	}
+
+	public static bool RoomNeeds(int npcType)
+
+--- Terraria.WorldGen.cs:10380
+					}
+				}
+				Liquid.QuickWater(-2);
+				for (int num19 = num11; num19 < num12 + 15; num19++)
+				{
+					for (int num20 = Main.maxTilesY - 300; num20 < num15 + 20; num20++)
+					{
+						Main.tile[num19, num20].liquid = 0;
+						if (Main.tile[num19, num20].type == 57 && Main.tile[num19, num20].active() && (!Main.tile[num19 - 1, num20 - 1].active() || !Main.tile[num19, num20 - 1].active() || !Main.tile[num19 + 1, num20 - 1].active() || !Main.tile[num19 - 1, num20].active() || !Main.tile[num19 + 1, num20].active() || !Main.tile[num19 - 1, num20 + 1].active() || !Main.tile[num19, num20 + 1].active() || !Main.tile[num19 + 1, num20 + 1].active()))
+						{
+>>> 							Main.tile[num19, num20].type = 633;
+						}
+					}
+				}
+				for (int num21 = num11; num21 < num12 + 15; num21++)
+				{
+					for (int num22 = Main.maxTilesY - 200; num22 < num15 + 20; num22++)
+					{
+						if (Main.tile[num21, num22].type == 633 && Main.tile[num21, num22].active() && !Main.tile[num21, num22 - 1].active() && genRand.Next(3) == 0)
+						{
+							TryGrowingTreeByType(634, num21, num22);
+
+--- Terraria.WorldGen.cs:10388
+						if (Main.tile[num19, num20].type == 57 && Main.tile[num19, num20].active() && (!Main.tile[num19 - 1, num20 - 1].active() || !Main.tile[num19, num20 - 1].active() || !Main.tile[num19 + 1, num20 - 1].active() || !Main.tile[num19 - 1, num20].active() || !Main.tile[num19 + 1, num20].active() || !Main.tile[num19 - 1, num20 + 1].active() || !Main.tile[num19, num20 + 1].active() || !Main.tile[num19 + 1, num20 + 1].active()))
+						{
+							Main.tile[num19, num20].type = 633;
+						}
+					}
+				}
+				for (int num21 = num11; num21 < num12 + 15; num21++)
+				{
+					for (int num22 = Main.maxTilesY - 200; num22 < num15 + 20; num22++)
+					{
+>>> 						if (Main.tile[num21, num22].type == 633 && Main.tile[num21, num22].active() && !Main.tile[num21, num22 - 1].active() && genRand.Next(3) == 0)
+						{
+							TryGrowingTreeByType(634, num21, num22);
+						}
+					}
+				}
+			}
+			else if (!drunkWorldGen)
+			{
+				for (int num23 = 25; num23 < Main.maxTilesX - 25; num23++)
+				{
+
+--- Terraria.WorldGen.cs:10390
+							Main.tile[num19, num20].type = 633;
+						}
+					}
+				}
+				for (int num21 = num11; num21 < num12 + 15; num21++)
+				{
+					for (int num22 = Main.maxTilesY - 200; num22 < num15 + 20; num22++)
+					{
+						if (Main.tile[num21, num22].type == 633 && Main.tile[num21, num22].active() && !Main.tile[num21, num22 - 1].active() && genRand.Next(3) == 0)
+						{
+>>> 							TryGrowingTreeByType(634, num21, num22);
+						}
+					}
+				}
+			}
+			else if (!drunkWorldGen)
+			{
+				for (int num23 = 25; num23 < Main.maxTilesX - 25; num23++)
+				{
+					if ((double)num23 < (double)Main.maxTilesX * 0.17 || (double)num23 > (double)Main.maxTilesX * 0.83)
+					{
+
+--- Terraria.WorldGen.cs:10405
+			else if (!drunkWorldGen)
+			{
+				for (int num23 = 25; num23 < Main.maxTilesX - 25; num23++)
+				{
+					if ((double)num23 < (double)Main.maxTilesX * 0.17 || (double)num23 > (double)Main.maxTilesX * 0.83)
+					{
+						for (int num24 = Main.maxTilesY - 300; num24 < Main.maxTilesY - 100 + genRand.Next(-1, 2); num24++)
+						{
+							if (Main.tile[num23, num24].type == 57 && Main.tile[num23, num24].active() && (!Main.tile[num23 - 1, num24 - 1].active() || !Main.tile[num23, num24 - 1].active() || !Main.tile[num23 + 1, num24 - 1].active() || !Main.tile[num23 - 1, num24].active() || !Main.tile[num23 + 1, num24].active() || !Main.tile[num23 - 1, num24 + 1].active() || !Main.tile[num23, num24 + 1].active() || !Main.tile[num23 + 1, num24 + 1].active()))
+							{
+>>> 								Main.tile[num23, num24].type = 633;
+							}
+						}
+					}
+				}
+				for (int num25 = 25; num25 < Main.maxTilesX - 25; num25++)
+				{
+					if ((double)num25 < (double)Main.maxTilesX * 0.17 || (double)num25 > (double)Main.maxTilesX * 0.83)
+					{
+						for (int num26 = Main.maxTilesY - 200; num26 < Main.maxTilesY - 50; num26++)
+						{
+
+--- Terraria.WorldGen.cs:10416
+							}
+						}
+					}
+				}
+				for (int num25 = 25; num25 < Main.maxTilesX - 25; num25++)
+				{
+					if ((double)num25 < (double)Main.maxTilesX * 0.17 || (double)num25 > (double)Main.maxTilesX * 0.83)
+					{
+						for (int num26 = Main.maxTilesY - 200; num26 < Main.maxTilesY - 50; num26++)
+						{
+>>> 							if (Main.tile[num25, num26].type == 633 && Main.tile[num25, num26].active() && !Main.tile[num25, num26 - 1].active() && genRand.Next(3) == 0)
+							{
+								TryGrowingTreeByType(634, num25, num26);
+							}
+						}
+					}
+				}
+			}
+			AddHellHouses();
+			if (drunkWorldGen)
+			{
+
+--- Terraria.WorldGen.cs:10418
+					}
+				}
+				for (int num25 = 25; num25 < Main.maxTilesX - 25; num25++)
+				{
+					if ((double)num25 < (double)Main.maxTilesX * 0.17 || (double)num25 > (double)Main.maxTilesX * 0.83)
+					{
+						for (int num26 = Main.maxTilesY - 200; num26 < Main.maxTilesY - 50; num26++)
+						{
+							if (Main.tile[num25, num26].type == 633 && Main.tile[num25, num26].active() && !Main.tile[num25, num26 - 1].active() && genRand.Next(3) == 0)
+							{
+>>> 								TryGrowingTreeByType(634, num25, num26);
+							}
+						}
+					}
+				}
+			}
+			AddHellHouses();
+			if (drunkWorldGen)
+			{
+				for (int num27 = 25; num27 < Main.maxTilesX - 25; num27++)
+				{
+
+--- Terraria.WorldGen.cs:10433
+			}
+			AddHellHouses();
+			if (drunkWorldGen)
+			{
+				for (int num27 = 25; num27 < Main.maxTilesX - 25; num27++)
+				{
+					for (int num28 = Main.maxTilesY - 300; num28 < Main.maxTilesY - 100 + genRand.Next(-1, 2); num28++)
+					{
+						if (Main.tile[num27, num28].type == 57 && Main.tile[num27, num28].active() && (!Main.tile[num27 - 1, num28 - 1].active() || !Main.tile[num27, num28 - 1].active() || !Main.tile[num27 + 1, num28 - 1].active() || !Main.tile[num27 - 1, num28].active() || !Main.tile[num27 + 1, num28].active() || !Main.tile[num27 - 1, num28 + 1].active() || !Main.tile[num27, num28 + 1].active() || !Main.tile[num27 + 1, num28 + 1].active()))
+						{
+>>> 							Main.tile[num27, num28].type = 633;
+						}
+					}
+				}
+				for (int num29 = 25; num29 < Main.maxTilesX - 25; num29++)
+				{
+					for (int num30 = Main.maxTilesY - 200; num30 < Main.maxTilesY - 50; num30++)
+					{
+						if (Main.tile[num29, num30].type == 633 && Main.tile[num29, num30].active() && !Main.tile[num29, num30 - 1].active() && genRand.Next(3) == 0)
+						{
+							TryGrowingTreeByType(634, num29, num30);
+
+--- Terraria.WorldGen.cs:10441
+						if (Main.tile[num27, num28].type == 57 && Main.tile[num27, num28].active() && (!Main.tile[num27 - 1, num28 - 1].active() || !Main.tile[num27, num28 - 1].active() || !Main.tile[num27 + 1, num28 - 1].active() || !Main.tile[num27 - 1, num28].active() || !Main.tile[num27 + 1, num28].active() || !Main.tile[num27 - 1, num28 + 1].active() || !Main.tile[num27, num28 + 1].active() || !Main.tile[num27 + 1, num28 + 1].active()))
+						{
+							Main.tile[num27, num28].type = 633;
+						}
+					}
+				}
+				for (int num29 = 25; num29 < Main.maxTilesX - 25; num29++)
+				{
+					for (int num30 = Main.maxTilesY - 200; num30 < Main.maxTilesY - 50; num30++)
+					{
+>>> 						if (Main.tile[num29, num30].type == 633 && Main.tile[num29, num30].active() && !Main.tile[num29, num30 - 1].active() && genRand.Next(3) == 0)
+						{
+							TryGrowingTreeByType(634, num29, num30);
+						}
+					}
+				}
+			}
+		});
+		AddGenerationPass("Corruption", (GenerationProgress progress, GameConfiguration passConfig) =>
+		{
+			int num = Main.maxTilesX;
+
+--- Terraria.WorldGen.cs:10443
+							Main.tile[num27, num28].type = 633;
+						}
+					}
+				}
+				for (int num29 = 25; num29 < Main.maxTilesX - 25; num29++)
+				{
+					for (int num30 = Main.maxTilesY - 200; num30 < Main.maxTilesY - 50; num30++)
+					{
+						if (Main.tile[num29, num30].type == 633 && Main.tile[num29, num30].active() && !Main.tile[num29, num30 - 1].active() && genRand.Next(3) == 0)
+						{
+>>> 							TryGrowingTreeByType(634, num29, num30);
+						}
+					}
+				}
+			}
+		});
+		AddGenerationPass("Corruption", (GenerationProgress progress, GameConfiguration passConfig) =>
+		{
+			int num = Main.maxTilesX;
+			int num2 = 0;
+			int num3 = Main.maxTilesX;
+
+--- Terraria.WorldGen.cs:15609
+							PlaceTile(l, m - 1, 24, mute: true);
+						}
+					}
+					else if (Main.tile[l, m].type == 199 && Main.tile[l, m].nactive())
+					{
+						if (!Main.tile[l, m - 1].active())
+						{
+							PlaceTile(l, m - 1, 201, mute: true);
+						}
+					}
+>>> 					else if (Main.tile[l, m].type == 633 && Main.tile[l, m].nactive() && !Main.tile[l, m - 1].active())
+					{
+						PlaceTile(l, m - 1, 637, mute: true);
+					}
+				}
+			}
+		});
+		AddGenerationPass("Glowing Mushrooms and Jungle Plants", (GenerationProgress progress, GameConfiguration passConfig) =>
+		{
+			progress.Set(1.0);
+			for (int i = 0; i < Main.maxTilesX; i++)
+
+--- Terraria.WorldGen.cs:15907
+					if (num > 0 && !Main.tile[i, num16].active())
+					{
+						Main.tile[i, num16].active(active: true);
+						Main.tile[i, num16].type = 638;
+						num--;
+					}
+					else
+					{
+						num = 0;
+					}
+>>> 					if (Main.tile[i, num16].active() && !Main.tile[i, num16].bottomSlope() && Main.tile[i, num16].type == 633 && GrowMoreVines(i, num16) && genRand.Next(5) < 3)
+					{
+						num = genRand.Next(1, 10);
+					}
+				}
+			}
+		});
+		AddGenerationPass("Flowers", (GenerationProgress progress, GameConfiguration passConfig) =>
+		{
+			progress.Message = Lang.gen[44].Value;
+			int num = (int)((double)Main.maxTilesX * 0.004);
+
+--- Terraria.WorldGen.cs:18648
+										}
+										else
+										{
+											Main.tile[i, j].type = 60;
+										}
+									}
+									else if (Main.tile[i, j].type == 0 || Main.tile[i, j].type == 59)
+									{
+										Main.tile[i, j].type = 59;
+									}
+>>> 									else if (Main.tile[i, j].type != 633)
+									{
+										if (j > GenVars.lavaLine + genRand.Next(-2, 3) + 2)
+										{
+											Main.tile[i, j].type = 230;
+										}
+										else if (!remixWorldGen || (double)j > Main.worldSurface + (double)genRand.Next(-1, 2))
+										{
+											Main.tile[i, j].type = 225;
+										}
+									}
+
+--- Terraria.WorldGen.cs:22690
+			}
+		}
+		switch (topTile.type)
+		{
+		case 596:
+			passStyle = 1248;
+			break;
+		case 616:
+			passStyle = 1257;
+			break;
+>>> 		case 634:
+			passStyle = 1278;
+			break;
+		case 583:
+		case 584:
+		case 585:
+		case 586:
+		case 587:
+		case 588:
+		case 589:
+			passStyle = 1249 + (topTile.type - 583);
+
+--- Terraria.WorldGen.cs:22736
+			break;
+		case 53:
+			passStyle = 911;
+			break;
+		case 116:
+			passStyle = 919;
+			break;
+		case 147:
+			passStyle = 913;
+			break;
+>>> 		case 633:
+			passStyle = 1278;
+			break;
+		case 109:
+		case 492:
+		{
+			int num = 917;
+			if (GetHollowTreeFoliageStyle() != 20)
+			{
+				if (x % 3 == 1)
+				{
+
+--- Terraria.WorldGen.cs:23046
+		{
+		case 2:
+		case 23:
+		case 60:
+		case 70:
+		case 109:
+		case 147:
+		case 199:
+		case 477:
+		case 492:
+>>> 		case 633:
+		case 661:
+		case 662:
+			return true;
+		default:
+			return TileLoader.CanGrowModTree(type);
+		}
+	}
+
+	public static bool GrowTree(int i, int y)
+	{
+
+--- Terraria.WorldGen.cs:23612
+		}
+		return false;
+	}
+
+	public static bool AshTreeGroundTest(int tileType)
+	{
+		if (tileType < 0)
+		{
+			return false;
+		}
+>>> 		if (tileType == 633)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	public static bool TryGrowingTreeByType(int treeTileType, int checkedX, int checkedY)
+	{
+		bool result = false;
+		switch (treeTileType)
+
+--- Terraria.WorldGen.cs:23654
+			break;
+		case 585:
+			result = GrowTreeWithSettings(checkedX, checkedY, GrowTreeSettings.Profiles.GemTree_Sappphire);
+			break;
+		case 596:
+			result = GrowTreeWithSettings(checkedX, checkedY, GrowTreeSettings.Profiles.VanityTree_Sakura);
+			break;
+		case 616:
+			result = GrowTreeWithSettings(checkedX, checkedY, GrowTreeSettings.Profiles.VanityTree_Willow);
+			break;
+>>> 		case 634:
+			result = GrowTreeWithSettings(checkedX, checkedY, GrowTreeSettings.Profiles.Tree_Ash);
+			break;
+		}
+		return result;
+	}
+
+	public static bool GrowTreeWithSettings(int checkedX, int checkedY, GrowTreeSettings settings)
+	{
+		int i;
+		for (i = checkedY; Main.tile[checkedX, i].type == settings.SaplingTileType; i++)
+
+--- Terraria.WorldGen.cs:36657
+				break;
+			case 116:
+				style = 7;
+				break;
+			case 234:
+				style = 8;
+				break;
+			case 112:
+				style = 9;
+				break;
+>>> 			case 633:
+				style = 10;
+				break;
+			default:
+				if (!TileLoader.SaplingGrowthType(type3, ref saplingType, ref style))
+				{
+					flag = true;
+				}
+				break;
+			}
+			if (!flag && (type2 != saplingType || num5 != style))
+
+--- Terraria.WorldGen.cs:38586
+				if (Main.tile[x, y + 1].type != 53 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 116)
+				{
+					flag = true;
+				}
+				if (Main.tile[x, y].liquid > 0 && Main.tile[x, y].lava())
+				{
+					flag = true;
+				}
+				break;
+			case 5:
+>>> 				if (Main.tile[x, y + 1].type != 57 && Main.tile[x, y + 1].type != 633 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+				{
+					flag = true;
+				}
+				if (Main.tile[x, y].liquid > 0 && !Main.tile[x, y].lava())
+				{
+					flag = true;
+				}
+				break;
+			case 6:
+				if (Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 147 && Main.tile[x, y + 1].type != 161 && Main.tile[x, y + 1].type != 163 && Main.tile[x, y + 1].type != 164 && Main.tile[x, y + 1].type != 200)
+
+--- Terraria.WorldGen.cs:39012
+				PlaceAlch(num, num2 - 1, 2);
+			}
+			if (Main.tile[num, num2].type == 23 || Main.tile[num, num2].type == 661 || Main.tile[num, num2].type == 25 || Main.tile[num, num2].type == 203 || Main.tile[num, num2].type == 199 || Main.tile[num, num2].type == 662)
+			{
+				PlaceAlch(num, num2 - 1, 3);
+			}
+			if ((Main.tile[num, num2].type == 53 || Main.tile[num, num2].type == 116) && num >= beachDistance && num <= Main.maxTilesX - beachDistance)
+			{
+				PlaceAlch(num, num2 - 1, 4);
+			}
+>>> 			if (Main.tile[num, num2].type == 57 || Main.tile[num, num2].type == 633)
+			{
+				PlaceAlch(num, num2 - 1, 5);
+			}
+			if (Main.tile[num, num2].type == 147 || Main.tile[num, num2].type == 163 || Main.tile[num, num2].type == 164 || Main.tile[num, num2].type == 161 || Main.tile[num, num2].type == 200)
+			{
+				PlaceAlch(num, num2 - 1, 6);
+			}
+			if (Main.tile[num, num2 - 1].active() && Main.netMode == 2)
+			{
+				NetMessage.SendTileSquare(-1, num, num2 - 1);
+
+--- Terraria.WorldGen.cs:39103
+				if (Main.tile[x, y + 1].type != 53 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380 && Main.tile[x, y + 1].type != 116)
+				{
+					flag = true;
+				}
+				if (Main.tile[x, y].liquid > 0 && Main.tile[x, y].lava())
+				{
+					flag = true;
+				}
+				break;
+			case 5:
+>>> 				if (Main.tile[x, y + 1].type != 57 && Main.tile[x, y + 1].type != 633 && Main.tile[x, y + 1].type != 78 && Main.tile[x, y + 1].type != 380)
+				{
+					flag = true;
+				}
+				if (Main.tile[x, y].type == 82 || !Main.tile[x, y].lava() || Main.netMode == 1)
+				{
+					break;
+				}
+				if (Main.tile[x, y].liquid > 16)
+				{
+					if (Main.tile[x, y].type == 83)
+
+--- Terraria.WorldGen.cs:40385
+				else
+				{
+					Item.NewItem(GetItemSource_FromTileBreak(num, y), num * 16, y * 16, 32, 32, 35);
+				}
+			}
+			if (type == 18)
+			{
+				int type3 = 36;
+				if (num3 >= 1 && num3 <= 3)
+				{
+>>> 					type3 = 634 + num3;
+				}
+				else if (num3 >= 4 && num3 <= 8)
+				{
+					type3 = 807 + num3;
+				}
+				else
+				{
+					switch (num3)
+					{
+					case 9:
+
+--- Terraria.WorldGen.cs:53014
+	{
+		if (y < 1 || y > Main.maxTilesY - 1)
+		{
+			return false;
+		}
+		Tile tile = Main.tile[x, y + 1];
+		if (tile.active() && tile.slope() == 0 && !tile.halfBrick())
+		{
+			if (((tile.type != 2 && tile.type != 78 && tile.type != 380 && tile.type != 477 && tile.type != 579) || typeAttemptedToPlace != 3) && ((tile.type != 23 && tile.type != 661) || typeAttemptedToPlace != 24) && ((tile.type != 109 && tile.type != 492) || typeAttemptedToPlace != 110) && ((tile.type != 199 && tile.type != 662) || typeAttemptedToPlace != 201))
+			{
+>>> 				if (tile.type == 633)
+				{
+					return typeAttemptedToPlace == 637;
+				}
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
+
+
+--- Terraria.WorldGen.cs:54338
+			{
+				if (num == 23 && tile.type == 59)
+				{
+					num = 661;
+				}
+				if (num == 199 && tile.type == 59)
+				{
+					num = 662;
+				}
+			}
+>>> 			if (forced || Collision.EmptyTile(i, j) || !Main.tileSolid[num] || (num == 23 && tile.type == 0 && tile.active()) || (num == 199 && tile.type == 0 && tile.active()) || (num == 2 && tile.type == 0 && tile.active()) || (num == 109 && tile.type == 0 && tile.active()) || (num == 60 && tile.type == 59 && tile.active()) || (num == 661 && tile.type == 59 && tile.active()) || (num == 662 && tile.type == 59 && tile.active()) || (num == 70 && tile.type == 59 && tile.active()) || (num == 633 && tile.type == 57 && tile.active()) || (Main.tileMoss[num] && (tile.type == 1 || tile.type == 38) && tile.active()))
+			{
+				if (num == 23 && (tile.type != 0 || !tile.active()))
+				{
+					return false;
+				}
+				if (num == 199 && (tile.type != 0 || !tile.active()))
+				{
+					return false;
+				}
+				if (num == 2 && (tile.type != 0 || !tile.active()))
+
+--- Terraria.WorldGen.cs:54372
+					return false;
+				}
+				if (num == 662 && (tile.type != 59 || !tile.active()))
+				{
+					return false;
+				}
+				if (num == 70 && (tile.type != 59 || !tile.active()))
+				{
+					return false;
+				}
+>>> 				if (num == 633 && (tile.type != 57 || !tile.active()))
+				{
+					return false;
+				}
+				if (Main.tileMoss[num])
+				{
+					if ((tile.type != 1 && tile.type != 38) || !tile.active())
+					{
+						return false;
+					}
+					if (tile.type == 38)
+
+--- Terraria.WorldGen.cs:57593
+		return true;
+	}
+
+	public static bool WouldTileReplacementWork(ushort attemptingToReplaceWith, int x, int y)
+	{
+		Tile t = Main.tile[x, y];
+		if (attemptingToReplaceWith >= TileLoader.TileCount)
+		{
+			return false;
+		}
+>>> 		if (TileID.Sets.Conversion.Grass[attemptingToReplaceWith] || attemptingToReplaceWith == 633)
+		{
+			return false;
+		}
+		if (Main.tileRope[t.type] && InWorld(x, y, 2))
+		{
+			Tile tile = Main.tile[x - 1, y];
+			Tile tile2 = Main.tile[x + 1, y];
+			if (attemptingToReplaceWith == 314 && tile != null && tile2 != null && ((tile.active() && tile.type == 314) || (tile2.active() && tile2.type == 314)))
+			{
+				return true;
+
+--- Terraria.WorldGen.cs:57673
+		topTextureFrameHeight = 96;
+		floorY = j;
+		for (int k = 0; k < 100; k++)
+		{
+			floorY = j + k;
+			Tile tile = Main.tile[x, floorY];
+			if (tile == null)
+			{
+				return false;
+			}
+>>> 			if (tile.type == 633)
+			{
+				treeStyle = 31;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static bool GetVanityTreeFoliageData(int i, int j, int xoffset, ref int treeFrame, ref int treeStyle, out int floorY, out int topTextureFrameWidth, out int topTextureFrameHeight)
+	{
+
+--- Terraria.WorldGen.cs:57995
+		case 492:
+			return TreeTypes.Hallowed;
+		case 53:
+			return TreeTypes.Palm;
+		case 112:
+			return TreeTypes.PalmCorrupt;
+		case 234:
+			return TreeTypes.PalmCrimson;
+		case 116:
+			return TreeTypes.PalmHallowed;
+>>> 		case 633:
+			return TreeTypes.Ash;
+		default:
+			return TreeTypes.None;
+		}
+	}
+
+	public static bool IsThisAMushroomTree(int i, int j)
+	{
+		GetTreeBottom(i, j, out var x, out var y);
+		if (GetTreeType(Main.tile[x, y].type) == TreeTypes.Mushroom)
+
+--- Terraria.WorldGen.cs:58635
+		if (fail)
+		{
+			if (Main.netMode != 1 && TileID.Sets.IsShakeable[tile.type])
+			{
+				ShakeTree(i, j);
+			}
+			if (tile.type == 2 || tile.type == 23 || tile.type == 109 || tile.type == 199 || tile.type == 477 || tile.type == 492)
+			{
+				tile.type = 0;
+			}
+>>> 			if (tile.type == 633)
+			{
+				tile.type = 57;
+			}
+			if (tile.type == 60 || tile.type == 661 || tile.type == 662 || tile.type == 70)
+			{
+				tile.type = 59;
+			}
+			if (Main.tileMoss[tile.type])
+			{
+				tile.type = 1;
+
+--- Terraria.WorldGen.cs:58939
+			dropItem = 129;
+			break;
+		case 0:
+		case 2:
+		case 109:
+		case 199:
+		case 477:
+		case 492:
+			dropItem = 2;
+			break;
+>>> 		case 633:
+			dropItem = 172;
+			break;
+		case 426:
+			dropItem = 3621;
+			break;
+		case 430:
+			dropItem = 3633;
+			break;
+		case 431:
+			dropItem = 3634;
+
+--- Terraria.WorldGen.cs:60005
+				dropItem = 3467;
+			}
+			break;
+		case 380:
+			num = tileCache.frameY / 18;
+			dropItem = 3215 + num;
+			break;
+		case 5:
+		case 596:
+		case 616:
+>>> 		case 634:
+		{
+			bool bonusWood = false;
+			KillTile_GetTreeDrops(x, y, tileCache, ref bonusWood, ref dropItem, ref secondaryItem);
+			if (bonusWood)
+			{
+				dropItemStack++;
+			}
+			break;
+		}
+		case 323:
+
+--- Terraria.WorldGen.cs:60334
+			case 0:
+				dropItem = 94;
+				break;
+			case 1:
+				dropItem = 631;
+				break;
+			case 2:
+				dropItem = 632;
+				break;
+			case 3:
+>>> 				dropItem = 633;
+				break;
+			case 4:
+				dropItem = 634;
+				break;
+			case 5:
+				dropItem = 913;
+				break;
+			case 6:
+				dropItem = 1384;
+				break;
+
+--- Terraria.WorldGen.cs:60337
+			case 1:
+				dropItem = 631;
+				break;
+			case 2:
+				dropItem = 632;
+				break;
+			case 3:
+				dropItem = 633;
+				break;
+			case 4:
+>>> 				dropItem = 634;
+				break;
+			case 5:
+				dropItem = 913;
+				break;
+			case 6:
+				dropItem = 1384;
+				break;
+			case 7:
+				dropItem = 1385;
+				break;
+
+--- Terraria.WorldGen.cs:61186
+				if (genRand.Next(2) == 0)
+				{
+					int k;
+					for (k = j; Main.tile[i, k] != null && (!Main.tile[i, k].active() || !Main.tileSolid[Main.tile[i, k].type] || Main.tileSolidTop[Main.tile[i, k].type]); k++)
+					{
+					}
+					if (Main.tile[i, k] != null)
+					{
+						Tile tile = Main.tile[i, k];
+						bool flag = false;
+>>> 						if (tile.type == 2 || tile.type == 109 || tile.type == 477 || tile.type == 492 || tile.type == 147 || tile.type == 199 || tile.type == 23 || tile.type == 633)
+						{
+							flag = true;
+						}
+						if (flag || TileLoader.CanDropAcorn(tile.type))
+						{
+							dropItem = 9;
+							secondaryItem = 27;
+						}
+						else
+						{
+
+--- Terraria.WorldGen.cs:61220
+		}
+		if (dropItem != 9)
+		{
+			return;
+		}
+		GetTreeBottom(i, j, out var x, out var y);
+		if (Main.tile[x, y].active())
+		{
+			switch (Main.tile[x, y].type)
+			{
+>>> 			case 633:
+				dropItem = 5215;
+				break;
+			case 23:
+			case 661:
+				dropItem = 619;
+				break;
+			case 199:
+			case 662:
+				dropItem = 911;
+				break;
+
+--- Terraria.WorldGen.cs:62093
+			break;
+		case 596:
+			dust = 78;
+			break;
+		case 615:
+			dust = 78;
+			break;
+		case 616:
+			dust = 78;
+			break;
+>>> 		case 633:
+			dust = ((genRand.Next(6) != 0) ? 237 : 36);
+			break;
+		case 637:
+		case 638:
+			dust = 237;
+			break;
+		case 634:
+			dust = ((genRand.Next(10) != 0) ? 36 : 31);
+			if (genRand.Next(12) == 0)
+			{
+
+--- Terraria.WorldGen.cs:62100
+		case 616:
+			dust = 78;
+			break;
+		case 633:
+			dust = ((genRand.Next(6) != 0) ? 237 : 36);
+			break;
+		case 637:
+		case 638:
+			dust = 237;
+			break;
+>>> 		case 634:
+			dust = ((genRand.Next(10) != 0) ? 36 : 31);
+			if (genRand.Next(12) == 0)
+			{
+				dust = 6;
+			}
+			break;
+		}
+		if (Main.tileMoss[tileCache.type])
+		{
+			if (tileCache.type == 381)
+
+# 1 hit(s) between lines 58635 and 58760
+# 1 hit(s) shown for 'if\ \(tile\.type\ ==\ 633\)' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:53014
+
+	public static bool IsFitToPlaceFlowerIn(int x, int y, int typeAttemptedToPlace)
+	{
+		if (y < 1 || y > Main.maxTilesY - 1)
+		{
+			return false;
+		}
+		Tile tile = Main.tile[x, y + 1];
+		if (tile.active() && tile.slope() == 0 && !tile.halfBrick())
+		{
+			if (((tile.type != 2 && tile.type != 78 && tile.type != 380 && tile.type != 477 && tile.type != 579) || typeAttemptedToPlace != 3) && ((tile.type != 23 && tile.type != 661) || typeAttemptedToPlace != 24) && ((tile.type != 109 && tile.type != 492) || typeAttemptedToPlace != 110) && ((tile.type != 199 && tile.type != 662) || typeAttemptedToPlace != 201))
+			{
+>>> 				if (tile.type == 633)
+				{
+					return typeAttemptedToPlace == 637;
+				}
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private static bool SeaOatWaterCheck(int x, int y)
+	{
+
+##### 4. tail of GrowTreeWithSettings (top frames)
+--- Terraria.WorldGen.cs:24061-24181
+			}
+			if (num4 == 1)
+			{
+				Main.tile[checkedX, i - 1].frameX = 66;
+				Main.tile[checkedX, i - 1].frameY = 154;
+			}
+			if (num4 == 2)
+			{
+				Main.tile[checkedX, i - 1].frameX = 66;
+				Main.tile[checkedX, i - 1].frameY = 176;
+			}
+		}
+		if (genRand.Next(13) != 0)
+		{
+			num4 = genRand.Next(3);
+			if (num4 == 0)
+			{
+				Main.tile[checkedX, i - num2].frameX = 22;
+				Main.tile[checkedX, i - num2].frameY = 198;
+			}
+			if (num4 == 1)
+			{
+				Main.tile[checkedX, i - num2].frameX = 22;
+				Main.tile[checkedX, i - num2].frameY = 220;
+			}
+			if (num4 == 2)
+			{
+				Main.tile[checkedX, i - num2].frameX = 22;
+				Main.tile[checkedX, i - num2].frameY = 242;
+			}
+		}
+		else
+		{
+			num4 = genRand.Next(3);
+			if (num4 == 0)
+			{
+				Main.tile[checkedX, i - num2].frameX = 0;
+				Main.tile[checkedX, i - num2].frameY = 198;
+			}
+			if (num4 == 1)
+			{
+				Main.tile[checkedX, i - num2].frameX = 0;
+				Main.tile[checkedX, i - num2].frameY = 220;
+			}
+			if (num4 == 2)
+			{
+				Main.tile[checkedX, i - num2].frameX = 0;
+				Main.tile[checkedX, i - num2].frameY = 242;
+			}
+		}
+		RangeFrame(checkedX - 2, i - num2 - 1, checkedX + 2, i + 1);
+		if (Main.netMode == 2)
+		{
+			NetMessage.SendTileSquare(-1, checkedX - 1, i - num2, 3, num2);
+		}
+		return true;
+	}
+
+	public static void GrowUndergroundTree(int i, int y)
+	{
+		if (Main.tile[i, y].type != 60 || !Main.tile[i, y].nactive() || Main.tile[i, y].halfBrick() || Main.tile[i, y].slope() != 0 || Main.tile[i, y].type != 60 || ((!Main.tile[i - 1, y].active() || Main.tile[i - 1, y].type != 60) && (!Main.tile[i + 1, y].active() || Main.tile[i + 1, y].type != 60)))
+		{
+			return;
+		}
+		int num = 1;
+		int num2 = genRand.Next(5, 15);
+		int num3 = num2 + 2;
+		if (Main.tile[i, y].type == 60)
+		{
+			num3 += 5;
+		}
+		if (!EmptyTileCheck(i - num, i + num, y - num3, y - 1, 20))
+		{
+			return;
+		}
+		bool flag = false;
+		bool flag2 = false;
+		int num4;
+		for (int j = y - num2; j < y; j++)
+		{
+			Main.tile[i, j].frameNumber((byte)genRand.Next(3));
+			Main.tile[i, j].active(active: true);
+			Main.tile[i, j].type = 5;
+			num4 = genRand.Next(3);
+			int num5 = genRand.Next(10);
+			if (j == y - 1 || j == y - num2)
+			{
+				num5 = 0;
+			}
+			while (((num5 == 5 || num5 == 7) & flag) || ((num5 == 6 || num5 == 7) & flag2))
+			{
+				num5 = genRand.Next(10);
+			}
+			flag = false;
+			flag2 = false;
+			if (num5 == 5 || num5 == 7)
+			{
+				flag = true;
+			}
+			if (num5 == 6 || num5 == 7)
+			{
+				flag2 = true;
+			}
+			switch (num5)
+			{
+			case 1:
+				if (num4 == 0)
+				{
+					Main.tile[i, j].frameX = 0;
+					Main.tile[i, j].frameY = 66;
+				}
+				if (num4 == 1)
+				{
+					Main.tile[i, j].frameX = 0;
+					Main.tile[i, j].frameY = 88;
+				}
+				if (num4 == 2)
+				{
+					Main.tile[i, j].frameX = 0;
+					Main.tile[i, j].frameY = 110;
+				}
