@@ -29,7 +29,8 @@ namespace Factorraria.Common.Mounts
     public class MechSuitBuildSystem : ModSystem
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
-        public float BuilderReachTiles = 16f;     // a builder arm reaches this far from the player's centre
+        public float BuilderReachTiles = 12f;      // a builder arm reaches this far from the player's centre (the anchoring arms reach 12.5: 2 x 100 px)
+        public bool KeepWaiting = true;            // true: a job waits (for material, reach, a cleared tile) until it finishes, is cancelled or the player leaves the suit
         public int StrikeTicks = 14;               // one placement strike
         public int RescanTicks = 15;               // an idle arm that found nothing looks again after this long
         public int BlockedCooldownTicks = 180;     // a tile PlaceTile refused (a player or NPC stands there) is skipped this long
@@ -288,9 +289,9 @@ namespace Factorraria.Common.Mounts
 
             if (!busy && job.Pending.Count == 0)
                 EndJob(job.Owner, "finished");
-            else if (!busy && job.IdleTicks >= SettleTicks && job.Placeable == 0 && job.WaitingForReach == 0)
+            else if (!KeepWaiting && !busy && job.IdleTicks >= SettleTicks && job.Placeable == 0 && job.WaitingForReach == 0)
                 EndJob(job.Owner, "nothing left can be placed");
-            else if (job.IdleTicks >= IdleTimeoutTicks)
+            else if (!KeepWaiting && job.IdleTicks >= IdleTimeoutTicks)
                 EndJob(job.Owner, "timed out waiting");
         }
 

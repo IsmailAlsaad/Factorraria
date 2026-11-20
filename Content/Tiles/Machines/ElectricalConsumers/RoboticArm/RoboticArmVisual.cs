@@ -41,10 +41,10 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         float GripDistance => motion.GripDistance;
         float ImpactPoint => motion.ImpactPoint;
 
-        public RoboticArmVisual()
+        public RoboticArmVisual(bool largeJoint = false)
         {
             beamTexture = ModContent.Request<Texture2D>("Factorraria/Content/Projectiles/Hooks/MechanicalArmBeam", AssetRequestMode.ImmediateLoad);
-            jointTexture = ModContent.Request<Texture2D>("Factorraria/Content/Projectiles/Hooks/MechanicalArmSmallJoint", AssetRequestMode.ImmediateLoad);
+            jointTexture = ModContent.Request<Texture2D>(largeJoint ? "Factorraria/Content/Projectiles/Hooks/MechanicalArmJoint" : "Factorraria/Content/Projectiles/Hooks/MechanicalArmSmallJoint", AssetRequestMode.ImmediateLoad);
             clawTexture = ModContent.Request<Texture2D>("Factorraria/Content/Projectiles/Hooks/MechanicalArmProjectile", AssetRequestMode.ImmediateLoad);
         }
 

@@ -57,6 +57,7 @@ namespace Factorraria.Common.Mounts
         readonly List<PlacedCopy> placedCopies = new();
         uint lastPlacedTick;
         bool sawBuilding;
+        readonly Dictionary<int, int> placedHave = new();
 
         BlockState[] states = Array.Empty<BlockState>();
         byte[] cellState = Array.Empty<byte>();
@@ -297,6 +298,15 @@ namespace Factorraria.Common.Mounts
             Rectangle view = new Rectangle((int)Main.screenPosition.X - 96, (int)Main.screenPosition.Y - 96, (int)viewSize.X + 192, (int)viewSize.Y + 192);
             Color valid = Color.White * HologramAlpha;
             Color red = RedTint * HologramAlpha;
+
+            placedHave.Clear();
+            for (int s = 0; s < 58; s++)
+            {
+                Item slot = player.inventory[s];
+                if (slot != null && !slot.IsAir)
+                    placedHave[slot.type] = (placedHave.TryGetValue(slot.type, out int have) ? have : 0) + slot.stack;
+            }
+
             for (int pass = 0; pass < 2; pass++)
             {
                 foreach (PlacedCopy copy in placedCopies)
@@ -319,12 +329,13 @@ namespace Factorraria.Common.Mounts
                         if (!view.Contains(x * 16, y * 16))
                             continue;
 
-                        bool collision = b.IsWall ? t.WallType != 0 : t.HasTile;
+                        // Red: something else stands there, or the inventory holds none of the material (the hologram stays either way).
+                        bool tinted = (b.IsWall ? t.WallType != 0 : t.HasTile) || !placedHave.TryGetValue(b.Item, out int owned) || owned <= 0;
                         Vector2 position = new Vector2(x * 16f, y * 16f) - Main.screenPosition;
                         if (b.IsWall)
-                            DrawWall(spriteBatch, b, position, collision ? red : valid);
+                            DrawWall(spriteBatch, b, position, tinted ? red : valid);
                         else
-                            DrawTile(spriteBatch, b, position, collision ? red : valid);
+                            DrawTile(spriteBatch, b, position, tinted ? red : valid);
                     }
                 }
             }

@@ -45,10 +45,11 @@ namespace Factorraria.Common.Mounts
     public class MechSuitBuilderArms : ModSystem
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
-        public float UpperArmLength = 56f;
-        public float ForearmLength = 56f;
-        public float FoldBeamLength = 14f;   // each beam shrinks to this length when the hand is at the shoulder (grabbing an item, being put away)
-        public float FoldDistance = 80f;     // hand-to-shoulder distance below which the beams start to shrink (full length at and beyond it)
+        public float UpperArmLength = 100f;  // same as MechanicalArmProjectile (the anchoring arms)
+        public float ForearmLength = 100f;
+        public float BeamThickness = 0.7f;   // same as the anchoring arms
+        public float FoldBeamLength = 20f;   // each beam shrinks to this length when the hand is at the shoulder (grabbing an item, being put away)
+        public float FoldDistance = 120f;     // hand-to-shoulder distance below which the beams start to shrink (full length at and beyond it)
         public float ShoulderOffsetX = 7f;   // the two arms sit this far left and right of the player's centre
         public float ShoulderOffsetY = -2f;
         public int RetireTicks = 30;         // after a job ends the arms fold back this long, then disappear
@@ -129,7 +130,7 @@ namespace Factorraria.Common.Mounts
                     if (!set.Building || Main.netMode == NetmodeID.MultiplayerClient)
                         arm.Motion.Update(shoulder, UpperArmLength, ForearmLength, arm.Held, false);
 
-                    arm.Visual ??= new RoboticArmVisual();
+                    arm.Visual ??= new RoboticArmVisual(true) { BeamThickness = BeamThickness };
                     // The logic and the reach keep the full lengths; only the drawn beams telescope as the hand nears the shoulder.
                     float fold = MathHelper.Clamp(Vector2.Distance(arm.Motion.Head, shoulder) / System.MathF.Max(FoldDistance, 1f), 0f, 1f);
                     float upperShown = MathHelper.Lerp(System.MathF.Min(FoldBeamLength, UpperArmLength), UpperArmLength, fold);

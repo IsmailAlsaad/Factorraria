@@ -615,7 +615,7 @@ tModLoader/other bases -> project types:
       +Y:int X, +IsWall:bool +Type:ushort +FrameY:int FrameX, +Half:bool +Plain:bool +Width:int +Item:int +Group:int
 **MechSuitBuildSystem.cs** uses: ArmState, Block, ConsumedEntry, Item, Main, MechSuitBlueprint, MechSuitBuildNet, MechSuitBuildNetSystem, MechSuitBuilderArm, MechSuitBuilderArmSet, MechSuitBuilderArms, MechSuitBuilderSystem, MechSuitPlayer, Pending, Player, RoboticArmMotion, RoboticArmNet, Tile, WorldGen, WorldPlacement
   class MechSuitBuildSystem : ModSystem
-    +BuilderReachTiles:float +StrikeTicks:int +RescanTicks:int +BlockedCooldownTicks:int +ReachTimeoutTicks:int +GrabTimeoutTicks:int +SettleTicks:int +IdleTimeoutTicks:int +StatusRefreshTicks:int +MaxPendingBlocks:int +ConsumedFlushTicks:int +LogJobs:bool +OnWorldUnload()[ov] +Unload()[ov] +HasJob(int) +StartJob(int,Rectangle,Point) +EndJob(int,string) +PostUpdateEverything()[ov]
+    +BuilderReachTiles:float +KeepWaiting:bool +StrikeTicks:int +RescanTicks:int +BlockedCooldownTicks:int +ReachTimeoutTicks:int +GrabTimeoutTicks:int +SettleTicks:int +IdleTimeoutTicks:int +StatusRefreshTicks:int +MaxPendingBlocks:int +ConsumedFlushTicks:int +LogJobs:bool +OnWorldUnload()[ov] +Unload()[ov] +HasJob(int) +StartJob(int,Rectangle,Point) +EndJob(int,string) +PostUpdateEverything()[ov]
     enum Phase : byte
       {Idle, Retracting, Reaching, Striking}
     class Arm
@@ -628,7 +628,7 @@ tModLoader/other bases -> project types:
   class MechSuitBuilderArmSet
     +Arms:MechSuitBuilderArm +Building:bool +RetireTimer:int
   class MechSuitBuilderArms : ModSystem
-    +UpperArmLength:float +ForearmLength:float +FoldBeamLength:float +FoldDistance:float +ShoulderOffsetX:float +ShoulderOffsetY:float +RetireTicks:int +OnWorldUnload()[ov] +GetOrCreate(int) +TryGet(int,out MechSuitBuilderArmSet) +Shoulder(Player,int) +MarkEnded(int) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+    +UpperArmLength:float +ForearmLength:float +BeamThickness:float +FoldBeamLength:float +FoldDistance:float +ShoulderOffsetX:float +ShoulderOffsetY:float +RetireTicks:int +OnWorldUnload()[ov] +GetOrCreate(int) +TryGet(int,out MechSuitBuilderArmSet) +Shoulder(Player,int) +MarkEnded(int) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
 **MechSuitBuilderSystem.cs** uses: Main, MechSuitBuildNet, MechSuitHologramSystem, MechSuitPlayer, Player, RoboticArmAreaEditorSystem
   class MechSuitBuilderSystem : ModSystem
     +MaxSelectionWidth:int +MaxSelectionHeight:int +CancelKey:Keys +TexturePath:string +Selection:Rectangle? +SelectionVersion:int +PlaceOrigin:Point? +IsDragging:bool +OriginFor(Rectangle,Point)[s] ~ShiftHeld:bool[s] ~Ready(out Player)[s] +OnWorldUnload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
