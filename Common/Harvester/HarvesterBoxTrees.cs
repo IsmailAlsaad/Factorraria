@@ -128,6 +128,8 @@ namespace Factorraria.Common.Harvester
             {
                 DisguiseSideColumn(x - 1, y, soilType, sides);
                 DisguiseSideColumn(x + 1, y, soilType, sides);
+                sides.Add(Begin(x - 2, y));   // a felled piece next to a neighbour tree reframes it, and the tree two boxes away must see its soil too
+                sides.Add(Begin(x + 2, y));
                 vanilla();
             }
             finally
@@ -282,6 +284,8 @@ namespace Factorraria.Common.Harvester
             Disguise middle = Begin(x, soilY);
             Disguise left = Begin(x - 1, soilY);
             Disguise right = Begin(x + 1, soilY);
+            Disguise farLeft = Begin(x - 2, soilY);   // GrowTree frames x - 2 .. x + 2, so a tree standing two boxes away is checked too
+            Disguise farRight = Begin(x + 2, soilY);
 
             int fakeX = int.MinValue;
             Tile fake = default;
@@ -322,6 +326,8 @@ namespace Factorraria.Common.Harvester
                     fake.TileType = fakeOldType;
                 }
 
+                End(farRight, false);
+                End(farLeft, false);
                 End(right, false);
                 End(left, false);
                 End(middle, true);
