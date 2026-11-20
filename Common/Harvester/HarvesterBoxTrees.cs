@@ -31,6 +31,7 @@ namespace Factorraria.Common.Harvester
 
         static bool GrowOwn(int x, int bottomY)
         {
+            HarvesterBoxTreeHooks.DbgReset();
             OwnGrowth = true;
             try
             {
@@ -313,6 +314,8 @@ namespace Factorraria.Common.Harvester
                     fake.HasTile = true;
                 }
 
+                HarvesterBoxTreeHooks.DbgHeader = $"sapling ({x},{bottomY}) soil={soilType} boxTile={Main.tile[x, soilY].TileType} disguised[mid={middle.Active} L={left.Active} R={right.Active} LL={farLeft.Active} RR={farRight.Active}] fakeX={(fakeX == int.MinValue ? "none" : fakeX.ToString())} sideFits[L={SideFits(x - 1, soilY)} R={SideFits(x + 1, soilY)}]";
+
                 if (fakeX != int.MinValue || SideFits(x - 1, soilY) || SideFits(x + 1, soilY))
                     grew = GrowOwn(x, bottomY);
             }
@@ -333,6 +336,7 @@ namespace Factorraria.Common.Harvester
                 End(middle, true);
             }
 
+            HarvesterBoxTreeHooks.DbgEnd(x, bottomY, grew);
             return grew;
         }
 
@@ -378,6 +382,8 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.GetCommonTreeFoliageData += GetCommonTreeFoliageDataHook;
             On_TileDrawing.GetTreeVariant += GetTreeVariantHook;
             On_WorldGen.AttemptToGrowTreeFromSapling += AttemptToGrowTreeFromSaplingHook;
+            On_WorldGen.CheckTree += CheckTreeDebugHook;
+            On_WorldGen.KillTile += KillTileDebugHook;
         }
 
         public override void Unload()
@@ -387,6 +393,113 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.GetCommonTreeFoliageData -= GetCommonTreeFoliageDataHook;
             On_TileDrawing.GetTreeVariant -= GetTreeVariantHook;
             On_WorldGen.AttemptToGrowTreeFromSapling -= AttemptToGrowTreeFromSaplingHook;
+            On_WorldGen.CheckTree -= CheckTreeDebugHook;
+            On_WorldGen.KillTile -= KillTileDebugHook;
+        }
+
+        // ---------------------------------------------------------------- TEMPORARY growth debug (patch_harvester_trees_debug). Remove once the growth bug is fixed.
+        // Only active while EnableDebugs is on AND our own growth call runs. Logs the first kills of tree tiles during one growth: which tile died, and the
+        // CheckTree call that killed it (its tile, frame and the four tiles around it, with their type, frame, active and actuated state; BOX! marks a box
+        // tile that was NOT disguised at that moment).
+        public static string DbgHeader = "";
+        static int dbgKills;
+        static readonly System.Collections.Generic.List<string> dbgStack = new System.Collections.Generic.List<string>();
+
+        static bool DbgActive
+        {
+            get
+            {
+                if (!HarvesterBoxTrees.OwnGrowth)
+                    return false;
+
+                global::Factorraria.Content.Configs.FurnaceOffsetConfig cfg = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
+                return cfg != null && cfg.EnableDebugs;
+            }
+        }
+
+        public static void DbgReset()
+        {
+            dbgKills = 0;
+            dbgStack.Clear();
+            DbgHeader = "";
+        }
+
+        static string Dbg(int x, int y)
+        {
+            if (!WorldGen.InWorld(x, y, 1))
+                return "outside";
+
+            Tile t = Main.tile[x, y];
+            if (!t.HasTile)
+                return "air";
+
+            string s = "t" + t.TileType + " f" + t.TileFrameX + "," + t.TileFrameY + (t.IsActuated ? " ACTUATED" : "");
+            if (HarvesterBoxRegistry.BoxTreeSoil.ContainsKey(t.TileType))
+                s += " BOX!";
+
+            return s;
+        }
+
+        static string DbgCheck(int i, int j)
+        {
+            return $"({i},{j}) [{Dbg(i, j)}] up[{Dbg(i, j - 1)}] below[{Dbg(i, j + 1)}] left[{Dbg(i - 1, j)}] right[{Dbg(i + 1, j)}]";
+        }
+
+        static void DbgLog(string text)
+        {
+            ModContent.GetInstance<HarvesterBoxTreeHooks>().Mod.Logger.Warn("[HarvesterTrees] " + text);
+        }
+
+        // One line after every growth attempt: did it grow, how many tree tiles were killed, and does the column have a top.
+        public static void DbgEnd(int x, int bottomY, bool grew)
+        {
+            global::Factorraria.Content.Configs.FurnaceOffsetConfig cfg = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
+            if (cfg == null || !cfg.EnableDebugs)
+                return;
+
+            int height = 0;
+            string topFrame = "none";
+            for (int k = 0; k <= 80 && WorldGen.InWorld(x, bottomY - k, 1); k++)
+            {
+                Tile t = Main.tile[x, bottomY - k];
+                if (!t.HasTile || t.TileType != TileID.Trees)
+                    break;
+
+                height++;
+                topFrame = t.TileFrameX + "," + t.TileFrameY;
+            }
+
+            DbgLog($"result for ({x},{bottomY}): grew={grew} killsLogged={dbgKills} trunkTiles={height} highestTrunkFrame={topFrame} ready={HarvesterBoxTrees.IsTreeReady(x, bottomY)} | {DbgHeader}");
+        }
+
+        static void CheckTreeDebugHook(On_WorldGen.orig_CheckTree orig, int i, int j)
+        {
+            if (!DbgActive)
+            {
+                orig(i, j);
+                return;
+            }
+
+            dbgStack.Add(DbgCheck(i, j));
+            try
+            {
+                orig(i, j);
+            }
+            finally
+            {
+                dbgStack.RemoveAt(dbgStack.Count - 1);
+            }
+        }
+
+        static void KillTileDebugHook(On_WorldGen.orig_KillTile orig, int i, int j, bool fail, bool effectOnly, bool noItem)
+        {
+            if (dbgStack.Count > 0 && dbgKills < 8 && DbgActive && WorldGen.InWorld(i, j, 1) && Main.tile[i, j].HasTile && Main.tile[i, j].TileType == TileID.Trees)
+            {
+                dbgKills++;
+                DbgLog($"KILL #{dbgKills} tree tile {Dbg(i, j)} at ({i},{j}), checkDepth={dbgStack.Count}\n    innermost CheckTree: {dbgStack[dbgStack.Count - 1]}\n    outermost CheckTree: {dbgStack[0]}\n    growth: {DbgHeader}");
+            }
+
+            orig(i, j, fail, effectOnly, noItem);
         }
 
         // Vanilla's random tick also grows saplings, and on a box it would do it with no soil disguise: the tree is built, then its own CheckTree pass kills
