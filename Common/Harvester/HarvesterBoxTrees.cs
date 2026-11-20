@@ -29,6 +29,9 @@ namespace Factorraria.Common.Harvester
         // True only while TryGrowSapling calls vanilla's growth, so the hook below can tell our growth from vanilla's own random tick.
         public static bool OwnGrowth;
 
+        // > 0 while RunAsTreeSoilWithSides runs (our own felling, or a manual break already wrapped by the KillTile hook), so the hook never wraps twice.
+        public static int SideDepth;
+
         static bool GrowOwn(int x, int bottomY)
         {
             HarvesterBoxTreeHooks.DbgReset();
@@ -125,6 +128,7 @@ namespace Factorraria.Common.Harvester
             int soilType = middle.Active ? middle.Soil : TileID.Grass;
             System.Collections.Generic.List<Disguise> sides = new System.Collections.Generic.List<Disguise>();
 
+            SideDepth++;
             try
             {
                 DisguiseSideColumn(x - 1, y, soilType, sides);
@@ -135,6 +139,7 @@ namespace Factorraria.Common.Harvester
             }
             finally
             {
+                SideDepth--;
                 for (int i = sides.Count - 1; i >= 0; i--)
                     End(sides[i], false);
 
@@ -212,6 +217,32 @@ namespace Factorraria.Common.Harvester
 
                 if (tile.TileType != TileID.Trees)
                     return false;
+            }
+
+            return false;
+        }
+
+        // The tree box a tree tile belongs to, for a tile broken from outside our own code (a player's axe, an explosion). A trunk or root piece looks down its own
+        // column; a branch piece has no box under its column, so the trunk beside it is tried too. Walks only through air and trunk tiles, like vanilla's soil search.
+        public static bool TryFindBoxForTreeTile(int i, int j, out int boxX, out int boxY)
+        {
+            boxX = 0;
+            boxY = 0;
+            for (int n = 0; n < 3; n++)
+            {
+                int c = n == 0 ? i : (n == 1 ? i - 1 : i + 1);
+                if (!WorldGen.InWorld(c, j, 1))
+                    continue;
+
+                Tile tile = Main.tile[c, j];
+                if (!tile.HasTile || tile.TileType != TileID.Trees)
+                    continue;
+
+                if (TryFindSoilBelow(c, j, 100, out boxY))
+                {
+                    boxX = c;
+                    return true;
+                }
             }
 
             return false;
@@ -361,8 +392,9 @@ namespace Factorraria.Common.Harvester
             for (int k = 0; k <= 80; k++)
             {
                 Tile tile = Main.tile[x, bottomY - k];
+                // No top frame: a tall trunk column with air above it is still a (topless) tree and gets felled. A lone root piece of a neighbouring tree is one tile.
                 if (!tile.HasTile || tile.TileType != TileID.Trees)
-                    return false;
+                    return k >= 4;
 
                 if (tile.TileFrameX == 22 && tile.TileFrameY >= 198)
                     return true;
@@ -384,6 +416,7 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.AttemptToGrowTreeFromSapling += AttemptToGrowTreeFromSaplingHook;
             On_WorldGen.CheckTree += CheckTreeDebugHook;
             On_WorldGen.KillTile += KillTileDebugHook;
+            On_WorldGen.KillTile += KillTileTreeHook;
         }
 
         public override void Unload()
@@ -395,6 +428,25 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.AttemptToGrowTreeFromSapling -= AttemptToGrowTreeFromSaplingHook;
             On_WorldGen.CheckTree -= CheckTreeDebugHook;
             On_WorldGen.KillTile -= KillTileDebugHook;
+            On_WorldGen.KillTile -= KillTileTreeHook;
+        }
+
+        // A tree tile broken by anything but our own code (a player's axe or pickaxe, an explosion): vanilla's drop code reads the soil under the tree, and the
+        // raw box tile gives plain wood, and a branch beside a box walks out of the world (IndexOutOfRange in KillTile_GetTreeDrops). So the break runs with the
+        // box and its side columns disguised, exactly like our own felling, and the cascade of the falling tree runs inside the same disguise. Only the final
+        // break (not a hit that only damages the tile). It reads and swaps tile data only, so the server (which handles a client's break) and single-player behave
+        // the same.
+        static void KillTileTreeHook(On_WorldGen.orig_KillTile orig, int i, int j, bool fail, bool effectOnly, bool noItem)
+        {
+            if (!fail && !effectOnly && HarvesterBoxTrees.SideDepth == 0 && !HarvesterBoxTrees.OwnGrowth && HarvesterBoxRegistry.BoxTreeSoil.Count > 0
+                && WorldGen.InWorld(i, j, 4) && Main.tile[i, j].HasTile && Main.tile[i, j].TileType == TileID.Trees
+                && HarvesterBoxTrees.TryFindBoxForTreeTile(i, j, out int boxX, out int boxY))
+            {
+                HarvesterBoxTrees.RunAsTreeSoilWithSides(boxX, boxY, () => orig(i, j, fail, effectOnly, noItem));
+                return;
+            }
+
+            orig(i, j, fail, effectOnly, noItem);
         }
 
         // ---------------------------------------------------------------- TEMPORARY growth debug (patch_harvester_trees_debug). Remove once the growth bug is fixed.
@@ -421,7 +473,15 @@ namespace Factorraria.Common.Harvester
         {
             dbgKills = 0;
             dbgStack.Clear();
-            DbgHeader = "";
+        }
+
+        static string DbgShort(int x, int y)
+        {
+            if (!WorldGen.InWorld(x, y, 1))
+                return "out";
+
+            Tile t = Main.tile[x, y];
+            return t.HasTile ? "t" + t.TileType + ":" + t.TileFrameX + "," + t.TileFrameY : "-";
         }
 
         static string Dbg(int x, int y)
@@ -469,7 +529,20 @@ namespace Factorraria.Common.Harvester
                 topFrame = t.TileFrameX + "," + t.TileFrameY;
             }
 
-            DbgLog($"result for ({x},{bottomY}): grew={grew} killsLogged={dbgKills} trunkTiles={height} highestTrunkFrame={topFrame} ready={HarvesterBoxTrees.IsTreeReady(x, bottomY)} | {DbgHeader}");
+            // A tree whose highest trunk tile is not a top frame (22,198+): dump the tiles around its top (5 columns, rows from 3 above the top to 1 below it).
+            string grid = "";
+            if (!topFrame.StartsWith("22,"))
+            {
+                int topY = bottomY - Math.Max(0, height - 1);
+                for (int yy = topY - 3; yy <= topY + 1; yy++)
+                {
+                    grid += "\n    y" + yy + ":";
+                    for (int xx = x - 2; xx <= x + 2; xx++)
+                        grid += " [" + DbgShort(xx, yy) + "]";
+                }
+            }
+
+            DbgLog($"result for ({x},{bottomY}): grew={grew} killsLogged={dbgKills} trunkTiles={height} highestTrunkFrame={topFrame} ready={HarvesterBoxTrees.IsTreeReady(x, bottomY)} | {DbgHeader}{grid}");
         }
 
         static void CheckTreeDebugHook(On_WorldGen.orig_CheckTree orig, int i, int j)
