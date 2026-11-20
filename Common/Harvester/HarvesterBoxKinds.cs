@@ -1,4 +1,6 @@
-﻿namespace Factorraria.Common.Harvester
+﻿using Terraria.ID;
+
+namespace Factorraria.Common.Harvester
 {
     // The herb tile styles (frameX / 18 of the vanilla herb tiles 82, 83 and 84). Verified in WorldGen.CheckAlch (probe 2).
     public enum HerbStyle
@@ -39,6 +41,30 @@
             HarvesterBoxKind.Waterleaf => "WaterleafPlanterBox",
             HarvesterBoxKind.Shiverthorn => "ShiverthornPlanterBox",
             _ => "FireBlossomPlanterBox"
+        };
+
+        // Phase 5: the vanilla soil tile a box stands in for when vanilla runs its tree rules (look, wood, acorns, sapling style). 0 = this box grows no trees yet
+        // (Waterleaf would be a palm and Fireblossom an ash tree: both use other tree tiles and other growth code, a later patch). Corrupt always grows
+        // corruption trees and Crimson crimson trees (Ismail, 2026-11-17).
+        public static int TreeSoil(HarvesterBoxKind kind) => kind switch
+        {
+            HarvesterBoxKind.Daybloom => TileID.Grass,
+            HarvesterBoxKind.Blinkroot => TileID.Grass,
+            HarvesterBoxKind.Moonglow => TileID.JungleGrass,
+            HarvesterBoxKind.Corrupt => TileID.CorruptGrass,
+            HarvesterBoxKind.Crimson => TileID.CrimsonGrass,
+            HarvesterBoxKind.Shiverthorn => TileID.SnowBlock,
+            _ => 0
+        };
+
+        // The sapling style (frameX / 54) vanilla's Check1x2 gives each soil. Verified in probe 4 (Check1x2 switch).
+        public static int SaplingStyle(int vanillaSoil) => vanillaSoil switch
+        {
+            TileID.SnowBlock => 1,
+            TileID.JungleGrass => 2,
+            TileID.CorruptGrass => 3,
+            TileID.CrimsonGrass => 4,
+            _ => 0
         };
 
         // The one herb that grows on that box.

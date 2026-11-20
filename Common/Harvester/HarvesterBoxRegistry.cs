@@ -15,12 +15,19 @@ namespace Factorraria.Common.Harvester
         // Vanilla planter box (tile 380) style -> the herb that grows on it. Built from the planter box ITEMS (found by name), so no style number is hard-coded.
         public static Dictionary<int, HerbStyle> PlanterHerbs = new();
 
+        // Harvester Box tile type -> the vanilla soil tile it stands in for in tree rules (only boxes that grow trees, see HarvesterBoxKinds.TreeSoil).
+        public static Dictionary<int, int> BoxTreeSoil = new();
+
         // The kinds that registered themselves, for ResolvePlanterStyles.
         public static List<HarvesterBoxKind> Kinds = new();
 
         public static void Register(int tileType, HarvesterBoxKind kind)
         {
             BoxHerbs[tileType] = HarvesterBoxKinds.Herb(kind);
+
+            int treeSoil = HarvesterBoxKinds.TreeSoil(kind);
+            if (treeSoil != 0)
+                BoxTreeSoil[tileType] = treeSoil;
             if (!Kinds.Contains(kind))
                 Kinds.Add(kind);
         }
@@ -29,6 +36,7 @@ namespace Factorraria.Common.Harvester
         {
             BoxHerbs.Clear();
             PlanterHerbs.Clear();
+            BoxTreeSoil.Clear();
             Kinds.Clear();
         }
 

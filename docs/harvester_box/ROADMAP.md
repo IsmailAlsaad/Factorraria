@@ -94,7 +94,7 @@ One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [x] Phase 2: gear visuals. Applied 2026-11-19 (patch_harvester_gears and patch_harvester_gears_fix), TESTED 2026-11-19 (Ismail: looks good). See 6d. The gear PNGs are Ismail's art.
 - [~] Phase 3: herb harvest and drops. Applied 2026-11-19 (patch_harvester_harvest), UNTESTED. See 6e.
 - [~] Phase 4: staff, particles, client sync. Applied 2026-11-19 (patch_harvester_staff), UNTESTED, tested together with Phase 3. See 6f. Needs the staff sprite from Ismail (6f).
-- [ ] Phase 5: acorns, trees, gemcorns
+- [~] Phase 5 (acorns and trees; palm, ash and gemcorns are not in yet): applied 2026-11-20 (patch_harvester_trees), UNTESTED, see 7h. Older notes on this line: acorns, trees, gemcorns
 - [ ] Phase 6: polish, MP verification
 
 ## 6b. Phase 1 as built (patch_harvester_p1, 2026-11-17, applied UNTESTED)
@@ -302,6 +302,26 @@ What this means for Phase 5 (analysis, not yet decided)
 3. Because drawing has its own biome function, check how `GetTreeBiome` finds the tree's look before assuming a hook on `GetTreeType` is enough to make a crimson tree look crimson on a Crimson box.
 
 Open dumps before writing Phase 5 (small; the next chat can ask for them in one probe): the bodies of `TileDrawing.GetTreeBiome` (2147) and `WorldGen.GetTreeFrame` (57949), and `WorldGen.GrowTree` from 23350 to 23360.
+
+## 7h. Phase 5 as built (patch_harvester_trees.ps1, 2026-11-20): applied, UNTESTED
+Decision (Ismail, 2026-11-20): NO tree or sapling ModTile and NO ModTree. Vanilla trees just accept the Harvester Boxes as soil through conditions added to vanilla functions. This replaces the ModTree route proposed in 7f and 7g. No IL was needed. Planting is a normal LEFT click with an acorn on the tile above the box, like an acorn on a grass block (older plan text in section 5 that says right-click planting is out of date).
+
+Authority and sync (rule 9): the server (or single-player) does everything that changes tiles: planting, growing, felling, replanting. The vanilla tile messages carry the result (sapling: `SendTileSquare` 3x3; a felled tree: one 7x25 tile square). The only new packet is `HarvesterBoxPlantAcorn` (63, client -> server, payload int x, int y of the box, in `Common/Net/HarvesterBoxTreeNet.cs`); in single-player `FactorrariaNet.SendRequest` runs the handler right away. A `GlobalItem` on the acorn (`HarvesterBoxAcornItem.UseItem`) sends it when the cursor is on a free tile above a tree box; vanilla's own placement fails there (its soil list does not know the box), so the two never both succeed. The server checks reach, that the acorn really is in the sender's held slot, that the box is a tree box and that the two tiles above are free, then writes the sapling, takes one acorn and syncs that slot. The hooks only read tile data, so they behave the same on every side.
+
+How it works (all in `Common/Harvester/HarvesterBoxTrees.cs`)
+- Each box kind names the vanilla soil it stands in for (`HarvesterBoxKinds.TreeSoil`): Daybloom and Blinkroot grass (2), Moonglow jungle grass (60), Corrupt corruption grass (23), Crimson crimson grass (199), Shiverthorn snow block (147). Waterleaf (palm) and Fireblossom (ash) return 0 and grow nothing yet. `HarvesterBoxRegistry.BoxTreeSoil` holds tile type -> soil.
+- **Disguise** (`Begin` / `End`): for the length of one vanilla call the box tile's type is the vanilla soil (same trick as `HarvesterBoxHerbHooks.RunAsVanillaPlanter`); the type and the frame are put back and the three boxes of that row are framed again. Used by the sapling check, growing, felling and the two draw hooks.
+- **Hooks** (`HarvesterBoxTreeHooks`): `WorldGen.IsTileTypeFitForTree` (a box counts, so trunks and saplings keep standing), `WorldGen.Check1x2` (sapling survival and style, disguised), `WorldGen.GetCommonTreeFoliageData` (tops and branches, disguised), `TileDrawing.GetTreeVariant` (trunk look, disguised).
+- **Growing**: a box with a sapling above makes an attempt every `TreeGrowTicks` (600) powered ticks through `WorldGen.AttemptToGrowTreeFromSapling`, with the box and the boxes beside it disguised (a row grows a tree with the root flare over its neighbours). Lone box: vanilla `GrowTree` needs an active soil tile beside the soil, so when neither side has one an EMPTY side cell is made an actuated vanilla soil tile for the call (passes the gate, fails the root flare test, then restored). A box wedged between two foreign blocks never grows a tree.
+- **Felling**: `IsReadyToHarvest` also says yes for a grown tree (the column above the box is trunk tiles up to a top, frameX 22 and frameY >= 198). The strike fells it with two `KillTile` calls (second trunk tile, then the stump) inside the drop capture with the box disguised, so wood, acorns and bonus wood are the vanilla ones for that soil and are routed like herb drops; a new sapling is planted for free.
+
+Why Waterleaf and Fireblossom are not in: a palm and an ash tree are different tree tiles (323 and 634) with their own growth code (`GrowPalmTree`, `GrowTreeWithSettings` with the ash profile), their own look code and their own top frames. The probes could not dump `GetPalmTreeBiome` (no match) or `GrowTreeSettings` (empty), so the ash ground rule and the palm look hooks are unknown. A small probe 7 for exactly those is the next step (5b), together with gemcorns.
+
+Not in this patch: Waterleaf palm, Fireblossom ash, gemcorns, shaking a box tree by hand (`ShakeTree` reads the real box type), chopping a box tree by hand (wood and acorns follow the real box type, so a corruption box gives plain wood when a player chops it).
+
+Things to test: (1) left click an acorn on the tile above a Daybloom box: a sapling appears and one acorn is used; the panel still opens with a right click as before. (2) The sapling stays (does not pop) when you place or break blocks around it. (3) A powered box grows it into a vanilla forest tree within a few minutes, with no roots when alone; a box in a row grows a tree with roots over its neighbours. (4) Moonglow, Corrupt, Crimson and Shiverthorn boxes grow jungle, corruption, crimson and snow trees (trunk and top). (5) The grown tree is felled by the staff, wood and acorns of the right kind (ebonwood, shadewood, rich mahogany, boreal wood) reach a conveyor or the floor, and a sapling is planted again. (6) The box art and the box row merging are unchanged afterwards. (7) Multiplayer: planting from a client, the sapling and tree appear for everyone, the acorn count is right, the felled tree disappears for everyone.
+
+Next-chat prompt (use this one; the older text in section 8 is out of date): "Continue the Harvester Box. Clone the repo, read docs/harvester_box/ROADMAP.md sections 7h and 6. Phase 5 (trees on the boxes) is applied; here are my test results: <paste>. Fix what failed, then plan 5b: Waterleaf palm, Fireblossom ash and gemcorns, which needs probe 7 first (GetPalmTreeBiome and the palm look code, GrowTreeSettings or whatever holds the ash ground rule, the top frames of palm and ash trees)."
 
 ## 8. Next-chat prompt
 
