@@ -202,10 +202,7 @@ namespace Factorraria.Common.Harvester
             public int Ticks;   // Ready: powered ticks waited. Strike: powered ticks since the staff started.
         }
 
-        public int TreeGrowTicks => 600;            // powered ticks between two growth attempts of a sapling above a box (an attempt can still fail on space, like vanilla)
-
         BoxState[] boxes = Array.Empty<BoxState>();
-        int[] saplingTicks = Array.Empty<int>();    // per box, powered ticks a sapling has waited (never saved)
         float[] gearBlend = Array.Empty<float>();   // per box, 0 = idle sprite .. 1 = active sprite (client visual only)
         int nextScanIn;
         int clientScanIn;
@@ -221,9 +218,6 @@ namespace Factorraria.Common.Harvester
 
             if (gearBlend.Length != length)
                 gearBlend = new float[length];
-
-            if (saplingTicks.Length != length)
-                saplingTicks = new int[length];
         }
 
         // Server and single-player (a multiplayer client never runs Update).
@@ -252,8 +246,6 @@ namespace Factorraria.Common.Harvester
                     case BoxCycle.Idle:
                         if (scan && HarvesterBoxRules.IsReadyToHarvest(x, y, ValidTileType))
                             boxes[k] = new BoxState { Cycle = BoxCycle.Ready, Ticks = 0 };
-                        else
-                            UpdateSapling(k, x, y);
                         break;
 
                     case BoxCycle.Ready:
@@ -481,23 +473,6 @@ namespace Factorraria.Common.Harvester
 
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.SendTileSquare(-1, x, y);
-        }
-
-        // Phase 5. A sapling above the box makes a growth attempt every TreeGrowTicks powered ticks (server and single-player; the tree's tiles reach clients
-        // through vanilla's own tile messages). Everything else about growing is in HarvesterBoxTrees.
-        void UpdateSapling(int k, int x, int y)
-        {
-            if (!HarvesterBoxTrees.IsSapling(x, y))
-            {
-                saplingTicks[k] = 0;
-                return;
-            }
-
-            if (++saplingTicks[k] < Math.Max(1, TreeGrowTicks))
-                return;
-
-            saplingTicks[k] = 0;
-            HarvesterBoxTrees.TryGrowSapling(x, y);
         }
 
         // Fells the tree above the box like two axe chops (the second trunk tile first, so the whole tree above falls while the stump still lets vanilla

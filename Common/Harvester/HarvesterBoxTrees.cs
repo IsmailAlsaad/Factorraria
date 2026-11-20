@@ -39,13 +39,13 @@ namespace Factorraria.Common.Harvester
         // > 0 while RunAsTreeSoilWithSides runs (our own felling, or a manual break already wrapped by the KillTile hook), so the hook never wraps twice.
         public static int SideDepth;
 
-        static bool GrowOwn(int x, int bottomY)
+        static bool GrowOwn(int x, int bottomY, bool underground)
         {
             HarvesterBoxTreeHooks.DbgReset();
             OwnGrowth = true;
             try
             {
-                return WorldGen.AttemptToGrowTreeFromSapling(x, bottomY, false);
+                return WorldGen.AttemptToGrowTreeFromSapling(x, bottomY, underground);
             }
             finally
             {
@@ -361,13 +361,14 @@ namespace Factorraria.Common.Harvester
                 NetMessage.SendTileSquare(-1, x, bottomY - 1, 3);
         }
 
-        // One growth attempt for the sapling whose bottom tile is (x, bottomY). Server and single-player. The box under the sapling AND the boxes beside it
+        // One growth attempt for the sapling whose bottom tile is (x, bottomY). Server and single-player. Vanilla's random tick decides WHEN (the
+        // AttemptToGrowTreeFromSapling hook below sends its call here); this decides HOW. The box under the sapling AND the boxes beside it
         // stand in for their vanilla soil for the call, so a box row grows a tree with the root flare over its neighbours, like a row of grass blocks.
         // Vanilla's GrowTree also needs a soil tile beside the one under the sapling, so a LONE box would never grow a tree. When neither side has one,
         // an EMPTY side cell is made an actuated tile of the vanilla soil for the length of the call: it passes "is there a soil tile beside it" (active) and
         // fails the root flare test (not actuated), so the tree grows with no roots and nothing is left behind. A box between two foreign blocks has no
         // empty side and never grows a tree.
-        public static bool TryGrowSapling(int x, int bottomY)
+        public static bool TryGrowSapling(int x, int bottomY, bool underground = false)
         {
             int soilY = bottomY + 1;
             if (!IsSapling(x, bottomY) || !IsTreeBox(x, soilY) || Main.netMode == NetmodeID.MultiplayerClient)
@@ -414,7 +415,7 @@ namespace Factorraria.Common.Harvester
                 HarvesterBoxTreeHooks.DbgHeader = $"sapling ({x},{bottomY}) soil={soilType} boxTile={Main.tile[x, soilY].TileType} disguised[mid={middle.Active} L={left.Active} R={right.Active} LL={farLeft.Active} RR={farRight.Active}] fakeX={(fakeX == int.MinValue ? "none" : fakeX.ToString())} sideFits[L={SideFits(x - 1, soilY, soilType)} R={SideFits(x + 1, soilY, soilType)}]";
 
                 if (!needsSide || fakeX != int.MinValue || SideFits(x - 1, soilY, soilType) || SideFits(x + 1, soilY, soilType))
-                    grew = GrowOwn(x, bottomY);
+                    grew = GrowOwn(x, bottomY, underground);
             }
             finally
             {
@@ -863,13 +864,25 @@ namespace Factorraria.Common.Harvester
             orig(i, j, fail, effectOnly, noItem);
         }
 
-        // Vanilla's random tick also grows saplings, and on a box it would do it with no soil disguise: the tree is built, then its own CheckTree pass kills
-        // the pieces that do not see tree soil (the IndexOutOfRange in KillTile_GetTreeDrops) and leaves some floating. Box saplings grow only through
-        // HarvesterBoxTrees.TryGrowSapling. The call may name the top or the bottom tile of the sapling, so both box rows are checked.
+        // Vanilla's random tick (UpdateWorld_OvergroundTile / UpdateWorld_UndergroundTile) grows saplings by calling this, and that is now the ONLY clock a box
+        // sapling has: it grows whether the Harvester Box is powered or not. But the raw call has no soil disguise (the tree was built, then its own CheckTree
+        // pass killed the pieces that did not see tree soil), so a call on a box sapling is sent through HarvesterBoxTrees.TryGrowSapling, which disguises the box
+        // and its neighbours and then calls vanilla again with OwnGrowth set (that second call passes straight through). The call may name the top or the bottom
+        // tile of the sapling, so both box rows are checked. `underground` is kept, so vanilla's own underground rule for forest and palm saplings still applies.
+        // Runs only on the server and in single-player (vanilla's random tick never runs on a client; TryGrowSapling refuses on a client anyway).
         static bool AttemptToGrowTreeFromSaplingHook(On_WorldGen.orig_AttemptToGrowTreeFromSapling orig, int x, int y, bool underground)
         {
-            if (!HarvesterBoxTrees.OwnGrowth && HarvesterBoxRegistry.BoxTreeSoil.Count > 0 && (HarvesterBoxTrees.IsTreeBox(x, y + 1) || HarvesterBoxTrees.IsTreeBox(x, y + 2)))
-                return false;
+            if (!HarvesterBoxTrees.OwnGrowth && HarvesterBoxRegistry.BoxTreeSoil.Count > 0)
+            {
+                int bottomY = -1;
+                if (HarvesterBoxTrees.IsTreeBox(x, y + 1))
+                    bottomY = y;
+                else if (HarvesterBoxTrees.IsTreeBox(x, y + 2))
+                    bottomY = y + 1;
+
+                if (bottomY != -1)
+                    return HarvesterBoxTrees.TryGrowSapling(x, bottomY, underground);
+            }
 
             return orig(x, y, underground);
         }
