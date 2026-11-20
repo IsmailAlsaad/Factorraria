@@ -248,6 +248,26 @@ namespace Factorraria.Common.Harvester
             return false;
         }
 
+        // For ONE tree piece's drop code: disguises the box under the trunk (boxX, boxY) and the surface tiles of the piece's own column. Vanilla looks down that
+        // column for the first solid tile when a branch or top drops its acorn, and a box (solid-top) or an empty side column makes it run out of the world.
+        // Anything already disguised by an outer call is skipped, so it nests safely.
+        public static System.Collections.Generic.List<Disguise> BeginForPiece(int boxX, int boxY, int column)
+        {
+            System.Collections.Generic.List<Disguise> list = new System.Collections.Generic.List<Disguise>();
+            Disguise middle = Begin(boxX, boxY);
+            list.Add(middle);
+            if (column != boxX)
+                DisguiseSideColumn(column, boxY, middle.Active ? middle.Soil : TileID.Grass, list);
+
+            return list;
+        }
+
+        public static void EndForPiece(System.Collections.Generic.List<Disguise> list)
+        {
+            for (int i = list.Count - 1; i >= 0; i--)
+                End(list[i], false);
+        }
+
         // ---------------------------------------------------------------- saplings
 
         public static bool IsSapling(int x, int y)
@@ -418,6 +438,7 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.KillTile += KillTileDebugHook;
             On_WorldGen.KillTile += KillTileTreeHook;
             On_WorldGen.CheckTree += CheckTreeBoxHook;   // added after the debug CheckTree hook on purpose, so it wraps it
+            On_WorldGen.KillTile_GetTreeDrops += KillTileGetTreeDropsHook;
         }
 
         public override void Unload()
@@ -431,6 +452,40 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.KillTile -= KillTileDebugHook;
             On_WorldGen.KillTile -= KillTileTreeHook;
             On_WorldGen.CheckTree -= CheckTreeBoxHook;
+            On_WorldGen.KillTile_GetTreeDrops -= KillTileGetTreeDropsHook;
+        }
+
+        // The piece-level fix for the IndexOutOfRange. Every tree piece that is killed asks KillTile_GetTreeDrops what it drops, and for tops and branches
+        // vanilla walks down THE PIECE'S OWN COLUMN to the first solid tile (a box is solid-top, so it walks past it, and below a row of boxes in the air the
+        // world is empty, so it runs out of the world). Felling and hand-breaking disguise a fixed window of columns around the trunk, but a cascade also kills
+        // pieces of neighbouring trees (the 10:54 log threw while the staff felled a crowded row). So this hook wraps each call: the box under the trunk
+        // beside the piece and the piece's own column are disguised for that one call, whichever piece it is and wherever the call comes from. It reads and
+        // swaps tile data only, so it is the same on every side. If it still throws, the piece is logged (EnableDebugs) before the exception goes on.
+        static void KillTileGetTreeDropsHook(On_WorldGen.orig_KillTile_GetTreeDrops orig, int i, int j, Tile tileCache, ref bool bonusWood, ref int dropItem, ref int secondaryItem)
+        {
+            if (HarvesterBoxRegistry.BoxTreeSoil.Count == 0 || !WorldGen.InWorld(i, j, 4) || !HarvesterBoxTrees.TryFindBoxForTreeTile(i, j, out int boxX, out int boxY))
+            {
+                orig(i, j, tileCache, ref bonusWood, ref dropItem, ref secondaryItem);
+                return;
+            }
+
+            System.Collections.Generic.List<HarvesterBoxTrees.Disguise> list = HarvesterBoxTrees.BeginForPiece(boxX, boxY, i);
+            try
+            {
+                orig(i, j, tileCache, ref bonusWood, ref dropItem, ref secondaryItem);
+            }
+            catch (IndexOutOfRangeException)
+            {
+                global::Factorraria.Content.Configs.FurnaceOffsetConfig cfg = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
+                if (cfg != null && cfg.EnableDebugs)
+                    DbgLog($"GetTreeDrops STILL threw for piece ({i},{j}) [{Dbg(i, j)}], box ({boxX},{boxY}) [{Dbg(boxX, boxY)}], column below: [{Dbg(i, j + 1)}] [{Dbg(i, boxY)}] [{Dbg(i, boxY + 1)}], disguised {list.Count} tile(s), sideDepth={HarvesterBoxTrees.SideDepth}");
+
+                throw;
+            }
+            finally
+            {
+                HarvesterBoxTrees.EndForPiece(list);
+            }
         }
 
         // THE growth fix (probe 4 + the Fix 5 log). Vanilla's CheckTree compares the RAW type of the tile under a trunk or root piece with the tree type or
