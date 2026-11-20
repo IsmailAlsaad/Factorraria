@@ -23,6 +23,7 @@ namespace Factorraria.Common.Harvester
             public int X, Y, Soil;
             public ushort Real;
             public short FrameX, FrameY;
+            public bool Fake;   // a temporary tile made in an empty cell (End takes it away again)
         }
 
         // True only while TryGrowSapling calls vanilla's growth, so the hook below can tell our growth from vanilla's own random tick.
@@ -84,6 +85,8 @@ namespace Factorraria.Common.Harvester
                 soil.TileType = d.Real;
                 soil.TileFrameX = d.FrameX;
                 soil.TileFrameY = d.FrameY;
+                if (d.Fake)
+                    soil.HasTile = false;
             }
 
             if (!reframeRow)
@@ -144,17 +147,20 @@ namespace Factorraria.Common.Harvester
 
         static void DisguiseSideColumn(int x, int soilY, int soilType, System.Collections.Generic.List<Disguise> list)
         {
+            // A box is solid-TOP (Main.tileSolidTop), which vanilla's downward search walks straight past, so a box is disguised whatever its own solid flags say.
             for (int y = Math.Max(1, soilY - 40); y < soilY + 100 && WorldGen.InWorld(x, y, 1); y++)
             {
-                if (!IsSolidGround(x, y))
-                    continue;
-
                 Tile tile = Main.tile[x, y];
                 int soil = 0;
-                if (HarvesterBoxRegistry.BoxTreeSoil.TryGetValue(tile.TileType, out int boxSoil))
+                if (tile.HasTile && HarvesterBoxRegistry.BoxTreeSoil.TryGetValue(tile.TileType, out int boxSoil))
                     soil = boxSoil;
-                else if (!WorldGen.IsTileTypeFitForTree(tile.TileType))
-                    soil = soilType;
+                else if (IsSolidGround(x, y))
+                {
+                    if (!WorldGen.IsTileTypeFitForTree(tile.TileType))
+                        soil = soilType;
+                }
+                else
+                    continue;
 
                 if (soil != 0)
                 {
@@ -168,6 +174,16 @@ namespace Factorraria.Common.Harvester
                 // skip the rest of this solid stretch; the next surface under it serves the pieces below
                 while (y + 1 < soilY + 100 && WorldGen.InWorld(x, y + 1, 1) && IsSolidGround(x, y + 1))
                     y++;
+            }
+
+            // No ground in this column at or under the box row (a lone box, or the end of a row, in the open): vanilla's search for the soil under a branch would
+            // run out of the world and throw. A temporary soil tile in the empty cell beside the box stops it; it is removed again by End.
+            if (WorldGen.InWorld(x, soilY, 1) && !Main.tile[x, soilY].HasTile)
+            {
+                Tile cell = Main.tile[x, soilY];
+                list.Add(new Disguise { Active = true, Fake = true, X = x, Y = soilY, Real = cell.TileType, FrameX = cell.TileFrameX, FrameY = cell.TileFrameY, Soil = soilType });
+                cell.TileType = (ushort)soilType;
+                cell.HasTile = true;
             }
         }
 

@@ -15,6 +15,7 @@ Thumbs.db
 .vscode/
 .clinerules
 .cursor
+tools/_probe_decomp
 
 index_codebase.py
 PROJECT_CONTEXT.md

@@ -29,5 +29,9 @@
 	  <Folder Include="Content\NPCs\Overrides\" />
 	  <Folder Include="Content\Tiles\Machines\GeneralMachines\MagicMaterializer\Statues\" />
 	</ItemGroup>
+	<ItemGroup>
+		<Compile Remove="tools\_probe_decomp\**" />
+	</ItemGroup>
+
 
 </Project>

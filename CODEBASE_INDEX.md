@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-20 | 430 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-20 | 431 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(86) BaseMachine(58) FactorrariaPacket(39) PacketDirection(34) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(22) Cart(22) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) RecipeCatalog(16) CartSystem(16) Entry(15) CartModule(15) VirtualItemSystem(14) RecipeKnowledgeSystem(14)
+FactorrariaNet(86) WorldGen(59) BaseMachine(58) FactorrariaPacket(39) PacketDirection(34) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(22) Cart(22) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) RecipeCatalog(16) CartSystem(16) Entry(15) CartModule(15) VirtualItemSystem(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -60,6 +60,7 @@ tModLoader/other bases -> project types:
 - GlobalLiquid (1): LiquidInteractionEdits
 - GlobalProjectile (1): CartTrackHookBlocker
 - GlobalWall (1): GlobalWallOverride
+- IDisposable (1): ConversionRecursion
 - IEquatable (1): RecipeOutputKey
 - IItemDropRuleCondition (1): FirstKingSlimeKillCondition
 - Mod (1): Factorraria
@@ -83,7 +84,7 @@ tModLoader/other bases -> project types:
     +WheelHalfBase:float[c] +HitboxWidth:int[c] +HitboxHeight:int[c] +MaxSpeed:float[c] +Drag:float[c] +BoostAccel:float[c] +ShoveSpeed:float[c] +MaxStep:float[c] +Gravity:float[c] +MaxFallSpeed:float[c] +GroundFriction:float[c] +RerailDelay:int[c] +RerailLandedReach:float[s] +DerailGuardRadius:float[s] +RerailStepSlack:float[s] +DerailTurnEase:float[s] +DerailMaxTilt:float[s] +BumpCooldown:int[c] +CollisionRestitution:float[c] +CollisionMinSpeed:float[c] +AnimStopSpeed:float[c] +AnimPixelsPerFrame:float[c] +AnimMaxFramesPerTick:float[c] +PickupPadding:float[c] +SpillGrabCooldown:int[c] +TerrariumDrainPerTick:int[c] +MaxCarriages:int[c] +ChainSpacing:float[c] +ChainSampleStep:float[c] +ChainCloseGapSpeed:float[c] +CouplingMaxRelativeSpeed:float[c] +MotorSpeedCap:float[c] +MotorAccel:float[c] +PassengerPickupCooldown:int[s] +PassengerGraceTicks:int[s] +PassengerPickupPadding:float[s] +PassengerPickupRange:float[s] +PassengerFloorLift:float[s] +PassengerWallHeight:float[s] +PassengerMinVisible:float[s] +PassengerMinInside:float[s] +PassengerLaunchMinSpeed:float[s] +PassengerLaunchMaxSpeed:float[s] +PassengerLaunchLift:float[s] +PassengerRestoreTries:int[s] +PassengerRestoreRange:float[s]
   class Cart
     +Skin:string +SkinType:int +Module:CartModule +PassengerNpc:int +PendingPassenger:TagCompound +PassengerRestoreTries:int +ModuleItem:int +IsChestItem(Item)[s] +IsTerrariumItem(Item)[s] +ChestSlots:int[c] +TryAddToChest(Item,bool) +ChestItems:Item +SlotFilter:int +IsSlotFiltered(int) +HasFilterFor(int) +SlotAccepts(int,Item) +FilterKeepCount(int,Item) +SetFilterFromSlots() +NormalizeTank() +OverflowItems:List<Item> +Tank:LiquidStack +FuelSlotCap:int[c] +Fuel:Item +IsBurning:bool +FuelBurnFraction:float +AcceptsFuel(int)[s] +AcceptsFuel(Item)[s] +TryAddFuel(Item) +RestoreBurn(int,int) +IsLavaSkin(int)[s] +IsMechSkin(int)[s] +FuelLiquidOf(int)[s] +IsMotorSkin(int)[s] +UsesLava:bool +FuelLiquid:int +UsesLiquid:bool +IsFuelLiquid(int) +AlwaysRuns:bool +HasPanel:bool +SpeedMultiplier:float +AccelMultiplier:float +SpeedLimit:float +DriveSpeedCap:float +DriveAccel:float +LiquidPerTick:float +LiquidCapacity:float +SetModule(CartModule,int) +ModuleItemType(CartModule)[s] +CollectPickupItems() +Position:Vector2 +Speed:float +Velocity:Vector2 +OnTrack:bool +Rotation:float +Active:bool +Id:int +PlacedByPlayer:bool +Chain:CartChain +IsCarriage:bool +Body:Cart +CollisionMass:int +ChainSlack:float +ReplayScanIndex:int +LoadChainId:int +LoadChainSlot:int +Facing:int +AnimFrame:int +Bumped:event Action<Cart>[s] +Collided:event Action<Cart, Cart>[s] +FrameChanged:event Action<Cart, int, int>[s] +Driving:event Action<Cart>[s] +AlongSpeed:float +TryCollide(Cart,Cart)[s] +Hitbox:Rectangle +Update() +TickCarriage() +ReplayBump() +Shove(float) +TryRailPose(float,float,float,out float,out float)[s] +NetBurning:bool +NetBurnFraction:float +NetMotorId:int +NetSlot:int +HasNetState:bool +ApplyNetState(Vector2,Vector2,float,int,bool) +ClientStep() +Save() +Load(TagCompound)[s]
-**CartCargo.cs** uses: Cart, CartCargoNet, CartChestUIState, CartGeometry, CartModule, CartPassengers, CartPhysics, CartSound, CartSoundKind, LiquidBroadcastSystem, LiquidStack, LiquidTypeRegistry, VirtualItem, VirtualItemSystem, WorldLiquidSources
+**CartCargo.cs** uses: Cart, CartCargoNet, CartChestUIState, CartGeometry, CartModule, CartPassengers, CartPhysics, CartSound, CartSoundKind, LiquidBroadcastSystem, LiquidStack, LiquidTypeRegistry, VirtualItem, VirtualItemSystem, WorldGen, WorldLiquidSources
   static class CartCargo
     +WindowColumns:int[c] +WindowRows:int[c] +Update(Cart)[s] +OnBump(Cart)[s] +GetWindow(Cart,out int,out int)[s] +PourTank(Cart)[s]
 **CartChain.cs** uses: Cart, CartModule, CartPhysics, Direction, Record
@@ -126,7 +127,7 @@ tModLoader/other bases -> project types:
 **CartMapSystem.cs** uses: CartMapConfig, CartMapIcons, CartMapMode, CartMapSettings
   class CartMapSystem : ModSystem
     +ButtonSize:int +Unload()[ov] +DrawButton(ref string)
-**CartMountBlocker.cs** uses: Cart, CartSkinTable
+**CartMountBlocker.cs** uses: Cart, CartSkinTable, WorldGen
   class CartMountBlocker : ModSystem
     +MountKeyTrackRangeTiles:int +AllowCartMount:bool[s] +Load()[ov] +Unload()[ov] +IsTrackTile(int,int)[s] +Log(string)[s] +IsUsingCartItem(Player)[s] +IsTrackRightClick(Player)[s]
   class CartTrackHookBlocker : GlobalProjectile
@@ -137,7 +138,7 @@ tModLoader/other bases -> project types:
 **CartPassengers.cs** uses: Cart, CartGeometry, CartModule, CartPassengerGlobalNPC, CartPhysics, CartSound, CartSoundKind, CartSystem
   static class CartPassengers
     +CanCarry(NPC)[s] +GetPassenger(Cart)[s] +Update(Cart)[s] +OnBump(Cart)[s] +Release(Cart,bool)[s] +ReleaseWithVelocity(Cart,Vector2)[s] +GetExtraLift(NPC)[s] +Pin(Cart,NPC)[s] +ClientTick()[s] +DrawingPassenger:a dedicated server never draws) bool[s] +CollectRiders()[s] +DrawRider(Cart)[s] +Save(Cart)[s]
-**CartRide.cs** uses: Cart, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartMountBlocker, CartPassengers, CartSystem, FactorrariaNet
+**CartRide.cs** uses: Cart, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartMountBlocker, CartPassengers, CartSystem, FactorrariaNet, WorldGen
   struct CartRideStart
     +SkinItem:int +Position:Vector2 +Velocity:Vector2 +Facing:int
   static class CartRide
@@ -157,7 +158,7 @@ tModLoader/other bases -> project types:
 **CartSystem.cs** uses: BucketPour, Cart, CartCargo, CartChain, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartNet, CartPassengers, CartPhysics, CartRide, CartSkinTable, CartSkins, CartSound, CartSoundKind, FurnaceOffsetConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, PlacedSprite, TrackData, TrackSample
   class CartSystem : ModSystem
     +Carts:List<Cart>[s] +NextCartId:int[s] +AssignId(Cart)[s] +FindById(int)[s] +Unload()[ov] +OnWorldLoad()[ov] +ClearWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +ClientInterpolate()[s] +CheckPlacement(Player,int,int,out Vector2,out bool)[s] +SpawnCart(Vector2,int,CartModule)[s] +FindCartAtCursor(Player)[s] +GetInstallModule(Item,Cart,out CartModule)[s] +IsInInteractRange(Player,Cart,float)[s] +PickUp(Player,Cart)[s] +GetZoomCorrectedMouseWorld()[s]
-**TrackData.cs**
+**TrackData.cs** uses: WorldGen
   enum TrackEnd
     {None, Stop, Bounce, Ramp, Open}
   struct TrackSample
@@ -169,7 +170,7 @@ tModLoader/other bases -> project types:
 **ChestLootDefinitions.cs** uses: ChestConditions, ChestLootRegistry, ClosedScrollItem, CokeItem, LootItem, SteelBarItem, VanillaChest
   static class ChestLootDefinitions
     +Register()[s]
-**ChestLootRegistry.cs**
+**ChestLootRegistry.cs** uses: WorldGen
   enum VanillaChest
     {Wood, Gold, GoldLocked, Shadow, ShadowLocked, Ivy, Frozen, LivingWood, Skyware, Lihzahrd, Water}
   struct LootItem
@@ -180,7 +181,7 @@ tModLoader/other bases -> project types:
     +Where(Func<Chest, bool>) +Clear() +Remove(int) +ReplaceItem(int,int) +Always(int,int,int) +Chance(float,int,int,int) +OneOf(LootItem) +OneOf(float,LootItem) +Custom(Action<Chest, UnifiedRandom>) ~Matches(Chest,int,int) ~Apply(Chest,UnifiedRandom)
   static class ChestLootRegistry
     +LogFoundChests:bool[s] +Rules:IReadOnlyList<ChestLootRule>[s] +ForAll()[s] +For(VanillaChest)[s] +For(VanillaChest)[s] +For(int,int)[s] +ForTile(int)[s] +ForMatching(Func<int, int, bool>)[s] +Clear()[s] +ApplyAll(UnifiedRandom,Action<string>)[s] +TryAdd(Chest,int,int)[s]
-**ChestLootSystem.cs** uses: ChestLootDefinitions, ChestLootRegistry
+**ChestLootSystem.cs** uses: ChestLootDefinitions, ChestLootRegistry, WorldGen
   class ChestLootSystem : ModSystem
     +PostSetupContent()[ov] +PostWorldGen()[ov] +Unload()[ov]
 
@@ -339,12 +340,12 @@ tModLoader/other bases -> project types:
 **GlobalWallOverride.cs**
   class GlobalWallOverride : GlobalWall
     +Drop(int,int,int,ref int)[ov]
-**LiquidTopologyGlobalTile.cs** uses: LiquidNetworkSystem, PipeTierRegistry
+**LiquidTopologyGlobalTile.cs** uses: LiquidNetworkSystem, PipeTierRegistry, WorldGen
   class LiquidTopologyGlobalTile : GlobalTile
     +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +MarkIfNextToPipe(int,int)[s]
 
 ### Common/Harvester/
-**HarvesterBoxHerbHooks.cs** uses: HarvesterBoxRegistry, HarvesterBoxRules
+**HarvesterBoxHerbHooks.cs** uses: HarvesterBoxRegistry, HarvesterBoxRules, WorldGen
   class HarvesterBoxHerbHooks : ModSystem
     +Load()[ov] +Unload()[ov] +PostSetupContent()[ov]
 **HarvesterBoxItemBase.cs** uses: HarvesterBoxKind, HarvesterBoxKinds
@@ -363,27 +364,27 @@ tModLoader/other bases -> project types:
 **HarvesterBoxRowSystem.cs** uses: BaseMachine, FactorrariaNet, HarvesterBoxRows, IRowMachine, MachinePlacement
   class HarvesterBoxRowSystem : ModSystem
     +OnWorldLoad()[ov] +OnWorldUnload()[ov] +MarkDirty(int,int,bool)[s] +PostUpdateWorld()[ov]
-**HarvesterBoxRows.cs** uses: BaseMachine, HarvesterBoxRegistry, HarvesterBoxRowSystem, IRowMachine
+**HarvesterBoxRows.cs** uses: BaseMachine, HarvesterBoxRegistry, HarvesterBoxRowSystem, IRowMachine, WorldGen
   static class HarvesterBoxRows
     +IsBoxTile(int)[s] +TryGetRun(int,int,out int,out int,out int)[s] +RunLengthFrom(int,int)[s] +TryFindRowEntity(int,int,out TileEntity,out Point16)[s] +HasRowEntityBefore(int,int,int)[s] +RefreshGeometry(BaseMachine)[s] +OnTileKilled(int,int)[s]
-**HarvesterBoxRules.cs** uses: HarvesterBoxRegistry, HarvesterBoxTrees, HerbStyle
+**HarvesterBoxRules.cs** uses: HarvesterBoxRegistry, HarvesterBoxTrees, HerbStyle, WorldGen
   static class HarvesterBoxRules
     +IsReadyToHarvest(int,int,int)[s] +HerbAllowedOnSoil(int,Tile)[s]
-**HarvesterBoxTileBase.cs** uses: BaseMachine, HarvesterBoxKind, HarvesterBoxRegistry
+**HarvesterBoxTileBase.cs** uses: BaseMachine, HarvesterBoxKind, HarvesterBoxRegistry, WorldGen
   abstract class HarvesterBoxTileBase<TEntity, TItem> : ModTile
     #Kind:HarvesterBoxKind[ab] +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
-**HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxKinds, HarvesterBoxNetSystem, HarvesterBoxRegistry, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxRules, HarvesterBoxTrees, HarvesterBoxUIState, IDropCaptureTarget, IHarvesterBoxRow, IMachineDynamicDraw, IRowMachine, MachineUIRegistry, MachineUIStateBase, MachineUISystem, RoboticArmDropCaptureSystem, VirtualItem, VirtualItemSystem
+**HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxKinds, HarvesterBoxNetSystem, HarvesterBoxRegistry, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxRules, HarvesterBoxTrees, HarvesterBoxUIState, IDropCaptureTarget, IHarvesterBoxRow, IMachineDynamicDraw, IRowMachine, MachineUIRegistry, MachineUIStateBase, MachineUISystem, RoboticArmDropCaptureSystem, VirtualItem, VirtualItemSystem, WorldGen
   abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IDropCaptureTarget, IHarvesterBoxRow
     +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +HarvestScanTicks:int +HarvestDelayTicks:int +StaffExtendTicks:int +StaffSweepTicks:int +StaffRetractTicks:int +StaffAbortMarginTicks:int +StaffTexturePath:string +StaffOffset:Vector2 +StaffPivotOffset:Vector2 +StaffSpriteRotationDegrees:float +StaffScale:float +StaffDustChance:float +StaffDustType:int +GearActiveFadeTicks:int +TreeGrowTicks:int +BeginClientStrike(int) +RouteDrop(Item) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
     enum BoxCycle : byte
       {Idle, Ready, Strike}
     struct BoxState
       +Cycle:BoxCycle +Ticks:int
-**HarvesterBoxTrees.cs** uses: HarvesterBoxRegistry
+**HarvesterBoxTrees.cs** uses: HarvesterBoxRegistry, WorldGen
   static class HarvesterBoxTrees
     +OwnGrowth:bool[s] +IsTreeBox(int,int)[s] +Begin(int,int)[s] +End(Disguise,bool)[s] +RunAsTreeSoil(int,int,Action)[s] +RunAsTreeSoilWithSides(int,int,Action)[s] +TryFindSoilBelow(int,int,int,out int)[s] +IsSapling(int,int)[s] +CanPlantSapling(int,int)[s] +PlaceSapling(int,int,int)[s] +TryGrowSapling(int,int)[s] +IsTreeReady(int,int)[s]
     struct Disguise
-      +Active:bool +Soil:int X, Y, +Real:ushort +FrameY:short FrameX,
+      +Active:bool +Soil:int X, Y, +Real:ushort +FrameY:short FrameX, +Fake:bool
   class HarvesterBoxTreeHooks : ModSystem
     +Load()[ov] +Unload()[ov]
 **IHarvesterBoxRow.cs**
@@ -428,7 +429,7 @@ tModLoader/other bases -> project types:
 **RecipeTabDefinitions.cs** uses: MechanicalAssemblerTile, VanillaStationBooks
   static class RecipeTabDefinitions
     +Twins:KeyValuePair<string, string>[s] +ExtraMachineTiles:KeyValuePair<string, Func<int>>[s] +Inherits:KeyValuePair<string, int >[s] +SplitUntilOwnerDiscovered:string[s] +InheritedTabs:KeyValuePair<string, string>[s]
-**RecipeTabDiscovery.cs** uses: Entry, JoinSync, RecipeCatalog, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeTabDefinitions, VanillaStationBooks
+**RecipeTabDiscovery.cs** uses: Entry, JoinSync, RecipeCatalog, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeTabDefinitions, VanillaStationBooks, WorldGen
   static class RecipeTabDiscovery
     +ExtraIdBase:int[c] +ScanTicks:int[s] +NearTilesX:int[s] +NearTilesY:int[s] +ServerNearExtra:int[s] +All:IReadOnlyCollection<Tab>[s] +Clear()[s] +Build()[s] +IsDiscovered(string)[s] +IsDiscoveredKey(string)[s] +IsOwnDiscovered(string)[s] +TilesOfTab(string)[s] +IsDiscoverable(string)[s] +HeaderStations(string)[s] +LegacySplitMarkers(IEnumerable<string>)[s] +InheritedNames(string)[s] +ItemsOf(string)[s] +ItemsOf(string)[s] +ScanLocalPlayer(Player)[s] +PopUpColor:Color[s] +PopUpDramatic:bool[s] +ShowNextPopUp()[s] +ClearPopUps()[s] +ServerAccepts(Player,int)[s] +ServerAcceptsItem(Player,int)[s] +NameOfMarker(int)[s]
     class Tab
@@ -491,7 +492,7 @@ tModLoader/other bases -> project types:
 **PipeTileBase.cs** uses: LiquidNetworkSystem, PipeConnectionHelper, PipeMaterial, PipeTierRegistry, TileOverdrawSystem
   abstract class PipeTileBase : ModTile
     #MaxFlowRate:float[ab] #Material:PipeMaterial[ab] #PipeDustId:int[v] #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +PlaceInWorld(int,int,Item)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +NearbyEffects(int,int,bool)[ov] +ReframeNeighbors(int,int)[s] +Slope(int,int)[ov] +CreateDust(int,int,ref int)[ov]
-**WorldLiquidSources.cs**
+**WorldLiquidSources.cs** uses: WorldGen
   class WorldLiquidSources : ModSystem
     +InfiniteThreshold:int[c] +IsInfiniteSource(Point)[s] +ComputeIsInfinite(Point)[s] +OnWorldUnload()[ov]
 
@@ -603,7 +604,7 @@ tModLoader/other bases -> project types:
 **MechSuitDebugSystem.cs** uses: BaseMachine, FurnaceOffsetConfig, MechSuitArmProjectile, MechSuitPlayer
   class MechSuitDebugSystem : ModSystem
     +PostDrawTiles()[ov]
-**MechSuitHologramSystem.cs** uses: MechSuitBuilderSystem, RoboticArmAreaEditorSystem
+**MechSuitHologramSystem.cs** uses: MechSuitBuilderSystem, RoboticArmAreaEditorSystem, WorldGen
   class MechSuitHologramSystem : ModSystem
     +HologramAlpha:float +RedTint:Color +EvaluateIntervalTicks:int +TexturePath:string +OnWorldUnload()[ov] +Unload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
     enum BlockState : byte
@@ -615,12 +616,12 @@ tModLoader/other bases -> project types:
     +SolveElbow(Vector2,Vector2,float,float,float,float)[s] +DrawSegment(SpriteBatch,Texture2D,Vector2,Vector2,Color,float)[s]
 
 ### Common/Net/
-**AwakenedStatueNet.cs** uses: AwakenedStatue, AwakenedStatueEntry, AwakenedStatueRegistry, AwakenedStatueSystem, Entry, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
+**AwakenedStatueNet.cs** uses: AwakenedStatue, AwakenedStatueEntry, AwakenedStatueRegistry, AwakenedStatueSystem, Entry, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, WorldGen
   class AwakenedStatueNetSystem : ModSystem
     +Load()[ov]
   static class AwakenedStatueNet
     +MaxJoinEntries:int[s] +MaxChangesPerPacket:int[s] +BroadcastDelta(List<Point16>,List<AwakenedStatue>)[s] +HandleChanged(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
-**BucketPour.cs** uses: BaseMachine, BucketBase, Cart, CartModule, CartSystem, FactorrariaNet, FactorrariaPacket, LiquidStack, LiquidTypeRegistry, MachineRequest, PacketDirection, RequestCheck, TileEntityHelper
+**BucketPour.cs** uses: BaseMachine, BucketBase, Cart, CartModule, CartSystem, FactorrariaNet, FactorrariaPacket, LiquidStack, LiquidTypeRegistry, MachineRequest, PacketDirection, RequestCheck, TileEntityHelper, WorldGen
   static class BucketPour
     +BucketUnits:float[s] +Reset()[s] +TryGetBucketLiquid(Item,out int)[s] +IsBottomless(int)[s] +TryFindMachineTank(BaseMachine,int,out LiquidStack,out int)[s] +CanPourCart(Cart,int)[s] +TryPourAtCursor(Player,Item)[s] +HandleRequest(BinaryReader,int)[s] +HandleResult(BinaryReader,int)[s] +ClientTick()[s]
   class BucketPourGlobalItem : GlobalItem
@@ -635,7 +636,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
   class CartTestFeed : ModSystem
     +Start(Vector2)[s] +Stop()[s] +PostUpdateEverything()[ov] +OnWorldUnload()[ov]
-**CartInputNet.cs** uses: Cart, CartModule, CartPhysics, CartRide, CartRideStart, CartSkinTable, CartSystem, FactorrariaNet, FactorrariaPacket, PacketDirection
+**CartInputNet.cs** uses: Cart, CartModule, CartPhysics, CartRide, CartRideStart, CartSkinTable, CartSystem, FactorrariaNet, FactorrariaPacket, PacketDirection, WorldGen
   class CartInputNetSystem : ModSystem
     +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
   enum CartAction : byte
@@ -705,12 +706,12 @@ tModLoader/other bases -> project types:
     +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
     struct Pending
       +Kind:CartSoundKind +Position:Vector2
-**ChestConveyorNet.cs** uses: ChestConveyorEntry, ChestConveyorMode, ChestConveyorSystem, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
+**ChestConveyorNet.cs** uses: ChestConveyorEntry, ChestConveyorMode, ChestConveyorSystem, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, WorldGen
   class ChestConveyorNetSystem : ModSystem
     +Load()[ov]
   static class ChestConveyorNet
     +MaxJoinEntries:int[s] +BroadcastEntry(Point,bool,ChestConveyorMode)[s] +RequestCycle(Point)[s] +HandleCycleRequest(BinaryReader,int)[s] +HandleChanged(BinaryReader,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
-**ConveyorFilterNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, PriorityConveyorNetwork, VirtualItemSystem
+**ConveyorFilterNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, PriorityConveyorNetwork, VirtualItemSystem, WorldGen
   class ConveyorFilterNetSystem : ModSystem
     +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov]
   static class ConveyorFilterNet
@@ -727,7 +728,7 @@ tModLoader/other bases -> project types:
     +Load()[ov]
   static class CosmicNet
     +WriteHeatmap(BinaryWriter)[s] +HandleRays(BinaryReader,int)[s] +HandleEvents(BinaryReader,int)[s] +ReadHeatmap(BinaryReader)[s]
-**CustomWireNet.cs** uses: CopperWireItem, CustomWireSystem, CustomWireType, FactorrariaNet, FactorrariaPacket, GoldWireItem, JoinSync, PacketDirection, TinWireItem
+**CustomWireNet.cs** uses: CopperWireItem, CustomWireSystem, CustomWireType, FactorrariaNet, FactorrariaPacket, GoldWireItem, JoinSync, PacketDirection, TinWireItem, WorldGen
   class CustomWireNetSystem : ModSystem
     +Load()[ov]
   static class CustomWireNet
@@ -759,7 +760,7 @@ tModLoader/other bases -> project types:
 **HarvesterBoxNet.cs** uses: FactorrariaNet, FactorrariaPacket, HarvesterBoxRows, IHarvesterBoxRow, PacketDirection
   class HarvesterBoxNetSystem : ModSystem
     +NearbyTiles:float +MaxPerTick:int +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +AnnounceStrike(int,int) +PostUpdateEverything()[ov]
-**HarvesterBoxTreeNet.cs** uses: FactorrariaNet, FactorrariaPacket, HarvesterBoxKinds, HarvesterBoxRegistry, HarvesterBoxTrees, PacketDirection
+**HarvesterBoxTreeNet.cs** uses: FactorrariaNet, FactorrariaPacket, HarvesterBoxKinds, HarvesterBoxRegistry, HarvesterBoxTrees, PacketDirection, WorldGen
   class HarvesterBoxTreeNetSystem : ModSystem
     +Load()[ov] +TryPlantAcornAtCursor(Player)[s]
   class HarvesterBoxAcornItem : GlobalItem
@@ -781,12 +782,12 @@ tModLoader/other bases -> project types:
 **JoinSyncSystem.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection
   class JoinSyncSystem : ModSystem
     +TestProvidersEnabled:bool[s] +TestBlobSize:int[s] +LastTestCounter:int[s] +Load()[ov] +PostUpdateEverything()[ov] +Unload()[ov]
-**LiquidBroadcast.cs** uses: FactorrariaNet, NetworkConfig
+**LiquidBroadcast.cs** uses: FactorrariaNet, NetworkConfig, WorldGen
   class LiquidBroadcastSystem : ModSystem
     +Marked:int[s] +SentWater:int[s] +SentSquares:int[s] +PeakQueue:int[s] +TicksOverCap:int[s] +Mark(int,int)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +Describe()[s]
   class LiquidBroadcastCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
-**LiquidPipeDiagnostics.cs** uses: FactorrariaNet, FlowNetwork, FlowNetworkDiagnostics, FlowSink, FlowSource, LiquidNetworkSystem, LiquidTypeRegistry, MachineVisualRegistry, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
+**LiquidPipeDiagnostics.cs** uses: FactorrariaNet, FlowNetwork, FlowNetworkDiagnostics, FlowSink, FlowSource, LiquidNetworkSystem, LiquidTypeRegistry, MachineVisualRegistry, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper, WorldGen
   static class LiquidPipeDiagnostics
     +Summary()[s] +Report(bool)[s]
   class LiquidPipeCommand : ModCommand
@@ -794,7 +795,7 @@ tModLoader/other bases -> project types:
 **MachineBootstrapSystem.cs** uses: FactorrariaNet, MachinePlacement, MachineVisualRegistry, TileEntityHelper
   class MachineBootstrapSystem : ModSystem
     +ColumnsPerTick:int[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
-**MachineDetail.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineRecipeSelect, MachineRequest, MachineSlotEdit, MachineUISystem, PacketDirection, RequestCheck, TileEntityHelper
+**MachineDetail.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineRecipeSelect, MachineRequest, MachineSlotEdit, MachineUISystem, PacketDirection, RequestCheck, TileEntityHelper, WorldGen
   enum DetailCloseReason : byte
     {Closed, Killed, OutOfReach, Dead, Full, Rejected}
   class MachineDetailSystem : ModSystem
@@ -814,12 +815,12 @@ tModLoader/other bases -> project types:
     +PacketsSent:int[s] +EntriesSent:int[s] +BytesSent:long[s] +EntriesReceived:int[s] +Applied:int[s] +Missed:int[s] +Failed:int[s] +TankSteps:int[s] +HandleLightUpdate(BinaryReader,int)[s] +QuantizeUse(float)[s] +QuantizeAmount(LiquidStack)[s] +WriteTanks(LiquidStack,BinaryWriter)[s] +ReadTanks(LiquidStack,BinaryReader)[s] +FingerprintOrZero(CustomRecipe)[s] +FindRecipe(RecipeBook,uint)[s] +ClearCaches()[s]
     sealed class FingerprintMap
       +Count:int +ByFingerprint:Dictionary<uint, CustomRecipe>
-**MachinePlacement.cs** uses: BaseMachine, FactorrariaNet, ITilePlacedConsumer, LiquidNetworkSystem, MachineVisualDefinition, MachineVisualRegistry, PowerGridSystem, TileEntityHelper
+**MachinePlacement.cs** uses: BaseMachine, FactorrariaNet, ITilePlacedConsumer, LiquidNetworkSystem, MachineVisualDefinition, MachineVisualRegistry, PowerGridSystem, TileEntityHelper, WorldGen
   static class MachinePlacement
     +RejectNextEntityRequest:bool[s] +ServerPlace(int,int,int)[s] +EnsureEntity(int,int)[s] +Share(BaseMachine)[s] +Register(BaseMachine)[s]
   sealed class MachinePlacedConsumer : ITilePlacedConsumer
     +AppliesTo(int) +OnTilePlaced(int,int,int,int)
-**MachinePlacementInfo.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineBiome, MachinePlacement, MachineVisualRegistry, PacketDirection, TileEntityHelper
+**MachinePlacementInfo.cs** uses: BaseMachine, FactorrariaNet, FactorrariaPacket, MachineBiome, MachinePlacement, MachineVisualRegistry, PacketDirection, TileEntityHelper, WorldGen
   class MachinePlacementInfoSystem : ModSystem
     +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov] +Unload()[ov]
   static class MachinePlacementInfo
@@ -836,7 +837,7 @@ tModLoader/other bases -> project types:
 **MachineRemoval.cs** uses: BaseMachine, Factorraria, FactorrariaNet, HarvesterBoxRows, PoleLinkNet, TileEntityHelper
   static class MachineRemoval
     +OnTileKilled(int,int)[s]
-**MachineRequest.cs** uses: BaseMachine, MachineDetailSystem, MachinePlacement
+**MachineRequest.cs** uses: BaseMachine, MachineDetailSystem, MachinePlacement, WorldGen
   enum RequestCheck : byte
     {Ok, Ignored, Refused}
   static class MachineRequest
@@ -901,7 +902,7 @@ tModLoader/other bases -> project types:
     +TryConsume(int,int)[s] +Reset(int)[s] +ResetAll()[s]
   class NetRateLimiterSystem : ModSystem
     +Load()[ov] +Unload()[ov]
-**PoleLinkNet.cs** uses: BaseMachine, CustomWireNet, CustomWireType, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, PoleLink, PoleLinkSystem, PowerPoleTileEntityBase, Result, SlotState
+**PoleLinkNet.cs** uses: BaseMachine, CustomWireNet, CustomWireType, FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, PoleLink, PoleLinkSystem, PowerPoleTileEntityBase, Result, SlotState, WorldGen
   enum PoleLinkRequestKind : byte
     {Link, Cut}
   enum PoleLinkResult : byte
@@ -953,7 +954,7 @@ tModLoader/other bases -> project types:
     +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov]
     struct Pending
       +Kind:SuperWeaponEffectKind +Position:Vector2
-**TilePlaced.cs** uses: FactorrariaNet, FactorrariaPacket, MachinePlacementInfo
+**TilePlaced.cs** uses: FactorrariaNet, FactorrariaPacket, MachinePlacementInfo, WorldGen
   interface ITilePlacedConsumer
     +AppliesTo(int) +OnTilePlaced(int,int,int,int)
   static class TilePlaced
@@ -1002,7 +1003,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 
 ### Common/Networks/
-**FlowNetwork.cs** uses: BaseMachine, Direction, FlowDir, FlowNode, FlowPort, FlowRoute, FlowRouteFinder, FlowRouteMerger, FlowSolver, FlowTransfer, LiquidStack, LiquidTankRules, LiquidTypeRegistry, LiquidWorldBanks, MotorTileEntityBase, PipeConnectionHelper, PipeMaterial, PipeTierRegistry, TileEntityHelper, WorldLiquidSources
+**FlowNetwork.cs** uses: BaseMachine, Direction, FlowDir, FlowNode, FlowPort, FlowRoute, FlowRouteFinder, FlowRouteMerger, FlowSolver, FlowTransfer, LiquidStack, LiquidTankRules, LiquidTypeRegistry, LiquidWorldBanks, MotorTileEntityBase, PipeConnectionHelper, PipeMaterial, PipeTierRegistry, TileEntityHelper, WorldGen, WorldLiquidSources
   sealed class FlowSource
     +Machine:BaseMachine +Tank:LiquidStack +TankIndex:int +WorldPos:Point +Owner:int +IsWorld:bool
   sealed class FlowSink
@@ -1018,7 +1019,7 @@ tModLoader/other bases -> project types:
     +Describe(FlowSource)[s] +Describe(FlowSink)[s] +Report(bool)[s]
   class FlowNetworkCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
-**LiquidWorldBanks.cs** uses: Factorraria, LiquidBroadcastSystem, LiquidTypeRegistry
+**LiquidWorldBanks.cs** uses: Factorraria, LiquidBroadcastSystem, LiquidTypeRegistry, WorldGen
   sealed class LiquidWorldBanks
     +WithdrawBankCount:int +DepositBankCount:int +WorldSourceOffer(Point) +WorldSinkSpace(Point,int) +AddWithdraw(Point,float) +AddDeposit(Point,int,float) +FlushAll() +Clear()
     struct DepositBank
@@ -1086,7 +1087,7 @@ tModLoader/other bases -> project types:
     +IsAwakening:bool +AwakenerOrigin:Point16 +AwakenRadiusTiles:int +AwakenedStatueCount:int +AwakenedEnemyCount:int
 
 ### Common/Story/
-**BoundMechanicGlobalNPC.cs** uses: FactorrariaNet
+**BoundMechanicGlobalNPC.cs** uses: FactorrariaNet, WorldGen
   class BoundMechanicGlobalNPC : GlobalNPC
     +UndergroundTexturePath:string[s] +AppliesToEntity(NPC,bool)[ov] +Unload()[ov] +PreDraw(NPC,SpriteBatch,Vector2,Color)[ov] +PostDraw(NPC,SpriteBatch,Vector2,Color)[ov]
 **MechanicRescueTracker.cs** uses: FactorrariaNet, ImportantDialogueEntry, ImportantDialoguePlayer, ImportantDialogueRegistry, ImportantDialogueSystem, StoryFlags, StorySystem
@@ -1200,10 +1201,10 @@ tModLoader/other bases -> project types:
 **SuperWeaponMissile.cs** uses: BaseMachine, SuperWeaponEffectKind, SuperWeaponNet, SuperWeaponSystem, WallShieldGlobalNPC
   class SuperWeaponMissile : ModProjectile
     +ArtPath:string[c] +Texture:string[ov] +Unload()[ov] +CanHitNPC(NPC)[ov] +CanHitPlayer(Player)[ov] +CanHitPvp(Player)[ov] +AI()[ov] +PreDraw(ref Color)[ov] +AnyInFlight()[s]
-**SuperWeaponPlacement.cs** uses: FactorrariaNet, MissileDrillTile, MissileTankTile, MissileThrusterTile
+**SuperWeaponPlacement.cs** uses: FactorrariaNet, MissileDrillTile, MissileTankTile, MissileThrusterTile, WorldGen
   static class SuperWeaponPlacement
     +CanPlacePart(Player,Item)[s]
-**SuperWeaponSystem.cs** uses: MissileDrillTile, MissileTankTile, MissileTankTileEntity, MissileThrusterTile, SuperWeaponAssembly, SuperWeaponEffectKind, SuperWeaponMissile, SuperWeaponNet, SuperWeaponState, SuperWeaponTrigger, TriggerCandidate, WallShieldGlobalNPC
+**SuperWeaponSystem.cs** uses: MissileDrillTile, MissileTankTile, MissileTankTileEntity, MissileThrusterTile, SuperWeaponAssembly, SuperWeaponEffectKind, SuperWeaponMissile, SuperWeaponNet, SuperWeaponState, SuperWeaponTrigger, TriggerCandidate, WallShieldGlobalNPC, WorldGen
   class SuperWeaponSystem : ModSystem
     +TriggerCheckTicks:int +IgniteTicks:int +MissileAccel:float +MissileMaxSpeedPx:float +MissileMaxRangeTiles:int +HitDistancePx:float +SuppressPartDrops:bool +BreakZoneTicks:int +OnWorldLoad()[ov] +OnWorldUnload()[ov] +PostUpdateEverything()[ov] +FindWall()[s] +FindShieldedWall()[s] +TankCenter(MissileTankTileEntity)[s] +StartIgnition(MissileTankTileEntity) +IsLaunchBreak(int,int)[s] +IsPartTile(int)[s]
     class BreakZone
@@ -1228,7 +1229,7 @@ tModLoader/other bases -> project types:
     +InstancePerEntity:bool[ov] +AppliesToEntity(NPC,bool)[ov] +ShieldUp:bool +IsWallType(int)[s] +IsShielded(NPC)[s] +BreakShield()[s] +RaiseShield()[s] +SendExtraAI(NPC,BitWriter,BinaryWriter)[ov] +ReceiveExtraAI(NPC,BitReader,BinaryReader)[ov] +ModifyIncomingHit(NPC,ref HitModifiers)[ov] +UpdateLifeRegen(NPC,ref int)[ov] +CheckDead(NPC)[ov] +PostAI(NPC)[ov]
 
 ### Common/Systems/
-**ChestConveyorSystem.cs** uses: ChestConveyorNet, VItemStacking, VirtualItem, VirtualItemSystem
+**ChestConveyorSystem.cs** uses: ChestConveyorNet, VItemStacking, VirtualItem, VirtualItemSystem, WorldGen
   enum ChestConveyorMode
     {InputOutput, Input, Output}
   enum ChestSideRole
@@ -1239,7 +1240,7 @@ tModLoader/other bases -> project types:
     +Enabled:bool[s] +ProbeRetryTicks:int[s] +HasListedChestAbove(int,int)[s] +QueueProbe(int,int,bool)[s] +Entries:IEnumerable<ChestConveyorEntry>[s] +CycleMode(ChestConveyorEntry)[s] +TryCycleModeAt(Point,out ChestConveyorMode)[s] +SetReplicaEntry(Point,bool,ChestConveyorMode)[s] +ReplaceReplica(List<KeyValuePair<Point, ChestConveyorMode>>)[s] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
     struct Probe
       +Tile:Point +AllowAdd:bool +Age:int
-**ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet
+**ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet, WorldGen
   class ConveyorPhysicsSystem : ModSystem
     +ConveyorSpeed:float[c] +NpcSyncTicks:int[s] +ItemSyncTicks:int[s] +LogStats:bool[s] +PostUpdateNPCs()[ov]
 **CustomWireSystem.cs** uses: CopperWireItem, GoldWireItem, IronCutterItem, LeadCutterItem, PowerGridSystem, TinWireItem
@@ -1247,13 +1248,13 @@ tModLoader/other bases -> project types:
     {None, Copper}
   class CustomWireSystem : ModSystem
     +AllWireTypes:CustomWireType[s] +WireGrid:Dictionary<Point16,CustomWireType>[s] +GetVisibleTileRect(out int,out int,out int,out int)[s] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +HasWire(int,int,CustomWireType)[s] +AddWire(int,int,CustomWireType)[s] +RemoveWire(int,int,CustomWireType)[s] +WireAt(int,int)[s] +SetWireAt(int,int,CustomWireType)[s] +ReplaceAll(List<KeyValuePair<Point16, CustomWireType>>)[s] +PostDrawTiles()[ov]
-**HellstoneGrowthSystem.cs** uses: BaseMachine, HellstoneGrowNetSystem
+**HellstoneGrowthSystem.cs** uses: BaseMachine, HellstoneGrowNetSystem, WorldGen
   class HellstoneGrowthSystem : ModSystem
     +Enabled:bool +MaxDistance:int +BaseSecondsToConvert:float +DistanceSlowdown:float +MinLavaAmount:int +AshLayerDepth:int +AshSecondsToConvert:float +AshDustCount:int +AshSoundVolume:float +AshSoundPitchVariance:float +SamplesPerTick:int +ScanColumnsPerTick:int +RescanDelayTicks:int +MaxCandidates:int +MaxExtraConversionsPerPick:int +SoundVariants:int +SoundVolume:float +SoundPitchVariance:float +SoundMaxInstances:int +LavaDustCount:int +EmberDustCount:int +SmokeDustCount:int +DustCullMargin:float +ClearWorld()[ov] +PostUpdateWorld()[ov] +PlayEffect(int,int,bool)
 **LiquidNetworkDebugSystem.cs** uses: BaseMachine, Direction, FlowDir, FlowNetwork, FlowPort, FlowRoute, FlowSink, FlowSource, FlowTransfer, FurnaceOffsetConfig, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry
   class LiquidNetworkDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
-**LiquidNetworkSystem.cs** uses: Factorraria, FlowNetwork, FlowNetworkBuilder, LiquidPipeDiagnostics, LiquidTextureCache, LiquidWorldBanks, PipeTierRegistry
+**LiquidNetworkSystem.cs** uses: Factorraria, FlowNetwork, FlowNetworkBuilder, LiquidPipeDiagnostics, LiquidTextureCache, LiquidWorldBanks, PipeTierRegistry, WorldGen
   class LiquidNetworkSystem : ModSystem
     +AllPipeTiles:HashSet<Point>[s] +networkNeedsRebuilding:bool[s] +FlowNetworks:List<FlowNetwork>[s] +WorldBanks:LiquidWorldBanks[s] +RebuildCount:int[s] +PostUpdateWorld()[ov] +RegisterPipeTile(Point)[s] +UnregisterPipeTile(Point)[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov]
 **MachineRegisterationSystem.cs** ns!=Factorraria.Common.Machines uses: AutohammerRecipeRegistry, AutohammerTileEntity, AutohammerUIState, BaseMachine, BeeWheelTile, BeeWheelTileEntity, BeeWheelUIState, BeeWheelVisual, CustomRecipe, DecayChamberRecipeRegistry, DecayChamberTileEntity, DecayChamberUIState, ExtractinatorRecipeRegistry, ExtractinatorTileEntity, ExtractinatorUIState, FuelGroup, FurnaceRecipeRegistry, FurnaceTileEntity, FurnaceUIState, GelBurnerTileEntity, GelBurnerUIState, HarvesterBoxRegistration, HarvesterBoxRegistry, HellforgeRecipeRegistry, HellforgeTileEntity, HellforgeUIState, IceMachineRecipeRegistry, IceMachineTileEntity, IceMachineUIState, IronMotorTile, IronMotorTileEntity, LeadMotorTile, LeadMotorTileEntity, LiquidBiomeVisits, LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidDistillatorUIState, MachineUIRegistry, MachineVisualRegistry, MagicMaterializerRegistry, MagicMaterializerTileEntity, MagicMaterializerUIState, MechanicalAssemblerRecipeRegistry, MechanicalAssemblerTile, MechanicalAssemblerTileEntity, MechanicalAssemblerUIState, MissileTankRegistry, MissileTankTile, MissileTankTileEntity, MissileTankUIState, PlatinumPowerPoleTile, PlatinumPowerPoleTileEntity, PowerPoleUIState, RecipeArtDefinitions, RecipeArtRegistry, RecipeBook, RecipeCatalog, RecipeTabDiscovery, RecipeVisibility, RoboticArmTile, RoboticArmTileEntity, RoboticArmUIState, ScrollPoolDefinitions, ScrollPools, SolidifierRecipeRegistry, SolidifierTileEntity, SolidifierUIState, SunCapsuleTile, SunCapsuleTileEntity, SunCapsuleUIState, VanillaStationBooks, WoodenPowerPoleTile, WoodenPowerPoleTileEntity
@@ -1269,7 +1270,7 @@ tModLoader/other bases -> project types:
       +Active:bool +From:Vector2 +To:Vector2 +Wire:CustomWireType +Invalid:bool +CanCommit:bool +EndSlot:int +EndPole:Point16
     enum PointHighlight
       {None, Valid, Invalid}
-**PoleLinkSystem.cs** uses: CustomWireNet, CustomWireType, PoleBoard, PowerGridSystem, PowerPoleTileEntityBase, TileEntityHelper
+**PoleLinkSystem.cs** uses: CustomWireNet, CustomWireType, PoleBoard, PowerGridSystem, PowerPoleTileEntityBase, TileEntityHelper, WorldGen
   class PoleLink
     +A:Point16 +B:Point16 +SlotA:byte +SlotB:byte +Wire:CustomWireType +Cost:ushort +Touches(Point16) +Other(Point16) +SlotOn(Point16)
   class PoleLinkSystem : ModSystem
@@ -1316,7 +1317,7 @@ tModLoader/other bases -> project types:
     +TileType:int +Texture:Asset<Texture2D> +MarginPx:int +InFront:bool +Select:TileOverdrawSelector +PreviewSelect:TileOverdrawSelector +Warned:bool
   class TileOverdrawSystem : ModSystem
     +ScanPaddingTiles:int +DefaultMarginPx:int +Load()[ov] +Unload()[ov] +Register(int,string,TileOverdrawSelector,int,bool,TileOverdrawSelector) +PostDrawTiles()[ov]
-**VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, Factorraria, FurnaceOffsetConfig, GhostDiagnostics, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem
+**VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, Factorraria, FurnaceOffsetConfig, GhostDiagnostics, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem, WorldGen
   class VirtualItemSystem : ModSystem
     +tileItemMap:Dictionary<Point, VirtualItem>[s] +vItemsById:Dictionary<int, VirtualItem>[s] +WorldItemsConverted:int[s] +PlayerPickups:int[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +AddReplica(VirtualItem)[s] +TryGetById(int,out VirtualItem)[s] +ForgetId(VirtualItem)[s] +Describe()[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +SyncWorldItem(int,string)[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +ReplaceFilterNetworks(List<KeyValuePair<int, List<Point>>>)[s] +TryGetConveyorFilter(int,int,out int)[s]
 **VisibleTileScan.cs**
@@ -1447,12 +1448,12 @@ tModLoader/other bases -> project types:
 **VItemStacking.cs** ns!=Factorraria.Content.VirtualItems
   static class VItemStacking
     +CanMerge(Item,Item)[s] +Insert(Item,int,int,Item,Func<int, Item, bool>,Action<int>)[s]
-**VirtualItem.cs** ns!=Factorraria.Content.VirtualItems uses: VItemGlobalItem, VItemStacking, VirtualItemSystem
+**VirtualItem.cs** ns!=Factorraria.Content.VirtualItems uses: VItemGlobalItem, VItemStacking, VirtualItemSystem, WorldGen
   class VirtualItem
     +itemType:int +stackSize:int +prefix:int +active:bool +Id:int +ReplicaStep:float +StepPerTick:float +pickupCooldown:int +cartGrabCooldown:int +frame:int +frameCounter:int +currentTileX:int +currentTileY:int +targetTileX:int +targetTileY:int +worldPosition:Vector2 +moveSpeed:float +Update() +CreateReplica(int,Item,Vector2,int,int,float)[s] +ApplyReplicaState(Item,int,Vector2,int,int,float) +ReplicaTick() +SetTargetTile(int,int) +GetSourceRectangle(Texture2D) +Remove() +MoveVirtualItem() +TryMergeWithVirtualItem(VirtualItem)
 
 ### Common/WorldGeneration/
-**CartWorldGen.Biomes.cs** uses: Cart, CartChain, CartModule, CartSystem, Factorraria, LiquidTypeRegistry, MachineBiome, SiliconOreItem, WoodenMinecartItem
+**CartWorldGen.Biomes.cs** uses: Cart, CartChain, CartModule, CartSystem, Factorraria, LiquidTypeRegistry, MachineBiome, SiliconOreItem, WoodenMinecartItem, WorldGen
   partial class CartWorldGen
     +BiomeScanRadius:int +BiomeMinTiles:int +DesertAmberChance:double +HellcartChance:double +ShroomCartChance:double +GemCartChance:double +WoodenCartChance:double +GoldChestShare2:double +TerrariumEmptyChance:double +TerrariumWaterChance:double +JungleHoneyChance:double +TerrariumMaxAmount:int
     enum CartBiome
@@ -1463,16 +1464,16 @@ tModLoader/other bases -> project types:
       +Biome:CartBiome +Depth:CartDepth +BelowRockLayer:bool
     class LootEntry
       +Pool:int +Min:int +Max:int +Chance:double +Slots:int +Distinct:bool
-**CartWorldGen.cs** uses: CartPhysics, TrackData, TrackSample
+**CartWorldGen.cs** uses: CartPhysics, TrackData, TrackSample, WorldGen
   partial class CartWorldGen : ModSystem
     +Enabled:bool +SpawnChancePerTile:double +LinkedChance:double +ChestChance:double +TerrariumChance:double +GoldChestShare:double +MinSpacingTiles:int +MaxCartsPerTrack:int +FlatMarginPx:int +HeadroomRowsMargin:int +OreSlots:int +OreMin:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
-**OilWorldGen.cs** uses: OilLiquid
+**OilWorldGen.cs** uses: OilLiquid, WorldGen
   class OilWorldGen : ModSystem
     +Enabled:bool +PoolDepth:int +FloorThickness:int +RimMargin:int +MinPoolDepthHere:int +PocketAttemptsPerTile:double +PocketExponent:double +PocketMinDepthFraction:double +PocketRadiusXMin:double +PocketRadiusXMax:double +PocketRadiusYMin:double +PocketRadiusYMax:double +PocketMaxCells:int +ExcludeHive:bool +PoolFraction:double +ShellThickness:int +ShellFullFraction:double +ShellEndFraction:double +OvalInset:int +ScanMarginTop:int +ScanMarginBottom:int +MinColumnHeight:int +SmoothRadius:int +PocketMaxChance:double +PocketChanceExponent:double +PocketCellsBottom:int +PocketCellsTop:int +MaxLiquidBodyCells:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov] +PostWorldGen()[ov]
-**PostWorldGenEdits.cs** uses: CoalTile
+**PostWorldGenEdits.cs** uses: CoalTile, WorldGen
   class PostWorldGenEdits : ModSystem
     +Enabled:bool[s] +PostWorldGen()[ov]
-**SiliconOreWorldGen.cs** uses: SiliconOreTile
+**SiliconOreWorldGen.cs** uses: SiliconOreTile, WorldGen
   class SiliconOreWorldGen : ModSystem
     +DensityPerTile:double[s] +StrengthMin:int[s] +StrengthMax:int[s] +StepsMin:int[s] +StepsMax:int[s] +BottomMargin:int[s] +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
 
@@ -1557,7 +1558,7 @@ tModLoader/other bases -> project types:
     +PreDrawInWorld(SpriteBatch,Color,Color,ref float,ref float,int)[ov] +PreDrawInInventory(SpriteBatch,Vector2,Rectangle,Color,Color,Vector2,float)[ov] +AddRecipes()[ov]
 
 ### Content/Items/Liquids/Buckets/
-**BucketBase.cs** ns!=ModLiquidExampleMod.Content.Items
+**BucketBase.cs** ns!=ModLiquidExampleMod.Content.Items uses: WorldGen
   abstract class BucketBase : ModItem
     +BucketLiquidType:int +HoldItem(Player)[ov]
 **FuelBucket.cs** uses: BucketBase, FuelLiquid
@@ -1621,7 +1622,7 @@ tModLoader/other bases -> project types:
   class SteelScrewItem : ModItem
 
 ### Content/Items/Mounts/
-**MechSuitItem.cs** uses: FactorrariaNet, MechSuitArmProjectile, MechSuitMount, MechSuitNet
+**MechSuitItem.cs** uses: FactorrariaNet, MechSuitArmProjectile, MechSuitMount, MechSuitNet, WorldGen
   class MechSuitItem : ModItem
   static class MechSuitTileSearch
     +TryFindNearestAnchorTile(Vector2,float,List<Vector2>,float,out Point)[s]
@@ -1686,12 +1687,12 @@ tModLoader/other bases -> project types:
     +AtlasTextureName:string[ov] +Update()[ov]
 
 ### Content/Projectiles/Hooks/
-**MechanicalArmProjectile.cs** uses: FactorrariaNet, MechanicalArmIK
+**MechanicalArmProjectile.cs** uses: FactorrariaNet, MechanicalArmIK, WorldGen
   class MechanicalArmProjectile : ModProjectile
     +Load()[ov] +Unload()[ov] +CanUseGrapple(Player)[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +OnKill(int)[ov] +PreDraw(ref Color)[ov]
 
 ### Content/Projectiles/Mounts/
-**MechSuitArmProjectile.cs** uses: FactorrariaNet, MechSuitPlayer, MechanicalArmIK
+**MechSuitArmProjectile.cs** uses: FactorrariaNet, MechSuitPlayer, MechanicalArmIK, WorldGen
   class MechSuitArmProjectile : ModProjectile
     +AnchorTile:Point +ArmBendSign:float +Latched:bool +Retracting:bool +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +BeginRetract() +PreDraw(ref Color)[ov]
 
@@ -1715,7 +1716,7 @@ tModLoader/other bases -> project types:
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/Extractinator/
-**ExtractinatorBlockPlayer.cs**
+**ExtractinatorBlockPlayer.cs** uses: WorldGen
   class ExtractinatorBlockPlayer : ModPlayer
     +PreUpdate()[ov] +PostUpdate()[ov] +OnEnterWorld()[ov]
 **ExtractinatorRecipeRegistry.cs** uses: SiliconOreItem
@@ -1853,7 +1854,7 @@ tModLoader/other bases -> project types:
 **RoboticArmTile.cs** uses: MechanicalArmItem, RoboticArmTileEntity
   class RoboticArmTile : ModTile
     +Texture:string[ov] +Slope(int,int)[ov]
-**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, Factorraria, GhostDiagnostics, IDropCaptureTarget, IMachineDynamicDraw, MachineSlotKind, RoboticArmMotion, RoboticArmNet, RoboticArmTile, RoboticArmVisual, RoboticArmWorker, Tracker, VirtualItem, VirtualItemSystem
+**RoboticArmTileEntity.cs** uses: ElectricConsumerMachine, Factorraria, GhostDiagnostics, IDropCaptureTarget, IMachineDynamicDraw, MachineSlotKind, RoboticArmMotion, RoboticArmNet, RoboticArmTile, RoboticArmVisual, RoboticArmWorker, Tracker, VirtualItem, VirtualItemSystem, WorldGen
   class RoboticArmTileEntity : ElectricConsumerMachine, IMachineDynamicDraw, IDropCaptureTarget
     +ValidTileType:int[ov] +PowerDemand:float[ov] #InputSlotCount:int[ov] #OutputSlotCount:int[ov] +UpperArmLength:float +ForearmLength:float +Reach:float +Shoulder:Vector2 +Visual:RoboticArmVisual +Motion:RoboticArmMotion +HeldForVisual:Item +ApplyNetState(bool,int,int,int,int) +AreaX:int +AreaY:int +AreaW:int +AreaH:int +ReachTiles:int +AreaLimit:int +AreaTiles:Rectangle +SetArea(int,int,int,int) +IsTileInReach(int,int) #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov] +Update()[ov] +IsTool(Item) +IsPlaceable(Item) +IsAcceptedItem(Item) +AcceptsSlotItem(global::MachineSlotKind,int,Item)[ov] #IntakeTiles()[ov] #TryGetIntakeSlot(int,out int,out int)[ov] +CanDeliverDrops:bool +RouteDrop(Item) +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DynamicDrawBehindTiles(SpriteBatch)
 **RoboticArmUIState.cs** uses: ElectricityUIIcon, MachineSlotBinding, MachineSlotKind, MachineUIElementEntry, MachineUIStateBase, RoboticArmAreaEditorSystem, RoboticArmTileEntity, UIItemSlotWrapper
@@ -1862,7 +1863,7 @@ tModLoader/other bases -> project types:
 **RoboticArmVisual.cs** uses: MechanicalArmIK, RoboticArmMotion
   class RoboticArmVisual
     +AimSmoothing:float +IdleAimTilt:float +SwingArc:float +SwingEndAngle:float +ClawPivotX:float +ClawPivotY:float +BlockScale:float +BeamThickness:float +JointScale:float +Update(RoboticArmMotion,Vector2,float,float,Item,bool) +DrawBehind(SpriteBatch,Vector2,Item,bool)
-**RoboticArmWorker.cs** uses: BaseMachine, FactorrariaNet, PureSiliconTile, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmMotion, RoboticArmNet, RoboticArmTileEntity, SiliconOreTile, TileEntityHelper
+**RoboticArmWorker.cs** uses: BaseMachine, FactorrariaNet, PureSiliconTile, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmMotion, RoboticArmNet, RoboticArmTileEntity, SiliconOreTile, TileEntityHelper, WorldGen
   class RoboticArmGhostSystem : ModSystem
     +Unload()[ov]
   class RoboticArmWorker
@@ -1887,7 +1888,7 @@ tModLoader/other bases -> project types:
 **BeeWheelDrawSystem.cs** uses: BaseMachine, BeeWheelTileEntity
   class BeeWheelDrawSystem : ModSystem
     +PostUpdateEverything()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Unload()[ov] +PostDrawTiles()[ov]
-**BeeWheelScanner.cs**
+**BeeWheelScanner.cs** uses: WorldGen
   sealed class BeeWheelScanner
     +HiveCount:int +ExposedSolidCount:int +ExposedHives:List<Point> +Scan(int,int,int,int,int,bool)
 **BeeWheelSystem.cs** uses: BeeWheelPlacedConsumer, BeeWheelVisual, TilePlaced
@@ -1901,7 +1902,7 @@ tModLoader/other bases -> project types:
     +ValidTileType:int[ov] +PowerSupply:float[ov] +PowerPerHive:float +HiveScanRadius:int +RescanDelayTicks:int +SafetyRescanTicks:int +MinWheelSpeed:float +MaxWheelSpeed:float +HivesForMaxSpeed:int +WheelSpeedEase:float +BigBeeWeight:float +SmallBeeWeight:float +BeeSpawnPerHive:float +MaxBees:int +BeeSpeed:float +BeeWobble:float +BeeScale:float +BeeFullOpacityAt:float +BeeFadeOutTiles:float +BeeFrameTicks:int +CustomBeeFrames:int +BeeSheetFacesLeft:bool +DyingSlowdownMin:float +DyingSlowdownMax:float +DyingStopSpeed:float +DyingHoverMinTicks:int +DyingHoverMaxTicks:int +DyingFadeMinTicks:int +DyingFadeMaxTicks:int +DyingBrightenPerTick:float +HoneyTilesPerTry:int +MaxHoneyTries:int +HoneyDustChance:float +VisualRange:float +HiveCount:int +ExposedSolidCount:int +Update()[ov] +NotifyTileChanged(int,int)[s] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DrawFront(SpriteBatch) +HasOrphanBees:bool[s] +ResetOrphans()[s] +UpdateOrphans()[s] +DrawOrphanBees(SpriteBatch)[s]
     sealed class Bee
       +Start:Vector2 +Pos:Vector2 +Progress:float +Step:float +Length:float +Phase:float +Wobble:float +Big:bool +Age:int +MovingRight:bool +Dying:bool +Base:Vector2 +Velocity:Vector2 +Side:Vector2 +SwayAmount:float +Speed:float +Slow:float +ApproachAlpha:float +StoppedFor:int +HoverTicks:int +FadeTicks:int
-**BeeWheelTileHooks.cs** uses: BeeWheelTileEntity, ITilePlacedConsumer, RoyalHoneyItem
+**BeeWheelTileHooks.cs** uses: BeeWheelTileEntity, ITilePlacedConsumer, RoyalHoneyItem, WorldGen
   class BeeWheelTileHooks : GlobalTile
     +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +PlaceInWorld(int,int,int,Item)[ov]
   sealed class BeeWheelPlacedConsumer : ITilePlacedConsumer
@@ -2010,7 +2011,7 @@ tModLoader/other bases -> project types:
 **MagicMaterializerUIState.cs** uses: MachineUIElementEntry, MachineUIStateBase
   class MagicMaterializerUIState : MachineUIStateBase
     #BuildElements()[ov]
-**MaterializerRightClickGuard.cs** uses: MachineVisualRegistry
+**MaterializerRightClickGuard.cs** uses: MachineVisualRegistry, WorldGen
   class MaterializerRightClickGuard : ModSystem
     +Load()[ov] +Unload()[ov]
 **MaterializerWireGuard.cs** uses: MachineVisualRegistry
@@ -2075,7 +2076,7 @@ tModLoader/other bases -> project types:
 **MissileTankTile.cs** uses: MissileTankItem, MissileTankTileEntity
   class MissileTankTile : ModTile
     +ArtPath:string[c] +SheetPath()[s] +Texture:string[ov]
-**MissileTankTileEntity.cs** uses: AssemblyIssue, AssemblyResult, BaseMachine, IMachineDynamicDraw, IMachineTileUnderlay, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, MissileDrillTile, MissileTankRegistry, MissileTankTile, MissileThrusterTile, OverhangDrawSystem, PartCell, SuperWeaponAssembly, SuperWeaponPartKind, SuperWeaponState
+**MissileTankTileEntity.cs** uses: AssemblyIssue, AssemblyResult, BaseMachine, IMachineDynamicDraw, IMachineTileUnderlay, LiquidFuelTable, LiquidStack, LiquidTypeRegistry, MissileDrillTile, MissileTankRegistry, MissileTankTile, MissileThrusterTile, OverhangDrawSystem, PartCell, SuperWeaponAssembly, SuperWeaponPartKind, SuperWeaponState, WorldGen
   class MissileTankTileEntity : BaseMachine, IMachineDynamicDraw, IMachineTileUnderlay
     +ValidTileType:int[ov] #AcceptedLiquidFuels:LiquidFuelTable[ov] +FuelCapacity:float #InputTankCapacity(int)[ov] +AssemblyCheckTicks:int +WeaponState:SuperWeaponState +WeaponFacing:int +WeaponIssue:AssemblyIssue +WeaponIssueRow:int +WeaponIssueDx:int +WeaponIssueDy:int +IsAssembled:bool +AssemblyText:string +IgnitionTicksLeft:int +IsFull:bool +IsReadyToFire:bool +Update()[ov] +RefreshAssembly() +BeginIgnition(int) +CompleteIgnition() +ClearLaunch() #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] +WindowX:int +WindowY:int +WindowWidth:int +WindowHeight:int +WindowEase:float +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DrawUnderTile(SpriteBatch,int,int)
 **MissileTankUIState.cs** uses: MachineUIElementEntry, MachineUIStateBase
@@ -2089,6 +2090,32 @@ tModLoader/other bases -> project types:
 **MissileThrusterTile.cs** uses: Direction, MissileThrusterItem, OverhangDrawSystem
   class MissileThrusterTile : ModTile
     +Texture:string[ov] +PreDraw(int,int,SpriteBatch)[ov]
+
+### tools/_probe_decomp/
+**Terraria.WorldGen.cs** ns!=Terraria
+  class WorldGen
+    +GetTreeFoliageDataMethod(int,int,int,ref int,ref int,out int,out int,out int) +GenPassDetour(orig_GenPassDetour,object,GenerationProgress,GameConfiguration) +orig_GenPassDetour(object,GenerationProgress,GameConfiguration) +TownManager:TownRoomManager[s] +tileReframeCount:int[s] +noMapUpdate:bool[s] +treeBG1:int[s] +treeBG2:int[s] +treeBG3:int[s] +treeBG4:int[s] +corruptBG:int[s] +jungleBG:int[s] +snowBG:int[s] +hallowBG:int[s] +crimsonBG:int[s] +desertBG:int[s] +oceanBG:int[s] +mushroomBG:int[s] +underworldBG:int[s] +oceanDistance:int[s] +beachDistance:int[s] +shimmerSafetyDistance:int[s] +crimson:bool[s] +tileCounts:int[s] +totalEvil:int[s] +totalBlood:int[s] +totalGood:int[s] +totalSolid:int[s] +totalEvil2:int[s] +totalBlood2:int[s] +totalGood2:int[s] +totalSolid2:int[s] +tEvil:byte[s] +tBlood:byte[s] +tGood:byte[s] +currentWorldSeed:string[s] +totalX:int[s] +totalD:int[s] +IsGeneratingHardMode:bool[s] +noTileActions:bool[s] +spawnEye:bool[s] +spawnHardBoss:int[s] +gen:bool[s] +shadowOrbSmashed:bool[s] +shadowOrbCount:int[s] +altarCount:int[s] +spawnMeteor:bool[s] +loadFailed:bool[s] +loadSuccess:bool[s] +worldCleared:bool[s] +worldBackup:bool[s] +loadBackup:bool[s] +noLiquidCheck:bool[s] +AllowedToSpreadInfections:bool[s] +_genRand:UnifiedRandom[s] +_genRandSeed:int[s] +_lastSeed:int[s] +statusText:string[s] +destroyObject:bool[s] +spawnDelay:int[s] +prioritizedTownNPCType:int[s] +numTileCount:int[s] +maxTileCount:int[s] +maxWallOut2:int[s] +CountedTiles:Dictionary<Point, bool>[s] +lavaCount:int[s] +iceCount:int[s] +sandCount:int[s] +rockCount:int[s] +shroomCount:int[s] +maxRoomTiles:int[s] +numRoomTiles:int[s] +roomX:int[s] +roomY:int[s] +roomCeilingsCount:int[s] +roomCeilingX:int[s] +roomCeilingY:int[s] +roomX1:int[s] +roomX2:int[s] +roomY1:int[s] +roomY2:int[s] +canSpawn:bool[s] +houseTile:bool[s] +bestX:int[s] +bestY:int[s] +hiScore:int[s] +WorldGenParam_Evil:int[s] +cactusWaterWidth:int[s] +cactusWaterHeight:int[s] +cactusWaterLimit:int[s] +mysticLogsEvent:MysticLogFairiesEvent[s] +roomCheckFailureReason:TownNPCRoomCheckFailureReason[s] +WorldSizeSmallX:int[c] +WorldSizeSmallY:int[c] +WorldSizeMediumX:int[c] +WorldSizeMediumY:int[c] +WorldSizeLargeX:int[c] +WorldSizeLargeY:int[c] +InfectionAndGrassSpreadOuterWorldBuffer:int[c] +generatingWorld:bool[s] +SmallConsecutivesFound:int[s] +SmallConsecutivesEliminated:int[s] +tempRemixWorldGen:bool[s] +remixWorldGen:bool[s] +everythingWorldGen:bool[s] +noTrapsWorldGen:bool[s] +drunkWorldGen:bool[s] +getGoodWorldGen:bool[s] +tempTenthAnniversaryWorldGen:bool[s] +tenthAnniversaryWorldGen:bool[s] +dontStarveWorldGen:bool[s] +notTheBees:bool[s] +drunkWorldGenText:bool[s] +placingTraps:bool[s] +USE_FRAMING_SKIP_FOR_UNIMPORTANT_TILES_IN_WORLDGEN:bool[c] +TreeTops:TreeTopsInfo[s] +BackgroundsCache:BackgroundChangeFlashInfo[s] +ExploitDestroyQueue:Queue<Point>[s] +BUBBLES_SOLID_STATE_FOR_HOUSING:bool[c] +grassSpread:int[s] +noMapUpdateRefresh:bool[s] ~_vanillaGenPasses:Dictionary<string, GenPass>[s] +genRand:UnifiedRandom[s] +oceanLevel:double[s] +SkipFramingBecauseOfGen:bool[s] +VanillaGenPasses:IReadOnlyDictionary<string, GenPass>[s] +SetupStatueList()[s] +PlaceStatueTrap(int,int)[s] +GetNPCSource_ShakeTree(int,int)[s] +EmptyLiquid(int,int)[s] +PlaceLiquid(int,int,byte,byte)[s] +PlayLiquidChangeSound(TileChangeType,int,int,int)[s] +GetLiquidChangeType(int,int)[s] +MoveTownNPC(int,int,int)[s] +moveRoom(int,int,int)[s] +IsNPCEvictable(int)[s] +kickOut(int)[s] +IsThereASpawnablePrioritizedTownNPC(int,int,ref bool)[s] +IsThereASpawnablePrioritizedTownNPC_Old(int,int)[s] +CheckSpecialTownNPCSpawningConditions(int)[s] +UnspawnTravelNPC()[s] +SpawnTravelNPC()[s] +SpawnTownNPC(int,int)[s] +CheckAchievement_RealEstateAndTownSlimes()[s] +RoomNeeds(int)[s] +QuickFindHome(int)[s] +CountTileTypesInArea(int,int,int,int,int)[s] +GetTileTypeCountByCategory(int,TileScanGroup)[s] +ScoreRoom(int,int)[s] +Housing_GetTestedRoomBounds(out int,out int,out int,out int)[s] +StartRoomCheck(int,int)[s] +CheckRoom(int,int)[s] +dropMeteor()[s] +meteor(int,int,bool)[s] +setWorldSize()[s] +GetWorldSize()[s] +worldGenCallback(object)[s] +do_worldGenCallBack(object)[s] +CreateNewWorld(GenerationProgress)[s] +JustQuit()[s] +SaveAndQuitCallBack(object)[s] +SaveAndQuit(Action)[s] +RenameWorld(WorldFileData,string,Action<string>)[s] +RenameWorldCallBack(object)[s] +playWorldCallBack(object)[s] ~FinishPlayWorld()[s] +playWorld()[s] +saveAndPlayCallBack(object)[s] +saveAndPlay()[s] +saveToonWhilePlayingCallBack(object)[s] +saveToonWhilePlaying()[s] +serverLoadWorldCallBack()[s] +serverLoadWorld()[s] +clearWorld()[s] +setBG(int,int)[s] +RandomizeWeather()[s] +RandomizeMoonState(UnifiedRandom,bool)[s] +RandomizeBackgroundBasedOnPlayer(UnifiedRandom,Player)[s] +RandomizeBackgrounds(UnifiedRandom)[s] +IsBackgroundConsideredTheSame(int,int)[s] +RandomizeTreeStyle()[s] +RandomizeCaveBackgrounds()[s] +mayanTrap(int,int)[s] +placeLavaTrap(int,int)[s] +IsTileNearby(int,int,int,int)[s] +placeTrap(int,int,int)[s] +countWires(int,int,int)[s] +countTiles(int,int,bool,bool)[s] +nextCount(int,int,bool,bool)[s] +countDirtTiles(int,int)[s] +nextDirtCount(int,int)[s] +InWorld(int,int,int)[s] +gemCave(int,int)[s] +randGem()[s] +randGemTile()[s] +randMoss(bool)[s] +neonMossBiome(int,int,int)[s] +setMoss(int,int)[s] +FillWallHolesInArea(Rectangle)[s] +tileCountAndDestroy()[s] +tileCounter(int,int)[s] +tileCounterNext(int,int)[s] +tileCounterKill()[s] +checkUnderground(int,int)[s] +GetNextJungleChestItem()[s] +OreHelper(int,int)[s] +StonePatch(int,int)[s] +ShellPile(int,int)[s] +MarblePileWithStatues(int,int)[s] +Statue(int,int,byte)[s] +OrePatch(int,int)[s] +PlaceOasis(int,int)[s] +BiomeTileCheck(int,int)[s] +oceanDepths(int,int)[s] +UpdateDesertHiveBounds(int,int)[s] +GenerateWorld(int,GenerationProgress)[s] ~AddGenPasses()[s] +IsItATrap(Tile)[s] +IsItATrigger(Tile)[s] +ClearAllBrokenTraps()[s] +ClearBrokenTraps(Point,List<Point>)[s] +QueuePostGenAction(Action<StructureMap>)[s] +ConsumePostGenActions(StructureMap)[s] +RandomRectanglePoint(Rectangle)[s] +RandomRectanglePoint(int,int,int,int)[s] +RandomWorldPoint(int)[s] +RandomWorldPoint(int,int,int,int)[s] +GrowPalmTree(int,int)[s] +IsPalmOasisTree(int)[s] +GrowEpicTree(int,int)[s] +Pyramid(int,int)[s] +GrowLivingTree(int,int,bool)[s] +GrowDungeonTree(int,int,bool)[s] +TreeGrowFXCheck(int,int)[s] +GetTreeLeaf(int,Tile,Tile,ref int,out int,out int)[s] +TreeGrowFX(int,int,int,int,bool)[s] +IsTileALeafyTreeTop(int,int)[s] +IsTileTypeFitForTree(ushort)[s] +GrowTree(int,int)[s] +DefaultTreeWallTest(int)[s] +GemTreeWallTest(int)[s] +GemTreeGroundTest(int)[s] +VanityTreeGroundTest(int)[s] +AshTreeGroundTest(int)[s] +TryGrowingTreeByType(int,int,int)[s] +GrowTreeWithSettings(int,int,GrowTreeSettings)[s] +GrowUndergroundTree(int,int)[s] +GrowShroom(int,int)[s] +AddTrees(bool)[s] +ExplodeMine(int,int,bool)[s] +EmptyTileCheck(int,int,int,int,int)[s] +StartHardmode()[s] +TryProtectingSpawnedItems()[s] +UndoSpawnedItemProtection()[s] +smCallBack(object)[s] +PlaceDoor(int,int,int,int)[s] +CloseDoor(int,int,bool)[s] +AddLifeCrystal(int,int)[s] +AddShadowOrb(int,int)[s] +AddHellHouses()[s] +HellFort(int,int,ushort,byte)[s] +HellHouse(int,int,byte,byte)[s] +HellRoom(int,int,int,int,byte,byte)[s] +templeCleaner(int,int)[s] +templePather(Vector2D,int,int)[s] +outerTempled(int,int)[s] +makeTemple(int,int)[s] +templePart2()[s] +nearPicture(int,int)[s] +nearPicture2(int,int)[s] +ShimmerRemoveWater()[s] +ShimmerMakeBiome(int,int)[s] +Shimmerator(int,int,bool,bool)[s] +MakeDungeon(int,int)[s] +RandBonePicture()[s] +RandHellPicture()[s] +RandHousePictureDesert()[s] +RandHousePicture()[s] +RandPictureTile()[s] +DungeonStairs(int,int,ushort,int)[s] +PlaceSandTrap(int,int)[s] +DungeonPitTrap(int,int,ushort,int)[s] +DungeonHalls(int,int,ushort,int,bool)[s] +DungeonRoom(int,int,ushort,int)[s] +DungeonEnt(int,int,ushort,int)[s] +AddBuriedChest(Point,int,bool,int)[s] +IsChestRigged(int,int)[s] +AddBuriedChest(int,int,int,bool,int,bool,ushort)[s] +UnlockDoor(int,int)[s] +OpenDoor(int,int,int)[s] +Check1xX(int,int,short)[s] +Check2xX(int,int,ushort)[s] +IsBelowANonHammeredPlatform(int,int)[s] +PlaceTight(int,int,bool)[s] +PlaceUncheckedStalactite(int,int,bool,int,bool)[s] +UpdateStalagtiteStyle(int,int)[s] +CheckTight(int,int)[s] +Place1xX(int,int,ushort,int)[s] +checkXmasTreeDrop(int,int,int)[s] +dropXmasTree(int,int,int)[s] +setXmasTree(int,int,int,int)[s] +PlaceXmasTree_Direct(int,int,int,int,int,int)[s] +PlaceXmasTree(int,int,ushort)[s] +CheckXmasTree(int,int)[s] +Place2xX(int,int,ushort,int)[s] +GetItemDrop_Benches(int)[s] +GetItemDrop_PicnicTables(int)[s] +GetItemDrop_Chair(int)[s] +GetItemDrop_Toilet(int)[s] +Check1x2(int,int,ushort)[s] +CheckOnTable1x1(int,int,int)[s] +CheckSign(int,int,ushort)[s] +PlaceSign(int,int,ushort,int)[s] +Place2x2Horizontal(int,int,ushort,int)[s] +paintColor(int)[s] +coatingColor(int)[s] +coatingColors(Tile,bool)[s] +paintEffect(int,int,byte,byte)[s] +paintCoatEffect(int,int,byte,List<Color>)[s] +paintTile(int,int,byte,bool)[s] +paintCoatTile(int,int,byte,bool)[s] +paintCoatWall(int,int,byte,bool)[s] +paintWall(int,int,byte,bool)[s] +Place3x3Wall(int,int,ushort,int)[s] +Check3x3Wall(int,int)[s] +Place2x3Wall(int,int,ushort,int)[s] +Check2x3Wall(int,int)[s] +Place3x2Wall(int,int,ushort,int)[s] +Check3x2Wall(int,int)[s] +Place4x3Wall(int,int,ushort,int)[s] +Check4x3Wall(int,int)[s] +Place6x4Wall(int,int,ushort,int)[s] +Check6x4Wall(int,int)[s] +Place1x1(int,int,int,int)[s] +Check1x1(int,int,int)[s] +CheckGolf1x1(int,int,int)[s] +CheckLogicTiles(int,int,int)[s] +PlaceLogicTiles(int,int,int,int)[s] +PlaceOnTable1x1(int,int,int,int)[s] +PlaceAlch(int,int,int)[s] +GrowSpike(int,int,ushort,ushort)[s] +GrowMoreVines(int,int)[s] +GrowAlch(int,int)[s] +PlantAlch()[s] +CheckAlch(int,int)[s] +CheckBanner(int,int,byte)[s] +PlaceBanner(int,int,ushort,int)[s] +PlaceMan(int,int,int)[s] +PlaceWoman(int,int,int)[s] +CheckWeaponsRack(int,int)[s] +ToggleGemLock(int,int,bool)[s] +CheckMan(int,int)[s] +CheckWoman(int,int)[s] +Place1x2(int,int,ushort,int)[s] +Place1x2Top(int,int,ushort,int)[s] +Check1x2Top(int,int,ushort)[s] +PlaceSmallPile(int,int,int,int,ushort)[s] +CheckPile(int,int)[s] +Check2x1(int,int,ushort)[s] +Place2x1(int,int,ushort,int)[s] +Check4x2(int,int,int)[s] +PlaceOasisPlant(int,int,ushort)[s] +CheckOasisPlant(int,int,int)[s] +GetCactusType(int,int,int,int,out int)[s] +GetCactusType(int,int,int,int,out bool,out bool,out bool)[s] +GetCactusType(int,int,int,int,out bool,out bool,out bool,out int)[s] +GetBiomeInfluence(int,int,int,int,out int,out int,out int)[s] +PlaceJunglePlant(int,int,ushort,int,int)[s] +CheckJunglePlant(int,int,int)[s] +CheckSuper(int,int,int)[s] +Check2x2(int,int,int)[s] +CheckBoulderChest(int,int)[s] +IsAContainer(Tile)[s] +OreRunner(int,int,double,int,ushort)[s] +SmashAltar(int,int)[s] +Check3x1(int,int,int)[s] +Check3x2(int,int,int)[s] +Check3x4(int,int,int)[s] +Check5x4(int,int,int)[s] +Check6x3(int,int,int)[s] +Place6x3(int,int,ushort,int,int)[s] +Place4x2(int,int,ushort,int,int)[s] +ShootFromCannon(int,int,int,int,int,float,int,bool)[s] +BunnyCannonCanFire()[s] +SwitchCannon(int,int)[s] +CheckCannon(int,int,int)[s] +PlaceCannon(int,int,ushort,int)[s] +SwitchMB(int,int)[s] +SwitchMonolith(int,int)[s] +SwitchFountain(int,int)[s] +CheckMB(int,int,int)[s] +PlaceMB(int,int,ushort,int)[s] +Place2x2(int,int,ushort,int)[s] +PlaceObject(int,int,int,bool,int,int,int,int)[s] +ShiftTrapdoor(int,int,bool,int)[s] +CheckTrapDoor(int,int,int)[s] +CheckTallGate(int,int,int)[s] +ShiftTallGate(int,int,bool,bool)[s] +GetTopLeftAndStyles(ref int,ref int,int,int,int,int)[s] +CheckTileFrames(int,int,int,int,int,int,int,int,int)[s] +CheckTileAnchors(int,int,int,int,int,AnchorType)[s] +AnchorValid(Tile,AnchorType)[s] +CanPlaceSink(int,int,ushort,int)[s] +Place3x4(int,int,ushort,int)[s] +Place5x4(int,int,ushort,int)[s] +Place3x1(int,int,ushort,int)[s] +Place3x2(int,int,ushort,int)[s] +Place2x2Style(int,int,ushort,int)[s] +NearFriendlyWall(int,int)[s] +Check2x2Style(int,int,int)[s] +PlacePumpkin(int,int)[s] +GrowPumpkin(int,int,int)[s] +FixHearts()[s] +DestroyHeart(int,int)[s] +FixHeart(int,int)[s] +FixChands()[s] +FixChand(int,int)[s] +PlaceChand(int,int,ushort,int)[s] +CheckChand(int,int,int)[s] +Check3x3(int,int,int)[s] +Check2x5(int,int,int)[s] +Check3x5(int,int,int)[s] +Check3x6(int,int,int)[s] +Place3x3(int,int,ushort,int)[s] +PlaceSunflower(int,int,ushort)[s] +FixSunflowers()[s] +FixSunflower(int,int)[s] +CheckSunflower(int,int,int)[s] +CheckDye(int,int)[s] +CheckRockGolemHead(int,int)[s] +CheckStinkbugBlocker(int,int)[s] +AttemptReorientingStinkbugBlocker(int,int,int,ref int)[s] +CheckGnome(int,int)[s] +PlaceGnome(int,int,int)[s] +PlaceDye(int,int,int)[s] +PlacePot(int,int,ushort,int)[s] +CheckCactus(int,int)[s] +PlantCactus(int,int)[s] +CheckOrb(int,int,int)[s] +CheckPalmTree(int,int)[s] +CheckTreeWithSettings(int,int,CheckTreeSettings)[s] +CheckTree(int,int)[s] +TileIsExposedToAir(int,int)[s] +TryKillingTreesAboveIfTheyWouldBecomeInvalid(int,int,int)[s] +Convert(int,int,int,int)[s] +Convert(int,int,int,int,bool,bool)[s] +CactusFrame(int,int)[s] +GrowCactus(int,int)[s] +CheckPot(int,int,int)[s] +PlaceChest(int,int,ushort,bool,int)[s] +PlaceChestDirect(int,int,ushort,int,int)[s] +PlaceDresserDirect(int,int,ushort,int,int)[s] +CheckChest(int,int,int)[s] +PlaceActuator(int,int)[s] +KillActuator(int,int)[s] +PlaceWire(int,int)[s] +KillWire(int,int)[s] +PlaceWire2(int,int)[s] +KillWire2(int,int)[s] +PlaceWire3(int,int)[s] +KillWire3(int,int)[s] +PlaceWire4(int,int)[s] +KillWire4(int,int)[s] +IsFitToPlaceFlowerIn(int,int,int)[s] +CheckBamboo(int,int)[s] +PlaceUnderwaterPlant(ushort,int,int)[s] +CanUnderwaterPlantGrowHere(ushort,int,int,bool)[s] +CheckUnderwaterPlant(ushort,int,int)[s] +PlaceCatTail(int,int)[s] +CheckCatTail(int,int)[s] +GrowCheckSeaweed(int,int)[s] +GrowCatTail(int,int)[s] +PlaceLilyPad(int,int)[s] +CheckLilyPad(int,int)[s] +TryKillingReplaceableTile(int,int,int)[s] +PlaceTile(int,int,int,bool,bool,int,int)[s] +KillWall(int,int,bool)[s] +LaunchRocket(int,int,bool)[s] +LaunchRocketSmall(int,int,bool)[s] +CanKillTile(int,int,SpecialKillTileContext)[s] +CanKillTile(int,int)[s] +CanKillTile(int,int,out bool)[s] +IsTileReplacable(int,int)[s] +CheckTileBreakability(int,int)[s] +CheckTileBreakability2_ShouldTileSurvive(int,int)[s] +ReplaceWall(int,int,ushort)[s] +ReplaceTile(int,int,ushort,int)[s] +WouldTileReplacementBeBlockedByLiquid(int,int,int)[s] +WouldTileReplacementWork(ushort,int,int)[s] +GetAshTreeFoliageData(int,int,int,ref int,ref int,out int,out int,out int)[s] +GetVanityTreeFoliageData(int,int,int,ref int,ref int,out int,out int,out int)[s] +GetGemTreeFoliageData(int,int,int,ref int,ref int,out int,out int,out int)[s] +GetCommonTreeFoliageData(int,int,int,ref int,ref int,out int,out int,out int)[s] +GetHollowTreeFoliageStyle()[s] +GetTreeFrame(Tile)[s] +GetTreeType(int)[s] +IsThisAMushroomTree(int,int)[s] +ResetTreeShakes()[s] +GetTreeBottom(int,int,out int,out int)[s] +KillTile(int,int,bool,bool,bool)[s] +GetPlayerForTile(int,int)[s] ~KillTile_DropItems(int,int,Tile,bool,bool)[s] ~KillTile_GetItemDrops(int,int,Tile,out int,out int,out int,out int,bool)[s] +IsHarvestableHerbWithSeed(int,int)[s] +KillTile_ShouldDropSeeds(int,int)[s] +KillTile_PlaySounds(int,int,bool,Tile)[s] +GetTileVisualHitbox(int,int)[s] +KillTile_GetTileDustAmount(bool,Tile,int,int)[s] +KillTile_MakeTileDust(int,int,Tile)[s] +IsOpenDoorAnchorFrame(int,int)[s] +IsLockedDoor(int,int)[s] +IsLockedDoor(Tile)[s] +DropDoorItem(int,int,int)[s] +GetItemSource_FromTileBreak(int,int)[s] +GetItemSource_FromWallBreak(int,int)[s] +GetItemSource_FromTreeShake(int,int)[s] +PlayerLOS(int,int)[s] +ChlorophyteDefense(int,int)[s] +Chlorophyte(int,int)[s] +nearbyChlorophyte(int,int)[s] +CountNearBlocksTypes(int,int,int,int,int)[s] +hardUpdateWorld(int,int)[s] +SolidTile(Tile)[s] +TileEmpty(int,int)[s] +SolidOrSlopedTile(Tile)[s] +TileType(int,int)[s] +SolidOrSlopedTile(int,int)[s] +IsRope(int,int)[s] +SolidTile(Point)[s] +SolidTile(int,int,bool)[s] +SolidTile2(Tile)[s] +PlatformProperTopFrame(short)[s] +SolidTileAllowBottomSlope(int,int)[s] +ActiveAndWalkableTile(int,int)[s] +SolidTileAllowTopSlope(int,int)[s] +SolidTileAllowLeftSlope(int,int)[s] +SolidTileAllowRightSlope(int,int)[s] +TopEdgeCanBeAttachedTo(int,int)[s] +RightEdgeCanBeAttachedTo(int,int)[s] +LeftEdgeCanBeAttachedTo(int,int)[s] +BottomEdgeCanBeAttachedTo(int,int)[s] +SolidTile3(int,int)[s] +SolidTile3(Tile)[s] +SolidTile2(int,int)[s] +SolidTileNoAttach(int,int)[s] +MineHouse(int,int)[s] +CountTiles(int)[s] +AddUpAlignmentCounts(bool)[s] +plantDye(int,int,bool)[s] +UpdateWorld()[s] +GetWorldUpdateRate()[s] +AttemptToGrowTreeFromSapling(int,int,bool)[s] +DontStarveTryWateringTile(int,int)[s] +HasAnyWireNearby(int,int,int)[s] +IsSafeFromRain(int,int)[s] +TryToggleLight(int,int,bool?,bool)[s] +GeneratePlanteraBulbOnAllMechsDefeated()[s] +SpreadDesertWalls(int,int,int)[s] +PlaceWall(int,int,int,bool)[s] +SpreadGrass(int,int,int,int,bool,TileColorCache)[s] +ChasmRunnerSideways(int,int,int,int)[s] +CrimStart(int,int)[s] +CrimPlaceHearts()[s] +CrimEnt(Vector2D,int)[s] +CrimVein(Vector2D,Vector2D)[s] +ChasmRunner(int,int,int,bool)[s] +SpawnPlanteraThorns(Vector2)[s] +GERunner(int,int,double,double,bool)[s] +oceanCave(int,int)[s] +WavyCaverer(int,int,double,double,int,int)[s] +TileRunner(int,int,double,int,int,bool,double,double,bool,bool,int)[s] +DirtyRockRunner(int,int)[s] +MudWallRunner(int,int)[s] +SnowCloudIsland(int,int)[s] +DesertCloudIsland(int,int)[s] +CloudIsland(int,int)[s] +WillWaterPlacedHereStayPut(int,int)[s] +CloudLake(int,int)[s] +FloatingIsland(int,int)[s] +Caverer(int,int)[s] +digTunnel(double,double,double,double,int,int,bool)[s] +IslandHouse(int,int,int)[s] +Mountinater(int,int)[s] +MakeWateryIceThing(int,int)[s] +Lakinater(int,int,double)[s] +SonOfLakinater(int,int,double)[s] +ShroomPatch(int,int)[s] +Cavinator(int,int,int)[s] +CaveOpenater(int,int)[s] +DiamondTileFrame(int,int)[s] +SquareTileFrame(int,int,bool)[s] +SquareWallFrame(int,int,bool)[s] +SectionTileFrameWithCheck(int,int,int,int)[s] +RefreshSections(int,int,int,int)[s] +RefreshSection(int,int)[s] +RefreshStrip(int,int,int,int,ref int,ref int)[s] +Reframe(int,int,bool)[s] +SectionTileFrame(int,int,int,int)[s] +GetSectionBounds(int,int,int,int,out int,out int,out int,out int)[s] +RangeFrame(int,int,int,int)[s] +WaterCheck()[s] +EveryTileFrame()[s] +PlantCheck(int,int)[s] +CanPoundTile(int,int)[s] +SlopeTile(int,int,int,bool)[s] +PoundTile(int,int)[s] +PoundPlatform(int,int)[s] +PlatformProperSides(int,int,bool)[s] +UpdateMapTile(int,int,bool)[s] +TileMergeAttemptFrametest(int,int,int,int,ref int,ref int,ref int,ref int,ref int,ref int,ref int,ref int)[s] +TileMergeAttemptFrametest(int,int,int,bool,ref int,ref int,ref int,ref int,ref int,ref int,ref int,ref int)[s] +TileMergeAttempt(int,int,ref int,ref int,ref int,ref int)[s] +TileMergeAttempt(int,bool,ref int,ref int,ref int,ref int)[s] +TileMergeAttempt(int,int,ref int,ref int,ref int,ref int,ref int,ref int,ref int,ref int)[s] +TileMergeAttempt(int,bool,ref int,ref int,ref int,ref int,ref int,ref int,ref int,ref int)[s] +TileMergeAttempt(int,bool,bool,ref int,ref int,ref int,ref int,ref int,ref int,ref int,ref int)[s] +TileMergeAttemptWeird(int,int,bool,ref int,ref int,ref int,ref int,ref int,ref int,ref int,ref int)[s] +GetTileMossColor(int)[s] +CheckFoodPlatter(int,int,int)[s] +TileFrame(int,int,bool,bool)[s] +SpawnFallingBlockProjectile(int,int,Tile,Tile,Tile,int)[s] +CheckTorch(int,int)[s] +CheckProjectilePressurePad(int,int)[s] +IsTreeType(int)[s] +CanPlaceProjectilePressurePad(int,int,int,int,int,int)[s] +BlockBelowMakesSandConvertIntoHardenedSand(int,int)[s] +BlockBelowMakesSandFall(int,int)[s] +AllowsSandfall(Tile)[s] +TriggerLunarApocalypse()[s] +UpdateLunarApocalypse()[s] +StartImpendingDoom(int)[s] +GetRidOfCultists()[s] +MessageLunarApocalypse()[s] +BroadcastText(NetworkText,Vector4)[s] +BroadcastText(NetworkText,Vector3)[s] +BroadcastText(NetworkText,int,int,int)[s] +BroadcastText(NetworkText,byte,byte,byte)[s] +BroadcastText(NetworkText,Color)[s] +CanCutTile(int,int,TileCuttingContext)[s] +InAPlaceWithWind(Vector2,int,int)[s] +DoesWindBlowAtThisHeight(int)[s] +InAPlaceWithWind(int,int,int,int)[s] +CountTileTypesInWorld(int)[s] ~ClearGenerationPasses()[s] +ModifyPass(PassLegacy,Manipulator)[s] +DetourPass(PassLegacy,GenPassDetour)[s] +ConvertTile(int,int,int,bool)[s] +ConvertTile(int,int,int)[s] +ConvertWall(int,int,int)[s] +SpreadInfectionToNearbyTile(int,int,int,int)[s]
+    static class WorldSize
+      +Small:int[c] +Medium:int[c] +Large:int[c]
+    static class SavedOreTiers
+      +Copper:int[s] +Iron:int[s] +Silver:int[s] +Gold:int[s] +Cobalt:int[s] +Mythril:int[s] +Adamantite:int[s]
+    static class Hooks
+      +WorldGenConfigProcessEvent(ref WorldGenConfiguration) +OnWorldGenConfigProcess:event WorldGenConfigProcessEvent[s] +OnWorldLoad:event Action[s] +Initialize()[s] +WorldLoaded()[s] +ProcessWorldGenConfig(ref WorldGenConfiguration)[s]
+    static class Spread
+      +Wall(int,int,int)[s] +Wall2(int,int,int)[s] +Moss(int,int)[s] +Gem(int,int)[s] +Spider(int,int)[s] +WallDungeon(int,int,int)[s]
+    static class TenthAnniversaryWorldInfo
+      +GoodPrefixIdsForAccessory:int[s] +GoodPrefixIdsForMeleeWeapon:int[s] +GoodPrefixIdsForRangedWeapon:int[s] +GoodPrefixIdsForMagicWeapon:int[s] +GoodPrefixIdsForSummonerWeapon:int[s]
+    struct GrowTreeSettings
+      +IsTileFitForTreeGroundTest(int) +IsWallTypeFitForTreeBack(int) +TreeTileType:ushort +TreeHeightMin:int +TreeHeightMax:int +TreeTopPaddingNeeded:int +GroundTest:IsTileFitForTreeGroundTest +WallTest:IsWallTypeFitForTreeBack +SaplingTileType:ushort
+      static class Profiles
+        +GemTree_Ruby:GrowTreeSettings[s] +GemTree_Diamond:GrowTreeSettings[s] +GemTree_Topaz:GrowTreeSettings[s] +GemTree_Amethyst:GrowTreeSettings[s] +GemTree_Sappphire:GrowTreeSettings[s] +GemTree_Emerald:GrowTreeSettings[s] +GemTree_Amber:GrowTreeSettings[s] +VanityTree_Sakura:GrowTreeSettings[s] +VanityTree_Willow:GrowTreeSettings[s] +Tree_Ash:GrowTreeSettings[s] +TryGetFromItemId(int,out GrowTreeSettings)[s] +TryGetFromTreeId(int,out GrowTreeSettings)[s]
+    struct CheckTreeSettings
+      +GroundValidTest(int) +IsGroundValid:GroundValidTest
+    enum SpecialKillTileContext
+      {None, MowingTheGrass}
+    struct TileMergeCullCache
+      +CullTop:bool +CullBottom:bool +CullLeft:bool +CullRight:bool +CullTopLeft:bool +CullTopRight:bool +CullBottomLeft:bool +CullBottomRight:bool +Cull(ref int,ref int,ref int,ref int,ref int,ref int,ref int,ref int)
+    struct ConversionRecursion : IDisposable
 
 ## Non-code files (png omitted; sprites follow <Name>_On/_Off/_On_FirstLiquid naming)
 - (root)/: .gitattributes, .gitignore, LICENSE; Factorraria.csproj; PROJECT_CONTEXT.md, README.md; build.txt, description.txt, description_workshop.txt
@@ -2111,7 +2138,7 @@ tModLoader/other bases -> project types:
 - docs/recipe_book/: ROADMAP.md
 - docs/super_weapons/: ROADMAP.md
 - docs/weapon_overhaul/: ROADMAP.md
-- tools/: harvester_probe.ps1, harvester_probe2.ps1, harvester_probe3.ps1, patch_engine.ps1; harvester_probe2_report.txt, harvester_probe3_report.txt, harvester_probe_report.txt
+- tools/: harvester_probe.ps1, harvester_probe2.ps1, harvester_probe3.ps1, harvester_probe4.ps1, patch_engine.ps1; harvester_probe2_report.txt, harvester_probe3_report.txt, harvester_probe4_report.txt, harvester_probe_report.txt
 - tools/cosmic_tests/: Program.cs.txt, Program_C2.cs.txt, README.txt
 - tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt
 - tools/sw_tests/: Program.cs.txt, README.txt
