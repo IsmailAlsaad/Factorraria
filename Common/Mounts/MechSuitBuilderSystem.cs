@@ -28,6 +28,7 @@ namespace Factorraria.Common.Mounts
         // --- TUNABLES (plain fields so hot reload can change them) ---
         public int MaxSelectionWidth = 64;
         public int MaxSelectionHeight = 64;
+        public Microsoft.Xna.Framework.Input.Keys CancelKey = Microsoft.Xna.Framework.Input.Keys.Escape; // ends the running build job (patch M4)
         public string TexturePath = "Factorraria/Content/Tiles/Machines/ElectricalConsumers/RoboticArm/RoboticArmArea";
 
         Rectangle? selection;
@@ -131,6 +132,12 @@ namespace Factorraria.Common.Mounts
 
             bool shift = ShiftHeld;
 
+            if (Main.keyState.IsKeyDown(CancelKey) && !Main.oldKeyState.IsKeyDown(CancelKey) && player.GetModPlayer<MechSuitPlayer>().IsBuilding)
+            {
+                MechSuitBuildNet.RequestCancel();
+                Mod.Logger.Info("MechSuitBuilderSystem: build cancel requested.");
+            }
+
             if (dragging)
             {
                 if (Main.mouseRight && shift)
@@ -170,6 +177,7 @@ namespace Factorraria.Common.Mounts
                 Main.mouseLeftRelease = false;
                 PlaceOrigin = OriginFor(Selection.Value, Main.MouseWorld.ToTileCoordinates());
                 MechSuitBuildNet.RequestBuild(Selection.Value, PlaceOrigin.Value);
+                ModContent.GetInstance<MechSuitHologramSystem>().AddPlaced(Selection.Value, PlaceOrigin.Value);
                 Mod.Logger.Info("MechSuitBuilderSystem: build requested, source " + Selection.Value + " -> destination origin " + PlaceOrigin.Value.X + "," + PlaceOrigin.Value.Y + ".");
             }
 

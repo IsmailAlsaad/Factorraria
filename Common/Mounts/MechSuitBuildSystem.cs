@@ -24,7 +24,7 @@ namespace Factorraria.Common.Mounts
     // owner's inventory, is not blocked by another block and passes the placement check (a tile that fails only the support check stays pending
     // and is retried, because the arms place other tiles around it). Switching material: the arm folds back to the player, "grabs" the next
     // item, then reaches out again. The job ends when nothing left can be placed (all done, or blocked / out of material / unsupported),
-    // when the player leaves the suit, dies or disconnects, when a new request replaces it, or after IdleTimeoutTicks without a placement.
+    // when the player leaves the suit, dies or disconnects, or after IdleTimeoutTicks without a placement.
     // Patch M3 builds tiles and walls only: multi-tile objects (and one-tile objects like platforms, torches, doors) are skipped (patch M5).
     public class MechSuitBuildSystem : ModSystem
     {
@@ -38,6 +38,7 @@ namespace Factorraria.Common.Mounts
         public int SettleTicks = 60;               // nothing placeable for this long (both arms idle) ends the job
         public int IdleTimeoutTicks = 1800;        // no placement for this long ends the job even if tiles are still out of reach
         public int StatusRefreshTicks = 60;        // the arm state is re-sent this often while nothing changes
+        public int MaxPendingBlocks = 30000;       // a new copy is refused when the running job would hold more blocks than this
         public int ConsumedFlushTicks = 10;        // taken items are reported to the owner at most this often
         public bool LogJobs = true;                // TEMPORARY [MechBuild] log lines (remove in Phase 10)
 
@@ -114,7 +115,7 @@ namespace Factorraria.Common.Mounts
 
         // ---------------------------------------------------------------- start / end
 
-        /// <summary>Server or single-player: starts (or replaces) the build job of one player. Everything the client sent is checked here.</summary>
+        /// <summary>Server or single-player: starts the build job of one player, or adds one more copy to the job that already runs. Everything the client sent is checked here.</summary>
         public void StartJob(int sender, Rectangle source, Point origin)
         {
             if (Main.netMode == NetmodeID.MultiplayerClient || sender < 0 || sender >= Main.maxPlayers)
@@ -141,11 +142,17 @@ namespace Factorraria.Common.Mounts
             List<MechSuitBlueprint.Block> blocks = new List<MechSuitBlueprint.Block>();
             ModContent.GetInstance<MechSuitBlueprint>().Scan(source, blocks);
 
-            Job job = new Job { Owner = sender, Source = source, Origin = origin, Total = blocks.Count };
+            // The blocks of a job hold absolute world tiles (the destination origin is added here), so one job can hold several copies
+            // placed at different spots. job.Origin stays at zero for the same reason.
+            Job job = new Job { Owner = sender, Source = source, Origin = Point.Zero, Total = blocks.Count };
             foreach (MechSuitBlueprint.Block block in blocks)
             {
                 if (block.IsWall || block.Plain)
+                {
+                    block.X += origin.X;
+                    block.Y += origin.Y;
                     job.Pending.Add(block);
+                }
                 else
                     job.ObjectBlocksSkipped++;
             }
@@ -156,15 +163,28 @@ namespace Factorraria.Common.Mounts
                 return;
             }
 
-            if (jobs.ContainsKey(sender))
-                EndJob(sender, "replaced by a new request");
+            if (jobs.TryGetValue(sender, out Job running))
+            {
+                if (running.Pending.Count + job.Pending.Count > MaxPendingBlocks)
+                {
+                    Log("request from " + sender + " refused: the running job would hold more than " + MaxPendingBlocks + " blocks");
+                    return;
+                }
+
+                running.Pending.AddRange(job.Pending);
+                running.Total += job.Total;
+                running.ObjectBlocksSkipped += job.ObjectBlocksSkipped;
+                running.IdleTicks = 0;
+                Log("player " + sender + " added a copy to the running build: source " + source + " -> origin " + origin + ", +" + job.Pending.Count + " blocks, " + running.Pending.Count + " pending now");
+                return;
+            }
 
             MechSuitBuilderArmSet set = ModContent.GetInstance<MechSuitBuilderArms>().GetOrCreate(sender);
             set.Building = true;
             for (int i = 0; i < job.Arms.Length; i++)
             {
                 job.Arms[i] = new Arm { View = set.Arms[i] };
-                job.Arms[i].View.SetHeld(0);
+                job.Arms[i].View.SetHeld(DisplayItem(job));
                 job.Arms[i].View.Motion.SetTarget(null);
             }
 
@@ -191,8 +211,23 @@ namespace Factorraria.Common.Mounts
                 player.GetModPlayer<MechSuitPlayer>().SetBuilding(false);
 
             SendState(job, player, false, true);
+            if (player != null && player.active)
+                Report(job, owner, reason);
             Log("player " + owner + "'s build ended (" + reason + "): placed " + job.Placed + " of " + (job.Placed + job.Pending.Count) + ", left " + job.Pending.Count
                 + " (blocked " + job.Blocked + ", out of material " + job.NoMaterial + ", unsupported " + job.Unsupported + ", out of reach " + job.WaitingForReach + ")");
+        }
+
+        // One chat line for the owner when the job ends (server -> that client; single-player prints it directly).
+        void Report(Job job, int owner, string reason)
+        {
+            string text = "Mech Suit build " + reason + ": placed " + job.Placed + ", left " + job.Pending.Count;
+            if (job.Pending.Count > 0)
+                text += " (blocked " + job.Blocked + ", out of material " + job.NoMaterial + ", unsupported " + job.Unsupported + ", out of reach " + job.WaitingForReach + ")";
+
+            if (Main.netMode == NetmodeID.Server)
+                Terraria.Chat.ChatHelper.SendChatMessageToClient(Terraria.Localization.NetworkText.FromLiteral(text), Color.LightGreen, owner);
+            else if (Main.netMode == NetmodeID.SinglePlayer)
+                Main.NewText(text, Color.LightGreen);
         }
 
         // ---------------------------------------------------------------- tick
@@ -277,6 +312,7 @@ namespace Factorraria.Common.Mounts
                     if (!FindTarget(job, owner, arm))
                     {
                         motion.SetTarget(null);
+                        KeepHolding(job, arm);
                         arm.Wait = RescanTicks;
                         break;
                     }
@@ -344,6 +380,30 @@ namespace Factorraria.Common.Mounts
             }
         }
 
+        // An arm that holds nothing (job start, or its last item was spent) takes the item of the first pending block it could place, or of
+        // the first pending block at all, so the claws always show something while a job runs.
+        int DisplayItem(Job job)
+        {
+            int fallback = 0;
+            for (int i = 0; i < job.Pending.Count; i++)
+            {
+                int item = job.Pending[i].Item;
+                if (fallback == 0)
+                    fallback = item;
+
+                if (inventoryCounts.TryGetValue(item, out int count) && count > 0)
+                    return item;
+            }
+
+            return fallback;
+        }
+
+        void KeepHolding(Job job, Arm arm)
+        {
+            if (arm.View.HeldType == 0)
+                arm.View.SetHeld(DisplayItem(job));
+        }
+
         static (int, int, bool) Key(Arm arm) => (arm.Tile.X, arm.Tile.Y, arm.Target.IsWall);
 
         void BeginReach(Arm arm)
@@ -391,7 +451,7 @@ namespace Factorraria.Common.Mounts
             job.Placeable = job.WaitingForReach = job.Blocked = job.NoMaterial = job.Unsupported = 0;
             float reachPixels = BuilderReachTiles * 16f;
             float reachSquared = reachPixels * reachPixels;
-            int best = -1;
+            MechSuitBlueprint.Block bestBlock = null;
             float bestDistance = float.MaxValue;
 
             for (int i = job.Pending.Count - 1; i >= 0; i--)
@@ -450,14 +510,14 @@ namespace Factorraria.Common.Mounts
                 if (distance < bestDistance)
                 {
                     bestDistance = distance;
-                    best = i;
+                    bestBlock = block;
                 }
             }
 
-            if (best < 0)
+            if (bestBlock == null)
                 return false;
 
-            arm.Target = job.Pending[best];
+            arm.Target = bestBlock;
             arm.Tile = new Point(job.Origin.X + arm.Target.X, job.Origin.Y + arm.Target.Y);
             job.Claimed.Add(Key(arm));
             return true;

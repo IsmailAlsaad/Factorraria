@@ -135,12 +135,12 @@ namespace Factorraria.Content.Items.Mounts
         public bool IsActive { get; private set; }
 
         // Patch M3. True while the server runs a build job for this player (owner: told by MechBuildArmState, or set directly in single-player).
-        // While it is true two of the three anchor slots are given to the builder arms: only AnchorArmsWhileBuilding arms anchor the player.
+        // While it is true the anchors keep their three slots (AnchorArmsWhileBuilding); the builder arms are separate, not part of these slots.
         public bool IsBuilding { get; private set; }
         public int AnchorArmsNormal = 3;         // anchors while not building (never more than MaxArms, the slot count)
-        public int AnchorArmsWhileBuilding = 2;  // anchors while building; the other two arms are the builder arms (MechSuitBuilderArms)
+        public int AnchorArmsWhileBuilding = 3;  // anchors while building: no cap any more (same as AnchorArmsNormal); the two builder arms (MechSuitBuilderArms) are extra
         public int AnchorArmLimit => IsBuilding ? AnchorArmsWhileBuilding : AnchorArmsNormal;
-        /// <summary>Total arms out: 3 while not building, 4 while building (2 anchors + 2 builder arms). The roadmap's "MaxArms 3 / 4".</summary>
+        /// <summary>Total arms out: 3 while not building, 5 while building (3 anchors + 2 builder arms).</summary>
         public int ArmCount => IsBuilding ? AnchorArmsWhileBuilding + 2 : AnchorArmsNormal;
 
         public void SetBuilding(bool building)

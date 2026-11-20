@@ -71,6 +71,7 @@ namespace Factorraria.Common.Net
         HarvesterBoxStrike = 62,      // server -> nearby clients: "the staff of the Harvester Box at tile (x, y) starts its strike": cosmetic replay only, the server already owns the harvest (Harvester Box patch P4; payload int x, int y)
         MechBuildRequest = 63,        // client -> server: "build the copy of the region (x, y, w, h) at destination origin (x, y)": one packet, the server reads the source region from the world itself (Mech Suit build tool patch M3; payload six shorts)
         MechBuildArmState = 64,       // server -> nearby clients: "the builder arms of player <n> are on / off; per arm: target tile or none, strike ticks when a strike started, held item type" (patch M3)
+        MechBuildCancel = 67,         // client -> server: "end my build job" (Mech Suit build tool patch M4; empty payload; the server ends the job of the sender and the arm state packet tells every client)
         MechBuildConsumed = 65,       // server -> owner: "the build job took these items from your inventory (slot, item type, count)": the owner's client removes them too, vanilla ignores server writes to the own inventory (patch M3)
         HarvesterBoxPlantAcorn = 66,  // client -> server: "plant an acorn on the Harvester Box at tile (x, y)": the server checks reach, the held acorn and the free tiles, then writes the sapling and takes the acorn (Harvester Box patch P5; payload int x, int y)
     }

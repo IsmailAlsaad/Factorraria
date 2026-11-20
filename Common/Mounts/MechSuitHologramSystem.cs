@@ -12,6 +12,7 @@ using Terraria.ObjectData;
 using Terraria.UI;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm;
 using Terraria.ID;
+using Factorraria.Content.Items.Mounts;
 
 namespace Factorraria.Common.Mounts
 {
@@ -44,6 +45,19 @@ namespace Factorraria.Common.Mounts
         readonly List<Block> blocks = new();
         readonly List<int> candidates = new();
         readonly Dictionary<int, int> remaining = new();
+        // Copies already sent to the server (patch M4). Client only: each is scanned from the local world at the click, the same way the server
+        // reads it, and drawn until the build job ends. Blocks that exist at the destination are not drawn.
+        class PlacedCopy
+        {
+            public Point Origin;
+            public readonly List<Block> Blocks = new();
+        }
+
+        public int PlacedGraceTicks = 300;      // a placed copy waits this long for the server to confirm a job before it is dropped
+        readonly List<PlacedCopy> placedCopies = new();
+        uint lastPlacedTick;
+        bool sawBuilding;
+
         BlockState[] states = Array.Empty<BlockState>();
         byte[] cellState = Array.Empty<byte>();
         int[] groupTotal = Array.Empty<int>();
@@ -76,6 +90,7 @@ namespace Factorraria.Common.Mounts
         void ClearBlueprint()
         {
             blocks.Clear();
+            placedCopies.Clear();
             builtVersion = -1;
             evaluated = false;
         }
@@ -88,6 +103,7 @@ namespace Factorraria.Common.Mounts
 
             layers.Insert(inventory, new LegacyGameInterfaceLayer("Factorraria: Mech Suit Hologram", delegate
             {
+                DrawPlaced(Main.spriteBatch);
                 DrawHologram(Main.spriteBatch);
                 return true;
             }, InterfaceScaleType.Game));
@@ -228,6 +244,88 @@ namespace Factorraria.Common.Mounts
             return dx * dx + dy * dy;
         }
 
+        // ---------------------------------------------------------------- copies already placed
+
+        /// <summary>Owner side, called when the place click sends its build request.</summary>
+        public void AddPlaced(Rectangle source, Point origin)
+        {
+            if (Main.dedServ)
+                return;
+
+            PlacedCopy copy = new PlacedCopy { Origin = origin };
+            ModContent.GetInstance<MechSuitBlueprint>().Scan(source, copy.Blocks);
+            copy.Blocks.RemoveAll(b => !(b.IsWall || b.Plain)); // objects wait for patch M5, the job skips them too
+            if (copy.Blocks.Count == 0)
+                return;
+
+            placedCopies.Add(copy);
+            lastPlacedTick = Main.GameUpdateCount;
+            sawBuilding = Main.LocalPlayer.GetModPlayer<MechSuitPlayer>().IsBuilding;
+        }
+
+        void DrawPlaced(SpriteBatch spriteBatch)
+        {
+            if (placedCopies.Count == 0 || Main.dedServ)
+                return;
+
+            Player player = Main.LocalPlayer;
+            bool building = player.GetModPlayer<MechSuitPlayer>().IsBuilding;
+            if (building)
+            {
+                sawBuilding = true;
+            }
+            else if (sawBuilding || Main.GameUpdateCount - lastPlacedTick > (uint)PlacedGraceTicks)
+            {
+                placedCopies.Clear(); // the job ended (or the server never started one)
+                sawBuilding = false;
+                return;
+            }
+
+            Vector2 viewSize = Vector2.Max(Main.ViewSize, new Vector2(Main.screenWidth, Main.screenHeight));
+            Rectangle view = new Rectangle((int)Main.screenPosition.X - 96, (int)Main.screenPosition.Y - 96, (int)viewSize.X + 192, (int)viewSize.Y + 192);
+            Color valid = Color.White * HologramAlpha;
+            Color red = RedTint * HologramAlpha;
+            int left = 0;
+
+            for (int pass = 0; pass < 2; pass++)
+            {
+                foreach (PlacedCopy copy in placedCopies)
+                {
+                    foreach (Block b in copy.Blocks)
+                    {
+                        if (b.IsWall != (pass == 0))
+                            continue;
+
+                        int x = copy.Origin.X + b.X;
+                        int y = copy.Origin.Y + b.Y;
+                        if (!WorldGen.InWorld(x, y, 1))
+                            continue;
+
+                        Tile t = Main.tile[x, y];
+                        bool built = b.IsWall ? t.WallType == b.Type : t.HasTile && t.TileType == b.Type;
+                        if (built)
+                            continue;
+
+                        if (pass == 1)
+                            left++;
+
+                        if (!view.Contains(x * 16, y * 16))
+                            continue;
+
+                        bool collision = b.IsWall ? t.WallType != 0 : t.HasTile;
+                        Vector2 position = new Vector2(x * 16f, y * 16f) - Main.screenPosition;
+                        if (b.IsWall)
+                            DrawWall(spriteBatch, b, position, collision ? red : valid);
+                        else
+                            DrawTile(spriteBatch, b, position, collision ? red : valid);
+                    }
+                }
+            }
+
+            // Small readout above the player: how many blocks are still to be built.
+            Utils.DrawBorderString(spriteBatch, left + " blocks left", player.Top - Main.screenPosition + new Vector2(0f, -36f), Color.White, 0.9f, 0.5f, 1f);
+        }
+
         // ---------------------------------------------------------------- drawing
 
         void DrawHologram(SpriteBatch spriteBatch)
@@ -248,7 +346,9 @@ namespace Factorraria.Common.Mounts
             if (!evaluated || cursor != lastCursor || Main.GameUpdateCount - lastEvaluate >= (uint)EvaluateIntervalTicks)
                 Evaluate(origin, cursor, player);
 
-            Rectangle view = new Rectangle((int)Main.screenPosition.X - 32, (int)Main.screenPosition.Y - 32, (int)Main.ViewSize.X + 64, (int)Main.ViewSize.Y + 64);
+            // Never smaller than the real screen (ViewSize can lag behind a zoom change) and with a generous margin, so the hologram is not cut off at the screen edges.
+            Vector2 viewSize = Vector2.Max(Main.ViewSize, new Vector2(Main.screenWidth, Main.screenHeight));
+            Rectangle view = new Rectangle((int)Main.screenPosition.X - 96, (int)Main.screenPosition.Y - 96, (int)viewSize.X + 192, (int)viewSize.Y + 192);
             Color valid = Color.White * HologramAlpha;
             Color red = RedTint * HologramAlpha;
 

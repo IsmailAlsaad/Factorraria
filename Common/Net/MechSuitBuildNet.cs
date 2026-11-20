@@ -51,6 +51,7 @@ namespace Factorraria.Common.Net
         public override void Load()
         {
             FactorrariaNet.Register(FactorrariaPacket.MechBuildRequest, PacketDirection.ToServer, MechSuitBuildNet.HandleRequest, 4);
+            FactorrariaNet.Register(FactorrariaPacket.MechBuildCancel, PacketDirection.ToServer, MechSuitBuildNet.HandleCancel);
             FactorrariaNet.Register(FactorrariaPacket.MechBuildArmState, PacketDirection.ToClient, MechSuitBuildNet.HandleArmState);
             FactorrariaNet.Register(FactorrariaPacket.MechBuildConsumed, PacketDirection.ToClient, MechSuitBuildNet.HandleConsumed);
         }
@@ -154,6 +155,21 @@ namespace Factorraria.Common.Net
                 writer.Write((short)origin.X);
                 writer.Write((short)origin.Y);
             });
+        }
+
+        /// <summary>Owner side: ask the server to end the build job of this player (single-player runs the handler directly).</summary>
+        public static void RequestCancel()
+        {
+            FactorrariaNet.SendRequest(FactorrariaPacket.MechBuildCancel);
+        }
+
+        // Server (or single-player). A job only ever ends for the sender, so a client cannot cancel someone else's build.
+        public static void HandleCancel(BinaryReader reader, int sender)
+        {
+            if (sender < 0 || sender >= Main.maxPlayers)
+                return;
+
+            ModContent.GetInstance<MechSuitBuildSystem>().EndJob(sender, "cancelled by the player");
         }
 
         // Server (or single-player, where sender is the local player).
