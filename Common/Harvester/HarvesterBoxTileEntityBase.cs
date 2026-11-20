@@ -508,7 +508,7 @@ namespace Factorraria.Common.Harvester
             dropTile = new Point(x, y);
             int soil = HarvesterBoxRegistry.BoxTreeSoil.TryGetValue(Main.tile[x, y + 1].TileType, out int s) ? s : TileID.Grass;
 
-            HarvesterBoxTrees.RunAsTreeSoil(x, y + 1, () => ModContent.GetInstance<RoboticArmDropCaptureSystem>().Run(this, () =>
+            HarvesterBoxTrees.RunAsTreeSoilWithSides(x, y + 1, () => ModContent.GetInstance<RoboticArmDropCaptureSystem>().Run(this, () =>
             {
                 WorldGen.KillTile(x, y - 1, false, false, false);
 

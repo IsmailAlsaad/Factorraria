@@ -25,6 +25,22 @@ namespace Factorraria.Common.Harvester
             public short FrameX, FrameY;
         }
 
+        // True only while TryGrowSapling calls vanilla's growth, so the hook below can tell our growth from vanilla's own random tick.
+        public static bool OwnGrowth;
+
+        static bool GrowOwn(int x, int bottomY)
+        {
+            OwnGrowth = true;
+            try
+            {
+                return WorldGen.AttemptToGrowTreeFromSapling(x, bottomY, false);
+            }
+            finally
+            {
+                OwnGrowth = false;
+            }
+        }
+
         public static bool IsTreeBox(int x, int y)
         {
             if (!WorldGen.InWorld(x, y, 1))
@@ -91,6 +107,67 @@ namespace Factorraria.Common.Harvester
             finally
             {
                 End(d, true);
+            }
+        }
+
+        // Felling a tree. Vanilla's branch and root pieces look down THEIR OWN column (x - 1 and x + 1) for the first solid tile and read the tree type from it
+        // when they drop an acorn or wood. Beside a box that tile is stone, a neighbour box or nothing a tree grows on, so vanilla indexes outside its tables,
+        // the exception aborts the fell halfway and the remaining branches float. So for the length of the call the surface tiles of both side columns (from 40
+        // tiles above the box down to the first solid tile at or under the box row) stand in for soil too: a neighbour box for its own soil, any other tile that
+        // is not already tree soil for the middle box's soil. Types, frames are put back afterwards.
+        public static void RunAsTreeSoilWithSides(int x, int y, Action vanilla)
+        {
+            Disguise middle = Begin(x, y);
+            int soilType = middle.Active ? middle.Soil : TileID.Grass;
+            System.Collections.Generic.List<Disguise> sides = new System.Collections.Generic.List<Disguise>();
+
+            try
+            {
+                DisguiseSideColumn(x - 1, y, soilType, sides);
+                DisguiseSideColumn(x + 1, y, soilType, sides);
+                vanilla();
+            }
+            finally
+            {
+                for (int i = sides.Count - 1; i >= 0; i--)
+                    End(sides[i], false);
+
+                End(middle, true);
+            }
+        }
+
+        static bool IsSolidGround(int x, int y)
+        {
+            Tile tile = Main.tile[x, y];
+            return tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType];
+        }
+
+        static void DisguiseSideColumn(int x, int soilY, int soilType, System.Collections.Generic.List<Disguise> list)
+        {
+            for (int y = Math.Max(1, soilY - 40); y < soilY + 100 && WorldGen.InWorld(x, y, 1); y++)
+            {
+                if (!IsSolidGround(x, y))
+                    continue;
+
+                Tile tile = Main.tile[x, y];
+                int soil = 0;
+                if (HarvesterBoxRegistry.BoxTreeSoil.TryGetValue(tile.TileType, out int boxSoil))
+                    soil = boxSoil;
+                else if (!WorldGen.IsTileTypeFitForTree(tile.TileType))
+                    soil = soilType;
+
+                if (soil != 0)
+                {
+                    list.Add(new Disguise { Active = true, X = x, Y = y, Real = tile.TileType, FrameX = tile.TileFrameX, FrameY = tile.TileFrameY, Soil = soil });
+                    tile.TileType = (ushort)soil;
+                }
+
+                if (y >= soilY)
+                    return;
+
+                // skip the rest of this solid stretch; the next surface under it serves the pieces below
+                while (y + 1 < soilY + 100 && WorldGen.InWorld(x, y + 1, 1) && IsSolidGround(x, y + 1))
+                    y++;
             }
         }
 
@@ -217,7 +294,7 @@ namespace Factorraria.Common.Harvester
                 }
 
                 if (fakeX != int.MinValue || SideFits(x - 1, soilY) || SideFits(x + 1, soilY))
-                    grew = WorldGen.AttemptToGrowTreeFromSapling(x, bottomY, false);
+                    grew = GrowOwn(x, bottomY);
             }
             finally
             {
@@ -278,6 +355,7 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.Check1x2 += Check1x2Hook;
             On_WorldGen.GetCommonTreeFoliageData += GetCommonTreeFoliageDataHook;
             On_TileDrawing.GetTreeVariant += GetTreeVariantHook;
+            On_WorldGen.AttemptToGrowTreeFromSapling += AttemptToGrowTreeFromSaplingHook;
         }
 
         public override void Unload()
@@ -286,6 +364,18 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.Check1x2 -= Check1x2Hook;
             On_WorldGen.GetCommonTreeFoliageData -= GetCommonTreeFoliageDataHook;
             On_TileDrawing.GetTreeVariant -= GetTreeVariantHook;
+            On_WorldGen.AttemptToGrowTreeFromSapling -= AttemptToGrowTreeFromSaplingHook;
+        }
+
+        // Vanilla's random tick also grows saplings, and on a box it would do it with no soil disguise: the tree is built, then its own CheckTree pass kills
+        // the pieces that do not see tree soil (the IndexOutOfRange in KillTile_GetTreeDrops) and leaves some floating. Box saplings grow only through
+        // HarvesterBoxTrees.TryGrowSapling. The call may name the top or the bottom tile of the sapling, so both box rows are checked.
+        static bool AttemptToGrowTreeFromSaplingHook(On_WorldGen.orig_AttemptToGrowTreeFromSapling orig, int x, int y, bool underground)
+        {
+            if (!HarvesterBoxTrees.OwnGrowth && HarvesterBoxRegistry.BoxTreeSoil.Count > 0 && (HarvesterBoxTrees.IsTreeBox(x, y + 1) || HarvesterBoxTrees.IsTreeBox(x, y + 2)))
+                return false;
+
+            return orig(x, y, underground);
         }
 
         // A tree on a box keeps standing (vanilla's trunk and sapling checks ask this about the soil), and a box beside a box counts as the soil beside it.
