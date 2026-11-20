@@ -463,9 +463,32 @@ namespace Factorraria.Common.Harvester
         // swaps tile data only, so it is the same on every side. If it still throws, the piece is logged (EnableDebugs) before the exception goes on.
         static void KillTileGetTreeDropsHook(On_WorldGen.orig_KillTile_GetTreeDrops orig, int i, int j, Tile tileCache, ref bool bonusWood, ref int dropItem, ref int secondaryItem)
         {
-            if (HarvesterBoxRegistry.BoxTreeSoil.Count == 0 || !WorldGen.InWorld(i, j, 4) || !HarvesterBoxTrees.TryFindBoxForTreeTile(i, j, out int boxX, out int boxY))
+            if (HarvesterBoxRegistry.BoxTreeSoil.Count == 0 || !WorldGen.InWorld(i, j, 4))
             {
                 orig(i, j, tileCache, ref bonusWood, ref dropItem, ref secondaryItem);
+                return;
+            }
+
+            if (!HarvesterBoxTrees.TryFindBoxForTreeTile(i, j, out int boxX, out int boxY))
+            {
+                // No box found for this piece: the 11:00:06 log threw HERE, in a second cascade level of FellTree. The piece is orphaned (the trunk beside it,
+                // or the trunk below it, was already killed by the cascade), so there is no box to disguise and vanilla's column walk runs out of the world.
+                // Such a piece is a leftover: give the plain wood drop (no acorn) instead of letting the exception escape and abort the whole felling.
+                try
+                {
+                    orig(i, j, tileCache, ref bonusWood, ref dropItem, ref secondaryItem);
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    global::Factorraria.Content.Configs.FurnaceOffsetConfig cfgOrphan = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
+                    if (cfgOrphan != null && cfgOrphan.EnableDebugs)
+                        DbgLog($"GetTreeDrops ORPHAN piece ({i},{j}) [{Dbg(i, j)}] had no box; plain wood, sideDepth={HarvesterBoxTrees.SideDepth}");
+
+                    dropItem = ItemID.Wood;
+                    secondaryItem = 0;
+                    bonusWood = false;
+                }
+
                 return;
             }
 

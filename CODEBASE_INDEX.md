@@ -4,7 +4,7 @@ generated 2026-11-20 | 446 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(253) Item(140) Player(109) FactorrariaNet(86) Tile(72) ItemID(72) WorldGen(67) BaseMachine(58) TextureAssets(41) TileObjectData(40) FactorrariaPacket(39) Sets(38) PacketDirection(34) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(253) Item(140) Player(109) FactorrariaNet(86) ItemID(73) Tile(72) WorldGen(67) BaseMachine(58) TextureAssets(41) TileObjectData(40) FactorrariaPacket(39) Sets(38) PacketDirection(34) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -390,9 +390,9 @@ tModLoader/other bases -> project types:
       {Idle, Ready, Strike}
     struct BoxState
       +Cycle:BoxCycle +Ticks:int
-**HarvesterBoxTrees.cs** uses: Factorraria, FurnaceOffsetConfig, HarvesterBoxRegistry, Main, Tile, WorldGen
+**HarvesterBoxTrees.cs** uses: Factorraria, FurnaceOffsetConfig, HarvesterBoxRegistry, ItemID, Main, Tile, WorldGen
   static class HarvesterBoxTrees
-    +OwnGrowth:bool[s] +SideDepth:int[s] +IsTreeBox(int,int)[s] +Begin(int,int)[s] +End(Disguise,bool)[s] +RunAsTreeSoil(int,int,Action)[s] +RunAsTreeSoilWithSides(int,int,Action)[s] +TryFindSoilBelow(int,int,int,out int)[s] +TryFindBoxForTreeTile(int,int,out int,out int)[s] +IsSapling(int,int)[s] +CanPlantSapling(int,int)[s] +PlaceSapling(int,int,int)[s] +TryGrowSapling(int,int)[s] +IsTreeReady(int,int)[s]
+    +OwnGrowth:bool[s] +SideDepth:int[s] +IsTreeBox(int,int)[s] +Begin(int,int)[s] +End(Disguise,bool)[s] +RunAsTreeSoil(int,int,Action)[s] +RunAsTreeSoilWithSides(int,int,Action)[s] +TryFindSoilBelow(int,int,int,out int)[s] +TryFindBoxForTreeTile(int,int,out int,out int)[s] +BeginForPiece(int,int,int)[s] +EndForPiece(List<Disguise>)[s] +IsSapling(int,int)[s] +CanPlantSapling(int,int)[s] +PlaceSapling(int,int,int)[s] +TryGrowSapling(int,int)[s] +IsTreeReady(int,int)[s]
     struct Disguise
       +Active:bool +Soil:int X, Y, +Real:ushort +FrameY:short FrameX, +Fake:bool
   class HarvesterBoxTreeHooks : ModSystem
