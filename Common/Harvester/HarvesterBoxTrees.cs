@@ -68,6 +68,30 @@ namespace Factorraria.Common.Harvester
             return type == TileID.Trees || type == TileID.PalmTree || type == 634;   // 634 = the ash tree
         }
 
+        // Vanilla's tree shake (the leaf loot an axe hit gives: acorns, wood, coins, critters, ...) for the tree whose trunk tile is (x, y). WorldGen.ShakeTree is
+        // private, so it is reached by reflection. Run it inside the soil disguise and the drop capture and BEFORE the tree is felled: it needs the leafy top to
+        // still stand. Vanilla shakes a tree base once until its own list is reset, so the list is cleared first (ResetTreeShakes is public) and every felling
+        // gets its shake. Server and single-player only (the caller already is). A failure is logged and never stops the felling.
+        public static void ShakeBeforeFelling(int x, int y)
+        {
+            try
+            {
+                System.Reflection.MethodInfo shake = typeof(WorldGen).GetMethod("ShakeTree", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, new[] { typeof(int), typeof(int) }, null);
+                if (shake == null)
+                {
+                    ModContent.GetInstance<HarvesterBoxTreeHooks>().Mod.Logger.Warn("[HarvesterTrees] WorldGen.ShakeTree not found: the staff fells trees without shaking them.");
+                    return;
+                }
+
+                WorldGen.ResetTreeShakes();
+                shake.Invoke(null, new object[] { x, y });
+            }
+            catch (Exception e)
+            {
+                ModContent.GetInstance<HarvesterBoxTreeHooks>().Mod.Logger.Warn("[HarvesterTrees] shake before felling failed: " + (e.InnerException ?? e));
+            }
+        }
+
         // Starts a disguise (Active stays false when (x, y) is not a tree box, so End does nothing).
         public static Disguise Begin(int x, int y)
         {

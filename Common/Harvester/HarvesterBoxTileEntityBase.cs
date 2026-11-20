@@ -510,6 +510,8 @@ namespace Factorraria.Common.Harvester
 
             HarvesterBoxTrees.RunAsTreeSoilWithSides(x, y + 1, () => ModContent.GetInstance<RoboticArmDropCaptureSystem>().Run(this, () =>
             {
+                HarvesterBoxTrees.ShakeBeforeFelling(x, y);   // the leaf loot an axe hit would give (needs the leafy top, so before the felling)
+
                 WorldGen.KillTile(x, y - 1, false, false, false);
 
                 if (Main.tile[x, y].HasTile && HarvesterBoxTrees.IsTreeTileType(Main.tile[x, y].TileType))

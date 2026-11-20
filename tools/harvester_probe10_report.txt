@@ -1,0 +1,454 @@
+Dll: C:\GOG Games\Terraria\tModLoader\tModLoader.dll
+Terraria.WorldGen: 2124 KB
+##### 1. ShakeTree (whole method)
+--- Terraria.WorldGen.cs:58017
+	private static void ShakeTree(int i, int j)
+	{
+		//IL_07c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_080b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0815: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0851: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0856: Unknown result type (might be due to invalid IL or missing references)
+		if (numTreeShakes == maxTreeShakes)
+		{
+			return;
+		}
+		GetTreeBottom(i, j, out var x, out var y);
+		int y2 = y;
+		TreeTypes treeType = GetTreeType(Main.tile[x, y].type);
+		if (treeType == TreeTypes.None)
+		{
+			return;
+		}
+		for (int k = 0; k < numTreeShakes; k++)
+		{
+			if (treeShakeX[k] == x && treeShakeY[k] == y)
+			{
+				return;
+			}
+		}
+		treeShakeX[numTreeShakes] = x;
+		treeShakeY[numTreeShakes] = y;
+		numTreeShakes++;
+		y--;
+		while (y > 10 && Main.tile[x, y].active() && TileID.Sets.IsShakeable[Main.tile[x, y].type])
+		{
+			y--;
+		}
+		y++;
+		if (!IsTileALeafyTreeTop(x, y) || Collision.SolidTiles(x - 2, x + 2, y - 2, y + 2))
+		{
+			return;
+		}
+		bool createLeaves = true;
+		if (!TileLoader.GlobalShakeTree(x, y, treeType) && PlantLoader.ShakeTree(x, y, Main.tile[x, y2].type, ref createLeaves))
+		{
+			if (Main.getGoodWorld && genRand.Next(17) == 0)
+			{
+				Projectile.NewProjectile(GetProjectileSource_ShakeTree(x, y), x * 16, y * 16, (float)Main.rand.Next(-100, 101) * 0.002f, 0f, 28, 0, 0f, Main.myPlayer, 16f, 16f);
+			}
+			else if (genRand.Next(300) == 0 && treeType == TreeTypes.Forest)
+			{
+				Item.NewItem(GetItemSource_ShakeTree(x, y), x * 16, y * 16, 16, 16, 832);
+			}
+			else if (genRand.Next(300) == 0 && treeType == TreeTypes.Forest)
+			{
+				Item.NewItem(GetItemSource_ShakeTree(x, y), x * 16, y * 16, 16, 16, 933);
+			}
+			else if (genRand.Next(200) == 0 && treeType == TreeTypes.Jungle)
+			{
+				Item.NewItem(GetItemSource_ShakeTree(x, y), x * 16, y * 16, 16, 16, 3360);
+			}
+			else if (genRand.Next(200) == 0 && treeType == TreeTypes.Jungle)
+			{
+				Item.NewItem(GetItemSource_ShakeTree(x, y), x * 16, y * 16, 16, 16, 3361);
+			}
+			else if (genRand.Next(1000) == 0 && treeType == TreeTypes.Forest)
+			{
+				Item.NewItem(GetItemSource_ShakeTree(x, y), x * 16, y * 16, 16, 16, 4366);
+			}
+			else if (genRand.Next(7) == 0 && (treeType == TreeTypes.Forest || treeType == TreeTypes.Snow || treeType == TreeTypes.Hallowed || treeType == TreeTypes.Ash))
+			{
+				Item.NewItem(GetItemSource_ShakeTree(x, y), x * 16, y * 16, 16, 16, 27, genRand.Next(1, 3));
+			}
+			else if (genRand.Next(8) == 0 && treeType == TreeTypes.Mushroom)
+			{
+				Item.NewItem(GetItemSource_ShakeTree(x, y), x * 16, y * 16, 16, 16, 194, genRand.Next(1, 2));
+			}
+			else if (genRand.Next(35) == 0 && Main.halloween)
+			{
+				Item.NewItem(GetItemSource_ShakeTree(x, y), x * 16, y * 16, 16, 16, 1809, genRand.Next(1, 3));
+			}
+			else if (genRand.Next(12) == 0)
+			{
+				int dropItem = 0;
+				KillTile_GetItemDrops(i, j, Main.tile[i, j], out dropItem, out var _, out var _, out var _);
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, dropItem, genRand.Next(1, 4));
+			}
+			else if (genRand.Next(20) == 0)
+			{
+				int type = 71;
+				int num = genRand.Next(50, 100);
+				if (genRand.Next(30) == 0)
+				{
+					type = 73;
+					num = 1;
+					if (genRand.Next(5) == 0)
+					{
+						num++;
+					}
+					if (genRand.Next(10) == 0)
+					{
+						num++;
+					}
+				}
+				else if (genRand.Next(10) == 0)
+				{
+					type = 72;
+					num = genRand.Next(1, 21);
+					if (genRand.Next(3) == 0)
+					{
+						num += genRand.Next(1, 21);
+					}
+					if (genRand.Next(4) == 0)
+					{
+						num += genRand.Next(1, 21);
+					}
+				}
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, type, num);
+			}
+			else if (genRand.Next(15) == 0 && (treeType == TreeTypes.Forest || treeType == TreeTypes.Hallowed))
+			{
+				int type2 = genRand.Next(5) switch
+				{
+					0 => 74, 
+					1 => 297, 
+					2 => 298, 
+					3 => 299, 
+					_ => 538, 
+				};
+				if (Player.GetClosestRollLuck(x, y, NPC.goldCritterChance) == 0f)
+				{
+					type2 = ((genRand.Next(2) != 0) ? 539 : 442);
+				}
+				NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16, y * 16, type2);
+			}
+			else if (genRand.Next(50) == 0 && treeType == TreeTypes.Hallowed && !Main.dayTime)
+			{
+				int type3 = Main.rand.NextFromList(new short[3] { 583, 584, 585 });
+				if (Main.tenthAnniversaryWorld && Main.rand.Next(4) != 0)
+				{
+					type3 = 583;
+				}
+				NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16, y * 16, type3);
+			}
+			else if (genRand.Next(50) == 0 && treeType == TreeTypes.Forest && !Main.dayTime)
+			{
+				NPC obj = Main.npc[NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16, y * 16, 611)];
+				obj.velocity.Y = 1f;
+				obj.netUpdate = true;
+			}
+			else if (genRand.Next(50) == 0 && treeType == TreeTypes.Jungle && Main.dayTime)
+			{
+				NPC obj2 = Main.npc[NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16, y * 16, Main.rand.NextFromList(new short[5] { 671, 672, 673, 674, 675 }))];
+				obj2.velocity.Y = 1f;
+				obj2.netUpdate = true;
+			}
+			else if (genRand.Next(40) == 0 && treeType == TreeTypes.Forest && !Main.dayTime && Main.halloween)
+			{
+				NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16, y * 16, 301);
+			}
+			else if (genRand.Next(50) == 0 && (treeType == TreeTypes.Forest || treeType == TreeTypes.Hallowed))
+			{
+				for (int l = 0; l < 5; l++)
+				{
+					Point val = new Point(x + Main.rand.Next(-2, 2), y - 1 + Main.rand.Next(-2, 2));
+					int type4 = ((Player.GetClosestRollLuck(x, y, NPC.goldCritterChance) != 0f) ? Main.rand.NextFromList(new short[3] { 74, 297, 298 }) : 442);
+					NPC obj3 = Main.npc[NPC.NewNPC(new EntitySource_ShakeTree(x, y), val.X * 16, val.Y * 16, type4)];
+					obj3.velocity = Main.rand.NextVector2CircularEdge(3f, 3f);
+					obj3.netUpdate = true;
+				}
+			}
+			else if (genRand.Next(40) == 0 && treeType == TreeTypes.Jungle)
+			{
+				for (int m = 0; m < 5; m++)
+				{
+					Point val2 = new Point(x + Main.rand.Next(-2, 2), y - 1 + Main.rand.Next(-2, 2));
+					NPC obj4 = Main.npc[NPC.NewNPC(new EntitySource_ShakeTree(x, y), val2.X * 16, val2.Y * 16, Main.rand.NextFromList(new short[2] { 210, 211 }))];
+					obj4.ai[1] = 65f;
+					obj4.netUpdate = true;
+				}
+			}
+			else if (genRand.Next(20) == 0 && (treeType == TreeTypes.Palm || treeType == TreeTypes.PalmCorrupt || treeType == TreeTypes.PalmCrimson || treeType == TreeTypes.PalmHallowed) && !IsPalmOasisTree(x))
+			{
+				NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16, y * 16, 603);
+			}
+			else if (genRand.Next(30) == 0 && (treeType == TreeTypes.Crimson || treeType == TreeTypes.PalmCrimson))
+			{
+				NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16 + 8, (y - 1) * 16, -22);
+			}
+			else if (genRand.Next(30) == 0 && (treeType == TreeTypes.Corrupt || treeType == TreeTypes.PalmCorrupt))
+			{
+				NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16 + 8, (y - 1) * 16, -11);
+			}
+			else if (genRand.Next(30) == 0 && treeType == TreeTypes.Jungle && !Main.dayTime)
+			{
+				NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16, y * 16, 51);
+			}
+			else if (genRand.Next(40) == 0 && treeType == TreeTypes.Jungle)
+			{
+				Projectile.NewProjectile(GetProjectileSource_ShakeTree(x, y), x * 16 + 8, (y - 1) * 16, 0f, 0f, 655, 0, 0f, Main.myPlayer);
+			}
+			else if (genRand.Next(20) == 0 && (treeType == TreeTypes.Forest || treeType == TreeTypes.Hallowed) && !Main.raining && !NPC.TooWindyForButterflies && Main.dayTime)
+			{
+				int type5 = 356;
+				if (Player.GetClosestRollLuck(x, y, NPC.goldCritterChance) == 0f)
+				{
+					type5 = 444;
+				}
+				NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16, y * 16, type5);
+			}
+			else if (genRand.Next(20) == 0 && treeType == TreeTypes.Ash && y > Main.maxTilesY - 250)
+			{
+				int secondaryItemStack = genRand.Next(3);
+				NPC.NewNPC(new EntitySource_ShakeTree(x, y), x * 16, y * 16, secondaryItemStack switch
+				{
+					0 => 654, 
+					1 => 653, 
+					_ => 655, 
+				});
+			}
+			else if (Main.remixWorld && genRand.Next(20) == 0 && treeType == TreeTypes.Ash && y > Main.maxTilesY - 250)
+			{
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, 965, genRand.Next(20, 41));
+			}
+			else if (genRand.Next(12) == 0 && treeType == TreeTypes.Forest)
+			{
+				Item.NewItem(Type: genRand.Next(5) switch
+				{
+					0 => 4009, 
+					1 => 4293, 
+					2 => 4282, 
+					3 => 4290, 
+					_ => 4291, 
+				}, source: GetItemSource_FromTreeShake(x, y), X: x * 16, Y: y * 16, Width: 16, Height: 16);
+			}
+			else if (genRand.Next(12) == 0 && treeType == TreeTypes.Snow)
+			{
+				int secondaryItemStack = ((genRand.Next(2) != 0) ? 4295 : 4286);
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, secondaryItemStack);
+			}
+			else if (genRand.Next(12) == 0 && treeType == TreeTypes.Jungle)
+			{
+				int secondaryItemStack = ((genRand.Next(2) != 0) ? 4292 : 4294);
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, secondaryItemStack);
+			}
+			else if (genRand.Next(12) == 0 && (treeType == TreeTypes.Palm || treeType == TreeTypes.PalmCorrupt || treeType == TreeTypes.PalmCrimson || treeType == TreeTypes.PalmHallowed) && !IsPalmOasisTree(x))
+			{
+				int secondaryItemStack = ((genRand.Next(2) != 0) ? 4287 : 4283);
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, secondaryItemStack);
+			}
+			else if (genRand.Next(12) == 0 && (treeType == TreeTypes.Corrupt || treeType == TreeTypes.PalmCorrupt))
+			{
+				int secondaryItemStack = ((genRand.Next(2) != 0) ? 4289 : 4284);
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, secondaryItemStack);
+			}
+			else if (genRand.Next(12) == 0 && (treeType == TreeTypes.Hallowed || treeType == TreeTypes.PalmHallowed))
+			{
+				int secondaryItemStack = ((genRand.Next(2) != 0) ? 4288 : 4297);
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, secondaryItemStack);
+			}
+			else if (genRand.Next(12) == 0 && (treeType == TreeTypes.Crimson || treeType == TreeTypes.PalmCrimson))
+			{
+				int secondaryItemStack = ((genRand.Next(2) != 0) ? 4285 : 4296);
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, secondaryItemStack);
+			}
+			else if (genRand.Next(12) == 0 && treeType == TreeTypes.Ash)
+			{
+				int secondaryItemStack = ((genRand.Next(2) != 0) ? 5278 : 5277);
+				Item.NewItem(GetItemSource_FromTreeShake(x, y), x * 16, y * 16, 16, 16, secondaryItemStack);
+			}
+		}
+		NPCLoader.blockLoot.Clear();
+		if (!createLeaves)
+		{
+			return;
+		}
+		int treeHeight = 0;
+		int treeFrame = 0;
+		int passStyle = 0;
+		GetTreeLeaf(x, Main.tile[x, y], Main.tile[x, y2], ref treeHeight, out treeFrame, out passStyle);
+		if (passStyle > 0)
+		{
+			if (Main.netMode == 2)
+			{
+				NetMessage.SendData(112, -1, -1, null, 1, x, y, 1f, passStyle);
+			}
+			if (Main.netMode == 0)
+			{
+				TreeGrowFX(x, y, 1, passStyle, hitTree: true);
+			}
+		}
+	}
+
+##### 2. who calls it, and its bookkeeping (treeShake / numTreeShakes)
+##### 'ShakeTree\(|numTreeShakes|treeShakeX|maxTreeShakes' in Terraria.WorldGen.cs: 44 line(s) in 8 method(s)
+  4 hit(s) at line(s) 1473, 1475, 1477, 1479  in  public delegate void orig_GenPassDetour(object self, GenerationProgress progress, GameConfiguration configuration);
+  2 hit(s) at line(s) 1622, 1624  in  public static EntitySource_ShakeTree GetNPCSource_ShakeTree(int x, int y)
+  2 hit(s) at line(s) 1627, 1629  in  private static EntitySource_ShakeTree GetProjectileSource_ShakeTree(int x, int y)
+  2 hit(s) at line(s) 1632, 1634  in  private static EntitySource_ShakeTree GetItemSource_ShakeTree(int x, int y)
+  1 hit(s) at line(s) 58014  in  public static void ResetTreeShakes()
+  31 hit(s) at line(s) 58017, 58027, 58038, 58040, 58045, 58046, 58047, 58059, 58063, 58067, 58071, 58075  in  private static void ShakeTree(int i, int j)
+  1 hit(s) at line(s) 58629  in  public static void KillTile(int i, int j, bool fail = false, bool effectOnly = false, bool noItem = false)
+  1 hit(s) at line(s) 64336  in  public static IEntitySource GetItemSource_FromTreeShake(int x, int y)
+
+# 8 hit(s) shown for 'numTreeShakes|maxTreeShakes' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:1473
+
+	public static BackgroundChangeFlashInfo BackgroundsCache = new BackgroundChangeFlashInfo();
+
+>>> 	private static int maxTreeShakes = 500;
+
+	private static int numTreeShakes = 0;
+
+	private static int[] treeShakeX = new int[maxTreeShakes];
+
+	private static int[] treeShakeY = new int[maxTreeShakes];
+
+--- Terraria.WorldGen.cs:1475
+
+	private static int maxTreeShakes = 500;
+
+>>> 	private static int numTreeShakes = 0;
+
+	private static int[] treeShakeX = new int[maxTreeShakes];
+
+	private static int[] treeShakeY = new int[maxTreeShakes];
+
+	private static bool fossilBreak = false;
+
+--- Terraria.WorldGen.cs:1477
+
+	private static int numTreeShakes = 0;
+
+>>> 	private static int[] treeShakeX = new int[maxTreeShakes];
+
+	private static int[] treeShakeY = new int[maxTreeShakes];
+
+	private static bool fossilBreak = false;
+
+	public static Queue<Point> ExploitDestroyQueue = new Queue<Point>();
+
+--- Terraria.WorldGen.cs:1479
+
+	private static int[] treeShakeX = new int[maxTreeShakes];
+
+>>> 	private static int[] treeShakeY = new int[maxTreeShakes];
+
+	private static bool fossilBreak = false;
+
+	public static Queue<Point> ExploitDestroyQueue = new Queue<Point>();
+
+	private static bool growGrassUnderground = false;
+
+--- Terraria.WorldGen.cs:58014
+
+	public static void ResetTreeShakes()
+	{
+>>> 		numTreeShakes = 0;
+	}
+
+	private static void ShakeTree(int i, int j)
+	{
+		//IL_07c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08b6: Unknown result type (might be due to invalid IL or missing references)
+
+--- Terraria.WorldGen.cs:58027
+		//IL_0815: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0851: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0856: Unknown result type (might be due to invalid IL or missing references)
+>>> 		if (numTreeShakes == maxTreeShakes)
+		{
+			return;
+		}
+		GetTreeBottom(i, j, out var x, out var y);
+		int y2 = y;
+		TreeTypes treeType = GetTreeType(Main.tile[x, y].type);
+
+--- Terraria.WorldGen.cs:58038
+		{
+			return;
+		}
+>>> 		for (int k = 0; k < numTreeShakes; k++)
+		{
+			if (treeShakeX[k] == x && treeShakeY[k] == y)
+			{
+				return;
+			}
+		}
+
+--- Terraria.WorldGen.cs:58045
+				return;
+			}
+		}
+>>> 		treeShakeX[numTreeShakes] = x;
+		treeShakeY[numTreeShakes] = y;
+		numTreeShakes++;
+		y--;
+		while (y > 10 && Main.tile[x, y].active() && TileID.Sets.IsShakeable[Main.tile[x, y].type])
+		{
+			y--;
+
+##### 3. IsTileALeafyTreeTop, GetTreeBottom users in the shake, GetItemSource_FromTreeShake
+--- Terraria.WorldGen.cs:23016
+	public static bool IsTileALeafyTreeTop(int i, int j)
+	{
+		Tile tileSafely = Framing.GetTileSafely(i, j);
+		if (tileSafely.active() && TileID.Sets.GetsCheckedForLeaves[tileSafely.type])
+		{
+			if (tileSafely.type == 323 && tileSafely.frameX >= 88)
+			{
+				return true;
+			}
+			if (tileSafely.frameX == 22 && tileSafely.frameY >= 198 && tileSafely.frameY <= 242)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+--- Terraria.WorldGen.cs:64334
+	public static IEntitySource GetItemSource_FromTreeShake(int x, int y)
+	{
+		return new EntitySource_ShakeTree(x, y);
+	}
+
+# 2 hit(s) shown for 'IsShakeable' in Terraria.WorldGen.cs
+--- Terraria.WorldGen.cs:58049
+		treeShakeY[numTreeShakes] = y;
+		numTreeShakes++;
+		y--;
+>>> 		while (y > 10 && Main.tile[x, y].active() && TileID.Sets.IsShakeable[Main.tile[x, y].type])
+		{
+			y--;
+		}
+		y++;
+		if (!IsTileALeafyTreeTop(x, y) || Collision.SolidTiles(x - 2, x + 2, y - 2, y + 2))
+		{
+
+--- Terraria.WorldGen.cs:58627
+		AttemptFossilShattering(i, j, tile, fail);
+		if (fail)
+		{
+>>> 			if (Main.netMode != 1 && TileID.Sets.IsShakeable[tile.type])
+			{
+				ShakeTree(i, j);
+			}
+			if (tile.type == 2 || tile.type == 23 || tile.type == 109 || tile.type == 199 || tile.type == 477 || tile.type == 492)
+			{
+				tile.type = 0;
+
