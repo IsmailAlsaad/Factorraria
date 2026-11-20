@@ -474,6 +474,31 @@ namespace Factorraria.Common.Harvester
                 // No box found for this piece: the 11:00:06 log threw HERE, in a second cascade level of FellTree. The piece is orphaned (the trunk beside it,
                 // or the trunk below it, was already killed by the cascade), so there is no box to disguise and vanilla's column walk runs out of the world.
                 // Such a piece is a leftover: give the plain wood drop (no acorn) instead of letting the exception escape and abort the whole felling.
+                // tML logs every thrown exception as "Silently Caught Exception" even when it is caught, so the throw is avoided: vanilla's walk is only run when
+                // its own column reaches a solid tile (solid, not solid-top) before the bottom of the world.
+                bool columnSafe = false;
+                for (int k = j; k < Main.maxTilesY; k++)
+                {
+                    Tile below = Main.tile[i, k];
+                    if (below.HasTile && Main.tileSolid[below.TileType] && !Main.tileSolidTop[below.TileType])
+                    {
+                        columnSafe = true;
+                        break;
+                    }
+                }
+
+                if (!columnSafe)
+                {
+                    global::Factorraria.Content.Configs.FurnaceOffsetConfig cfgSkip = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
+                    if (cfgSkip != null && cfgSkip.EnableDebugs)
+                        DbgLog($"GetTreeDrops ORPHAN piece ({i},{j}) [{Dbg(i, j)}] had no box and its column has no ground; plain wood, vanilla skipped, sideDepth={HarvesterBoxTrees.SideDepth}");
+
+                    dropItem = ItemID.Wood;
+                    secondaryItem = 0;
+                    bonusWood = false;
+                    return;
+                }
+
                 try
                 {
                     orig(i, j, tileCache, ref bonusWood, ref dropItem, ref secondaryItem);
