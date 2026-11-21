@@ -51,9 +51,9 @@ namespace Factorraria.Common.Harvester
             switch (herb)
             {
                 case HerbStyle.Daybloom:
-                    // Surface layer only; the more light, the faster it grows.
+                    // Surface layer only; the more light, the faster it grows. Blooms by day only.
                     c.CanGrow = IsSurface(y);
-                    c.CanBloom = c.CanGrow;
+                    c.CanBloom = c.CanGrow && !IsNight();
                     if (c.CanGrow)
                         c.Speed = MathHelper.Lerp(DaybloomMinSpeed, DaybloomMaxSpeed, EstimateLight(x, y));
                     break;
@@ -71,10 +71,10 @@ namespace Factorraria.Common.Harvester
                     break;
 
                 case HerbStyle.Waterleaf:
-                    // Anywhere, but it needs rain or a rain cloud above it; a desert speeds it up.
-                    c.CanGrow = HasWater(x, y);
-                    c.CanBloom = c.CanGrow;
-                    if (c.CanGrow && ScanBiomes(x, y).Desert >= BiomeTileThreshold)
+                    // Grows anywhere (a desert speeds it up), but only blooms while it rains or a rain cloud is above it.
+                    c.CanGrow = true;
+                    c.CanBloom = HasWater(x, y);
+                    if (ScanBiomes(x, y).Desert >= BiomeTileThreshold)
                         c.Speed = WaterleafDesertSpeed;
                     break;
 
