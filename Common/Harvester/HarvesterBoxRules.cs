@@ -7,9 +7,9 @@ namespace Factorraria.Common.Harvester
     // too, so keep every growth check in this class.
     public static class HarvesterBoxRules
     {
-        // A herb is ready to harvest at the Mature and Blooming stages (tiles 83 and 84), and only if it is the herb of its own box. The harvest
-        // takes the vanilla yield for the stage it finds (mature outside its blooming condition: the herb only; blooming: herb and seeds).
-        // Change this one function to change when boxes harvest (for example to wait for the blooming stage).
+        // A herb is ready to harvest only when it is BLOOMING (tile 84), not just mature (tile 83), and only if it is the herb of its own box. A herb
+        // goes from mature to blooming only when its growth rules are satisfied (HerbGrowthRules), so a box waits until the conditions are met.
+        // Blooming always yields the herb and seeds. Change this one function to change when boxes harvest.
         public static bool IsReadyToHarvest(int herbX, int herbY, int boxTileType)
         {
             if (!WorldGen.InWorld(herbX, herbY, 1))
@@ -23,7 +23,7 @@ namespace Factorraria.Common.Harvester
                 return false;
 
             Tile plant = Main.tile[herbX, herbY];
-            if (!plant.HasTile || (plant.TileType != TileID.MatureHerbs && plant.TileType != TileID.BloomingHerbs))
+            if (!plant.HasTile || plant.TileType != TileID.BloomingHerbs)
                 return false;
 
             return plant.TileFrameX / 18 == (int)boxHerb;
