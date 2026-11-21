@@ -4,7 +4,7 @@ generated 2026-11-21 | 454 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(260) Item(147) Player(113) FactorrariaNet(87) Tile(75) ItemID(73) WorldGen(70) BaseMachine(59) TileObjectData(41) TextureAssets(41) FactorrariaPacket(40) Sets(39) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(260) Item(147) Player(113) FactorrariaNet(87) Tile(75) ItemID(73) WorldGen(70) BaseMachine(59) TileObjectData(41) TextureAssets(41) FactorrariaPacket(40) Sets(39) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -1684,14 +1684,14 @@ tModLoader/other bases -> project types:
   class SteelScrewItem : ModItem
 
 ### Content/Items/Mounts/
-**MechSuitItem.cs** uses: Factorraria, FactorrariaNet, Item, Main, MechSuitArmProjectile, MechSuitBuildSystem, MechSuitMount, MechSuitNet, Player, Tile, WorldGen
+**MechSuitItem.cs** uses: FactorrariaNet, Item, Main, MechSuitArmProjectile, MechSuitBuildSystem, MechSuitMount, MechSuitNet, Player, Tile, WorldGen
   class MechSuitItem : ModItem
   static class MechSuitTileSearch
     +TryFindNearestAnchorTile(Vector2,float,List<Vector2>,float,out Point)[s]
   struct MechArmSlot
     +ProjectileIndex:int +AnchorTile:Point +IsActive:bool +IsLatched:bool
   class MechSuitPlayer : ModPlayer
-    +MaxArms:int[c] +SearchRadiusTiles:float +CutoffRadiusTiles:float +DeadzoneRadiusTiles:float +MoveSpeed:float +SearchCooldownTicks:int +SearchRadiusPixels:float +CutoffRadiusPixels:float +DeadzoneRadiusPixels:float +IsActive:bool +IsBuilding:bool +AnchorArmsNormal:int +AnchorArmsWhileBuilding:int +AnchorArmLimit:int +ArmCount:int +SetBuilding(bool) +Activate() +Deactivate() +DeactivateCore() +SetReportedState(bool) +PlayerDisconnect()[ov] +Kill(double,int,bool,PlayerDeathReason)[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov] +TryGetClosestLatchedAnchor(out Vector2) +ModifyDrawInfo(ref PlayerDrawSet)[ov]
+    +MaxArms:int[c] +SearchRadiusTiles:float +CutoffRadiusTiles:float +DeadzoneRadiusTiles:float +MoveSpeed:float +SearchCooldownTicks:int +SearchRadiusPixels:float +CutoffRadiusPixels:float +DeadzoneRadiusPixels:float +IsActive:bool +IsBuilding:bool +AnchorArmsNormal:int +AnchorArmsWhileBuilding:int +AnchorArmLimit:int +ArmCount:int +RelayDistanceTiles:float +SetBuilding(bool) +Activate() +Deactivate() +DeactivateCore() +SetReportedState(bool) +PlayerDisconnect()[ov] +Kill(double,int,bool,PlayerDeathReason)[ov] +SyncPlayer(int,int,bool)[ov] +PostUpdateRunSpeeds()[ov] +PreUpdateMovement()[ov] +PostUpdate()[ov] +TryGetClosestLatchedAnchor(out Vector2) +ModifyDrawInfo(ref PlayerDrawSet)[ov]
 **MechSuitMount.cs** uses: FactorrariaNet, MechSuitBuff, MechSuitPlayer, Player
   class MechSuitMount : ModMount
     +SetMount(Player,ref bool)[ov] +Dismount(Player,ref bool)[ov]

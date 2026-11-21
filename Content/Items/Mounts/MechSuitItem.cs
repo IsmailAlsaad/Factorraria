@@ -145,6 +145,9 @@ namespace Factorraria.Content.Items.Mounts
         /// <summary>Total arms out: 3 while not building, and 3 while building (1 anchor + 2 builder arms).</summary>
         public int ArmCount => IsBuilding ? AnchorArmsWhileBuilding + 2 : AnchorArmsNormal;
         bool wasBuilding;
+        // Patch M5c: re-anchoring while building. Once the player is this far (tiles) from the lone anchor, a 4th arm is shot at a new tile.
+        public float RelayDistanceTiles = 7f;
+        bool relayActive;   // owner only: slot 1 holds the relay arm that is flying out / latching; slot 0 still holds the old anchor
 
         public void SetBuilding(bool building)
         {
@@ -474,13 +477,19 @@ namespace Factorraria.Content.Items.Mounts
 
             // A build job just started: keep the best arm as the anchor (a latched one, the closest to the player) in slot 0.
             if (IsBuilding && !wasBuilding)
+            {
+                relayActive = false;
                 KeepBestAnchorInSlotZero();
+            }
 
             wasBuilding = IsBuilding;
+            if (!IsBuilding)
+                relayActive = false;
 
             // While a build job runs the arms beyond the anchor limit become the builder arms (patch M5b): the claw hands its position to a
             // builder arm and the projectile vanishes (no reeling in, no separate set of arms coming out).
-            for (int i = AnchorArmLimit; i < MaxArms; i++)
+            int convertFrom = AnchorArmLimit + (relayActive ? 1 : 0); // the relay arm (slot 1) is not a builder arm
+            for (int i = convertFrom; i < MaxArms; i++)
             {
                 if (!arms[i].IsActive) continue;
 
@@ -523,6 +532,9 @@ namespace Factorraria.Content.Items.Mounts
                 searchCooldown = SearchCooldownTicks;
             }
 
+            if (IsBuilding)
+                UpdateRelay();
+
             // Vanilla sends a projectile only when it spawns, so a client that joins while we are suited never gets our arms. Marking them
             // netUpdate every few seconds makes the owner send them again: the server relays it, a client without the arm creates it, and a
             // client that already has it re-applies the same anchor and position. Single-player has nobody to tell.
@@ -535,6 +547,45 @@ namespace Factorraria.Content.Items.Mounts
                         Main.projectile[arms[i].ProjectileIndex].netUpdate = true;
                 }
             }
+        }
+
+        // Patch M5c. While a job runs the suit holds on with ONE anchor (slot 0). So the player can still move on, once he is RelayDistanceTiles
+        // away from it a 4th arm is shot at a new tile (slot 1, free during a job; same search and deadzone rules as any anchor). As soon as it
+        // latches, the old anchor reels in (the normal retract) and the new arm takes slot 0. If the relay is lost on the way (its block goes),
+        // the next tick may start another one. Owner only, like all of UpdateArms; the others just see projectiles.
+        void UpdateRelay()
+        {
+            if (relayActive)
+            {
+                if (!arms[1].IsActive)
+                {
+                    relayActive = false;
+                    return;
+                }
+
+                if (!arms[1].IsLatched)
+                    return;
+
+                if (arms[0].IsActive && Main.projectile[arms[0].ProjectileIndex].ModProjectile is MechSuitArmProjectile oldAnchor)
+                    oldAnchor.BeginRetract();
+
+                arms[0] = arms[1];
+                arms[1] = new MechArmSlot { ProjectileIndex = -1 };
+                relayActive = false;
+                return;
+            }
+
+            if (!arms[0].IsLatched || arms[1].IsActive || searchCooldown > 0)
+                return;
+
+            float limit = RelayDistanceTiles * 16f;
+            if (Vector2.DistanceSquared(Player.Center, AnchorWorldCenter(arms[0].AnchorTile)) <= limit * limit)
+                return;
+
+            if (TryLaunchNewArm(1))
+                relayActive = true;
+
+            searchCooldown = SearchCooldownTicks;
         }
 
         // The anchor that stays when a job starts: the latched arm closest to the player (it holds the suit up), else any arm that is out.
@@ -571,7 +622,7 @@ namespace Factorraria.Content.Items.Mounts
             return -1;
         }
 
-        void TryLaunchNewArm(int slot)
+        bool TryLaunchNewArm(int slot)
         {
             // Every arm that is out (flying or latched) blocks new anchors inside its deadzone circle.
             deadzoneScratch.Clear();
@@ -579,7 +630,7 @@ namespace Factorraria.Content.Items.Mounts
                 if (arms[i].IsActive) deadzoneScratch.Add(AnchorWorldCenter(arms[i].AnchorTile));
 
             if (!MechSuitTileSearch.TryFindNearestAnchorTile(Player.Center, SearchRadiusPixels, deadzoneScratch, DeadzoneRadiusPixels, out Point tile))
-                return; // nothing in range — will just retry next eligible tick (fallback to gravity is implicit: no arm means normal player physics elsewhere still hold)
+                return false; // nothing in range — will just retry next eligible tick (fallback to gravity is implicit: no arm means normal player physics elsewhere still hold)
 
             // The anchor tile and the bend side travel in ai[0..2] of the spawn packet, so every machine builds the same arm from the packet itself.
             int projIndex = Projectile.NewProjectile(
@@ -593,10 +644,11 @@ namespace Factorraria.Content.Items.Mounts
                 (slot % 2 == 0) ? 1f : -1f); // alternate bend so multiple arms fan out visually instead of overlapping
 
             if (projIndex < 0 || projIndex >= Main.maxProjectiles)
-                return;
+                return false;
 
             arms[slot] = new MechArmSlot { ProjectileIndex = projIndex, AnchorTile = tile };
             SoundEngine.PlaySound(SoundID.Item1 with { PitchVariance = 0.3f });
+            return true;
         }
 
         static Vector2 AnchorWorldCenter(Point tile) => new Vector2(tile.X * 16 + 8, tile.Y * 16 + 8);
