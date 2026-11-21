@@ -190,20 +190,22 @@ namespace Factorraria.Content.VirtualItems
             tag["virtualItemsData"] = savedItemList;
             tag["vitemVersion"] = 2;
 
-            List<Point> filterPoints = new List<Point>();
+            List<int> filterXs = new List<int>();
+            List<int> filterYs = new List<int>();
             List<int> filterIds = new List<int>();
 
-            // Only save tiles that actually have an active filter set
+            // One entry per filtered network (any one of its tiles identifies it). Plain ints, no Point serializer needed.
+            HashSet<PriorityConveyorNetwork> savedNetworks = new HashSet<PriorityConveyorNetwork>();
             foreach (var pair in ConveyorNetworkMap)
             {
-                if (pair.Value.FilteredItemId != ItemID.None)
-                {
-                    filterPoints.Add(pair.Key);
-                    filterIds.Add(pair.Value.FilteredItemId);
-                }
+                if (pair.Value.FilteredItemId == ItemID.None || !savedNetworks.Add(pair.Value)) continue;
+                filterXs.Add(pair.Key.X);
+                filterYs.Add(pair.Key.Y);
+                filterIds.Add(pair.Value.FilteredItemId);
             }
 
-            tag["PriorityFilterPoints"] = filterPoints;
+            tag["PriorityFilterX"] = filterXs;
+            tag["PriorityFilterY"] = filterYs;
             tag["PriorityFilterIds"] = filterIds;
         }
 
@@ -264,23 +266,41 @@ namespace Factorraria.Content.VirtualItems
 
             ConveyorNetworkMap.Clear();
 
-            if (tag.ContainsKey("PriorityFilterPoints") && tag.ContainsKey("PriorityFilterIds"))
+            if (tag.ContainsKey("PriorityFilterX") && tag.ContainsKey("PriorityFilterY") && tag.ContainsKey("PriorityFilterIds"))
             {
-                IList<Point> points = tag.Get<List<Point>>("PriorityFilterPoints");
-                IList<int> ids = tag.Get<List<int>>("PriorityFilterIds");
+                IList<int> xs = tag.GetList<int>("PriorityFilterX");
+                IList<int> ys = tag.GetList<int>("PriorityFilterY");
+                IList<int> ids = tag.GetList<int>("PriorityFilterIds");
 
-                for (int i = 0; i < points.Count; i++)
-                {
-                    Point pt = points[i];
-                    int filterId = ids[i];
-
-                    // Reconstruct networks and re-apply saved filters on world load
-                    if (IsPriorityConveyorTile(pt.X, pt.Y))
-                    {
-                        SetConveyorFilter(pt.X, pt.Y, filterId);
-                    }
-                }
+                for (int i = 0; i < ids.Count && i < xs.Count && i < ys.Count; i++)
+                    ApplySavedConveyorFilter(xs[i], ys[i], ids[i]);
             }
+            else if (tag.ContainsKey("PriorityFilterPoints") && tag.ContainsKey("PriorityFilterIds"))
+            {
+                // Old save format (one entry per tile)
+                try
+                {
+                    IList<Point> points = tag.Get<List<Point>>("PriorityFilterPoints");
+                    IList<int> ids = tag.GetList<int>("PriorityFilterIds");
+
+                    for (int i = 0; i < points.Count && i < ids.Count; i++)
+                        ApplySavedConveyorFilter(points[i].X, points[i].Y, ids[i]);
+                }
+                catch { }
+            }
+
+            ConveyorFilterNet.MarkDirty();
+        }
+
+        // Sets the filter directly (never toggles, unlike SetConveyorFilter, which is the player's click action).
+        static void ApplySavedConveyorFilter(int x, int y, int itemId)
+        {
+            if (!IsPriorityConveyorTile(x, y) || !IsValidItemID(itemId)) return;
+
+            if (!ConveyorNetworkMap.TryGetValue(new Point(x, y), out PriorityConveyorNetwork network))
+                network = RebuildNetworkAt(x, y);
+
+            if (network != null) network.FilteredItemId = itemId;
         }
 
         // Offsets (in pixels) for stacking sprites upward into a pile
