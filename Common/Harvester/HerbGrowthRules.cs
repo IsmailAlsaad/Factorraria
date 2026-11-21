@@ -29,8 +29,8 @@ namespace Factorraria.Common.Harvester
         public static float BloomChance => 0.5f;      // mature -> blooming, per random update, before Speed
         public static float WiltChance => 10f;      // blooming -> mature once the bloom conditions are lost
 
-        public static int BiomeRadiusX => 15;         // the window of tiles around the herb that is counted for biomes (31 x 21)
-        public static int BiomeRadiusY => 10;
+        public static int BiomeRadiusX => 50;         // the window of tiles around the herb that is counted for biomes (31 x 21)
+        public static int BiomeRadiusY => 50;
         public static int BiomeTileThreshold => 20;   // tiles of a biome inside the window for the herb to count as being in it
 
         public static float DaybloomMinSpeed => 0.15f;   // speed at zero light
