@@ -30,7 +30,8 @@ namespace Factorraria.Common.Mounts
     //   collision   destination holds a different block      -> red, ignored until it is cleared
     //   no material the local inventory ran out of the item   -> red; materials run out nearest-first from the cursor (no build order)
     // Rules: a tile with no placeable item (grass) is skipped. A multi-tile object counts as ONE item and is only copied when its whole
-    // footprint is inside the selection. Chests and machines are copied as plain objects (placed empty). Slopes are drawn as full blocks,
+    // footprint is inside the selection. Chests and machines are copied as plain objects (placed empty; since patch M5 the job builds them too,
+// and built / blocked is decided by MechSuitBlueprint.Matches / StateOf, the same rule the job uses). Slopes are drawn as full blocks,
     // half blocks as half blocks, paint is not shown, liquids and wires are not copied.
     public class MechSuitHologramSystem : ModSystem
     {
@@ -166,12 +167,8 @@ namespace Factorraria.Common.Mounts
                 else
                 {
                     Tile t = Main.tile[x, y];
-                    if (b.IsWall)
-                        cell = (byte)(t.WallType == b.Type ? 1 : t.WallType != 0 ? 2 : 0);
-                    else if (!t.HasTile)
-                        cell = 0;
-                    else
-                        cell = (byte)(t.TileType == b.Type && (b.Plain || (t.TileFrameX == b.FrameX && t.TileFrameY == b.FrameY)) ? 1 : 2);
+                    // The same-block rule of the server job (MechSuitBlueprint.Matches: type, and style for objects; frames are not compared).
+                    cell = (byte)(MechSuitBlueprint.Matches(b, t) ? 1 : MechSuitBlueprint.Occupied(b, t) ? 2 : 0);
                 }
 
                 cellState[i] = cell;
@@ -253,22 +250,18 @@ namespace Factorraria.Common.Mounts
             if (Main.dedServ)
                 return;
 
-            PlacedCopy copy = new PlacedCopy { Origin = origin };
+            // Blocks are shifted to their destination (absolute tiles), so Origin stays zero. Objects are kept whole: every cell is drawn, the
+            // head of each stands for the unit (the same units the server job holds).
+            PlacedCopy copy = new PlacedCopy { Origin = Point.Zero };
             ModContent.GetInstance<MechSuitBlueprint>().Scan(source, copy.Blocks);
-            copy.Blocks.RemoveAll(b => !(b.IsWall || b.Plain)); // objects wait for patch M5, the job skips them too
+            MechSuitBlueprint.Shift(copy.Blocks, origin);
             if (copy.Blocks.Count == 0)
                 return;
 
-            // Same rule as the server: the new copy wins where it overlaps an older one.
-            HashSet<(int, int, bool)> newKeys = new HashSet<(int, int, bool)>();
-            foreach (Block b in copy.Blocks)
-                newKeys.Add((origin.X + b.X, origin.Y + b.Y, b.IsWall));
-
+            // Same rule as the server: the new copy wins where it overlaps an older one (whole units are dropped).
+            HashSet<(int, int, bool)> newCells = MechSuitBlueprint.CellsOf(copy.Blocks);
             foreach (PlacedCopy older in placedCopies)
-            {
-                Point o = older.Origin;
-                older.Blocks.RemoveAll(b => newKeys.Contains((o.X + b.X, o.Y + b.Y, b.IsWall)));
-            }
+                older.Blocks.RemoveAll(b => MechSuitBlueprint.Overlaps(newCells, b));
 
             placedCopies.RemoveAll(c => c.Blocks.Count == 0);
             placedCopies.Add(copy);
@@ -321,16 +314,16 @@ namespace Factorraria.Common.Mounts
                         if (!WorldGen.InWorld(x, y, 1))
                             continue;
 
-                        Tile t = Main.tile[x, y];
-                        bool built = b.IsWall ? t.WallType == b.Type : t.HasTile && t.TileType == b.Type;
-                        if (built)
+                        // The server job's rule for the whole unit: built units vanish, units with something else in the way are red.
+                        MechSuitBlueprint.UnitState state = MechSuitBlueprint.StateOf(b);
+                        if (state == MechSuitBlueprint.UnitState.Built)
                             continue;
 
                         if (!view.Contains(x * 16, y * 16))
                             continue;
 
                         // Red: something else stands there, or the inventory holds none of the material (the hologram stays either way).
-                        bool tinted = (b.IsWall ? t.WallType != 0 : t.HasTile) || !placedHave.TryGetValue(b.Item, out int owned) || owned <= 0;
+                        bool tinted = state == MechSuitBlueprint.UnitState.Blocked || !placedHave.TryGetValue(b.Item, out int owned) || owned <= 0;
                         Vector2 position = new Vector2(x * 16f, y * 16f) - Main.screenPosition;
                         if (b.IsWall)
                             DrawWall(spriteBatch, b, position, tinted ? red : valid);

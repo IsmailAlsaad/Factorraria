@@ -553,77 +553,13 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
                 return false;
             }
 
-            if (!TileObject.Place(data))
-            {
-                if (DebugPlacement)
-                    arm.Mod.Logger.Info($"[RoboticArm] {held.Name} at ({x},{y}): TileObject.Place returned false (footprint {footprint})");
-                return false;
-            }
-
-            // Place can report success without changing anything; only a footprint that now holds the tile counts.
-            bool any = false;
-            for (int tx = footprint.Left; tx < footprint.Right && !any; tx++)
-                for (int ty = footprint.Top; ty < footprint.Bottom && !any; ty++)
-                {
-                    Tile tile = Framing.GetTileSafely(tx, ty);
-                    any = tile.HasTile && tile.TileType == held.createTile;
-                }
-
-            if (!any)
-            {
-                if (DebugPlacement)
-                    arm.Mod.Logger.Info($"[RoboticArm] {held.Name} at ({x},{y}): Place returned true but no footprint tile holds tile {held.createTile} (footprint {footprint})");
-                return false;
-            }
-
-            WorldGen.SquareTileFrame(x, y);
-            TileObjectData.CallPostPlacementPlayerHook(x, y, held.createTile, held.placeStyle, FacingFor(x), data.alternate, data);
-
-            // A chest or dresser is created by that hook. If the world has no free chest slot left it made nothing: undo the tile
-            // instead of leaving a container that holds nothing (nothing was broadcast yet, so no client has seen it).
-            if (ChestUpdateMode(held.createTile) >= 0)
-            {
-                Point16 corner = TileObjectData.TopLeft(x, y);
-                if (Chest.FindChest(corner.X, corner.Y) < 0)
-                {
-                    WorldGen.KillTile(x, y, noItem: true);
-                    return false;
-                }
-            }
-
-            TileLoader.PlaceInWorld(x, y, held);
-            return true;
+            return WorldPlacement.PlaceObject(x, y, held, FacingFor(x), data, footprint);
         }
 
-        // The first number of the ChestUpdates packet (message 34) for a tile that owns a Main.chest entry, or -1 for any other tile.
-        // Same values vanilla's Chest.AfterPlacement_Hook uses for the request a client sends after placing one.
-        static int ChestUpdateMode(int type)
-        {
-            if (type == TileID.Containers) return 0;
-            if (type == TileID.Dressers) return 2;
-            if (type == TileID.Containers2) return 4;
-            if (TileID.Sets.BasicChest[type]) return 100;
-            if (TileID.Sets.BasicDresser[type]) return 102;
-            return -1;
-        }
-
-        // Vanilla's chest hook only creates the chest in the placing process. A player's placement is broadcast by the server after the
-        // client's request; the arm places on the server, so the server tells the clients here (index of the new Main.chest entry).
+        // Chest message and tile-entity sharing of a placed object live in WorldPlacement (patch M5, shared with the Mech Suit builder arms).
         void BroadcastContainerCreated(Item held)
         {
-            if (Main.netMode != NetmodeID.Server)
-                return;
-
-            int mode = ChestUpdateMode(held.createTile);
-            if (mode < 0)
-                return;
-
-            Point16 corner = TileObjectData.TopLeft(target.X, target.Y);
-            int index = Chest.FindChest(corner.X, corner.Y);
-            if (index < 0)
-                return;
-
-            NetMessage.SendData(MessageID.ChestUpdates, -1, -1, null, mode, corner.X, corner.Y, held.placeStyle, index, mode >= 100 ? held.createTile : 0);
+            WorldPlacement.BroadcastObjectExtras(held, target.X, target.Y);
         }
 
         bool PlacePlain(Item held)
@@ -820,31 +756,21 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         // the working area and the reach. onlyCheck must stay false (true draws vanilla's placement hologram).
         bool TryGetObjectPlacement(int x, int y, Item held, bool onlyCheck, out TileObject data, out Rectangle footprint)
         {
-            footprint = default;
-            if (!TileObject.CanPlace(x, y, held.createTile, held.placeStyle, FacingFor(x), out data, onlyCheck))
+            if (!WorldPlacement.TryGetObjectPlacement(x, y, held, FacingFor(x), onlyCheck, out data, out footprint))
                 return false;
-
-            TileObjectData objectData = TileObjectData.GetTileData(data.type, data.style, data.alternate)
-                ?? TileObjectData.GetTileData(held.createTile, held.placeStyle);
-            footprint = objectData == null
-                ? new Rectangle(x, y, 1, 1)
-                : new Rectangle(data.xCoord, data.yCoord, objectData.Width, objectData.Height);
 
             if (TileID.Sets.Platforms[held.createTile] && !PlatformsInOpenAir && !AnyTileAround(x, y))
                 return false;
+
+            if (!FootprintMustFitArea)
+                return true;
 
             Rectangle area = arm.AreaTiles;
             for (int tx = footprint.Left; tx < footprint.Right; tx++)
             {
                 for (int ty = footprint.Top; ty < footprint.Bottom; ty++)
                 {
-                    if (!WorldGen.InWorld(tx, ty, 5) || Framing.GetTileSafely(tx, ty).HasTile)
-                        return false;
-
-                    if (FootprintMustFitArea && (!area.Contains(tx, ty) || !arm.IsTileInReach(tx, ty)))
-                        return false;
-
-                    if (!Collision.EmptyTile(tx, ty, true))
+                    if (!area.Contains(tx, ty) || !arm.IsTileInReach(tx, ty))
                         return false;
                 }
             }

@@ -25,7 +25,9 @@ namespace Factorraria.Common.Mounts
     // and is retried, because the arms place other tiles around it). Switching material: the arm folds back to the player, "grabs" the next
     // item, then reaches out again. The job ends when nothing left can be placed (all done, or blocked / out of material / unsupported),
     // when the player leaves the suit, dies or disconnects, or after IdleTimeoutTicks without a placement.
-    // Patch M3 builds tiles and walls only: multi-tile objects (and one-tile objects like platforms, torches, doors) are skipped (patch M5).
+    // Patch M5: the job places objects too (one-tile and multi-tile, chests, machines). One pending entry per placeable unit (MechSuitBlueprint.Block.Head):
+    // a plain block, a wall or a whole object; an object is placed by WorldPlacement.PlaceObject (the route a player's item takes, so chests get their
+    // empty Main.chest entry and machines their TileEntity), costs one item, and counts as built when its whole footprint holds the same type and style.
     public class MechSuitBuildSystem : ModSystem
     {
         // --- TUNABLES (plain fields so hot reload can change them) ---
@@ -71,7 +73,7 @@ namespace Factorraria.Common.Mounts
             public readonly HashSet<(int, int, bool)> Claimed = new();
             public readonly Dictionary<(int, int, bool), uint> Cooldowns = new();
             public readonly List<MechSuitBuildNetSystem.ConsumedEntry> Consumed = new();
-            public int Total, ObjectBlocksSkipped, Placed;
+            public int Total, Placed;
             public int IdleTicks, StatusTimer, ConsumeTimer;
             // The newest scan of the pending list (what is left, and why).
             public int Placeable, WaitingForReach, Blocked, NoMaterial, Unsupported;
@@ -114,6 +116,18 @@ namespace Factorraria.Common.Mounts
             return item;
         }
 
+        static int CountObjects(Job job)
+        {
+            int count = 0;
+            foreach (MechSuitBlueprint.Block block in job.Pending)
+            {
+                if (block.ObjW > 0)
+                    count++;
+            }
+
+            return count;
+        }
+
         // ---------------------------------------------------------------- start / end
 
         /// <summary>Server or single-player: starts the build job of one player, or adds one more copy to the job that already runs. Everything the client sent is checked here.</summary>
@@ -142,39 +156,34 @@ namespace Factorraria.Common.Mounts
 
             List<MechSuitBlueprint.Block> blocks = new List<MechSuitBlueprint.Block>();
             ModContent.GetInstance<MechSuitBlueprint>().Scan(source, blocks);
+            MechSuitBlueprint.Shift(blocks, origin);
 
-            // The blocks of a job hold absolute world tiles (the destination origin is added here), so one job can hold several copies
-            // placed at different spots. job.Origin stays at zero for the same reason.
-            Job job = new Job { Owner = sender, Source = source, Origin = Point.Zero, Total = blocks.Count };
+            // The blocks of a job hold absolute world tiles (the destination origin is added by Shift), so one job can hold several copies
+            // placed at different spots. job.Origin stays at zero for the same reason. Only the head of a unit is kept: the job places a
+            // whole object from its footprint and does not need the other cells (the client's placed hologram does, to draw them).
+            Job job = new Job { Owner = sender, Source = source, Origin = Point.Zero };
             foreach (MechSuitBlueprint.Block block in blocks)
             {
-                if (block.IsWall || block.Plain)
-                {
-                    block.X += origin.X;
-                    block.Y += origin.Y;
+                if (block.Head)
                     job.Pending.Add(block);
-                }
-                else
-                    job.ObjectBlocksSkipped++;
             }
+
+            job.Total = job.Pending.Count;
 
             if (job.Pending.Count == 0)
             {
-                Log("request from " + sender + " refused: nothing to build in " + source + " (" + job.ObjectBlocksSkipped + " object blocks skipped)");
+                Log("request from " + sender + " refused: nothing to build in " + source);
                 return;
             }
 
             if (jobs.TryGetValue(sender, out Job running))
             {
                 // The new copy wins where it overlaps older pending copies: those blocks are dropped (same tile, same layer), never counted twice.
-                HashSet<(int, int, bool)> newKeys = new HashSet<(int, int, bool)>();
-                foreach (MechSuitBlueprint.Block block in job.Pending)
-                    newKeys.Add((block.X, block.Y, block.IsWall));
-
+                HashSet<(int, int, bool)> newCells = MechSuitBlueprint.CellsOf(job.Pending);
                 List<MechSuitBlueprint.Block> kept = new List<MechSuitBlueprint.Block>(running.Pending.Count);
                 foreach (MechSuitBlueprint.Block block in running.Pending)
                 {
-                    if (!newKeys.Contains((block.X, block.Y, block.IsWall)))
+                    if (!MechSuitBlueprint.Overlaps(newCells, block))
                         kept.Add(block);
                 }
 
@@ -188,7 +197,6 @@ namespace Factorraria.Common.Mounts
                 running.Pending.AddRange(kept);
                 running.Pending.AddRange(job.Pending);
                 running.Total += job.Total;
-                running.ObjectBlocksSkipped += job.ObjectBlocksSkipped;
                 running.IdleTicks = 0;
                 Log("player " + sender + " added a copy to the running build: source " + source + " -> origin " + origin + ", +" + job.Pending.Count + " blocks, " + running.Pending.Count + " pending now");
                 return;
@@ -208,7 +216,7 @@ namespace Factorraria.Common.Mounts
                 owner.GetModPlayer<MechSuitPlayer>().SetBuilding(true);
 
             SendState(job, owner, true, true);
-            Log("player " + sender + " started a build: source " + source + " -> origin " + origin + ", " + job.Pending.Count + " blocks, " + job.ObjectBlocksSkipped + " object blocks skipped (patch M5)");
+            Log("player " + sender + " started a build: source " + source + " -> origin " + origin + ", " + job.Pending.Count + " units (" + CountObjects(job) + " objects)");
         }
 
         /// <summary>Ends the job of a player (no-op without one). Called by the job itself, by a new request, and when the suit goes off.</summary>
@@ -404,13 +412,24 @@ namespace Factorraria.Common.Mounts
                 arm.View.SetHeld(DisplayItem(job));
         }
 
-        static (int, int, bool) Key(Arm arm) => (arm.Tile.X, arm.Tile.Y, arm.Target.IsWall);
+        // A unit's key: its own tile, or the top-left corner of an object (one claim / cooldown per unit).
+        static (int, int, bool) KeyOf(MechSuitBlueprint.Block block) => block.ObjW > 0 ? (block.ObjX, block.ObjY, false) : (block.X, block.Y, block.IsWall);
+
+        static (int, int, bool) Key(Arm arm) => KeyOf(arm.Target);
+
+        // Where the hand goes: the tile's centre, or the centre of the object's footprint.
+        static Vector2 CenterOf(MechSuitBlueprint.Block block)
+        {
+            return block.ObjW > 0
+                ? new Vector2((block.ObjX + block.ObjW / 2f) * 16f, (block.ObjY + block.ObjH / 2f) * 16f)
+                : new Vector2(block.X * 16f + 8f, block.Y * 16f + 8f);
+        }
 
         void BeginReach(Arm arm)
         {
             arm.Phase = Phase.Reaching;
             arm.Timer = 0;
-            arm.View.Motion.SetTarget(new Vector2(arm.Tile.X * 16f + 8f, arm.Tile.Y * 16f + 8f));
+            arm.View.Motion.SetTarget(CenterOf(arm.Target));
         }
 
         void Release(Job job, Arm arm)
@@ -429,7 +448,7 @@ namespace Factorraria.Common.Mounts
             if (!job.Pending.Contains(arm.Target))
                 return false;
 
-            Vector2 center = new Vector2(arm.Tile.X * 16f + 8f, arm.Tile.Y * 16f + 8f);
+            Vector2 center = CenterOf(arm.Target);
             float reach = BuilderReachTiles * 16f * 1.1f;
             return Vector2.DistanceSquared(owner.Center, center) <= reach * reach;
         }
@@ -457,26 +476,24 @@ namespace Factorraria.Common.Mounts
             for (int i = job.Pending.Count - 1; i >= 0; i--)
             {
                 MechSuitBlueprint.Block block = job.Pending[i];
-                int x = job.Origin.X + block.X;
-                int y = job.Origin.Y + block.Y;
-                if (!WorldGen.InWorld(x, y, 5))
+                Rectangle footprint = MechSuitBlueprint.Footprint(block);
+                if (!WorldGen.InWorld(footprint.Left, footprint.Top, 5) || !WorldGen.InWorld(footprint.Right - 1, footprint.Bottom - 1, 5))
                 {
                     job.Blocked++;
                     continue;
                 }
 
-                Tile tile = Main.tile[x, y];
-                bool done = block.IsWall ? tile.WallType == block.Type : tile.HasTile && tile.TileType == block.Type;
-                if (done)
+                // Built / blocked / free for the whole unit (every cell of an object), the same rule the holograms use.
+                MechSuitBlueprint.UnitState state = MechSuitBlueprint.StateOf(block);
+                if (state == MechSuitBlueprint.UnitState.Built)
                 {
                     job.Pending[i] = job.Pending[job.Pending.Count - 1];
                     job.Pending.RemoveAt(job.Pending.Count - 1);
                     continue;
                 }
 
-                bool occupied = block.IsWall ? tile.WallType != 0 : tile.HasTile;
-                (int, int, bool) key = (x, y, block.IsWall);
-                if (occupied || (job.Cooldowns.TryGetValue(key, out uint until) && until > Main.GameUpdateCount))
+                (int, int, bool) key = KeyOf(block);
+                if (state == MechSuitBlueprint.UnitState.Blocked || (job.Cooldowns.TryGetValue(key, out uint until) && until > Main.GameUpdateCount))
                 {
                     job.Blocked++;
                     continue;
@@ -492,14 +509,27 @@ namespace Factorraria.Common.Mounts
                 }
 
                 Item item = GetItem(block.Item);
-                bool canPlace = block.IsWall ? WorldPlacement.CanPlaceWall(x, y, item) : WorldPlacement.CanPlacePlain(x, y, item);
+                bool isObject = block.ObjW > 0;
+                float distance = Vector2.DistanceSquared(owner.Center, CenterOf(block));
+
+                // The object check (TileObject.CanPlace over every variant) is the dear one: only run it for objects the arm could reach.
+                if (isObject && distance > reachSquared)
+                {
+                    job.WaitingForReach++;
+                    continue;
+                }
+
+                bool canPlace = block.IsWall
+                    ? WorldPlacement.CanPlaceWall(block.X, block.Y, item)
+                    : isObject
+                        ? WorldPlacement.TryGetObjectAt(new Point(block.ObjX, block.ObjY), item, owner.direction, out _, out _, out _, out _)
+                        : WorldPlacement.CanPlacePlain(block.X, block.Y, item);
                 if (!canPlace)
                 {
                     job.Unsupported++;
                     continue;
                 }
 
-                float distance = Vector2.DistanceSquared(owner.Center, new Vector2(x * 16f + 8f, y * 16f + 8f));
                 if (distance > reachSquared)
                 {
                     job.WaitingForReach++;
@@ -518,7 +548,8 @@ namespace Factorraria.Common.Mounts
                 return false;
 
             arm.Target = bestBlock;
-            arm.Tile = new Point(job.Origin.X + arm.Target.X, job.Origin.Y + arm.Target.Y);
+            (int, int, bool) anchor = KeyOf(arm.Target);
+            arm.Tile = new Point(anchor.Item1, anchor.Item2);
             job.Claimed.Add(Key(arm));
             return true;
         }
@@ -547,9 +578,23 @@ namespace Factorraria.Common.Mounts
 
             Item item = GetItem(block.Item);
             bool placed;
+            Rectangle placedArea = new Rectangle(x, y, 1, 1);
+            Point objectCursor = new Point(x, y);
             if (block.IsWall)
             {
                 placed = WorldPlacement.CanPlaceWall(x, y, item) && WorldPlacement.PlaceWall(x, y, item);
+            }
+            else if (block.ObjW > 0)
+            {
+                // The route a player's item takes (WorldPlacement.PlaceObject): chests get their empty Main.chest entry, machines their entity.
+                // The facing follows the owner (the other side is tried too), see roadmap section 8.
+                placed = false;
+                if (WorldPlacement.TryGetObjectAt(new Point(block.ObjX, block.ObjY), item, owner.direction, out int direction, out Point cursor, out TileObject data, out Rectangle footprint))
+                {
+                    placed = WorldPlacement.PlaceObject(cursor.X, cursor.Y, item, direction, data, footprint);
+                    placedArea = footprint;
+                    objectCursor = cursor;
+                }
             }
             else
             {
@@ -581,7 +626,12 @@ namespace Factorraria.Common.Mounts
 
             if (Main.netMode == NetmodeID.Server)
             {
-                NetMessage.SendTileSquare(-1, x - 1, y - 1, 3, 3);
+                // One tile square around what was placed (3 x 3 for a block), then the chest message / tile-entity sharing of an object.
+                int squareX = System.Math.Max(0, placedArea.X - 1);
+                int squareY = System.Math.Max(0, placedArea.Y - 1);
+                NetMessage.SendTileSquare(-1, squareX, squareY, System.Math.Min(255, placedArea.Width + 2), System.Math.Min(255, placedArea.Height + 2));
+                if (block.ObjW > 0)
+                    WorldPlacement.BroadcastObjectExtras(item, objectCursor.X, objectCursor.Y);
                 RoboticArmNet.SendPlaceSound(ModContent.GetInstance<MechSuitBuilderArms>().Shoulder(owner, 0), x, y);
             }
         }
