@@ -138,42 +138,42 @@ Items: {
 
 	DaybloomHarvesterBoxItem: {
 		DisplayName: Daybloom Harvester Box
-		Tooltip: Consumes power to automatically harvest plants
+		Tooltip: Consumes power to automatically harvest plants and trees
 	}
 
 	MoonglowHarvesterBoxItem: {
 		DisplayName: Moonglow Harvester Box
-		Tooltip: Consumes power to automatically harvest plants
+		Tooltip: Consumes power to automatically harvest plants and trees
 	}
 
 	CorruptHarvesterBoxItem: {
 		DisplayName: Corrupt Harvester Box
-		Tooltip: Consumes power to automatically harvest plants
+		Tooltip: Consumes power to automatically harvest plants and trees
 	}
 
 	CrimsonHarvesterBoxItem: {
 		DisplayName: Crimson Harvester Box
-		Tooltip: Consumes power to automatically harvest plants
+		Tooltip: Consumes power to automatically harvest plants and trees
 	}
 
 	BlinkrootHarvesterBoxItem: {
 		DisplayName: Blinkroot Harvester Box
-		Tooltip: Consumes power to automatically harvest plants
+		Tooltip: Consumes power to automatically harvest plants and trees
 	}
 
 	WaterleafHarvesterBoxItem: {
 		DisplayName: Waterleaf Harvester Box
-		Tooltip: Consumes power to automatically harvest plants
+		Tooltip: Consumes power to automatically harvest plants and trees
 	}
 
 	ShiverthornHarvesterBoxItem: {
 		DisplayName: Shiverthorn Harvester Box
-		Tooltip: Consumes power to automatically harvest plants
+		Tooltip: Consumes power to automatically harvest plants and trees
 	}
 
 	FireblossomHarvesterBoxItem: {
 		DisplayName: Fireblossom Harvester Box
-		Tooltip: Consumes power to automatically harvest plants
+		Tooltip: Consumes power to automatically harvest plants and trees
 	}
 
 	MechSuitItem: {
