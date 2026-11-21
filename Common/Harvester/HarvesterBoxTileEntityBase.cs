@@ -176,14 +176,14 @@ namespace Factorraria.Common.Harvester
         }
 
         // Placement hologram (HarvesterBoxPlacementPreview): the idle gear on the tile that is about to be placed. Spins on the shared clock.
-        public void DrawGearPreview(SpriteBatch spriteBatch, int tileX, int tileY, Color color)
+        public void DrawGearPreview(SpriteBatch spriteBatch, int tileX, Vector2 tileCenterOnScreen, Color color)
         {
             if (!TryGetGearTextures(out Texture2D idle, out _))
                 return;
 
             float clock = GearClock;
             float angle = (tileX & 1) == 0 ? clock : -clock + MathHelper.ToRadians(GearMeshOffsetDegrees);
-            DrawGear(spriteBatch, idle, new Vector2(tileX * 16f + 8f, tileY * 16f + 8f) + GearOffset, color, angle);
+            spriteBatch.Draw(idle, tileCenterOnScreen + GearOffset, null, color, angle, idle.Size() / 2f, GearScale, SpriteEffects.None, 0f);
         }
 
         // ---- Herb harvest and staff (Phase 3 and 4, docs/harvester_box/ROADMAP.md 6e and 6f) ----

@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Systems;
+﻿using Factorraria.Common.Harvester;
+using Factorraria.Common.Systems;
 using Factorraria.Common.VirtualItems;
 using Factorraria.Content.Tiles.Conveyors;
 using Microsoft.Xna.Framework;
@@ -658,7 +659,7 @@ namespace Factorraria.Content.VirtualItems
                 return false;
             }
 
-            return !Factorraria.Common.Harvester.HarvesterBoxRows.IsBoxTile(Main.tile[tileX, tileY].TileType);
+            return !HarvesterBoxRows.IsBoxTile(Main.tile[tileX, tileY].TileType);
         }
 
         public bool TryMergeWithVirtualItem(VirtualItem targetItem)
