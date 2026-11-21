@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Net;
+﻿using Factorraria.Common.Mounts;
+using Factorraria.Common.Net;
 using Factorraria.Content.Projectiles.Mounts;
 using Microsoft.Xna.Framework;
 using System;
@@ -135,13 +136,15 @@ namespace Factorraria.Content.Items.Mounts
         public bool IsActive { get; private set; }
 
         // Patch M3. True while the server runs a build job for this player (owner: told by MechBuildArmState, or set directly in single-player).
-        // While it is true the anchors keep their three slots (AnchorArmsWhileBuilding); the builder arms are separate, not part of these slots.
+        // Patch M5b: while it is true ONE arm stays anchored (slot 0, a latched one) and the other two hand their claws to the two builder
+        // arms (MechSuitBuilderArms) and vanish; the arm count stays 3. When the job ends the free slots launch new anchors as usual.
         public bool IsBuilding { get; private set; }
         public int AnchorArmsNormal = 3;         // anchors while not building (never more than MaxArms, the slot count)
-        public int AnchorArmsWhileBuilding = 3;  // anchors while building: no cap any more (same as AnchorArmsNormal); the two builder arms (MechSuitBuilderArms) are extra
+        public int AnchorArmsWhileBuilding = 1;  // anchors while building; the rest of the arms are the builder arms
         public int AnchorArmLimit => IsBuilding ? AnchorArmsWhileBuilding : AnchorArmsNormal;
-        /// <summary>Total arms out: 3 while not building, 5 while building (3 anchors + 2 builder arms).</summary>
+        /// <summary>Total arms out: 3 while not building, and 3 while building (1 anchor + 2 builder arms).</summary>
         public int ArmCount => IsBuilding ? AnchorArmsWhileBuilding + 2 : AnchorArmsNormal;
+        bool wasBuilding;
 
         public void SetBuilding(bool building)
         {
@@ -220,6 +223,7 @@ namespace Factorraria.Content.Items.Mounts
         // Server and remote clients: the player left, so their mirrored flag goes with them (their arms die with them, see MechSuitArmProjectile.AI).
         public override void PlayerDisconnect()
         {
+            ModContent.GetInstance<MechSuitBuildSystem>().ForgetPlayer(Player.whoAmI);
             IsActive = false;
         }
 
@@ -468,7 +472,14 @@ namespace Factorraria.Content.Items.Mounts
                 if (arms[i].IsLatched) latchedCount++;
             }
 
-            // A build job (patch M3) takes slots away from the anchors: arms beyond the anchor limit reel in.
+            // A build job just started: keep the best arm as the anchor (a latched one, the closest to the player) in slot 0.
+            if (IsBuilding && !wasBuilding)
+                KeepBestAnchorInSlotZero();
+
+            wasBuilding = IsBuilding;
+
+            // While a build job runs the arms beyond the anchor limit become the builder arms (patch M5b): the claw hands its position to a
+            // builder arm and the projectile vanishes (no reeling in, no separate set of arms coming out).
             for (int i = AnchorArmLimit; i < MaxArms; i++)
             {
                 if (!arms[i].IsActive) continue;
@@ -476,7 +487,7 @@ namespace Factorraria.Content.Items.Mounts
                 if (arms[i].IsLatched) latchedCount--;
                 activeCount--;
                 if (Main.projectile[arms[i].ProjectileIndex].ModProjectile is MechSuitArmProjectile excessArm)
-                    excessArm.BeginRetract();
+                    excessArm.HandOff();
 
                 arms[i] = new MechArmSlot { ProjectileIndex = -1 };
             }
@@ -524,6 +535,33 @@ namespace Factorraria.Content.Items.Mounts
                         Main.projectile[arms[i].ProjectileIndex].netUpdate = true;
                 }
             }
+        }
+
+        // The anchor that stays when a job starts: the latched arm closest to the player (it holds the suit up), else any arm that is out.
+        void KeepBestAnchorInSlotZero()
+        {
+            int best = -1;
+            float bestDistance = float.MaxValue;
+            for (int i = 0; i < MaxArms; i++)
+            {
+                if (!arms[i].IsLatched) continue;
+
+                float distance = Vector2.DistanceSquared(Player.Center, AnchorWorldCenter(arms[i].AnchorTile));
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = i;
+                }
+            }
+
+            for (int i = 0; i < MaxArms && best < 0; i++)
+            {
+                if (arms[i].IsActive)
+                    best = i;
+            }
+
+            if (best > 0)
+                (arms[0], arms[best]) = (arms[best], arms[0]);
         }
 
         int FindFreeSlot()

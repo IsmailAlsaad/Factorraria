@@ -9,6 +9,9 @@ using Terraria.ModLoader;
 namespace Factorraria.Common.Mounts
 {
     // The two builder arms of a Mech Suit that is running a build job (patch M3). Plain objects, no tile entity, no projectile.
+    // Patch M5b: they are not extra arms any more. When a job starts, two of the three anchoring arms hand over (MechSuitArmProjectile.HandOff ->
+    // RegisterHandoff): each builder arm starts at the claw position of the anchoring arm it replaces, and that projectile vanishes. One anchoring
+    // arm stays. Arm 0 always takes the closest valid block, arm 1 the furthest valid one (MechSuitBuildSystem.FindTarget).
     // Each arm is a RoboticArmMotion (the hand model: reach, strike timing) plus, on a machine with a screen, a RoboticArmVisual (beams,
     // elbow, claw, held block), both reused from the Robotic Arm with the player's shoulder as the pivot.
     //   Authority: the build job (MechSuitBuildSystem, server or single-player) drives the motions. A multiplayer client never runs the
@@ -40,6 +43,7 @@ namespace Factorraria.Common.Mounts
         public readonly MechSuitBuilderArm[] Arms = { new MechSuitBuilderArm(), new MechSuitBuilderArm() };
         public bool Building;
         public int RetireTimer;
+        public int HandoffsApplied;   // anchoring arms that already handed their claw position to one of the two builder arms
     }
 
     public class MechSuitBuilderArms : ModSystem
@@ -60,6 +64,7 @@ namespace Factorraria.Common.Mounts
         public override void OnWorldUnload()
         {
             sets.Clear();
+            pendingHandoffs.Clear();
         }
 
         public MechSuitBuilderArmSet GetOrCreate(int player)
@@ -74,6 +79,50 @@ namespace Factorraria.Common.Mounts
         }
 
         public bool TryGet(int player, out MechSuitBuilderArmSet set) => sets.TryGetValue(player, out set);
+
+        readonly Dictionary<int, List<Vector2>> pendingHandoffs = new();
+
+        /// <summary>A job starts for this player (server job start, or the first arm state a client receives): the builder arms become active and take over the claws waiting in the handoff list.</summary>
+        public MechSuitBuilderArmSet BeginBuilding(int player)
+        {
+            MechSuitBuilderArmSet set = GetOrCreate(player);
+            set.Building = true;
+            set.HandoffsApplied = 0;
+            if (pendingHandoffs.TryGetValue(player, out List<Vector2> waiting))
+            {
+                foreach (Vector2 claw in waiting)
+                    ApplyHandoff(player, set, claw);
+
+                pendingHandoffs.Remove(player);
+            }
+
+            return set;
+        }
+
+        /// <summary>An anchoring arm of this player turned into a builder arm (every machine calls this from the projectile). Applied at once when the job is already running here, otherwise kept until it starts.</summary>
+        public void RegisterHandoff(int player, Vector2 clawPosition)
+        {
+            if (sets.TryGetValue(player, out MechSuitBuilderArmSet set) && set.Building)
+            {
+                ApplyHandoff(player, set, clawPosition);
+                return;
+            }
+
+            if (!pendingHandoffs.TryGetValue(player, out List<Vector2> waiting))
+                pendingHandoffs[player] = waiting = new List<Vector2>();
+
+            if (waiting.Count < 2)
+                waiting.Add(clawPosition);
+        }
+
+        void ApplyHandoff(int player, MechSuitBuilderArmSet set, Vector2 clawPosition)
+        {
+            if (set.HandoffsApplied >= set.Arms.Length)
+                return;
+
+            int index = set.HandoffsApplied++;
+            set.Arms[index].Motion.StartFrom(clawPosition, Shoulder(Main.player[player], index));
+        }
 
         public Vector2 Shoulder(Player player, int arm)
         {
@@ -93,6 +142,7 @@ namespace Factorraria.Common.Mounts
                 return;
             }
 
+            pendingHandoffs.Remove(player);
             set.Building = false;
             set.RetireTimer = RetireTicks;
             foreach (MechSuitBuilderArm arm in set.Arms)

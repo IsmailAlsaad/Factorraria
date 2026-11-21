@@ -88,12 +88,14 @@ namespace Factorraria.Common.Mounts
         {
             jobs.Clear();
             items.Clear();
+            blueprintCaches.Clear();
         }
 
         public override void Unload()
         {
             jobs.Clear();
             items.Clear();
+            blueprintCaches.Clear();
         }
 
         public bool HasJob(int owner) => jobs.ContainsKey(owner);
@@ -116,6 +118,42 @@ namespace Factorraria.Common.Mounts
             return item;
         }
 
+        // What was copied, read from the world ONCE per selection (the client sends its selection version with every request). Before patch
+        // M5b every click rescanned the source area, so anything that changed there after the copy (a copy placed over part of its own source,
+        // digging, an earlier build) changed what the next placement built: extra blocks in the empty parts of the layout.
+        class BlueprintCache
+        {
+            public Rectangle Source;
+            public int Version;
+            public readonly List<MechSuitBlueprint.Block> Blocks = new();
+        }
+
+        readonly Dictionary<int, BlueprintCache> blueprintCaches = new();
+
+        public void ForgetPlayer(int player)
+        {
+            blueprintCaches.Remove(player);
+        }
+
+        // A fresh list of copies every time (the job moves them to the destination, the cache must stay untouched).
+        List<MechSuitBlueprint.Block> GetBlueprint(int sender, Rectangle source, int version)
+        {
+            bool reuse = version >= 0 && blueprintCaches.TryGetValue(sender, out BlueprintCache cached) && cached.Version == version && cached.Source == source;
+            if (!reuse)
+            {
+                BlueprintCache fresh = new BlueprintCache { Source = source, Version = version };
+                ModContent.GetInstance<MechSuitBlueprint>().Scan(source, fresh.Blocks);
+                blueprintCaches[sender] = fresh;
+                Log("player " + sender + " copied area " + source + " read from the world: " + fresh.Blocks.Count + " blocks (selection " + version + ")");
+            }
+
+            List<MechSuitBlueprint.Block> blocks = new List<MechSuitBlueprint.Block>(blueprintCaches[sender].Blocks.Count);
+            foreach (MechSuitBlueprint.Block block in blueprintCaches[sender].Blocks)
+                blocks.Add(block.Clone());
+
+            return blocks;
+        }
+
         static int CountObjects(Job job)
         {
             int count = 0;
@@ -131,7 +169,7 @@ namespace Factorraria.Common.Mounts
         // ---------------------------------------------------------------- start / end
 
         /// <summary>Server or single-player: starts the build job of one player, or adds one more copy to the job that already runs. Everything the client sent is checked here.</summary>
-        public void StartJob(int sender, Rectangle source, Point origin)
+        public void StartJob(int sender, Rectangle source, Point origin, int selectionVersion = -1)
         {
             if (Main.netMode == NetmodeID.MultiplayerClient || sender < 0 || sender >= Main.maxPlayers)
                 return;
@@ -154,8 +192,7 @@ namespace Factorraria.Common.Mounts
                 return;
             }
 
-            List<MechSuitBlueprint.Block> blocks = new List<MechSuitBlueprint.Block>();
-            ModContent.GetInstance<MechSuitBlueprint>().Scan(source, blocks);
+            List<MechSuitBlueprint.Block> blocks = GetBlueprint(sender, source, selectionVersion);
             MechSuitBlueprint.Shift(blocks, origin);
 
             // The blocks of a job hold absolute world tiles (the destination origin is added by Shift), so one job can hold several copies
@@ -202,8 +239,7 @@ namespace Factorraria.Common.Mounts
                 return;
             }
 
-            MechSuitBuilderArmSet set = ModContent.GetInstance<MechSuitBuilderArms>().GetOrCreate(sender);
-            set.Building = true;
+            MechSuitBuilderArmSet set = ModContent.GetInstance<MechSuitBuilderArms>().BeginBuilding(sender);
             for (int i = 0; i < job.Arms.Length; i++)
             {
                 job.Arms[i] = new Arm { View = set.Arms[i] };
@@ -317,7 +353,7 @@ namespace Factorraria.Common.Mounts
                         break;
                     }
 
-                    if (!FindTarget(job, owner, arm))
+                    if (!FindTarget(job, owner, arm, index))
                     {
                         motion.SetTarget(null);
                         KeepHolding(job, arm);
@@ -457,7 +493,7 @@ namespace Factorraria.Common.Mounts
 
         // Scans the whole pending list: drops what is already built, counts why the rest cannot be placed right now, and claims the closest
         // tile that can. Also refreshes the job's Placeable / WaitingForReach numbers that decide when the job ends.
-        bool FindTarget(Job job, Player owner, Arm arm)
+        bool FindTarget(Job job, Player owner, Arm arm, int armIndex)
         {
             inventoryCounts.Clear();
             for (int s = 0; s < 58; s++)
@@ -470,8 +506,10 @@ namespace Factorraria.Common.Mounts
             job.Placeable = job.WaitingForReach = job.Blocked = job.NoMaterial = job.Unsupported = 0;
             float reachPixels = BuilderReachTiles * 16f;
             float reachSquared = reachPixels * reachPixels;
-            MechSuitBlueprint.Block bestBlock = null;
+            MechSuitBlueprint.Block bestBlock = null;     // the closest valid block to the player (arm 0)
             float bestDistance = float.MaxValue;
+            MechSuitBlueprint.Block farBlock = null;      // the furthest valid block that is still in reach (arm 1)
+            float farDistance = -1f;
 
             for (int i = job.Pending.Count - 1; i >= 0; i--)
             {
@@ -542,12 +580,20 @@ namespace Factorraria.Common.Mounts
                     bestDistance = distance;
                     bestBlock = block;
                 }
+
+                if (distance > farDistance)
+                {
+                    farDistance = distance;
+                    farBlock = block;
+                }
             }
 
-            if (bestBlock == null)
+            // Arm 0 takes the closest valid block, arm 1 the furthest one (claimed blocks were skipped above, so they never pick the same one).
+            MechSuitBlueprint.Block pick = armIndex == 0 ? bestBlock : farBlock;
+            if (pick == null)
                 return false;
 
-            arm.Target = bestBlock;
+            arm.Target = pick;
             (int, int, bool) anchor = KeyOf(arm.Target);
             arm.Tile = new Point(anchor.Item1, anchor.Item2);
             job.Claimed.Add(Key(arm));

@@ -44,6 +44,22 @@ namespace Factorraria.Content.Projectiles.Mounts
         bool retractingLocal;
         public bool Retracting => retractingLocal || Projectile.ai[2] > 1.5f || Projectile.ai[2] < -1.5f;
 
+        // Patch M5b: the arm turns into a builder arm (|ai[2]| = 3, the sign is still the bend side). Every machine sees it through ai[2]: the claw's
+        // position goes to the builder arm that takes over (MechSuitBuilderArms.RegisterHandoff) and the projectile vanishes at once, no reeling in.
+        // A handed-off arm also counts as Retracting, so the owner's slot is free from that tick.
+        public bool HandedOff => Projectile.ai[2] > 2.5f || Projectile.ai[2] < -2.5f;
+        bool handoffReported;
+
+        // Owner only (the others learn it from ai[2] and the netUpdate).
+        public void HandOff()
+        {
+            if (HandedOff)
+                return;
+
+            Projectile.ai[2] = ArmBendSign * 3f;
+            Projectile.netUpdate = true;
+        }
+
         static Asset<Texture2D> ArmSegmentTexture;
         static Asset<Texture2D> JointTexture;
 
@@ -97,6 +113,18 @@ namespace Factorraria.Content.Projectiles.Mounts
             // The suit is off, the owner died, or the block this arm holds (or flies to) is gone (mined, exploded, replaced). Tile changes reach
             // every machine, so every machine reels in its own copy; the owner's UpdateArms then sees a free slot (a retracting arm no longer
             // counts as active) and launches a new arm at the nearest valid tile.
+            if (HandedOff)
+            {
+                if (!handoffReported)
+                {
+                    handoffReported = true;
+                    ModContent.GetInstance<MechSuitBuilderArms>().RegisterHandoff(Projectile.owner, Projectile.Center);
+                }
+
+                Projectile.Kill();
+                return;
+            }
+
             if (!Retracting && (player.dead || !mechPlayer.IsActive || !AnchorTileIsSolid()))
                 BeginRetract();
 
@@ -155,7 +183,7 @@ namespace Factorraria.Content.Projectiles.Mounts
         // The owner also publishes it (ai[2] = bend side * 2 + netUpdate) so the other machines reel in even when only the owner knows why.
         public void BeginRetract()
         {
-            if (Retracting)
+            if (Retracting || HandedOff)
                 return;
 
             retractingLocal = true;

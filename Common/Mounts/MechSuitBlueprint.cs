@@ -30,6 +30,11 @@ namespace Factorraria.Common.Mounts
             public int Style = -1;      // objects: TileObjectData.GetTileStyle of the source (the "same object" test uses it); -1 for plain blocks and walls
             public bool Head = true;    // the one block that stands for a placeable unit: a plain block, a wall, or the first block of an object (patch M5)
             public int ObjX, ObjY, ObjW, ObjH; // objects only: the whole footprint (offset from the selection, absolute after Shift); ObjW 0 = not an object
+
+            public Block Clone()
+            {
+                return (Block)MemberwiseClone();
+            }
         }
 
         Dictionary<(int, int), int> tileItems;

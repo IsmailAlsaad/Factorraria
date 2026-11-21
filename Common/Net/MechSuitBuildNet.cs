@@ -91,7 +91,8 @@ namespace Factorraria.Common.Net
                 }
 
                 MechSuitBuilderArmSet set = arms.GetOrCreate(message.Player);
-                set.Building = true;
+                if (!set.Building)
+                    arms.BeginBuilding(message.Player);
                 for (int i = 0; i < set.Arms.Length && i < message.Arms.Length; i++)
                 {
                     ArmState state = message.Arms[i];
@@ -154,6 +155,7 @@ namespace Factorraria.Common.Net
                 writer.Write((short)source.Height);
                 writer.Write((short)origin.X);
                 writer.Write((short)origin.Y);
+                writer.Write(ModContent.GetInstance<MechSuitBuilderSystem>().SelectionVersion);   // patch M5b: the server reads the copied area once per selection
             });
         }
 
@@ -177,7 +179,8 @@ namespace Factorraria.Common.Net
         {
             Rectangle source = new Rectangle(reader.ReadInt16(), reader.ReadInt16(), reader.ReadInt16(), reader.ReadInt16());
             Point origin = new Point(reader.ReadInt16(), reader.ReadInt16());
-            ModContent.GetInstance<MechSuitBuildSystem>().StartJob(sender, source, origin);
+            int selectionVersion = reader.ReadInt32();
+            ModContent.GetInstance<MechSuitBuildSystem>().StartJob(sender, source, origin, selectionVersion);
         }
 
         /// <summary>Server: tells the players near the owner (the owner included) what its builder arms do. building = false ends them.</summary>

@@ -4,7 +4,7 @@ generated 2026-11-21 | 454 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(260) Item(147) Player(113) FactorrariaNet(87) Tile(75) ItemID(73) WorldGen(70) BaseMachine(59) TileObjectData(41) TextureAssets(41) FactorrariaPacket(40) Sets(39) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(260) Item(147) Player(113) FactorrariaNet(87) Tile(75) ItemID(73) WorldGen(70) BaseMachine(59) TileObjectData(41) TextureAssets(41) FactorrariaPacket(40) Sets(39) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -625,25 +625,27 @@ tModLoader/other bases -> project types:
   class MechSuitBlueprint : ModSystem
     +Unload()[ov] +TryGetTileItem(int,int,bool,out int) +Footprint(Block)[s] +Matches(Block,Tile)[s] +Occupied(Block,Tile)[s] +StateOf(Block)[s] +Shift(List<Block>,Point)[s] +Overlaps(HashSet<(int, int, bool)>,Block)[s] +Scan(Rectangle,List<Block>)
     class Block
-      +Y:int X, +IsWall:bool +Type:ushort +FrameY:int FrameX, +Half:bool +Plain:bool +Width:int +Item:int +Group:int +Style:int +Head:bool +ObjH:int ObjX, ObjY, ObjW,
+      +Y:int X, +IsWall:bool +Type:ushort +FrameY:int FrameX, +Half:bool +Plain:bool +Width:int +Item:int +Group:int +Style:int +Head:bool +ObjH:int ObjX, ObjY, ObjW, +Clone()
     enum UnitState : byte
       {Free, Built, Blocked}
 **MechSuitBuildSystem.cs** uses: ArmState, Block, ConsumedEntry, Item, Main, MechSuitBlueprint, MechSuitBuildNet, MechSuitBuildNetSystem, MechSuitBuilderArm, MechSuitBuilderArmSet, MechSuitBuilderArms, MechSuitBuilderSystem, MechSuitPlayer, Pending, Player, RoboticArmMotion, RoboticArmNet, Tile, TileObject, UnitState, WorldGen, WorldPlacement
   class MechSuitBuildSystem : ModSystem
-    +BuilderReachTiles:float +KeepWaiting:bool +StrikeTicks:int +RescanTicks:int +BlockedCooldownTicks:int +ReachTimeoutTicks:int +GrabTimeoutTicks:int +SettleTicks:int +IdleTimeoutTicks:int +StatusRefreshTicks:int +MaxPendingBlocks:int +ConsumedFlushTicks:int +LogJobs:bool +OnWorldUnload()[ov] +Unload()[ov] +HasJob(int) +StartJob(int,Rectangle,Point) +EndJob(int,string) +PostUpdateEverything()[ov]
+    +BuilderReachTiles:float +KeepWaiting:bool +StrikeTicks:int +RescanTicks:int +BlockedCooldownTicks:int +ReachTimeoutTicks:int +GrabTimeoutTicks:int +SettleTicks:int +IdleTimeoutTicks:int +StatusRefreshTicks:int +MaxPendingBlocks:int +ConsumedFlushTicks:int +LogJobs:bool +OnWorldUnload()[ov] +Unload()[ov] +HasJob(int) +ForgetPlayer(int) +StartJob(int,Rectangle,Point,int) +EndJob(int,string) +PostUpdateEverything()[ov]
     enum Phase : byte
       {Idle, Retracting, Reaching, Striking}
     class Arm
       +View:MechSuitBuilderArm +Phase:Phase +Target:Block +Tile:Point +Timer:int +Wait:int +ImpactDone:bool +NextType:int +LastHasTarget:bool +LastTile:Point16 +LastStriking:bool +LastHeld:ushort
     class Job
       +Owner:int +Source:Rectangle +Origin:Point +Pending:List<Block> +Arms:Arm +Consumed:List<ConsumedEntry> +Placed:int Total, +ConsumeTimer:int IdleTicks, StatusTimer, +Unsupported:int Placeable, WaitingForReach, Blocked, NoMaterial,
+    class BlueprintCache
+      +Source:Rectangle +Version:int +Blocks:List<Block>
 **MechSuitBuilderArms.cs** uses: Item, Main, Player, RoboticArmMotion, RoboticArmVisual
   class MechSuitBuilderArm
     +Motion:RoboticArmMotion +Visual:RoboticArmVisual +Held:Item +HeldType:ushort +SetHeld(int)
   class MechSuitBuilderArmSet
-    +Arms:MechSuitBuilderArm +Building:bool +RetireTimer:int
+    +Arms:MechSuitBuilderArm +Building:bool +RetireTimer:int +HandoffsApplied:int
   class MechSuitBuilderArms : ModSystem
-    +UpperArmLength:float +ForearmLength:float +BeamThickness:float +FoldBeamLength:float +FoldDistance:float +ShoulderOffsetX:float +ShoulderOffsetY:float +RetireTicks:int +OnWorldUnload()[ov] +GetOrCreate(int) +TryGet(int,out MechSuitBuilderArmSet) +Shoulder(Player,int) +MarkEnded(int) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+    +UpperArmLength:float +ForearmLength:float +BeamThickness:float +FoldBeamLength:float +FoldDistance:float +ShoulderOffsetX:float +ShoulderOffsetY:float +RetireTicks:int +OnWorldUnload()[ov] +GetOrCreate(int) +TryGet(int,out MechSuitBuilderArmSet) +BeginBuilding(int) +RegisterHandoff(int,Vector2) +Shoulder(Player,int) +MarkEnded(int) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
 **MechSuitBuilderSystem.cs** uses: Main, MechSuitBuildNet, MechSuitHologramSystem, MechSuitPlayer, Player, RoboticArmAreaEditorSystem
   class MechSuitBuilderSystem : ModSystem
     +MaxSelectionWidth:int +MaxSelectionHeight:int +CancelKey:Keys +TexturePath:string +Selection:Rectangle? +SelectionVersion:int +PlaceOrigin:Point? +IsDragging:bool +OriginFor(Rectangle,Point)[s] ~ShiftHeld:bool[s] ~Ready(out Player)[s] +OnWorldUnload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
@@ -916,7 +918,7 @@ tModLoader/other bases -> project types:
     +ServerChanged:int[s] +ServerRefused:int[s] +ClientSent:int[s] +ClientApplied:int[s] +Request(MagicMaterializerTileEntity)[s] +HandleRequest(BinaryReader,int)[s] +HandleChanged(BinaryReader,int)[s] +Update()[s] +Reset()[s] +Describe()[s]
   class MaterializerToggleSystem : ModSystem
     +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov] +Unload()[ov]
-**MechSuitBuildNet.cs** uses: FactorrariaNet, FactorrariaPacket, Item, Main, MechSuitBuildSystem, MechSuitBuilderArm, MechSuitBuilderArmSet, MechSuitBuilderArms, MechSuitPlayer, PacketDirection, Player
+**MechSuitBuildNet.cs** uses: FactorrariaNet, FactorrariaPacket, Item, Main, MechSuitBuildSystem, MechSuitBuilderArm, MechSuitBuilderArmSet, MechSuitBuilderArms, MechSuitBuilderSystem, MechSuitPlayer, PacketDirection, Player
   class MechSuitBuildNetSystem : ModSystem
     +NearbyTiles:float +Load()[ov] +Unload()[ov] +Enqueue(StateMessage) +Enqueue(ConsumedEntry) +PostUpdateEverything()[ov]
     struct ArmState
@@ -1682,7 +1684,7 @@ tModLoader/other bases -> project types:
   class SteelScrewItem : ModItem
 
 ### Content/Items/Mounts/
-**MechSuitItem.cs** uses: FactorrariaNet, Item, Main, MechSuitArmProjectile, MechSuitMount, MechSuitNet, Player, Tile, WorldGen
+**MechSuitItem.cs** uses: Factorraria, FactorrariaNet, Item, Main, MechSuitArmProjectile, MechSuitBuildSystem, MechSuitMount, MechSuitNet, Player, Tile, WorldGen
   class MechSuitItem : ModItem
   static class MechSuitTileSearch
     +TryFindNearestAnchorTile(Vector2,float,List<Vector2>,float,out Point)[s]
@@ -1752,9 +1754,9 @@ tModLoader/other bases -> project types:
     +Load()[ov] +Unload()[ov] +CanUseGrapple(Player)[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +OnKill(int)[ov] +PreDraw(ref Color)[ov]
 
 ### Content/Projectiles/Mounts/
-**MechSuitArmProjectile.cs** uses: FactorrariaNet, Main, MechSuitPlayer, MechanicalArmIK, Player, TextureAssets, Tile, WorldGen
+**MechSuitArmProjectile.cs** uses: FactorrariaNet, Main, MechSuitBuilderArms, MechSuitPlayer, MechanicalArmIK, Player, TextureAssets, Tile, WorldGen
   class MechSuitArmProjectile : ModProjectile
-    +AnchorTile:Point +ArmBendSign:float +Latched:bool +Retracting:bool +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +BeginRetract() +PreDraw(ref Color)[ov]
+    +AnchorTile:Point +ArmBendSign:float +Latched:bool +Retracting:bool +HandedOff:bool +HandOff() +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +BeginRetract() +PreDraw(ref Color)[ov]
 
 ### Content/Tiles/Conveyors/
 **ClockwisePriorityConveyorTile.cs** uses: ConveyorFilterNet, Item, ItemID, Main, Player, VirtualItemSystem
@@ -1903,7 +1905,7 @@ tModLoader/other bases -> project types:
     +OnSpawn(Item,IEntitySource)[ov]
 **RoboticArmMotion.cs** uses: Item, Main, TextureAssets
   class RoboticArmMotion
-    +TrackSmoothTime:float +BendSmoothTime:float +IdleOffsetX:float +IdleOffsetY:float +SideDeadZone:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +GripDistance:float +InPositionDistance:float +Initialized:bool +Side:int +Head:Vector2 +Bend:float +Target:Vector2? +HasTarget:bool +Striking:bool +StrikeDuration:int +InPosition:bool +StrikeProgress:float +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool)
+    +TrackSmoothTime:float +BendSmoothTime:float +IdleOffsetX:float +IdleOffsetY:float +SideDeadZone:float +ThrustDistance:float +ImpactPoint:float +HoldBackMax:float +GripDistance:float +InPositionDistance:float +Initialized:bool +Side:int +Head:Vector2 +Bend:float +Target:Vector2? +HasTarget:bool +Striking:bool +StrikeDuration:int +InPosition:bool +StrikeProgress:float +StartFrom(Vector2,Vector2) +SetTarget(Vector2?) +StartStrike(int) +Update(Vector2,float,float,Item,bool)
 **RoboticArmNet.cs** uses: ArmState, FactorrariaNet, FactorrariaPacket, Item, Main, PacketDirection, Player, RoboticArmMotion, RoboticArmTileEntity
   class RoboticArmNet : ModSystem
     +NearbyTiles:float[c] +Sent:int[s] +Received:int[s] +Missed:int[s] +EffectsSent:int[s] +SoundsPlayed:int[s] +Describe()[s] +Load()[ov] +Unload()[ov] +SendTileAction(Vector2,int,int,int,int)[s] +SendPlaceSound(Vector2,int,int)[s] +PostUpdateEverything()[ov]

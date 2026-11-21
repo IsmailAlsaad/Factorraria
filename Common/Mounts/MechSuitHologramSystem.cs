@@ -253,7 +253,14 @@ namespace Factorraria.Common.Mounts
             // Blocks are shifted to their destination (absolute tiles), so Origin stays zero. Objects are kept whole: every cell is drawn, the
             // head of each stands for the unit (the same units the server job holds).
             PlacedCopy copy = new PlacedCopy { Origin = Point.Zero };
-            ModContent.GetInstance<MechSuitBlueprint>().Scan(source, copy.Blocks);
+            // The blueprint of the selection (read once, like on the server), never a fresh scan: the world may have changed since the copy.
+            MechSuitBuilderSystem builder = ModContent.GetInstance<MechSuitBuilderSystem>();
+            if (builtVersion != builder.SelectionVersion)
+                BuildBlueprint(source, builder.SelectionVersion);
+
+            foreach (Block b in blocks)
+                copy.Blocks.Add(b.Clone());
+
             MechSuitBlueprint.Shift(copy.Blocks, origin);
             if (copy.Blocks.Count == 0)
                 return;

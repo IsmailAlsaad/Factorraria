@@ -47,6 +47,16 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.RoboticArm
         public bool InPosition => inPosition;
         public float StrikeProgress => Striking ? 1f - strikeTimer / (float)strikeDuration : 0f;
 
+        // Mech Suit (patch M5b): a builder arm takes over from an anchoring arm, so its hand starts where that arm's claw was.
+        public void StartFrom(Vector2 handPosition, Vector2 shoulder)
+        {
+            head = handPosition;
+            headVelocity = Vector2.Zero;
+            side = handPosition.X >= shoulder.X ? 1 : -1;
+            bend = -side;
+            initialized = true;
+        }
+
         public void SetTarget(Vector2? worldTarget)
         {
             target = worldTarget;
