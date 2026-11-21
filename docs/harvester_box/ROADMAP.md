@@ -219,6 +219,15 @@ Known limits
 - Not compiled or run.
 - A client keeps a strike alive for a few ticks after the plant vanishes (the abort margin). A box whose entity is rebuilt mid-strike (a row change) loses the strike on the server; clients stop theirs when it ends or the plant changes.
 
+## 6g. Tweaks (patch_harvester_tweaks2, 2026-11-21, applied UNTESTED)
+
+- Items and vItems fall through boxes (patch_harvester_itemfall): `HarvesterBoxItemFall` (On_Item.UpdateItem makes box types non-solid for one item update), and `VirtualItem.RestsOn` (boxes are not a resting platform for vItems).
+- Gear in the placement hologram: `HarvesterBoxPlacementPreview` (On_TileObject.DrawPreview, draws one faded idle gear; red when the box cannot go there).
+- Gears draw in front of the smart cursor outline: new `IMachineLateDraw`; `MachineSmartOutlineSystem.PostDrawTiles` calls `DrawAfterOutline` right after the outlines. The box entity's `DynamicDraw` now draws only the staffs.
+- Acorn on a box plays the vanilla dig sound for the planting player (`TryPlantAcornAtCursor`; vanilla placement fails there, so it never played).
+- Row frames after tree growth: `HarvesterBoxTrees.End` now reframes boxes x - 4 .. x + 4 once the last disguise is gone (vanilla framed around boxes that were still disguised). Diagnosis, not reproduced.
+- Power loss mid strike: server and single-player abort the strike to Idle (`AbortStrike`), the staff shrinks back over `StaffRetractTicks` (client visual, turning with the slowing gear), and `IsGearActive` is false while the row is off, so the gear crossfades back to the idle sprite. A box that is only Ready keeps waiting (its delay freezes).
+
 ## 7. Verify (resolved by the probe, then recorded here)
 
 - Vanilla herb check: the tile types and the planter style each herb requires (`CheckAlch`, `PlaceAlch`, herb growth). Planter box style order.

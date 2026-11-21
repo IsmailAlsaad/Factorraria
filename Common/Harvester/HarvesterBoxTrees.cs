@@ -133,14 +133,23 @@ namespace Factorraria.Common.Harvester
                     soil.HasTile = false;
             }
 
-            if (!reframeRow)
-                return;
+            if (reframeRow)
+                ReframeBoxes(d.X, d.Y, 1);
 
-            for (int dx = -1; dx <= 1; dx++)
+            // The last disguise of the operation just ended, so no box reads as a foreign tile any more. Vanilla framed the tiles around the soil while
+            // some boxes were still disguised (a sapling or tree frames x - 2 .. x + 2), which left the boxes next to a disguised one with the wrong
+            // merge cell. Frame the whole neighbourhood again now that every box is itself.
+            if (Disguised.Count == 0)
+                ReframeBoxes(d.X, d.Y, 4);
+        }
+
+        static void ReframeBoxes(int centerX, int y, int radius)
+        {
+            for (int dx = -radius; dx <= radius; dx++)
             {
-                int x = d.X + dx;
-                if (WorldGen.InWorld(x, d.Y, 1) && Main.tile[x, d.Y].HasTile && HarvesterBoxRegistry.BoxHerbs.ContainsKey(Main.tile[x, d.Y].TileType))
-                    WorldGen.TileFrame(x, d.Y, false, true);
+                int x = centerX + dx;
+                if (WorldGen.InWorld(x, y, 1) && Main.tile[x, y].HasTile && HarvesterBoxRegistry.BoxHerbs.ContainsKey(Main.tile[x, y].TileType))
+                    WorldGen.TileFrame(x, y, false, true);
             }
         }
 

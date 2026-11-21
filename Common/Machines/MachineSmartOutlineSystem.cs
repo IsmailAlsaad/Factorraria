@@ -291,13 +291,40 @@ namespace Factorraria.Common.Machines
         // OutlineInFront: drawn after all tiles. This pass owns its own SpriteBatch (the behind-tiles pass above draws into vanilla's).
         public override void PostDrawTiles()
         {
-            if (!OutlineInFront || Main.dedServ || Main.gameMenu || !Main.SmartCursorIsUsed || MachineVisualRegistry.Definitions.Count == 0)
+            if (Main.dedServ || Main.gameMenu)
                 return;
 
+            bool drawOutlines = OutlineInFront && Main.SmartCursorIsUsed && MachineVisualRegistry.Definitions.Count > 0;
             SpriteBatch spriteBatch = Main.spriteBatch;
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-            DrawOutlines();
-            spriteBatch.End();
+            bool batchBegun = false;
+
+            if (drawOutlines)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                batchBegun = true;
+                DrawOutlines();
+            }
+
+            // Parts that must sit in front of the highlight (the Harvester Box gears). Drawn here, right after the outlines, whatever the mod system order is.
+            foreach (TileEntity entity in TileEntity.ByPosition.Values)
+            {
+                if (entity is not IMachineLateDraw late)
+                    continue;
+
+                if (entity is not IMachineDynamicDraw dynamic || !dynamic.TryGetDynamicBounds(out Vector2 center, out float radius) || !BaseMachine.IsOnScreen(center, radius))
+                    continue;
+
+                if (!batchBegun)
+                {
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                    batchBegun = true;
+                }
+
+                late.DrawAfterOutline(spriteBatch);
+            }
+
+            if (batchBegun)
+                spriteBatch.End();
         }
 
         void DrawOutlines()

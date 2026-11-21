@@ -20,7 +20,7 @@ namespace Factorraria.Common.Harvester
     // The powered entity of a Harvester Box ROW: one entity for every box of the same kind touching left and right, at the row's leftmost box
     // (HarvesterBoxRows / HarvesterBoxRowSystem keep that true). It draws power and joins the grid through custom wire on ANY box of the row. The gears, the harvest
     // cycle and the drops come in later phases (docs/harvester_box/ROADMAP.md, 6c).
-    public abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IDropCaptureTarget, IHarvesterBoxRow where TTile : ModTile
+    public abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IMachineLateDraw, IHarvesterGearPreview, IDropCaptureTarget, IHarvesterBoxRow where TTile : ModTile
     {
         public override int ValidTileType => ModContent.TileType<TTile>();
 
@@ -65,7 +65,7 @@ namespace Factorraria.Common.Harvester
         float GearClock => (float)((Main.GameUpdateCount * (double)MathHelper.ToRadians(GearSpeedDegreesPerTick)) % MathHelper.TwoPi);
 
         // The active gear sprite shows from the moment the plant above is ripe until the strike is over (Ready and Strike).
-        public virtual bool IsGearActive(int boxIndex) => boxIndex >= 0 && boxIndex < boxes.Length && boxes[boxIndex].Cycle != BoxCycle.Idle;
+        public virtual bool IsGearActive(int boxIndex) => isOn && boxIndex >= 0 && boxIndex < boxes.Length && boxes[boxIndex].Cycle != BoxCycle.Idle;
 
         // x is the WORLD tile x of the box.
         float GearAngle(int x)
@@ -136,7 +136,11 @@ namespace Factorraria.Common.Harvester
         public void DynamicDraw(SpriteBatch spriteBatch)
         {
             DrawStaffs(spriteBatch);
+        }
 
+        // The gears: drawn by MachineSmartOutlineSystem right after its outlines, so they are in front of the highlight.
+        public void DrawAfterOutline(SpriteBatch spriteBatch)
+        {
             if (!gearInitialized || !TryGetGearTextures(out Texture2D idle, out Texture2D active))
                 return;
 
@@ -169,6 +173,17 @@ namespace Factorraria.Common.Harvester
         void DrawGear(SpriteBatch spriteBatch, Texture2D texture, Vector2 center, Color color, float angle)
         {
             spriteBatch.Draw(texture, center - Main.screenPosition, null, color, angle, texture.Size() / 2f, GearScale, SpriteEffects.None, 0f);
+        }
+
+        // Placement hologram (HarvesterBoxPlacementPreview): the idle gear on the tile that is about to be placed. Spins on the shared clock.
+        public void DrawGearPreview(SpriteBatch spriteBatch, int tileX, int tileY, Color color)
+        {
+            if (!TryGetGearTextures(out Texture2D idle, out _))
+                return;
+
+            float clock = GearClock;
+            float angle = (tileX & 1) == 0 ? clock : -clock + MathHelper.ToRadians(GearMeshOffsetDegrees);
+            DrawGear(spriteBatch, idle, new Vector2(tileX * 16f + 8f, tileY * 16f + 8f) + GearOffset, color, angle);
         }
 
         // ---- Herb harvest and staff (Phase 3 and 4, docs/harvester_box/ROADMAP.md 6e and 6f) ----
@@ -204,6 +219,8 @@ namespace Factorraria.Common.Harvester
 
         BoxState[] boxes = Array.Empty<BoxState>();
         float[] gearBlend = Array.Empty<float>();   // per box, 0 = idle sprite .. 1 = active sprite (client visual only)
+        float[] retreatGrowth = Array.Empty<float>();   // per box: > 0 while a staff cut off by a power loss shrinks back (growth 1 = fully out; client visual only)
+        float[] retreatAngle = Array.Empty<float>();    // per box: where that staff points (radians, the same meaning as StaffAngle)
         int nextScanIn;
         int clientScanIn;
         Point dropTile;     // the herb tile being harvested right now (RouteDrop reads it)
@@ -218,13 +235,33 @@ namespace Factorraria.Common.Harvester
 
             if (gearBlend.Length != length)
                 gearBlend = new float[length];
+
+            if (retreatGrowth.Length != length)
+            {
+                retreatGrowth = new float[length];
+                retreatAngle = new float[length];
+            }
         }
 
         // Server and single-player (a multiplayer client never runs Update).
         void UpdateHarvest()
         {
-            if (Main.netMode == NetmodeID.MultiplayerClient || !isOn)
-                return;   // browned out or switched off: the whole cycle freezes (every count is in powered ticks)
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            if (!isOn)
+            {
+                // Switched off or browned out: a staff that is out goes back to Idle (and shrinks back on screen); a plant that is only waiting
+                // keeps its place (every count is in powered ticks, so the delay just freezes).
+                int offLength = RowLength;
+                if (offLength > 0)
+                {
+                    EnsureBoxes(offLength);
+                    AbortAllStrikes();
+                }
+
+                return;
+            }
 
             int length = RowLength;
             if (length <= 0)
@@ -290,6 +327,32 @@ namespace Factorraria.Common.Harvester
             }
         }
 
+        void AbortAllStrikes()
+        {
+            for (int k = 0; k < boxes.Length; k++)
+            {
+                if (boxes[k].Cycle == BoxCycle.Strike)
+                    AbortStrike(k);
+            }
+        }
+
+        // The power went while the staff of box k was out. The cycle restarts from Idle (the box looks again when the power is back; a herb that was
+        // already harvested stays harvested). On a machine with a screen the staff shrinks back from where it was.
+        void AbortStrike(int k)
+        {
+            if (!Main.dedServ && k < retreatGrowth.Length)
+            {
+                float growth = StaffGrowth(boxes[k].Ticks);
+                if (growth > 0f)
+                {
+                    retreatGrowth[k] = growth;
+                    retreatAngle[k] = StaffAngle(Position.X + k, boxes[k].Ticks);
+                }
+            }
+
+            boxes[k] = default;
+        }
+
         // Called from DynamicUpdate (not on a dedicated server): a multiplayer client's copy of the cycle, then the staff dust.
         void UpdateStrikeVisuals()
         {
@@ -298,6 +361,21 @@ namespace Factorraria.Common.Harvester
                 return;
 
             EnsureBoxes(length);
+
+            if (!isOn)
+                AbortAllStrikes();   // a multiplayer client's own copy (the server and single-player already did it in UpdateHarvest; then this finds nothing)
+
+            // A staff cut off by a power loss keeps turning with the slowing gear while it shrinks back into it.
+            float retreatStep = 1f / Math.Max(1, StaffRetractTicks);
+            for (int k = 0; k < length; k++)
+            {
+                if (retreatGrowth[k] <= 0f)
+                    continue;
+
+                float direction = ((Position.X + k) & 1) == 0 ? 1f : -1f;
+                retreatAngle[k] += direction * MathHelper.ToRadians(GearSpeedDegreesPerTick) * gearSpeed;
+                retreatGrowth[k] = Math.Max(0f, retreatGrowth[k] - retreatStep);
+            }
 
             float fadeStep = 1f / Math.Max(1, GearActiveFadeTicks);
             for (int k = 0; k < length; k++)
@@ -404,19 +482,33 @@ namespace Factorraria.Common.Harvester
 
             for (int k = 0; k < count; k++)
             {
-                if (boxes[k].Cycle != BoxCycle.Strike)
+                float growth;
+                float staffAngle;
+                int x = Position.X + k;
+
+                if (boxes[k].Cycle == BoxCycle.Strike)
+                {
+                    growth = StaffGrowth(boxes[k].Ticks);
+                    staffAngle = StaffAngle(x, boxes[k].Ticks);
+                }
+                else if (k < retreatGrowth.Length && retreatGrowth[k] > 0f)
+                {
+                    growth = retreatGrowth[k];   // cut off by a power loss: shrinking back into the gear
+                    staffAngle = retreatAngle[k];
+                }
+                else
+                {
                     continue;
+                }
 
                 if (texture == null && !TryGetStaffTexture(out texture))
                     return;   // no staff sprite yet
 
-                float growth = StaffGrowth(boxes[k].Ticks);
                 if (growth <= 0f)
                     continue;
 
                 // The whole sprite is scaled up from its pivot, so it grows along the direction it faces.
-                int x = Position.X + k;
-                float angle = StaffAngle(x, boxes[k].Ticks) + MathHelper.ToRadians(StaffSpriteRotationDegrees);
+                float angle = staffAngle + MathHelper.ToRadians(StaffSpriteRotationDegrees);
                 Vector2 origin = new Vector2(0f, texture.Height) + StaffPivotOffset;   // bottom left corner of the sprite, plus the tuning offset
                 spriteBatch.Draw(texture, StaffBase(x) - Main.screenPosition, null, Lighting.GetColor(x, Position.Y), angle, origin, StaffScale * growth, SpriteEffects.None, 0f);
             }

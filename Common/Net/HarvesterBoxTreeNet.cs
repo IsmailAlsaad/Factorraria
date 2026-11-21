@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.IO;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -28,8 +29,12 @@ namespace Factorraria.Common.Net
             int boxX = target.X;
             int boxY = target.Y + 1;   // the sapling stands on the tile above the box
 
-            if (!HarvesterBoxTrees.CanPlantSapling(boxX, boxY - 1))
+            if (!HarvesterBoxTrees.CanPlantSapling(boxX, boxY - 1) || !FactorrariaNet.InReach(player, boxX, boxY))
                 return;
+
+            // Vanilla's own placement fails on a box, so nothing played a sound: same sound vanilla plays when an acorn goes into grass.
+            // Only the planting player hears it (the sapling itself reaches everyone through the tile square).
+            SoundEngine.PlaySound(SoundID.Dig, new Vector2(boxX * 16f + 8f, (boxY - 1) * 16f + 8f));
 
             FactorrariaNet.SendRequest(FactorrariaPacket.HarvesterBoxPlantAcorn, writer =>
             {

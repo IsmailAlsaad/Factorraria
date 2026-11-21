@@ -417,7 +417,7 @@ namespace Factorraria.Content.VirtualItems
             {
                 CurrentFallVelocity = 1f;
             }
-            else if (IsTilePassable(currentTileX, currentTileY + 1) && !isPlatform(currentTileX, currentTileY + 1))
+            else if (IsTilePassable(currentTileX, currentTileY + 1) && !RestsOn(currentTileX, currentTileY + 1))
             {
                 pickupCooldown = 0;
                 VirtualItem targetItem = VirtualItemSystem.GetVirtualItemAtTile(currentTileX, currentTileY + 1, this);
@@ -648,6 +648,17 @@ namespace Factorraria.Content.VirtualItems
             Tile tile = Main.tile[tileX, tileY];
 
             return tile.HasTile && Main.tileSolidTop[tile.TileType];
+        }
+
+        // A platform an item rests on. Harvester boxes are solid-top for the player and NPCs, but items fall straight through them.
+        bool RestsOn(int tileX, int tileY)
+        {
+            if (!isPlatform(tileX, tileY))
+            {
+                return false;
+            }
+
+            return !Factorraria.Common.Harvester.HarvesterBoxRows.IsBoxTile(Main.tile[tileX, tileY].TileType);
         }
 
         public bool TryMergeWithVirtualItem(VirtualItem targetItem)
