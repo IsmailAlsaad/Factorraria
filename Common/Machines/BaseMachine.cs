@@ -748,11 +748,29 @@ namespace Factorraria.Common.Machines
             {
                 VirtualItem vItem = VirtualItemSystem.GetVirtualItemAtTile(tile.X, tile.Y);
                 if (vItem == null || vItem.stackSize <= 0) continue;
-                if (!TryGetIntakeSlot(vItem.itemType, out int slot, out int limit)) continue;
+                bool hasMain = TryGetIntakeSlot(vItem.itemType, out int slot, out int limit);
+                bool hasFuel = TryGetFuelIntake(vItem.itemType, out int fuelSlot, out int fuelLimit);
+                if (!hasMain && !hasFuel) continue;
+                if (hasMain && hasFuel && slot == fuelSlot) hasFuel = false;
+
+                // An item that is both ingredient and fuel (wood in a furnace) goes to the fuel slot first when that
+                // slot is empty, then to the ingredient slot, and falls back to the fuel slot once the ingredient slot is full.
+                if (hasFuel && (!hasMain || InputSlots[fuelSlot].IsAir))
+                {
+                    int beforeFuel = vItem.stackSize;
+                    MoveVItemIntoSlot(vItem, fuelSlot, fuelLimit);
+                    if (vItem.stackSize != beforeFuel) return;
+                }
 
                 int before = vItem.stackSize;
-                MoveVItemIntoSlot(vItem, slot, limit);
+                if (hasMain) MoveVItemIntoSlot(vItem, slot, limit);
                 if (vItem.stackSize != before) return;   // took something; one vItem per tick
+
+                if (hasFuel)
+                {
+                    MoveVItemIntoSlot(vItem, fuelSlot, fuelLimit);
+                    if (vItem.stackSize != before) return;
+                }
             }
         }
 
@@ -779,6 +797,19 @@ namespace Factorraria.Common.Machines
             }
 
             slot = -1; limit = 0;
+            return false;
+        }
+        bool TryGetFuelIntake(int itemType, out int slot, out int limit)
+        {
+            slot = -1; limit = 0;
+            if (Fuels == null) return false;
+            foreach (FuelModule f in Fuels)
+            {
+                if (!f.CanAccept(itemType)) continue;
+                slot = f.SlotIndex;
+                limit = f.StackLimit(itemType);
+                return true;
+            }
             return false;
         }
 

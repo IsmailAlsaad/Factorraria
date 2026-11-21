@@ -4,7 +4,7 @@ generated 2026-11-21 | 454 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(260) Item(147) Player(113) FactorrariaNet(87) Tile(75) ItemID(73) WorldGen(70) BaseMachine(58) TextureAssets(41) TileObjectData(40) FactorrariaPacket(40) Sets(39) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(260) Item(147) Player(113) FactorrariaNet(87) Tile(75) ItemID(73) WorldGen(70) BaseMachine(58) TextureAssets(41) TileObjectData(40) FactorrariaPacket(40) Sets(39) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -375,7 +375,7 @@ tModLoader/other bases -> project types:
     +PlanterItemName(HarvesterBoxKind)[s] +TreeSoil(HarvesterBoxKind)[s] +SaplingStyle(int)[s] +Herb(HarvesterBoxKind)[s]
 **HarvesterBoxPlacementPreview.cs** uses: HarvesterBoxRows, Item, Main, Player, TileObject
   interface IHarvesterGearPreview
-    +DrawGearPreview(SpriteBatch,int,int,Color)
+    +DrawGearPreview(SpriteBatch,int,Vector2,Color)
   class HarvesterBoxPlacementPreview : ModSystem
     +Load()[ov] +Unload()[ov]
 **HarvesterBoxRegistry.cs** uses: HarvesterBoxKind, HarvesterBoxKinds, HerbStyle, Item, ItemID
@@ -395,7 +395,7 @@ tModLoader/other bases -> project types:
     #Kind:HarvesterBoxKind[ab] +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
 **HarvesterBoxTileEntityBase.cs** uses: ElectricConsumerMachine, HarvesterBoxKinds, HarvesterBoxNetSystem, HarvesterBoxRegistry, HarvesterBoxRowSystem, HarvesterBoxRows, HarvesterBoxRules, HarvesterBoxTrees, HarvesterBoxUIState, IDropCaptureTarget, IHarvesterBoxRow, IHarvesterGearPreview, IMachineDynamicDraw, IMachineLateDraw, IRowMachine, Item, MachineUIRegistry, MachineUIStateBase, MachineUISystem, Main, RoboticArmDropCaptureSystem, Tile, VirtualItem, VirtualItemSystem, WorldGen
   abstract class HarvesterBoxTileEntityBase<TTile> : ElectricConsumerMachine, IRowMachine, IMachineDynamicDraw, IMachineLateDraw, IHarvesterGearPreview, IDropCaptureTarget, IHarvesterBoxRow
-    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DrawAfterOutline(SpriteBatch) +DrawGearPreview(SpriteBatch,int,int,Color) +HarvestScanTicks:int +HarvestDelayTicks:int +StaffExtendTicks:int +StaffSweepTicks:int +StaffRetractTicks:int +StaffAbortMarginTicks:int +StaffTexturePath:string +StaffOffset:Vector2 +StaffPivotOffset:Vector2 +StaffSpriteRotationDegrees:float +StaffScale:float +StaffDustChance:float +StaffDustType:int +GearActiveFadeTicks:int +BeginClientStrike(int) +RouteDrop(Item) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
+    +ValidTileType:int[ov] +RowFirstX:int +RowLength:int +PowerDemand:float[ov] +Update()[ov] +GearTexturePath:string +GearActiveTexturePath:string +GearSpeedDegreesPerTick:float +GearMeshOffsetDegrees:float +GearTeeth:int +GearSpinUpTicks:int +GearSpinDownTicks:int +GearSyncEase:float +GearOffset:Vector2 +GearScale:float +IsGearActive(int)[v] +DynamicUpdate() +TryGetDynamicBounds(out Vector2,out float) +DynamicDraw(SpriteBatch) +DrawAfterOutline(SpriteBatch) +DrawGearPreview(SpriteBatch,int,Vector2,Color) +HarvestScanTicks:int +HarvestDelayTicks:int +StaffExtendTicks:int +StaffSweepTicks:int +StaffRetractTicks:int +StaffAbortMarginTicks:int +StaffTexturePath:string +StaffOffset:Vector2 +StaffPivotOffset:Vector2 +StaffSpriteRotationDegrees:float +StaffScale:float +StaffDustChance:float +StaffDustType:int +GearActiveFadeTicks:int +BeginClientStrike(int) +RouteDrop(Item) +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +NetPlaceEntityAttempt(int,int)[ov] +OnRightClick(int,int)[ov]
     enum BoxCycle : byte
       {Idle, Ready, Strike}
     struct BoxState
@@ -1506,7 +1506,7 @@ tModLoader/other bases -> project types:
 **VItemStacking.cs** ns!=Factorraria.Content.VirtualItems uses: Item
   static class VItemStacking
     +CanMerge(Item,Item)[s] +Insert(Item,int,int,Item,Func<int, Item, bool>,Action<int>)[s]
-**VirtualItem.cs** ns!=Factorraria.Content.VirtualItems uses: Factorraria, HarvesterBoxRows, Item, ItemID, Main, TextureAssets, Tile, VItemGlobalItem, VItemStacking, VirtualItemSystem, WorldGen
+**VirtualItem.cs** ns!=Factorraria.Content.VirtualItems uses: HarvesterBoxRows, Item, ItemID, Main, TextureAssets, Tile, VItemGlobalItem, VItemStacking, VirtualItemSystem, WorldGen
   class VirtualItem
     +itemType:int +stackSize:int +prefix:int +active:bool +Id:int +ReplicaStep:float +StepPerTick:float +pickupCooldown:int +cartGrabCooldown:int +frame:int +frameCounter:int +currentTileX:int +currentTileY:int +targetTileX:int +targetTileY:int +worldPosition:Vector2 +moveSpeed:float +Update() +CreateReplica(int,Item,Vector2,int,int,float)[s] +ApplyReplicaState(Item,int,Vector2,int,int,float) +ReplicaTick() +SetTargetTile(int,int) +GetSourceRectangle(Texture2D) +Remove() +MoveVirtualItem() +TryMergeWithVirtualItem(VirtualItem)
 
