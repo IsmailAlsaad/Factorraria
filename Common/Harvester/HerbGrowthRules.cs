@@ -29,16 +29,16 @@ namespace Factorraria.Common.Harvester
         public static float BloomChance => 0.5f;      // mature -> blooming, per random update, before Speed
         public static float WiltChance => 10f;      // blooming -> mature once the bloom conditions are lost
 
-        public static int BiomeRadiusX => 50;         // the window of tiles around the herb that is counted for biomes (31 x 21)
+        public static int BiomeRadiusX => 50;         // the window of tiles around the herb that is counted for biomes (101 x 101)
         public static int BiomeRadiusY => 50;
-        public static int BiomeTileThreshold => 20;   // tiles of a biome inside the window for the herb to count as being in it
+        public static int BiomeTileThreshold => 100;  // tiles of a biome inside the window for the herb to count as being in it
 
         public static float DaybloomMinSpeed => 0.15f;   // speed at zero light
         public static float DaybloomMaxSpeed => 2f;      // speed at full light
         public static float BlinkrootMaxLight => 1f;   // Blinkroot only grows at or below this light (0..1)
         public static float WaterleafDesertSpeed => 3f;
         public static int RainCloudRange => 26;          // tiles above a Waterleaf that a rain cloud may be
-
+        public static float RainStrengthMin => 0.2f;     // natural rain only counts at or above this strength (Main.maxRaining, 0..1)
         public static int SkyScanTiles => 60;            // how far up the sun check looks for a roof
         public static float IndoorSunFraction => 0.25f;  // sunlight that reaches a herb under a roof or wall
         public static int LampRadius => 7;               // light-emitting tiles (torches...) within this many tiles light the herb
@@ -71,10 +71,12 @@ namespace Factorraria.Common.Harvester
                     break;
 
                 case HerbStyle.Waterleaf:
-                    // Grows anywhere (a desert speeds it up), but only blooms while it rains or a rain cloud is above it.
-                    c.CanGrow = true;
-                    c.CanBloom = HasWater(x, y);
-                    if (ScanBiomes(x, y).Desert >= BiomeTileThreshold)
+                    // Desert only, and only while it gets water: natural rain with open sky above it, or a rain cloud above it with nothing solid in between.
+                    // Without water it neither grows nor blooms (a blooming one wilts). The desert speeds it up.
+                    bool desert = ScanBiomes(x, y).Desert >= BiomeTileThreshold;
+                    c.CanGrow = desert && HasWater(x, y);
+                    c.CanBloom = c.CanGrow;
+                    if (desert)
                         c.Speed = WaterleafDesertSpeed;
                     break;
 
@@ -166,10 +168,10 @@ namespace Factorraria.Common.Harvester
         public static bool IsUnderground(int y) => y >= Main.worldSurface && !IsUnderworld(y);
         public static bool IsNight() => !Main.dayTime;
 
-        // ---- Water: raining, or a rain cloud straight above with nothing solid in between ----
+        // ---- Water: natural rain (surface layer, no wall behind the herb, strong enough), or a rain cloud straight above with nothing solid in between ----
         public static bool HasWater(int x, int y)
         {
-            if (Main.raining)
+            if (Main.raining && Main.maxRaining >= RainStrengthMin && IsSurface(y) && Main.tile[x, y].WallType == 0)
                 return true;
 
             int top = Math.Max(0, y - RainCloudRange);
