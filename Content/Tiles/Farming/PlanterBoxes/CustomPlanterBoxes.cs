@@ -13,6 +13,8 @@ namespace Factorraria.Content.Tiles.Farming.PlanterBoxes
     public class MushroomPlanterBoxTile : PlanterBoxTileBase<MushroomPlanterBoxItem>
     {
         protected override int DustTile => TileID.MushroomGrass;
+
+        protected override int TreeSoil => TileID.MushroomGrass;   // glowing mushrooms and giant mushroom trees grow on it (MushroomGrowthRules)
     }
 
     public class HallowedPlanterBoxItem : PlanterBoxItemBase<HallowedPlanterBoxTile> { }

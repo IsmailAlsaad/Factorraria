@@ -25,6 +25,10 @@ namespace Factorraria.Common.Harvester
         // The sound when it is hit and broken.
         protected virtual SoundStyle BreakSound => SoundID.Dig;
 
+        // The vanilla soil this box stands in for in tree and plant rules (HarvesterBoxRegistry.BoxTreeSoil). 0 = it is no tree box. Only the Mushroom box says
+        // anything yet (mushroom grass); Hallowed and Stone follow in Phase 5.
+        protected virtual int TreeSoil => 0;
+
         public override void SetStaticDefaults()
         {
             Main.tileFrameImportant[Type] = true;
@@ -54,6 +58,9 @@ namespace Factorraria.Common.Harvester
             // No plain custom planter box grows a herb: HarvesterBoxRules.HerbAllowedOnSoil answers false for every herb (planting is refused, a herb that is somehow
             // there breaks). The herb boxes are the vanilla planter boxes and the Harvester Boxes.
             HarvesterBoxRegistry.NoHerbBoxes.Add(Type);
+
+            if (TreeSoil != 0)
+                HarvesterBoxRegistry.BoxTreeSoil[Type] = TreeSoil;
         }
 
         // Replace the default dust with the dust of this box's own soil.

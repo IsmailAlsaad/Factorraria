@@ -553,6 +553,12 @@ namespace Factorraria.Common.Harvester
                 return;
             }
 
+            if (Main.tile[x, y].TileType == TileID.MushroomPlants)
+            {
+                HarvestMushroom(x, y);
+                return;
+            }
+
             int style = Main.tile[x, y].TileFrameX / 18;
             dropTile = new Point(x, y);
 
@@ -562,6 +568,18 @@ namespace Factorraria.Common.Harvester
                 NetMessage.SendData(MessageID.TileManipulation, -1, -1, null, 0, x, y);
 
             WorldGen.PlaceAlch(x, y, style);
+
+            if (Main.netMode == NetmodeID.Server)
+                NetMessage.SendTileSquare(-1, x, y);
+        }
+
+        // A glowing mushroom (Mushroom box): broken like a hand break (vanilla's own yield, the drops captured and routed like a herb's). Nothing is replanted,
+        // the box grows the next one itself (MushroomGrowthRules). Runs on the server / in single-player.
+        void HarvestMushroom(int x, int y)
+        {
+            dropTile = new Point(x, y);
+
+            ModContent.GetInstance<RoboticArmDropCaptureSystem>().Run(this, () => WorldGen.KillTile(x, y, false, false, false));
 
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.SendTileSquare(-1, x, y);

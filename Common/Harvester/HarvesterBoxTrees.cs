@@ -39,6 +39,25 @@ namespace Factorraria.Common.Harvester
         // > 0 while RunAsTreeSoilWithSides runs (our own felling, or a manual break already wrapped by the KillTile hook), so the hook never wraps twice.
         public static int SideDepth;
 
+        // Vanilla's own tree growth for a soil that needs no sapling (the mushroom tree): GrowTree takes the SOIL row. Same OwnGrowth flag as GrowOwn.
+        static bool GrowOwnTree(int x, int soilY)
+        {
+            HarvesterBoxTreeHooks.DbgReset();
+            OwnGrowth = true;
+            try
+            {
+                return WorldGen.GrowTree(x, soilY);
+            }
+            finally
+            {
+                OwnGrowth = false;
+            }
+        }
+
+        // One growth attempt of a mushroom tree on the mushroom box at (x, soilY): the same disguise of the box and its neighbours as a sapling gets,
+        // but no sapling is needed. Server and single-player.
+        public static bool TryGrowMushroomTree(int x, int soilY) => TryGrowSapling(x, soilY - 1, false, true);
+
         static bool GrowOwn(int x, int bottomY, bool underground)
         {
             HarvesterBoxTreeHooks.DbgReset();
@@ -148,8 +167,8 @@ namespace Factorraria.Common.Harvester
             for (int dx = -radius; dx <= radius; dx++)
             {
                 int x = centerX + dx;
-                if (WorldGen.InWorld(x, y, 1) && Main.tile[x, y].HasTile && HarvesterBoxRegistry.BoxTypes.Contains(Main.tile[x, y].TileType))
-                    WorldGen.TileFrame(x, y, false, true);
+                if (WorldGen.InWorld(x, y, 1) && Main.tile[x, y].HasTile && (HarvesterBoxRegistry.BoxTypes.Contains(Main.tile[x, y].TileType) || HarvesterBoxRegistry.BoxTreeSoil.ContainsKey(Main.tile[x, y].TileType)))
+                    WorldGen.TileFrame(x, y, false, true);   // the plain Mushroom box is a tree box too, and merges its frame by neighbours like the Harvester Boxes
             }
         }
 
@@ -336,6 +355,10 @@ namespace Factorraria.Common.Harvester
             if (!WorldGen.InWorld(x, bottomY - 1, 4) || !IsTreeBox(x, bottomY + 1))
                 return false;
 
+            // Mushroom trees grow by themselves on mushroom grass (MushroomGrowthRules): no acorn goes into a mushroom box, and a felled mushroom tree is not replanted.
+            if (HarvesterBoxRegistry.BoxTreeSoil[Main.tile[x, bottomY + 1].TileType] == TileID.MushroomGrass)
+                return false;
+
             for (int y = bottomY - 1; y <= bottomY; y++)
             {
                 Tile tile = Main.tile[x, y];
@@ -377,10 +400,10 @@ namespace Factorraria.Common.Harvester
         // an EMPTY side cell is made an actuated tile of the vanilla soil for the length of the call: it passes "is there a soil tile beside it" (active) and
         // fails the root flare test (not actuated), so the tree grows with no roots and nothing is left behind. A box between two foreign blocks has no
         // empty side and never grows a tree.
-        public static bool TryGrowSapling(int x, int bottomY, bool underground = false)
+        public static bool TryGrowSapling(int x, int bottomY, bool underground = false, bool mushroom = false)   // mushroom: no sapling is needed, bottomY is the tile above the box and GrowTree runs instead
         {
             int soilY = bottomY + 1;
-            if (!IsSapling(x, bottomY) || !IsTreeBox(x, soilY) || Main.netMode == NetmodeID.MultiplayerClient)
+            if ((!mushroom && !IsSapling(x, bottomY)) || !IsTreeBox(x, soilY) || Main.netMode == NetmodeID.MultiplayerClient)
                 return false;
 
             int soilType = HarvesterBoxRegistry.BoxTreeSoil[Main.tile[x, soilY].TileType];
@@ -424,7 +447,7 @@ namespace Factorraria.Common.Harvester
                 HarvesterBoxTreeHooks.DbgHeader = $"sapling ({x},{bottomY}) soil={soilType} boxTile={Main.tile[x, soilY].TileType} disguised[mid={middle.Active} L={left.Active} R={right.Active} LL={farLeft.Active} RR={farRight.Active}] fakeX={(fakeX == int.MinValue ? "none" : fakeX.ToString())} sideFits[L={SideFits(x - 1, soilY, soilType)} R={SideFits(x + 1, soilY, soilType)}]";
 
                 if (!needsSide || fakeX != int.MinValue || SideFits(x - 1, soilY, soilType) || SideFits(x + 1, soilY, soilType))
-                    grew = GrowOwn(x, bottomY, underground);
+                    grew = mushroom ? GrowOwnTree(x, soilY) : GrowOwn(x, bottomY, underground);
             }
             finally
             {

@@ -63,7 +63,7 @@ namespace Factorraria.Common.Harvester
             HarvesterBoxKind.Shiverthorn => TileID.SnowBlock,
             HarvesterBoxKind.Fireblossom => 633,   // an ash tree (tile 634): AshTreeGroundTest takes ash grass (633) only
             HarvesterBoxKind.Waterleaf => TileID.Sand,   // a palm tree (tile 323): GrowPalmTree takes sand (53) as its soil
-            HarvesterBoxKind.Mushroom => 0,   // Phase 4 (giant mushroom trees): its own growth code, not a sapling
+            HarvesterBoxKind.Mushroom => TileID.MushroomGrass,   // Phase 4: giant mushroom trees are tile 5 trees on mushroom grass (70), grown by GrowTree with no sapling (MushroomGrowthRules)
             HarvesterBoxKind.Hallowed => 0,   // Phase 5: pearlwood trees (soil tile 109)
             HarvesterBoxKind.Stone => 0,      // Phase 5: gem trees from gemcorns only
             _ => 0

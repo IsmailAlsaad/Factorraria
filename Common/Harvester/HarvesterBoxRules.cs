@@ -19,6 +19,13 @@ namespace Factorraria.Common.Harvester
             if (HarvesterBoxRegistry.BoxTreeSoil.ContainsKey(boxTileType) && HarvesterBoxTrees.IsTreeReady(herbX, herbY))
                 return true;
 
+            // Phase 4: a glowing mushroom (tile 71) on a mushroom box is ripe as soon as it stands there; the harvest breaks it and does not replant.
+            if (HarvesterBoxRegistry.BoxTreeSoil.TryGetValue(boxTileType, out int treeSoil) && treeSoil == TileID.MushroomGrass)
+            {
+                Tile mushroom = Main.tile[herbX, herbY];
+                return mushroom.HasTile && mushroom.TileType == TileID.MushroomPlants;
+            }
+
             if (!HarvesterBoxRegistry.BoxHerbs.TryGetValue(boxTileType, out HerbStyle boxHerb))
                 return false;
 
