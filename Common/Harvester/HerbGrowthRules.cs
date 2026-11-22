@@ -36,7 +36,7 @@ namespace Factorraria.Common.Harvester
         public static float DaybloomMinSpeed => 0.15f;   // speed at zero light
         public static float DaybloomMaxSpeed => 2f;      // speed at full light
         public static float BlinkrootMaxLight => 1f;   // Blinkroot only grows at or below this light (0..1)
-        public static float WaterleafDesertSpeed => 3f;
+        public static float WaterleafDesertSpeed => 1f;
         public static int RainCloudRange => 26;          // tiles above a Waterleaf that a rain cloud may be
         public static float RainStrengthMin => 0.2f;     // natural rain only counts at or above this strength (Main.maxRaining, 0..1)
         public static int SkyScanTiles => 60;            // how far up the sun check looks for a roof

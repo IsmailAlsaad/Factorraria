@@ -13,7 +13,7 @@ namespace Factorraria.Common.Harvester
     // fixes entities after a place or a mine lives in HarvesterBoxRowSystem.
     public static class HarvesterBoxRows
     {
-        public static bool IsBoxTile(int tileType) => HarvesterBoxRegistry.BoxHerbs.ContainsKey(tileType);
+        public static bool IsBoxTile(int tileType) => HarvesterBoxRegistry.BoxTypes.Contains(tileType);
 
         static bool IsBoxAt(int x, int y, int tileType)
         {

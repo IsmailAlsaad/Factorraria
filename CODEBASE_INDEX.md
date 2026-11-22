@@ -12,9 +12,9 @@ Project bases -> derived:
 - BucketBase: FuelBucket, OilBucket
 - ElectricConsumerMachine: AutohammerTileEntity, ExtractinatorTileEntity, HarvesterBoxTileEntityBase, MechanicalAssemblerTileEntity, MotorTileEntityBase, PowerPoleTileEntityBase, RoboticArmTileEntity, SolidifierTileEntity
 - ElectricProducerMachine: BeeWheelTileEntity, GelBurnerTileEntity, SunCapsuleTileEntity
-- HarvesterBoxItemBase: BlinkrootHarvesterBoxItem, CorruptHarvesterBoxItem, CrimsonHarvesterBoxItem, DaybloomHarvesterBoxItem, FireblossomHarvesterBoxItem, MoonglowHarvesterBoxItem, ShiverthornHarvesterBoxItem, WaterleafHarvesterBoxItem
-- HarvesterBoxTileBase: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile, WaterleafHarvesterBoxTile
-- HarvesterBoxTileEntityBase: BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxTileEntity, MoonglowHarvesterBoxTileEntity, ShiverthornHarvesterBoxTileEntity, WaterleafHarvesterBoxTileEntity
+- HarvesterBoxItemBase: BlinkrootHarvesterBoxItem, CorruptHarvesterBoxItem, CrimsonHarvesterBoxItem, DaybloomHarvesterBoxItem, FireblossomHarvesterBoxItem, HallowedHarvesterBoxItem, MoonglowHarvesterBoxItem, MushroomHarvesterBoxItem, ShiverthornHarvesterBoxItem, StoneHarvesterBoxItem, WaterleafHarvesterBoxItem
+- HarvesterBoxTileBase: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, HallowedHarvesterBoxTile, MoonglowHarvesterBoxTile, MushroomHarvesterBoxTile, ShiverthornHarvesterBoxTile, StoneHarvesterBoxTile, WaterleafHarvesterBoxTile
+- HarvesterBoxTileEntityBase: BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxTileEntity, HallowedHarvesterBoxTileEntity, MoonglowHarvesterBoxTileEntity, MushroomHarvesterBoxTileEntity, ShiverthornHarvesterBoxTileEntity, StoneHarvesterBoxTileEntity, WaterleafHarvesterBoxTileEntity
 - ICosmicEventSink: CosmicEventRouter, CosmicNullSink
 - IDropCaptureTarget: HarvesterBoxTileEntityBase, RoboticArmTileEntity
 - IElectricConsumer: ElectricConsumerMachine
@@ -375,7 +375,7 @@ tModLoader/other bases -> project types:
   enum HerbStyle
     {Daybloom, Moonglow, Blinkroot, Deathweed, Waterleaf, Fireblossom, Shiverthorn}
   enum HarvesterBoxKind
-    {Daybloom, Moonglow, Corrupt, Crimson, Blinkroot, Waterleaf, Shiverthorn, Fireblossom}
+    {Daybloom, Moonglow, Corrupt, Crimson, Blinkroot, Waterleaf, Shiverthorn, Fireblossom, Mushroom, Hallowed, Stone}
   static class HarvesterBoxKinds
     +PlanterItemName(HarvesterBoxKind)[s] +TreeSoil(HarvesterBoxKind)[s] +SaplingStyle(int)[s] +PlanterDustTile(HarvesterBoxKind)[s] +Herb(HarvesterBoxKind)[s]
 **HarvesterBoxPlacementPreview.cs** uses: HarvesterBoxRows, Item, Main, Player, TileObject
@@ -385,7 +385,7 @@ tModLoader/other bases -> project types:
     +Load()[ov] +Unload()[ov]
 **HarvesterBoxRegistry.cs** uses: HarvesterBoxKind, HarvesterBoxKinds, HerbStyle, Item, ItemID
   static class HarvesterBoxRegistry
-    +BoxHerbs:Dictionary<int, HerbStyle>[s] +PlanterHerbs:Dictionary<int, HerbStyle>[s] +BoxTreeSoil:Dictionary<int, int>[s] +Kinds:List<HarvesterBoxKind>[s] +NoHerbBoxes:HashSet<int>[s] +PlanterDustTiles:Dictionary<int, int>[s] +Register(int,HarvesterBoxKind)[s] +Clear()[s] +ResolvePlanterStyles(Mod)[s]
+    +BoxTypes:HashSet<int>[s] +BoxHerbs:Dictionary<int, HerbStyle>[s] +PlanterHerbs:Dictionary<int, HerbStyle>[s] +BoxTreeSoil:Dictionary<int, int>[s] +Kinds:List<HarvesterBoxKind>[s] +NoHerbBoxes:HashSet<int>[s] +PlanterDustTiles:Dictionary<int, int>[s] +Register(int,HarvesterBoxKind)[s] +Clear()[s] +ResolvePlanterStyles(Mod)[s]
 **HarvesterBoxRowSystem.cs** uses: BaseMachine, FactorrariaNet, HarvesterBoxRows, IRowMachine, MachinePlacement, Main, PowerGridSystem
   class HarvesterBoxRowSystem : ModSystem
     +OnWorldLoad()[ov] +OnWorldUnload()[ov] +MarkDirty(int,int,bool)[s] +PostUpdateWorld()[ov]
@@ -1816,7 +1816,7 @@ tModLoader/other bases -> project types:
   class EmptyPlanterBoxTile : PlanterBoxTileBase<EmptyPlanterBoxItem>
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/
-**AutohammerRecipeRegistry.cs** uses: BeeWheelItem, BlinkrootHarvesterBoxItem, ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CorruptHarvesterBoxItem, CounterClockwisePriorityConveyor, CrimsonHarvesterBoxItem, CrimtaneSheetItem, CustomRecipe, DaybloomHarvesterBoxItem, DemoniteSheetItem, FireblossomHarvesterBoxItem, GoldPlateItem, GoldWireItem, HarvesterBoxKind, HarvesterBoxKinds, IronCutterItem, ItemID, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MoonglowHarvesterBoxItem, PlatinumPowerPoleItem, RecipeBook, RoyalHoneyItem, ShiverthornHarvesterBoxItem, SimpleCircuitItem, SunCapsuleItem, TinWireItem, WaterleafHarvesterBoxItem, WoodenMinecartItem, WoodenPowerPoleItem
+**AutohammerRecipeRegistry.cs** uses: BeeWheelItem, BlinkrootHarvesterBoxItem, ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CorruptHarvesterBoxItem, CounterClockwisePriorityConveyor, CrimsonHarvesterBoxItem, CrimtaneSheetItem, CustomRecipe, DaybloomHarvesterBoxItem, DemoniteSheetItem, FireblossomHarvesterBoxItem, GoldPlateItem, GoldWireItem, HallowedHarvesterBoxItem, HallowedPlanterBoxItem, HarvesterBoxKind, HarvesterBoxKinds, IronCutterItem, ItemID, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MoonglowHarvesterBoxItem, MushroomHarvesterBoxItem, MushroomPlanterBoxItem, PlatinumPowerPoleItem, RecipeBook, RoyalHoneyItem, ShiverthornHarvesterBoxItem, SimpleCircuitItem, StoneHarvesterBoxItem, StonePlanterBoxItem, SunCapsuleItem, TinWireItem, WaterleafHarvesterBoxItem, WoodenMinecartItem, WoodenPowerPoleItem
   class AutohammerRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s] +AddHarvesterRecipes()[s]
 **AutohammerTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.Autohammer uses: AutohammerRecipeRegistry, ElectricConsumerMachine, RecipeBook
@@ -1845,7 +1845,7 @@ tModLoader/other bases -> project types:
     #BuildElements()[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/HarvesterBox/
-**HarvesterBoxItems.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, HarvesterBoxItemBase, HarvesterBoxKind, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile, WaterleafHarvesterBoxTile
+**HarvesterBoxItems.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, HallowedHarvesterBoxTile, HarvesterBoxItemBase, HarvesterBoxKind, MoonglowHarvesterBoxTile, MushroomHarvesterBoxTile, ShiverthornHarvesterBoxTile, StoneHarvesterBoxTile, WaterleafHarvesterBoxTile
   class DaybloomHarvesterBoxItem : HarvesterBoxItemBase<DaybloomHarvesterBoxTile>
     #Kind:HarvesterBoxKind[ov]
   class MoonglowHarvesterBoxItem : HarvesterBoxItemBase<MoonglowHarvesterBoxTile>
@@ -1862,10 +1862,16 @@ tModLoader/other bases -> project types:
     #Kind:HarvesterBoxKind[ov]
   class FireblossomHarvesterBoxItem : HarvesterBoxItemBase<FireblossomHarvesterBoxTile>
     #Kind:HarvesterBoxKind[ov]
-**HarvesterBoxRegistration.cs** uses: BaseMachine, BlinkrootHarvesterBoxTile, BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxTile, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxTile, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxTile, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxTile, FireblossomHarvesterBoxTileEntity, HarvesterBoxUIState, MachineUIRegistry, MachineVisualRegistry, MoonglowHarvesterBoxTile, MoonglowHarvesterBoxTileEntity, ShiverthornHarvesterBoxTile, ShiverthornHarvesterBoxTileEntity, WaterleafHarvesterBoxTile, WaterleafHarvesterBoxTileEntity
+  class MushroomHarvesterBoxItem : HarvesterBoxItemBase<MushroomHarvesterBoxTile>
+    #Kind:HarvesterBoxKind[ov]
+  class HallowedHarvesterBoxItem : HarvesterBoxItemBase<HallowedHarvesterBoxTile>
+    #Kind:HarvesterBoxKind[ov]
+  class StoneHarvesterBoxItem : HarvesterBoxItemBase<StoneHarvesterBoxTile>
+    #Kind:HarvesterBoxKind[ov]
+**HarvesterBoxRegistration.cs** uses: BaseMachine, BlinkrootHarvesterBoxTile, BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxTile, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxTile, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxTile, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxTile, FireblossomHarvesterBoxTileEntity, HallowedHarvesterBoxTile, HallowedHarvesterBoxTileEntity, HarvesterBoxUIState, MachineUIRegistry, MachineVisualRegistry, MoonglowHarvesterBoxTile, MoonglowHarvesterBoxTileEntity, MushroomHarvesterBoxTile, MushroomHarvesterBoxTileEntity, ShiverthornHarvesterBoxTile, ShiverthornHarvesterBoxTileEntity, StoneHarvesterBoxTile, StoneHarvesterBoxTileEntity, WaterleafHarvesterBoxTile, WaterleafHarvesterBoxTileEntity
   static class HarvesterBoxRegistration
     +RegisterVisuals()[s]
-**HarvesterBoxTileEntities.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, HarvesterBoxTileEntityBase, MoonglowHarvesterBoxTile, ShiverthornHarvesterBoxTile, WaterleafHarvesterBoxTile
+**HarvesterBoxTileEntities.cs** uses: BlinkrootHarvesterBoxTile, CorruptHarvesterBoxTile, CrimsonHarvesterBoxTile, DaybloomHarvesterBoxTile, FireblossomHarvesterBoxTile, HallowedHarvesterBoxTile, HarvesterBoxTileEntityBase, MoonglowHarvesterBoxTile, MushroomHarvesterBoxTile, ShiverthornHarvesterBoxTile, StoneHarvesterBoxTile, WaterleafHarvesterBoxTile
   class DaybloomHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<DaybloomHarvesterBoxTile>
   class MoonglowHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<MoonglowHarvesterBoxTile>
   class CorruptHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<CorruptHarvesterBoxTile>
@@ -1874,7 +1880,10 @@ tModLoader/other bases -> project types:
   class WaterleafHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<WaterleafHarvesterBoxTile>
   class ShiverthornHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<ShiverthornHarvesterBoxTile>
   class FireblossomHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<FireblossomHarvesterBoxTile>
-**HarvesterBoxTiles.cs** uses: BlinkrootHarvesterBoxItem, BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxItem, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxItem, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxItem, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxItem, FireblossomHarvesterBoxTileEntity, HarvesterBoxKind, HarvesterBoxTileBase, MoonglowHarvesterBoxItem, MoonglowHarvesterBoxTileEntity, ShiverthornHarvesterBoxItem, ShiverthornHarvesterBoxTileEntity, WaterleafHarvesterBoxItem, WaterleafHarvesterBoxTileEntity
+  class MushroomHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<MushroomHarvesterBoxTile>
+  class HallowedHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<HallowedHarvesterBoxTile>
+  class StoneHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<StoneHarvesterBoxTile>
+**HarvesterBoxTiles.cs** uses: BlinkrootHarvesterBoxItem, BlinkrootHarvesterBoxTileEntity, CorruptHarvesterBoxItem, CorruptHarvesterBoxTileEntity, CrimsonHarvesterBoxItem, CrimsonHarvesterBoxTileEntity, DaybloomHarvesterBoxItem, DaybloomHarvesterBoxTileEntity, FireblossomHarvesterBoxItem, FireblossomHarvesterBoxTileEntity, HallowedHarvesterBoxItem, HallowedHarvesterBoxTileEntity, HarvesterBoxKind, HarvesterBoxTileBase, MoonglowHarvesterBoxItem, MoonglowHarvesterBoxTileEntity, MushroomHarvesterBoxItem, MushroomHarvesterBoxTileEntity, ShiverthornHarvesterBoxItem, ShiverthornHarvesterBoxTileEntity, StoneHarvesterBoxItem, StoneHarvesterBoxTileEntity, WaterleafHarvesterBoxItem, WaterleafHarvesterBoxTileEntity
   class DaybloomHarvesterBoxTile : HarvesterBoxTileBase<DaybloomHarvesterBoxTileEntity, DaybloomHarvesterBoxItem>
     #Kind:HarvesterBoxKind[ov]
   class MoonglowHarvesterBoxTile : HarvesterBoxTileBase<MoonglowHarvesterBoxTileEntity, MoonglowHarvesterBoxItem>
@@ -1890,6 +1899,12 @@ tModLoader/other bases -> project types:
   class ShiverthornHarvesterBoxTile : HarvesterBoxTileBase<ShiverthornHarvesterBoxTileEntity, ShiverthornHarvesterBoxItem>
     #Kind:HarvesterBoxKind[ov]
   class FireblossomHarvesterBoxTile : HarvesterBoxTileBase<FireblossomHarvesterBoxTileEntity, FireblossomHarvesterBoxItem>
+    #Kind:HarvesterBoxKind[ov]
+  class MushroomHarvesterBoxTile : HarvesterBoxTileBase<MushroomHarvesterBoxTileEntity, MushroomHarvesterBoxItem>
+    #Kind:HarvesterBoxKind[ov]
+  class HallowedHarvesterBoxTile : HarvesterBoxTileBase<HallowedHarvesterBoxTileEntity, HallowedHarvesterBoxItem>
+    #Kind:HarvesterBoxKind[ov]
+  class StoneHarvesterBoxTile : HarvesterBoxTileBase<StoneHarvesterBoxTileEntity, StoneHarvesterBoxItem>
     #Kind:HarvesterBoxKind[ov]
 **HarvesterBoxUIState.cs** uses: ElectricConsumerMachine, ElectricityUIIcon, MachineUIElementEntry, MachineUIStateBase
   class HarvesterBoxUIState : MachineUIStateBase

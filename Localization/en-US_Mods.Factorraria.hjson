@@ -196,6 +196,21 @@ Items: {
 		Tooltip: Consumes power to automatically harvest plants and trees
 	}
 
+	MushroomHarvesterBoxItem: {
+		DisplayName: Mushroom Harvester Box
+		Tooltip: Consumes power to automatically harvest plants and trees
+	}
+
+	HallowedHarvesterBoxItem: {
+		DisplayName: Hallowed Harvester Box
+		Tooltip: Consumes power to automatically harvest plants and trees
+	}
+
+	StoneHarvesterBoxItem: {
+		DisplayName: Stone Harvester Box
+		Tooltip: Consumes power to automatically harvest plants and trees
+	}
+
 	MechSuitItem: {
 		DisplayName: Mech Suit
 		Tooltip: ""
@@ -1136,6 +1151,9 @@ Tiles: {
 	WaterleafHarvesterBoxTile.MapEntry: Waterleaf Harvester Box
 	ShiverthornHarvesterBoxTile.MapEntry: Shiverthorn Harvester Box
 	FireblossomHarvesterBoxTile.MapEntry: Fireblossom Harvester Box
+	MushroomHarvesterBoxTile.MapEntry: Mushroom Harvester Box
+	HallowedHarvesterBoxTile.MapEntry: Hallowed Harvester Box
+	StoneHarvesterBoxTile.MapEntry: Stone Harvester Box
 }
 
 Story: {

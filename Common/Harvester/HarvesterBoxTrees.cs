@@ -148,7 +148,7 @@ namespace Factorraria.Common.Harvester
             for (int dx = -radius; dx <= radius; dx++)
             {
                 int x = centerX + dx;
-                if (WorldGen.InWorld(x, y, 1) && Main.tile[x, y].HasTile && HarvesterBoxRegistry.BoxHerbs.ContainsKey(Main.tile[x, y].TileType))
+                if (WorldGen.InWorld(x, y, 1) && Main.tile[x, y].HasTile && HarvesterBoxRegistry.BoxTypes.Contains(Main.tile[x, y].TileType))
                     WorldGen.TileFrame(x, y, false, true);
             }
         }

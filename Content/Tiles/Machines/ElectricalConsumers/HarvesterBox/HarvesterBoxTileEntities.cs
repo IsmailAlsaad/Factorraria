@@ -34,4 +34,16 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox
     public class FireblossomHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<FireblossomHarvesterBoxTile>
     {
     }
+
+    public class MushroomHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<MushroomHarvesterBoxTile>
+    {
+    }
+
+    public class HallowedHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<HallowedHarvesterBoxTile>
+    {
+    }
+
+    public class StoneHarvesterBoxTileEntity : HarvesterBoxTileEntityBase<StoneHarvesterBoxTile>
+    {
+    }
 }

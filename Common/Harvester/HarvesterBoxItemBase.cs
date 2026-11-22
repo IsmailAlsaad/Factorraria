@@ -17,7 +17,8 @@ namespace Factorraria.Common.Harvester
                 if (ModContent.HasAsset(base.Texture))
                     return base.Texture;
 
-                return ItemID.Search.TryGetId(HarvesterBoxKinds.PlanterItemName(Kind), out int planterBox) ? "Terraria/Images/Item_" + planterBox : "Terraria/Images/Item_" + ItemID.Wood;
+                string planterName = HarvesterBoxKinds.PlanterItemName(Kind);   // null for our own kinds (Mushroom, Hallowed, Stone)
+                return planterName != null && ItemID.Search.TryGetId(planterName, out int planterBox) ? "Terraria/Images/Item_" + planterBox : "Terraria/Images/Item_" + ItemID.Wood;
             }
         }
 

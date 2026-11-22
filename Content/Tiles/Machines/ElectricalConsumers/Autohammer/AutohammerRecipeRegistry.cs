@@ -7,6 +7,7 @@ using Factorraria.Content.Items.Hooks;
 using Factorraria.Content.Items.Machines;
 using Factorraria.Content.Items.Materials;
 using Factorraria.Content.Items.Wires;
+using Factorraria.Content.Tiles.Farming.PlanterBoxes;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
 using System;
 using System.Collections.Generic;
@@ -268,13 +269,24 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
             AddRecipe<WaterleafHarvesterBoxItem>(HarvesterBoxKind.Waterleaf);
             AddRecipe<ShiverthornHarvesterBoxItem>(HarvesterBoxKind.Shiverthorn);
             AddRecipe<FireblossomHarvesterBoxItem>(HarvesterBoxKind.Fireblossom);
+
+            // Our own planter boxes: the Harvester Box is made from 30 of the matching custom planter box item (no vanilla item to look up).
+            AddRecipe<MushroomHarvesterBoxItem>(ModContent.ItemType<MushroomPlanterBoxItem>());
+            AddRecipe<HallowedHarvesterBoxItem>(ModContent.ItemType<HallowedPlanterBoxItem>());
+            AddRecipe<StoneHarvesterBoxItem>(ModContent.ItemType<StonePlanterBoxItem>());
         }
 
         static void AddRecipe<TItem>(HarvesterBoxKind kind) where TItem : ModItem
         {
-            if (!ItemID.Search.TryGetId(HarvesterBoxKinds.PlanterItemName(kind), out int planterBox))
+            string planterName = HarvesterBoxKinds.PlanterItemName(kind);
+            if (planterName == null || !ItemID.Search.TryGetId(planterName, out int planterBox))
                 return;
 
+            AddRecipe<TItem>(planterBox);
+        }
+
+        static void AddRecipe<TItem>(int planterBox) where TItem : ModItem
+        {
             Recipe.Create(ModContent.ItemType<TItem>(), 30)
                 .AddIngredient(planterBox, 30)
                 .AddIngredient(ItemID.StaffofRegrowth, 1)

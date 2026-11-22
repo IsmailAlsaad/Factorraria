@@ -22,7 +22,7 @@ namespace Factorraria.Common.Harvester
         public override void PostSetupContent()
         {
             // Boxes register their tile types in SetStaticDefaults, so the registry is complete here.
-            boxTypes = HarvesterBoxRegistry.BoxHerbs.Keys.ToArray();
+            boxTypes = HarvesterBoxRegistry.BoxTypes.ToArray();
             wasSolid = new bool[boxTypes.Length];
             wasSolidTop = new bool[boxTypes.Length];
         }

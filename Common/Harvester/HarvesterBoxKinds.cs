@@ -25,7 +25,13 @@ namespace Factorraria.Common.Harvester
         Blinkroot,
         Waterleaf,
         Shiverthorn,
-        Fireblossom
+        Fireblossom,
+
+        // Phase 3 of docs/planter_boxes/ROADMAP.md: our own boxes. They have NO vanilla planter box item (their planter boxes are our own items, see
+        // PlanterBoxItemBase) and no herb, so PlanterItemName and Herb answer null for them. Appended at the end on purpose.
+        Mushroom,
+        Hallowed,
+        Stone
     }
 
     public static class HarvesterBoxKinds
@@ -40,7 +46,8 @@ namespace Factorraria.Common.Harvester
             HarvesterBoxKind.Blinkroot => "BlinkrootPlanterBox",
             HarvesterBoxKind.Waterleaf => "WaterleafPlanterBox",
             HarvesterBoxKind.Shiverthorn => "ShiverthornPlanterBox",
-            _ => "FireBlossomPlanterBox"
+            HarvesterBoxKind.Fireblossom => "FireBlossomPlanterBox",
+            _ => null   // Mushroom, Hallowed, Stone: our own planter box items, not vanilla ones. Callers must check for null.
         };
 
         // Phase 5: the vanilla soil tile a box stands in for when vanilla runs its tree rules (look, wood, acorns, sapling style). 0 = this box grows no trees yet
@@ -56,6 +63,9 @@ namespace Factorraria.Common.Harvester
             HarvesterBoxKind.Shiverthorn => TileID.SnowBlock,
             HarvesterBoxKind.Fireblossom => 633,   // an ash tree (tile 634): AshTreeGroundTest takes ash grass (633) only
             HarvesterBoxKind.Waterleaf => TileID.Sand,   // a palm tree (tile 323): GrowPalmTree takes sand (53) as its soil
+            HarvesterBoxKind.Mushroom => 0,   // Phase 4 (giant mushroom trees): its own growth code, not a sapling
+            HarvesterBoxKind.Hallowed => 0,   // Phase 5: pearlwood trees (soil tile 109)
+            HarvesterBoxKind.Stone => 0,      // Phase 5: gem trees from gemcorns only
             _ => 0
         };
 
@@ -81,11 +91,15 @@ namespace Factorraria.Common.Harvester
             HarvesterBoxKind.Blinkroot => TileID.Dirt,
             HarvesterBoxKind.Waterleaf => TileID.Sand,
             HarvesterBoxKind.Shiverthorn => TileID.SnowBlock,
+            HarvesterBoxKind.Mushroom => TileID.MushroomGrass,
+            HarvesterBoxKind.Hallowed => TileID.HallowedGrass,
+            HarvesterBoxKind.Stone => TileID.Stone,
             _ => TileID.Ash   // Fireblossom
         };
 
-        // The one herb that grows on that box.
-        public static HerbStyle Herb(HarvesterBoxKind kind) => kind switch
+        // The one herb that grows on that box, or null when the box grows no herb (Mushroom, Hallowed and Stone: HarvesterBoxRegistry.Register
+        // puts those tiles in NoHerbBoxes, so planting a herb on them is refused).
+        public static HerbStyle? Herb(HarvesterBoxKind kind) => kind switch
         {
             HarvesterBoxKind.Daybloom => HerbStyle.Daybloom,
             HarvesterBoxKind.Moonglow => HerbStyle.Moonglow,
@@ -94,7 +108,8 @@ namespace Factorraria.Common.Harvester
             HarvesterBoxKind.Blinkroot => HerbStyle.Blinkroot,
             HarvesterBoxKind.Waterleaf => HerbStyle.Waterleaf,
             HarvesterBoxKind.Shiverthorn => HerbStyle.Shiverthorn,
-            _ => HerbStyle.Fireblossom
+            HarvesterBoxKind.Fireblossom => HerbStyle.Fireblossom,
+            _ => null
         };
     }
 }

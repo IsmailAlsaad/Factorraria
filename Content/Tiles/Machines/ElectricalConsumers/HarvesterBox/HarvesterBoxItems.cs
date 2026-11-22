@@ -42,4 +42,19 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox
     {
         protected override HarvesterBoxKind Kind => HarvesterBoxKind.Fireblossom;
     }
+
+    public class MushroomHarvesterBoxItem : HarvesterBoxItemBase<MushroomHarvesterBoxTile>
+    {
+        protected override HarvesterBoxKind Kind => HarvesterBoxKind.Mushroom;
+    }
+
+    public class HallowedHarvesterBoxItem : HarvesterBoxItemBase<HallowedHarvesterBoxTile>
+    {
+        protected override HarvesterBoxKind Kind => HarvesterBoxKind.Hallowed;
+    }
+
+    public class StoneHarvesterBoxItem : HarvesterBoxItemBase<StoneHarvesterBoxTile>
+    {
+        protected override HarvesterBoxKind Kind => HarvesterBoxKind.Stone;
+    }
 }

@@ -9,7 +9,10 @@ namespace Factorraria.Common.Harvester
     // Filled when the tiles load (HarvesterBoxTileBase.SetStaticDefaults) and in PostSetupContent (ResolvePlanterStyles), emptied on unload.
     public static class HarvesterBoxRegistry
     {
-        // Harvester Box tile type -> the herb that grows on it.
+        // Every Harvester Box tile type, whether or not it grows a herb. This (not BoxHerbs) is the "is this a Harvester Box" test.
+        public static HashSet<int> BoxTypes = new();
+
+        // Harvester Box tile type -> the herb that grows on it. Only boxes that grow a herb are in here (Mushroom, Hallowed and Stone are not: see NoHerbBoxes).
         public static Dictionary<int, HerbStyle> BoxHerbs = new();
 
         // Vanilla planter box (tile 380) style -> the herb that grows on it. Built from the planter box ITEMS (found by name), so no style number is hard-coded.
@@ -21,7 +24,8 @@ namespace Factorraria.Common.Harvester
         // The kinds that registered themselves, for ResolvePlanterStyles.
         public static List<HarvesterBoxKind> Kinds = new();
 
-        // Plain custom planter box tiles that grow no herb at all (the Empty Planter Box). See HarvesterBoxRules.HerbAllowedOnSoil.
+        // Custom box tiles that grow no herb at all: the plain custom planter boxes (Empty, Mushroom, Hallowed, Stone) and the Harvester Boxes of kinds
+        // without a herb (Register adds them). See HarvesterBoxRules.HerbAllowedOnSoil.
         public static HashSet<int> NoHerbBoxes = new();
 
         // Vanilla planter box (tile 380) style -> the tile whose break dust it uses. Built next to PlanterHerbs, from the same planter box items.
@@ -29,7 +33,13 @@ namespace Factorraria.Common.Harvester
 
         public static void Register(int tileType, HarvesterBoxKind kind)
         {
-            BoxHerbs[tileType] = HarvesterBoxKinds.Herb(kind);
+            BoxTypes.Add(tileType);
+
+            HerbStyle? herb = HarvesterBoxKinds.Herb(kind);
+            if (herb.HasValue)
+                BoxHerbs[tileType] = herb.Value;
+            else
+                NoHerbBoxes.Add(tileType);
 
             int treeSoil = HarvesterBoxKinds.TreeSoil(kind);
             if (treeSoil != 0)
@@ -40,6 +50,7 @@ namespace Factorraria.Common.Harvester
 
         public static void Clear()
         {
+            BoxTypes.Clear();
             BoxHerbs.Clear();
             PlanterHerbs.Clear();
             BoxTreeSoil.Clear();
@@ -57,6 +68,10 @@ namespace Factorraria.Common.Harvester
             foreach (HarvesterBoxKind kind in Kinds)
             {
                 string itemName = HarvesterBoxKinds.PlanterItemName(kind);
+                HerbStyle? herb = HarvesterBoxKinds.Herb(kind);
+                if (itemName == null || herb == null)
+                    continue;   // our own boxes (Mushroom, Hallowed, Stone): no vanilla planter box to tie a herb to
+
                 if (!ItemID.Search.TryGetId(itemName, out int itemType))
                 {
                     mod.Logger.Warn($"[Harvester] vanilla item '{itemName}' not found: the {kind} planter box keeps the vanilla rules (any herb).");
@@ -71,7 +86,7 @@ namespace Factorraria.Common.Harvester
                     continue;
                 }
 
-                PlanterHerbs[sample.placeStyle] = HarvesterBoxKinds.Herb(kind);
+                PlanterHerbs[sample.placeStyle] = herb.Value;
                 PlanterDustTiles[sample.placeStyle] = HarvesterBoxKinds.PlanterDustTile(kind);
             }
 

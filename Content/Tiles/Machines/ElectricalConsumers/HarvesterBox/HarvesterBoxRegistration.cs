@@ -20,6 +20,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox
             RegisterVisual<WaterleafHarvesterBoxTile, WaterleafHarvesterBoxTileEntity>();
             RegisterVisual<ShiverthornHarvesterBoxTile, ShiverthornHarvesterBoxTileEntity>();
             RegisterVisual<FireblossomHarvesterBoxTile, FireblossomHarvesterBoxTileEntity>();
+            RegisterVisual<MushroomHarvesterBoxTile, MushroomHarvesterBoxTileEntity>();
+            RegisterVisual<HallowedHarvesterBoxTile, HallowedHarvesterBoxTileEntity>();
+            RegisterVisual<StoneHarvesterBoxTile, StoneHarvesterBoxTileEntity>();
         }
 
         // A machine tile has to be in the visual registry to get its entity (MachinePlacement.ServerPlace). A Harvester Box is drawn as a normal framed tile (the merge frames
