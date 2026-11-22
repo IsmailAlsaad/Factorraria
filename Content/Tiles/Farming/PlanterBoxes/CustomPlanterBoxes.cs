@@ -22,6 +22,8 @@ namespace Factorraria.Content.Tiles.Farming.PlanterBoxes
     public class HallowedPlanterBoxTile : PlanterBoxTileBase<HallowedPlanterBoxItem>
     {
         protected override int DustTile => TileID.HallowedGrass;
+
+        protected override int TreeSoil => TileID.HallowedGrass;   // acorns planted on it grow hallowed trees: pearlwood (same tree code as every tree box, HarvesterBoxTrees)
     }
 
     public class StonePlanterBoxItem : PlanterBoxItemBase<StonePlanterBoxTile> { }
@@ -31,5 +33,7 @@ namespace Factorraria.Content.Tiles.Farming.PlanterBoxes
         protected override int DustTile => TileID.Stone;
 
         protected override SoundStyle BreakSound => SoundID.Tink;
+
+        protected override int TreeSoil => TileID.Stone;   // gemcorns planted on it grow gem trees (vanilla rules: underground only); plain acorns are refused (HarvesterBoxTrees.CanPlantSapling)
     }
 }

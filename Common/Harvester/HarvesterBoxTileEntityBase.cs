@@ -592,6 +592,7 @@ namespace Factorraria.Common.Harvester
         {
             dropTile = new Point(x, y);
             int soil = HarvesterBoxRegistry.BoxTreeSoil.TryGetValue(Main.tile[x, y + 1].TileType, out int s) ? s : TileID.Grass;
+            int treeTile = Main.tile[x, y].TileType;   // a felled gem tree is replanted with the gemcorn style of its own gem
 
             HarvesterBoxTrees.RunAsTreeSoilWithSides(x, y + 1, () => ModContent.GetInstance<RoboticArmDropCaptureSystem>().Run(this, () =>
             {
@@ -606,8 +607,14 @@ namespace Factorraria.Common.Harvester
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.SendTileSquare(-1, x - 3, y - 24, 7, 25);   // the whole fallen tree, so no client keeps a piece of it
 
-            if (HarvesterBoxTrees.CanPlantSapling(x, y))
-                HarvesterBoxTrees.PlaceSapling(x, y, HarvesterBoxKinds.SaplingStyle(soil));
+            bool gemTree = HarvesterBoxKinds.IsGemTreeTile(treeTile);
+            if (HarvesterBoxTrees.CanPlantSapling(x, y, gemTree))
+            {
+                if (gemTree)
+                    HarvesterBoxTrees.PlaceSapling(x, y, treeTile - HarvesterBoxKinds.GemTreeFirstTile, HarvesterBoxKinds.GemSaplingTile);
+                else
+                    HarvesterBoxTrees.PlaceSapling(x, y, HarvesterBoxKinds.SaplingStyle(soil));
+            }
         }
 
         // The three tiles beside and above the plant: where a conveyor can take the drops, or a vItem can wait.

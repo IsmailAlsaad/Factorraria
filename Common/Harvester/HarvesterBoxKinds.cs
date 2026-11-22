@@ -64,8 +64,8 @@ namespace Factorraria.Common.Harvester
             HarvesterBoxKind.Fireblossom => 633,   // an ash tree (tile 634): AshTreeGroundTest takes ash grass (633) only
             HarvesterBoxKind.Waterleaf => TileID.Sand,   // a palm tree (tile 323): GrowPalmTree takes sand (53) as its soil
             HarvesterBoxKind.Mushroom => TileID.MushroomGrass,   // Phase 4: giant mushroom trees are tile 5 trees on mushroom grass (70), grown by GrowTree with no sapling (MushroomGrowthRules)
-            HarvesterBoxKind.Hallowed => 0,   // Phase 5: pearlwood trees (soil tile 109)
-            HarvesterBoxKind.Stone => 0,      // Phase 5: gem trees from gemcorns only
+            HarvesterBoxKind.Hallowed => TileID.HallowedGrass,   // Phase 5a: hallowed trees (pearlwood) from acorns, vanilla soil 109
+            HarvesterBoxKind.Stone => TileID.Stone,   // Phase 5b: gem trees from gemcorns only (GemTreeGroundTest takes stone and moss, so stone (1) passes)
             _ => 0
         };
 
@@ -76,10 +76,19 @@ namespace Factorraria.Common.Harvester
             TileID.JungleGrass => 2,
             TileID.CorruptGrass => 3,
             TileID.CrimsonGrass => 4,
+            TileID.HallowedGrass => 5,   // Check1x2 gives hallowed grass (109) and its second kind (492) style 5, which AttemptToGrowTreeFromSapling grows with GrowTree
             633 => 10,   // ash grass: Check1x2 gives style 10, which AttemptToGrowTreeFromSapling grows through TryGrowingTreeByType(634)
             TileID.Sand => 6,   // Check1x2: sand (53) gives style 6, which AttemptToGrowTreeFromSapling grows with GrowPalmTree
             _ => 0
         };
+
+        // Gemcorns (Phase 5b). The seven GemTree<Gem>Seed items are consecutive (Topaz 4851 to Amber 4857, probe 3). Each plants the gem sapling (tile 590) with the style
+        // 0 to 6 in that order, and AttemptToGrowTreeFromSapling grows tile 583 + style from it (Topaz 583 ... Amber 589, probe 2). Expression-bodied on purpose.
+        public static int GemSaplingTile => 590;
+        public static int GemTreeFirstTile => 583;
+        public static bool IsGemcorn(int itemType) => itemType >= ItemID.GemTreeTopazSeed && itemType <= ItemID.GemTreeAmberSeed;
+        public static int GemcornStyle(int itemType) => itemType - ItemID.GemTreeTopazSeed;
+        public static bool IsGemTreeTile(int tileType) => tileType >= GemTreeFirstTile && tileType <= GemTreeFirstTile + 6;
 
         // The tile whose break dust a planter box of that kind uses (the block or grass its soil is made of). Used for the vanilla planter boxes (PlanterBoxGlobalTile).
         public static int PlanterDustTile(HarvesterBoxKind kind) => kind switch

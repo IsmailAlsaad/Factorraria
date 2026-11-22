@@ -23,13 +23,13 @@ namespace Factorraria.Common.Net
         }
 
         // Called when the local player uses an acorn (main thread): looks at the tile under the cursor.
-        public static void TryPlantAcornAtCursor(Player player)
+        public static void TryPlantAcornAtCursor(Player player, int itemType)
         {
             Point target = Main.MouseWorld.ToTileCoordinates();
             int boxX = target.X;
             int boxY = target.Y + 1;   // the sapling stands on the tile above the box
 
-            if (!HarvesterBoxTrees.CanPlantSapling(boxX, boxY - 1) || !FactorrariaNet.InReach(player, boxX, boxY))
+            if (!HarvesterBoxTrees.CanPlantSapling(boxX, boxY - 1, HarvesterBoxKinds.IsGemcorn(itemType)) || !FactorrariaNet.InReach(player, boxX, boxY))
                 return;
 
             // Vanilla's own placement fails on a box, so nothing played a sound: same sound vanilla plays when an acorn goes into grass.
@@ -55,14 +55,18 @@ namespace Factorraria.Common.Net
                 return;
 
             Item held = player.inventory[player.selectedItem];
-            if (held.type != ItemID.Acorn || held.stack <= 0)
+            bool gemcorn = HarvesterBoxKinds.IsGemcorn(held.type);
+            if ((held.type != ItemID.Acorn && !gemcorn) || held.stack <= 0)
                 return;
 
-            if (!HarvesterBoxTrees.CanPlantSapling(x, y - 1))
+            // The Stone box takes only gemcorns, every other tree box only acorns (CanPlantSapling).
+            if (!HarvesterBoxTrees.CanPlantSapling(x, y - 1, gemcorn))
                 return;
 
-            int style = HarvesterBoxKinds.SaplingStyle(HarvesterBoxRegistry.BoxTreeSoil[Main.tile[x, y].TileType]);
-            HarvesterBoxTrees.PlaceSapling(x, y - 1, style);
+            if (gemcorn)
+                HarvesterBoxTrees.PlaceSapling(x, y - 1, HarvesterBoxKinds.GemcornStyle(held.type), HarvesterBoxKinds.GemSaplingTile);
+            else
+                HarvesterBoxTrees.PlaceSapling(x, y - 1, HarvesterBoxKinds.SaplingStyle(HarvesterBoxRegistry.BoxTreeSoil[Main.tile[x, y].TileType]));
 
             held.stack--;
             if (held.stack <= 0)
@@ -76,12 +80,12 @@ namespace Factorraria.Common.Net
     // Using an acorn (left click) asks the server to plant it when the cursor is on the tile above a tree box. Vanilla's own placement fails there, so nothing doubles.
     public class HarvesterBoxAcornItem : GlobalItem
     {
-        public override bool AppliesToEntity(Item entity, bool lateInstantiation) => entity.type == ItemID.Acorn;
+        public override bool AppliesToEntity(Item entity, bool lateInstantiation) => entity.type == ItemID.Acorn || HarvesterBoxKinds.IsGemcorn(entity.type);
 
         public override bool? UseItem(Item item, Player player)
         {
             if (player.whoAmI == Main.myPlayer && HarvesterBoxRegistry.BoxTreeSoil.Count > 0)
-                HarvesterBoxTreeNetSystem.TryPlantAcornAtCursor(player);
+                HarvesterBoxTreeNetSystem.TryPlantAcornAtCursor(player, item.type);
 
             return null;
         }

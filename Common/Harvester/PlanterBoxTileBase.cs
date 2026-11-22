@@ -25,8 +25,8 @@ namespace Factorraria.Common.Harvester
         // The sound when it is hit and broken.
         protected virtual SoundStyle BreakSound => SoundID.Dig;
 
-        // The vanilla soil this box stands in for in tree and plant rules (HarvesterBoxRegistry.BoxTreeSoil). 0 = it is no tree box. Only the Mushroom box says
-        // anything yet (mushroom grass); Hallowed and Stone follow in Phase 5.
+        // The vanilla soil this box stands in for in tree and plant rules (HarvesterBoxRegistry.BoxTreeSoil). 0 = it is no tree box. The Mushroom box (mushroom
+        // grass), the Hallowed box (hallowed grass) and the Stone box (stone, gemcorns only) say something.
         protected virtual int TreeSoil => 0;
 
         public override void SetStaticDefaults()

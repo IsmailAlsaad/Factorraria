@@ -84,7 +84,7 @@ namespace Factorraria.Common.Harvester
         // The tile types a tree on a box is made of: forest, corruption, crimson, jungle, snow and hallowed trees are all tile 5, a palm is tile 323.
         public static bool IsTreeTileType(int type)
         {
-            return type == TileID.Trees || type == TileID.PalmTree || type == 634;   // 634 = the ash tree
+            return type == TileID.Trees || type == TileID.PalmTree || type == 634 || HarvesterBoxKinds.IsGemTreeTile(type);   // 634 = the ash tree, 583 to 589 the gem trees
         }
 
         // Vanilla's tree shake (the leaf loot an axe hit gives: acorns, wood, coins, critters, ...) for the tree whose trunk tile is (x, y). WorldGen.ShakeTree is
@@ -346,17 +346,23 @@ namespace Factorraria.Common.Harvester
                 return false;
 
             Tile tile = Main.tile[x, y];
-            return tile.HasTile && tile.TileType == TileID.Saplings;
+            return tile.HasTile && (tile.TileType == TileID.Saplings || tile.TileType == HarvesterBoxKinds.GemSaplingTile);
         }
 
         // A sapling is two tiles tall: (x, bottomY - 1) and (x, bottomY), bottomY being the tile right above the box.
-        public static bool CanPlantSapling(int x, int bottomY)
+        // gemcorn: the item is a gemcorn (or the felled tree was a gem tree). The Stone box takes ONLY gemcorns and every other tree box only acorns.
+        public static bool CanPlantSapling(int x, int bottomY, bool gemcorn = false)
         {
             if (!WorldGen.InWorld(x, bottomY - 1, 4) || !IsTreeBox(x, bottomY + 1))
                 return false;
 
+            int boxSoil = HarvesterBoxRegistry.BoxTreeSoil[Main.tile[x, bottomY + 1].TileType];
+
             // Mushroom trees grow by themselves on mushroom grass (MushroomGrowthRules): no acorn goes into a mushroom box, and a felled mushroom tree is not replanted.
-            if (HarvesterBoxRegistry.BoxTreeSoil[Main.tile[x, bottomY + 1].TileType] == TileID.MushroomGrass)
+            if (boxSoil == TileID.MushroomGrass)
+                return false;
+
+            if (gemcorn != (boxSoil == TileID.Stone))
                 return false;
 
             for (int y = bottomY - 1; y <= bottomY; y++)
@@ -371,19 +377,20 @@ namespace Factorraria.Common.Harvester
 
         // Writes the two sapling tiles the way vanilla's object placement does (frameX = style * 54 + a random variant * 18, frameY 0 for the top tile and 18
         // for the bottom tile; Check1x2 fixes the style from the soil on its first call anyway). Server and single-player only; the server sends the tiles.
-        public static void PlaceSapling(int x, int bottomY, int style)
+        // saplingTile: the plain sapling (20, an acorn) or the gem sapling (590, a gemcorn, style 0 to 6).
+        public static void PlaceSapling(int x, int bottomY, int style, int saplingTile = TileID.Saplings)
         {
             short frameX = (short)(style * 54 + WorldGen.genRand.Next(3) * 18);
 
             Tile top = Main.tile[x, bottomY - 1];
             top.HasTile = true;
-            top.TileType = TileID.Saplings;
+            top.TileType = (ushort)saplingTile;
             top.TileFrameX = frameX;
             top.TileFrameY = 0;
 
             Tile bottom = Main.tile[x, bottomY];
             bottom.HasTile = true;
-            bottom.TileType = TileID.Saplings;
+            bottom.TileType = (ushort)saplingTile;
             bottom.TileFrameX = frameX;
             bottom.TileFrameY = 18;
 
@@ -479,7 +486,14 @@ namespace Factorraria.Common.Harvester
                 return false;
 
             Tile tile = Main.tile[x, y];
-            return tile.HasTile && (soilType == 633 ? WorldGen.AshTreeGroundTest(tile.TileType) : WorldGen.IsTileTypeFitForTree(tile.TileType));
+            if (!tile.HasTile)
+                return false;
+
+            // The gem profile (GrowTreeWithSettings with GemTreeGroundTest: stone and moss) wants a stone tile beside the soil, like the ash profile wants ash grass.
+            if (soilType == TileID.Stone)
+                return WorldGen.GemTreeGroundTest(tile.TileType);
+
+            return soilType == 633 ? WorldGen.AshTreeGroundTest(tile.TileType) : WorldGen.IsTileTypeFitForTree(tile.TileType);
         }
 
         // ---------------------------------------------------------------- the tree
@@ -527,6 +541,8 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.SpawnFallingBlockProjectile += SpawnFallingBlockHook;
             On_WorldGen.CheckTreeWithSettings += CheckTreeWithSettingsBoxHook;
             On_WorldGen.GetAshTreeFoliageData += GetAshTreeFoliageDataHook;
+            On_WorldGen.GetGemTreeFoliageData += GetGemTreeFoliageDataHook;
+            On_WorldGen.TileFrame += TileFrameGemSaplingHook;
         }
 
         public override void Unload()
@@ -546,6 +562,8 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.SpawnFallingBlockProjectile -= SpawnFallingBlockHook;
             On_WorldGen.CheckTreeWithSettings -= CheckTreeWithSettingsBoxHook;
             On_WorldGen.GetAshTreeFoliageData -= GetAshTreeFoliageDataHook;
+            On_WorldGen.GetGemTreeFoliageData -= GetGemTreeFoliageDataHook;
+            On_WorldGen.TileFrame -= TileFrameGemSaplingHook;
         }
 
         // The piece-level fix for the IndexOutOfRange. Every tree piece that is killed asks KillTile_GetTreeDrops what it drops, and for tops and branches
@@ -699,6 +717,53 @@ namespace Factorraria.Common.Harvester
             }
 
             orig(x, y, settings);
+        }
+
+        // Gem trees (Stone box, Phase 5b). Their tops and branches ask the same question as the other trees' (GetGemTreeFoliageData, called by TileDrawing for every
+        // gem tree tile), so the box under the trunk stands in for its soil (stone) for the call. Reads and swaps tile data only, so it is the same on every side.
+        static bool GetGemTreeFoliageDataHook(On_WorldGen.orig_GetGemTreeFoliageData orig, int i, int j, int xoffset, ref int treeFrame, ref int treeStyle, out int floorY, out int topTextureFrameWidth, out int topTextureFrameHeight)
+        {
+            if (HarvesterBoxRegistry.BoxTreeSoil.Count > 0 && HarvesterBoxTrees.TryFindSoilBelow(i + xoffset, j, 100, out int soilY))
+            {
+                HarvesterBoxTrees.Disguise d = HarvesterBoxTrees.Begin(i + xoffset, soilY);
+                try
+                {
+                    return orig(i, j, xoffset, ref treeFrame, ref treeStyle, out floorY, out topTextureFrameWidth, out topTextureFrameHeight);
+                }
+                finally
+                {
+                    HarvesterBoxTrees.End(d, false);
+                }
+            }
+
+            return orig(i, j, xoffset, ref treeFrame, ref treeStyle, out floorY, out topTextureFrameWidth, out topTextureFrameHeight);
+        }
+
+        // A gem sapling (tile 590, from a gemcorn) keeps standing on a Stone box. The probe did not show which function checks its soil (TileFrame skips tile 590 in
+        // its object switch, and Check1x2's soil switch has no stone case), so the box under the sapling stands in for stone for the whole TileFrame call of that
+        // one tile, whatever support check runs inside it. Every other tile goes straight through. Reads and swaps tile data only (same on every side).
+        static void TileFrameGemSaplingHook(On_WorldGen.orig_TileFrame orig, int i, int j, bool resetFrame, bool noBreak)
+        {
+            if (HarvesterBoxRegistry.BoxTreeSoil.Count > 0 && WorldGen.InWorld(i, j, 4) && Main.tile[i, j].HasTile && Main.tile[i, j].TileType == HarvesterBoxKinds.GemSaplingTile)
+            {
+                int boxY = HarvesterBoxTrees.IsTreeBox(i, j + 1) ? j + 1 : (HarvesterBoxTrees.IsTreeBox(i, j + 2) ? j + 2 : -1);
+                if (boxY != -1)
+                {
+                    HarvesterBoxTrees.Disguise d = HarvesterBoxTrees.Begin(i, boxY);
+                    try
+                    {
+                        orig(i, j, resetFrame, noBreak);
+                    }
+                    finally
+                    {
+                        HarvesterBoxTrees.End(d, false);
+                    }
+
+                    return;
+                }
+            }
+
+            orig(i, j, resetFrame, noBreak);
         }
 
         // The ash tree's top and branches walk down the trunk's column for the first ash grass tile (GetAshTreeFoliageData) and return false (nothing is drawn)
