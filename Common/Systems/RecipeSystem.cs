@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Machines;
+﻿using Factorraria.Common.Harvester;
+using Factorraria.Common.Machines;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
 using Factorraria.Content.Items.Hooks;
 using Factorraria.Content.Items.Machines;
@@ -19,6 +20,9 @@ namespace Factorraria.Common.Systems
     {
         public override void AddRecipes()
         {
+            // Planter boxes are crafted from the Empty Planter Box (Common/Harvester/PlanterBoxRecipes.cs)
+            PlanterBoxRecipes.AddRecipes();
+
             // Decay Chamber
             new RecipeBook().DisableVanillaRecipe(ItemID.LesionStation, true);
             Recipe.Create(ItemID.LesionStation, 1)

@@ -21,6 +21,9 @@ namespace Factorraria.Common.Harvester
         // The kinds that registered themselves, for ResolvePlanterStyles.
         public static List<HarvesterBoxKind> Kinds = new();
 
+        // Plain custom planter box tiles that grow no herb at all (the Empty Planter Box). See HarvesterBoxRules.HerbAllowedOnSoil.
+        public static HashSet<int> NoHerbBoxes = new();
+
         public static void Register(int tileType, HarvesterBoxKind kind)
         {
             BoxHerbs[tileType] = HarvesterBoxKinds.Herb(kind);
@@ -38,6 +41,7 @@ namespace Factorraria.Common.Harvester
             PlanterHerbs.Clear();
             BoxTreeSoil.Clear();
             Kinds.Clear();
+            NoHerbBoxes.Clear();
         }
 
         // Vanilla stores a planter box's style in frameY / 18 (WorldGen.PlaceTile sets frameY = 18 * style, KillTile drops item 3215 + frameY / 18),

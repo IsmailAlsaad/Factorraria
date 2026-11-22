@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-22 | 457 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-22 | 461 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(262) Item(148) Player(113) FactorrariaNet(87) Tile(77) ItemID(74) WorldGen(72) BaseMachine(59) TileObjectData(41) TextureAssets(41) Sets(40) FactorrariaPacket(40) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(264) Item(150) Player(113) FactorrariaNet(87) Tile(78) ItemID(76) WorldGen(73) BaseMachine(59) TileObjectData(42) TextureAssets(41) Sets(40) FactorrariaPacket(40) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -38,20 +38,21 @@ Project bases -> derived:
 - MotorTileEntityBase: IronMotorTileEntity, LeadMotorTileEntity
 - Particle: PuffExplosion
 - PipeTileBase: IronPipeTile, LeadPipeTile
+- PlanterBoxTileBase: EmptyPlanterBoxTile
 - PowerPoleTileBase: PlatinumPowerPoleTile, WoodenPowerPoleTile
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 - RecipeBookEntry: RecipeBookGridCell
 tModLoader/other bases -> project types:
 - ModSystem (123): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, HarvesterBoxHerbHooks, HarvesterBoxItemFall, HarvesterBoxNetSystem, HarvesterBoxPlacementPreview, HarvesterBoxRowSystem, HarvesterBoxTreeHooks, HarvesterBoxTreeNetSystem, HellstoneGrowNetSystem, HellstoneGrowthSystem, HerbGrowthHooks, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineSmartOutlineSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitBlueprint, MechSuitBuildNetSystem, MechSuitBuildSystem, MechSuitBuilderArms, MechSuitBuilderSystem, MechSuitDebugSystem, MechSuitHologramSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RecipeTabDiscoverySystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
-- ModItem (46): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, HarvesterBoxItemBase, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenMinecartItem, WoodenPowerPoleItem
+- ModItem (47): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, EmptyPlanterBoxItem, GoldPlateItem, GoldWireItem, HarvesterBoxItemBase, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenMinecartItem, WoodenPowerPoleItem
 - byte (36): AssemblyIssue, BlockState, BoxCycle, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, Phase, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState, UnitState
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
-- ModTile (17): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
+- ModTile (18): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PlanterBoxTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - UIElement (15): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookModeButton, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModPlayer (14): CartEquipPlayer, CartInteractionPlayer, CartRiderPlayer, CosmicRadiationPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
 - GlobalTile (13): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, PriorityConveyorSwapGlobalTile, SuperWeaponDropGuard, TilePlacedGlobalTile
 - GlobalItem (12): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, HarvesterBoxAcornItem, HerbTooltipGlobalItem, MagicMaterializerItemTooltip, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
-- GlobalNPC (11): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
+- GlobalNPC (12): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, DryadShopGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - IAutoload (3): IPlant, ITree, ModTree
@@ -357,6 +358,9 @@ tModLoader/other bases -> project types:
     +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +MarkIfNextToPipe(int,int)[s]
 
 ### Common/Harvester/
+**DryadShopGlobalNPC.cs** uses: EmptyPlanterBoxItem, Entry, Item
+  class DryadShopGlobalNPC : GlobalNPC
+    +ModifyShop(NPCShop)[ov]
 **HarvesterBoxHerbHooks.cs** uses: HarvesterBoxRegistry, HarvesterBoxRules, Main, Tile, WorldGen
   class HarvesterBoxHerbHooks : ModSystem
     +Load()[ov] +Unload()[ov] +PostSetupContent()[ov]
@@ -380,7 +384,7 @@ tModLoader/other bases -> project types:
     +Load()[ov] +Unload()[ov]
 **HarvesterBoxRegistry.cs** uses: HarvesterBoxKind, HarvesterBoxKinds, HerbStyle, Item, ItemID
   static class HarvesterBoxRegistry
-    +BoxHerbs:Dictionary<int, HerbStyle>[s] +PlanterHerbs:Dictionary<int, HerbStyle>[s] +BoxTreeSoil:Dictionary<int, int>[s] +Kinds:List<HarvesterBoxKind>[s] +Register(int,HarvesterBoxKind)[s] +Clear()[s] +ResolvePlanterStyles(Mod)[s]
+    +BoxHerbs:Dictionary<int, HerbStyle>[s] +PlanterHerbs:Dictionary<int, HerbStyle>[s] +BoxTreeSoil:Dictionary<int, int>[s] +Kinds:List<HarvesterBoxKind>[s] +NoHerbBoxes:HashSet<int>[s] +Register(int,HarvesterBoxKind)[s] +Clear()[s] +ResolvePlanterStyles(Mod)[s]
 **HarvesterBoxRowSystem.cs** uses: BaseMachine, FactorrariaNet, HarvesterBoxRows, IRowMachine, MachinePlacement, Main, PowerGridSystem
   class HarvesterBoxRowSystem : ModSystem
     +OnWorldLoad()[ov] +OnWorldUnload()[ov] +MarkDirty(int,int,bool)[s] +PostUpdateWorld()[ov]
@@ -422,6 +426,12 @@ tModLoader/other bases -> project types:
 **IHarvesterBoxRow.cs**
   interface IHarvesterBoxRow
     +BeginClientStrike(int)
+**PlanterBoxRecipes.cs** uses: EmptyPlanterBoxItem, HarvesterBoxKind, HarvesterBoxKinds, ItemID, Main
+  static class PlanterBoxRecipes
+    +AddRecipes()[s]
+**PlanterBoxTileBase.cs** uses: Main, Tile, TileObjectData, WorldGen
+  abstract class PlanterBoxTileBase<TItem> : ModTile
+    +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
 
 ### Common/Knowledge/
 **LiquidBiomeVisits.cs** uses: LiquidTypeRegistry, MachineBiome, Player, RecipeKnowledgeNet, RecipeKnowledgeSystem
@@ -1377,7 +1387,7 @@ tModLoader/other bases -> project types:
 **RecipeBookSystem.cs** uses: CartChestUISystem, Factorraria, Item, MachineUISystem, Main, Player, RecipeBookArt, RecipeBookButtonState, RecipeBookPlayer, RecipeBookState, RecipeIcon
   class RecipeBookSystem : ModSystem
     +IsOpen:bool[s] +Open()[s] +OpenAt(string)[s] +OpenIngredientSearch(int)[s] +Close(bool)[s] +Toggle()[s] +Load()[ov] +Unload()[ov] +OnWorldUnload()[ov] +UpdateUI(GameTime)[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
-**RecipeSystem.cs** uses: ItemID, RecipeBook
+**RecipeSystem.cs** uses: ItemID, PlanterBoxRecipes, RecipeBook
   class RecipeSystem : ModSystem
     +AddRecipes()[ov]
 **SkeletronHandDropGlobalItem.cs** uses: Item, ItemID, Main
@@ -1780,6 +1790,12 @@ tModLoader/other bases -> project types:
 **PriorityConveyorSwapGlobalTile.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, TilePlaced, VirtualItemSystem
   class PriorityConveyorSwapGlobalTile : GlobalTile
     +ReplaceTile(int,int,int,int,int)[ov]
+
+### Content/Tiles/Farming/PlanterBoxes/
+**EmptyPlanterBox.cs** uses: HarvesterBoxRegistry, Item, ItemID, PlanterBoxTileBase
+  class EmptyPlanterBoxItem : ModItem
+    +Texture:string[ov]
+  class EmptyPlanterBoxTile : PlanterBoxTileBase<EmptyPlanterBoxItem>
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/
 **AutohammerRecipeRegistry.cs** uses: BeeWheelItem, BlinkrootHarvesterBoxItem, ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CorruptHarvesterBoxItem, CounterClockwisePriorityConveyor, CrimsonHarvesterBoxItem, CrimtaneSheetItem, CustomRecipe, DaybloomHarvesterBoxItem, DemoniteSheetItem, FireblossomHarvesterBoxItem, GoldPlateItem, GoldWireItem, HarvesterBoxKind, HarvesterBoxKinds, IronCutterItem, ItemID, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MoonglowHarvesterBoxItem, PlatinumPowerPoleItem, RecipeBook, RoyalHoneyItem, ShiverthornHarvesterBoxItem, SimpleCircuitItem, SunCapsuleItem, TinWireItem, WaterleafHarvesterBoxItem, WoodenMinecartItem, WoodenPowerPoleItem
@@ -2332,6 +2348,7 @@ tModLoader/other bases -> project types:
 - docs/mech_suit_builder/: ROADMAP.md
 - docs/multiplayer/: ROADMAP.md, SURVEY_APPENDIX.md
 - docs/npcs/: ROADMAP.md
+- docs/planter_boxes/: ROADMAP.md
 - docs/poles/: ROADMAP.md
 - docs/recipe_book/: ROADMAP.md
 - docs/super_weapons/: ROADMAP.md

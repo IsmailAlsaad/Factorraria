@@ -37,6 +37,9 @@ namespace Factorraria.Common.Harvester
             if (!soil.HasTile)
                 return null;
 
+            if (HarvesterBoxRegistry.NoHerbBoxes.Contains(soil.TileType))
+                return false;
+
             if (HarvesterBoxRegistry.BoxHerbs.TryGetValue(soil.TileType, out HerbStyle boxHerb))
                 return (int)boxHerb == herbStyle;
 

@@ -136,6 +136,11 @@ Items: {
 		Tooltip: ""
 	}
 
+	EmptyPlanterBoxItem: {
+		DisplayName: Empty Planter Box
+		Tooltip: Nothing grows on it. Craft it into a planter box at a work bench
+	}
+
 	DaybloomHarvesterBoxItem: {
 		DisplayName: Daybloom Harvester Box
 		Tooltip: Consumes power to automatically harvest plants and trees
@@ -1104,6 +1109,7 @@ Tiles: {
 	BeeWheelTile.MapEntry: Bee Wheel Tile
 	SunCapsuleTileMapEntry: Sun Capsule Tile
 	SunCapsuleTile.MapEntry: Sun Capsule Tile
+	EmptyPlanterBoxTile.MapEntry: Empty Planter Box
 	DaybloomHarvesterBoxTile.MapEntry: Daybloom Harvester Box
 	MoonglowHarvesterBoxTile.MapEntry: Moonglow Harvester Box
 	CorruptHarvesterBoxTile.MapEntry: Corrupt Harvester Box
