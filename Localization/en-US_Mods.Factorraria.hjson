@@ -138,7 +138,22 @@ Items: {
 
 	EmptyPlanterBoxItem: {
 		DisplayName: Empty Planter Box
-		Tooltip: Nothing grows on it. Craft it into a planter box at a work bench
+		Tooltip: ""
+	}
+
+	MushroomPlanterBoxItem: {
+		DisplayName: Mushroom Planter Box
+		Tooltip: ""
+	}
+
+	HallowedPlanterBoxItem: {
+		DisplayName: Hallowed Planter Box
+		Tooltip: ""
+	}
+
+	StonePlanterBoxItem: {
+		DisplayName: Stone Planter Box
+		Tooltip: ""
 	}
 
 	DaybloomHarvesterBoxItem: {
@@ -1110,6 +1125,9 @@ Tiles: {
 	SunCapsuleTileMapEntry: Sun Capsule Tile
 	SunCapsuleTile.MapEntry: Sun Capsule Tile
 	EmptyPlanterBoxTile.MapEntry: Empty Planter Box
+	MushroomPlanterBoxTile.MapEntry: Mushroom Planter Box
+	HallowedPlanterBoxTile.MapEntry: Hallowed Planter Box
+	StonePlanterBoxTile.MapEntry: Stone Planter Box
 	DaybloomHarvesterBoxTile.MapEntry: Daybloom Harvester Box
 	MoonglowHarvesterBoxTile.MapEntry: Moonglow Harvester Box
 	CorruptHarvesterBoxTile.MapEntry: Corrupt Harvester Box

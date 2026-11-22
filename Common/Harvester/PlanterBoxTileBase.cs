@@ -43,6 +43,10 @@ namespace Factorraria.Common.Harvester
             HitSound = SoundID.Dig;
             AddMapEntry(new Color(160, 110, 60), CreateMapEntryName());
             RegisterItemDrop(ModContent.ItemType<TItem>());
+
+            // No plain custom planter box grows a herb: HarvesterBoxRules.HerbAllowedOnSoil answers false for every herb (planting is refused, a herb that is somehow
+            // there breaks). The herb boxes are the vanilla planter boxes and the Harvester Boxes.
+            HarvesterBoxRegistry.NoHerbBoxes.Add(Type);
         }
 
         public override bool CanPlace(int i, int j)

@@ -58,8 +58,8 @@ Ismail's spec (2026-11-22). Pair with `docs/harvester_box/ROADMAP.md` (the Harve
 ## 3. Phases (one patch each)
 
 - **Phase 1, empty box, shop, recipes.** `PlanterBoxTileBase`, `EmptyPlanterBoxItem` + `EmptyPlanterBoxTile`, `DryadShopGlobalNPC`, `PlanterBoxRecipes` (10 recipes), `HarvesterBoxRegistry.NoHerbBoxes` + the rule in `HarvesterBoxRules.HerbAllowedOnSoil`.
-- **Phase 2, three new planter boxes.** Add `Mushroom`, `Hallowed`, `Stone` to `HarvesterBoxKind` (careful: `PlanterItemName` falls back to Fireblossom for unknown kinds, give the new kinds their own items). A tile, an item and a recipe each, on `PlanterBoxTileBase`. `Herb(kind)` becomes nullable (Hallowed and Stone allow no herb).
-- **Phase 3, three Harvester variants.** Tile, item, entity, registration (`HarvesterBoxRegistration`), Autohammer recipes (`AutohammerRecipeRegistry.AddHarvesterRecipes`), row and power systems as they are.
+- **Phase 2, three new planter boxes.** A tile, an item and a recipe each (Mushroom, Hallowed, Stone), on `PlanterBoxTileBase` and `PlanterBoxItemBase`. Every plain custom box registers in `NoHerbBoxes` from the tile base (none of them grows a herb). `HarvesterBoxKind` is NOT touched here: its additions moved to Phase 3.
+- **Phase 3, three Harvester variants.** Tile, item, entity, registration (`HarvesterBoxRegistration`), Autohammer recipes (`AutohammerRecipeRegistry.AddHarvesterRecipes`), row and power systems as they are. Add `Mushroom`, `Hallowed`, `Stone` to `HarvesterBoxKind` here. Careful: `PlanterItemName` only knows vanilla item names and falls back to Fireblossom for unknown kinds, `Herb(kind)` also falls back to Fireblossom (make it nullable), and `TreeSoil` falls back to 0.
 - **Phase 4, Mushroom growth.** Glowing mushrooms (tile 71) grow occasionally, giant mushroom trees from time to time. Rules in `HerbGrowthRules` style, harvest by the Harvester variant.
 - **Phase 5, trees.** Hallowed box: acorns give pearlwood (soil tile 109 in the tree table). Stone box: gemcorns only. Also make saplings work on the PLAIN custom planter boxes (today only the Harvester Box tree code handles a ModTile soil).
 - **Phase 6, spreading.** Probe first (`tools\planter_probe.ps1`): decompile `WorldGen.hardUpdateWorld` (callers and gating), `SpreadInfectionToNearbyTile`, tile 380 frame logic. Then: hook `hardUpdateWorld` so the three source boxes spread to nearby blocks (`SpreadInfectionToNearbyTile`), a conversion table for touching boxes, vanilla tile 380 styles converted through `TileLoader.RegisterConversion` delegates (style = `frameY / 18`), Harvester Box conversion (tile swap + entity swap + `HarvesterBoxRowSystem.MarkDirty`), the herb above breaks.
@@ -94,8 +94,8 @@ Spreading needs no extra art (converted boxes reuse the Corrupt, Crimson and Hal
 
 One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and done.
 
-- [~] Phase 1: empty box, Dryad shop, recipes (patch_planter_p1, 2026-11-22, applied UNTESTED)
-- [ ] Phase 2: three new planter boxes
+- [x] Phase 1: empty box, Dryad shop, recipes (patch_planter_p1, 2026-11-22, applied, TESTED 2026-11-22: Ismail, everything works)
+- [~] Phase 2: three new planter boxes (patch_planter_p2, 2026-11-22, applied UNTESTED). New `PlanterBoxItemBase`, `CustomPlanterBoxes.cs` (Mushroom, Hallowed, Stone item and tile), 3 more Work Bench recipes (5 empty + 2 mud + 1 mushroom grass seeds; 5 empty + 2 dirt + 1 hallowed seeds; 5 empty + 2 stone). Growth on them is not in yet: mushrooms Phase 4, trees Phase 5.
 - [ ] Phase 3: three Harvester variants
 - [ ] Phase 4: Mushroom growth
 - [ ] Phase 5: Hallowed and Stone trees
@@ -104,4 +104,4 @@ One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 
 ## 6. Next-chat prompt
 
-"Continue the planter box rework. Clone the repo, read docs/planter_boxes/ROADMAP.md (spec, Progress) and docs/harvester_box/ROADMAP.md only where needed. Phase 1 is applied; my test results are below if I give them (record them with a small patch first, do not guess). Then do Phase 2: the three new planter boxes (Mushroom, Hallowed, Stone)."
+"Continue the planter box rework. Clone the repo, read docs/planter_boxes/ROADMAP.md (spec, Progress) and docs/harvester_box/ROADMAP.md only where needed. Phase 2 is applied; my test results are below if I give them (record them with a small patch first, do not guess). Then do Phase 3: the three Harvester Box variants (Mushroom, Hallowed, Stone)."

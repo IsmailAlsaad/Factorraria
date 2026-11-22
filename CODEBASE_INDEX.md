@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-22 | 461 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-22 | 463 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -38,13 +38,14 @@ Project bases -> derived:
 - MotorTileEntityBase: IronMotorTileEntity, LeadMotorTileEntity
 - Particle: PuffExplosion
 - PipeTileBase: IronPipeTile, LeadPipeTile
-- PlanterBoxTileBase: EmptyPlanterBoxTile
+- PlanterBoxItemBase: EmptyPlanterBoxItem, HallowedPlanterBoxItem, MushroomPlanterBoxItem, StonePlanterBoxItem
+- PlanterBoxTileBase: EmptyPlanterBoxTile, HallowedPlanterBoxTile, MushroomPlanterBoxTile, StonePlanterBoxTile
 - PowerPoleTileBase: PlatinumPowerPoleTile, WoodenPowerPoleTile
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 - RecipeBookEntry: RecipeBookGridCell
 tModLoader/other bases -> project types:
 - ModSystem (123): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, HarvesterBoxHerbHooks, HarvesterBoxItemFall, HarvesterBoxNetSystem, HarvesterBoxPlacementPreview, HarvesterBoxRowSystem, HarvesterBoxTreeHooks, HarvesterBoxTreeNetSystem, HellstoneGrowNetSystem, HellstoneGrowthSystem, HerbGrowthHooks, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineSmartOutlineSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitBlueprint, MechSuitBuildNetSystem, MechSuitBuildSystem, MechSuitBuilderArms, MechSuitBuilderSystem, MechSuitDebugSystem, MechSuitHologramSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RecipeTabDiscoverySystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
-- ModItem (47): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, EmptyPlanterBoxItem, GoldPlateItem, GoldWireItem, HarvesterBoxItemBase, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenMinecartItem, WoodenPowerPoleItem
+- ModItem (47): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, HarvesterBoxItemBase, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlanterBoxItemBase, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenMinecartItem, WoodenPowerPoleItem
 - byte (36): AssemblyIssue, BlockState, BoxCycle, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, Phase, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState, UnitState
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
 - ModTile (18): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PlanterBoxTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
@@ -426,10 +427,13 @@ tModLoader/other bases -> project types:
 **IHarvesterBoxRow.cs**
   interface IHarvesterBoxRow
     +BeginClientStrike(int)
-**PlanterBoxRecipes.cs** uses: EmptyPlanterBoxItem, HarvesterBoxKind, HarvesterBoxKinds, ItemID, Main
+**PlanterBoxItemBase.cs** uses: Item, ItemID
+  abstract class PlanterBoxItemBase<TTile> : ModItem
+    +Texture:string[ov]
+**PlanterBoxRecipes.cs** uses: EmptyPlanterBoxItem, HallowedPlanterBoxItem, HarvesterBoxKind, HarvesterBoxKinds, ItemID, Main, MushroomPlanterBoxItem, StonePlanterBoxItem
   static class PlanterBoxRecipes
     +AddRecipes()[s]
-**PlanterBoxTileBase.cs** uses: Main, Tile, TileObjectData, WorldGen
+**PlanterBoxTileBase.cs** uses: HarvesterBoxRegistry, Main, Tile, TileObjectData, WorldGen
   abstract class PlanterBoxTileBase<TItem> : ModTile
     +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
 
@@ -1792,9 +1796,15 @@ tModLoader/other bases -> project types:
     +ReplaceTile(int,int,int,int,int)[ov]
 
 ### Content/Tiles/Farming/PlanterBoxes/
-**EmptyPlanterBox.cs** uses: HarvesterBoxRegistry, Item, ItemID, PlanterBoxTileBase
-  class EmptyPlanterBoxItem : ModItem
-    +Texture:string[ov]
+**CustomPlanterBoxes.cs** uses: PlanterBoxItemBase, PlanterBoxTileBase
+  class MushroomPlanterBoxItem : PlanterBoxItemBase<MushroomPlanterBoxTile>
+  class MushroomPlanterBoxTile : PlanterBoxTileBase<MushroomPlanterBoxItem>
+  class HallowedPlanterBoxItem : PlanterBoxItemBase<HallowedPlanterBoxTile>
+  class HallowedPlanterBoxTile : PlanterBoxTileBase<HallowedPlanterBoxItem>
+  class StonePlanterBoxItem : PlanterBoxItemBase<StonePlanterBoxTile>
+  class StonePlanterBoxTile : PlanterBoxTileBase<StonePlanterBoxItem>
+**EmptyPlanterBox.cs** uses: PlanterBoxItemBase, PlanterBoxTileBase
+  class EmptyPlanterBoxItem : PlanterBoxItemBase<EmptyPlanterBoxTile>
   class EmptyPlanterBoxTile : PlanterBoxTileBase<EmptyPlanterBoxItem>
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/

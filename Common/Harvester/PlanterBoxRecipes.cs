@@ -38,6 +38,11 @@ namespace Factorraria.Common.Harvester
             Make(HarvesterBoxKind.Corrupt, (ItemID.DirtBlock, 2), (ItemID.CorruptSeeds, 1));
             Make(HarvesterBoxKind.Crimson, (ItemID.CrimsandBlock, 2));
             Make(HarvesterBoxKind.Crimson, (ItemID.DirtBlock, 2), (ItemID.CrimsonSeeds, 1));
+
+            // Our own boxes.
+            MakeFromEmpty(ModContent.ItemType<MushroomPlanterBoxItem>(), (ItemID.MudBlock, 2), (ItemID.MushroomGrassSeeds, 1));
+            MakeFromEmpty(ModContent.ItemType<HallowedPlanterBoxItem>(), (ItemID.DirtBlock, 2), (ItemID.HallowedSeeds, 1));
+            MakeFromEmpty(ModContent.ItemType<StonePlanterBoxItem>(), (ItemID.StoneBlock, 2));
         }
 
         static void DisableVanillaRecipes(int resultItem)
@@ -55,7 +60,13 @@ namespace Factorraria.Common.Harvester
             if (!ItemID.Search.TryGetId(HarvesterBoxKinds.PlanterItemName(kind), out int box))
                 return;
 
-            Recipe recipe = Recipe.Create(box, 5).AddIngredient(ModContent.ItemType<EmptyPlanterBoxItem>(), 5);
+            MakeFromEmpty(box, extras);
+        }
+
+        // 5 empty planter boxes + the extras = 5 of the result, at a work bench.
+        static void MakeFromEmpty(int resultItem, params (int item, int count)[] extras)
+        {
+            Recipe recipe = Recipe.Create(resultItem, 5).AddIngredient(ModContent.ItemType<EmptyPlanterBoxItem>(), 5);
             foreach ((int item, int count) in extras)
                 recipe.AddIngredient(item, count);
 
