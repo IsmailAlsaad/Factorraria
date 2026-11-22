@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-21 | 456 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-22 | 457 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(262) Item(148) Player(113) FactorrariaNet(87) Tile(77) ItemID(74) WorldGen(72) BaseMachine(59) TileObjectData(41) TextureAssets(41) Sets(40) FactorrariaPacket(40) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(262) Item(147) Player(113) FactorrariaNet(87) Tile(77) ItemID(74) WorldGen(72) BaseMachine(59) TileObjectData(41) TextureAssets(41) Sets(40) FactorrariaPacket(40) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -49,8 +49,8 @@ tModLoader/other bases -> project types:
 - ModTile (17): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - UIElement (15): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookModeButton, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModPlayer (14): CartEquipPlayer, CartInteractionPlayer, CartRiderPlayer, CosmicRadiationPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
+- GlobalTile (13): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, PriorityConveyorSwapGlobalTile, SuperWeaponDropGuard, TilePlacedGlobalTile
 - GlobalItem (12): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, HarvesterBoxAcornItem, HerbTooltipGlobalItem, MagicMaterializerItemTooltip, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
-- GlobalTile (12): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, SuperWeaponDropGuard, TilePlacedGlobalTile
 - GlobalNPC (11): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
@@ -381,7 +381,7 @@ tModLoader/other bases -> project types:
 **HarvesterBoxRegistry.cs** uses: HarvesterBoxKind, HarvesterBoxKinds, HerbStyle, Item, ItemID
   static class HarvesterBoxRegistry
     +BoxHerbs:Dictionary<int, HerbStyle>[s] +PlanterHerbs:Dictionary<int, HerbStyle>[s] +BoxTreeSoil:Dictionary<int, int>[s] +Kinds:List<HarvesterBoxKind>[s] +Register(int,HarvesterBoxKind)[s] +Clear()[s] +ResolvePlanterStyles(Mod)[s]
-**HarvesterBoxRowSystem.cs** uses: BaseMachine, FactorrariaNet, HarvesterBoxRows, IRowMachine, MachinePlacement, Main
+**HarvesterBoxRowSystem.cs** uses: BaseMachine, FactorrariaNet, HarvesterBoxRows, IRowMachine, MachinePlacement, Main, PowerGridSystem
   class HarvesterBoxRowSystem : ModSystem
     +OnWorldLoad()[ov] +OnWorldUnload()[ov] +MarkDirty(int,int,bool)[s] +PostUpdateWorld()[ov]
 **HarvesterBoxRows.cs** uses: BaseMachine, HarvesterBoxRegistry, HarvesterBoxRowSystem, IRowMachine, Main, Tile, WorldGen
@@ -416,7 +416,7 @@ tModLoader/other bases -> project types:
   struct HerbConditions
     +CanGrow:bool +CanBloom:bool +Speed:float
   static class HerbGrowthRules
-    +GrowChance:float[s] +BloomChance:float[s] +WiltChance:float[s] +BiomeRadiusX:int[s] +BiomeRadiusY:int[s] +BiomeTileThreshold:int[s] +DaybloomMinSpeed:float[s] +DaybloomMaxSpeed:float[s] +BlinkrootMaxLight:float[s] +WaterleafDesertSpeed:float[s] +RainCloudRange:int[s] +SkyScanTiles:int[s] +IndoorSunFraction:float[s] +LampRadius:int[s] +Evaluate(HerbStyle,int,int)[s] +Step(int,int)[s] +IsSurface(int)[s] +IsUnderworld(int)[s] +IsUnderground(int)[s] +IsNight()[s] +HasWater(int,int)[s] +EstimateLight(int,int)[s]
+    +GrowChance:float[s] +BloomChance:float[s] +WiltChance:float[s] +BiomeRadiusX:int[s] +BiomeRadiusY:int[s] +BiomeTileThreshold:int[s] +DaybloomMinSpeed:float[s] +DaybloomMaxSpeed:float[s] +BlinkrootMaxLight:float[s] +WaterleafDesertSpeed:float[s] +RainCloudRange:int[s] +RainStrengthMin:float[s] +SkyScanTiles:int[s] +IndoorSunFraction:float[s] +LampRadius:int[s] +Evaluate(HerbStyle,int,int)[s] +Step(int,int)[s] +IsSurface(int)[s] +IsUnderworld(int)[s] +IsUnderground(int)[s] +IsNight()[s] +HasWater(int,int)[s] +EstimateLight(int,int)[s]
     struct BiomeCounts
       +Snow:int Jungle, Desert, Evil,
 **IHarvesterBoxRow.cs**
@@ -1311,9 +1311,9 @@ tModLoader/other bases -> project types:
     +Enabled:bool[s] +ProbeRetryTicks:int[s] +HasListedChestAbove(int,int)[s] +QueueProbe(int,int,bool)[s] +Entries:IEnumerable<ChestConveyorEntry>[s] +CycleMode(ChestConveyorEntry)[s] +TryCycleModeAt(Point,out ChestConveyorMode)[s] +SetReplicaEntry(Point,bool,ChestConveyorMode)[s] +ReplaceReplica(List<KeyValuePair<Point, ChestConveyorMode>>)[s] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
     struct Probe
       +Tile:Point +AllowAdd:bool +Age:int
-**ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet, Item, Main, Player, Tile, WorldGen
+**ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet, Main, Player, Tile, WorldGen
   class ConveyorPhysicsSystem : ModSystem
-    +ConveyorSpeed:float[c] +NpcSyncTicks:int[s] +ItemSyncTicks:int[s] +LogStats:bool[s] +PostUpdateNPCs()[ov]
+    +ConveyorSpeed:float[c] +NpcSyncTicks:int[s] +LogStats:bool[s] +PostUpdateNPCs()[ov]
 **CustomWireSystem.cs** uses: CopperWireItem, GoldWireItem, IronCutterItem, LeadCutterItem, Main, PowerGridSystem, TinWireItem
   enum CustomWireType : byte
     {None, Copper}
@@ -1543,7 +1543,7 @@ tModLoader/other bases -> project types:
     +Enabled:bool +SpawnChancePerTile:double +LinkedChance:double +ChestChance:double +TerrariumChance:double +GoldChestShare:double +MinSpacingTiles:int +MaxCartsPerTrack:int +FlatMarginPx:int +HeadroomRowsMargin:int +OreSlots:int +OreMin:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov]
 **OilWorldGen.cs** uses: Main, OilLiquid, Sets, Tile, TileObjectData, WorldGen
   class OilWorldGen : ModSystem
-    +Enabled:bool +PoolDepth:int +FloorThickness:int +RimMargin:int +MinPoolDepthHere:int +PocketAttemptsPerTile:double +PocketExponent:double +PocketMinDepthFraction:double +PocketRadiusXMin:double +PocketRadiusXMax:double +PocketRadiusYMin:double +PocketRadiusYMax:double +PocketMaxCells:int +ExcludeHive:bool +PoolFraction:double +ShellThickness:int +ShellFullFraction:double +ShellEndFraction:double +OvalInset:int +ScanMarginTop:int +ScanMarginBottom:int +MinColumnHeight:int +SmoothRadius:int +PocketMaxChance:double +PocketChanceExponent:double +PocketCellsBottom:int +PocketCellsTop:int +MaxLiquidBodyCells:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov] +PostWorldGen()[ov]
+    +Enabled:bool +RecaseAfterTracks:bool +PoolDepth:int +FloorThickness:int +RimMargin:int +MinPoolDepthHere:int +PocketAttemptsPerTile:double +PocketExponent:double +PocketMinDepthFraction:double +PocketRadiusXMin:double +PocketRadiusXMax:double +PocketRadiusYMin:double +PocketRadiusYMax:double +PocketMaxCells:int +ExcludeHive:bool +PoolFraction:double +ShellThickness:int +ShellFullFraction:double +ShellEndFraction:double +OvalInset:int +ScanMarginTop:int +ScanMarginBottom:int +MinColumnHeight:int +SmoothRadius:int +PocketMaxChance:double +PocketChanceExponent:double +PocketCellsBottom:int +PocketCellsTop:int +MaxLiquidBodyCells:int +ModifyWorldGenTasks(List<GenPass>,ref double)[ov] +PostWorldGen()[ov]
 **PostWorldGenEdits.cs** uses: CoalTile, Main, Tile, WorldGen
   class PostWorldGenEdits : ModSystem
     +Enabled:bool[s] +PostWorldGen()[ov]
@@ -1777,6 +1777,9 @@ tModLoader/other bases -> project types:
 **CounterClockwisePriorityConveyorTile.cs** uses: ConveyorFilterNet, Item, ItemID, Main, Player, VirtualItemSystem
   class CounterClockwisePriorityConveyorTile : ModTile
     +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
+**PriorityConveyorSwapGlobalTile.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, TilePlaced, VirtualItemSystem
+  class PriorityConveyorSwapGlobalTile : GlobalTile
+    +ReplaceTile(int,int,int,int,int)[ov]
 
 ### Content/Tiles/Machines/ElectricalConsumers/Autohammer/
 **AutohammerRecipeRegistry.cs** uses: BeeWheelItem, BlinkrootHarvesterBoxItem, ByriteAlloyItem, ByriteAlloySlabItem, ClockwisePriorityConveyor, CopperWireItem, CorruptHarvesterBoxItem, CounterClockwisePriorityConveyor, CrimsonHarvesterBoxItem, CrimtaneSheetItem, CustomRecipe, DaybloomHarvesterBoxItem, DemoniteSheetItem, FireblossomHarvesterBoxItem, GoldPlateItem, GoldWireItem, HarvesterBoxKind, HarvesterBoxKinds, IronCutterItem, ItemID, LeadCutterItem, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MoonglowHarvesterBoxItem, PlatinumPowerPoleItem, RecipeBook, RoyalHoneyItem, ShiverthornHarvesterBoxItem, SimpleCircuitItem, SunCapsuleItem, TinWireItem, WaterleafHarvesterBoxItem, WoodenMinecartItem, WoodenPowerPoleItem

@@ -22,6 +22,7 @@ namespace Factorraria.Common.WorldGeneration
     public class OilWorldGen : ModSystem
     {
         public bool Enabled = true;
+        public bool RecaseAfterTracks = true;         // lay the Sandstone shell a second time after every other pass: vanilla lays minecart tracks in "Micro Biomes" (after the first casing) and a track tunnel through the shell drains the pool in game
         public int PoolDepth = 14;                    // tiles of oil at the deepest point
         public int FloorThickness = 20;                // solid tiles kept under the pool
         public int RimMargin = 3;                     // solid desert kept between oil and the biome edge
@@ -99,6 +100,7 @@ namespace Factorraria.Common.WorldGeneration
                     tasks.Insert(i + 1, new PassLegacy("Factorraria Oil Probe (" + passName + ")", (p, c) => ProbeAfter(passName), 0.01));
                 }
 
+                tasks.Add(new PassLegacy("Factorraria Oil Recase", RecaseShell, 1));     // after the tracks: casing again, then the usual oil work below
                 tasks.Add(new PassLegacy("Factorraria Oil Restore", RestoreOil, 1));
                 tasks.Add(new PassLegacy("Factorraria Oil Check", CheckOil, 1));   // runs after every other pass
                 Mod.Logger.Info("[OilGen] pass inserted, anchor=" + usedAnchor);
@@ -743,6 +745,69 @@ namespace Factorraria.Common.WorldGeneration
                 Mod.Logger.Info("[OilGen] probe: oil in pool box went " + lastProbeOil + " -> " + oil + " during/after pass '" + passName + "', pool box now [" + CountLiquids(checkArea, probeOilType) + "]");
                 lastProbeOil = oil;
             }
+        }
+
+        // Second application of the casing. Vanilla lays minecart tracks inside "Micro Biomes", which runs AFTER our first pass, and a track
+        // tunnel through the shell lets the pool drain out in game. This pass runs after every other pass (so after all tracks) and writes every
+        // shell cell as Sandstone again. The Restore pass right after it then does the usual oil work: pool refill, stray tile removal, foreign
+        // liquid sweep. Cells that are already intact Sandstone are left alone.
+        private void RecaseShell(GenerationProgress progress, GameConfiguration configuration)
+        {
+            progress.Message = "Resealing the oil pool";
+
+            if (!RecaseAfterTracks || !ovalValid || footKind == null)
+                return;
+
+            int w = footKind.GetLength(0);
+            int h = footKind.GetLength(1);
+            int rewritten = 0;
+            int tracksReplaced = 0;
+            int objectsRemoved = 0;
+            List<Point> reframe = new List<Point>();
+
+            for (int i = 0; i < w; i++)
+            {
+                for (int j = 0; j < h; j++)
+                {
+                    if (footKind[i, j] != 1)
+                        continue;
+
+                    int x = footLeft + i;
+                    int y = footTop + j;
+                    if (!WorldGen.InWorld(x, y, 10))
+                        continue;
+
+                    Tile tile = Main.tile[x, y];
+                    bool intact = tile.HasTile && tile.TileType == TileID.Sandstone && !tile.IsActuated
+                        && !tile.IsHalfBlock && tile.Slope == SlopeType.Solid;
+                    if (intact)
+                    {
+                        if (tile.LiquidAmount != 0)
+                            tile.LiquidAmount = 0;
+                        continue;
+                    }
+
+                    if (tile.HasTile && tile.TileType == TileID.MinecartTrack)
+                        tracksReplaced++;
+                    else if (tile.HasTile && !Main.tileSolid[tile.TileType])
+                        objectsRemoved += RemoveObjectAt(x, y);   // whole object, so nothing half-destroyed is left in the shell
+
+                    tile.LiquidAmount = 0;
+                    tile.HasTile = true;
+                    tile.TileType = TileID.Sandstone;
+                    tile.IsActuated = false;
+                    tile.IsHalfBlock = false;
+                    tile.Slope = SlopeType.Solid;
+                    rewritten++;
+                    reframe.Add(new Point(x, y));
+                }
+            }
+
+            foreach (Point p in reframe)
+                WorldGen.SquareTileFrame(p.X, p.Y, true);
+
+            Mod.Logger.Info("[OilGen] recase (after all passes, so after the minecart tracks): rewrote " + rewritten + " shell cells, of which "
+                + tracksReplaced + " were minecart track, removed " + objectsRemoved + " other objects");
         }
 
         // Workaround: re-applies oil to every pool cell that no longer holds it, after all other passes.

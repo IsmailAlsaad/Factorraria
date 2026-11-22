@@ -13,15 +13,13 @@ namespace Factorraria.Common.Systems
         // 2.5f matches vanilla Terraria conveyor belt speed (pixels per frame)
         public const float ConveyorSpeed = 2.5f;
 
-        // Dedicated server: a carried NPC or item is sent to the clients (vanilla SyncNPC / SyncItem) every this many ticks,
-        // staggered per entity, so clients see it slide. Not const so hot reload can tweak them.
+        // Dedicated server: a carried NPC is sent to the clients (vanilla SyncNPC) every this many ticks,
+        // staggered per entity, so clients see it slide. Not const so hot reload can tweak it.
         public static int NpcSyncTicks = 3;
-        public static int ItemSyncTicks = 3;
 
         // TEMPORARY diagnostics (remove in Phase 10): the server logs what it pushed and sent every 5 seconds, only when it was not zero.
         public static bool LogStats = true;
         static int npcsPushed;
-        static int itemsPushed;
         static int syncsSent;
 
         static bool SyncDue(int index, int everyTicks)
@@ -66,33 +64,16 @@ namespace Factorraria.Common.Systems
                 }
             }
 
-            // 3. Push Dropped Vanilla Items: same rule as NPCs. The server pushes and sends them (vanilla SyncItem), the
-            //    clients do not push, so a client can never show an item somewhere the server has not put it.
-            if (FactorrariaNet.IsServerSide)
-            {
-                for (int i = 0; i < Main.maxItems; i++)
-                {
-                    Item item = Main.item[i];
-                    if (item.active && item.stack > 0 && TryApplyConveyorForce(item))
-                    {
-                        itemsPushed++;
-
-                        if (Main.netMode == NetmodeID.Server && !item.instanced && SyncDue(i, ItemSyncTicks))
-                        {
-                            NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i);
-                            syncsSent++;
-                        }
-                    }
-                }
-            }
+            // 3. Dropped vanilla items are deliberately NOT pushed. A belt never moves a dropped item: it rests where it
+            //    is until the belt tile under it is free, and VirtualItemSystem.ConvertItemsToVItems then turns it into a
+            //    vItem, which the vItem simulation moves. (Pushing it here made it slide past a full line of vItems.)
 
             if (Main.netMode == NetmodeID.Server && Main.GameUpdateCount % 300 == 0)
             {
-                if (LogStats && (npcsPushed > 0 || itemsPushed > 0))
-                    FactorrariaNet.Log("[Conveyor] last 5 s: NPC pushes " + npcsPushed + ", item pushes " + itemsPushed + ", sync packets sent " + syncsSent);
+                if (LogStats && npcsPushed > 0)
+                    FactorrariaNet.Log("[Conveyor] last 5 s: NPC pushes " + npcsPushed + ", sync packets sent " + syncsSent);
 
                 npcsPushed = 0;
-                itemsPushed = 0;
                 syncsSent = 0;
             }
         }
@@ -132,7 +113,8 @@ namespace Factorraria.Common.Systems
                     break;
                 }
 
-                // Vanilla moves a player standing on a vanilla belt by itself, but not NPCs or dropped items, so the mod pushes those.
+                // Vanilla moves a player standing on a vanilla belt by itself, but not NPCs, so the mod pushes NPCs. Dropped items are
+                // never pushed (see PostUpdateNPCs step 3), so only Player and NPC reach this point.
                 // (Before patch 2.5c this check stopped every non-item here, which left NPCs on vanilla belts alone.)
                 if (entity is Player)
                 {

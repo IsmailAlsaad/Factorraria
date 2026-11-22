@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Machines;
 using Factorraria.Common.Net;
+using Factorraria.Common.Systems;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
@@ -164,6 +165,11 @@ namespace Factorraria.Common.Harvester
             // A row entity left on a tile that is no longer a box (a kill the hook did not see).
             if (TileEntity.ByPosition.TryGetValue(p, out TileEntity stray) && stray is IRowMachine && stray is BaseMachine strayMachine && !strayMachine.IsTileValidForEntity(p.X, p.Y))
                 strayMachine.Kill(p.X, p.Y);
+
+            // A run can change length with no entity created or killed (a box placed at, or mined from, the end of a row keeps its entity). The
+            // power flood reads RowFirstX / RowLength from the tiles live, so the wires on the gained or lost tiles join or leave the grid only
+            // after a rebuild. Entity creation and kills already flag it; this covers the rest. Server and single-player only (clients never run it).
+            PowerGridSystem.gridNeedsRebuilding = true;
         }
 
         // Exactly one entity for the run left..right, at its left end, carrying the wire switch state of everything it replaces.

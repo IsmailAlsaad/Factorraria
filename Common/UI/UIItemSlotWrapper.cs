@@ -183,17 +183,29 @@ namespace Factorraria.Content.UI
                 item.favorited = true;
             }
 
-            if (useFavoriteLook)
+            // The UI batch samples with LinearClamp, which blurs the slot art and the item icon at the non-integer inventory scale. Draw the
+            // slot with point sampling (Main.DefaultSamplerState), like LiquidTankUIElement and ElectricityUIIcon do, then put the batch back.
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+            try
             {
-                // Slot index 10, not 0: vanilla draws the hotbar number (1-0) on inventory-context slots below 10.
-                favoriteDrawArray[10] = item;
-                ItemSlot.Draw(spriteBatch, favoriteDrawArray, ItemSlot.Context.InventoryItem, 10, drawPosition);
-                favoriteDrawArray[10] = null;
+                if (useFavoriteLook)
+                {
+                    // Slot index 10, not 0: vanilla draws the hotbar number (1-0) on inventory-context slots below 10.
+                    favoriteDrawArray[10] = item;
+                    ItemSlot.Draw(spriteBatch, favoriteDrawArray, ItemSlot.Context.InventoryItem, 10, drawPosition);
+                    favoriteDrawArray[10] = null;
+                }
+                else
+                {
+                    if (customDraw != null) customDraw(spriteBatch, dimesions, item);
+                    else ItemSlot.Draw(spriteBatch, ref item, context, drawPosition);
+                }
             }
-            else
+            finally
             {
-                if (customDraw != null) customDraw(spriteBatch, dimesions, item);
-                else ItemSlot.Draw(spriteBatch, ref item, context, drawPosition);
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
             }
 
             item.favorited = wasFavorited;

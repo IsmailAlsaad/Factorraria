@@ -49,11 +49,29 @@ namespace Factorraria.Common.UI.CustomUIElements
             ElectricityIconBackground = ModContent.Request<Texture2D>("Factorraria/Common/UI/CustomUIElements/Lightning_On_Background");
         }
 
+        // The UI batch samples with LinearClamp, which blurs this pixel-art icon whenever it is drawn at a non-integer scale. The liquid tank
+        // avoids that by re-beginning the batch with Main.DefaultSamplerState (point sampling); do the same around the whole icon.
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
             if (IsVisible != null && !IsVisible()) return;
 
             ShowHoverText();
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+            try
+            {
+                DrawIcon(spriteBatch);
+            }
+            finally
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+            }
+        }
+
+        private void DrawIcon(SpriteBatch spriteBatch)
+        {
 
             CalculatedStyle dimensions = GetDimensions();
             Vector2 drawPosition = dimensions.Position();
