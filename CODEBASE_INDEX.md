@@ -4,7 +4,7 @@ generated 2026-11-22 | 457 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(262) Item(147) Player(113) FactorrariaNet(87) Tile(77) ItemID(74) WorldGen(72) BaseMachine(59) TileObjectData(41) TextureAssets(41) Sets(40) FactorrariaPacket(40) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(23) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(262) Item(148) Player(113) FactorrariaNet(87) Tile(77) ItemID(74) WorldGen(72) BaseMachine(59) TileObjectData(41) TextureAssets(41) Sets(40) FactorrariaPacket(40) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -433,9 +433,9 @@ tModLoader/other bases -> project types:
 **RecipeArtDefinitions.cs** uses: RecipeArtRegistry
   static class RecipeArtDefinitions
     +Register()[s]
-**RecipeArtRegistry.cs**
+**RecipeArtRegistry.cs** uses: Factorraria
   static class RecipeArtRegistry
-    +Machine:string[c] +All:IReadOnlyList<Entry>[s] +Problems:IReadOnlyList<string>[s] +KeyFor(string)[s] +Contains(string)[s] +TryGet(string,out Entry)[s] +Register(string)[s] +Clear()[s]
+    +Machine:string[c] +All:IReadOnlyList<Entry>[s] +Problems:IReadOnlyList<string>[s] +KeyFor(string)[s] +CanonicalKey(string)[s] +Contains(string)[s] +TryGet(string,out Entry)[s] +Register(string)[s] +Clear()[s]
     class Entry
       +Name:string +TexturePath:string +Key:string +Texture:Texture2D
 **RecipeCatalog.cs** uses: CustomRecipe, FuelTable, LiquidFuelTable, LiquidIngredient, RecipeArtRegistry, RecipeBook, RecipeIngredient, RecipeKey, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeTabDefinitions, RecipeTabDiscovery, VanillaStationBooks
@@ -1311,9 +1311,9 @@ tModLoader/other bases -> project types:
     +Enabled:bool[s] +ProbeRetryTicks:int[s] +HasListedChestAbove(int,int)[s] +QueueProbe(int,int,bool)[s] +Entries:IEnumerable<ChestConveyorEntry>[s] +CycleMode(ChestConveyorEntry)[s] +TryCycleModeAt(Point,out ChestConveyorMode)[s] +SetReplicaEntry(Point,bool,ChestConveyorMode)[s] +ReplaceReplica(List<KeyValuePair<Point, ChestConveyorMode>>)[s] +LoadWorldData(TagCompound)[ov] +OnWorldUnload()[ov] +Unload()[ov]
     struct Probe
       +Tile:Point +AllowAdd:bool +Age:int
-**ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet, Main, Player, Tile, WorldGen
+**ConveyorPhysicsSystem.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, FactorrariaNet, Item, Main, Player, Tile, WorldGen
   class ConveyorPhysicsSystem : ModSystem
-    +ConveyorSpeed:float[c] +NpcSyncTicks:int[s] +LogStats:bool[s] +PostUpdateNPCs()[ov]
+    +ConveyorSpeed:float[c] +NpcSyncTicks:int[s] +Load()[ov] +Unload()[ov] +LogStats:bool[s] +PostUpdateNPCs()[ov]
 **CustomWireSystem.cs** uses: CopperWireItem, GoldWireItem, IronCutterItem, LeadCutterItem, Main, PowerGridSystem, TinWireItem
   enum CustomWireType : byte
     {None, Copper}

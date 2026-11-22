@@ -16,6 +16,25 @@ namespace Factorraria.Common.Systems
         // Dedicated server: a carried NPC is sent to the clients (vanilla SyncNPC) every this many ticks,
         // staggered per entity, so clients see it slide. Not const so hot reload can tweak it.
         public static int NpcSyncTicks = 3;
+        public override void Load()
+        {
+            On_Collision.StepConveyorBelt += SkipVanillaBeltForItems;
+        }
+
+        public override void Unload()
+        {
+            On_Collision.StepConveyorBelt -= SkipVanillaBeltForItems;
+        }
+
+        // Dropped items are never moved by a belt (see PostUpdateNPCs step 3): they wait for a free tile and become vItems.
+        // Players and NPCs still go through vanilla's own belt step.
+        static void SkipVanillaBeltForItems(On_Collision.orig_StepConveyorBelt orig, Entity entity, float gravDir)
+        {
+            if (entity is Item)
+                return;
+
+            orig(entity, gravDir);
+        }
 
         // TEMPORARY diagnostics (remove in Phase 10): the server logs what it pushed and sent every 5 seconds, only when it was not zero.
         public static bool LogStats = true;

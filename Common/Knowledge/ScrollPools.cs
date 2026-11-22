@@ -19,7 +19,7 @@ namespace Factorraria.Common.Knowledge
             public RecipeOutputKey Output;  // the product (item or liquid)
             public float Weight;            // relative, default 1
             public string ArtName;          // set for art entries (see RecipeArtRegistry); Machine and Output are unused then
-            public string CatalogKey => ArtName != null ? RecipeArtRegistry.KeyFor(ArtName) : RecipeCatalog.KeyFor(Machine, Output);
+            public string CatalogKey => ArtName != null ? RecipeArtRegistry.CanonicalKey(ArtName) : RecipeCatalog.KeyFor(Machine, Output);
         }
 
         readonly List<Entry> entries = new List<Entry>();
@@ -119,7 +119,7 @@ namespace Factorraria.Common.Knowledge
                 bool pooled = false;
                 foreach (ScrollPool pool in ordered)
                     foreach (ScrollPool.Entry e in pool.Entries)
-                        if (e.ArtName == art.Name) pooled = true;
+                        if (string.Equals(e.ArtName, art.Name, StringComparison.OrdinalIgnoreCase)) pooled = true;
                 if (!pooled)
                     warn($"[ScrollPools] art '{art.Name}' is in no scroll pool, so no parchment can ever unlock it (add .AddArt(\"{art.Name}\") to a pool in ScrollPoolDefinitions).");
             }

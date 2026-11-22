@@ -314,7 +314,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
         }
 
         /// <summary>R1.8: By Hand first, then the tabs in the order this character found them in this world (unrecorded ones last, in catalog order).</summary>
-        static int TabSort(RecipeBookPlayer player, string tab) => tab == VanillaStationBooks.HandName ? int.MinValue : player.TabRank(tab);
+        static int TabSort(RecipeBookPlayer player, string tab) => tab == VanillaStationBooks.HandName ? int.MinValue : tab == RecipeArtRegistry.Machine ? int.MaxValue : player.TabRank(tab);   // By Hand first, Notes (art) last
 
         // ------------------------------------------------------------------------------------------
         // Search

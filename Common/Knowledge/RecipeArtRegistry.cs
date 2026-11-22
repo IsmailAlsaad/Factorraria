@@ -28,6 +28,7 @@ namespace Factorraria.Common.Knowledge
 
             Asset<Texture2D> asset;
             bool requested;
+            bool alphaChecked;
 
             /// <summary>The PNG, or null if it does not exist (the book page then says the art is missing). Client only.</summary>
             public Texture2D Texture
@@ -37,15 +38,59 @@ namespace Factorraria.Common.Knowledge
                     if (!requested)
                     {
                         requested = true;
-                        if (ModContent.HasAsset(TexturePath)) asset = ModContent.Request<Texture2D>(TexturePath);
+                        if (ModContent.HasAsset(TexturePath)) asset = ModContent.Request<Texture2D>(TexturePath, AssetRequestMode.ImmediateLoad);
                     }
-                    return asset?.Value;
+                    Texture2D tex = asset?.Value;
+                    if (tex != null && !alphaChecked)
+                    {
+                        alphaChecked = true;
+                        EnsurePremultiplied(Name, tex);
+                    }
+                    return tex;
                 }
             }
         }
 
+        /// <summary>
+        /// The batch blends with premultiplied alpha (One, InverseSourceAlpha), so a texture holding STRAIGHT alpha draws its
+        /// semi-transparent pixels too bright, which reads as opaque. If any pixel has a channel above its alpha the data cannot
+        /// be premultiplied, so it is converted once here. Logs what it found (Logs\client.log, search "[Art]").
+        /// </summary>
+        static void EnsurePremultiplied(string name, Texture2D tex)
+        {
+            try
+            {
+                var px = new Microsoft.Xna.Framework.Color[tex.Width * tex.Height];
+                tex.GetData(px);
+                int semi = 0;
+                bool straight = false;
+                for (int i = 0; i < px.Length; i++)
+                {
+                    Microsoft.Xna.Framework.Color c = px[i];
+                    if (c.A > 0 && c.A < 255) semi++;
+                    if (c.R > c.A || c.G > c.A || c.B > c.A) straight = true;
+                }
+
+                if (straight)
+                {
+                    for (int i = 0; i < px.Length; i++)
+                    {
+                        Microsoft.Xna.Framework.Color c = px[i];
+                        px[i] = new Microsoft.Xna.Framework.Color(c.R * c.A / 255, c.G * c.A / 255, c.B * c.A / 255, (int)c.A);
+                    }
+                    tex.SetData(px);
+                }
+
+                ModContent.GetInstance<Factorraria>()?.Logger.Info("[Art] '" + name + "': " + semi + " semi-transparent pixels, " + (straight ? "data was straight alpha, premultiplied now" : "data already premultiplied"));
+            }
+            catch (System.Exception exception)
+            {
+                ModContent.GetInstance<Factorraria>()?.Logger.Warn("[Art] could not check the alpha of '" + name + "': " + exception.Message);
+            }
+        }
+
         static readonly List<Entry> entries = new List<Entry>();
-        static readonly Dictionary<string, Entry> byKey = new Dictionary<string, Entry>();
+        static readonly Dictionary<string, Entry> byKey = new Dictionary<string, Entry>(System.StringComparer.OrdinalIgnoreCase);   // "Thunder Cloud" finds "Thunder cloud"
         static readonly List<string> problems = new List<string>();
 
         public static IReadOnlyList<Entry> All => entries;
@@ -54,6 +99,9 @@ namespace Factorraria.Common.Knowledge
         public static IReadOnlyList<string> Problems => problems;
 
         public static string KeyFor(string name) => Machine + "|" + name;
+
+        /// <summary>The key as REGISTERED (the PNG's real spelling), whatever case the caller typed. Unknown names fall back to KeyFor.</summary>
+        public static string CanonicalKey(string name) => byKey.TryGetValue(KeyFor(name), out Entry e) ? e.Key : KeyFor(name);
 
         public static bool Contains(string catalogKey) => catalogKey != null && byKey.ContainsKey(catalogKey);
 

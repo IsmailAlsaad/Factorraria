@@ -66,7 +66,7 @@ namespace Factorraria.Common.Knowledge
             ScrollPools.Define("UnderworldShadowChests", "The paper is barely readable from all the burn marks").AddArt("Underworld lava", weight: 1f);
 
             ScrollPools.Define("SkyislandChests", "This was probably written using a feather from the local wildlife")
-                .AddArt("Thunder Cloud", weight: 1f)
+                .AddArt("Thunder cloud", weight: 1f)
                 .AddArt("Cascade", weight: 1f);
 
             ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a factory.")

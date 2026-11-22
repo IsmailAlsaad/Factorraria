@@ -576,7 +576,12 @@ namespace Factorraria.Common.UI.RecipeBookUI
             float fit = Math.Min(1f, Math.Min(body.Width / (float)tex.Width, body.Height / (float)tex.Height));
             int w = Math.Max(1, (int)(tex.Width * fit));
             int h = Math.Max(1, (int)(tex.Height * fit));
+            // Own batch so transparent pixels blend over the page whatever state the batch was left in. Point sampling at 1:1, linear when shrunk.
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, fit < 1f ? SamplerState.LinearClamp : SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
             sb.Draw(tex, new Rectangle(body.Center.X - w / 2, body.Center.Y - h / 2, w, h), Color.White);
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
         }
 
         void DrawPager(SpriteBatch sb, Rectangle r, int count)
