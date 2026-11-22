@@ -2386,7 +2386,7 @@ tModLoader/other bases -> project types:
 - docs/recipe_book/: ROADMAP.md
 - docs/super_weapons/: ROADMAP.md
 - docs/weapon_overhaul/: ROADMAP.md
-- tools/: harvester_probe.ps1, harvester_probe10.ps1, harvester_probe2.ps1, harvester_probe3.ps1, harvester_probe4.ps1, harvester_probe7.ps1, harvester_probe8.ps1, harvester_probe9.ps1, patch_engine.ps1, patch_planter_probe4.ps1, planter_probe4.ps1; harvester_probe10_report.txt, harvester_probe2_report.txt, harvester_probe3_report.txt, harvester_probe4_report.txt, harvester_probe7_report.txt, harvester_probe8_report.txt, harvester_probe9_report.txt, harvester_probe_report.txt
+- tools/: harvester_probe.ps1, harvester_probe10.ps1, harvester_probe2.ps1, harvester_probe3.ps1, harvester_probe4.ps1, harvester_probe7.ps1, harvester_probe8.ps1, harvester_probe9.ps1, patch_engine.ps1; harvester_probe10_report.txt, harvester_probe2_report.txt, harvester_probe3_report.txt, harvester_probe4_report.txt, harvester_probe7_report.txt, harvester_probe8_report.txt, harvester_probe9_report.txt, harvester_probe_report.txt
 - tools/cosmic_tests/: Program.cs.txt, Program_C2.cs.txt, README.txt
 - tools/flow_tests/: Program.cs.txt, README.txt, Stubs.cs.txt, TickTests.cs.txt, TopologyTests.cs.txt
 - tools/sw_tests/: Program.cs.txt, README.txt
