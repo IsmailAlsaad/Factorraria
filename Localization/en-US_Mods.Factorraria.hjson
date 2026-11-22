@@ -148,7 +148,7 @@ Items: {
 
 	HallowedPlanterBoxItem: {
 		DisplayName: Hallowed Planter Box
-		Tooltip: ""
+		Tooltip: "Can spread the hollow to nearby blocks"
 	}
 
 	StonePlanterBoxItem: {
@@ -168,17 +168,29 @@ Items: {
 
 	CorruptHarvesterBoxItem: {
 		DisplayName: Corrupt Harvester Box
-		Tooltip: Consumes power to automatically harvest plants and trees
+		Tooltip: 
+		'''
+		Consumes power to automatically harvest plants and trees
+		Can spread the corruption to nearby blocks
+		'''
 	}
 
 	CrimsonHarvesterBoxItem: {
 		DisplayName: Crimson Harvester Box
-		Tooltip: Consumes power to automatically harvest plants and trees
+		Tooltip: 
+		'''
+		Consumes power to automatically harvest plants and trees
+		Can spread the crimson to nearby blocks
+		'''
 	}
 
 	BlinkrootHarvesterBoxItem: {
 		DisplayName: Blinkroot Harvester Box
-		Tooltip: Consumes power to automatically harvest plants and trees
+		Tooltip: 
+		'''
+		Consumes power to automatically harvest plants and trees
+		Can convert to other harvester boxes when grass spreads on it
+		'''
 	}
 
 	WaterleafHarvesterBoxItem: {
