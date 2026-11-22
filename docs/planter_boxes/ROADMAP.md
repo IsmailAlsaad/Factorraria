@@ -100,8 +100,8 @@ One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [x] Phase 2 tweaks (patch_planter_tweaks, 2026-11-22, applied, TESTED 2026-11-22: Ismail, all passed): per-box break dust (`PlanterBoxDust`, `PlanterBoxGlobalTile` for the vanilla boxes by style, `PlanterBoxTileBase.DustTile`), Stone box Tink sound (`BreakSound`), and the Dryad shop puts the Empty box in the Daybloom Planter Box slot (`InsertBefore`).
 - [x] Phase 3: three Harvester variants (patch_planter_p3, 2026-11-22, applied, TESTED 2026-11-22: Ismail, all passed). `HarvesterBoxKind` gained Mushroom, Hallowed, Stone. `PlanterItemName` is now explicit per kind and answers null for the three (no Fireblossom fallback); `Herb(kind)` is `HerbStyle?` (null for the three); `HarvesterBoxRegistry.Register` puts herbless kinds in `NoHerbBoxes` and every box in the new `BoxTypes` set, which replaced `BoxHerbs` as the "is a Harvester Box" test in `HarvesterBoxRows.IsBoxTile`, `HarvesterBoxItemFall` and `HarvesterBoxTrees.ReframeBoxes`. `ResolvePlanterStyles` skips kinds without a vanilla box. `TreeSoil` stays 0 for them (Mushroom Phase 4, Hallowed and Stone Phase 5) and `PlanterDustTile` gives them their soil dust. New tile, item, entity and `RegisterVisual` each, plus an Autohammer recipe each (30 of the matching custom planter box + Staff of Regrowth + 12 Cog + 5 Simple Circuit). Harvester Boxes keep silver dust and Tink. They plant nothing and harvest nothing yet.
 - [x] Phase 4: Mushroom growth (patch_planter_p4, 2026-11-22, applied, TESTED 2026-11-22: Ismail, everything passed). Probes 1 and 5 done (findings in sections 5b and 5c). Glowing mushrooms and giant mushroom trees grow on the plain Mushroom box and the Mushroom Harvester Box from vanilla's random update (`MushroomGrowthRules`, `MushroomBoxGlobalTile`); `PlantCheck` is hooked so a mushroom survives on a box; the Mushroom box is now in `BoxTreeSoil` (soil 70), so the tree disguise code covers it; no sapling or acorn on mushroom soil (`CanPlantSapling`); the Harvester harvests mushrooms (`IsReadyToHarvest`, `HarvestMushroom`) and fells mushroom trees without replanting. Design and test list in section 5c.
-- [~] Phase 5a: Hallowed trees (patch_planter_p5a, 2026-11-22, applied, UNTESTED). `HarvesterBoxKind.Hallowed` and `HallowedPlanterBoxTile` now name soil 109 (`TreeSoil`), and `SaplingStyle(109)` is 5, so the plain Hallowed box and the Hallowed Harvester Box take acorns, grow hallowed trees (pearlwood) and the Harvester fells and replants them, all through the existing `HarvesterBoxTrees` code. No new hooks. Design and test list in section 5e.
-- [~] Phase 5b: Stone box gemcorns (patch_planter_p5b, 2026-11-22, applied, UNTESTED). Probe 6 done (findings in section 5g). The Stone box and the Stone Harvester Box stand in for stone (soil 1, passes `GemTreeGroundTest`), take ONLY gemcorns (never acorns), grow gem trees with vanilla's rules (underground only, Ismail's decision 2026-11-22) and the Harvester fells them and replants the same gem. New: gemcorn planting (`HarvesterBoxAcornItem`, `HarvesterBoxPlantAcorn` handler, `PlaceSapling(..., 590)`), `IsTreeTileType` knows tiles 583 to 589, `SideFits` for stone, `GetGemTreeFoliageData` and `TileFrame` hooks. Design and test list in section 5g.
+- [x] Phase 5a: Hallowed trees (patch_planter_p5a, 2026-11-22, applied, TESTED 2026-11-22: Ismail, all passed). `HarvesterBoxKind.Hallowed` and `HallowedPlanterBoxTile` now name soil 109 (`TreeSoil`), and `SaplingStyle(109)` is 5, so the plain Hallowed box and the Hallowed Harvester Box take acorns, grow hallowed trees (pearlwood) and the Harvester fells and replants them, all through the existing `HarvesterBoxTrees` code. No new hooks. Design and test list in section 5e.
+- [x] Phase 5b: Stone box gemcorns (patch_planter_p5b, 2026-11-22, applied, TESTED 2026-11-22: Ismail, all passed, including the gem sapling surviving on the box through the TileFrame hook). Probe 6 done (findings in section 5g). The Stone box and the Stone Harvester Box stand in for stone (soil 1, passes `GemTreeGroundTest`), take ONLY gemcorns (never acorns), grow gem trees with vanilla's rules (underground only, Ismail's decision 2026-11-22) and the Harvester fells them and replants the same gem. New: gemcorn planting (`HarvesterBoxAcornItem`, `HarvesterBoxPlantAcorn` handler, `PlaceSapling(..., 590)`), `IsTreeTileType` knows tiles 583 to 589, `SideFits` for stone, `GetGemTreeFoliageData` and `TileFrame` hooks. Design and test list in section 5g.
 - [ ] Phase 6: spreading (probe first)
 - [ ] Phase 7: polish and multiplayer test
 
@@ -137,7 +137,7 @@ Design (what patch_planter_p4 does):
 - Multiplayer: server and single-player only (the random update never runs on a client). A new mushroom goes out with `SendTileSquare`; `GrowTree` and the felling send their own tiles. The `PlantCheck` hook reads tile data, so clients agree. No new packet.
 - Left out on purpose: the paint copy of a new mushroom, and `TreeGrowFXCheck` (the growth sparkle), because their signatures were not verified.
 
-Test list for Phase 4 (Ismail): see the patch reply; record results here.
+Test results for Phase 4 (Ismail, 2026-11-22): everything passed.
 
 ## 5e. Phase 5a design (Hallowed trees) and what is known for 5b (gemcorns)
 
@@ -155,7 +155,7 @@ Known for 5b (Stone box, gemcorns), NOT yet verified in code:
 - Open design question for Ismail (5b): vanilla gem saplings only grow underground (below the surface). Decision 3 of the Harvester Box says to reuse vanilla rules, so a Stone box on the surface would never grow a gem tree. Keep that, or let the Stone box grow gem trees anywhere?
 - Planned shape of 5b (after the probe): the Stone box stands in for stone, the acorn item hook also takes the seven gemcorns (the Stone box takes ONLY gemcorns, every other tree box only acorns), `PlaceSapling` writes tile 590 with the gemcorn's style, `IsTreeTileType` learns tiles 583 to 589, and the felling and the drops are checked against the probe report.
 
-Test list for Phase 5a (Ismail): see the patch reply; record results here.
+Test results for Phase 5a (Ismail, 2026-11-22): all passed.
 
 ## 5g. Phase 5b probe 6 findings and design (tools\planter_probe6_report.txt, 2026-11-22)
 
@@ -175,11 +175,11 @@ Design (what patch_planter_p5b does):
 - Harvest: `IsTreeTileType` knows 583 to 589, so `IsTreeReady`, the harvest and the felling (`FellTree`, with the shake and drop capture) treat a gem tree like any other; the replant uses the felled tree's own gem style (`treeTile - 583`).
 - Multiplayer as in Phase 5: server and single-player grow and fell, tile squares carry the result, the existing `HarvesterBoxPlantAcorn` packet carries the planting (the server reads the held item, so a client cannot plant what it does not hold).
 
-Test list for Phase 5b (Ismail): see the patch reply; record results here.
+Test results for Phase 5b (Ismail, 2026-11-22): all passed. The `TileFrame` hook for gem saplings was the main risk (the probe did not show which function checks a gem sapling's soil); it works, so it stays.
 
 ## 5h. Next-chat prompt (current, after Phase 5b)
 
-"Continue the planter box rework (Factorraria). Clone the repo and read docs/planter_boxes/ROADMAP.md (spec, Progress, sections 5e to 5h, section 3 Phase 6). Phases 5a (Hallowed trees) and 5b (Stone box gemcorns) are applied; their test results are: <paste>. Record them first with a small patch, then start Phase 6 (spreading): write the probe first (tools\planter_probe7.ps1: `WorldGen.hardUpdateWorld` callers and gating, `SpreadInfectionToNearbyTile`, the infection and purity conversion code, tile 380 frame logic, `TileLoader.RegisterConversion`), and ask me to run it."
+"Continue the planter box rework (Factorraria). Clone the repo and read docs/planter_boxes/ROADMAP.md (spec, Progress, sections 5e to 5h, section 3 Phase 6). Phases 4, 5a (Hallowed trees) and 5b (Stone box gemcorns) are tested and done (all passed, recorded in Progress). Start Phase 6 (spreading) straight away: write the probe first (tools\planter_probe7.ps1: `WorldGen.hardUpdateWorld` callers and gating, `SpreadInfectionToNearbyTile`, the infection and purity conversion code, tile 380 frame logic, `TileLoader.RegisterConversion`), and ask me to run it."
 
 ## 5f. Next-chat prompt (OUTDATED: written after Phase 5a, use section 5h)
 
