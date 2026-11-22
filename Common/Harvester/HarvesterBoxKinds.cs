@@ -71,6 +71,19 @@ namespace Factorraria.Common.Harvester
             _ => 0
         };
 
+        // The tile whose break dust a planter box of that kind uses (the block or grass its soil is made of). Used for the vanilla planter boxes (PlanterBoxGlobalTile).
+        public static int PlanterDustTile(HarvesterBoxKind kind) => kind switch
+        {
+            HarvesterBoxKind.Daybloom => TileID.Grass,
+            HarvesterBoxKind.Moonglow => TileID.JungleGrass,
+            HarvesterBoxKind.Corrupt => TileID.CorruptGrass,
+            HarvesterBoxKind.Crimson => TileID.CrimsonGrass,
+            HarvesterBoxKind.Blinkroot => TileID.Dirt,
+            HarvesterBoxKind.Waterleaf => TileID.Sand,
+            HarvesterBoxKind.Shiverthorn => TileID.SnowBlock,
+            _ => TileID.Ash   // Fireblossom
+        };
+
         // The one herb that grows on that box.
         public static HerbStyle Herb(HarvesterBoxKind kind) => kind switch
         {

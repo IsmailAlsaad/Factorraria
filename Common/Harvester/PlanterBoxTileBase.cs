@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -17,6 +18,12 @@ namespace Factorraria.Common.Harvester
     public abstract class PlanterBoxTileBase<TItem> : ModTile where TItem : ModItem
     {
         public override string Texture => ModContent.HasAsset(base.Texture) ? base.Texture : "Terraria/Images/Tile_" + TileID.PlanterBox;
+
+        // The tile whose break dust this box uses (its own grass or block, see PlanterBoxDust). Wood unless a box says otherwise.
+        protected virtual int DustTile => TileID.WoodBlock;
+
+        // The sound when it is hit and broken.
+        protected virtual SoundStyle BreakSound => SoundID.Dig;
 
         public override void SetStaticDefaults()
         {
@@ -40,13 +47,20 @@ namespace Factorraria.Common.Harvester
             TileObjectData.addTile(Type);
 
             DustType = DustID.WoodFurniture;
-            HitSound = SoundID.Dig;
+            HitSound = BreakSound;
             AddMapEntry(new Color(160, 110, 60), CreateMapEntryName());
             RegisterItemDrop(ModContent.ItemType<TItem>());
 
             // No plain custom planter box grows a herb: HarvesterBoxRules.HerbAllowedOnSoil answers false for every herb (planting is refused, a herb that is somehow
             // there breaks). The herb boxes are the vanilla planter boxes and the Harvester Boxes.
             HarvesterBoxRegistry.NoHerbBoxes.Add(Type);
+        }
+
+        // Replace the default dust with the dust of this box's own soil.
+        public override bool CreateDust(int i, int j, ref int type)
+        {
+            PlanterBoxDust.Spawn(i, j, DustTile);
+            return false;
         }
 
         public override bool CanPlace(int i, int j)

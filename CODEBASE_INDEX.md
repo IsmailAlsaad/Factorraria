@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-22 | 463 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-22 | 464 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-Main(264) Item(150) Player(113) FactorrariaNet(87) Tile(78) ItemID(76) WorldGen(73) BaseMachine(59) TileObjectData(42) TextureAssets(41) Sets(40) FactorrariaPacket(40) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
+Main(265) Item(150) Player(113) FactorrariaNet(87) Tile(79) ItemID(77) WorldGen(74) BaseMachine(59) TileObjectData(42) TextureAssets(41) Sets(40) FactorrariaPacket(40) PacketDirection(35) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18)
 
 ## Inheritance
 Project bases -> derived:
@@ -50,8 +50,8 @@ tModLoader/other bases -> project types:
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
 - ModTile (18): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PlanterBoxTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - UIElement (15): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookModeButton, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
+- GlobalTile (14): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, PlanterBoxGlobalTile, PriorityConveyorSwapGlobalTile, SuperWeaponDropGuard, TilePlacedGlobalTile
 - ModPlayer (14): CartEquipPlayer, CartInteractionPlayer, CartRiderPlayer, CosmicRadiationPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
-- GlobalTile (13): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, PriorityConveyorSwapGlobalTile, SuperWeaponDropGuard, TilePlacedGlobalTile
 - GlobalItem (12): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, HarvesterBoxAcornItem, HerbTooltipGlobalItem, MagicMaterializerItemTooltip, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalNPC (12): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, DryadShopGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
@@ -359,7 +359,7 @@ tModLoader/other bases -> project types:
     +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +MarkIfNextToPipe(int,int)[s]
 
 ### Common/Harvester/
-**DryadShopGlobalNPC.cs** uses: EmptyPlanterBoxItem, Entry, Item
+**DryadShopGlobalNPC.cs** uses: EmptyPlanterBoxItem, Entry, Item, ItemID
   class DryadShopGlobalNPC : GlobalNPC
     +ModifyShop(NPCShop)[ov]
 **HarvesterBoxHerbHooks.cs** uses: HarvesterBoxRegistry, HarvesterBoxRules, Main, Tile, WorldGen
@@ -377,7 +377,7 @@ tModLoader/other bases -> project types:
   enum HarvesterBoxKind
     {Daybloom, Moonglow, Corrupt, Crimson, Blinkroot, Waterleaf, Shiverthorn, Fireblossom}
   static class HarvesterBoxKinds
-    +PlanterItemName(HarvesterBoxKind)[s] +TreeSoil(HarvesterBoxKind)[s] +SaplingStyle(int)[s] +Herb(HarvesterBoxKind)[s]
+    +PlanterItemName(HarvesterBoxKind)[s] +TreeSoil(HarvesterBoxKind)[s] +SaplingStyle(int)[s] +PlanterDustTile(HarvesterBoxKind)[s] +Herb(HarvesterBoxKind)[s]
 **HarvesterBoxPlacementPreview.cs** uses: HarvesterBoxRows, Item, Main, Player, TileObject
   interface IHarvesterGearPreview
     +DrawGearPreview(SpriteBatch,int,Vector2,Color)
@@ -385,7 +385,7 @@ tModLoader/other bases -> project types:
     +Load()[ov] +Unload()[ov]
 **HarvesterBoxRegistry.cs** uses: HarvesterBoxKind, HarvesterBoxKinds, HerbStyle, Item, ItemID
   static class HarvesterBoxRegistry
-    +BoxHerbs:Dictionary<int, HerbStyle>[s] +PlanterHerbs:Dictionary<int, HerbStyle>[s] +BoxTreeSoil:Dictionary<int, int>[s] +Kinds:List<HarvesterBoxKind>[s] +NoHerbBoxes:HashSet<int>[s] +Register(int,HarvesterBoxKind)[s] +Clear()[s] +ResolvePlanterStyles(Mod)[s]
+    +BoxHerbs:Dictionary<int, HerbStyle>[s] +PlanterHerbs:Dictionary<int, HerbStyle>[s] +BoxTreeSoil:Dictionary<int, int>[s] +Kinds:List<HarvesterBoxKind>[s] +NoHerbBoxes:HashSet<int>[s] +PlanterDustTiles:Dictionary<int, int>[s] +Register(int,HarvesterBoxKind)[s] +Clear()[s] +ResolvePlanterStyles(Mod)[s]
 **HarvesterBoxRowSystem.cs** uses: BaseMachine, FactorrariaNet, HarvesterBoxRows, IRowMachine, MachinePlacement, Main, PowerGridSystem
   class HarvesterBoxRowSystem : ModSystem
     +OnWorldLoad()[ov] +OnWorldUnload()[ov] +MarkDirty(int,int,bool)[s] +PostUpdateWorld()[ov]
@@ -427,15 +427,20 @@ tModLoader/other bases -> project types:
 **IHarvesterBoxRow.cs**
   interface IHarvesterBoxRow
     +BeginClientStrike(int)
+**PlanterBoxDust.cs** uses: HarvesterBoxRegistry, Main, Tile, WorldGen
+  static class PlanterBoxDust
+    +Spawn(int,int,int)[s]
+  class PlanterBoxGlobalTile : GlobalTile
+    +CreateDust(int,int,int,ref int)[ov]
 **PlanterBoxItemBase.cs** uses: Item, ItemID
   abstract class PlanterBoxItemBase<TTile> : ModItem
     +Texture:string[ov]
 **PlanterBoxRecipes.cs** uses: EmptyPlanterBoxItem, HallowedPlanterBoxItem, HarvesterBoxKind, HarvesterBoxKinds, ItemID, Main, MushroomPlanterBoxItem, StonePlanterBoxItem
   static class PlanterBoxRecipes
     +AddRecipes()[s]
-**PlanterBoxTileBase.cs** uses: HarvesterBoxRegistry, Main, Tile, TileObjectData, WorldGen
+**PlanterBoxTileBase.cs** uses: HarvesterBoxRegistry, Main, PlanterBoxDust, Tile, TileObjectData, WorldGen
   abstract class PlanterBoxTileBase<TItem> : ModTile
-    +Texture:string[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
+    +Texture:string[ov] #DustTile:int[v] #BreakSound:SoundStyle[v] +CreateDust(int,int,ref int)[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
 
 ### Common/Knowledge/
 **LiquidBiomeVisits.cs** uses: LiquidTypeRegistry, MachineBiome, Player, RecipeKnowledgeNet, RecipeKnowledgeSystem
@@ -1799,10 +1804,13 @@ tModLoader/other bases -> project types:
 **CustomPlanterBoxes.cs** uses: PlanterBoxItemBase, PlanterBoxTileBase
   class MushroomPlanterBoxItem : PlanterBoxItemBase<MushroomPlanterBoxTile>
   class MushroomPlanterBoxTile : PlanterBoxTileBase<MushroomPlanterBoxItem>
+    #DustTile:int[ov]
   class HallowedPlanterBoxItem : PlanterBoxItemBase<HallowedPlanterBoxTile>
   class HallowedPlanterBoxTile : PlanterBoxTileBase<HallowedPlanterBoxItem>
+    #DustTile:int[ov]
   class StonePlanterBoxItem : PlanterBoxItemBase<StonePlanterBoxTile>
   class StonePlanterBoxTile : PlanterBoxTileBase<StonePlanterBoxItem>
+    #DustTile:int[ov] #BreakSound:SoundStyle[ov]
 **EmptyPlanterBox.cs** uses: PlanterBoxItemBase, PlanterBoxTileBase
   class EmptyPlanterBoxItem : PlanterBoxItemBase<EmptyPlanterBoxTile>
   class EmptyPlanterBoxTile : PlanterBoxTileBase<EmptyPlanterBoxItem>

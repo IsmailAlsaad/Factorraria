@@ -18,13 +18,19 @@ namespace Factorraria.Common.Harvester
             if (shop.NpcType != NPCID.Dryad || shop.Name != "Shop")
                 return;
 
+            // The empty box takes the slot of the Daybloom Planter Box (the first herb box), so the shop order stays as vanilla has it. If vanilla ever
+            // stops selling that box it goes last instead.
+            int emptyBox = ModContent.ItemType<EmptyPlanterBoxItem>();
+            if (ItemID.Search.TryGetId("DayBloomPlanterBox", out int daybloomBox) && shop.TryGetEntry(daybloomBox, out _))
+                shop.InsertBefore(daybloomBox, emptyBox);
+            else
+                shop.Add(emptyBox);
+
             foreach (NPCShop.Entry entry in shop.Entries)
             {
                 if (entry.Item.createTile == TileID.PlanterBox)
                     entry.Disable();
             }
-
-            shop.Add<EmptyPlanterBoxItem>();
         }
     }
 }

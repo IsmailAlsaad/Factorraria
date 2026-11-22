@@ -24,6 +24,9 @@ namespace Factorraria.Common.Harvester
         // Plain custom planter box tiles that grow no herb at all (the Empty Planter Box). See HarvesterBoxRules.HerbAllowedOnSoil.
         public static HashSet<int> NoHerbBoxes = new();
 
+        // Vanilla planter box (tile 380) style -> the tile whose break dust it uses. Built next to PlanterHerbs, from the same planter box items.
+        public static Dictionary<int, int> PlanterDustTiles = new();
+
         public static void Register(int tileType, HarvesterBoxKind kind)
         {
             BoxHerbs[tileType] = HarvesterBoxKinds.Herb(kind);
@@ -42,6 +45,7 @@ namespace Factorraria.Common.Harvester
             BoxTreeSoil.Clear();
             Kinds.Clear();
             NoHerbBoxes.Clear();
+            PlanterDustTiles.Clear();
         }
 
         // Vanilla stores a planter box's style in frameY / 18 (WorldGen.PlaceTile sets frameY = 18 * style, KillTile drops item 3215 + frameY / 18),
@@ -49,6 +53,7 @@ namespace Factorraria.Common.Harvester
         public static void ResolvePlanterStyles(Mod mod)
         {
             PlanterHerbs.Clear();
+            PlanterDustTiles.Clear();
             foreach (HarvesterBoxKind kind in Kinds)
             {
                 string itemName = HarvesterBoxKinds.PlanterItemName(kind);
@@ -67,6 +72,7 @@ namespace Factorraria.Common.Harvester
                 }
 
                 PlanterHerbs[sample.placeStyle] = HarvesterBoxKinds.Herb(kind);
+                PlanterDustTiles[sample.placeStyle] = HarvesterBoxKinds.PlanterDustTile(kind);
             }
 
             mod.Logger.Info($"[Harvester] {PlanterHerbs.Count} vanilla planter box style(s) tied to a herb");

@@ -30,6 +30,7 @@ Ismail's spec (2026-11-22). Pair with `docs/harvester_box/ROADMAP.md` (the Harve
 | **Stone** (new) | 2 Stone Block. Supports only gemcorns (all the gem trees). |
 
 - Each of the three new boxes also gets a **Harvester Box** variant.
+- **Break dust and sound** (Ismail, 2026-11-22): every plain planter box breaks with the dust of its own soil: Daybloom grass, Moonglow jungle grass, Blinkroot dirt, Waterleaf sand, Shiverthorn snow, Fireblossom ash, Corrupt and Crimson their grass, Mushroom mushroom grass, Hallowed hallowed grass, Stone stone, Empty wood. The Stone box makes the Tink sound instead of Dig. The Harvester Boxes are unchanged (silver dust, Tink).
 - **Spreading**: the Corrupt, Crimson and Hallowed boxes (planter and Harvester alike) are infection SOURCES. They spread to nearby blocks AND to nearby planter boxes touching them (planter and Harvester Boxes both), converting them into the source's box.
   - Corrupt / Crimson convert: Daybloom, Waterleaf, Blinkroot, Moonglow, Shiverthorn, Mushroom, Stone.
   - Hallowed converts: Daybloom, Waterleaf, Blinkroot, Shiverthorn, Stone (and other nearby spreadable blocks).
@@ -96,6 +97,7 @@ One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 
 - [x] Phase 1: empty box, Dryad shop, recipes (patch_planter_p1, 2026-11-22, applied, TESTED 2026-11-22: Ismail, everything works)
 - [~] Phase 2: three new planter boxes (patch_planter_p2, 2026-11-22, applied UNTESTED). New `PlanterBoxItemBase`, `CustomPlanterBoxes.cs` (Mushroom, Hallowed, Stone item and tile), 3 more Work Bench recipes (5 empty + 2 mud + 1 mushroom grass seeds; 5 empty + 2 dirt + 1 hallowed seeds; 5 empty + 2 stone). Growth on them is not in yet: mushrooms Phase 4, trees Phase 5.
+- [~] Phase 2 tweaks (patch_planter_tweaks, 2026-11-22, applied UNTESTED): per-box break dust (`PlanterBoxDust`, `PlanterBoxGlobalTile` for the vanilla boxes by style, `PlanterBoxTileBase.DustTile`), Stone box Tink sound (`BreakSound`), and the Dryad shop puts the Empty box in the Daybloom Planter Box slot (`InsertBefore`).
 - [ ] Phase 3: three Harvester variants
 - [ ] Phase 4: Mushroom growth
 - [ ] Phase 5: Hallowed and Stone trees

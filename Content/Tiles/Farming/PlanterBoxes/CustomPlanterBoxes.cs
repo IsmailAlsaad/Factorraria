@@ -1,4 +1,6 @@
 ﻿using Factorraria.Common.Harvester;
+using Terraria.Audio;
+using Terraria.ID;
 
 namespace Factorraria.Content.Tiles.Farming.PlanterBoxes
 {
@@ -8,13 +10,24 @@ namespace Factorraria.Content.Tiles.Farming.PlanterBoxes
     // Stone grows the gem trees from gemcorns (Phase 5). None of them grows a herb.
     public class MushroomPlanterBoxItem : PlanterBoxItemBase<MushroomPlanterBoxTile> { }
 
-    public class MushroomPlanterBoxTile : PlanterBoxTileBase<MushroomPlanterBoxItem> { }
+    public class MushroomPlanterBoxTile : PlanterBoxTileBase<MushroomPlanterBoxItem>
+    {
+        protected override int DustTile => TileID.MushroomGrass;
+    }
 
     public class HallowedPlanterBoxItem : PlanterBoxItemBase<HallowedPlanterBoxTile> { }
 
-    public class HallowedPlanterBoxTile : PlanterBoxTileBase<HallowedPlanterBoxItem> { }
+    public class HallowedPlanterBoxTile : PlanterBoxTileBase<HallowedPlanterBoxItem>
+    {
+        protected override int DustTile => TileID.HallowedGrass;
+    }
 
     public class StonePlanterBoxItem : PlanterBoxItemBase<StonePlanterBoxTile> { }
 
-    public class StonePlanterBoxTile : PlanterBoxTileBase<StonePlanterBoxItem> { }
+    public class StonePlanterBoxTile : PlanterBoxTileBase<StonePlanterBoxItem>
+    {
+        protected override int DustTile => TileID.Stone;
+
+        protected override SoundStyle BreakSound => SoundID.Tink;
+    }
 }
