@@ -45,6 +45,12 @@ Ismail's spec (2026-11-22). Pair with `docs/harvester_box/ROADMAP.md` (the Harve
 - Evil boxes do not convert Hallowed boxes and the reverse. The Empty box never converts.
 - The Empty box sells for 5 silver (`EmptyPlanterBoxItem.SetDefaults`, tunable).
 
+### Seeds on Blinkroot boxes (Ismail, 2026-11-23)
+
+- The player can place seeds by hand on a Blinkroot box, planter box and Harvester Box alike, and the box turns into the seed's box: Grass Seeds -> Daybloom, Jungle Grass Seeds -> Moonglow, Corrupt Seeds -> Corrupt (Deathweed), Crimson Seeds -> Crimson (Deathweed), Hallowed Seeds -> Hallowed, Mushroom Grass Seeds -> Mushroom. A planter box stays a planter box and a Harvester Box stays a Harvester Box.
+- Each of those six boxes then also spreads to neighbouring Blinkroot boxes and converts them to its kind, in the same style as crimson and corruption spread to other blocks.
+- This is a first slice of the Phase 6 spreading (the conversion code is shared), not the whole of it.
+
 ## 2. Multiplayer design (rule 9)
 
 | Thing | Authority | Sync |
@@ -55,6 +61,8 @@ Ismail's spec (2026-11-22). Pair with `docs/harvester_box/ROADMAP.md` (the Harve
 | Mushroom growth, tree growth, harvests | Server and single-player | Tile changes via `NetMessage.SendTileSquare`; Harvester entities as today. |
 | Spreading | Server and single-player (vanilla `hardUpdateWorld` only runs there) | `SendTileSquare`; a converted Harvester Box swaps tile and entity, then `HarvesterBoxRowSystem.MarkDirty` reconciles the row. |
 | Sapling by right-click | Server validates | The existing acorn request packet in `Common/Net/`. |
+| Seed on a Blinkroot box | Server validates (reach, the held seed, the box) and converts | `PlanterBoxSeed = 68` (client -> server, tile x, y) in `Common/Net/PlanterBoxSeedNet.cs`; the tile goes out as a tile square, the seed slot with `SyncEquipment`. Single-player runs the handler directly. |
+| Seed-kind spreading | Server and single-player (vanilla's random update) | `SendTileSquare`; a converted Harvester Box queues `HarvesterBoxRowSystem.MarkDirty` and the row system fixes the entities. |
 
 ## 3. Phases (one patch each)
 
@@ -102,7 +110,8 @@ One line per phase. `[ ]` not started, `[~]` applied untested, `[x]` tested and 
 - [x] Phase 4: Mushroom growth (patch_planter_p4, 2026-11-22, applied, TESTED 2026-11-22: Ismail, everything passed). Probes 1 and 5 done (findings in sections 5b and 5c). Glowing mushrooms and giant mushroom trees grow on the plain Mushroom box and the Mushroom Harvester Box from vanilla's random update (`MushroomGrowthRules`, `MushroomBoxGlobalTile`); `PlantCheck` is hooked so a mushroom survives on a box; the Mushroom box is now in `BoxTreeSoil` (soil 70), so the tree disguise code covers it; no sapling or acorn on mushroom soil (`CanPlantSapling`); the Harvester harvests mushrooms (`IsReadyToHarvest`, `HarvestMushroom`) and fells mushroom trees without replanting. Design and test list in section 5c.
 - [x] Phase 5a: Hallowed trees (patch_planter_p5a, 2026-11-22, applied, TESTED 2026-11-22: Ismail, all passed). `HarvesterBoxKind.Hallowed` and `HallowedPlanterBoxTile` now name soil 109 (`TreeSoil`), and `SaplingStyle(109)` is 5, so the plain Hallowed box and the Hallowed Harvester Box take acorns, grow hallowed trees (pearlwood) and the Harvester fells and replants them, all through the existing `HarvesterBoxTrees` code. No new hooks. Design and test list in section 5e.
 - [x] Phase 5b: Stone box gemcorns (patch_planter_p5b, 2026-11-22, applied, TESTED 2026-11-22: Ismail, all passed, including the gem sapling surviving on the box through the TileFrame hook). Probe 6 done (findings in section 5g). The Stone box and the Stone Harvester Box stand in for stone (soil 1, passes `GemTreeGroundTest`), take ONLY gemcorns (never acorns), grow gem trees with vanilla's rules (underground only, Ismail's decision 2026-11-22) and the Harvester fells them and replants the same gem. New: gemcorn planting (`HarvesterBoxAcornItem`, `HarvesterBoxPlantAcorn` handler, `PlaceSapling(..., 590)`), `IsTreeTileType` knows tiles 583 to 589, `SideFits` for stone, `GetGemTreeFoliageData` and `TileFrame` hooks. Design and test list in section 5g.
-- [ ] Phase 6: spreading (probe first)
+- [~] Phase 5c: seeds on Blinkroot boxes and their spreading (patch_planter_seeds, 2026-11-23, applied UNTESTED). See 5i.
+- [ ] Phase 6: spreading (probe first). Partly done by Phase 5c: `PlanterBoxConversion` (`ConvertBox`, `TryGetKind`, `CanConvert`, `SpreadStep`) already converts boxes of both families; Phase 6 widens `CanConvert` to the spec table and adds the spread to nearby blocks. `WorldGen.AllowedToSpreadInfections` (a public static bool) and the infection helper `WorldGen.SpreadInfectionToNearbyTile` are visible in the tML source (patches/tModLoader/Terraria/WorldGen.TML.cs), so the probe only needs the vanilla grass and infection tick code.
 - [ ] Phase 7: polish and multiplayer test
 
 ## 5b. Phase 4 probe 1 findings (tools\planter_probe4_report.txt, tML 2026.08.3.0, decompiled WorldGen uses raw tile ids)
@@ -177,7 +186,19 @@ Design (what patch_planter_p5b does):
 
 Test results for Phase 5b (Ismail, 2026-11-22): all passed. The `TileFrame` hook for gem saplings was the main risk (the probe did not show which function checks a gem sapling's soil); it works, so it stays.
 
-## 5h. Next-chat prompt (current, after Phase 5b)
+## 5i. Phase 5c as built (patch_planter_seeds, 2026-11-23): applied, UNTESTED
+
+- `Common/Harvester/PlanterBoxConversion.cs`: `SeedKind(itemType)` (the six seeds), `TryGetKind(x, y)` (kind and family of the box at a tile: vanilla planter box by style = frameY / 18, plain custom box by tile, Harvester Box by tile), `CanConvert(source, target)` (the table: a seed kind converts Blinkroot, nothing else yet), `ConvertBox(x, y, kind)` (server and single-player: vanilla box -> style change, or our plain Mushroom / Hallowed tile; Harvester Box -> tile swap + `HarvesterBoxRowSystem.MarkDirty` + the row entity on that tile is killed first, wire state carried; then `SquareTileFrame` and a 3x3 `SendTileSquare`), `SpreadStep(x, y)`. Tunables (expression-bodied): `SpreadChance` 1, `SpreadRange` 2, `ChainChance` 0.5.
+- Spread: `PlanterBoxSpreadGlobalTile.RandomUpdate` (vanilla's random update, which runs for tile 380 too: tML calls `TileLoader.RandomUpdate` for every tile type) calls `SpreadStep` for any planter box or Harvester Box. A source (Daybloom, Moonglow, Corrupt, Crimson, Hallowed, Mushroom) picks a random convertible box in the 5x5 square around it, converts it into its own kind (the target keeps its family), and with a 1 in 2 chance tries again, like vanilla's infection. The three infections (Corrupt, Crimson, Hallowed) obey `WorldGen.AllowedToSpreadInfections` (Journey mode switch), skip half the updates after Plantera and respect sunflowers (a Sunflower within 2 tiles of the target). Not copied from vanilla: the Hardmode requirement and the chlorophyte protection (the spec lists neither). A vanilla pick lands on a given tile about every 9 minutes, so one spread step per source takes about that long at `SpreadChance` 1.
+- Seeds: `PlanterBoxSeedItem` (GlobalItem on the six seeds, `UseItem`) -> `PlanterBoxSeedNetSystem.TrySeedAtCursor` (reach check, Blinkroot check, Dig sound) -> `PlanterBoxSeed = 68` -> `HandleSeed` (server: reach, held seed, Blinkroot box, `ConvertBox`, one seed taken, `SyncEquipment`). Same shape as the acorn packet.
+- `HarvesterBoxRegistry` gained `KindTiles`, `TileKinds`, `PlainKindTiles`, `PlainKinds`, `PlanterStyleKinds`, `KindPlanterStyles`; `PlanterBoxTileBase` has a `BoxKind` virtual (Mushroom, Hallowed, Stone set it).
+- A herb or sapling standing on a converted box is handled by the existing rules: a herb that is not the new box's herb breaks (CheckAlch hook, triggered by the re-frame); a sapling or tree is re-checked by the tree hooks like on any soil change. Both are on the test list.
+
+Tests (Ismail): 1. Seed on a plain Blinkroot box: each of the six seeds turns it into the right box (look, break dust, and it drops that box's own item when mined), one seed used, a lone box and a box inside a row. 2. Same on a Blinkroot Harvester Box, including the first box of a row, a middle box and the last box: the row splits, power and the wire switch still work, the new boxes get their own entity (right-click shows the electric panel). 3. Seed on a non-Blinkroot box: nothing happens and no seed is used. 4. A Blinkroot herb on the box when it converts: it breaks. A sapling or tree on it: no crash. 5. Spread: set `SpreadChance` high and `ChainChance` high in `PlanterBoxConversion`, hot reload, wait: the Daybloom, Moonglow, Corrupt, Crimson, Hallowed and Mushroom boxes (planter and Harvester) convert Blinkroot boxes within 2 tiles; other kinds are never converted; a Sunflower next to the target stops the three infections; the Journey mode "stop biome spread" switch stops them too. 6. Dedicated server: seed from a client, spread while the client watches, a late joiner sees the converted boxes, no stale Harvester Box replica (check the power panel on a converted box).
+
+Next-chat prompt: "Continue the planter box rework (Factorraria). Clone the repo and read docs/planter_boxes/ROADMAP.md (spec incl. 'Seeds on Blinkroot boxes', Progress, section 5i). Phase 5c (patch_planter_seeds) is applied; my test results are: <paste>. Record them first with a small patch. Then continue Phase 6 (spreading): `PlanterBoxConversion.CanConvert` is the table to widen, and the probe only needs the vanilla grass and infection tick code."
+
+## 5h. Next-chat prompt (OUTDATED: written after Phase 5b, use section 5i)
 
 "Continue the planter box rework (Factorraria). Clone the repo and read docs/planter_boxes/ROADMAP.md (spec, Progress, sections 5e to 5h, section 3 Phase 6). Phases 4, 5a (Hallowed trees) and 5b (Stone box gemcorns) are tested and done (all passed, recorded in Progress). Start Phase 6 (spreading) straight away: write the probe first (tools\planter_probe7.ps1: `WorldGen.hardUpdateWorld` callers and gating, `SpreadInfectionToNearbyTile`, the infection and purity conversion code, tile 380 frame logic, `TileLoader.RegisterConversion`), and ask me to run it."
 

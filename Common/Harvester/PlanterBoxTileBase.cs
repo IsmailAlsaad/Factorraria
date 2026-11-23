@@ -29,6 +29,9 @@ namespace Factorraria.Common.Harvester
         // grass), the Hallowed box (hallowed grass) and the Stone box (stone, gemcorns only) say something.
         protected virtual int TreeSoil => 0;
 
+        // The kind this plain box stands for, so seeds and spreading can turn other boxes into it (PlanterBoxConversion). null = it is not a kind (the Empty box).
+        protected virtual HarvesterBoxKind? BoxKind => null;
+
         public override void SetStaticDefaults()
         {
             Main.tileFrameImportant[Type] = true;
@@ -61,6 +64,12 @@ namespace Factorraria.Common.Harvester
 
             if (TreeSoil != 0)
                 HarvesterBoxRegistry.BoxTreeSoil[Type] = TreeSoil;
+
+            if (BoxKind.HasValue)
+            {
+                HarvesterBoxRegistry.PlainKinds[Type] = BoxKind.Value;
+                HarvesterBoxRegistry.PlainKindTiles[BoxKind.Value] = Type;
+            }
         }
 
         // Replace the default dust with the dust of this box's own soil.

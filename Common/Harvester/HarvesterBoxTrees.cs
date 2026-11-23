@@ -42,7 +42,6 @@ namespace Factorraria.Common.Harvester
         // Vanilla's own tree growth for a soil that needs no sapling (the mushroom tree): GrowTree takes the SOIL row. Same OwnGrowth flag as GrowOwn.
         static bool GrowOwnTree(int x, int soilY)
         {
-            HarvesterBoxTreeHooks.DbgReset();
             OwnGrowth = true;
             try
             {
@@ -60,7 +59,6 @@ namespace Factorraria.Common.Harvester
 
         static bool GrowOwn(int x, int bottomY, bool underground)
         {
-            HarvesterBoxTreeHooks.DbgReset();
             OwnGrowth = true;
             try
             {
@@ -451,8 +449,6 @@ namespace Factorraria.Common.Harvester
                     Disguised.Add(DisguiseKey(fakeX, soilY));
                 }
 
-                HarvesterBoxTreeHooks.DbgHeader = $"sapling ({x},{bottomY}) soil={soilType} boxTile={Main.tile[x, soilY].TileType} disguised[mid={middle.Active} L={left.Active} R={right.Active} LL={farLeft.Active} RR={farRight.Active}] fakeX={(fakeX == int.MinValue ? "none" : fakeX.ToString())} sideFits[L={SideFits(x - 1, soilY, soilType)} R={SideFits(x + 1, soilY, soilType)}]";
-
                 if (!needsSide || fakeX != int.MinValue || SideFits(x - 1, soilY, soilType) || SideFits(x + 1, soilY, soilType))
                     grew = mushroom ? GrowOwnTree(x, soilY) : GrowOwn(x, bottomY, underground);
             }
@@ -474,7 +470,6 @@ namespace Factorraria.Common.Harvester
                 End(middle, true);
             }
 
-            HarvesterBoxTreeHooks.DbgEnd(x, bottomY, grew);
             return grew;
         }
 
@@ -531,10 +526,8 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.GetCommonTreeFoliageData += GetCommonTreeFoliageDataHook;
             On_TileDrawing.GetTreeVariant += GetTreeVariantHook;
             On_WorldGen.AttemptToGrowTreeFromSapling += AttemptToGrowTreeFromSaplingHook;
-            On_WorldGen.CheckTree += CheckTreeDebugHook;
-            On_WorldGen.KillTile += KillTileDebugHook;
             On_WorldGen.KillTile += KillTileTreeHook;
-            On_WorldGen.CheckTree += CheckTreeBoxHook;   // added after the debug CheckTree hook on purpose, so it wraps it
+            On_WorldGen.CheckTree += CheckTreeBoxHook;
             On_WorldGen.KillTile_GetTreeDrops += KillTileGetTreeDropsHook;
             On_WorldGen.CheckPalmTree += CheckPalmTreeBoxHook;
             On_TileDrawing.GetPalmTreeVariant += GetPalmTreeVariantHook;
@@ -552,8 +545,6 @@ namespace Factorraria.Common.Harvester
             On_WorldGen.GetCommonTreeFoliageData -= GetCommonTreeFoliageDataHook;
             On_TileDrawing.GetTreeVariant -= GetTreeVariantHook;
             On_WorldGen.AttemptToGrowTreeFromSapling -= AttemptToGrowTreeFromSaplingHook;
-            On_WorldGen.CheckTree -= CheckTreeDebugHook;
-            On_WorldGen.KillTile -= KillTileDebugHook;
             On_WorldGen.KillTile -= KillTileTreeHook;
             On_WorldGen.CheckTree -= CheckTreeBoxHook;
             On_WorldGen.KillTile_GetTreeDrops -= KillTileGetTreeDropsHook;
@@ -571,7 +562,7 @@ namespace Factorraria.Common.Harvester
         // world is empty, so it runs out of the world). Felling and hand-breaking disguise a fixed window of columns around the trunk, but a cascade also kills
         // pieces of neighbouring trees (the 10:54 log threw while the staff felled a crowded row). So this hook wraps each call: the box under the trunk
         // beside the piece and the piece's own column are disguised for that one call, whichever piece it is and wherever the call comes from. It reads and
-        // swaps tile data only, so it is the same on every side. If it still throws, the piece is logged (EnableDebugs) before the exception goes on.
+        // swaps tile data only, so it is the same on every side.
         static void KillTileGetTreeDropsHook(On_WorldGen.orig_KillTile_GetTreeDrops orig, int i, int j, Tile tileCache, ref bool bonusWood, ref int dropItem, ref int secondaryItem)
         {
             if (HarvesterBoxRegistry.BoxTreeSoil.Count == 0 || !WorldGen.InWorld(i, j, 4))
@@ -600,10 +591,6 @@ namespace Factorraria.Common.Harvester
 
                 if (!columnSafe)
                 {
-                    global::Factorraria.Content.Configs.FurnaceOffsetConfig cfgSkip = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
-                    if (cfgSkip != null && cfgSkip.EnableDebugs)
-                        DbgLog($"GetTreeDrops ORPHAN piece ({i},{j}) [{Dbg(i, j)}] had no box and its column has no ground; plain wood, vanilla skipped, sideDepth={HarvesterBoxTrees.SideDepth}");
-
                     dropItem = ItemID.Wood;
                     secondaryItem = 0;
                     bonusWood = false;
@@ -616,10 +603,6 @@ namespace Factorraria.Common.Harvester
                 }
                 catch (IndexOutOfRangeException)
                 {
-                    global::Factorraria.Content.Configs.FurnaceOffsetConfig cfgOrphan = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
-                    if (cfgOrphan != null && cfgOrphan.EnableDebugs)
-                        DbgLog($"GetTreeDrops ORPHAN piece ({i},{j}) [{Dbg(i, j)}] had no box; plain wood, sideDepth={HarvesterBoxTrees.SideDepth}");
-
                     dropItem = ItemID.Wood;
                     secondaryItem = 0;
                     bonusWood = false;
@@ -632,14 +615,6 @@ namespace Factorraria.Common.Harvester
             try
             {
                 orig(i, j, tileCache, ref bonusWood, ref dropItem, ref secondaryItem);
-            }
-            catch (IndexOutOfRangeException)
-            {
-                global::Factorraria.Content.Configs.FurnaceOffsetConfig cfg = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
-                if (cfg != null && cfg.EnableDebugs)
-                    DbgLog($"GetTreeDrops STILL threw for piece ({i},{j}) [{Dbg(i, j)}], box ({boxX},{boxY}) [{Dbg(boxX, boxY)}], column below: [{Dbg(i, j + 1)}] [{Dbg(i, boxY)}] [{Dbg(i, boxY + 1)}], disguised {list.Count} tile(s), sideDepth={HarvesterBoxTrees.SideDepth}");
-
-                throw;
             }
             finally
             {
@@ -830,132 +805,6 @@ namespace Factorraria.Common.Harvester
             {
                 HarvesterBoxTrees.RunAsTreeSoilWithSides(boxX, boxY, () => orig(i, j, fail, effectOnly, noItem));
                 return;
-            }
-
-            orig(i, j, fail, effectOnly, noItem);
-        }
-
-        // ---------------------------------------------------------------- TEMPORARY growth debug (patch_harvester_trees_debug). Remove once the growth bug is fixed.
-        // Only active while EnableDebugs is on AND our own growth call runs. Logs the first kills of tree tiles during one growth: which tile died, and the
-        // CheckTree call that killed it (its tile, frame and the four tiles around it, with their type, frame, active and actuated state; BOX! marks a box
-        // tile that was NOT disguised at that moment).
-        public static string DbgHeader = "";
-        static int dbgKills;
-        static readonly System.Collections.Generic.List<string> dbgStack = new System.Collections.Generic.List<string>();
-
-        static bool DbgActive
-        {
-            get
-            {
-                if (!HarvesterBoxTrees.OwnGrowth)
-                    return false;
-
-                global::Factorraria.Content.Configs.FurnaceOffsetConfig cfg = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
-                return cfg != null && cfg.EnableDebugs;
-            }
-        }
-
-        public static void DbgReset()
-        {
-            dbgKills = 0;
-            dbgStack.Clear();
-        }
-
-        static string DbgShort(int x, int y)
-        {
-            if (!WorldGen.InWorld(x, y, 1))
-                return "out";
-
-            Tile t = Main.tile[x, y];
-            return t.HasTile ? "t" + t.TileType + ":" + t.TileFrameX + "," + t.TileFrameY : "-";
-        }
-
-        static string Dbg(int x, int y)
-        {
-            if (!WorldGen.InWorld(x, y, 1))
-                return "outside";
-
-            Tile t = Main.tile[x, y];
-            if (!t.HasTile)
-                return "air";
-
-            string s = "t" + t.TileType + " f" + t.TileFrameX + "," + t.TileFrameY + (t.IsActuated ? " ACTUATED" : "");
-            if (HarvesterBoxRegistry.BoxTreeSoil.ContainsKey(t.TileType))
-                s += " BOX!";
-
-            return s;
-        }
-
-        static string DbgCheck(int i, int j)
-        {
-            return $"({i},{j}) [{Dbg(i, j)}] up[{Dbg(i, j - 1)}] below[{Dbg(i, j + 1)}] left[{Dbg(i - 1, j)}] right[{Dbg(i + 1, j)}]";
-        }
-
-        static void DbgLog(string text)
-        {
-            ModContent.GetInstance<HarvesterBoxTreeHooks>().Mod.Logger.Warn("[HarvesterTrees] " + text);
-        }
-
-        // One line after every growth attempt: did it grow, how many tree tiles were killed, and does the column have a top.
-        public static void DbgEnd(int x, int bottomY, bool grew)
-        {
-            global::Factorraria.Content.Configs.FurnaceOffsetConfig cfg = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
-            if (cfg == null || !cfg.EnableDebugs)
-                return;
-
-            int height = 0;
-            string topFrame = "none";
-            for (int k = 0; k <= 80 && WorldGen.InWorld(x, bottomY - k, 1); k++)
-            {
-                Tile t = Main.tile[x, bottomY - k];
-                if (!t.HasTile || t.TileType != TileID.Trees)
-                    break;
-
-                height++;
-                topFrame = t.TileFrameX + "," + t.TileFrameY;
-            }
-
-            // A tree whose highest trunk tile is not a top frame (22,198+): dump the tiles around its top (5 columns, rows from 3 above the top to 1 below it).
-            string grid = "";
-            if (!topFrame.StartsWith("22,"))
-            {
-                int topY = bottomY - Math.Max(0, height - 1);
-                for (int yy = topY - 3; yy <= topY + 1; yy++)
-                {
-                    grid += "\n    y" + yy + ":";
-                    for (int xx = x - 2; xx <= x + 2; xx++)
-                        grid += " [" + DbgShort(xx, yy) + "]";
-                }
-            }
-
-            DbgLog($"result for ({x},{bottomY}): grew={grew} killsLogged={dbgKills} trunkTiles={height} highestTrunkFrame={topFrame} ready={HarvesterBoxTrees.IsTreeReady(x, bottomY)} | {DbgHeader}{grid}");
-        }
-
-        static void CheckTreeDebugHook(On_WorldGen.orig_CheckTree orig, int i, int j)
-        {
-            if (!DbgActive)
-            {
-                orig(i, j);
-                return;
-            }
-
-            dbgStack.Add(DbgCheck(i, j));
-            try
-            {
-                orig(i, j);
-            }
-            finally
-            {
-                dbgStack.RemoveAt(dbgStack.Count - 1);
-            }
-        }
-
-        static void KillTileDebugHook(On_WorldGen.orig_KillTile orig, int i, int j, bool fail, bool effectOnly, bool noItem)
-        {
-            if (dbgStack.Count > 0 && dbgKills < 8 && DbgActive && WorldGen.InWorld(i, j, 1) && Main.tile[i, j].HasTile && Main.tile[i, j].TileType == TileID.Trees)
-            {
-                dbgKills++;
-                DbgLog($"KILL #{dbgKills} tree tile {Dbg(i, j)} at ({i},{j}), checkDepth={dbgStack.Count}\n    innermost CheckTree: {dbgStack[dbgStack.Count - 1]}\n    outermost CheckTree: {dbgStack[0]}\n    growth: {DbgHeader}");
             }
 
             orig(i, j, fail, effectOnly, noItem);

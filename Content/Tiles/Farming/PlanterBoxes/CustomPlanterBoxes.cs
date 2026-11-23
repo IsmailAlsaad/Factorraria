@@ -15,6 +15,8 @@ namespace Factorraria.Content.Tiles.Farming.PlanterBoxes
         protected override int DustTile => TileID.MushroomGrass;
 
         protected override int TreeSoil => TileID.MushroomGrass;   // glowing mushrooms and giant mushroom trees grow on it (MushroomGrowthRules)
+
+        protected override HarvesterBoxKind? BoxKind => HarvesterBoxKind.Mushroom;
     }
 
     public class HallowedPlanterBoxItem : PlanterBoxItemBase<HallowedPlanterBoxTile> { }
@@ -24,6 +26,8 @@ namespace Factorraria.Content.Tiles.Farming.PlanterBoxes
         protected override int DustTile => TileID.HallowedGrass;
 
         protected override int TreeSoil => TileID.HallowedGrass;   // acorns planted on it grow hallowed trees: pearlwood (same tree code as every tree box, HarvesterBoxTrees)
+
+        protected override HarvesterBoxKind? BoxKind => HarvesterBoxKind.Hallowed;
     }
 
     public class StonePlanterBoxItem : PlanterBoxItemBase<StonePlanterBoxTile> { }
@@ -35,5 +39,7 @@ namespace Factorraria.Content.Tiles.Farming.PlanterBoxes
         protected override SoundStyle BreakSound => SoundID.Tink;
 
         protected override int TreeSoil => TileID.Stone;   // gemcorns planted on it grow gem trees (vanilla rules: underground only); plain acorns are refused (HarvesterBoxTrees.CanPlantSapling)
+
+        protected override HarvesterBoxKind? BoxKind => HarvesterBoxKind.Stone;
     }
 }

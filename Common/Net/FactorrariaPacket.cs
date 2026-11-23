@@ -74,6 +74,7 @@ namespace Factorraria.Common.Net
         MechBuildCancel = 67,         // client -> server: "end my build job" (Mech Suit build tool patch M4; empty payload; the server ends the job of the sender and the arm state packet tells every client)
         MechBuildConsumed = 65,       // server -> owner: "the build job took these items from your inventory (slot, item type, count)": the owner's client removes them too, vanilla ignores server writes to the own inventory (patch M3)
         HarvesterBoxPlantAcorn = 66,  // client -> server: "plant an acorn on the Harvester Box at tile (x, y)": the server checks reach, the held acorn and the free tiles, then writes the sapling and takes the acorn (Harvester Box patch P5; payload int x, int y)
+        PlanterBoxSeed = 68,          // client -> server: "use the seed I hold on the Blinkroot box at tile (x, y)": the server checks reach, the held seed and the box, turns the box into the seed's box and takes one seed (planter box seeds patch)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

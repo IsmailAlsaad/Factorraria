@@ -31,9 +31,20 @@ namespace Factorraria.Common.Harvester
         // Vanilla planter box (tile 380) style -> the tile whose break dust it uses. Built next to PlanterHerbs, from the same planter box items.
         public static Dictionary<int, int> PlanterDustTiles = new();
 
+        // Kind <-> tile, so a box can be turned into another kind (PlanterBoxConversion). The Harvester Boxes fill these in Register; the plain custom boxes
+        // (Mushroom, Hallowed, Stone) fill the Plain pair from PlanterBoxTileBase; the vanilla planter box (tile 380) fills the style pair in ResolvePlanterStyles.
+        public static Dictionary<HarvesterBoxKind, int> KindTiles = new();
+        public static Dictionary<int, HarvesterBoxKind> TileKinds = new();
+        public static Dictionary<HarvesterBoxKind, int> PlainKindTiles = new();
+        public static Dictionary<int, HarvesterBoxKind> PlainKinds = new();
+        public static Dictionary<int, HarvesterBoxKind> PlanterStyleKinds = new();
+        public static Dictionary<HarvesterBoxKind, int> KindPlanterStyles = new();
+
         public static void Register(int tileType, HarvesterBoxKind kind)
         {
             BoxTypes.Add(tileType);
+            KindTiles[kind] = tileType;
+            TileKinds[tileType] = kind;
 
             HerbStyle? herb = HarvesterBoxKinds.Herb(kind);
             if (herb.HasValue)
@@ -57,6 +68,12 @@ namespace Factorraria.Common.Harvester
             Kinds.Clear();
             NoHerbBoxes.Clear();
             PlanterDustTiles.Clear();
+            KindTiles.Clear();
+            TileKinds.Clear();
+            PlainKindTiles.Clear();
+            PlainKinds.Clear();
+            PlanterStyleKinds.Clear();
+            KindPlanterStyles.Clear();
         }
 
         // Vanilla stores a planter box's style in frameY / 18 (WorldGen.PlaceTile sets frameY = 18 * style, KillTile drops item 3215 + frameY / 18),
@@ -65,6 +82,8 @@ namespace Factorraria.Common.Harvester
         {
             PlanterHerbs.Clear();
             PlanterDustTiles.Clear();
+            PlanterStyleKinds.Clear();
+            KindPlanterStyles.Clear();
             foreach (HarvesterBoxKind kind in Kinds)
             {
                 string itemName = HarvesterBoxKinds.PlanterItemName(kind);
@@ -88,6 +107,8 @@ namespace Factorraria.Common.Harvester
 
                 PlanterHerbs[sample.placeStyle] = herb.Value;
                 PlanterDustTiles[sample.placeStyle] = HarvesterBoxKinds.PlanterDustTile(kind);
+                PlanterStyleKinds[sample.placeStyle] = kind;
+                KindPlanterStyles[kind] = sample.placeStyle;
             }
 
             mod.Logger.Info($"[Harvester] {PlanterHerbs.Count} vanilla planter box style(s) tied to a herb");
