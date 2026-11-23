@@ -2,6 +2,7 @@
 using Factorraria.Content.VirtualItems;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.GameContent.UI;
 using Terraria.ID;
 using Terraria.Localization;
 
@@ -9,7 +10,7 @@ namespace Factorraria.Content.Tiles.Conveyors
 {
     // Hover text for the two priority conveyor tiles (drawn at the cursor by ElectricityHoverTip, which supports colours).
     // Client-side only: the filter networks are replicated to clients (ConveyorFilterNet), so TryGetConveyorFilter works in multiplayer too.
-    //   filter set:  "{item name}: High" / "Others: Low"
+    //   filter set:  "{item name}: High" / "Others: Low"   (item name in its rarity colour)
     //   no filter:   "All Items: Medium"
     public static class PriorityConveyorHover
     {
@@ -25,7 +26,7 @@ namespace Factorraria.Content.Tiles.Conveyors
             if (VirtualItemSystem.TryGetConveyorFilter(i, j, out int filterItemId))
             {
                 ElectricityHoverTip.ShowLines(
-                    new[] { (Lang.GetItemNameValue(filterItemId) + ": ", white), ("High", high) },
+                    new[] { (Lang.GetItemNameValue(filterItemId), ItemRarity.GetColor(ContentSamples.ItemsByType[filterItemId].rare)), (": ", white), ("High", high) },
                     new[] { ("Others: ", white), ("Low", low) });
             }
             else
