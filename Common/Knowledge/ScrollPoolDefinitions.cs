@@ -5,6 +5,7 @@ using Factorraria.Content.Items.Liquids.Motors;
 using Factorraria.Content.Items.Liquids.Pipes;
 using Factorraria.Content.Items.Machines;
 using Factorraria.Content.Items.Materials;
+using Factorraria.Content.Items.Wires;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
 using Factorraria.Content.Tiles.SuperWeapons.MissileDrill;
 using Factorraria.Content.Tiles.SuperWeapons.MissileTank;
@@ -79,6 +80,8 @@ namespace Factorraria.Common.Knowledge
                 // Autohammer
                 .Add("Autohammer", ModContent.ItemType<ClockwisePriorityConveyor>(), weight: 0.5f)         // the two priority conveyors
                 .Add("Autohammer", ModContent.ItemType<CounterClockwisePriorityConveyor>(), weight: 0.5f)  // share ONE normal slot (0.5 + 0.5)
+                .Add("Autohammer", ModContent.ItemType<CopperWireItem>(), weight: 0.5f)
+                .Add("Autohammer", ModContent.ItemType<TinWireItem>(), weight: 0.5f)
                 .Add("Autohammer", ModContent.ItemType<MechanicalArmItem>())
                 .Add("Autohammer", ItemID.SkeletronHand)
                 .Add("Autohammer", ItemID.Autohammer)
