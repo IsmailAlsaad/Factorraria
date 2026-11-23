@@ -25,6 +25,7 @@
             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Shimmer statue");
             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Thunder cloud");
             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Trains");
+            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Power");
         }
     }
 }

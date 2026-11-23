@@ -93,7 +93,7 @@ namespace Factorraria.Common.Knowledge
                 .Add("Autohammer", ModContent.ItemType<BeeWheelItem>())
                 .Add("Autohammer", ModContent.ItemType<MeteoritePanelItem>())
                 .Add("Autohammer", ModContent.ItemType<SunCapsuleItem>())
-                
+
                 // Harvester box
                 .Add("Autohammer", ModContent.ItemType<BlinkrootHarvesterBoxItem>())
 
@@ -121,7 +121,8 @@ namespace Factorraria.Common.Knowledge
                 .Add("VanillaDemonAltar", ItemID.LesionStation)   // the Decay Chamber item itself
 
                 .AddArt("ShimmerStatue", weight: 1f)   // the Shimmer Statue art (registered in RecipeArtDefinitions)
-                .AddArt("Trains", weight: 1f);          // the Trains art (registered in RecipeArtDefinitions)
+                .AddArt("Trains", weight: 1f)          // the Trains art (registered in RecipeArtDefinitions)
+                .AddArt("Power", weight: 10f);           // the Power art (registered in RecipeArtDefinitions)
             // The Decay Chamber item (Lesion Station) is a hand-craft at the Demon Altar (RecipeSystem.cs), so no machine book has it. It is in
             // the pool through the vanilla Demon Altar tab (VanillaStationBooks): "VanillaDemonAltar" is that tab's catalog name.
         }
