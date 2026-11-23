@@ -325,10 +325,12 @@ tModLoader/other bases -> project types:
 ### Common/Crafting/
 **TimedCraftingPlayer.cs** uses: TimedCraftingSystem
   class TimedCraftingPlayer : ModPlayer
-    +Active:Recipe +Progress:int +Duration:int +Fraction:float +Repeat:bool +HitTimer:int +FreshStart:bool +Toggle(Recipe,bool) +NotifyFocusClick(Recipe,bool) +Cancel() +PostUpdate()[ov]
+    +Active:Recipe +Progress:int +Duration:int +Fraction:float +Repeat:bool +HitTimer:int +FreshStart:bool +Toggle(Recipe,bool) +NotifyFocusClick(Recipe) +Cancel() +PostUpdate()[ov]
 **TimedCraftingSystem.cs** uses: OutputSlotAnimation, TimedCraftingPlayer
   class TimedCraftingSystem : ModSystem
-    +baseTicks:float +ticksPerUnit:float +countBonus:float +minTicks:int +maxTicks:int +grayMultiplier:float +rarityMultipliers:float +craftingListContext:int +hitTicks:int +hammerTexturePath:string +hammerPivotNudge:Vector2 +hammerAnchor:Vector2 +hammerScale:float +hammerRaisedAngle:float +hammerHitAngle:float +hammerRecoilEnd:float +hammerSwingStart:float +tinkSound:SoundStyle +completeSoundPath:string +completeSoundVolume:float +deliveringCraft:bool +DrawSlotOrig(SpriteBatch,ref Item,int,Vector2,Color) +DrawSlotHook(DrawSlotOrig,SpriteBatch,ref Item,int,Vector2,Color) +Load()[ov] +RarityMultiplier(int) +GetDurationTicks(Recipe) +HammerAngle(TimedCraftingPlayer) +PlayCompleteSound()
+    +baseTicks:float +ticksPerUnit:float +countBonus:float +minTicks:int +maxTicks:int +grayMultiplier:float +rarityMultipliers:float +craftingListContext:int +hitTicks:int +hammerTexturePath:string +hammerPivotNudge:Vector2 +hammerAnchor:Vector2 +hammerScale:float +hammerRaisedAngle:float +hammerHitAngle:float +hammerWindupExtra:float +hammerHangCreep:float +hammerHitStop:float +hammerLiftEnd:float +hammerSwingStart:float +hammerSquash:float +hammerSquashEnd:float +hammerStretch:float +hammerSquashAxis:Vector2 +hammerStrikePoint:Vector2 +sparkCountMin:int +sparkCountMax:int +sparkAngleMin:float +sparkAngleMax:float +sparkSpeedMin:float +sparkSpeedMax:float +sparkLifeMin:int +sparkLifeMax:int +sparkGravity:float +sparkDrag:float +sparkStreak:float +sparkColors:Color +tinkSound:SoundStyle +completeSoundPath:string +completeSoundVolume:float +deliveringCraft:bool +DrawSlotOrig(SpriteBatch,ref Item,int,Vector2,Color) +DrawSlotHook(DrawSlotOrig,SpriteBatch,ref Item,int,Vector2,Color) +Load()[ov] +RarityMultiplier(int) +GetDurationTicks(Recipe) +HammerAngle(TimedCraftingPlayer) +SpawnHitSparks() +PostUpdateEverything()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +PlayCompleteSound()
+    class CraftSpark
+      +pos:Vector2 +vel:Vector2 +life:int +maxLife:int +size:float +color:Color
 
 ### Common/Globals/
 **BossLootGlobal.cs** ns!=Factorraria.Common.NPCs
@@ -2234,6 +2236,7 @@ tModLoader/other bases -> project types:
 - .cursor/rules/: factorraria.mdc, liquids-networks.mdc, machines.mdc, tml-api.mdc
 - .cursor/tml/: EXAMPLEMOD_INDEX.md, TML_API_INDEX.md, TML_MAP.md
 - Assets/Atlases/: Particles_Atlas.json
+- Assets/Sounds/: CraftingComplete.wav
 - Assets/Sounds/AshGrow/: AshGrow1.wav, AshGrow2.wav, AshGrow3.wav
 - Assets/Sounds/GeigerCounterClick/: GeigerCounterClick1.wav, GeigerCounterClick10.wav, GeigerCounterClick2.wav, GeigerCounterClick3.wav, GeigerCounterClick4.wav, GeigerCounterClick5.wav, GeigerCounterClick6.wav, GeigerCounterClick7.wav, GeigerCounterClick8.wav, GeigerCounterClick9.wav
 - Assets/Sounds/HellstoneGrow/: HellstoneGrow1.wav, HellstoneGrow2.wav, HellstoneGrow3.wav

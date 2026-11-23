@@ -27,24 +27,29 @@ namespace Factorraria.Common.Crafting
         /// <summary>Ticks since the last hammer hit (0..hitTicks). Drives the hammer animation and decides when the next chunk lands.</summary>
         public int HitTimer { get; private set; }
 
-        /// <summary>True until the first hit of a freshly started craft, so the hammer starts raised instead of recoiling from a hit that never happened.</summary>
+        /// <summary>True until the first hit of a freshly started craft, so the hammer starts by lifting off the slot instead of doing a hit-stop for a hit that never happened.</summary>
         public bool FreshStart { get; private set; }
 
-        Recipe pendingSwitch;
-        bool pendingSwitchRepeat;
+        uint startTick;
+        uint focusChangeTick = uint.MaxValue;
 
         public void Toggle(Recipe recipe, bool repeat)
         {
+            // A click that only moved the list focus must never start a craft, whichever hook ran first this frame.
+            if (focusChangeTick == Main.GameUpdateCount) return;
+
             if (ReferenceEquals(Active, recipe)) Cancel();
             else Start(recipe, repeat);
         }
 
-        /// <summary>A click moved the list focus to another product. If a craft is running this becomes cancel + start.</summary>
-        public void NotifyFocusClick(Recipe recipe, bool repeat)
+        /// <summary>
+        /// A click moved the list focus to another product. A running craft is cancelled and nothing new starts:
+        /// the next left/right click on the newly focused product starts it.
+        /// </summary>
+        public void NotifyFocusClick(Recipe recipe)
         {
-            if (Active == null || ReferenceEquals(Active, recipe)) return;
-            pendingSwitch = recipe;
-            pendingSwitchRepeat = repeat;
+            focusChangeTick = Main.GameUpdateCount;
+            if (Active != null && (!ReferenceEquals(Active, recipe) || startTick == focusChangeTick)) Cancel();
         }
 
         public void Cancel()
@@ -54,7 +59,6 @@ namespace Factorraria.Common.Crafting
             Duration = 0;
             HitTimer = 0;
             FreshStart = false;
-            pendingSwitch = null;
         }
 
         void Start(Recipe recipe, bool repeat)
@@ -65,6 +69,7 @@ namespace Factorraria.Common.Crafting
             Duration = ModContent.GetInstance<TimedCraftingSystem>().GetDurationTicks(recipe);
             HitTimer = 0;
             FreshStart = true;
+            startTick = Main.GameUpdateCount;
             SoundEngine.PlaySound(SoundID.MenuTick);
         }
 
@@ -77,14 +82,6 @@ namespace Factorraria.Common.Crafting
         public override void PostUpdate()
         {
             if (Player.whoAmI != Main.myPlayer || Main.dedServ) return;
-
-            if (pendingSwitch != null)
-            {
-                Recipe next = pendingSwitch;
-                bool nextRepeat = pendingSwitchRepeat;
-                Cancel();
-                if (Main.playerInventory && IsFocusedAndAvailable(next)) Start(next, nextRepeat);
-            }
 
             if (Active == null) return;
 
@@ -105,6 +102,7 @@ namespace Factorraria.Common.Crafting
             FreshStart = false;
             Progress = Math.Min(Progress + hitTicks, Duration);
             SoundEngine.PlaySound(system.tinkSound);
+            system.SpawnHitSparks();
             if (Progress >= Duration) Finish();
         }
 
