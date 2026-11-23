@@ -325,10 +325,10 @@ tModLoader/other bases -> project types:
 ### Common/Crafting/
 **TimedCraftingPlayer.cs** uses: TimedCraftingSystem
   class TimedCraftingPlayer : ModPlayer
-    +Active:Recipe +Progress:int +Duration:int +Fraction:float +Repeat:bool +Toggle(Recipe,bool) +NotifyFocusClick(Recipe,bool) +Cancel() +PostUpdate()[ov]
+    +Active:Recipe +Progress:int +Duration:int +Fraction:float +Repeat:bool +HitTimer:int +FreshStart:bool +Toggle(Recipe,bool) +NotifyFocusClick(Recipe,bool) +Cancel() +PostUpdate()[ov]
 **TimedCraftingSystem.cs** uses: OutputSlotAnimation, TimedCraftingPlayer
   class TimedCraftingSystem : ModSystem
-    +baseTicks:float +ticksPerUnit:float +countBonus:float +minTicks:int +maxTicks:int +grayMultiplier:float +rarityMultipliers:float +craftingListContext:int +deliveringCraft:bool +DrawSlotOrig(SpriteBatch,ref Item,int,Vector2,Color) +DrawSlotHook(DrawSlotOrig,SpriteBatch,ref Item,int,Vector2,Color) +Load()[ov] +RarityMultiplier(int) +GetDurationTicks(Recipe)
+    +baseTicks:float +ticksPerUnit:float +countBonus:float +minTicks:int +maxTicks:int +grayMultiplier:float +rarityMultipliers:float +craftingListContext:int +hitTicks:int +hammerTexturePath:string +hammerPivotNudge:Vector2 +hammerAnchor:Vector2 +hammerScale:float +hammerRaisedAngle:float +hammerHitAngle:float +hammerRecoilEnd:float +hammerSwingStart:float +tinkSound:SoundStyle +completeSoundPath:string +completeSoundVolume:float +deliveringCraft:bool +DrawSlotOrig(SpriteBatch,ref Item,int,Vector2,Color) +DrawSlotHook(DrawSlotOrig,SpriteBatch,ref Item,int,Vector2,Color) +Load()[ov] +RarityMultiplier(int) +GetDurationTicks(Recipe) +HammerAngle(TimedCraftingPlayer) +PlayCompleteSound()
 
 ### Common/Globals/
 **BossLootGlobal.cs** ns!=Factorraria.Common.NPCs
@@ -494,7 +494,7 @@ tModLoader/other bases -> project types:
       +Name:string +Id:int +Tile:int +Items:HashSet<int> +ItemList:int +Inherited:bool +Split:bool +Owner:string +Inherits:List<Tab> +Marker:int
   class RecipeTabDiscoverySystem : ModSystem
     +PostUpdateEverything()[ov] +OnWorldUnload()[ov]
-**ScrollPoolDefinitions.cs** uses: BeeWheelItem, BlinkrootHarvesterBoxItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, IronMotorItem, IronPipeItem, LeadMotorItem, LeadPipeItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, SunCapsuleItem, WoodenPowerPoleItem
+**ScrollPoolDefinitions.cs** uses: BeeWheelItem, BlinkrootHarvesterBoxItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, GoldWireItem, IronMotorItem, IronPipeItem, LeadMotorItem, LeadPipeItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, SunCapsuleItem, TinWireItem, WoodenPowerPoleItem
   static class ScrollPoolDefinitions
     +MissileDrillPool:string[s] +MissileTankPool:string[s] +MissileThrusterPool:string[s] +Register()[s]
 **ScrollPools.cs** uses: RecipeArtRegistry, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey

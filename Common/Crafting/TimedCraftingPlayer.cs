@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -10,6 +11,7 @@ namespace Factorraria.Common.Crafting
 {
     /// <summary>
     /// Local player's timed-craft state. One craft at a time: Active recipe + Progress/Duration ticks.
+    /// Progress is not gradual: it jumps one chunk (TimedCraftingSystem.hitTicks, 0.5 s) per hammer hit.
     /// Repeats until cancelled: click the product again, switch product, close the inventory, die, or the recipe stops
     /// being available (station out of range, condition lost, ingredients gone - all folded into Main.availableRecipe).
     /// </summary>
@@ -21,6 +23,12 @@ namespace Factorraria.Common.Crafting
         public float Fraction => Duration <= 0 ? 0f : MathHelper.Clamp(Progress / (float)Duration, 0f, 1f);
 
         public bool Repeat { get; private set; }
+
+        /// <summary>Ticks since the last hammer hit (0..hitTicks). Drives the hammer animation and decides when the next chunk lands.</summary>
+        public int HitTimer { get; private set; }
+
+        /// <summary>True until the first hit of a freshly started craft, so the hammer starts raised instead of recoiling from a hit that never happened.</summary>
+        public bool FreshStart { get; private set; }
 
         Recipe pendingSwitch;
         bool pendingSwitchRepeat;
@@ -44,6 +52,8 @@ namespace Factorraria.Common.Crafting
             Active = null;
             Progress = 0;
             Duration = 0;
+            HitTimer = 0;
+            FreshStart = false;
             pendingSwitch = null;
         }
 
@@ -53,6 +63,8 @@ namespace Factorraria.Common.Crafting
             Repeat = repeat;
             Progress = 0;
             Duration = ModContent.GetInstance<TimedCraftingSystem>().GetDurationTicks(recipe);
+            HitTimer = 0;
+            FreshStart = true;
             SoundEngine.PlaySound(SoundID.MenuTick);
         }
 
@@ -82,7 +94,17 @@ namespace Factorraria.Common.Crafting
                 return;
             }
 
-            Progress++;
+            TimedCraftingSystem system = ModContent.GetInstance<TimedCraftingSystem>();
+            int hitTicks = Math.Max(1, system.hitTicks);
+
+            HitTimer++;
+            if (HitTimer < hitTicks) return;
+
+            // The hammer lands: one chunk of progress, one tink.
+            HitTimer = 0;
+            FreshStart = false;
+            Progress = Math.Min(Progress + hitTicks, Duration);
+            SoundEngine.PlaySound(system.tinkSound);
             if (Progress >= Duration) Finish();
         }
 
@@ -112,8 +134,15 @@ namespace Factorraria.Common.Crafting
                 if (!rest.IsAir) Player.QuickSpawnItem(Player.GetSource_Misc("Factorraria/TimedCrafting"), rest, rest.stack);
             }
 
+            system.PlayCompleteSound();
+
             Recipe.FindRecipes();
-            if (Repeat) Progress = 0;
+            if (Repeat)
+            {
+                Progress = 0;
+                HitTimer = 0;
+                FreshStart = false;
+            }
             else Cancel();
         }
     }

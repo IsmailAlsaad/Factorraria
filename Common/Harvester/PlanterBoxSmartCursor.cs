@@ -83,8 +83,8 @@ namespace Factorraria.Common.Harvester
 
             // Vanilla sets both: the yellow box reads SmartCursorX/Y, but the placement preview and the actual placement read the player's tile target.
             Main.SmartCursorShowing = true;
-            Main.SmartCursorX = player.tileTargetX = bestX;
-            Main.SmartCursorY = player.tileTargetY = bestY;
+            Main.SmartCursorX = Player.tileTargetX = bestX;
+            Main.SmartCursorY = Player.tileTargetY = bestY;
         }
 
         // A tile is "ours" if it is a Harvester Box or a plain custom planter box.

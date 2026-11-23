@@ -158,20 +158,20 @@ Items: {
 
 	DaybloomHarvesterBoxItem: {
 		DisplayName: Daybloom Harvester Box
-		Tooltip: 
-		'''
-		Consumes power to automatically harvest plants and trees
-		Can spread grass to nearby planter boxes
-		'''
+		Tooltip:
+			'''
+			Consumes power to automatically harvest plants and trees
+			Can spread grass to nearby planter boxes
+			'''
 	}
 
 	MoonglowHarvesterBoxItem: {
 		DisplayName: Moonglow Harvester Box
-		Tooltip: 
-		'''
-		Consumes power to automatically harvest plants and trees
-		Can spread jungle grass to nearby planter boxes
-		'''
+		Tooltip:
+			'''
+			Consumes power to automatically harvest plants and trees
+			Can spread jungle grass to nearby planter boxes
+			'''
 	}
 
 	CorruptHarvesterBoxItem: {
@@ -218,12 +218,12 @@ Items: {
 
 	MushroomHarvesterBoxItem: {
 		DisplayName: Glowing Mushroom Harvester Box
-		Tooltip: 
-		'''
-		Consumes power to automatically harvest plants and trees
-		Can spread glowing mushroom grass to nearby planter boxes
-		'''	
-		}
+		Tooltip:
+			'''
+			Consumes power to automatically harvest plants and trees
+			Can spread glowing mushroom grass to nearby planter boxes
+			'''
+	}
 
 	HallowedHarvesterBoxItem: {
 		DisplayName: Hallowed Harvester Box
