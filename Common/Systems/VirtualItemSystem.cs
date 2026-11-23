@@ -40,6 +40,11 @@ namespace Factorraria.Content.VirtualItems
         private static int hoveredVItemRarity = ItemRarityID.White;
         private static Vector2 cachedMouseWorld;
 
+        // Lazy safety net (VerifyVItems): runs every integrityCheckInterval ticks (180 = 3 s). Instance fields so hot reload can tweak them.
+        int integrityTimer;
+        int integrityCheckInterval = 180;
+        public static int RepairsMade;
+
         #endregion
 
         public override void PostUpdateWorld()
@@ -69,8 +74,78 @@ namespace Factorraria.Content.VirtualItems
                 }
             }
 
+            integrityTimer++;
+            if (integrityTimer >= integrityCheckInterval)
+            {
+                integrityTimer = 0;
+                VerifyVItems();
+            }
+
             VItemNet.ServerTick();
             ConveyorFilterNet.ServerTick();   // patch 7.3: broadcast the filtered networks when they changed   // patch 7.2: send each subscribed player what changed near them (does nothing off a dedicated server)
+        }
+
+        /// <summary>
+        /// Lazy safety net, server / single-player only (a client keeps replicas, never reservations). Runs every few seconds and once after a world load:
+        /// drops reservations that point at removed vItems or at a tile the vItem no longer targets, re-registers a vItem whose target tile lost its
+        /// reservation, and un-freezes a moving vItem whose speed is 0. Replicas need no packet: positions/targets/step reach clients through VItemNet as usual.
+        /// Returns how many things it fixed.
+        /// </summary>
+        public static int VerifyVItems()
+        {
+            int repairs = 0;
+            List<Point> staleKeys = null;
+
+            foreach (KeyValuePair<Point, VirtualItem> pair in tileItemMap)
+            {
+                VirtualItem owner = pair.Value;
+
+                if (owner.active == false || owner.targetTileX != pair.Key.X || owner.targetTileY != pair.Key.Y)
+                {
+                    if (staleKeys == null)
+                    {
+                        staleKeys = new List<Point>();
+                    }
+
+                    staleKeys.Add(pair.Key);
+                }
+            }
+
+            if (staleKeys != null)
+            {
+                for (int i = 0; i < staleKeys.Count; i++)
+                {
+                    tileItemMap.Remove(staleKeys[i]);
+                }
+
+                repairs += staleKeys.Count;
+            }
+
+            for (int i = 0; i < virtualItems.Count; i++)
+            {
+                VirtualItem item = virtualItems[i];
+
+                if (item.active == false)
+                {
+                    continue;
+                }
+
+                Point target = new Point(item.targetTileX, item.targetTileY);
+
+                if (tileItemMap.TryGetValue(target, out VirtualItem existing) == false || existing.active == false)
+                {
+                    tileItemMap[target] = item;
+                    repairs++;
+                }
+
+                if (item.RepairMovementState())
+                {
+                    repairs++;
+                }
+            }
+
+            RepairsMade += repairs;
+            return repairs;
         }
 
         // --- ITEM ID SAFETY GUARD ---
@@ -140,7 +215,7 @@ namespace Factorraria.Content.VirtualItems
         public static string Describe()
         {
             return "vItems: netMode=" + Main.netMode + " list=" + virtualItems.Count + " ids=" + vItemsById.Count + " nextId=" + nextVItemId
-                + " converted=" + WorldItemsConverted + " pickups=" + PlayerPickups + " | " + VItemNet.Describe() + " | " + ConveyorFilterNet.Describe();
+                + " repairs=" + RepairsMade + " converted=" + WorldItemsConverted + " pickups=" + PlayerPickups + " | " + VItemNet.Describe() + " | " + ConveyorFilterNet.Describe();
         }
 
         // --- WORLD LIFECYCLE ---
@@ -260,6 +335,7 @@ namespace Factorraria.Content.VirtualItems
                         item.worldPosition.Y = posY;
 
                         item.SetTargetTile(targetX, targetY);
+                        item.MarkForLoadRestore();
                     }
                 }
             }
@@ -289,6 +365,7 @@ namespace Factorraria.Content.VirtualItems
                 catch { }
             }
 
+            VerifyVItems();
             ConveyorFilterNet.MarkDirty();
         }
 

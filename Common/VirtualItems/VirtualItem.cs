@@ -72,6 +72,9 @@ namespace Factorraria.Content.VirtualItems
         // True on a vItem created by an auto-split while it slides from its parent's position into its own tile. No conveyor logic runs until it has arrived.
         bool settlingFromSplit;
 
+        // Set on a vItem loaded from the world save. The path flags and fall speed are never saved, so the first Update rebuilds them (RestoreAfterLoad).
+        bool pendingLoadRestore;
+
         static readonly Dictionary<(int, int), Vector2> ClockwiseConveyorPushTable = new Dictionary<(int, int), Vector2>
         {
             [(0, 0)] = new Vector2(0, 0),
@@ -158,6 +161,12 @@ namespace Factorraria.Content.VirtualItems
                 return;
             }
 
+            if (pendingLoadRestore)
+            {
+                pendingLoadRestore = false;
+                RestoreAfterLoad();
+            }
+
             AnimateItem();
             MoveVirtualItem();
             TryUpgradeCoinTier();
@@ -171,6 +180,60 @@ namespace Factorraria.Content.VirtualItems
             {
                 cartGrabCooldown--;
             }
+        }
+
+        public void MarkForLoadRestore()
+        {
+            pendingLoadRestore = true;
+        }
+
+        // FoundConveyor / FoundValidPath / CurrentFallVelocity are not saved. A vItem saved mid-move (current tile != target tile) only re-scans when it
+        // arrives, so with both flags false the gravity check would push it off its conveyor, or leave its speed at 0 so it never moves again.
+        // Runs on the first Update, when the tiles are certainly loaded.
+        void RestoreAfterLoad()
+        {
+            MaxConveyorPriority = 0;
+            FoundConveyor = false;
+            FoundValidPath = false;
+            pathMasks.Clear();
+
+            ScanNeighborsForConveyors();
+
+            pathMasks.Clear();
+            MaxConveyorPriority = 0;
+
+            if (CurrentFallVelocity <= 0f)
+            {
+                CurrentFallVelocity = 1f;
+            }
+
+            // Saved while still sliding out of a split parent: its position is off its own tile, so let it finish the slide first
+            if (currentTileX == targetTileX && currentTileY == targetTileY)
+            {
+                Vector2 tileCenter = new Vector2((targetTileX * 16) + 8, (targetTileY * 16) + 8);
+
+                if (Vector2.DistanceSquared(worldPosition, tileCenter) > 1f)
+                {
+                    settlingFromSplit = true;
+                }
+            }
+        }
+
+        // Lazy check helper: a vItem that is moving between tiles with speed 0 will never arrive (speed 0 -> 0 px per tick). Gives it speed again.
+        public bool RepairMovementState()
+        {
+            if (active == false || CurrentFallVelocity > 0f)
+            {
+                return false;
+            }
+
+            if (currentTileX == targetTileX && currentTileY == targetTileY)
+            {
+                return false;
+            }
+
+            CurrentFallVelocity = 1f;
+            return true;
         }
 
         private VirtualItem() { }
