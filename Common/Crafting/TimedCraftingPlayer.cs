@@ -31,6 +31,7 @@ namespace Factorraria.Common.Crafting
         public bool FreshStart { get; private set; }
 
         uint startTick;
+        SoundStyle hitSound;
         uint focusChangeTick = uint.MaxValue;
 
         public void Toggle(Recipe recipe, bool repeat)
@@ -70,6 +71,7 @@ namespace Factorraria.Common.Crafting
             HitTimer = 0;
             FreshStart = true;
             startTick = Main.GameUpdateCount;
+            hitSound = ModContent.GetInstance<TimedCraftingSystem>().GetHitSound(recipe);
             SoundEngine.PlaySound(SoundID.MenuTick);
         }
 
@@ -101,7 +103,7 @@ namespace Factorraria.Common.Crafting
             HitTimer = 0;
             FreshStart = false;
             Progress = Math.Min(Progress + hitTicks, Duration);
-            SoundEngine.PlaySound(system.tinkSound);
+            SoundEngine.PlaySound(hitSound);
             system.SpawnHitSparks();
             if (Progress >= Duration) Finish();
         }

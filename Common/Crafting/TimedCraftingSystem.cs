@@ -70,7 +70,9 @@ namespace Factorraria.Common.Crafting
         public float sparkStreak = 0.5f;                         // how much faster sparks stretch into streaks
         public Color[] sparkColors = { new Color(205, 208, 218), new Color(205, 208, 218), new Color(150, 154, 166), new Color(255, 196, 96) };
 
-        public SoundStyle tinkSound = SoundID.Tink with { Volume = 0.6f, Pitch = -0.2f, PitchVariance = 0.1f };
+        public SoundStyle tinkSound = SoundID.Tink with { Volume = 0.6f, Pitch = -0.2f, PitchVariance = 0.1f };   // fallback when the product has no tile/wall hit sound
+        public float hitSoundVolume = 0.6f;                      // multiplies the volume of a tile/wall hit sound used for the hammer
+        public float hitSoundPitchVariance = 0.1f;               // minimum pitch variance for a tile/wall hit sound used for the hammer
         public string completeSoundPath = "Factorraria/Assets/Sounds/CraftingComplete";
         public float completeSoundVolume = 0.15f;
 
@@ -371,6 +373,40 @@ namespace Factorraria.Common.Crafting
                 float length = s.size * (1f + s.vel.Length() * sparkStreak);
                 sb.Draw(pixel, s.pos, source, s.color * fade, s.vel.ToRotation(), new Vector2(0.5f, 0.5f), new Vector2(length, s.size), SpriteEffects.None, 0f);
             }
+        }
+
+        /// <summary>
+        /// Sound of one hammer hit on this recipe. Mimics the hit sound of what the product places: a modded tile's or wall's
+        /// registered HitSound, or Dig for vanilla tiles/walls. Anything else (no tile or wall, or a modded one with no
+        /// HitSound set) falls back to tinkSound. Client-only audio, nothing to sync.
+        /// </summary>
+        public SoundStyle GetHitSound(Recipe recipe)
+        {
+            Item product = recipe?.createItem;
+            if (product != null && !product.IsAir)
+            {
+                SoundStyle? found = null;
+                bool placesSomething = false;
+                if (product.createTile >= 0)
+                {
+                    placesSomething = true;
+                    ModTile modTile = TileLoader.GetTile(product.createTile);
+                    found = modTile != null ? modTile.HitSound : SoundID.Dig;
+                }
+                else if (product.createWall >= 0)
+                {
+                    placesSomething = true;
+                    ModWall modWall = WallLoader.GetWall(product.createWall);
+                    found = modWall != null ? modWall.HitSound : SoundID.Dig;
+                }
+
+                if (placesSomething && found.HasValue)
+                {
+                    SoundStyle style = found.Value;
+                    return style with { Volume = style.Volume * hitSoundVolume, PitchVariance = Math.Max(style.PitchVariance, hitSoundPitchVariance) };
+                }
+            }
+            return tinkSound;
         }
 
         /// <summary>Custom completion sound if Assets/Sounds/CraftingComplete exists, otherwise nothing extra (vanilla CraftItem still plays its own grab sound).</summary>
