@@ -143,12 +143,12 @@ Items: {
 
 	MushroomPlanterBoxItem: {
 		DisplayName: Glowing Mushroom Planter Box
-		Tooltip: "Can spread glowing mushroom grass to nearby planter boxes"
+		Tooltip: Can spread glowing mushroom grass to nearby planter boxes
 	}
 
 	HallowedPlanterBoxItem: {
 		DisplayName: Hallowed Planter Box
-		Tooltip: Can spread the hollow to nearby blocks
+		Tooltip: Can spread the hollow to nearby planter boxes
 	}
 
 	StonePlanterBoxItem: {
@@ -158,12 +158,20 @@ Items: {
 
 	DaybloomHarvesterBoxItem: {
 		DisplayName: Daybloom Harvester Box
-		Tooltip: Consumes power to automatically harvest plants and trees
+		Tooltip: 
+		'''
+		Consumes power to automatically harvest plants and trees
+		Can spread grass to nearby planter boxes
+		'''
 	}
 
 	MoonglowHarvesterBoxItem: {
 		DisplayName: Moonglow Harvester Box
-		Tooltip: Consumes power to automatically harvest plants and trees
+		Tooltip: 
+		'''
+		Consumes power to automatically harvest plants and trees
+		Can spread jungle grass to nearby planter boxes
+		'''
 	}
 
 	CorruptHarvesterBoxItem: {
@@ -171,7 +179,7 @@ Items: {
 		Tooltip:
 			'''
 			Consumes power to automatically harvest plants and trees
-			Can spread the corruption to nearby blocks
+			Can spread the corruption to nearby planter boxes
 			'''
 	}
 
@@ -180,7 +188,7 @@ Items: {
 		Tooltip:
 			'''
 			Consumes power to automatically harvest plants and trees
-			Can spread the crimson to nearby blocks
+			Can spread the crimson to nearby planter boxes
 			'''
 	}
 
@@ -210,15 +218,19 @@ Items: {
 
 	MushroomHarvesterBoxItem: {
 		DisplayName: Glowing Mushroom Harvester Box
-		Tooltip: Consumes power to automatically harvest plants and trees
-	}
+		Tooltip: 
+		'''
+		Consumes power to automatically harvest plants and trees
+		Can spread glowing mushroom grass to nearby planter boxes
+		'''	
+		}
 
 	HallowedHarvesterBoxItem: {
 		DisplayName: Hallowed Harvester Box
 		Tooltip:
 			'''
 			Consumes power to automatically harvest plants and trees
-			Can spread the hollow to nearby blocks
+			Can spread the hollow to nearby planter boxes
 			'''
 	}
 
