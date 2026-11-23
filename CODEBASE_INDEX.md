@@ -1,5 +1,5 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-23 | 451 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-23 | 452 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
@@ -49,8 +49,8 @@ tModLoader/other bases -> project types:
 - ModTile (18): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PlanterBoxTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - GlobalTile (16): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, MushroomBoxGlobalTile, PlanterBoxGlobalTile, PlanterBoxSpreadGlobalTile, PriorityConveyorSwapGlobalTile, SuperWeaponDropGuard, TilePlacedGlobalTile
 - UIElement (15): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookModeButton, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
+- GlobalItem (14): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, HarvesterBoxAcornItem, HerbTooltipGlobalItem, MagicMaterializerItemTooltip, PlanterBoxSeedItem, PlanterBoxTooltipGlobalItem, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModPlayer (14): CartEquipPlayer, CartInteractionPlayer, CartRiderPlayer, CosmicRadiationPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
-- GlobalItem (13): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, HarvesterBoxAcornItem, HerbTooltipGlobalItem, MagicMaterializerItemTooltip, PlanterBoxSeedItem, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - GlobalNPC (12): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, DryadShopGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
@@ -442,6 +442,9 @@ tModLoader/other bases -> project types:
 **PlanterBoxTileBase.cs** uses: HarvesterBoxKind, HarvesterBoxRegistry, PlanterBoxDust
   abstract class PlanterBoxTileBase<TItem> : ModTile
     +Texture:string[ov] #DustTile:int[v] #BreakSound:SoundStyle[v] #TreeSoil:int[v] #BoxKind:HarvesterBoxKind?[v] +CreateDust(int,int,ref int)[ov] +CanPlace(int,int)[ov] +TileFrame(int,int,ref bool,ref bool)[ov] +Slope(int,int)[ov]
+**PlanterBoxTooltipGlobalItem.cs**
+  class PlanterBoxTooltipGlobalItem : GlobalItem
+    +AppliesToEntity(Item,bool)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
 
 ### Common/Knowledge/
 **LiquidBiomeVisits.cs** uses: LiquidTypeRegistry, MachineBiome, RecipeKnowledgeNet, RecipeKnowledgeSystem
