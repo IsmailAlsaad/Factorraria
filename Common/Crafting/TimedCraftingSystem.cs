@@ -378,7 +378,7 @@ namespace Factorraria.Common.Crafting
         {
             if (!hasCompleteSound) return;
             //SoundEngine.PlaySound(new SoundStyle(completeSoundPath) { Volume = completeSoundVolume });
-            SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.15f });
+            SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.15f , PitchVariance = 0.15f });
         }
     }
 }

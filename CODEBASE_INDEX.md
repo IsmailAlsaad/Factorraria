@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-23 | 453 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-23 | 454 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(89) BaseMachine(60) FactorrariaPacket(41) PacketDirection(36) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(22) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) RecipeCatalog(16) Entry(16) CartSystem(16) VirtualItemSystem(15) CartModule(15) RecipeKnowledgeSystem(14)
+FactorrariaNet(89) BaseMachine(60) FactorrariaPacket(41) PacketDirection(36) LiquidTypeRegistry(34) RecipeBook(26) Factorraria(24) Cart(22) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartSystem(16) CartModule(15) RecipeKnowledgeSystem(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -1458,7 +1458,7 @@ tModLoader/other bases -> project types:
 ### Common/UI/CustomUIElements/
 **ElectricityHoverTip.cs**
   class ElectricityHoverTip : ModSystem
-    +Show(string,Color)[s] +Show((string text, Color color))[s] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +Unload()[ov]
+    +Show(string,Color)[s] +Show((string text, Color color))[s] +ShowLines((string text, Color color))[s] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +Unload()[ov]
 **ElectricityUIIcon.cs** uses: BaseMachine, ElectricityHoverTip, IElectricProducer
   class ElectricityUIIcon : UIElement
     +PulseWhen:Func<bool> +EmptyAtZero:bool #DrawSelf(SpriteBatch)[ov]
@@ -1804,12 +1804,15 @@ tModLoader/other bases -> project types:
     +AnchorTile:Point +ArmBendSign:float +Latched:bool +Retracting:bool +HandedOff:bool +HandOff() +Load()[ov] +Unload()[ov] +CanDamage()[ov] +ShouldUpdatePosition()[ov] +AI()[ov] +BeginRetract() +PreDraw(ref Color)[ov]
 
 ### Content/Tiles/Conveyors/
-**ClockwisePriorityConveyorTile.cs** uses: ConveyorFilterNet, VirtualItemSystem
+**ClockwisePriorityConveyorTile.cs** uses: ConveyorFilterNet, PriorityConveyorHover, VirtualItemSystem
   class ClockwisePriorityConveyorTile : ModTile
-    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
-**CounterClockwisePriorityConveyorTile.cs** uses: ConveyorFilterNet, VirtualItemSystem
+    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +MouseOver(int,int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
+**CounterClockwisePriorityConveyorTile.cs** uses: ConveyorFilterNet, PriorityConveyorHover, VirtualItemSystem
   class CounterClockwisePriorityConveyorTile : ModTile
-    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
+    +Texture:string[ov] +NumDust(int,int,bool,ref int)[ov] +AnimateTile(ref int,ref int)[ov] +MouseOver(int,int)[ov] +RightClick(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CanDrop(int,int)[ov]
+**PriorityConveyorHover.cs** uses: ElectricityHoverTip, VirtualItemSystem
+  static class PriorityConveyorHover
+    +Show(int,int)[s]
 **PriorityConveyorSwapGlobalTile.cs** uses: ClockwisePriorityConveyorTile, CounterClockwisePriorityConveyorTile, TilePlaced, VirtualItemSystem
   class PriorityConveyorSwapGlobalTile : GlobalTile
     +ReplaceTile(int,int,int,int,int)[ov]

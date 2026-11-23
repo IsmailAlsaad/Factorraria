@@ -46,6 +46,11 @@ namespace Factorraria.Content.Tiles.Conveyors
             }
         }
 
+        public override void MouseOver(int i, int j)
+        {
+            PriorityConveyorHover.Show(i, j);
+        }
+
         public override bool RightClick(int i, int j)
         {
             Player player = Main.LocalPlayer;
