@@ -494,7 +494,7 @@ tModLoader/other bases -> project types:
       +Name:string +Id:int +Tile:int +Items:HashSet<int> +ItemList:int +Inherited:bool +Split:bool +Owner:string +Inherits:List<Tab> +Marker:int
   class RecipeTabDiscoverySystem : ModSystem
     +PostUpdateEverything()[ov] +OnWorldUnload()[ov]
-**ScrollPoolDefinitions.cs** uses: BeeWheelItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, IronMotorItem, IronPipeItem, LeadMotorItem, LeadPipeItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, SunCapsuleItem, WoodenPowerPoleItem
+**ScrollPoolDefinitions.cs** uses: BeeWheelItem, BlinkrootHarvesterBoxItem, ByriteAlloyItem, ClockwisePriorityConveyor, CokeItem, CounterClockwisePriorityConveyor, GoldWireItem, IronMotorItem, IronPipeItem, LeadMotorItem, LeadPipeItem, LiquidTypeRegistry, MechanicalArmItem, MechanicalAssemblerItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlatinumPowerPoleItem, ScrollPools, SimpleCircuitItem, SteelBarItem, SunCapsuleItem, WoodenPowerPoleItem
   static class ScrollPoolDefinitions
     +MissileDrillPool:string[s] +MissileTankPool:string[s] +MissileThrusterPool:string[s] +Register()[s]
 **ScrollPools.cs** uses: RecipeArtRegistry, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey
