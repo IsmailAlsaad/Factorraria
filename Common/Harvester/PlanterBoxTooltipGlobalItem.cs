@@ -11,11 +11,15 @@ namespace Factorraria.Common.Harvester
         static string Line(int type)
         {
             if (type == ItemID.CorruptPlanterBox)
-                return "Can spread the corruption to nearby blocks";
+                return "Can spread the corruption to nearby planter boxes";
             if (type == ItemID.CrimsonPlanterBox)
-                return "Can spread the crimson to nearby blocks";
+                return "Can spread the crimson to nearby planter boxes";
             if (type == ItemID.BlinkrootPlanterBox)
                 return "Can convert to other planter boxes when grass spreads on it";
+            if (type == ItemID.MoonglowPlanterBox)
+                return "Can spread jungle grass to nearby planter boxes";
+            if (type == ItemID.Daybloom)
+                return "Can spread grass to nearby planter boxes";
             return null;
         }
 
