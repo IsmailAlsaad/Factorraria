@@ -5,6 +5,7 @@ using Factorraria.Content.Items.Liquids.Motors;
 using Factorraria.Content.Items.Liquids.Pipes;
 using Factorraria.Content.Items.Machines;
 using Factorraria.Content.Items.Materials;
+using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
 using Factorraria.Content.Tiles.SuperWeapons.MissileDrill;
 using Factorraria.Content.Tiles.SuperWeapons.MissileTank;
 using Factorraria.Content.Tiles.SuperWeapons.MissileThruster;
@@ -92,6 +93,9 @@ namespace Factorraria.Common.Knowledge
                 .Add("Autohammer", ModContent.ItemType<BeeWheelItem>())
                 .Add("Autohammer", ModContent.ItemType<MeteoritePanelItem>())
                 .Add("Autohammer", ModContent.ItemType<SunCapsuleItem>())
+                
+                // Harvester box
+                .Add("Autohammer", ModContent.ItemType<BlinkrootHarvesterBoxItem>())
 
                 // Mechanical Assembler
                 .Add("MechanicalAssembler", ModContent.ItemType<SimpleCircuitItem>())
