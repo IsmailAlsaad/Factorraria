@@ -52,7 +52,7 @@ namespace Factorraria.Common.Machines
 
         public int OutputMaxStack = Item.CommonMaxStack;   // fallback output cap for machines or items no recipe knows
         public int OutputBufferMultiplier = 10;            // an output slot holds this many crafts' worth of the product
-        public int IngredientBufferMultiplier = 2;         // an input slot holds this many crafts' worth (conveyor intake AND hand deposits)
+        public int IngredientBufferMultiplier = 3;         // an input slot holds this many crafts' worth (conveyor intake AND hand deposits)
         public MachineBiome InsideBiome { get; set; } = MachineBiome.Unknown;
 
         // Which look of a multi-style overhang sheet this machine draws (see MachineVisualRegistry.RegisterOverhang styleCount). 0 for
