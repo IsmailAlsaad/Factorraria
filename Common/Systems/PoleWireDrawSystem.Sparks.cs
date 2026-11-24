@@ -32,7 +32,7 @@ namespace Factorraria.Common.Systems
         public float SparkScale = 1f;
         public int MaxPulses = 24;                 // sweeps running at once
         public int MaxZapSoundsPerTick = 2;        // a whole grid powering up does not play a hundred zaps at once
-        public float FlashPixelsPerSpark = 35f;    // P9c: the flash density, one spark per this many pixels of rope (so a longer wire gets proportionally more)
+        public float FlashPixelsPerSpark = 10f;    // P9c: the flash density, one spark per this many pixels of rope (so a longer wire gets proportionally more)
         public float FlashSparkScale = 1.1f;
         public float FlashSparkSpeed = 1.6f;       // random drift of a flash spark, pixels per tick
         public int FlashCooldownTicks = 20;        // a wire that just flashed ignores further pole changes for this long
