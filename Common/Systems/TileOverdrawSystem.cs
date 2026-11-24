@@ -155,7 +155,11 @@ namespace Factorraria.Common.Systems
         {
             texture = entry.Texture.Value;
             int cellSize = 16 + entry.MarginPx * 2;
-            source = new Rectangle(cell * cellSize, 0, cellSize, cellSize);
+
+            // Cells run left to right and wrap onto the next row once the cell number passes the sheet's width (a sheet 16 cells wide: cell 16 is
+            // the first cell of row 2). Existing one-row sheets behave exactly as before.
+            int columns = Math.Max(1, texture.Width / cellSize);
+            source = new Rectangle(cell % columns * cellSize, cell / columns * cellSize, cellSize, cellSize);
             if (source.Right <= texture.Width && source.Bottom <= texture.Height)
                 return true;
 

@@ -443,6 +443,10 @@ The network changes `LiquidStack.Amount` every tick for machines and motors on t
 ### P10 (L) Placement checks
 `PipeTileBase.CanPlace` / `MotorTileBase.CanPlace` run on the client. Vanilla has the same trust model for tile placement, so no server re-check is planned.
 
+### P11 (L) Pipe flow visuals (side feature)
+The liquid networks exist on the server only (P1), so a client cannot know which pipes carry liquid. Decision: the server marks each ON pump with the liquid it moved (`MotorTileEntityBase.FlowLiquidType`), the 5.2 light update carries it, and every client derives the animation from its own pipe tiles and motor replicas (`PipeFlowVisualSystem`). ON pumps are one-way along `Facing`, so the direction of the wave is known without sending routes. Windowed pipe art is chosen by a hash of the tile position, so it needs no sync and no save data.
+**Status (applied, untested):** see the Progress entry 'pipe flow visuals'.
+
 ## Roadmap inputs from this step
 - Net-plumbing phase: tile-placed packet registers pipes and motors (P1) and heals saved data.
 - Liquid phase: P2 (broadcast world liquid changes), P3 (motor rotate request), P4 (quantized tank sync), then P5-P7 verification.

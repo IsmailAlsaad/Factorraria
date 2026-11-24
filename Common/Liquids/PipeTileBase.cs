@@ -1,5 +1,6 @@
 ﻿using Factorraria.Common.Systems;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
@@ -63,6 +64,10 @@ namespace Factorraria.Common.Liquids
             rotation = 0f;
             PipeConnectionHelper.GetOpenSides(i, j, out bool up, out bool down, out bool left, out bool right, Type);
             cell = (up ? 1 : 0) | (down ? 2 : 0) | (left ? 4 : 0) | (right ? 8 : 0);
+
+            // The windowed style lives in the second row of the overdraw sheet (cell index + 16).
+            if (IsStraightMask(cell) && IsWindowedAt(i, j))
+                cell += 16;
             return true;
         }
 
@@ -71,7 +76,33 @@ namespace Factorraria.Common.Liquids
         {
             rotation = 0f;
             cell = tile.TileFrameX / 18;
-            return cell >= 0 && cell < 16;
+            if (cell < 0 || cell >= 16)
+                return false;
+
+            // TileFrameY 18 = the windowed style: second row of the sheet (TileOverdrawSystem wraps cell 16+ onto the next row).
+            if (tile.TileFrameY >= 18)
+                cell += 16;
+            return true;
+        }
+
+        // Up-down (up 1 + down 2) and left-right (left 4 + right 8): the only shapes that can be windowed.
+        public static bool IsStraightMask(int mask) => mask == 3 || mask == 12;
+
+        // 1 pipe in 4 is drawn in the windowed style. A hash of the position, not a random roll: the server, every client and every
+        // later load agree without saving or sending anything. (Breaking a pipe and placing it again on the same tile gives the same style.)
+        public static bool IsWindowedAt(int i, int j)
+        {
+            uint h = (uint)(i * 73856093) ^ (uint)(j * 19349663);
+            h ^= h >> 13;
+            h *= 0x5bd1e995u;
+            h ^= h >> 15;
+            return (h & 3u) == 0u;
+        }
+
+        // While liquid moves through this pipe, PipeFlowVisualSystem draws it itself (scaled, with the window liquid), after all tiles.
+        public override bool PreDraw(int i, int j, SpriteBatch spriteBatch)
+        {
+            return !ModContent.GetInstance<PipeFlowVisualSystem>().TryGetCell(i, j, out _);
         }
 
         public override bool CanPlace(int i, int j)
@@ -149,7 +180,9 @@ namespace Factorraria.Common.Liquids
             int connectionMask = (up ? 1 : 0) | (down ? 2 : 0) | (left ? 4 : 0) | (right ? 8 : 0);
 
             Main.tile[i, j].TileFrameX = (short)(connectionMask * 18);
-            Main.tile[i, j].TileFrameY = 0;
+
+            // Second row of the tile sheet = the windowed art (straight pipes only, 1 in 4 by position).
+            Main.tile[i, j].TileFrameY = (short)(IsStraightMask(connectionMask) && IsWindowedAt(i, j) ? 18 : 0);
         }
 
         // Unhammerable: no slopes, no half blocks (the sprite and the flow logic assume a full tile).

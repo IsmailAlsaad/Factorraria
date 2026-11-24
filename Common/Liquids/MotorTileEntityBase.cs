@@ -15,12 +15,23 @@ namespace Factorraria.Common.Machines
 
         public Direction Facing = Direction.Right;
 
+        // Visual only (PipeFlowVisualSystem): the liquid type this ON pump moved in the last few ticks, -1 = none. FlowNetwork writes it on the
+        // server (or in single-player), it is forgotten after FlowIdleLimitTicks without a transfer (so a pump that stalls for a tick or two does
+        // not flicker the animation), and it reaches every client in this motor's light update. Never saved.
+        public int FlowLiquidType = -1;
+        public int FlowIdleTicks;
+        public int FlowIdleLimitTicks = 12;
+
         // Sealed so future motor tiers override UpdateMotor() instead. A power flip (grid, brownout, wire toggle) needs nothing here:
         // FlowNetwork.Tick reads isOn and PumpStrength of every motor each tick and refreshes its routes when one changed.
         public sealed override void Update()
         {
             base.Update();
             UpdateMotor();
+
+            // A client replica only mirrors what the server sent, so only the server (and single-player) forgets the flow.
+            if (FlowLiquidType >= 0 && Terraria.Main.netMode != Terraria.ID.NetmodeID.MultiplayerClient && ++FlowIdleTicks > FlowIdleLimitTicks)
+                FlowLiquidType = -1;
         }
 
         protected virtual void UpdateMotor() { }
@@ -57,6 +68,19 @@ namespace Factorraria.Common.Machines
         }
 
         protected override string DescribeSnapshotExtra() => base.DescribeSnapshotExtra() + " facing=" + Facing;
+
+        // The flow animation needs the liquid on clients that only get light updates (no snapshot, no UI). One small number, re-sent only when it changes.
+        protected override void WriteLightExtra(BinaryWriter writer)
+        {
+            base.WriteLightExtra(writer);
+            writer.Write7BitEncodedInt(FlowLiquidType + 1);
+        }
+
+        protected override void ReadLightExtra(BinaryReader reader)
+        {
+            base.ReadLightExtra(reader);
+            FlowLiquidType = reader.Read7BitEncodedInt() - 1;
+        }
 
         public override void SaveData(TagCompound tag)
         {
