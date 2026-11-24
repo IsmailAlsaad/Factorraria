@@ -22,7 +22,7 @@ namespace Factorraria.Common.Machines
     // MachineOverhangSystem) on a grid of OutlineScale x OutlineScale world pixels (Terraria art pixels are 2x2), cached per machine, and
     // drawn in the behind-tiles pass (same hook as MachineOverhangSystem), so tiles cover it.
     // Not outlined: the moving parts drawn by IMachineDynamicDraw (arm, wheel, ...) and the liquid layers; only the base sprite.
-    public class MachineSmartOutlineSystem : ModSystem
+    public partial class MachineSmartOutlineSystem : ModSystem
     {
         // TUNING: instance fields (not const/static) so they can be tweaked with hot reload.
         public Color HighlightColor = new Color(125,125,125);               // outline of a machine you can use (R, G, B, A)
@@ -76,6 +76,7 @@ namespace Factorraria.Common.Machines
         public override void OnWorldUnload()
         {
             outlineCache.Clear();
+            cartOutlineCache.Clear();
             hasTarget = false;
         }
 
@@ -88,6 +89,7 @@ namespace Factorraria.Common.Machines
             }
 
             outlineCache.Clear();
+            cartOutlineCache.Clear();
             alphaCache.Clear();
             scratchCells.Clear();
         }
@@ -624,7 +626,14 @@ namespace Factorraria.Common.Machines
                 }
             }
 
-            Outline outline = new Outline { OriginX = minX, OriginY = minY };
+            return new Outline { OriginX = minX, OriginY = minY, Runs = BuildEdgeRuns(solid, width, height, scale) };
+        }
+
+        // The edge pass of BuildOutline, shared with the cart outline: a solid mask of width x height grid cells (each cell is scale units)
+        // in, 1-cell-high runs (in units, relative to the mask's top-left) out.
+        List<Rectangle> BuildEdgeRuns(bool[] solid, int width, int height, int scale)
+        {
+            List<Rectangle> runs = new List<Rectangle>();
             for (int y = 0; y < height; y++)
             {
                 int runStart = -1;
@@ -652,13 +661,13 @@ namespace Factorraria.Common.Machines
                     }
                     else if (runStart >= 0)
                     {
-                        outline.Runs.Add(new Rectangle(runStart * scale, y * scale, (x - runStart) * scale, scale));
+                        runs.Add(new Rectangle(runStart * scale, y * scale, (x - runStart) * scale, scale));
                         runStart = -1;
                     }
                 }
             }
 
-            return outline;
+            return runs;
         }
     }
 }

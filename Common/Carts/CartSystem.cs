@@ -1,4 +1,5 @@
 using Factorraria.Common.Liquids;
+using Factorraria.Common.Machines;
 using Factorraria.Content.Configs;
 using Factorraria.Content.Items.Carts;
 using Microsoft.Xna.Framework;
@@ -792,6 +793,9 @@ namespace Factorraria.Common.Carts
 
             CartPassengers.CollectRiders(); // which NPC rides which cart, for DrawCart
 
+            MachineSmartOutlineSystem outlines = ModContent.GetInstance<MachineSmartOutlineSystem>();
+            bool outlineCarts = outlines.BeginCartOutlines(out Cart outlineTarget); // smart cursor outline, same look as the machines
+
             for (int i = 0; i < Carts.Count; i++)
             {
                 Cart motor = Carts[i];
@@ -821,6 +825,11 @@ namespace Factorraria.Common.Carts
                 Vector2 screen = cart.Position - Main.screenPosition;
 
                 DrawCart(cart, screen, light);
+
+                if (outlineCarts)
+                {
+                    outlines.DrawCartOutline(cart, screen, cart == outlineTarget);
+                }
 
                 if (debug)
                 {

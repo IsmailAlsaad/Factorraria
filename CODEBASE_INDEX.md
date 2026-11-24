@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-24 | 455 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-24 | 456 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(89) BaseMachine(60) FactorrariaPacket(41) PacketDirection(36) LiquidTypeRegistry(35) RecipeBook(26) Factorraria(24) Cart(22) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartSystem(16) CartModule(15) RecipeKnowledgeSystem(14)
+FactorrariaNet(89) BaseMachine(60) FactorrariaPacket(41) PacketDirection(36) LiquidTypeRegistry(35) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) CartSystem(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartModule(15) RecipeKnowledgeSystem(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -158,7 +158,7 @@ tModLoader/other bases -> project types:
 **CartSkins.cs**
   static class CartSkins
     +VanillaPrefix:string[c] +DefaultKey:string[c] +KeyOf(int)[s] +TryTypeOf(string,out int)[s]
-**CartSystem.cs** uses: BucketPour, Cart, CartCargo, CartChain, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartNet, CartPassengers, CartPhysics, CartRide, CartSkinTable, CartSkins, CartSound, CartSoundKind, FurnaceOffsetConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, PlacedSprite, TrackData, TrackSample
+**CartSystem.cs** uses: BucketPour, Cart, CartCargo, CartChain, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartNet, CartPassengers, CartPhysics, CartRide, CartSkinTable, CartSkins, CartSound, CartSoundKind, FurnaceOffsetConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineSmartOutlineSystem, PlacedSprite, TrackData, TrackSample
   class CartSystem : ModSystem
     +Carts:List<Cart>[s] +NextCartId:int[s] +AssignId(Cart)[s] +FindById(int)[s] +Unload()[ov] +OnWorldLoad()[ov] +ClearWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +ClientInterpolate()[s] +CheckPlacement(Player,int,int,out Vector2,out bool)[s] +SpawnCart(Vector2,int,CartModule)[s] +FindCartAtCursor(Player)[s] +GetInstallModule(Item,Cart,out CartModule)[s] +IsInInteractRange(Player,Cart,float)[s] +PickUp(Player,Cart)[s] +GetZoomCorrectedMouseWorld()[s]
 **TrackData.cs**
@@ -628,8 +628,11 @@ tModLoader/other bases -> project types:
 **MachineOverhangSystem.cs** uses: BaseMachine, LiquidOverlayLayer, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineCanvas, MachineTransition, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
     +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
+**MachineSmartOutlineSystem.Carts.cs** uses: Cart, CartSkinTable, CartSystem, PlacedSprite
+  partial class MachineSmartOutlineSystem
+    +BeginCartOutlines(out Cart) +DrawCartOutline(Cart,Vector2,bool)
 **MachineSmartOutlineSystem.cs** uses: BaseMachine, CartSystem, IMachineDynamicDraw, IMachineLateDraw, IRowMachine, MachineCanvas, MachineDetailSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, TileEntityHelper
-  class MachineSmartOutlineSystem : ModSystem
+  partial class MachineSmartOutlineSystem : ModSystem
     +HighlightColor:Color +SelectedColor:Color +OutlineInside:bool +OutlineInFront:bool +OutlineScale:int +SmartRadiusPixels:float +AlphaThreshold:int +MaxCachedOutlines:int +ScreenMarginPixels:float +Load()[ov] +OnWorldUnload()[ov] +Unload()[ov] +PostUpdateInput()[ov] +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
     struct SpriteCell
       +Texture:Texture2D +Source:Rectangle +X:int +Y:int +Quarter:int
