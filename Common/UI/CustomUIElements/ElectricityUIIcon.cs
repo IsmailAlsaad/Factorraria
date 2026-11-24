@@ -181,8 +181,12 @@ namespace Factorraria.Common.UI.CustomUIElements
             if (!liftedByBatteries && (demand > supply || (!producer && supply <= 0f) || (demand == 0 && supply == 0)))
             {
                 // Batteries that are waiting for enough company: keep the numbers (red) so the player sees demand is above supply + capacity.
+                // Same Overloaded label as the no-battery case whenever demand is above supply, including a grid with no supply at all.
                 if (dischargeCapacity > 0f)
-                    ElectricityHoverTip.Show((PowerText(demand) + "/" + PowerText(supply), red), (" + ", separator), (PowerText(dischargeCapacity), blue));
+                {
+                    string overloadPrefix = demand > supply ? "Overloaded " : "";
+                    ElectricityHoverTip.Show((overloadPrefix + PowerText(demand) + "/" + PowerText(supply), red), (" + ", separator), (PowerText(dischargeCapacity), blue));
+                }
                 else if (supply > 0f && demand > supply)
                     ElectricityHoverTip.Show("Overloaded " + PowerText(demand) + "/" + PowerText(supply), red);
                 else
