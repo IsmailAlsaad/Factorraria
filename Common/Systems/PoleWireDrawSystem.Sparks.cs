@@ -12,10 +12,13 @@ namespace Factorraria.Common.Systems
     // Client only (power poles patch P9b). The sparks and sounds of the hanging wires; the rest of the class is in PoleWireDrawSystem.cs.
     // Nothing here is saved or sent: every client watches its own replica of the links and the synced isOn of the two poles.
     //
-    // A wire SPARKS (a sweep of electric dust along it from end A to end B, plus one zap sound) when BOTH of its poles are on and it was not
-    // already so: the two poles go from "not both on" to "both on" (one on and one off does not count), or the link was just placed while
-    // both are already on. Nothing sparks for a link that is off screen (no rope), and nothing sparks during the first StartupQuietTicks
-    // after entering a world, because the links and the poles' state all arrive then and would look like a thousand new links.
+    // Two effects (P9c). A wire SWEEPS (electric dust travelling along it from end A to end B, plus one zap sound) only when the link is
+    // just placed while both poles are on. A wire that already exists FLASHES (dust along its whole length in one tick, at a fixed density
+    // per pixel of rope, plus one zap sound) whenever either of its poles changes isOn: a pole switched on or off, the grid shutting down
+    // or powering up, a machine joining or leaving the grid and tipping it. isOn is the only signal used: it is what the server's grid
+    // decides and what the machine snapshot syncs, so a client sees exactly the changes the server made.
+    // Nothing happens for a link that is off screen (no rope; its state is still tracked so it does not flash when it comes back), and
+    // nothing happens during the first StartupQuietTicks after entering a world, because the links and the poles' state all arrive then.
     public partial class PoleWireDrawSystem
     {
         // Tunables (plain instance fields, so hot reload can change them).
@@ -28,6 +31,10 @@ namespace Factorraria.Common.Systems
         public float SparkScale = 1f;
         public int MaxPulses = 24;                 // sweeps running at once
         public int MaxZapSoundsPerTick = 2;        // a whole grid powering up does not play a hundred zaps at once
+        public float FlashPixelsPerSpark = 20f;    // P9c: the flash density, one spark per this many pixels of rope (so a longer wire gets proportionally more)
+        public float FlashSparkScale = 1.1f;
+        public float FlashSparkSpeed = 1.6f;       // random drift of a flash spark, pixels per tick
+        public int FlashCooldownTicks = 20;        // a wire that just flashed ignores further pole changes for this long
 
         // Sounds (vanilla ones for now; swap them here, or later for your own SoundStyle("Factorraria/Assets/Sounds/...")).
         public SoundStyle FirstPointSound = SoundID.Item64 with { Volume = 0.7f, Pitch = 0.2f };                           // right click on the first pole
@@ -84,13 +91,40 @@ namespace Factorraria.Common.Systems
             foreach (CachedLink entry in cache)
             {
                 PoleLink link = entry.Link;
-                bool both = TryGetDrawablePole(link.A, link.SlotA, out PowerPoleTileEntityBase poleA) && TryGetDrawablePole(link.B, link.SlotB, out PowerPoleTileEntityBase poleB)
-                    && poleA.isOn && poleB.isOn;
+                if (entry.FlashCooldown > 0)
+                    entry.FlashCooldown--;
 
-                bool started = both && !entry.BothOn;
+                // Poles not here yet (join order): nothing to compare, and the entry stays unprimed.
+                if (!TryGetDrawablePole(link.A, link.SlotA, out PowerPoleTileEntityBase poleA) || !TryGetDrawablePole(link.B, link.SlotB, out PowerPoleTileEntityBase poleB))
+                    continue;
+
+                bool onA = poleA.isOn;
+                bool onB = poleB.isOn;
+                bool both = onA && onB;
+
+                // What happened to this wire this tick. State is always updated (even off screen or while quiet), so only a real
+                // change that happens in view can spark.
+                bool sweep = false;
+                bool flash = false;
+                if (!entry.Primed)
+                {
+                    entry.Primed = true;
+                    sweep = entry.JustPlaced && both;
+                }
+                else if (onA != entry.OnA || onB != entry.OnB)
+                {
+                    flash = entry.FlashCooldown <= 0;
+                }
+
+                entry.JustPlaced = false;
+                entry.OnA = onA;
+                entry.OnB = onB;
                 entry.BothOn = both;
 
-                if (!started || quiet || !Sparks || pulses.Count >= MaxPulses)
+                if ((!sweep && !flash) || quiet || !Sparks)
+                    continue;
+
+                if (sweep && pulses.Count >= MaxPulses)
                     continue;
 
                 if (!visibleKnown)
@@ -104,7 +138,15 @@ namespace Factorraria.Common.Systems
 
                 // A link that was just placed has no rope yet this tick (the first draw or step creates it), so make it here.
                 PoleRope rope = GetRope(entry, entry.RestA, entry.RestB);
-                pulses.Add(new Pulse { Link = link });
+                if (sweep)
+                {
+                    pulses.Add(new Pulse { Link = link });
+                }
+                else
+                {
+                    EmitFlash(rope);
+                    entry.FlashCooldown = FlashCooldownTicks;
+                }
 
                 if (zaps < MaxZapSoundsPerTick)
                 {
@@ -138,6 +180,20 @@ namespace Factorraria.Common.Systems
 
             for (int s = 0; s < StraySparksPerTick; s++)
                 SpawnSpark(PointAlong(rope, Main.rand.NextFloat() * front));
+        }
+
+        // The whole wire at once: a fixed density of sparks per pixel of rope, one per slot at a random spot inside it so they do not line up.
+        void EmitFlash(PoleRope rope)
+        {
+            int count = Math.Max(2, (int)Math.Ceiling(rope.Length / Math.Max(1f, FlashPixelsPerSpark)));
+            float last = rope.Count - 1;
+
+            for (int s = 0; s < count; s++)
+            {
+                float index = (s + Main.rand.NextFloat()) / count * last;
+                Dust dust = Dust.NewDustPerfect(PointAlong(rope, index) + Main.rand.NextVector2Circular(2f, 2f), SparkDustType, Main.rand.NextVector2Circular(FlashSparkSpeed, FlashSparkSpeed), 0, default, FlashSparkScale * (0.7f + 0.6f * Main.rand.NextFloat()));
+                dust.noGravity = true;
+            }
         }
 
         // 'index' is a fractional node index.

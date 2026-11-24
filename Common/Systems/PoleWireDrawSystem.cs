@@ -60,7 +60,12 @@ namespace Factorraria.Common.Systems
             public float RestChord;
             public float Reach;             // radius of the wider board + cull margin + SagReach: how far the wire can be from its chord
             public PoleRope Rope;           // P9: null while the link is off screen (nothing is simulated or kept for it)
-            public bool BothOn;             // P9b: both poles were on at the last tick (the sparks start when this turns true)
+            public bool BothOn;             // P9b: both poles were on at the last tick
+            public bool OnA;                // P9c: each pole's isOn at the last tick (a change of either one makes the whole wire flash)
+            public bool OnB;
+            public bool Primed;             // P9c: the poles were resolved at least once, so OnA / OnB / BothOn are real
+            public bool JustPlaced;         // P9c: a brand new link (not in the previous cache): its first both-on gets the sweep, not the flash
+            public int FlashCooldown;       // P9c: ticks until this wire may flash again (a flickering grid does not strobe)
         }
 
         readonly List<CachedLink> cache = new List<CachedLink>();
@@ -445,14 +450,13 @@ namespace Factorraria.Common.Systems
         {
             // P9: ropes survive a rebuild (matched by the link object), so cutting or adding one link does not make every other wire snap back.
             var previous = new Dictionary<PoleLink, PoleRope>();
-            var wasOn = new HashSet<(Point16, byte, Point16, byte)>();   // P9b: matched by value, so a resynced link object does not spark again
+            var oldState = new Dictionary<(Point16, byte, Point16, byte), CachedLink>();   // P9b/P9c: matched by value, so a resynced link object does not spark again
             foreach (CachedLink old in cache)
             {
                 if (old.Rope != null)
                     previous[old.Link] = old.Rope;
 
-                if (old.BothOn)
-                    wasOn.Add((old.Link.A, old.Link.SlotA, old.Link.B, old.Link.SlotB));
+                oldState[(old.Link.A, old.Link.SlotA, old.Link.B, old.Link.SlotB)] = old;
             }
 
             cache.Clear();
@@ -463,7 +467,20 @@ namespace Factorraria.Common.Systems
                 if (previous.TryGetValue(link, out PoleRope rope))
                     entry.Rope = rope;
 
-                entry.BothOn = wasOn.Contains((link.A, link.SlotA, link.B, link.SlotB));
+                if (oldState.TryGetValue((link.A, link.SlotA, link.B, link.SlotB), out CachedLink known))
+                {
+                    entry.BothOn = known.BothOn;
+                    entry.OnA = known.OnA;
+                    entry.OnB = known.OnB;
+                    entry.Primed = known.Primed;
+                    entry.JustPlaced = known.JustPlaced;
+                    entry.FlashCooldown = known.FlashCooldown;
+                }
+                else
+                {
+                    // Not in the previous cache: a real placement, unless we are still absorbing the world-load / join burst.
+                    entry.JustPlaced = quietTicks >= StartupQuietTicks;
+                }
 
                 Resolve(entry);
                 cache.Add(entry);

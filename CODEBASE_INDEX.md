@@ -1398,14 +1398,14 @@ tModLoader/other bases -> project types:
     +Pos:Vector2 +Old:Vector2 +Count:int +Length:float +SegmentLength:float +NodeCount(float,float,int)[s] +FillRestCurve(Vector2,int,Vector2,Vector2,float)[s] +Rest(Vector2,Vector2) +Pin(Vector2,Vector2) +Step(PoleWireDrawSystem,Vector2,Vector2,List<PoleDisturber>) +DistanceToPolyline(Vector2,int,Vector2)[s]
 **PoleWireDrawSystem.Sparks.cs** uses: CachedLink, PoleLink, PoleLinkSystem, PoleRope, PowerPoleTileEntityBase
   partial class PoleWireDrawSystem
-    +Sparks:bool +StartupQuietTicks:int +SparkTicks:int +SparksPerTick:int +StraySparksPerTick:int +SparkDustType:int +SparkScale:float +MaxPulses:int +MaxZapSoundsPerTick:int +FirstPointSound:SoundStyle +ConnectSound:SoundStyle +ZapSound:SoundStyle +OnWorldLoad()[ov] +PlayFirstPointSound(Vector2) +PlayConnectSound(Vector2)
+    +Sparks:bool +StartupQuietTicks:int +SparkTicks:int +SparksPerTick:int +StraySparksPerTick:int +SparkDustType:int +SparkScale:float +MaxPulses:int +MaxZapSoundsPerTick:int +FlashPixelsPerSpark:float +FlashSparkScale:float +FlashSparkSpeed:float +FlashCooldownTicks:int +FirstPointSound:SoundStyle +ConnectSound:SoundStyle +ZapSound:SoundStyle +OnWorldLoad()[ov] +PlayFirstPointSound(Vector2) +PlayConnectSound(Vector2)
     class Pulse
       +Link:PoleLink +Age:int
 **PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleDisturber, PoleLink, PoleLinkInputSystem, PoleLinkSystem, PoleRope, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
   partial class PoleWireDrawSystem : ModSystem
     +WireThickness:float +CullMarginPixels:float +CopperColor:Color +TinColor:Color +GoldColor:Color +InvalidColor:Color +Simulate:bool +Disturbance:bool +NodeSpacing:float +MaxNodes:int +Gravity:float +Damping:float +WindForce:float +GustAmount:float +GustSpeed:float +FlutterAmount:float +ConstraintIterations:int +DisturbRadius:float +DisturbStrength:float +MaxNodeSpeed:float +Unload()[ov] +OnWorldUnload()[ov] +DrawWire(SpriteBatch,Vector2,Vector2,CustomWireType,bool) +GetWireColor(CustomWireType) +BeginBatch(SpriteBatch)[s] +DrawLinks(SpriteBatch) +PostUpdateEverything()[ov] +SegmentIntersectsRect(Vector2,Vector2,Rectangle)[s] +DistanceToWire(PoleLink,Vector2,Vector2,Vector2) +GetSwayedPoint(PowerPoleCrossboardSystem,PowerPoleTileEntityBase,int)[s]
     class CachedLink
-      +Link:PoleLink +Bounds:Rectangle +Resolved:bool +RestA:Vector2 +RestB:Vector2 +RestChord:float +Reach:float +Rope:PoleRope +BothOn:bool
+      +Link:PoleLink +Bounds:Rectangle +Resolved:bool +RestA:Vector2 +RestB:Vector2 +RestChord:float +Reach:float +Rope:PoleRope +BothOn:bool +OnA:bool +OnB:bool +Primed:bool +JustPlaced:bool +FlashCooldown:int
 **PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
