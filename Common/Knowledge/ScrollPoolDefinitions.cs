@@ -29,6 +29,9 @@ namespace Factorraria.Common.Knowledge
     ///       .AddLiquid("Solidifier", LiquidTypeRegistry.Oil);        liquid products use the LiquidTypeRegistry ids
     ///       .AddArt("ExampleNote");                                  a recipe book art PNG (registered in RecipeArtDefinitions), by file name
     ///
+    /// Optional third argument: ScrollPools.Define("Name", "hint", revealIngredients: true). Reading a parchment of that pool then also counts the
+    /// recipe as CRAFTED (the book shows its ingredients, not just the faded page). Default false. Used by the super weapon part pools below.
+    ///
     /// Machine names: Furnace, Hellforge, Solidifier, IceMachine, LiquidDistillator, Autohammer, DecayChamber, MechanicalAssembler.
     /// Vanilla station tabs: "Vanilla" + the tile name (VanillaDemonAltar, VanillaFurnaces, VanillaAnvils, ...) and VanillaHand for hand crafts.
     /// A pool entry can target them, but the whole-book fallback roll never picks one (there are thousands; they would drown the machine recipes).
@@ -137,9 +140,10 @@ namespace Factorraria.Common.Knowledge
         // ==========================================================================================
         static void SuperWeaponPartPools()
         {
-            ScrollPools.Define(MissileDrillPool, "Infected drill head blueprint").Add("MechanicalAssembler", ModContent.ItemType<MissileDrillItem>());
-            ScrollPools.Define(MissileTankPool, "Byrite tank casing blueprint").Add("MechanicalAssembler", ModContent.ItemType<MissileTankItem>());
-            ScrollPools.Define(MissileThrusterPool, "Meteorite thruster booster blueprint").Add("MechanicalAssembler", ModContent.ItemType<MissileThrusterItem>());
+            // revealIngredients: true = reading the parchment also counts the part's recipe as crafted, so its ingredients are shown.
+            ScrollPools.Define(MissileDrillPool, "Infected drill head blueprint", revealIngredients: true).Add("MechanicalAssembler", ModContent.ItemType<MissileDrillItem>());
+            ScrollPools.Define(MissileTankPool, "Byrite tank casing blueprint", revealIngredients: true).Add("MechanicalAssembler", ModContent.ItemType<MissileTankItem>());
+            ScrollPools.Define(MissileThrusterPool, "Meteorite thruster booster blueprint", revealIngredients: true).Add("MechanicalAssembler", ModContent.ItemType<MissileThrusterItem>());
         }
 
         // Real, compiled example that is NOT called by default. Adjust the entries to recipes that exist, then call it from Register().

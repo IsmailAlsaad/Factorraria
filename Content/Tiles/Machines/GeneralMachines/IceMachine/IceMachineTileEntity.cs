@@ -1,6 +1,8 @@
 using Factorraria.Common.Machines;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine
 {
@@ -20,6 +22,20 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine
         protected override void OnAnimationFrameChanged(int newFrame, int previousFrame)
         {
 
+        }
+    }
+
+    // The Ice Machine is the vanilla Ice Machine item, so its extra tooltip line is added through a GlobalItem (vanilla lines stay).
+    public class IceMachineItemTooltip : GlobalItem
+    {
+        public override bool AppliesToEntity(Item entity, bool lateInstantiation)
+        {
+            return entity.type == ItemID.IceMachine;
+        }
+
+        public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+        {
+            tooltips.Add(new TooltipLine(Mod, "FactorrariaIceMachineCold", "Requires a cold environment to operate"));
         }
     }
 }

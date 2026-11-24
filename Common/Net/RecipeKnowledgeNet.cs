@@ -407,6 +407,12 @@ namespace Factorraria.Common.Net
                 SendKnowledgeDelta(KnowledgeKind.Unlocked, key);
             }
 
+            // Pools defined with revealIngredients: true (the super weapon parts): reading the parchment also counts the recipe as crafted,
+            // so the recipe book shows its ingredients. Only for a recipe that is really one of the pool's own: a roll that fell back to
+            // the whole book (pool used up) is an ordinary read. ServerMarkCrafted broadcasts the delta, so every client rebuilds.
+            if (ScrollPools.TryGet(pool.Length == 0 ? null : pool, out ScrollPool readPool) && readPool.RevealIngredients && readPool.HasRecipe(key))
+                ServerMarkCrafted(key);
+
             ReplyRead(sender, true, key, ParchmentFailure.None, pool);
         }
 

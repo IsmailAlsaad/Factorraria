@@ -48,8 +48,8 @@ tModLoader/other bases -> project types:
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
 - ModTile (18): BeeWheelTile, ClockwisePriorityConveyorTile, CoalTile, CounterClockwisePriorityConveyorTile, HarvesterBoxTileBase, MechanicalAssemblerTile, MeteorHeadStatueTile, MissileDrillTile, MissileTankTile, MissileThrusterTile, MotorTileBase, PipeTileBase, PlanterBoxTileBase, PowerPoleTileBase, PureSiliconTile, RoboticArmTile, SiliconOreTile, SunCapsuleTile
 - GlobalTile (16): AwakenedStatueGlobalTile, BeeWheelTileHooks, ChestConveyorGlobalTile, CosmicIonizedTileDraw, CosmicReceiverGlobalTile, LarvaDropGlobalTile, LiquidTopologyGlobalTile, MachineVisualOverride, MachineWireGlobalTile, MaterializerWireGuard, MushroomBoxGlobalTile, PlanterBoxGlobalTile, PlanterBoxSpreadGlobalTile, PriorityConveyorSwapGlobalTile, SuperWeaponDropGuard, TilePlacedGlobalTile
+- GlobalItem (15): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, HarvesterBoxAcornItem, HerbTooltipGlobalItem, IceMachineItemTooltip, MagicMaterializerItemTooltip, PlanterBoxSeedItem, PlanterBoxTooltipGlobalItem, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - UIElement (15): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookModeButton, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
-- GlobalItem (14): BucketPourGlobalItem, CartModuleItemGlobal, CosmicGemsparkTooltip, DecayChamberItemTooltip, HarvesterBoxAcornItem, HerbTooltipGlobalItem, MagicMaterializerItemTooltip, PlanterBoxSeedItem, PlanterBoxTooltipGlobalItem, RoboticArmDropCapture, SkeletronHandDropGlobalItem, VItemGlobalItem, VanillaCartItemGlobal, VanillaConveyorGlobalItem
 - ModPlayer (14): CartEquipPlayer, CartInteractionPlayer, CartRiderPlayer, CosmicRadiationPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
 - GlobalNPC (12): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, DryadShopGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
@@ -501,11 +501,11 @@ tModLoader/other bases -> project types:
     +MissileDrillPool:string[s] +MissileTankPool:string[s] +MissileThrusterPool:string[s] +Register()[s]
 **ScrollPools.cs** uses: RecipeArtRegistry, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey
   class ScrollPool
-    +Name:string +Hint:string +Entries:IReadOnlyList<Entry> +WithHint(string) +Add(string,int,float) +AddLiquid(string,int,float) +AddArt(string,float)
+    +Name:string +Hint:string +RevealIngredients:bool +Entries:IReadOnlyList<Entry> +WithHint(string) +WithRevealIngredients(bool) +HasRecipe(string) +Add(string,int,float) +AddLiquid(string,int,float) +AddArt(string,float)
     struct Entry
       +Machine:string +Output:RecipeOutputKey +Weight:float +ArtName:string +CatalogKey:string
   static class ScrollPools
-    +All:IReadOnlyList<ScrollPool>[s] +Define(string,string)[s] +TryGet(string,out ScrollPool)[s] +HintFor(string)[s] +Clear()[s] +Validate(Action<string>)[s] +RemainingCount(ScrollPool)[s] +TryRoll(string,UnifiedRandom,out string)[s]
+    +All:IReadOnlyList<ScrollPool>[s] +Define(string,string,bool?)[s] +TryGet(string,out ScrollPool)[s] +HintFor(string)[s] +Clear()[s] +Validate(Action<string>)[s] +RemainingCount(ScrollPool)[s] +TryRoll(string,UnifiedRandom,out string)[s]
 **VanillaStationBooks.cs** uses: RecipeBook, RecipeCatalog
   static class VanillaStationBooks
     +Prefix:string[c] +HandName:string[c] +NameFor(int)[s] +TileOf(string)[s] +RegisterAll(out int)[s]
@@ -1027,7 +1027,7 @@ tModLoader/other bases -> project types:
     +MaxJoinLinks:int[s] +MaxPolesPerPacket:int[s] +RefusalRepeatTicks:int[s] +AutoSlot:byte[s] +ResetClient()[s] +RequestLink(int,int,int,int,CustomWireType,int,int,int,int)[s] +RequestCut(int,int,int,int,int)[s] +HandleRequest(BinaryReader,int)[s] +OnMachineKilled(BaseMachine,Point16)[s] +HandleChanged(BinaryReader,int)[s] +ClientTick()[s] +CountWire(Player,int)[s] +ConsumeWire(Player,int,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
     sealed class Incoming
       +Result:PoleLinkResult +ItemType:int +Count:int +States:List<KeyValuePair<Point16, List<SlotState>>> +ReplaceAll:List<PoleLink>
-**RecipeKnowledgeNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, LiquidBiomeVisits, PacketDirection, Pending, RecipeBookSystem, RecipeCatalog, RecipeKnowledgeSystem, RecipeParchmentItem, RecipeTabDiscovery, RecipeVisibility, ScrollPools
+**RecipeKnowledgeNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, LiquidBiomeVisits, PacketDirection, Pending, RecipeBookSystem, RecipeCatalog, RecipeKnowledgeSystem, RecipeParchmentItem, RecipeTabDiscovery, RecipeVisibility, ScrollPool, ScrollPools
   class RecipeKnowledgeNetSystem : ModSystem
     +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov]
   enum ParchmentReadResult
@@ -2133,6 +2133,8 @@ tModLoader/other bases -> project types:
 **IceMachineTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine uses: BaseMachine, CustomRecipe, IceMachineRecipeRegistry, MachineBiome, RecipeBook
   class IceMachineTileEntity : BaseMachine
     +ValidTileType:int[ov] +Recipes:RecipeBook[ov] #InputLiquidCount:int[ov] #OutputSlotCount:int[ov] #CanStartCraft(CustomRecipe)[ov] #OnAnimationFrameChanged(int,int)[ov]
+  class IceMachineItemTooltip : GlobalItem
+    +AppliesToEntity(Item,bool)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
 **IceMachineUIState.cs** ns!=Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine uses: IceMachineRecipeRegistry, IceMachineTileEntity, LiquidTankUIElement, MachineUIElementEntry, MachineUIStateBase
   class IceMachineUIState : MachineUIStateBase
     #BasePanelSize:Vector2[ov] #BuildElements()[ov]

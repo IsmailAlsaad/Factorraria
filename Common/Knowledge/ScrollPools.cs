@@ -26,6 +26,13 @@ namespace Factorraria.Common.Knowledge
 
         public string Name { get; }
         public string Hint { get; private set; }
+
+        /// <summary>
+        /// True = reading a parchment of this pool also marks the rolled recipe as CRAFTED (its ingredients are revealed in the
+        /// recipe book, not just the faded "unlocked" page). Used by the super weapon part pools. Set it through ScrollPools.Define.
+        /// </summary>
+        public bool RevealIngredients { get; private set; }
+
         public IReadOnlyList<Entry> Entries => entries;
 
         public ScrollPool(string name) { Name = name; }
@@ -35,6 +42,22 @@ namespace Factorraria.Common.Knowledge
         {
             Hint = hint;
             return this;
+        }
+
+        /// <summary>Reading a parchment of this pool also counts the recipe as crafted (reveals its ingredients). See RevealIngredients.</summary>
+        public ScrollPool WithRevealIngredients(bool reveal)
+        {
+            RevealIngredients = reveal;
+            return this;
+        }
+
+        /// <summary>True if one of this pool's own entries is this catalog key (a recipe rolled from the whole-book fallback is not).</summary>
+        public bool HasRecipe(string catalogKey)
+        {
+            if (catalogKey == null) return false;
+            foreach (Entry e in entries)
+                if (e.CatalogKey == catalogKey) return true;
+            return false;
         }
 
         /// <summary>Adds an item product made on the named machine.</summary>
@@ -74,13 +97,21 @@ namespace Factorraria.Common.Knowledge
 
         public static IReadOnlyList<ScrollPool> All => ordered;
 
-        /// <summary>Starts (or reopens) a pool. Name lookup ignores case.</summary>
-        public static ScrollPool Define(string name, string hint = null)
+        /// <summary>
+        /// Starts (or reopens) a pool. Name lookup ignores case.
+        /// revealIngredients: true = reading a parchment of this pool also counts the recipe as crafted, so its ingredients show.
+        /// Left out (null) it is false for a new pool and unchanged when reopening one.
+        /// </summary>
+        public static ScrollPool Define(string name, string hint = null, bool? revealIngredients = null)
         {
             if (byName.TryGetValue(name, out ScrollPool existing))
-                return hint == null ? existing : existing.WithHint(hint);
+            {
+                if (hint != null) existing.WithHint(hint);
+                if (revealIngredients.HasValue) existing.WithRevealIngredients(revealIngredients.Value);
+                return existing;
+            }
 
-            var pool = new ScrollPool(name).WithHint(hint);
+            var pool = new ScrollPool(name).WithHint(hint).WithRevealIngredients(revealIngredients ?? false);
             byName[name] = pool;
             ordered.Add(pool);
             return pool;
