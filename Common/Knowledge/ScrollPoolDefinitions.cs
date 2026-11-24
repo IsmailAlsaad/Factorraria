@@ -20,8 +20,11 @@ namespace Factorraria.Common.Knowledge
     ///
     /// A scroll / parchment carries a pool NAME. Reading a parchment rolls ONE recipe:
     ///   1. from that pool's recipes the world has not unlocked or crafted yet (weighted)
-    ///   2. once the pool is used up, from EVERY recipe in the book
-    /// A scroll with no pool (null) always rolls from the whole book.
+    ///   2. once the pool is used up, from its FALLBACK pool (every pool falls back to "Default" unless you change it, see below)
+    ///   3. once that is used up too, from EVERY recipe in the book
+    /// A scroll with no pool (null) always rolls from the whole book. The "Default" pool itself falls straight to the whole book.
+    ///
+    /// To pick another fallback: ScrollPools.Define("Name", "hint").Add(...).WithFallback("OtherPool")   (chains work; WithFallback(null) = straight to the whole book).
     ///
     ///   ScrollPools.Define("Dungeon", "hint shown in the tooltip")
     ///       .Add("Furnace", ItemID.IronBar)                          machine name as registered in MachineRegisterationSystem
@@ -61,7 +64,7 @@ namespace Factorraria.Common.Knowledge
         // Every chest in the world has a 15% chance of a scroll of this pool (see ChestLootDefinitions).
         // One line = one recipe. First argument = the machine that crafts it (catalog name), second = the product.
         // Weights are relative (default 1). A recipe leaves the pool once it is unlocked or crafted; when the
-        // whole pool is used up the scroll falls back to any recipe in the book.
+        // whole pool is used up the scroll falls back to any recipe in the book. Every OTHER pool falls back to this pool first.
         // To drop a recipe: delete or comment out its line. To make one rarer/more common: add weight: 0.5f / 2f.
         // ==========================================================================================
         static void DefaultPool()
@@ -136,7 +139,7 @@ namespace Factorraria.Common.Knowledge
         // ==========================================================================================
         // SUPER WEAPON #1 (the missile): ONE POOL PER PART, ONE REAL RECIPE EACH (patch N7.1b). The Mechanic gives one scroll of each
         // (StoryScrolls, patch N7.1). Each pool teaches the part's Mechanical Assembler recipe (MechanicalAssemblerRecipeRegistry). A pool whose
-        // only recipe is already unlocked or crafted falls back to a random recipe of the whole book (the normal scroll rule).
+        // only recipe is already unlocked or crafted falls back to the "Default" pool (the normal scroll rule), then to the whole book.
         // ==========================================================================================
         static void SuperWeaponPartPools()
         {

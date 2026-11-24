@@ -1059,15 +1059,29 @@ Configs: {
 
 Dialogue: {
 	Dryad: {
-		RescueMechanicText: oh {PlayerName} thank you for saving me, I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
-		RescueMechanicOtherText: I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
-		PlanWithMechanicText: The Mechanic and I talked, {PlayerName} She has a plan for you Go and see her
+		RescueMechanic: {
+			Text: oh {PlayerName} thank you for saving me, I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
+		}
+
+		RescueMechanicOther: {
+			Text: I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
+		}
+
+		PlanWithMechanic: {
+			Text: The Mechanic and I talked, {PlayerName} She has a plan for you Go and see her
+		}
+
 		RescueReminder: Did you find the lost mechanic?
 	}
 
 	Mechanic: {
-		RescuedEyeText: Thanks! I was stuck down here for a long time trying to find where my backpack went
-		SuperWeaponIntroText: So you are the one the Dryad told me about, {PlayerName} I have come up with a plan to weaken the wall of flesh Here are the blueprints you need This would require a lot of parts, so I would recommend automating the process
+		RescuedEye: {
+			Text: Thanks! I was stuck down here for a long time trying to find where my backpack went
+		}
+
+		SuperWeaponIntro: {
+			Text: So you are the one the Dryad told me about, {PlayerName} I have come up with a plan to weaken the wall of flesh Here are the blueprints you need This would require a lot of parts, so I would recommend automating the process
+		}
 
 		Bag: {
 			Text: Have you found my bag?

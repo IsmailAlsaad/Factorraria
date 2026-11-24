@@ -105,7 +105,7 @@ namespace Factorraria.Common.Knowledge
                 case "pools":
                     caller.Reply($"{ScrollPools.All.Count} scroll pool(s):", Color.LightGreen);
                     foreach (ScrollPool sp in ScrollPools.All)
-                        caller.Reply($"  {sp.Name}: {ScrollPools.RemainingCount(sp)} of {sp.Entries.Count} recipe(s) still available", Color.White);
+                        caller.Reply($"  {sp.Name}: {ScrollPools.RemainingCount(sp)} of {sp.Entries.Count} recipe(s) still available, then " + (sp.FallbackName ?? "whole book"), Color.White);
                     break;
                 case "list":
                     caller.Reply($"{RecipeKnowledgeSystem.UnlockedKeys.Count} recipe(s) unlocked by parchment:", Color.LightGreen);

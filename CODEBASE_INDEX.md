@@ -501,11 +501,11 @@ tModLoader/other bases -> project types:
     +MissileDrillPool:string[s] +MissileTankPool:string[s] +MissileThrusterPool:string[s] +Register()[s]
 **ScrollPools.cs** uses: RecipeArtRegistry, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey
   class ScrollPool
-    +Name:string +Hint:string +RevealIngredients:bool +Entries:IReadOnlyList<Entry> +WithHint(string) +WithRevealIngredients(bool) +HasRecipe(string) +Add(string,int,float) +AddLiquid(string,int,float) +AddArt(string,float)
+    +Name:string +Hint:string +FallbackName:string +RevealIngredients:bool +Entries:IReadOnlyList<Entry> +WithHint(string) +WithFallback(string) +WithRevealIngredients(bool) +HasRecipe(string) +Add(string,int,float) +AddLiquid(string,int,float) +AddArt(string,float)
     struct Entry
       +Machine:string +Output:RecipeOutputKey +Weight:float +ArtName:string +CatalogKey:string
   static class ScrollPools
-    +All:IReadOnlyList<ScrollPool>[s] +Define(string,string,bool?)[s] +TryGet(string,out ScrollPool)[s] +HintFor(string)[s] +Clear()[s] +Validate(Action<string>)[s] +RemainingCount(ScrollPool)[s] +TryRoll(string,UnifiedRandom,out string)[s]
+    +All:IReadOnlyList<ScrollPool>[s] +DefaultPoolName:string[s] +Define(string,string,bool?)[s] +TryGet(string,out ScrollPool)[s] +HintFor(string)[s] +Clear()[s] +Validate(Action<string>)[s] +RemainingCount(ScrollPool)[s] +TryRoll(string,UnifiedRandom,out string)[s]
 **VanillaStationBooks.cs** uses: RecipeBook, RecipeCatalog
   static class VanillaStationBooks
     +Prefix:string[c] +HandName:string[c] +NameFor(int)[s] +TileOf(string)[s] +RegisterAll(out int)[s]

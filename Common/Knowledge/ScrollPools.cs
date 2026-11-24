@@ -28,6 +28,13 @@ namespace Factorraria.Common.Knowledge
         public string Hint { get; private set; }
 
         /// <summary>
+        /// Name of the pool a parchment of this pool rolls from once this pool has nothing left, before it falls back to the whole book.
+        /// ScrollPools.Define sets it to the default pool ("Default") for every new pool except the default pool itself. null = straight to the whole book.
+        /// Change it with WithFallback. Resolved by name when rolling, so the target pool can be defined later.
+        /// </summary>
+        public string FallbackName { get; private set; }
+
+        /// <summary>
         /// True = reading a parchment of this pool also marks the rolled recipe as CRAFTED (its ingredients are revealed in the
         /// recipe book, not just the faded "unlocked" page). Used by the super weapon part pools. Set it through ScrollPools.Define.
         /// </summary>
@@ -41,6 +48,16 @@ namespace Factorraria.Common.Knowledge
         public ScrollPool WithHint(string hint)
         {
             Hint = hint;
+            return this;
+        }
+
+        /// <summary>
+        /// Which registered pool to roll from when this one is used up. Pass null to skip straight to the whole book.
+        /// Chains work (A -> B -> C -> whole book); a loop just ends at the whole book.
+        /// </summary>
+        public ScrollPool WithFallback(string poolName)
+        {
+            FallbackName = poolName;
             return this;
         }
 
@@ -86,7 +103,8 @@ namespace Factorraria.Common.Knowledge
     /// Registry of scroll pools + the roll used when a parchment is read.
     /// A scroll/parchment stores only its pool NAME (null = global). Roll order:
     ///   1. the pool's own recipes that are not unlocked and not crafted (weighted)
-    ///   2. otherwise every recipe in the catalog that is not unlocked and not crafted (uniform)
+    ///   2. otherwise the pool's fallback pool (ScrollPool.FallbackName, "Default" for every pool but the default one), then ITS fallback, ...
+    ///   3. otherwise every recipe in the catalog that is not unlocked and not crafted (uniform)
     /// Nothing is "reserved" by a roll: a recipe only leaves the pool once it is unlocked (parchment read) or crafted,
     /// so throwing away an unread parchment loses nothing.
     /// </summary>
@@ -96,6 +114,9 @@ namespace Factorraria.Common.Knowledge
         static readonly List<ScrollPool> ordered = new List<ScrollPool>();
 
         public static IReadOnlyList<ScrollPool> All => ordered;
+
+        /// <summary>Name of the pool every other pool falls back to by default (see ScrollPool.FallbackName).</summary>
+        public static string DefaultPoolName = "Default";
 
         /// <summary>
         /// Starts (or reopens) a pool. Name lookup ignores case.
@@ -111,7 +132,8 @@ namespace Factorraria.Common.Knowledge
                 return existing;
             }
 
-            var pool = new ScrollPool(name).WithHint(hint).WithRevealIngredients(revealIngredients ?? false);
+            var pool = new ScrollPool(name).WithHint(hint).WithRevealIngredients(revealIngredients ?? false)
+                .WithFallback(string.Equals(name, DefaultPoolName, StringComparison.OrdinalIgnoreCase) ? null : DefaultPoolName);
             byName[name] = pool;
             ordered.Add(pool);
             return pool;
@@ -139,6 +161,10 @@ namespace Factorraria.Common.Knowledge
                 foreach (ScrollPool.Entry e in pool.Entries)
                     if (!RecipeCatalog.Exists(e.CatalogKey))
                         warn($"[ScrollPools] pool '{pool.Name}': no recipe or art '{e.CatalogKey}' in the catalog (typo, unknown machine name, or the recipe/art does not exist). Entry skipped.");
+
+            foreach (ScrollPool pool in ordered)
+                if (pool.FallbackName != null && !byName.ContainsKey(pool.FallbackName))
+                    warn($"[ScrollPools] pool '{pool.Name}': fallback pool '{pool.FallbackName}' is not defined. It will fall back to the whole book instead.");
 
             foreach (string problem in RecipeArtRegistry.Problems) warn("[ScrollPools] " + problem);
 
@@ -177,30 +203,43 @@ namespace Factorraria.Common.Knowledge
 
         /// <summary>
         /// Picks the recipe a parchment teaches. poolName null or unknown = global pool.
+        /// Order: the pool itself, then its fallback pool, then that one's fallback, and so on (each pool is tried once), then the whole book.
         /// False only if the whole book has nothing left to unlock.
         /// </summary>
         public static bool TryRoll(string poolName, UnifiedRandom rand, out string catalogKey)
         {
-            if (TryGet(poolName, out ScrollPool pool))
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string name = poolName;
+            while (name != null && TryGet(name, out ScrollPool pool) && visited.Add(pool.Name))
             {
-                List<KeyValuePair<string, float>> local = Candidates(pool);
-                if (local.Count > 0)
-                {
-                    float total = 0f;
-                    foreach (var c in local) total += c.Value;
-                    float roll = rand.NextFloat() * total;
-                    foreach (var c in local)
-                    {
-                        roll -= c.Value;
-                        if (roll < 0f) { catalogKey = c.Key; return true; }
-                    }
-                    catalogKey = local[local.Count - 1].Key;   // float edge case
-                    return true;
-                }
+                if (TryRollFrom(pool, rand, out catalogKey)) return true;
+                name = pool.FallbackName;
             }
 
-            // Pool exhausted (or no pool): any recipe in the whole book.
+            // Every pool in the chain is used up (or there was none): any recipe in the whole book.
             return RecipeCatalog.TryRollLocked(rand, out catalogKey);
+        }
+
+        /// <summary>Weighted roll over one pool's own remaining recipes. False if it has none left.</summary>
+        static bool TryRollFrom(ScrollPool pool, UnifiedRandom rand, out string catalogKey)
+        {
+            List<KeyValuePair<string, float>> local = Candidates(pool);
+            if (local.Count == 0)
+            {
+                catalogKey = null;
+                return false;
+            }
+
+            float total = 0f;
+            foreach (var c in local) total += c.Value;
+            float roll = rand.NextFloat() * total;
+            foreach (var c in local)
+            {
+                roll -= c.Value;
+                if (roll < 0f) { catalogKey = c.Key; return true; }
+            }
+            catalogKey = local[local.Count - 1].Key;   // float edge case
+            return true;
         }
     }
 }
