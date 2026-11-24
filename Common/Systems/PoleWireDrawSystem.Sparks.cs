@@ -14,8 +14,8 @@ namespace Factorraria.Common.Systems
     //
     // Two effects (P9c). A wire SWEEPS (electric dust travelling along it from end A to end B, plus one zap sound) only when the link is
     // just placed while both poles are on. A wire that already exists FLASHES (dust along its whole length in one tick, at a fixed density
-    // per pixel of rope, plus one zap sound) whenever either of its poles changes isOn: a pole switched on or off, the grid shutting down
-    // or powering up, a machine joining or leaving the grid and tipping it. isOn is the only signal used: it is what the server's grid
+    // per pixel of rope, plus one zap sound) whenever either of its poles goes from off to on (turning off is silent): a pole switched on, the grid
+    // powering up, a machine joining the grid and tipping it back on. isOn is the only signal used: it is what the server's grid
     // decides and what the machine snapshot syncs, so a client sees exactly the changes the server made.
     // Nothing happens for a link that is off screen (no rope; its state is still tracked so it does not flash when it comes back), and
     // nothing happens during the first StartupQuietTicks after entering a world, because the links and the poles' state all arrive then.
@@ -24,14 +24,15 @@ namespace Factorraria.Common.Systems
         // Tunables (plain instance fields, so hot reload can change them).
         public bool Sparks = true;
         public int StartupQuietTicks = 180;        // after entering a world, link and power changes are absorbed silently for this long
-        public int SparkTicks = 36;                // how long the sweep along the wire takes
+        public float SweepPixelsPerTick = 10f;     // the sweep's constant speed: a short wire finishes sooner than a long one
+        public int MinSweepTicks = 6;              // a very short wire still shows the sweep for at least this long
         public int SparksPerTick = 2;              // dust at the sweep's front
         public int StraySparksPerTick = 1;         // dust at a random point behind the front
         public int SparkDustType = 226;            // DustID.Electric
         public float SparkScale = 1f;
         public int MaxPulses = 24;                 // sweeps running at once
         public int MaxZapSoundsPerTick = 2;        // a whole grid powering up does not play a hundred zaps at once
-        public float FlashPixelsPerSpark = 20f;    // P9c: the flash density, one spark per this many pixels of rope (so a longer wire gets proportionally more)
+        public float FlashPixelsPerSpark = 35f;    // P9c: the flash density, one spark per this many pixels of rope (so a longer wire gets proportionally more)
         public float FlashSparkScale = 1.1f;
         public float FlashSparkSpeed = 1.6f;       // random drift of a flash spark, pixels per tick
         public int FlashCooldownTicks = 20;        // a wire that just flashed ignores further pole changes for this long
@@ -45,6 +46,7 @@ namespace Factorraria.Common.Systems
         {
             public PoleLink Link;
             public int Age;
+            public int Ticks;                      // how long this sweep lasts: rope length / SweepPixelsPerTick
         }
 
         readonly List<Pulse> pulses = new List<Pulse>();
@@ -111,7 +113,7 @@ namespace Factorraria.Common.Systems
                     entry.Primed = true;
                     sweep = entry.JustPlaced && both;
                 }
-                else if (onA != entry.OnA || onB != entry.OnB)
+                else if ((onA && !entry.OnA) || (onB && !entry.OnB))   // only a pole turning ON; turning off is silent
                 {
                     flash = entry.FlashCooldown <= 0;
                 }
@@ -140,7 +142,7 @@ namespace Factorraria.Common.Systems
                 PoleRope rope = GetRope(entry, entry.RestA, entry.RestB);
                 if (sweep)
                 {
-                    pulses.Add(new Pulse { Link = link });
+                    pulses.Add(new Pulse { Link = link, Ticks = Math.Max(MinSweepTicks, (int)Math.Ceiling(rope.Length / Math.Max(0.1f, SweepPixelsPerTick))) });
                 }
                 else
                 {
@@ -161,13 +163,13 @@ namespace Factorraria.Common.Systems
                 pulse.Age++;
 
                 // Over, or the link was cut / left the screen (no rope): the sweep just ends.
-                if (pulse.Age > SparkTicks || !byLink.TryGetValue(pulse.Link, out CachedLink entry) || entry.Rope == null)
+                if (pulse.Age > pulse.Ticks || !byLink.TryGetValue(pulse.Link, out CachedLink entry) || entry.Rope == null)
                 {
                     pulses.RemoveAt(i);
                     continue;
                 }
 
-                EmitSparks(entry.Rope, pulse.Age / (float)Math.Max(1, SparkTicks));
+                EmitSparks(entry.Rope, pulse.Age / (float)Math.Max(1, pulse.Ticks));
             }
         }
 
