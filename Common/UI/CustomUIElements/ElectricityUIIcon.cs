@@ -183,6 +183,8 @@ namespace Factorraria.Common.UI.CustomUIElements
                 // Batteries that are waiting for enough company: keep the numbers (red) so the player sees demand is above supply + capacity.
                 if (dischargeCapacity > 0f)
                     ElectricityHoverTip.Show((PowerText(demand) + "/" + PowerText(supply), red), (" + ", separator), (PowerText(dischargeCapacity), blue));
+                else if (supply > 0f && demand > supply)
+                    ElectricityHoverTip.Show("Overloaded " + PowerText(demand) + "/" + PowerText(supply), red);
                 else
                     ElectricityHoverTip.Show("No power", red);
                 return;

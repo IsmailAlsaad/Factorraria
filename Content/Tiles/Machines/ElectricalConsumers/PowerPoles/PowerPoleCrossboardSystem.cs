@@ -121,6 +121,9 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
             // crossarm tips cover the wire ends. They still land on top of the overhang canvases (MachineOverhangSystem sorts before this).
             ModContent.GetInstance<PoleWireDrawSystem>().DrawLinks(spriteBatch);
 
+            // The pending-link preview wire (P6) too, so it hangs behind the crossboards like the finished wires do (own batch).
+            ModContent.GetInstance<PoleLinkInputSystem>().DrawWorld(spriteBatch);
+
             foreach (TileEntity entity in TileEntity.ByPosition.Values)
             {
                 if (entity is not PowerPoleTileEntityBase pole)
@@ -175,9 +178,6 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles
 
             if (batchBegun)
                 spriteBatch.End();
-
-            // Pending-link hologram and connection point markers (P6), on top of the finished wires.
-            ModContent.GetInstance<PoleLinkInputSystem>().DrawWorld(spriteBatch);
         }
 
         // One board, up to three layers, each its own Draw call of a different cell of the SAME sheet at the SAME position, rotation and light, so the

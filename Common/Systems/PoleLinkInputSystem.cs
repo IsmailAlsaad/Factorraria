@@ -424,7 +424,7 @@ namespace Factorraria.Common.Systems
             preview = default;
         }
 
-        // ---------------------------------------------------------------- drawing: world (called by PowerPoleCrossboardSystem.PostDrawTiles, after the boards)
+        // ---------------------------------------------------------------- drawing: world (called by PowerPoleCrossboardSystem.PostDrawTiles, right after the finished wires and BEFORE the boards)
         // Only the pending-link hologram. The connection point highlights are cells of the board sheets, drawn with the boards (GetPointHighlight).
 
         public void DrawWorld(SpriteBatch spriteBatch)

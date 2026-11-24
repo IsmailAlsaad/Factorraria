@@ -25,7 +25,7 @@ namespace Factorraria.Common.Systems
         // Tunables (plain instance fields, so hot reload can change them).
         public float WireThickness = 2f;
         public float CullMarginPixels = 4f;
-        public Color CopperColor = new Color(183, 88, 25);     // sampled from CopperWireTile.png
+        public Color CopperColor = new Color(186, 73, 41);     // the spool's main colour in CopperWireItem.png (tin and gold already match their spools)
         public Color TinColor = new Color(85, 91, 75);      // sampled from TinWireTile.png
         public Color GoldColor = new Color(203, 179, 73);     // sampled from GoldWireTile.png
         public Color InvalidColor = new Color(255, 70, 70);    // same red as the pole placement hologram
