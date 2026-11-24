@@ -516,13 +516,13 @@ tModLoader/other bases -> project types:
     +LiquidMerge(int,int,int,int)[ov]
 **LiquidNetworkRegistries.cs** uses: FuelLiquid, MachineBiome, OilLiquid
   class LiquidTypeDefinition
-    +Name:string +RenderColor:Color +VanillaTileLiquidId:byte? +IsWaterVariant:bool +IconPath:string
+    +Name:string +RenderColor:Color +VanillaTileLiquidId:byte? +IsWaterVariant:bool +IconPath:string +SplashDust:int
   static class LiquidTypeRegistry
-    +definitions:List<LiquidTypeDefinition>[s] +Register(LiquidTypeDefinition)[s] +ToTileLiquidId(int)[s] +FromTileLiquidId(byte)[s] +Get(int)[s] +Water:int[s] +Lava:int[s] +Honey:int[s] +Shimmer:int[s] +Oil:int[s] +Fuel:int[s] +AnyWater:int[c] +SnowWater:int[s] +DesertWater:int[s] +JungleWater:int[s] +OceanWater:int[s] +UndergroundWater:int[s] +CavernWater:int[s] +CorruptionWater:int[s] +CrimsonWater:int[s] +HallowWater:int[s] +OasisWater:int[s] +WaterByBiome:Dictionary<MachineBiome, int>[s] +WaterFor(MachineBiome)[s] +IsWater(int)[s] +RegisterBiomeWater(MachineBiome,string,Color,string)[s]
+    +definitions:List<LiquidTypeDefinition>[s] +Register(LiquidTypeDefinition)[s] +ToTileLiquidId(int)[s] +FromTileLiquidId(byte)[s] +Get(int)[s] +Water:int[s] +Lava:int[s] +Honey:int[s] +Shimmer:int[s] +Oil:int[s] +Fuel:int[s] +AnyWater:int[c] +SnowWater:int[s] +DesertWater:int[s] +JungleWater:int[s] +OceanWater:int[s] +UndergroundWater:int[s] +CavernWater:int[s] +CorruptionWater:int[s] +CrimsonWater:int[s] +HallowWater:int[s] +OasisWater:int[s] +WaterByBiome:Dictionary<MachineBiome, int>[s] +WaterFor(MachineBiome)[s] +IsWater(int)[s] +RegisterBiomeWater(MachineBiome,string,Color,string,int)[s]
   enum PipeMaterial
     {Lead, Iron}
   static class PipeTierRegistry
-    +MaxFlowRateByTileType:Dictionary<int, float>[s] +MaterialByTileType:Dictionary<int, PipeMaterial>[s] +Register(int,float,PipeMaterial)[s] +RegisterMotor(int,PipeMaterial)[s] +TryGetMaterial(int,out PipeMaterial)[s] +CanLink(int,int)[s] +IsPipeTile(int)[s]
+    +MaxFlowRateByTileType:Dictionary<int, float>[s] +MaterialByTileType:Dictionary<int, PipeMaterial>[s] +Register(int,float,PipeMaterial)[s] +RegisterMotor(int,PipeMaterial)[s] +TryGetMaterial(int,out PipeMaterial)[s] +CanLink(int,int)[s] +IsPipeTile(int)[s] +IsMotorTile(int)[s]
   class LiquidTypeRegistrationSystem : ModSystem
     +PostSetupContent()[ov] +Unload()[ov]
 **LiquidStack.cs**
@@ -549,11 +549,13 @@ tModLoader/other bases -> project types:
 **PipeConnectionHelper.cs** uses: BaseMachine, Direction, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
   static class PipeConnectionHelper
     +CanConnect(int,int,Direction,int)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
-**PipeFlowVisualSystem.cs** uses: Direction, LiquidTypeRegistry, MotorTileEntityBase, Phase, PipeTierRegistry, Record, VisibleTileScan
+**PipeFlowVisualSystem.cs** uses: Direction, LiquidTypeRegistry, MachineVisualOverride, MotorTileEntityBase, Phase, PipeTierRegistry, Record, VisibleTileScan
   sealed class PipeFlowCell
-    +S:float +Travel:Point +Liquid:int +Rate:float +IsMotor:bool +EndMask:int +Intensity:float +Stamp:int
+    +S:float +Dist:float +Travel:Point +Liquid:int +Rate:float +IsMotor:bool +EndMask:int +Intensity:float +Stamp:int
   class PipeFlowVisualSystem : ModSystem
-    +BallSpeedTilesPerSecond:float +BallLengthTiles:float +BallSpacingTiles:float +SwellAmount:float +SqueezeAmount:float +MotorSwellMultiplier:float +RebuildIntervalTicks:int +MaxWalkPipes:int +MaxRangeTiles:float +FadePerTick:float +OpenEndParticlesPerUnit:float +LeakParticlesPerUnit:float +WindowParticlesPerUnit:float +MaxParticlesPerTick:int +ParticleScaleMin:float +ParticleScaleMax:float +OpenEndSpeedMin:float +OpenEndSpeedMax:float +LeakSpeedMin:float +LeakSpeedMax:float +WindowSpeedMin:float +WindowSpeedMax:float +WindowHorizontal:Rectangle +WindowVertical:Rectangle +Unload()[ov] +OnWorldUnload()[ov] +GetTileScale(int,int,Tile) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+    +BallSpeedTilesPerSecond:float +BallLengthTiles:float +BallSpacingTiles:float +SwellAmount:float +SqueezeAmount:float +MotorSwellMultiplier:float +RebuildIntervalTicks:int +MaxWalkPipes:int +MaxRangeTiles:float +FadePerTick:float +OpenEndParticlesPerUnit:float +LeakChancePerTick:float +LeakBurstMin:int +LeakBurstMax:int +WindowParticlesPerUnit:float +MaxParticlesPerTick:int +ParticleScaleMin:float +ParticleScaleMax:float +OpenEndSpeedMin:float +OpenEndSpeedMax:float +LeakSpeedMin:float +LeakSpeedMax:float +WindowSpeedMin:float +WindowSpeedMax:float +WindowScaleMultiplier:float +MaxWindowParticles:int +WindowHorizontal:Rectangle +WindowVertical:Rectangle +Unload()[ov] +OnWorldUnload()[ov] +GetTileScale(int,int,Tile) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+    struct WindowParticle
+      +Tile:Point +Position:Vector2 +Velocity:Vector2 +Texture:Texture2D +Frame:Rectangle +Tint:Color +Scale:float +Age:int +Life:int
 **PipeTileBase.cs** uses: LiquidNetworkSystem, PipeConnectionHelper, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileOverdrawSystem
   abstract class PipeTileBase : ModTile
     #MaxFlowRate:float[ab] #Material:PipeMaterial[ab] #PipeDustId:int[v] #OverdrawTexturePath:string[v] +IsStraightMask(int)[s] +IsWindowedAt(int,int)[s] +PreDraw(int,int,SpriteBatch)[ov] +CanPlace(int,int)[ov] +PlaceInWorld(int,int,Item)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +NearbyEffects(int,int,bool)[ov] +ReframeNeighbors(int,int)[s] +Slope(int,int)[ov] +CreateDust(int,int,ref int)[ov]
@@ -655,7 +657,7 @@ tModLoader/other bases -> project types:
   static class MachineVisualRegistry
     +Definitions:Dictionary<int, MachineVisualDefinition>[s] +Register<T>(int,string,string,string,string)[s] +RegisterAlternateOn(int,string,Func<BaseMachine, bool>)[s] +RegisterOnStates(int,string)[s] +RegisterLiquidOverlay(int,string,Func<BaseMachine, LiquidStack>,string,string)[s] ~Warn(string)[s] +RegisterOverhang<T>(int,string,string,int,int,float,float,int,int,float,string,string,int)[s]
   class MachineVisualOverride : GlobalTile
-    +PreDraw(int,int,int,SpriteBatch)[ov] +GetMotorRotation(Direction)[s] +RightClick(int,int,int)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +ModifyLight(int,int,int,ref float,ref float,ref float)[ov]
+    +PreDraw(int,int,int,SpriteBatch)[ov] +DrawDeferredMotor(SpriteBatch,int,int)[s] +GetMotorRotation(Direction)[s] +RightClick(int,int,int)[ov] +KillTile(int,int,int,ref bool,ref bool,ref bool)[ov] +ModifyLight(int,int,int,ref float,ref float,ref float)[ov]
 **MachineWireGlobalTile.cs** uses: BaseMachine, TileEntityHelper
   class MachineWireGlobalTile : GlobalTile
     +PreHitWire(int,int,int)[ov]
@@ -666,7 +668,7 @@ tModLoader/other bases -> project types:
     +HeldVersion:int[s] +IsIngredient(int)[s] +BuildIngredientIndex()[s] +ClearIndex()[s] +InvalidateHeld()[s] +GetState(string,RecipeOutputGroup)[s] +GetState(string)[s] +Poll()[s] +IsItemHeld(int)[s] +IsHeld(string)[s] +IsNameRevealedInBrowser(string,RecipeOutputGroup,RecipeState)[s] +TryGetItemProducers(int,out List<string>)[s] +IsProductCrafted(RecipeOutputKey)[s] +IsIngredientRevealed(int)[s] +IsLiquidRevealed(int)[s] +IsMachineCrafted(string)[s] +IsFuelRevealed(string,FuelEntry)[s] +FindBookRecipeFor(RecipeOutputKey,string)[s] +InBook(RecipeState)[s]
 **TileEntityHelper.cs** uses: Factorraria, FurnaceOffsetConfig, HarvesterBoxRows, LiquidNetworkSystem, PowerGridSystem
   static class TileEntityHelper
-    +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float,int,Vector2?)[s] +GetAnimationFrame(Point16,int)[s]
+    +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float,int,Vector2?,bool)[s] +GetAnimationFrame(Point16,int)[s]
 
 ### Common/Mounts/
 **MechSuitBlueprint.cs**

@@ -485,6 +485,11 @@ namespace Factorraria.Common.Machines
 
             InitializeMachine(entity);
 
+            // Pumps are drawn by PipeFlowVisualSystem (DrawDeferredMotor below), in the same point-sampled pass as the pipes. Drawn here, inside the
+            // tile pass, a swollen pump was resampled with smoothing and came out blurry, and it switched between two ways of being drawn.
+            if (entity is MotorTileEntityBase)
+                return false;
+
             if (def.Canvas != null)
             {
                 // The whole machine (footprint tiles + overhang), On or Off, is drawn as one canvas by
@@ -528,9 +533,40 @@ namespace Factorraria.Common.Machines
             return false;
         }
 
+        // A pump drawn straight to the screen after all tiles (PipeFlowVisualSystem.PostDrawTiles calls this for every pump on screen), with the same
+        // point sampling the pipes use, so a swollen pump stays as sharp as a swollen pipe. Same art, state and animation as the normal path in PreDraw.
+        public static void DrawDeferredMotor(SpriteBatch spriteBatch, int i, int j)
+        {
+            Tile tile = Main.tile[i, j];
+            if (!tile.HasTile || !MachineVisualRegistry.Definitions.TryGetValue(tile.TileType, out MachineVisualDefinition def) || def.DrawNormalTile)
+                return;
+
+            // No entity on this client yet: PreDraw let the vanilla tile draw, so there is nothing to add.
+            if (!(def.ResolveEntity(i, j) is MotorTileEntityBase motor))
+                return;
+
+            float rotation = GetMotorRotation(motor.Facing);
+            Vector2 scale = ModContent.GetInstance<PipeFlowVisualSystem>().GetTileScale(i, j, tile);
+
+            if (def.TryGetActiveTransition(motor, out Texture2D transitionTexture, out int transitionFrame, out MachineTransition transitionKind))
+            {
+                TileEntityHelper.AnimateTileEntity(spriteBatch, transitionTexture, i, j, rotation, transitionFrame, scale, true);
+                DrawLiquidOverlays(spriteBatch, def.LiquidOverlays, transitionKind, motor, i, j, rotation, transitionFrame, scale, true);
+                return;
+            }
+
+            Texture2D texture = motor.IsRunning ? def.GetOnAsset(motor).Value : def.OffTexture.Value;
+            int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture, i, j, rotation, -1, scale, true);
+
+            if (motor.IsRunning)
+                DrawLiquidOverlays(spriteBatch, def.LiquidOverlays, MachineTransition.None, motor, i, j, rotation, -1, scale, true);
+
+            motor.NotifyAnimationFrame(frame);
+        }
+
         // forcedFrame -1 = the normal looping animation, otherwise the exact frame (startup / shutdown).
         // kind picks each layer's On / startup / shutdown texture; a layer without that one is skipped.
-        static void DrawLiquidOverlays(SpriteBatch spriteBatch, List<LiquidOverlayLayer> layers, MachineTransition kind, BaseMachine entity, int i, int j, float rotation, int forcedFrame, Vector2 scale)
+        static void DrawLiquidOverlays(SpriteBatch spriteBatch, List<LiquidOverlayLayer> layers, MachineTransition kind, BaseMachine entity, int i, int j, float rotation, int forcedFrame, Vector2 scale, bool toScreen = false)
         {
             if (layers == null)
                 return;
@@ -547,7 +583,7 @@ namespace Factorraria.Common.Machines
                 LiquidTypeDefinition liquidDef = LiquidTypeRegistry.Get(stack.LiquidType);
                 Texture2D recolored = LiquidTextureCache.GetOrCreate(cacheKey, source, liquidDef);
 
-                TileEntityHelper.AnimateTileEntity(spriteBatch, recolored, i, j, rotation, forcedFrame, scale);
+                TileEntityHelper.AnimateTileEntity(spriteBatch, recolored, i, j, rotation, forcedFrame, scale, toScreen);
             }
         }
 

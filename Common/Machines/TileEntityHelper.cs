@@ -113,7 +113,8 @@ namespace Factorraria.Common.Machines
 
         // forcedFrame >= 0 draws exactly that frame (clamped to the texture) instead of the looping animation; used by startup/shutdown.
         // scale (default 1) stretches the slice around its own centre; the pump uses it to swell with the pipes.
-        public static int AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j,float rotation = 0f, int forcedFrame = -1, Vector2? scale = null)
+        // toScreen true = drawn straight to the screen after the tiles (no off-screen offset), the way PipeFlowVisualSystem draws pumps.
+        public static int AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j,float rotation = 0f, int forcedFrame = -1, Vector2? scale = null, bool toScreen = false)
         {
             Tile thisTile = Framing.GetTileSafely(i, j);
             TileObjectData data = TileObjectData.GetTileData(thisTile.TileType, 0);
@@ -139,7 +140,7 @@ namespace Factorraria.Common.Machines
                 frameHeight += rowHeight;
             }
 
-            Vector2 offset = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
+            Vector2 offset = (toScreen || Main.drawToScreen) ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
             Vector2 origin = new Vector2(8f, data.CoordinateHeights[subY] / 2f);
             Vector2 drawPosition = new Vector2(i, j) * 16 - Main.screenPosition + offset + new Vector2(0, data.DrawYOffset) + origin;
             int frameCount = targetTexture.Height / frameHeight;
