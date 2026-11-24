@@ -20,7 +20,17 @@ namespace Factorraria.Common.Machines
         // not flicker the animation), and it reaches every client in this motor's light update. Never saved.
         public int FlowLiquidType = -1;
         public int FlowIdleTicks;
-        public int FlowIdleLimitTicks = 12;
+        public int FlowIdleLimitTicks = 20;
+
+        // Visual only: how much liquid this pump moves, for the particle amount. FlowNetwork adds what a route moved this tick to
+        // FlowMovedThisTick (server / single-player), Update smooths it into FlowRate (units per tick) and rounds that to FlowRateLevel
+        // (units of FlowRateStep, 0..255), which is what the light update carries. Quantized on purpose: the payload is only re-sent when
+        // the level changes. FlowRateStep must be the same on the server and the clients (it is a plain default, so it is).
+        public float FlowMovedThisTick;
+        public float FlowRate;
+        public float FlowRateSmoothing = 0.1f;   // 0..1 per tick: how fast FlowRate follows the real amount
+        public float FlowRateStep = 0.25f;       // units per tick one FlowRateLevel stands for
+        public byte FlowRateLevel;
 
         // Sealed so future motor tiers override UpdateMotor() instead. A power flip (grid, brownout, wire toggle) needs nothing here:
         // FlowNetwork.Tick reads isOn and PumpStrength of every motor each tick and refreshes its routes when one changed.
@@ -30,8 +40,18 @@ namespace Factorraria.Common.Machines
             UpdateMotor();
 
             // A client replica only mirrors what the server sent, so only the server (and single-player) forgets the flow.
-            if (FlowLiquidType >= 0 && Terraria.Main.netMode != Terraria.ID.NetmodeID.MultiplayerClient && ++FlowIdleTicks > FlowIdleLimitTicks)
-                FlowLiquidType = -1;
+            if (Terraria.Main.netMode != Terraria.ID.NetmodeID.MultiplayerClient)
+            {
+                if (FlowLiquidType >= 0 && ++FlowIdleTicks > FlowIdleLimitTicks)
+                {
+                    FlowLiquidType = -1;
+                    FlowRate = 0f;
+                }
+
+                FlowRate += (FlowMovedThisTick - FlowRate) * FlowRateSmoothing;
+                FlowMovedThisTick = 0f;
+                FlowRateLevel = (byte)System.Math.Clamp((int)System.Math.Round(FlowRate / System.Math.Max(0.01f, FlowRateStep)), 0, 255);
+            }
         }
 
         protected virtual void UpdateMotor() { }
@@ -74,12 +94,14 @@ namespace Factorraria.Common.Machines
         {
             base.WriteLightExtra(writer);
             writer.Write7BitEncodedInt(FlowLiquidType + 1);
+            writer.Write(FlowRateLevel);
         }
 
         protected override void ReadLightExtra(BinaryReader reader)
         {
             base.ReadLightExtra(reader);
             FlowLiquidType = reader.Read7BitEncodedInt() - 1;
+            FlowRateLevel = reader.ReadByte();
         }
 
         public override void SaveData(TagCompound tag)

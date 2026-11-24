@@ -58,11 +58,14 @@ namespace Factorraria.Common.Liquids
             PipeTierRegistry.RegisterMotor(Type, Material);
 
             // Art outside the 16px cell: 2 cells in a row (0 = Off, 1 = On), drawn facing Right and rotated with the motor. See TileOverdrawSystem.
-            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell);
+            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell, scaler: SelectOverdrawScale);
         }
 
         // LeadMotorTile -> .../LeadMotorOverdraw (PNG optional: a missing sheet just draws nothing).
         protected virtual string OverdrawTexturePath => Texture.EndsWith("Tile") ? Texture.Substring(0, Texture.Length - 4) + "Overdraw" : Texture + "_Overdraw";
+
+        // The overhang art swells with the pump (PipeFlowVisualSystem owns the wave; the pump is its path coordinate 0).
+        static Vector2 SelectOverdrawScale(int i, int j, Tile tile) => ModContent.GetInstance<PipeFlowVisualSystem>().GetTileScale(i, j, tile);
 
         // Placement hologram: a new motor is Off and faces Right (MotorTileEntityBase.Facing default).
         static bool SelectPreviewCell(int i, int j, Tile tile, out int cell, out float rotation)

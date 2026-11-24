@@ -263,12 +263,12 @@ namespace Factorraria.Common.Networks
                 if (amount <= 0f) continue;
 
                 Deposit(transfer.Dst, transfer.Type, amount);
-                MarkRouteMotors(transfer.Route, transfer.Type);
+                MarkRouteMotors(transfer.Route, transfer.Type, amount);
             }
         }
 
         // Visual only: tell every ON pump on this route which liquid it just moved (see MotorTileEntityBase.FlowLiquidType).
-        void MarkRouteMotors(int routeIndex, int liquidType)
+        void MarkRouteMotors(int routeIndex, int liquidType, float amount)
         {
             if (routeIndex < 0 || routeIndex >= Routes.Count)
                 return;
@@ -282,6 +282,7 @@ namespace Factorraria.Common.Networks
 
                 motor.FlowLiquidType = liquidType;
                 motor.FlowIdleTicks = 0;
+                motor.FlowMovedThisTick += amount;   // every pump of a route pushes the whole stream through itself (visual only)
             }
         }
 

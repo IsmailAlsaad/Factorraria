@@ -445,7 +445,7 @@ The network changes `LiquidStack.Amount` every tick for machines and motors on t
 
 ### P11 (L) Pipe flow visuals (side feature)
 The liquid networks exist on the server only (P1), so a client cannot know which pipes carry liquid. Decision: the server marks each ON pump with the liquid it moved (`MotorTileEntityBase.FlowLiquidType`), the 5.2 light update carries it, and every client derives the animation from its own pipe tiles and motor replicas (`PipeFlowVisualSystem`). ON pumps are one-way along `Facing`, so the direction of the wave is known without sending routes. Windowed pipe art is chosen by a hash of the tile position, so it needs no sync and no save data.
-**Status (applied, untested):** see the Progress entry 'pipe flow visuals'.
+**Status (applied, untested):** see the Progress entries 'pipe flow visuals' and 'pipe flow visuals v2'. v2 adds the pump's quantized move rate (`FlowRateLevel`, one more byte in the motor light update) so clients can scale the dust amount, and replaces the metaball drawing with vanilla dust.
 
 ## Roadmap inputs from this step
 - Net-plumbing phase: tile-placed packet registers pipes and motors (P1) and heals saved data.

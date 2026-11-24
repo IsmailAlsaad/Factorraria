@@ -12,28 +12,32 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Common.Liquids
 {
-    // What the visuals know about one pipe tile that liquid is moving through right now.
+    // What the visuals know about one pipe (or pump) tile that liquid is moving through right now.
     public sealed class PipeFlowCell
     {
         public float S;          // path coordinate along the flow: 0 at the pump, +n for the n-th tile downstream, -n for the n-th tile upstream
         public Point Travel;     // the unit step the liquid takes through this tile (the pump's facing downstream, the reverse upstream)
         public int Liquid;       // LiquidTypeRegistry id (colour and dust)
+        public float Rate;       // liquid units the pump moves per tick (smoothed, from the pump's quantized FlowRateLevel); scales the particle amount
+        public bool IsMotor;     // this cell is the pump itself (swells with the pipes, drawn by its own tile code)
         public int EndMask;      // straight pipes only: bit (1 << Direction) for every end that opens onto empty space
         public float Intensity;  // 0..1, fades in and out so the animation never pops
         public int Stamp;        // the rebuild this cell was last seen in
     }
 
     // CLIENT ONLY and purely cosmetic: nothing here is saved or sent. It reads what every client already has: the motor replicas
-    // (isOn, Facing and FlowLiquidType, which the server writes and sends in the motor's light update) and the pipe tiles.
+    // (isOn, Facing, FlowLiquidType and FlowRateLevel, which the server writes and sends in the motor's light update) and the pipe tiles.
     //
     // Every few ticks it walks the pipes from each running pump: downstream along its Facing (ON pumps are one-way) and upstream
-    // behind it, giving every pipe a path coordinate S. A wave then runs along S: a "ball" of fluid travels intake -> pump -> outlet,
-    // swelling the pipes it passes and squeezing them a little right behind it.
+    // behind it, giving every pipe a path coordinate S (the pump itself is S 0). A wave then runs along S: a "ball" of fluid travels
+    // intake -> pump -> outlet, swelling the pipes and the pump it passes and squeezing them a little right behind it.
     //
-    // Drawing (PostDrawTiles): a pipe that is part of a flow is NOT drawn by vanilla (PipeTileBase.PreDraw says no) but here, scaled,
-    // with the window liquid drawn BEHIND it (so the window art's transparent hole masks the liquid) and the open-end blobs in front.
-    // The liquid in a window and at an open end is a small 2D metaball field evaluated per pixel (no shader): a pixel is liquid when the
-    // summed field of the blobs crosses MetaballThreshold, so blobs that come close melt into each other.
+    // Drawing: EVERY pipe is drawn here (PostDrawTiles; PipeTileBase.PreDraw always says no), scaled by the wave while liquid moves and at
+    // scale 1 otherwise, so a pipe never switches between two ways of being drawn (that switch was the flicker). The art outside the
+    // tile (TileOverdrawSystem) and the pump (MachineVisualOverride) ask GetTileScale so they swell in step.
+    //
+    // Liquid itself is plain vanilla dust: bursts from the window of a windowed pipe, a stream out of an open pipe end, and leaks from
+    // pipes that touch air. Every amount is liquid units moved per tick times a tuning field below.
     public class PipeFlowVisualSystem : ModSystem
     {
         // ---- Tuning (instance fields on purpose: hot reload can change them) ----
@@ -42,32 +46,38 @@ namespace Factorraria.Common.Liquids
         public float BallSpacingTiles = 9f;       // distance between two balls (must be more than 2 * BallLengthTiles)
         public float SwellAmount = 0.2f;          // extra scale at the middle of the ball
         public float SqueezeAmount = 0.07f;       // scale lost just behind the ball
+        public float MotorSwellMultiplier = 1f;   // the pump swells SwellAmount and squeezes SqueezeAmount times this (0 = the pump stays put)
         public int RebuildIntervalTicks = 10;
         public int MaxWalkPipes = 600;            // per pump and side
         public float MaxRangeTiles = 90f;         // pumps farther than this from the player are not animated
         public float FadePerTick = 0.1f;
 
-        // Window rectangles in tile pixels (the 16x16 cell, 0,0 = top-left). Match them to the transparent hole in the art.
+        // ---- Particle amounts ----
+        // Each is "particles per tick, per liquid unit moved per tick, while the swell is at its peak" (the swell lobe scales it down toward
+        // its edges and to 0 outside it). A lead pump moves up to 5 units per tick, an iron pump up to 10, so with the defaults an open
+        // end of a full lead pump makes about 1 particle per tick at the swell's peak. Fractions are rolled (0.3 = one particle in three ticks).
+        public float OpenEndParticlesPerUnit = 0.2f;   // the stream out of the open end the liquid leaves through
+        public float LeakParticlesPerUnit = 0.05f;     // sprays out of any side of a pipe that touches air
+        public float WindowParticlesPerUnit = 0.08f;   // drifting inside the window of a windowed pipe
+        public int MaxParticlesPerTick = 24;           // a hard cap over all pipes on screen, so a huge network cannot flood the dust pool
+        public float ParticleScaleMin = 0.8f;
+        public float ParticleScaleMax = 1.1f;
+        public float OpenEndSpeedMin = 0.8f;           // pixels per tick
+        public float OpenEndSpeedMax = 2.2f;
+        public float LeakSpeedMin = 0.4f;
+        public float LeakSpeedMax = 1.4f;
+        public float WindowSpeedMin = 0.6f;
+        public float WindowSpeedMax = 1.4f;
+
+        // Window rectangles in tile pixels (the 16x16 cell, 0,0 = top-left). Window particles appear inside these; match them to the hole in the art.
         public Rectangle WindowHorizontal = new Rectangle(3, 5, 10, 6);
         public Rectangle WindowVertical = new Rectangle(5, 3, 6, 10);
-
-        // The blobs of one ball: offset along the pipe in tiles from the ball's centre (negative = behind it) and radius in pixels.
-        public float[] BlobOffsetsTiles = { 0f, -1.55f, 1.4f };
-        public float[] BlobRadiiPx = { 5.5f, 2.6f, 2f };
-        public float MetaballThreshold = 1f;
-        public float MetaballCore = 2.2f;         // field value where the lighter core colour starts
-
-        public float OpenEndReachPx = 5f;         // how far the blob at an open end pokes out at its biggest
-        public int LeakOneInChance = 25;          // per tick while a ball is inside a pipe tile that has air next to it
-        public int MaxLeaksPerTick = 2;
 
         readonly Dictionary<Point, PipeFlowCell> cells = new Dictionary<Point, PipeFlowCell>();
         readonly Queue<(Point pos, int dist, Point step)> queue = new Queue<(Point, int, Point)>();
         readonly HashSet<Point> walked = new HashSet<Point>();
         readonly List<Point> removeBuffer = new List<Point>();
-        readonly float[] blobX = new float[8];
-        readonly float[] blobY = new float[8];
-        readonly float[] blobR = new float[8];
+        readonly List<KeyValuePair<Point, PipeFlowCell>> emitBuffer = new List<KeyValuePair<Point, PipeFlowCell>>();
         int stamp;
         int tickCounter;
 
@@ -76,6 +86,7 @@ namespace Factorraria.Common.Liquids
             cells.Clear();
             queue.Clear();
             walked.Clear();
+            emitBuffer.Clear();
         }
 
         public override void OnWorldUnload()
@@ -83,15 +94,22 @@ namespace Factorraria.Common.Liquids
             cells.Clear();
         }
 
-        /// <summary>True while this pipe is part of a flow the visuals draw themselves (PipeTileBase.PreDraw then skips the vanilla draw).</summary>
-        public bool TryGetCell(int i, int j, out PipeFlowCell cell)
+        /// <summary>The scale a tile is drawn at right now: Vector2.One when no liquid moves through it. Pipes swell across their axis only (corners and junctions evenly), the pump evenly.</summary>
+        public Vector2 GetTileScale(int i, int j, Tile tile)
         {
-            if (cells.Count == 0)
-            {
-                cell = null;
-                return false;
-            }
-            return cells.TryGetValue(new Point(i, j), out cell);
+            if (cells.Count == 0 || !cells.TryGetValue(new Point(i, j), out PipeFlowCell cell))
+                return Vector2.One;
+
+            float s = ScaleAt(Phase(cell.S), cell.Intensity);
+            if (cell.IsMotor)
+                return new Vector2(1f + (s - 1f) * MotorSwellMultiplier);
+
+            int mask = tile.TileFrameX / 18;
+            if (mask == 12)
+                return new Vector2(1f, s);
+            if (mask == 3)
+                return new Vector2(s, 1f);
+            return new Vector2(s);
         }
 
         // ------------------------------------------------------------------ update
@@ -113,7 +131,7 @@ namespace Factorraria.Common.Liquids
                 Rebuild();
 
             FadeCells();
-            SpawnLeaks();
+            SpawnParticles();
         }
 
         void Rebuild()
@@ -144,6 +162,11 @@ namespace Factorraria.Common.Liquids
             Point step = side.ToOffset();
             Point motorPos = new Point(motor.Position.X, motor.Position.Y);
             int motorType = Main.tile[motorPos.X, motorPos.Y].TileType;
+            float rate = motor.FlowRateLevel * motor.FlowRateStep;
+
+            // The pump itself is the first cell of the wave (path coordinate 0), so it swells with its pipes.
+            if (downstream)
+                Record(motorPos, 0f, motor.Facing.ToOffset(), motor.FlowLiquidType, rate, Main.tile[motorPos.X, motorPos.Y], true);
 
             queue.Clear();
             walked.Clear();
@@ -161,7 +184,7 @@ namespace Factorraria.Common.Liquids
                     continue;
 
                 budget--;
-                Record(pos, downstream ? dist : -dist, downstream ? stepHere : new Point(-stepHere.X, -stepHere.Y), motor.FlowLiquidType, tile);
+                Record(pos, downstream ? dist : -dist, downstream ? stepHere : new Point(-stepHere.X, -stepHere.Y), motor.FlowLiquidType, rate, tile, false);
 
                 for (int d = 0; d < 4; d++)
                 {
@@ -171,7 +194,7 @@ namespace Factorraria.Common.Liquids
             }
         }
 
-        void Record(Point pos, float s, Point travel, int liquid, Tile tile)
+        void Record(Point pos, float s, Point travel, int liquid, float rate, Tile tile, bool isMotor)
         {
             if (!cells.TryGetValue(pos, out PipeFlowCell cell))
             {
@@ -186,8 +209,10 @@ namespace Factorraria.Common.Liquids
             cell.S = s;
             cell.Travel = travel;
             cell.Liquid = liquid;
+            cell.Rate = rate;
+            cell.IsMotor = isMotor;
             cell.Stamp = stamp;
-            cell.EndMask = ComputeEndMask(pos.X, pos.Y, tile);
+            cell.EndMask = isMotor ? 0 : ComputeEndMask(pos.X, pos.Y, tile);
         }
 
         // Which ends of a straight pipe open onto empty space (nothing, not even a wall-less block, next to it).
@@ -232,6 +257,7 @@ namespace Factorraria.Common.Liquids
                 }
             }
 
+            // Safe to drop: a pipe without a cell is drawn at scale 1, exactly what a cell at intensity 0 draws.
             for (int i = 0; i < removeBuffer.Count; i++)
                 cells.Remove(removeBuffer[i]);
         }
@@ -266,29 +292,128 @@ namespace Factorraria.Common.Liquids
             return 1f + (raw - 1f) * intensity;
         }
 
-        // ------------------------------------------------------------------ leaks
+        // ------------------------------------------------------------------ particles
 
-        void SpawnLeaks()
+        void SpawnParticles()
         {
             if (cells.Count == 0 || Main.gamePaused)
                 return;
 
             VisibleTileScan.GetRange(1, out int left, out int right, out int top, out int bottom);
-            int spawned = 0;
 
+            // Collected first so the cap below cuts a random part of a big network, not always the same pipes (dictionary order).
+            emitBuffer.Clear();
             foreach (KeyValuePair<Point, PipeFlowCell> pair in cells)
             {
-                if (spawned >= MaxLeaksPerTick)
-                    break;
-
                 PipeFlowCell cell = pair.Value;
                 Point p = pair.Key;
-                if (cell.Intensity < 0.9f || p.X < left || p.X > right || p.Y < top || p.Y > bottom)
+                if (cell.IsMotor || cell.Intensity < 0.5f || cell.Rate <= 0f || p.X < left || p.X > right || p.Y < top || p.Y > bottom)
                     continue;
 
-                if (Lobe(Phase(cell.S)) < 0.7f || !Main.rand.NextBool(Math.Max(1, LeakOneInChance)))
+                emitBuffer.Add(pair);
+            }
+
+            if (emitBuffer.Count == 0)
+                return;
+
+            int budget = Math.Max(0, MaxParticlesPerTick);
+            int startAt = Main.rand.Next(emitBuffer.Count);
+
+            for (int n = 0; n < emitBuffer.Count && budget > 0; n++)
+            {
+                KeyValuePair<Point, PipeFlowCell> pair = emitBuffer[(startAt + n) % emitBuffer.Count];
+                PipeFlowCell cell = pair.Value;
+                Point p = pair.Key;
+
+                // Everything is strongest while the swell passes through this pipe.
+                float peak = Lobe(Phase(cell.S)) * cell.Intensity * cell.Rate;
+                if (peak <= 0.001f)
                     continue;
 
+                Tile tile = Main.tile[p.X, p.Y];
+                if (!tile.HasTile)
+                    continue;
+
+                budget -= EmitWindow(p, cell, tile, peak, budget);
+                budget -= EmitOpenEnd(p, cell, peak, budget);
+                budget -= EmitLeak(p, cell, peak, budget);
+            }
+        }
+
+        // How many particles to make this tick for an expected amount (the fraction is rolled), capped by what is left of the budget.
+        static int Roll(float expected, int budget)
+        {
+            int count = (int)expected;
+            if (Main.rand.NextFloat() < expected - count)
+                count++;
+            return Math.Min(count, Math.Max(0, budget));
+        }
+
+        // Windowed straight pipes only (TileFrameY 18 = the windowed art): drifting along the pipe inside the window.
+        int EmitWindow(Point p, PipeFlowCell cell, Tile tile, float peak, int budget)
+        {
+            if (tile.TileFrameY < 18)
+                return 0;
+
+            int mask = tile.TileFrameX / 18;
+            bool horizontal = mask == 12;
+            if (!horizontal && mask != 3)
+                return 0;
+
+            int sign = horizontal ? cell.Travel.X : cell.Travel.Y;
+            if (sign == 0)
+                return 0;
+
+            int count = Roll(peak * WindowParticlesPerUnit, budget);
+            Rectangle window = horizontal ? WindowHorizontal : WindowVertical;
+
+            for (int k = 0; k < count; k++)
+            {
+                Vector2 position = new Vector2(p.X * 16f + window.X + Main.rand.NextFloat() * window.Width, p.Y * 16f + window.Y + Main.rand.NextFloat() * window.Height);
+                float speed = Main.rand.NextFloat(WindowSpeedMin, WindowSpeedMax) * sign;
+                Vector2 velocity = horizontal ? new Vector2(speed, Main.rand.NextFloat(-0.1f, 0.1f)) : new Vector2(Main.rand.NextFloat(-0.1f, 0.1f), speed);
+                SpawnDust(position, velocity, cell.Liquid, false);
+            }
+            return count;
+        }
+
+        // Straight pipes: the end the liquid leaves through, when it opens onto air. A stream that arcs down.
+        int EmitOpenEnd(Point p, PipeFlowCell cell, float peak, int budget)
+        {
+            if (cell.EndMask == 0)
+                return 0;
+
+            for (int d = 0; d < 4; d++)
+            {
+                if ((cell.EndMask & (1 << d)) == 0)
+                    continue;
+
+                Point o = ((Direction)d).ToOffset();
+                if (o != cell.Travel)
+                    continue;
+
+                int count = Roll(peak * OpenEndParticlesPerUnit, budget);
+                for (int k = 0; k < count; k++)
+                {
+                    Vector2 position = new Vector2(p.X * 16f + 8f + o.X * 8f, p.Y * 16f + 8f + o.Y * 8f) + new Vector2(Main.rand.NextFloat(-2f, 2f) * Math.Abs(o.Y), Main.rand.NextFloat(-2f, 2f) * Math.Abs(o.X));
+                    Vector2 velocity = new Vector2(o.X, o.Y) * Main.rand.NextFloat(OpenEndSpeedMin, OpenEndSpeedMax) + new Vector2(Main.rand.NextFloat(-0.25f, 0.25f), Main.rand.NextFloat(-0.35f, 0f));
+                    SpawnDust(position, velocity, cell.Liquid, true);
+                }
+                return count;
+            }
+            return 0;
+        }
+
+        // Any pipe with air next to it: sprays out of one of the open sides.
+        int EmitLeak(Point p, PipeFlowCell cell, float peak, int budget)
+        {
+            int count = Roll(peak * LeakParticlesPerUnit, budget);
+            if (count <= 0)
+                return 0;
+
+            int made = 0;
+            for (int k = 0; k < count; k++)
+            {
                 int start = Main.rand.Next(4);
                 for (int n = 0; n < 4; n++)
                 {
@@ -296,18 +421,18 @@ namespace Factorraria.Common.Liquids
                     if (!WorldGen.InWorld(p.X + o.X, p.Y + o.Y, 1) || Main.tile[p.X + o.X, p.Y + o.Y].HasTile)
                         continue;
 
-                    SpawnLeakDust(p, o, cell.Liquid);
-                    spawned++;
+                    Vector2 position = new Vector2(p.X * 16f + 8f + o.X * 8f, p.Y * 16f + 8f + o.Y * 8f);
+                    Vector2 velocity = new Vector2(o.X, o.Y) * Main.rand.NextFloat(LeakSpeedMin, LeakSpeedMax) + new Vector2(Main.rand.NextFloat(-0.3f, 0.3f), Main.rand.NextFloat(-0.4f, 0f));
+                    SpawnDust(position, velocity, cell.Liquid, true);
+                    made++;
                     break;
                 }
             }
+            return made;
         }
 
-        static void SpawnLeakDust(Point tilePos, Point side, int liquid)
+        void SpawnDust(Vector2 position, Vector2 velocity, int liquid, bool gravity)
         {
-            Vector2 position = new Vector2(tilePos.X * 16f + 8f + side.X * 8f, tilePos.Y * 16f + 8f + side.Y * 8f);
-            Vector2 velocity = new Vector2(side.X, side.Y) * Main.rand.NextFloat(0.4f, 1.4f) + new Vector2(Main.rand.NextFloat(-0.3f, 0.3f), Main.rand.NextFloat(-0.4f, 0f));
-
             int dustType;
             Color tint = default;
             if (LiquidTypeRegistry.IsWater(liquid)) dustType = DustID.Water;
@@ -319,8 +444,8 @@ namespace Factorraria.Common.Liquids
                 tint = LiquidColor(liquid);
             }
 
-            Dust dust = Dust.NewDustPerfect(position, dustType, velocity, 0, tint, Main.rand.NextFloat(0.8f, 1.1f));
-            dust.noGravity = false;
+            Dust dust = Dust.NewDustPerfect(position, dustType, velocity, 0, tint, Main.rand.NextFloat(ParticleScaleMin, Math.Max(ParticleScaleMin, ParticleScaleMax)));
+            dust.noGravity = !gravity;
         }
 
         static Color LiquidColor(int liquid)
@@ -334,163 +459,46 @@ namespace Factorraria.Common.Liquids
 
         // ------------------------------------------------------------------ drawing
 
+        // Draws every pipe on screen (PipeTileBase.PreDraw skips the vanilla draw for all of them), after all tiles so a swollen pipe
+        // covers its neighbours instead of being painted over by them.
         public override void PostDrawTiles()
         {
-            if (Main.dedServ || Main.gameMenu || cells.Count == 0)
+            if (Main.dedServ || Main.gameMenu)
                 return;
 
             VisibleTileScan.GetRange(2, out int left, out int right, out int top, out int bottom);
             SpriteBatch spriteBatch = Main.spriteBatch;
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            foreach (KeyValuePair<Point, PipeFlowCell> pair in cells)
+            for (int i = left; i <= right; i++)
             {
-                Point p = pair.Key;
-                if (p.X < left || p.X > right || p.Y < top || p.Y > bottom)
-                    continue;
+                for (int j = top; j <= bottom; j++)
+                {
+                    Tile tile = Main.tile[i, j];
+                    if (!tile.HasTile || !PipeTierRegistry.IsPipeTile(tile.TileType))
+                        continue;
 
-                DrawCell(spriteBatch, p.X, p.Y, pair.Value);
+                    DrawPipe(spriteBatch, i, j, tile);
+                }
             }
 
             spriteBatch.End();
         }
 
-        void DrawCell(SpriteBatch spriteBatch, int i, int j, PipeFlowCell cell)
+        void DrawPipe(SpriteBatch spriteBatch, int i, int j, Tile tile)
         {
-            Tile tile = Main.tile[i, j];
-            if (!tile.HasTile || !PipeTierRegistry.IsPipeTile(tile.TileType))
+            Texture2D texture = Main.instance.TilesRenderer.GetTileDrawTexture(tile, i, j);
+            if (texture == null)
                 return;
 
             Color light = Lighting.GetColor(i, j);
-            Color liquid = LiquidColor(cell.Liquid);
-            float u = Phase(cell.S);
-            float scale = ScaleAt(u, cell.Intensity);
+            if (tile.IsActuated)
+                light = new Color((byte)(light.R * 0.4f), (byte)(light.G * 0.4f), (byte)(light.B * 0.4f), light.A);
 
-            int mask = tile.TileFrameX / 18;
-            bool horizontal = mask == 12;
-            bool straight = horizontal || mask == 3;
-            Vector2 origin = new Vector2(i * 16f, j * 16f) - Main.screenPosition;
-
-            Color body = liquid.MultiplyLight(Color.Lerp(light, Color.White, 0.2f));
-            Color core = Color.Lerp(liquid, Color.White, 0.35f).MultiplyLight(Color.Lerp(light, Color.White, 0.2f));
-
-            // 1. Window liquid, behind the tile so the art's transparent hole masks it.
-            if (straight && tile.TileFrameY >= 18 && (horizontal ? cell.Travel.X : cell.Travel.Y) != 0)
-            {
-                int count = FillWindowBlobs(cell, horizontal);
-                Rectangle window = horizontal ? WindowHorizontal : WindowVertical;
-                DrawMetaballs(spriteBatch, origin, window, count, false, body, core);
-            }
-
-            // 2. The tile itself, scaled. Straight pipes swell across their axis only; corners and junctions swell evenly.
-            Texture2D texture = Main.instance.TilesRenderer.GetTileDrawTexture(tile, i, j);
-            if (texture != null)
-            {
-                Vector2 scaleVector = !straight ? new Vector2(scale) : horizontal ? new Vector2(1f, scale) : new Vector2(scale, 1f);
-                Rectangle source = new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, 16);
-                spriteBatch.Draw(texture, origin + new Vector2(8f, 8f), source, light, 0f, new Vector2(8f, 8f), scaleVector, SpriteEffects.None, 0f);
-            }
-
-            // 3. A blob poking out of the open end the liquid leaves through.
-            if (cell.EndMask != 0)
-                DrawOpenEnds(spriteBatch, origin, cell, u, body, core);
-        }
-
-        // Puts the blobs of the nearest ball into blobX/Y/R, in tile pixels. Returns how many.
-        int FillWindowBlobs(PipeFlowCell cell, bool horizontal)
-        {
-            float spacing = Math.Max(0.5f, BallSpacingTiles);
-            float firstCentre = Time * BallSpeedTilesPerSecond + BallLengthTiles * 0.5f;
-            float centre = firstCentre + MathF.Round((cell.S - firstCentre) / spacing) * spacing;
-            int sign = horizontal ? cell.Travel.X : cell.Travel.Y;
-
-            int count = Math.Min(Math.Min(BlobOffsetsTiles.Length, BlobRadiiPx.Length), blobX.Length);
-            for (int k = 0; k < count; k++)
-            {
-                float along = 8f + (centre + BlobOffsetsTiles[k] - cell.S) * 16f * sign;
-                blobX[k] = horizontal ? along : 8f;
-                blobY[k] = horizontal ? 8f : along;
-                blobR[k] = BlobRadiiPx[k];
-            }
-            return count;
-        }
-
-        void DrawOpenEnds(SpriteBatch spriteBatch, Vector2 origin, PipeFlowCell cell, float u, Color body, Color core)
-        {
-            float lobe = Lobe(u);
-            if (lobe < 0.05f)
-                return;
-
-            for (int d = 0; d < 4; d++)
-            {
-                if ((cell.EndMask & (1 << d)) == 0)
-                    continue;
-
-                Point o = ((Direction)d).ToOffset();
-                if (o != cell.Travel)
-                    continue;   // only the end the liquid leaves through
-
-                float reach = -2f + (OpenEndReachPx + 2f) * lobe;
-                float f = Math.Clamp(u / Math.Max(0.5f, BallLengthTiles), 0f, 1f);
-
-                // Blob 0 swells out of the mouth. Blob 1 is a drip that detaches from it and falls.
-                blobX[0] = 8f + o.X * (8f + reach);
-                blobY[0] = 8f + o.Y * (8f + reach);
-                blobR[0] = 1.5f + 2.5f * lobe;
-                blobX[1] = 8f + o.X * 11f;
-                blobY[1] = 8f + o.Y * 11f + 2f + 12f * f * f;
-                blobR[1] = 1.7f * (1f - 0.5f * f);
-
-                Rectangle region = new Rectangle((int)(blobX[0] - 10f), (int)(blobY[0] - 10f), 20, 30);
-                DrawMetaballs(spriteBatch, origin, region, 2, true, body, core);
-            }
-        }
-
-        // Fills every pixel of region (tile pixels) whose metaball field reaches the threshold, one horizontal run at a time.
-        void DrawMetaballs(SpriteBatch spriteBatch, Vector2 origin, Rectangle region, int count, bool skipInsideTile, Color body, Color core)
-        {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Rectangle pixelSource = new Rectangle(0, 0, 1, 1);
-
-            for (int y = region.Top; y < region.Bottom; y++)
-            {
-                int runStart = 0;
-                int runState = 0;
-
-                for (int x = region.Left; x <= region.Right; x++)
-                {
-                    int state = 0;
-                    if (x < region.Right && !(skipInsideTile && x >= 0 && x < 16 && y >= 0 && y < 16))
-                    {
-                        float field = 0f;
-                        for (int k = 0; k < count; k++)
-                        {
-                            float dx = x + 0.5f - blobX[k];
-                            float dy = y + 0.5f - blobY[k];
-                            field += blobR[k] * blobR[k] / (dx * dx + dy * dy + 1f);
-                        }
-                        state = field >= MetaballCore ? 2 : field >= MetaballThreshold ? 1 : 0;
-                    }
-
-                    if (state == runState)
-                        continue;
-
-                    if (runState != 0)
-                        spriteBatch.Draw(pixel, origin + new Vector2(runStart, y), pixelSource, runState == 2 ? core : body, 0f, Vector2.Zero, new Vector2(x - runStart, 1f), SpriteEffects.None, 0f);
-
-                    runStart = x;
-                    runState = state;
-                }
-            }
-        }
-    }
-
-    internal static class PipeFlowColorExtensions
-    {
-        // Lighting-style multiply of two colours (channel by channel), alpha kept from the first.
-        public static Color MultiplyLight(this Color color, Color light)
-        {
-            return new Color((byte)(color.R * light.R / 255), (byte)(color.G * light.G / 255), (byte)(color.B * light.B / 255), color.A);
+            Vector2 scale = GetTileScale(i, j, tile);
+            Vector2 center = new Vector2(i * 16f + 8f, j * 16f + 8f) - Main.screenPosition;
+            Rectangle source = new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, 16);
+            spriteBatch.Draw(texture, center, source, light, 0f, new Vector2(8f, 8f), scale, SpriteEffects.None, 0f);
         }
     }
 }

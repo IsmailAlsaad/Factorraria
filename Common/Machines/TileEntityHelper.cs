@@ -112,7 +112,8 @@ namespace Factorraria.Common.Machines
         }
 
         // forcedFrame >= 0 draws exactly that frame (clamped to the texture) instead of the looping animation; used by startup/shutdown.
-        public static int AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j,float rotation = 0f, int forcedFrame = -1)
+        // scale (default 1) stretches the slice around its own centre; the pump uses it to swell with the pipes.
+        public static int AnimateTileEntity(SpriteBatch spriteBatch, Texture2D targetTexture, int i,int j,float rotation = 0f, int forcedFrame = -1, Vector2? scale = null)
         {
             Tile thisTile = Framing.GetTileSafely(i, j);
             TileObjectData data = TileObjectData.GetTileData(thisTile.TileType, 0);
@@ -149,7 +150,7 @@ namespace Factorraria.Common.Machines
 
             Rectangle textureSlice = new Rectangle(thisTile.TileFrameX, frameY + frameHeight * frameYOffset, 16, data.CoordinateHeights[subY]);
             Color lightingColor = Lighting.GetColor(i, j);
-            spriteBatch.Draw(targetTexture, drawPosition, textureSlice, lightingColor, rotation, origin, 1f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(targetTexture, drawPosition, textureSlice, lightingColor, rotation, origin, scale ?? Vector2.One, SpriteEffects.None, 0f);
 
             return frameYOffset;
         }

@@ -52,7 +52,7 @@ namespace Factorraria.Common.Liquids
             PipeTierRegistry.Register(Type, MaxFlowRate, Material);
 
             // Art outside the 16px cell: one cell per connection mask (16 cells in a row), see TileOverdrawSystem.
-            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell);
+            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell, scaler: SelectOverdrawScale);
         }
 
         // LeadPipeTile -> .../LeadPipeOverdraw (PNG optional: a missing sheet just draws nothing).
@@ -99,10 +99,14 @@ namespace Factorraria.Common.Liquids
             return (h & 3u) == 0u;
         }
 
-        // While liquid moves through this pipe, PipeFlowVisualSystem draws it itself (scaled, with the window liquid), after all tiles.
+        // The overhang art swells with the pipe (PipeFlowVisualSystem owns the wave).
+        static Vector2 SelectOverdrawScale(int i, int j, Tile tile) => ModContent.GetInstance<PipeFlowVisualSystem>().GetTileScale(i, j, tile);
+
+        // PipeFlowVisualSystem draws EVERY pipe itself (scale 1 when nothing flows), after all tiles, so a pipe never switches between two
+        // ways of being drawn when a flow starts or stops.
         public override bool PreDraw(int i, int j, SpriteBatch spriteBatch)
         {
-            return !ModContent.GetInstance<PipeFlowVisualSystem>().TryGetCell(i, j, out _);
+            return false;
         }
 
         public override bool CanPlace(int i, int j)

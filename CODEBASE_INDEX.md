@@ -540,22 +540,20 @@ tModLoader/other bases -> project types:
     +Recolor(GraphicsDevice,Texture2D,Color,Color,float)[s]
   static class LiquidTextureCache
     +GetOrCreate(string,Texture2D,LiquidTypeDefinition,float)[s] +Clear()[s]
-**MotorTileBase.cs** uses: BaseMachine, IMotorTile, LiquidNetworkSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, PipeMaterial, PipeTierRegistry, PowerGridSystem, TileOverdrawSystem
+**MotorTileBase.cs** uses: BaseMachine, IMotorTile, LiquidNetworkSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, PowerGridSystem, TileOverdrawSystem
   abstract class MotorTileBase<TEntity> : ModTile, IMotorTile
     #Material:PipeMaterial[ab] #MotorDustId:int[v] #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov] +Slope(int,int)[ov]
 **MotorTileEntityBase.cs** ns!=Factorraria.Common.Machines uses: Direction, ElectricConsumerMachine, Factorraria, LiquidNetworkSystem, MotorRotate, PipeTileBase
   abstract class MotorTileEntityBase : ElectricConsumerMachine
-    +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +FlowLiquidType:int +FlowIdleTicks:int +FlowIdleLimitTicks:int +Update()[ov] #UpdateMotor()[v] +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
+    +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +FlowLiquidType:int +FlowIdleTicks:int +FlowIdleLimitTicks:int +FlowMovedThisTick:float +FlowRate:float +FlowRateSmoothing:float +FlowRateStep:float +FlowRateLevel:byte +Update()[ov] #UpdateMotor()[v] +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
 **PipeConnectionHelper.cs** uses: BaseMachine, Direction, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
   static class PipeConnectionHelper
     +CanConnect(int,int,Direction,int)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
 **PipeFlowVisualSystem.cs** uses: Direction, LiquidTypeRegistry, MotorTileEntityBase, Phase, PipeTierRegistry, Record, VisibleTileScan
   sealed class PipeFlowCell
-    +S:float +Travel:Point +Liquid:int +EndMask:int +Intensity:float +Stamp:int
+    +S:float +Travel:Point +Liquid:int +Rate:float +IsMotor:bool +EndMask:int +Intensity:float +Stamp:int
   class PipeFlowVisualSystem : ModSystem
-    +BallSpeedTilesPerSecond:float +BallLengthTiles:float +BallSpacingTiles:float +SwellAmount:float +SqueezeAmount:float +RebuildIntervalTicks:int +MaxWalkPipes:int +MaxRangeTiles:float +FadePerTick:float +WindowHorizontal:Rectangle +WindowVertical:Rectangle +BlobOffsetsTiles:float +BlobRadiiPx:float +MetaballThreshold:float +MetaballCore:float +OpenEndReachPx:float +LeakOneInChance:int +MaxLeaksPerTick:int +Unload()[ov] +OnWorldUnload()[ov] +TryGetCell(int,int,out PipeFlowCell) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
-  static class PipeFlowColorExtensions
-    +MultiplyLight(Color,Color)[s]
+    +BallSpeedTilesPerSecond:float +BallLengthTiles:float +BallSpacingTiles:float +SwellAmount:float +SqueezeAmount:float +MotorSwellMultiplier:float +RebuildIntervalTicks:int +MaxWalkPipes:int +MaxRangeTiles:float +FadePerTick:float +OpenEndParticlesPerUnit:float +LeakParticlesPerUnit:float +WindowParticlesPerUnit:float +MaxParticlesPerTick:int +ParticleScaleMin:float +ParticleScaleMax:float +OpenEndSpeedMin:float +OpenEndSpeedMax:float +LeakSpeedMin:float +LeakSpeedMax:float +WindowSpeedMin:float +WindowSpeedMax:float +WindowHorizontal:Rectangle +WindowVertical:Rectangle +Unload()[ov] +OnWorldUnload()[ov] +GetTileScale(int,int,Tile) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
 **PipeTileBase.cs** uses: LiquidNetworkSystem, PipeConnectionHelper, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileOverdrawSystem
   abstract class PipeTileBase : ModTile
     #MaxFlowRate:float[ab] #Material:PipeMaterial[ab] #PipeDustId:int[v] #OverdrawTexturePath:string[v] +IsStraightMask(int)[s] +IsWindowedAt(int,int)[s] +PreDraw(int,int,SpriteBatch)[ov] +CanPlace(int,int)[ov] +PlaceInWorld(int,int,Item)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +NearbyEffects(int,int,bool)[ov] +ReframeNeighbors(int,int)[s] +Slope(int,int)[ov] +CreateDust(int,int,ref int)[ov]
@@ -642,7 +640,7 @@ tModLoader/other bases -> project types:
 **MachineTransitionSystem.cs** uses: BaseMachine, MachineVisualDefinition, MachineVisualRegistry
   class MachineTransitionSystem : ModSystem
     +PostUpdateEverything()[ov]
-**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, FactorrariaNet, FurnaceOffsetConfig, IMachineTileUnderlay, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, TileEntityHelper
+**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, FactorrariaNet, FurnaceOffsetConfig, IMachineTileUnderlay, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, PipeFlowVisualSystem, TileEntityHelper
   enum MachineTransition : byte
     {None, Startup, Shutdown}
   class LiquidOverlayLayer
@@ -665,7 +663,7 @@ tModLoader/other bases -> project types:
     +HeldVersion:int[s] +IsIngredient(int)[s] +BuildIngredientIndex()[s] +ClearIndex()[s] +InvalidateHeld()[s] +GetState(string,RecipeOutputGroup)[s] +GetState(string)[s] +Poll()[s] +IsItemHeld(int)[s] +IsHeld(string)[s] +IsNameRevealedInBrowser(string,RecipeOutputGroup,RecipeState)[s] +TryGetItemProducers(int,out List<string>)[s] +IsProductCrafted(RecipeOutputKey)[s] +IsIngredientRevealed(int)[s] +IsLiquidRevealed(int)[s] +IsMachineCrafted(string)[s] +IsFuelRevealed(string,FuelEntry)[s] +FindBookRecipeFor(RecipeOutputKey,string)[s] +InBook(RecipeState)[s]
 **TileEntityHelper.cs** uses: Factorraria, FurnaceOffsetConfig, HarvesterBoxRows, LiquidNetworkSystem, PowerGridSystem
   static class TileEntityHelper
-    +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float,int)[s] +GetAnimationFrame(Point16,int)[s]
+    +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float,int,Vector2?)[s] +GetAnimationFrame(Point16,int)[s]
 
 ### Common/Mounts/
 **MechSuitBlueprint.cs**
@@ -1425,9 +1423,9 @@ tModLoader/other bases -> project types:
     +AppliesToEntity(Item,bool)[ov] +OnSpawn(Item,IEntitySource)[ov]
 **TileOverdrawSystem.cs** uses: VisibleTileScan
   class TileOverdrawEntry
-    +TileType:int +Texture:Asset<Texture2D> +MarginPx:int +InFront:bool +Select:TileOverdrawSelector +PreviewSelect:TileOverdrawSelector +Warned:bool
+    +TileType:int +Texture:Asset<Texture2D> +MarginPx:int +InFront:bool +Select:TileOverdrawSelector +PreviewSelect:TileOverdrawSelector +Scale:TileOverdrawScaler +Warned:bool
   class TileOverdrawSystem : ModSystem
-    +ScanPaddingTiles:int +DefaultMarginPx:int +Load()[ov] +Unload()[ov] +Register(int,string,TileOverdrawSelector,int,bool,TileOverdrawSelector) +PostDrawTiles()[ov]
+    +ScanPaddingTiles:int +DefaultMarginPx:int +Load()[ov] +Unload()[ov] +Register(int,string,TileOverdrawSelector,int,bool,TileOverdrawSelector,TileOverdrawScaler) +PostDrawTiles()[ov]
 **VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, Factorraria, FurnaceOffsetConfig, GhostDiagnostics, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem
   class VirtualItemSystem : ModSystem
     +tileItemMap:Dictionary<Point, VirtualItem>[s] +vItemsById:Dictionary<int, VirtualItem>[s] +WorldItemsConverted:int[s] +PlayerPickups:int[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +RepairsMade:int[s] +VerifyVItems()[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +AddReplica(VirtualItem)[s] +TryGetById(int,out VirtualItem)[s] +ForgetId(VirtualItem)[s] +Describe()[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +SyncWorldItem(int,string)[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +ReplaceFilterNetworks(List<KeyValuePair<int, List<Point>>>)[s] +TryGetConveyorFilter(int,int,out int)[s]

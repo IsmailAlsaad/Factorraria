@@ -500,6 +500,9 @@ namespace Factorraria.Common.Machines
 
             float rotation = entity is MotorTileEntityBase motor ? GetMotorRotation(motor.Facing) : 0f;
 
+            // A pump swells with the pipes while liquid moves (PipeFlowVisualSystem); every other machine draws at 1.
+            Vector2 scale = entity is MotorTileEntityBase ? ModContent.GetInstance<PipeFlowVisualSystem>().GetTileScale(i, j, Main.tile[i, j]) : Vector2.One;
+
             if (entity is IMachineTileUnderlay underlay)
                 underlay.DrawUnderTile(spriteBatch, i, j);
 
@@ -507,8 +510,8 @@ namespace Factorraria.Common.Machines
             // OnAnimationFrameChanged, so per-frame sounds of the normal On animation don't fire on its frames.
             if (def.TryGetActiveTransition(entity, out Texture2D transitionTexture, out int transitionFrame, out MachineTransition transitionKind))
             {
-                TileEntityHelper.AnimateTileEntity(spriteBatch, transitionTexture, i, j, rotation, transitionFrame);
-                DrawLiquidOverlays(spriteBatch, def.LiquidOverlays, transitionKind, entity, i, j, rotation, transitionFrame);
+                TileEntityHelper.AnimateTileEntity(spriteBatch, transitionTexture, i, j, rotation, transitionFrame, scale);
+                DrawLiquidOverlays(spriteBatch, def.LiquidOverlays, transitionKind, entity, i, j, rotation, transitionFrame, scale);
                 return false;
             }
 
@@ -516,10 +519,10 @@ namespace Factorraria.Common.Machines
                 ? def.GetOnAsset(entity)
                 : def.OffTexture;
 
-            int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j, rotation);
+            int frame = TileEntityHelper.AnimateTileEntity(spriteBatch, texture.Value, i, j, rotation, -1, scale);
 
             if (entity.IsRunning)
-                DrawLiquidOverlays(spriteBatch, def.LiquidOverlays, MachineTransition.None, entity, i, j, rotation, -1);
+                DrawLiquidOverlays(spriteBatch, def.LiquidOverlays, MachineTransition.None, entity, i, j, rotation, -1, scale);
 
             entity.NotifyAnimationFrame(frame);
             return false;
@@ -527,7 +530,7 @@ namespace Factorraria.Common.Machines
 
         // forcedFrame -1 = the normal looping animation, otherwise the exact frame (startup / shutdown).
         // kind picks each layer's On / startup / shutdown texture; a layer without that one is skipped.
-        static void DrawLiquidOverlays(SpriteBatch spriteBatch, List<LiquidOverlayLayer> layers, MachineTransition kind, BaseMachine entity, int i, int j, float rotation, int forcedFrame)
+        static void DrawLiquidOverlays(SpriteBatch spriteBatch, List<LiquidOverlayLayer> layers, MachineTransition kind, BaseMachine entity, int i, int j, float rotation, int forcedFrame, Vector2 scale)
         {
             if (layers == null)
                 return;
@@ -544,7 +547,7 @@ namespace Factorraria.Common.Machines
                 LiquidTypeDefinition liquidDef = LiquidTypeRegistry.Get(stack.LiquidType);
                 Texture2D recolored = LiquidTextureCache.GetOrCreate(cacheKey, source, liquidDef);
 
-                TileEntityHelper.AnimateTileEntity(spriteBatch, recolored, i, j, rotation, forcedFrame);
+                TileEntityHelper.AnimateTileEntity(spriteBatch, recolored, i, j, rotation, forcedFrame, scale);
             }
         }
 

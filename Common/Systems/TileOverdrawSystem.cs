@@ -12,6 +12,9 @@ namespace Factorraria.Common.Systems
     // has not reached this client yet). rotation is in radians, around the tile's centre (0 = the art as drawn).
     public delegate bool TileOverdrawSelector(int i, int j, Tile tile, out int cell, out float rotation);
 
+    // The scale a placed tile's overdraw cell is drawn at, around the cell's centre (Vector2.One = as drawn). Pipes and pumps use it to swell with the flow.
+    public delegate Vector2 TileOverdrawScaler(int i, int j, Tile tile);
+
     public class TileOverdrawEntry
     {
         public int TileType;
@@ -20,6 +23,7 @@ namespace Factorraria.Common.Systems
         public bool InFront = true;        // true: drawn after all tiles (over them); false: drawn before any tile (behind them)
         public TileOverdrawSelector Select;
         public TileOverdrawSelector PreviewSelect;   // cell for the placement hologram (the tile is not placed yet); null = Select
+        public TileOverdrawScaler Scale;             // optional: per-tile draw scale (the hologram always draws at 1)
         public bool Warned;
     }
 
@@ -69,7 +73,7 @@ namespace Factorraria.Common.Systems
         }
 
         /// <summary>Call from the tile's SetStaticDefaults. Does nothing on a dedicated server (no screen). marginPx 0 = DefaultMarginPx. inFront false = draw behind tiles.</summary>
-        public void Register(int tileType, string texturePath, TileOverdrawSelector selector, int marginPx = 0, bool inFront = true, TileOverdrawSelector previewSelector = null)
+        public void Register(int tileType, string texturePath, TileOverdrawSelector selector, int marginPx = 0, bool inFront = true, TileOverdrawSelector previewSelector = null, TileOverdrawScaler scaler = null)
         {
             if (Main.dedServ)
                 return;
@@ -83,7 +87,8 @@ namespace Factorraria.Common.Systems
                 MarginPx = marginPx > 0 ? marginPx : DefaultMarginPx,
                 InFront = inFront,
                 Select = selector,
-                PreviewSelect = previewSelector
+                PreviewSelect = previewSelector,
+                Scale = scaler
             };
         }
 
@@ -134,7 +139,8 @@ namespace Factorraria.Common.Systems
                         continue;
 
                     BeginBatchIfNeeded();
-                    DrawCell(spriteBatch, texture, source, x, y, rotation, Lighting.GetColor(x, y));
+                    Vector2 scale = entry.Scale != null ? entry.Scale(x, y, tile) : Vector2.One;
+                    DrawCell(spriteBatch, texture, source, x, y, rotation, Lighting.GetColor(x, y), scale);
                 }
             }
 
@@ -143,7 +149,7 @@ namespace Factorraria.Common.Systems
             {
                 BeginBatchIfNeeded();
                 Color tint = holoValid ? Color.White * 0.55f : new Color(255, 70, 70) * 0.6f;
-                DrawCell(spriteBatch, holoTexture, holoSource, holoX, holoY, holoRotation, tint);
+                DrawCell(spriteBatch, holoTexture, holoSource, holoX, holoY, holoRotation, tint, Vector2.One);
             }
 
             if (ownBatch)
@@ -171,12 +177,12 @@ namespace Factorraria.Common.Systems
             return false;
         }
 
-        // The cell is centred on tile (x, y) and rotated around that centre.
-        static void DrawCell(SpriteBatch spriteBatch, Texture2D texture, Rectangle source, int x, int y, float rotation, Color color)
+        // The cell is centred on tile (x, y), scaled and rotated around that centre.
+        static void DrawCell(SpriteBatch spriteBatch, Texture2D texture, Rectangle source, int x, int y, float rotation, Color color, Vector2 scale)
         {
             Vector2 center = new Vector2(x * 16 + 8, y * 16 + 8) - Main.screenPosition;
             Vector2 origin = new Vector2(source.Width * 0.5f, source.Height * 0.5f);
-            spriteBatch.Draw(texture, center, source, color, rotation, origin, 1f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(texture, center, source, color, rotation, origin, scale, SpriteEffects.None, 0f);
         }
 
         // Placement hologram: the held item places a registered tile of this pass. valid = in reach and placeable there.
