@@ -40,6 +40,15 @@ namespace Factorraria.Common.Carts
             corners[3] = center - right - up;
         }
 
+        /// <summary>Distance in pixels from a world point to the cart's tilted hitbox (0 when the point is inside it).</summary>
+        public static float DistanceTo(Cart cart, Vector2 worldPoint)
+        {
+            Vector2 offset = worldPoint - BoxCenter(cart);
+            float along = Math.Max(Math.Abs(Vector2.Dot(offset, Right(cart))) - CartPhysics.HitboxWidth * 0.5f, 0f);
+            float height = Math.Max(Math.Abs(Vector2.Dot(offset, Up(cart))) - CartPhysics.HitboxHeight * 0.5f, 0f);
+            return (float)Math.Sqrt(along * along + height * height);
+        }
+
         /// <summary>Point-in-rotated-rectangle test, with the box grown by padding pixels on every side.</summary>
         public static bool Contains(Cart cart, Vector2 worldPoint, float padding)
         {

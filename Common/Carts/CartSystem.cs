@@ -27,7 +27,6 @@ namespace Factorraria.Common.Carts
         public static readonly List<Cart> Carts = new List<Cart>();
 
         private const float PlaceRange = 6f * 16f;
-        private const float InteractRange = 7f * 16f;
 
         private static bool reportedFailure;
         private static bool chainsNeedRebuild; // set by LoadWorldData, handled on the first tick the track tables are ready
@@ -575,7 +574,7 @@ namespace Factorraria.Common.Carts
 
             if (right)
             {
-                Cart target = FindCartAtCursor(player);
+                Cart target = FindCartForRightClick(player);
                 if (target == null)
                 {
                     return;
@@ -638,7 +637,7 @@ namespace Factorraria.Common.Carts
                 }
 
                 float distance = Vector2.Distance(player.Center, cart.Position);
-                if (distance <= InteractRange && distance < bestDistance)
+                if (distance < bestDistance && IsInInteractRange(player, cart, 0f))
                 {
                     bestDistance = distance;
                     best = cart;
@@ -646,6 +645,22 @@ namespace Factorraria.Common.Carts
             }
 
             return best;
+        }
+
+        /// <summary>
+        /// Right click target: the cart under the cursor, else (smart cursor on) the nearby cart the smart cursor is targeting
+        /// (MachineSmartOutlineSystem). Left click never uses the smart fallback, so attacking and mining are not hijacked.
+        /// </summary>
+        public static Cart FindCartForRightClick(Player player)
+        {
+            Cart direct = FindCartAtCursor(player);
+            if (direct != null)
+            {
+                return direct;
+            }
+
+            Cart smart = ModContent.GetInstance<MachineSmartOutlineSystem>().SmartCartTarget;
+            return smart != null && IsInInteractRange(player, smart, 0f) ? smart : null;
         }
 
         private static bool TryPlaceFromItem(Player player, Item held)
@@ -720,11 +735,24 @@ namespace Factorraria.Common.Carts
             return false;
         }
 
-        /// <summary>True when the player is within clicking range of the cart (the client's own check, with slackPixels extra for the server's lagging copy of the player).</summary>
+        /// <summary>
+        /// True when the player is within clicking range of the cart: the normal tile interaction range (vanilla tile range + block range
+        /// from accessories / buffs + the held item's tile boost, the same rules as FactorrariaNet.InReach), measured to the cart's hitbox.
+        /// slackPixels is extra distance for the server's lagging copy of the player (the client passes 0).
+        /// </summary>
         public static bool IsInInteractRange(Player player, Cart cart, float slackPixels)
         {
-            return player != null && player.active && !player.dead && cart != null && cart.Active
-                && Vector2.Distance(player.Center, cart.Position) <= InteractRange + slackPixels;
+            if (player == null || !player.active || player.dead || cart == null || !cart.Active)
+            {
+                return false;
+            }
+
+            Rectangle box = cart.Hitbox;
+            float dx = Math.Max(Math.Max(box.Left - player.Center.X, 0f), player.Center.X - box.Right) / 16f;
+            float dy = Math.Max(Math.Max(box.Top - player.Center.Y, 0f), player.Center.Y - box.Bottom) / 16f;
+            float extra = slackPixels / 16f + player.blockRange + Math.Max(0, player.HeldItem?.tileBoost ?? 0);
+
+            return dx <= Player.tileRangeX + extra && dy <= Player.tileRangeY + extra;
         }
 
         /// <summary>Removes the cart and gives the player its skin item, module item and contents.</summary>
@@ -893,32 +921,50 @@ namespace Factorraria.Common.Carts
         private const float ModuleScale = 0.75f;        // module icon size relative to its item sprite
         private const float ModuleLiftFraction = 0.4f;  // height of the module's base above the rail, as a fraction of the cart frame
 
-        /// <summary>Draws the installed chest / terrarium (its item icon) inside the cart, rotated and flipped with it.</summary>
-        private static void DrawModule(Cart cart, Vector2 screen, Color light, SpriteEffects effects)
+        /// <summary>
+        /// The installed module's icon and where it sits (shared by DrawModule and the smart cursor outline): lift = pixels above the rail
+        /// point along the cart's up, scale = icon scale; the icon's origin is its bottom centre. False (icon = null) when there is no module.
+        /// </summary>
+        public static bool TryGetModuleSprite(Cart cart, CartSkinTable.PlacedSprite body, out Texture2D icon, out float lift, out float scale)
         {
+            icon = null;
+            lift = 0f;
+            scale = ModuleScale * 1.2f;
+
             if (cart.Module == CartModule.Empty)
             {
-                return;
+                return false;
             }
 
             int itemType = cart.ModuleItem > 0 ? cart.ModuleItem : Cart.ModuleItemType(cart.Module);
             if (itemType <= 0)
             {
-                return;
+                return false;
             }
 
             Main.instance.LoadItem(itemType);
-            Texture2D icon = TextureAssets.Item[itemType].Value;
+            icon = TextureAssets.Item[itemType].Value;
+            lift = body.Source.Height * ModuleLiftFraction * 1.2f;
+            return true;
+        }
 
+        /// <summary>Draws the installed chest / terrarium (its item icon) inside the cart, rotated and flipped with it.</summary>
+        private static void DrawModule(Cart cart, Vector2 screen, Color light, SpriteEffects effects)
+        {
             CartSkinTable.PlacedSprite body = CartSkinTable.GetPlacedSprite(cart.SkinType, cart.AnimFrame);
-            Vector2 position = screen + CartGeometry.Up(cart) * (body.Source.Height * ModuleLiftFraction * 1.2f);
+            if (!TryGetModuleSprite(cart, body, out Texture2D icon, out float lift, out float moduleScale))
+            {
+                return;
+            }
+
+            Vector2 position = screen + CartGeometry.Up(cart) * lift;
 
             if (cart.Module == CartModule.Terrarium)
             {
                 DrawTerrariumLiquid(cart, position, light, effects);
             }
 
-            Main.spriteBatch.Draw(icon, position, null, light, cart.Rotation, new Vector2(icon.Width / 2f, icon.Height), ModuleScale * 1.2f, effects, 0f);
+            Main.spriteBatch.Draw(icon, position, null, light, cart.Rotation, new Vector2(icon.Width / 2f, icon.Height), moduleScale, effects, 0f);
         }
 
         // The liquid art for the terrarium: drawn behind the terrarium icon with the same anchor and scale, so make it the same size as the

@@ -107,7 +107,7 @@ tModLoader/other bases -> project types:
     +PostUpdate()[ov]
 **CartGeometry.cs** uses: Cart, CartPhysics
   static class CartGeometry
-    +Right(Cart)[s] +Up(Cart)[s] +BoxCenter(Cart)[s] +GetCorners(Cart,Vector2)[s] +Contains(Cart,Vector2,float)[s]
+    +Right(Cart)[s] +Up(Cart)[s] +BoxCenter(Cart)[s] +GetCorners(Cart,Vector2)[s] +DistanceTo(Cart,Vector2)[s] +Contains(Cart,Vector2,float)[s]
 **CartInteractionPlayer.cs** uses: BucketPour, Cart, CartChestUISystem, CartSkinTable, CartSystem
   class CartInteractionPlayer : ModPlayer
     +CanUseItem(Item)[ov] +ShiftClickSlot(Item,int,int)[ov]
@@ -160,7 +160,7 @@ tModLoader/other bases -> project types:
     +VanillaPrefix:string[c] +DefaultKey:string[c] +KeyOf(int)[s] +TryTypeOf(string,out int)[s]
 **CartSystem.cs** uses: BucketPour, Cart, CartCargo, CartChain, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartNet, CartPassengers, CartPhysics, CartRide, CartSkinTable, CartSkins, CartSound, CartSoundKind, FurnaceOffsetConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineSmartOutlineSystem, PlacedSprite, TrackData, TrackSample
   class CartSystem : ModSystem
-    +Carts:List<Cart>[s] +NextCartId:int[s] +AssignId(Cart)[s] +FindById(int)[s] +Unload()[ov] +OnWorldLoad()[ov] +ClearWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +ClientInterpolate()[s] +CheckPlacement(Player,int,int,out Vector2,out bool)[s] +SpawnCart(Vector2,int,CartModule)[s] +FindCartAtCursor(Player)[s] +GetInstallModule(Item,Cart,out CartModule)[s] +IsInInteractRange(Player,Cart,float)[s] +PickUp(Player,Cart)[s] +GetZoomCorrectedMouseWorld()[s]
+    +Carts:List<Cart>[s] +NextCartId:int[s] +AssignId(Cart)[s] +FindById(int)[s] +Unload()[ov] +OnWorldLoad()[ov] +ClearWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +ClientInterpolate()[s] +CheckPlacement(Player,int,int,out Vector2,out bool)[s] +SpawnCart(Vector2,int,CartModule)[s] +FindCartAtCursor(Player)[s] +FindCartForRightClick(Player)[s] +GetInstallModule(Item,Cart,out CartModule)[s] +IsInInteractRange(Player,Cart,float)[s] +PickUp(Player,Cart)[s] +GetZoomCorrectedMouseWorld()[s] +TryGetModuleSprite(Cart,PlacedSprite,out Texture2D,out float,out float)[s]
 **TrackData.cs**
   enum TrackEnd
     {None, Stop, Bounce, Ramp, Open}
@@ -628,9 +628,9 @@ tModLoader/other bases -> project types:
 **MachineOverhangSystem.cs** uses: BaseMachine, LiquidOverlayLayer, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineCanvas, MachineTransition, MachineVisualDefinition, MachineVisualRegistry, TileEntityHelper
   class MachineOverhangSystem : ModSystem
     +Load()[ov] +Unload()[ov] +PostDrawTiles()[ov]
-**MachineSmartOutlineSystem.Carts.cs** uses: Cart, CartSkinTable, CartSystem, PlacedSprite
+**MachineSmartOutlineSystem.Carts.cs** uses: Cart, CartGeometry, CartSkinTable, CartSystem, Outline, PlacedSprite
   partial class MachineSmartOutlineSystem
-    +BeginCartOutlines(out Cart) +DrawCartOutline(Cart,Vector2,bool)
+    +SmartCartTarget:Cart +BeginCartOutlines(out Cart) +DrawCartOutline(Cart,Vector2,bool)
 **MachineSmartOutlineSystem.cs** uses: BaseMachine, CartSystem, IMachineDynamicDraw, IMachineLateDraw, IRowMachine, MachineCanvas, MachineDetailSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, TileEntityHelper
   partial class MachineSmartOutlineSystem : ModSystem
     +HighlightColor:Color +SelectedColor:Color +OutlineInside:bool +OutlineInFront:bool +OutlineScale:int +SmartRadiusPixels:float +AlphaThreshold:int +MaxCachedOutlines:int +ScreenMarginPixels:float +Load()[ov] +OnWorldUnload()[ov] +Unload()[ov] +PostUpdateInput()[ov] +PostUpdateEverything()[ov] +PostDrawTiles()[ov]

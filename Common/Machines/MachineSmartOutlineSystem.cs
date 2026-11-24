@@ -77,6 +77,7 @@ namespace Factorraria.Common.Machines
         {
             outlineCache.Clear();
             cartOutlineCache.Clear();
+            smartCartTarget = null;
             hasTarget = false;
         }
 
@@ -130,6 +131,7 @@ namespace Factorraria.Common.Machines
         {
             hasTarget = false;
             targetDirect = false;
+            smartCartTarget = null;
 
             if (Main.dedServ || Main.gameMenu || Main.mapFullscreen || !Main.SmartCursorIsUsed || MachineVisualRegistry.Definitions.Count == 0)
                 return;
@@ -167,12 +169,15 @@ namespace Factorraria.Common.Machines
                 found = true;
             }
 
+            found = ConsiderCarts(mouse, player, ref bestDistance, found);
+
             if (found)
             {
                 // Vanilla found its own target (chest, crystal ball, NPC...): the closer one to the cursor wins, a tie goes to vanilla.
                 if (GetVanillaTargetDistance(mouse) <= bestDistance)
                 {
                     found = false;
+                    smartCartTarget = null;
                 }
                 else if (Main.SmartInteractShowingGenuine)
                 {
@@ -218,7 +223,7 @@ namespace Factorraria.Common.Machines
         // the normal tile right-click (MachineVisualOverride.RightClick), and so is anything vanilla's own smart interact picked.
         void HandleNearbyRightClick()
         {
-            if (!hasTarget || targetDirect || !PlayerInput.Triggers.JustPressed.MouseRight)
+            if (!hasTarget || targetDirect || smartCartTarget != null || !PlayerInput.Triggers.JustPressed.MouseRight)   // a cart target is opened by CartSystem (FindCartForRightClick)
                 return;
 
             Player player = Main.LocalPlayer;
@@ -248,7 +253,7 @@ namespace Factorraria.Common.Machines
         // vanilla tile, then that tile wins (you are clearly pointing at it).
         private void RedirectClickToTarget(On_Player.orig_TileInteractionsUse orig, Player self, int myX, int myY)
         {
-            if (!Main.dedServ && self.whoAmI == Main.myPlayer && hasTarget && Main.SmartCursorIsUsed && !self.mouseInterface)
+            if (!Main.dedServ && self.whoAmI == Main.myPlayer && hasTarget && smartCartTarget == null && Main.SmartCursorIsUsed && !self.mouseInterface)
             {
                 if (fallbackHandledTick == Main.GameUpdateCount)
                 {
@@ -362,7 +367,7 @@ namespace Factorraria.Common.Machines
                 if (outline == null || outline.Runs.Count == 0)
                     continue;
 
-                bool selected = hasTarget && targetPosition == corner;
+                bool selected = hasTarget && smartCartTarget == null && targetPosition == corner;
                 DrawOutline(spriteBatch, outline, selected ? SelectedColor : HighlightColor);
             }
         }
