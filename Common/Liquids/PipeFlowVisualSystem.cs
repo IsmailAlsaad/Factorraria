@@ -12,18 +12,25 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Common.Liquids
 {
-    // One chain of pumps (a lone pump, or pumps that feed each other's backs) and the single ball of fluid travelling through all its pipes.
+    // One chain of pumps (a lone pump, or pumps that feed each other's backs) and the balls of fluid travelling through all its pipes.
     public sealed class PumpChain
     {
-        public float Progress;       // 0..1: how far every ball is on its way to the place of the next one (one spacing = one chunk moved)
-        public float Rate;           // liquid units per tick the chain moves (smoothed)
+        public readonly List<FlowBall> Balls = new List<FlowBall>();   // every ball in flight, oldest first
+        public float EmitProgress;   // 0..1: how far the chain is toward emitting its next ball (one ball per chunk of liquid moved)
+        public float Rate;           // liquid units per tick the chain moves
         public float Min, Max;       // path coordinates S of the first and the last tile of the chain
         public float NextMin, NextMax;   // being collected by the walk in progress
-        public float Spacing = 1f;         // tiles between two balls right now (eased toward TargetSpacing every tick)
-        public float TargetSpacing = 1f;   // the speed times the time one chunk takes, never below BallMinSpacingTiles (see ComputeSpacing)
-        public bool SpacingSet;            // Spacing has been given its first value
+        public bool Primed;          // the balls a running chain already has when it is first seen were created
         public bool Synced;          // lined up with a real chunk at least once
         public int Stamp;
+    }
+
+    // One ball: it is made at the source pipe with the speed the chain had at that moment and keeps that speed until it leaves at the end pipe,
+    // so a change of the pump rate only shows in the balls made after it.
+    public sealed class FlowBall
+    {
+        public float Pos;     // path coordinate S of its centre
+        public float Speed;   // tiles per tick
     }
 
     // What the visuals know about one pipe (or pump) tile that liquid is moving through right now.
@@ -38,7 +45,9 @@ namespace Factorraria.Common.Liquids
         public int EndMask;      // straight pipes only: bit (1 << Direction) for every end that opens onto empty space
         public float Intensity;  // 0..1, fades in and out so the animation never pops
         public int Stamp;        // the rebuild this cell was last seen in
-        public PumpChain Chain;  // the ball that passes through this cell
+        public PumpChain Chain;  // the balls that pass through this cell
+        public int WaveStamp;    // the tick WaveU was worked out in (BallU)
+        public float WaveU;      // where this tile is relative to its nearest ball (BallU)
     }
 
     // CLIENT ONLY and purely cosmetic: nothing here is saved or sent. It reads what every client already has: the motor replicas
@@ -48,13 +57,16 @@ namespace Factorraria.Common.Liquids
     // behind it, giving every pipe a path coordinate S. A pump that is switched OFF is a plain pipe, so the walk goes through it. Pumps in a
     // chain (one feeding the back of the next) continue each other's S, and share one ball.
     //
-    // The balls: exactly one ball per chunk of liquid (ChunkUnits, 255, a full world cell). The balls travel at BallSpeedTilesPerSecond, so the
-    // gap between two of them is that speed times the time the pump needs to move a chunk at its rate: a slower ball speed means more balls,
-    // closer together, and a faster pump means more of them too. When that gap would be smaller than BallMinSpacingTiles the gap stays at the
-    // minimum and the balls speed up instead, so the one-ball-per-chunk timing never changes. They are spaced back from the end pipe, and the
-    // position is the integral of the rate, so a rate change never makes them jump. When the network delivers a real chunk
-    // (MotorTileEntityBase.FlowChunkCount changes: a world cell received liquid, or 255 units went into a machine) the pattern is lined up so a
-    // ball is at the end pipe at that moment. The count travels in the motor's light update, so every client sees the same moments.
+    // The balls: exactly one ball per chunk of liquid (ChunkUnits, 255, a full world cell). A ball is made at the source pipe and then only
+    // ever moves forward, at the speed the chain had when it was made: BallSpeedTilesPerSecond, so the gap between two balls is that speed
+    // times the time the pump needs to move a chunk (a slower ball speed means more balls, closer together, and a faster pump means more of
+    // them too). When that gap would be smaller than BallMinSpacingTiles it stays at the minimum and the balls are faster instead, so one ball
+    // per chunk always holds. A change of the pump rate therefore never touches the balls already in the pipes: the new slower or faster balls
+    // start at the source and travel through the network, replacing the old pattern as they go (a faster ball that catches a slower one
+    // simply passes it). When the network delivers a real chunk (MotorTileEntityBase.FlowChunkCount changes: a world cell received liquid, or
+    // 255 units went into a machine) the moment the next balls are made is lined up so one of them reaches the end pipe at the delivery
+    // moments (the travel time is known, so no ball is ever pulled back or pushed). The count travels in the motor's light update, so every
+    // client sees the same moments.
     //
     // Drawing: EVERY pipe is drawn here (PostDrawTiles; PipeTileBase.PreDraw always says no), scaled by the wave while liquid moves and at
     // scale 1 otherwise, so a pipe never switches between two ways of being drawn (that switch was the flicker). The art outside the
@@ -71,8 +83,8 @@ namespace Factorraria.Common.Liquids
         public float ChunkUnits => 255f;           // liquid units in a full world cell: one ball per this much liquid moved
         public float BallSpeedTilesPerSecond => 4f;   // how fast the balls travel while they are not crowded: slower = more balls, closer together
         public float BallMinSpacingTiles => 5f;       // the closest two balls may get (the swell is BallLengthTiles long); past that the balls go faster instead of more frequent
-        public float SpacingEasing => 0.1f;           // 0..1 per tick: how quickly the gap between balls follows a change of the pump rate
-        public float SyncGain => 0.5f;             // 0..1: how much of its timing error the ball corrects at each real chunk (the first one lines it up fully)
+
+        public float SyncGain => 0.5f;             // 0..1: how much of the timing error the making of new balls corrects at each real chunk (the first one lines it up fully)
         public float BallLengthTiles => 3f;        // the swelling lobe; the squeeze lobe right behind it is as long
 
         public float SwellAmount => 0.15f;          // extra scale at the middle of the ball
@@ -128,6 +140,7 @@ namespace Factorraria.Common.Liquids
         readonly List<PumpChain> activeChains = new List<PumpChain>();
         readonly List<MotorTileEntityBase> staleRoots = new List<MotorTileEntityBase>();
         PumpChain activeChain;   // the chain the walk in progress belongs to
+        int waveStamp = 1;       // counts ticks: BallU is worked out once per tile per tick
 
         // One liquid drifter inside the window of a pipe. Client only, not saved. Drawn under the pipe (DrawWindowParticles).
         struct WindowParticle
@@ -317,12 +330,8 @@ namespace Factorraria.Common.Liquids
                 chain.Min = chain.NextMin;
                 chain.Max = Math.Max(chain.NextMax, chain.NextMin + 1f);
 
-                chain.TargetSpacing = ComputeSpacing(chain.Rate);
-                if (!chain.SpacingSet)
-                {
-                    chain.Spacing = chain.TargetSpacing;
-                    chain.SpacingSet = true;
-                }
+                if (!chain.Primed && chain.Rate > 0f)
+                    PrimeChain(chain);
             }
         }
 
@@ -339,10 +348,53 @@ namespace Factorraria.Common.Liquids
             return Math.Clamp(Math.Max(0.1f, BallSpeedTilesPerSecond) * secondsPerChunk, min, 10000f);
         }
 
-        // Every tick: the balls of each chain move by the liquid the chain moved (rate / ChunkUnits of one spacing, so one spacing = one chunk), and
-        // are lined up when the network reports a real chunk. After a chunk the last ball is at the end pipe and a new one starts at the intake.
+        // The balls a chain has the first moment it is seen: the ones that would be in the pipes if it had been running for a while at this rate,
+        // lined up so one is at the end pipe. They are made once; after that balls only come from the source.
+        void PrimeChain(PumpChain chain)
+        {
+            chain.Primed = true;
+            chain.Balls.Clear();
+
+            float spacing = ComputeSpacing(chain.Rate);
+            float start = chain.Min - Math.Max(0.5f, BallLengthTiles) * 0.5f;
+            float phase = ChunkPhase(chain);
+            chain.EmitProgress = phase;
+
+            float speed = spacing * chain.Rate / Math.Max(1f, ChunkUnits);
+            float end = chain.Max + Math.Max(0.5f, BallLengthTiles) * 0.5f;
+            for (float pos = start + spacing * phase; pos <= end && chain.Balls.Count < 1024; pos += spacing)
+                chain.Balls.Add(new FlowBall { Pos = pos, Speed = speed });
+        }
+
+        // Where the making of balls should be (fraction of a period since the last one) at the moment a chunk is delivered, so that a ball made
+        // earlier arrives at the end pipe at that moment: the travel time over the period, without the whole periods.
+        float ChunkPhase(PumpChain chain)
+        {
+            float spacing = ComputeSpacing(chain.Rate);
+            float start = chain.Min - Math.Max(0.5f, BallLengthTiles) * 0.5f;
+            float periods = (chain.Max - start) / spacing;
+            return periods - MathF.Floor(periods);
+        }
+
+        // A new ball at the source, with the speed this rate gives: one spacing in the time the chain needs to move one chunk.
+        void SpawnBall(PumpChain chain)
+        {
+            if (chain.Rate <= 0f || chain.Balls.Count >= 1024)
+                return;
+
+            float spacing = ComputeSpacing(chain.Rate);
+            chain.Balls.Add(new FlowBall
+            {
+                Pos = chain.Min - Math.Max(0.5f, BallLengthTiles) * 0.5f,
+                Speed = spacing * chain.Rate / Math.Max(1f, ChunkUnits)
+            });
+        }
+
+        // Every tick: balls move at their own speed (never backwards) and leave after the end pipe; a new ball is made every ChunkUnits of liquid
+        // the chain moves. A real chunk only shifts the making of the NEXT balls, never a ball that is already there.
         void AdvanceChains()
         {
+            waveStamp++;
             if (activeChains.Count == 0 || Main.gamePaused)
                 return;
 
@@ -362,24 +414,48 @@ namespace Factorraria.Common.Liquids
                     continue;
 
                 lastChunkCount[motor] = count;
+                if (!chain.Primed || chain.Rate <= 0f)
+                    continue;
+
+                float target = ChunkPhase(chain);
                 if (!chain.Synced)
                 {
-                    chain.Progress = 0f;
+                    chain.EmitProgress = target;
                     chain.Synced = true;
                 }
                 else
                 {
-                    float error = chain.Progress < 0.5f ? chain.Progress : chain.Progress - 1f;
-                    chain.Progress -= error * Math.Clamp(SyncGain, 0f, 1f);
+                    float error = chain.EmitProgress - target;
+                    error -= MathF.Round(error);
+                    chain.EmitProgress -= error * Math.Clamp(SyncGain, 0f, 1f);
                 }
             }
 
+            float halfLength = Math.Max(0.5f, BallLengthTiles) * 0.5f;
             for (int c = 0; c < activeChains.Count; c++)
             {
                 PumpChain chain = activeChains[c];
-                chain.Progress += chain.Rate / Math.Max(1f, ChunkUnits);
-                chain.Progress -= MathF.Floor(chain.Progress);
-                chain.Spacing += (chain.TargetSpacing - chain.Spacing) * Math.Clamp(SpacingEasing, 0.001f, 1f);
+                if (!chain.Primed)
+                    continue;
+
+                for (int b = chain.Balls.Count - 1; b >= 0; b--)
+                {
+                    FlowBall ball = chain.Balls[b];
+                    ball.Pos += ball.Speed;
+                    if (ball.Pos - halfLength > chain.Max)
+                        chain.Balls.RemoveAt(b);
+                }
+
+                if (chain.Rate <= 0f)
+                    continue;
+
+                chain.EmitProgress += chain.Rate / Math.Max(1f, ChunkUnits);
+                for (int guard = 0; guard < 4 && chain.EmitProgress >= 1f; guard++)
+                {
+                    chain.EmitProgress -= 1f;
+                    SpawnBall(chain);
+                }
+                chain.EmitProgress = Math.Clamp(chain.EmitProgress, -1f, 1f);
             }
         }
 
@@ -445,7 +521,7 @@ namespace Factorraria.Common.Liquids
             }
         }
 
-        // Every chain has its own ball (PumpChain.Progress), so unrelated pumps already differ; a chain's first pump starts at S 0.
+        // Every chain has its own balls (PumpChain.Balls), so unrelated pumps already differ; a chain's first pump starts at S 0.
         float RootPhase(MotorTileEntityBase motor) => 0f;
 
         void AddRelay(MotorTileEntityBase from, MotorTileEntityBase to, int dist)
@@ -598,19 +674,35 @@ namespace Factorraria.Common.Liquids
         // ------------------------------------------------------------------ the wave
 
         // Where this tile is relative to the nearest ball of its chain: 0..BallLengthTiles while the ball is on it (the ball is centred on the tile
-        // at u = BallLengthTiles / 2), negative before it. The balls sit at Max + Spacing * (Progress - j) for j = 0, 1, 2...: one is on the end
-        // pipe when Progress is 0, and they carry on upstream past the first tile, so a ball enters the chain smoothly. A tile with no chain is
-        // never on a ball.
+        // at u = BallLengthTiles / 2), negative before it. Where two balls overlap (a faster one passing a slower one) the nearer one counts,
+        // which is continuous because the bump is symmetric around the ball. A tile with no chain, or a chain with no ball, is never on a ball.
+        // Worked out once per tile per tick (the draw, the overhang art and the particles all ask).
         float BallU(PipeFlowCell cell)
         {
-            PumpChain chain = cell.Chain;
-            if (chain == null)
-                return -1f;
+            if (cell.WaveStamp == waveStamp)
+                return cell.WaveU;
 
-            float spacing = Math.Max(0.5f, chain.Spacing);
-            float j = Math.Max(0f, MathF.Round((chain.Max + spacing * chain.Progress - cell.S) / spacing));
-            float center = chain.Max + spacing * (chain.Progress - j);
-            return cell.S - center + Math.Max(0.5f, BallLengthTiles) * 0.5f;
+            float u = -1f;
+            PumpChain chain = cell.Chain;
+            if (chain != null && chain.Balls.Count > 0)
+            {
+                float nearest = chain.Balls[0].Pos;
+                float best = Math.Abs(cell.S - nearest);
+                for (int b = 1; b < chain.Balls.Count; b++)
+                {
+                    float distance = Math.Abs(cell.S - chain.Balls[b].Pos);
+                    if (distance < best)
+                    {
+                        best = distance;
+                        nearest = chain.Balls[b].Pos;
+                    }
+                }
+                u = cell.S - nearest + Math.Max(0.5f, BallLengthTiles) * 0.5f;
+            }
+
+            cell.WaveU = u;
+            cell.WaveStamp = waveStamp;
+            return u;
         }
 
         // 0..1 smooth bump over the first BallLengthTiles of the period (the swelling part).
