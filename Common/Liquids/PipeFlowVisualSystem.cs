@@ -893,14 +893,11 @@ namespace Factorraria.Common.Liquids
             proxy.active = false;
         }
 
-        // The dust's own draw colour, times the liquid tint for the tinted water dust (the game tints real dust itself; the window drifters are drawn by hand).
+        // The dust's own draw colour. The tintable dust already returns the liquid tint from GetAlpha (the tint went in as the dust's colour);
+        // multiplying it in again, or onto a blue water frame, is what turned the window particles black.
         static Color WindowTint(Dust proxy, Color tint)
         {
-            Color baseColor = proxy.GetAlpha(Color.White);
-            if (tint == default)
-                return baseColor;
-
-            return new Color(baseColor.ToVector4() * tint.ToVector4());
+            return proxy.GetAlpha(Color.White);
         }
 
         void UpdateWindowParticles()
@@ -1006,8 +1003,9 @@ namespace Factorraria.Common.Liquids
         }
 
         // The dust a liquid sprays. Water liquids keep their biome dust (plain water follows the player's biome, below).
-        // Every other liquid (Lava, Honey, Shimmer, Oil, Fuel, later ones) sprays plain water dust tinted to its registered RenderColor. Not their own
+        // Every other liquid (Lava, Honey, Shimmer, Oil, Fuel, later ones) sprays the tintable dust in its registered RenderColor. Not their own
         // vanilla dust: Lava/Honey dust (and the bubble dust) are made to live only inside liquid, so they died the tick they left a pipe.
+        // Not the water dust either: it draws in its own blue and ignores the dust colour, so every liquid came out dark blue.
         static int SplashDustFor(int liquid, out Color tint)
         {
             tint = default;
@@ -1030,7 +1028,7 @@ namespace Factorraria.Common.Liquids
             }
 
             tint = LiquidColor(liquid);
-            return DustID.Water;
+            return DustID.TintableDust;
         }
 
         static Color LiquidColor(int liquid)
