@@ -4,7 +4,7 @@ generated 2026-11-25 | 461 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(91) BaseMachine(60) FactorrariaPacket(42) PacketDirection(36) LiquidTypeRegistry(35) RecipeBook(26) Factorraria(26) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) CartSystem(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartModule(15) RecipeKnowledgeSystem(14)
+FactorrariaNet(91) BaseMachine(60) FactorrariaPacket(42) PacketDirection(36) LiquidTypeRegistry(35) RecipeBook(26) Factorraria(26) Cart(23) MachineUIStateBase(20) TileEntityHelper(18) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) LiquidStack(17) CartSystem(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartModule(15) RecipeKnowledgeSystem(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -550,7 +550,7 @@ tModLoader/other bases -> project types:
     +Recolor(GraphicsDevice,Texture2D,Color,Color,float)[s]
   static class LiquidTextureCache
     +GetOrCreate(string,Texture2D,LiquidTypeDefinition,float)[s] +Clear()[s]
-**MotorTileBase.cs** uses: BaseMachine, IMotorTile, LiquidNetworkSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, PowerGridSystem, TileOverdrawSystem
+**MotorTileBase.cs** uses: BaseMachine, IMotorTile, LiquidNetworkSystem, MachineVisualDefinition, MachineVisualOverride, MachineVisualRegistry, MotorTileEntityBase, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, PowerGridSystem, TileEntityHelper, TileOverdrawSystem
   abstract class MotorTileBase<TEntity> : ModTile, IMotorTile
     #Material:PipeMaterial[ab] #MotorDustId:int[v] #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov] +Slope(int,int)[ov]
 **MotorTileEntityBase.cs** ns!=Factorraria.Common.Machines uses: Direction, ElectricConsumerMachine, Factorraria, LiquidNetworkSystem, MotorRotate, PipeTileBase
@@ -690,7 +690,7 @@ tModLoader/other bases -> project types:
     {Hidden, DebugRevealed, FadedIngredient, FadedParchment, Crafted}
   static class RecipeVisibility
     +HeldVersion:int[s] +IsIngredient(int)[s] +BuildIngredientIndex()[s] +ClearIndex()[s] +InvalidateHeld()[s] +GetState(string,RecipeOutputGroup)[s] +GetState(string)[s] +Poll()[s] +IsItemHeld(int)[s] +IsHeld(string)[s] +IsNameRevealedInBrowser(string,RecipeOutputGroup,RecipeState)[s] +TryGetItemProducers(int,out List<string>)[s] +IsProductCrafted(RecipeOutputKey)[s] +IsIngredientRevealed(int)[s] +IsLiquidRevealed(int)[s] +IsMachineCrafted(string)[s] +IsFuelRevealed(string,FuelEntry)[s] +FindBookRecipeFor(RecipeOutputKey,string)[s] +InBook(RecipeState)[s]
-**TileEntityHelper.cs** uses: Factorraria, FurnaceOffsetConfig, HarvesterBoxRows, LiquidNetworkSystem, PowerGridSystem
+**TileEntityHelper.cs** uses: Factorraria, FurnaceOffsetConfig, HarvesterBoxRows, IMotorTile, LiquidNetworkSystem, PowerGridSystem
   static class TileEntityHelper
     +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float,int,Vector2?,bool)[s] +GetAnimationFrame(Point16,int)[s]
 

@@ -1,4 +1,5 @@
 ﻿using Factorraria.Common.Systems;
+using Factorraria.Common.Liquids;
 using Factorraria.Content.Configs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -162,7 +163,9 @@ namespace Factorraria.Common.Machines
             if (frameCount <= 1) return 0;
 
             int animationSpeed = Math.Max(1, ModContent.GetInstance<FurnaceOffsetConfig>().animationSpeedDivider);
-            long spatialOffset = (topLeft.X * 3) + (topLeft.Y * 7);
+            // Motors are the exception: every motor shows the same frame at the same time, wherever it is placed.
+            bool isMotor = ModContent.GetModTile(Main.tile[topLeft.X, topLeft.Y].TileType) is IMotorTile;
+            long spatialOffset = isMotor ? 0 : (topLeft.X * 3) + (topLeft.Y * 7);
             return (int)((Main.GameUpdateCount / animationSpeed + spatialOffset) % frameCount);
         }
     }
