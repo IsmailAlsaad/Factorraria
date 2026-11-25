@@ -79,6 +79,7 @@ namespace Factorraria.Common.Systems
             cache.Clear();
             byLink.Clear();
             disturbers.Clear();
+            birds.Clear();
             scratch = new Vector2[0];
             cachedVersion = -1;
         }
@@ -87,6 +88,7 @@ namespace Factorraria.Common.Systems
         {
             cache.Clear();
             byLink.Clear();
+            birds.Clear();
             cachedVersion = -1;
         }
 
@@ -250,8 +252,19 @@ namespace Factorraria.Common.Systems
                 DrawCurve(spriteBatch, rope.Pos, rope.Count, link.Wire, cutHover != null && ReferenceEquals(link, cutHover));
             }
 
+            // P11: the birds go in the same batch (on top of the wires, behind the crossboards). A bird that is flying away can outlive
+            // the last visible wire, so the batch is begun here if no wire began it.
+            if (!batchBegun && birds.Count > 0)
+            {
+                BeginBatch(spriteBatch);
+                batchBegun = true;
+            }
+
             if (batchBegun)
+            {
+                DrawBirds(spriteBatch);
                 spriteBatch.End();
+            }
         }
 
         // ---------------------------------------------------------------- P9: simulation (client only, only for links on screen)
@@ -262,6 +275,7 @@ namespace Factorraria.Common.Systems
                 return;
 
             UpdateSparks();   // P9b: sparks and the zap sound, they do not depend on Simulate
+            UpdateBirds();    // P11: wire birds (client only, cosmetic)
 
             if (!Simulate)
                 return;

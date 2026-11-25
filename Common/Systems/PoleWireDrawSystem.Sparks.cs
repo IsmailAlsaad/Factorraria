@@ -56,6 +56,7 @@ namespace Factorraria.Common.Systems
         {
             quietTicks = 0;
             pulses.Clear();
+            birds.Clear();
         }
 
         // The local player's own actions (called by PoleLinkInputSystem).
@@ -148,6 +149,7 @@ namespace Factorraria.Common.Systems
                 {
                     EmitFlash(rope);
                     entry.FlashCooldown = FlashCooldownTicks;
+                    ScareBirds(link);   // P11
                 }
 
                 if (zaps < MaxZapSoundsPerTick)
