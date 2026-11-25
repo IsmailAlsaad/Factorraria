@@ -559,13 +559,13 @@ tModLoader/other bases -> project types:
     +CanConnect(int,int,Direction,int)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
 **PipeFlowVisualSystem.cs** uses: Direction, LiquidTypeRegistry, MachineVisualOverride, MotorTileEntityBase, PipeTierRegistry, Record, VisibleTileScan
   sealed class PumpChain
-    +Balls:List<FlowBall> +EmitProgress:float +Rate:float +Max:float Min, +NextMax:float NextMin, +Primed:bool +Synced:bool +Stamp:int
+    +Balls:List<FlowBall> +EmitProgress:float +Rate:float +StableRate:float +Max:float Min, +NextMax:float NextMin, +Primed:bool +Synced:bool +Stamp:int
   sealed class FlowBall
     +Pos:float +Speed:float
   sealed class PipeFlowCell
     +S:float +Dist:float +Travel:Point +Liquid:int +Rate:float +IsMotor:bool +EndMask:int +Intensity:float +Stamp:int +Chain:PumpChain +WaveStamp:int +WaveU:float
   class PipeFlowVisualSystem : ModSystem
-    +ChunkUnits:float +BallSpeedTilesPerSecond:float +BallMinSpacingTiles:float +SyncGain:float +SyncDeadbandTicks:float +SyncMaxStep:float +BallLengthTiles:float +SwellAmount:float +SqueezeAmount:float +MotorSwellMultiplier:float +RebuildIntervalTicks:int +MaxWalkPipes:int +MaxRangeTiles:float +FadePerTick:float +OpenEndParticlesPerUnit:float +LeakChancePerTick:float +LeakBurstMin:int +LeakBurstMax:int +WindowParticlesPerUnit:float +MaxParticlesPerTick:int +ParticleScaleMin:float +ParticleScaleMax:float +OpenEndSpeedMin:float +OpenEndSpeedMax:float +LeakSpeedMin:float +LeakSpeedMax:float +WindowSpeedMin:float +WindowSpeedMax:float +WindowScaleMultiplier:float +MaxWindowParticles:int +WindowHorizontal:Rectangle +WindowVertical:Rectangle +Unload()[ov] +OnWorldUnload()[ov] +GetTileScale(int,int,Tile) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+    +ChunkUnits:float +BallSpeedTilesPerSecond:float +BallMinSpacingTiles:float +SyncGain:float +SyncDeadbandTicks:float +SyncMaxStep:float +RateHoldFraction:float +BallLengthTiles:float +SwellAmount:float +SqueezeAmount:float +MotorSwellMultiplier:float +RebuildIntervalTicks:int +MaxWalkPipes:int +MaxRangeTiles:float +FadePerTick:float +OpenEndParticlesPerUnit:float +LeakChancePerTick:float +LeakBurstMin:int +LeakBurstMax:int +WindowParticlesPerUnit:float +MaxParticlesPerTick:int +ParticleScaleMin:float +ParticleScaleMax:float +OpenEndSpeedMin:float +OpenEndSpeedMax:float +LeakSpeedMin:float +LeakSpeedMax:float +WindowSpeedMin:float +WindowSpeedMax:float +WindowScaleMultiplier:float +MaxWindowParticles:int +WindowHorizontal:Rectangle +WindowVertical:Rectangle +Unload()[ov] +OnWorldUnload()[ov] +GetTileScale(int,int,Tile) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
     struct WindowParticle
       +Tile:Point +Position:Vector2 +Velocity:Vector2 +Texture:Texture2D +Frame:Rectangle +Tint:Color +Scale:float +Age:int +Life:int
 **PipeTileBase.cs** uses: LiquidNetworkSystem, PipeConnectionHelper, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileOverdrawSystem

@@ -18,6 +18,7 @@ namespace Factorraria.Common.Liquids
         public readonly List<FlowBall> Balls = new List<FlowBall>();   // every ball in flight, oldest first
         public float EmitProgress;   // 0..1: how far the chain is toward emitting its next ball (one ball per chunk of liquid moved)
         public float Rate;           // liquid units per tick the chain moves
+        public float StableRate;     // Rate held steady against small wobble (PipeFlowVisualSystem.HoldRate): what the balls' speed, spacing and making use
         public float Min, Max;       // path coordinates S of the first and the last tile of the chain
         public float NextMin, NextMax;   // being collected by the walk in progress
         public bool Primed;          // the balls a running chain already has when it is first seen were created
@@ -85,8 +86,9 @@ namespace Factorraria.Common.Liquids
         public float BallMinSpacingTiles => 5f;       // the closest two balls may get (the swell is BallLengthTiles long); past that the balls go faster instead of more frequent
 
         public float SyncGain => 0.5f;             // 0..1: how much of the timing error the making of new balls corrects at each real chunk (the first one lines it up fully)
-        public float SyncDeadbandTicks => 1.5f;    // a chunk that arrives this many ticks off the expected moment is not corrected (the delivery itself jitters by a tick)
-        public float SyncMaxStep => 0.02f;         // the most the making of balls is shifted at one chunk, as a part of the gap between two balls
+        public float SyncDeadbandTicks => 3f;      // a chunk that arrives this many ticks off the expected moment is not corrected (the delivery itself jitters by a tick or two)
+        public float SyncMaxStep => 0.005f;        // the most the making of balls is shifted at one chunk, as a part of the gap between two balls (every shift is an uneven gap)
+        public float RateHoldFraction => 0.08f;    // the rate the balls use only changes when the pump's rate moves by more than this fraction (smoothing + rounding wobble must not change ball speeds)
         public float BallLengthTiles => 3f;        // the swelling lobe; the squeeze lobe right behind it is as long
 
         public float SwellAmount => 0.15f;          // extra scale at the middle of the ball
@@ -321,6 +323,18 @@ namespace Factorraria.Common.Liquids
                 chainByRoot.Remove(staleRoots[k]);
         }
 
+        // The pump's rate wobbles by a level or two (it is smoothed and rounded), and every wobble made balls of slightly different speed and
+        // period, so the gaps between them drifted. The balls follow the rate only when it really changed, then snap to it.
+        float HoldRate(float held, float rate)
+        {
+            if (rate <= 0f)
+                return 0f;
+            if (held <= 0f)
+                return rate;
+
+            return MathF.Abs(rate - held) > Math.Max(0f, RateHoldFraction) * held ? rate : held;
+        }
+
         void FinishChains()
         {
             for (int c = 0; c < activeChains.Count; c++)
@@ -331,8 +345,9 @@ namespace Factorraria.Common.Liquids
 
                 chain.Min = chain.NextMin;
                 chain.Max = Math.Max(chain.NextMax, chain.NextMin + 1f);
+                chain.StableRate = HoldRate(chain.StableRate, chain.Rate);
 
-                if (!chain.Primed && chain.Rate > 0f)
+                if (!chain.Primed && chain.StableRate > 0f)
                     PrimeChain(chain);
             }
         }
@@ -357,12 +372,12 @@ namespace Factorraria.Common.Liquids
             chain.Primed = true;
             chain.Balls.Clear();
 
-            float spacing = ComputeSpacing(chain.Rate);
+            float spacing = ComputeSpacing(chain.StableRate);
             float start = chain.Min - Math.Max(0.5f, BallLengthTiles) * 0.5f;
             float phase = ChunkPhase(chain);
             chain.EmitProgress = phase;
 
-            float speed = spacing * chain.Rate / Math.Max(1f, ChunkUnits);
+            float speed = spacing * chain.StableRate / Math.Max(1f, ChunkUnits);
             float end = chain.Max + Math.Max(0.5f, BallLengthTiles) * 0.5f;
             for (float pos = start + spacing * phase; pos <= end && chain.Balls.Count < 1024; pos += spacing)
                 chain.Balls.Add(new FlowBall { Pos = pos, Speed = speed });
@@ -372,7 +387,7 @@ namespace Factorraria.Common.Liquids
         // earlier arrives at the end pipe at that moment: the travel time over the period, without the whole periods.
         float ChunkPhase(PumpChain chain)
         {
-            float spacing = ComputeSpacing(chain.Rate);
+            float spacing = ComputeSpacing(chain.StableRate);
             float start = chain.Min - Math.Max(0.5f, BallLengthTiles) * 0.5f;
             float periods = (chain.Max - start) / spacing;
             return periods - MathF.Floor(periods);
@@ -383,11 +398,11 @@ namespace Factorraria.Common.Liquids
         // balls equal (made on whole ticks, the gap would jump between two whole numbers of ticks, which shows when the pump is fast).
         void SpawnBall(PumpChain chain, float elapsedTicks)
         {
-            if (chain.Rate <= 0f || chain.Balls.Count >= 1024)
+            if (chain.StableRate <= 0f || chain.Balls.Count >= 1024)
                 return;
 
-            float spacing = ComputeSpacing(chain.Rate);
-            float speed = spacing * chain.Rate / Math.Max(1f, ChunkUnits);
+            float spacing = ComputeSpacing(chain.StableRate);
+            float speed = spacing * chain.StableRate / Math.Max(1f, ChunkUnits);
             chain.Balls.Add(new FlowBall
             {
                 Pos = chain.Min - Math.Max(0.5f, BallLengthTiles) * 0.5f + speed * Math.Clamp(elapsedTicks, 0f, 2f),
@@ -419,7 +434,7 @@ namespace Factorraria.Common.Liquids
                     continue;
 
                 lastChunkCount[motor] = count;
-                if (!chain.Primed || chain.Rate <= 0f)
+                if (!chain.Primed || chain.StableRate <= 0f)
                     continue;
 
                 float target = ChunkPhase(chain);
@@ -432,7 +447,7 @@ namespace Factorraria.Common.Liquids
                 {
                     float error = chain.EmitProgress - target;
                     error -= MathF.Round(error);
-                    float deadband = chain.Rate / Math.Max(1f, ChunkUnits) * Math.Max(0f, SyncDeadbandTicks);
+                    float deadband = chain.StableRate / Math.Max(1f, ChunkUnits) * Math.Max(0f, SyncDeadbandTicks);
                     if (MathF.Abs(error) > deadband)
                     {
                         float step = (MathF.Abs(error) - deadband) * Math.Clamp(SyncGain, 0f, 1f);
@@ -456,10 +471,10 @@ namespace Factorraria.Common.Liquids
                         chain.Balls.RemoveAt(b);
                 }
 
-                if (chain.Rate <= 0f)
+                if (chain.StableRate <= 0f)
                     continue;
 
-                float perTick = chain.Rate / Math.Max(1f, ChunkUnits);
+                float perTick = chain.StableRate / Math.Max(1f, ChunkUnits);
                 chain.EmitProgress += perTick;
                 for (int guard = 0; guard < 4 && chain.EmitProgress >= 1f; guard++)
                 {
