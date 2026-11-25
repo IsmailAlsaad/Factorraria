@@ -824,7 +824,7 @@ namespace Factorraria.Common.Liquids
             for (int k = 0; k < count; k++)
             {
                 // Starts in the upstream half of the window and drifts out through the downstream end.
-                float along = Main.rand.NextFloat() * 0.5f;
+                float along = Main.rand.NextFloat(-0.35f, 0.1f);
                 float across = Main.rand.NextFloat();
                 float speed = Math.Max(0.05f, Main.rand.NextFloat(WindowSpeedMin, Math.Max(WindowSpeedMin, WindowSpeedMax)));
 
