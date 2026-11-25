@@ -15,6 +15,10 @@ namespace Factorraria.Common.Machines
 
         public Direction Facing = Direction.Right;
 
+        // The facing the player last turned a motor to (right-click). A new motor they place starts with it, and the placement hologram shows it.
+        // Per client and not saved: it is only the placing player's habit, the motor's own Facing stays server-owned (MotorRotate).
+        public static Direction LastPlacedFacing = Direction.Right;
+
         // Visual only (PipeFlowVisualSystem): the liquid type this ON pump moved in the last few ticks, -1 = none. FlowNetwork writes it on the
         // server (or in single-player), it is forgotten after FlowIdleLimitTicks without a transfer (so a pump that stalls for a tick or two does
         // not flicker the animation), and it reaches every client in this motor's light update. Never saved.
@@ -63,17 +67,48 @@ namespace Factorraria.Common.Machines
 
         protected virtual void UpdateMotor() { }
 
+        // A placed motor takes the facing the player last set. Multiplayer client: the entity is made by the server (and arrives later), so
+        // the client asks the server for that facing with the usual rotate request, sent right after the placement packets (the server
+        // has the entity by then). Single-player: the entity exists already, set it and reshape the pipes next to it. A dedicated server
+        // running this hook (the Robotic Arm placing a motor) has LastPlacedFacing at the default, so it changes nothing there.
+        public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
+        {
+            int id = base.Hook_AfterPlacement(i, j, type, style, direction, alternate);
+
+            Direction wanted = LastPlacedFacing;
+            if (wanted == Direction.Right)
+                return id;   // the default facing
+
+            Terraria.DataStructures.Point16 corner = Terraria.ObjectData.TileObjectData.TopLeft(i, j);
+            if (Terraria.Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
+            {
+                global::Factorraria.Common.Net.MotorRotate.RequestFacing(corner, wanted);
+                return id;
+            }
+
+            if (ByPosition.TryGetValue(corner, out Terraria.DataStructures.TileEntity placed) && placed is MotorTileEntityBase motor && motor.Facing != wanted)
+            {
+                motor.Facing = wanted;
+                LiquidNetworkSystem.networkNeedsRebuilding = true;
+                PipeTileBase.ReframeNeighbors(corner.X, corner.Y);
+            }
+
+            return id;
+        }
+
         public override void OnRightClick(int i, int j)
         {
             // Patch 8.3 (P3): the server owns Facing (its liquid networks read it). A multiplayer client only asks; the server turns the
             // motor and tells every client (MotorRotate), and the reframing of the neighbouring pipes happens when that answer arrives.
             if (Terraria.Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
             {
+                LastPlacedFacing = Facing.Rotate90();   // the facing this click asks for (the server honours it)
                 global::Factorraria.Common.Net.MotorRotate.Request(this);
                 return;
             }
 
             Facing = Facing.Rotate90();
+            LastPlacedFacing = Facing;
 
             LiquidNetworkSystem.networkNeedsRebuilding = true;
             PipeTileBase.ReframeNeighbors(i, j);

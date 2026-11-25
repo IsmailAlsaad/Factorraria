@@ -67,11 +67,11 @@ namespace Factorraria.Common.Liquids
         // The overhang art swells with the pump (PipeFlowVisualSystem owns the wave; the pump is its path coordinate 0).
         static Vector2 SelectOverdrawScale(int i, int j, Tile tile) => ModContent.GetInstance<PipeFlowVisualSystem>().GetTileScale(i, j, tile);
 
-        // Placement hologram: a new motor is Off and faces Right (MotorTileEntityBase.Facing default).
+        // Placement hologram: a new motor is Off and faces the way the player last turned a motor (MotorTileEntityBase.LastPlacedFacing, Right until then).
         static bool SelectPreviewCell(int i, int j, Tile tile, out int cell, out float rotation)
         {
             cell = 0;
-            rotation = 0f;
+            rotation = MachineVisualOverride.GetMotorRotation(MotorTileEntityBase.LastPlacedFacing);
             return true;
         }
 

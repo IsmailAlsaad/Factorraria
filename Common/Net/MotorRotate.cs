@@ -65,6 +65,19 @@ namespace Factorraria.Common.Net
             });
         }
 
+        /// <summary>Multiplayer client: asks the server to give the motor at corner this exact facing (a value, so a repeat changes nothing twice).
+        /// Sent right after placing a motor, when the replica does not exist yet; the server's answer (MotorFacingChanged) turns the replica once it arrives.</summary>
+        public static void RequestFacing(Point16 corner, Direction wanted)
+        {
+            ClientSent++;
+            FactorrariaNet.SendRequest(FactorrariaPacket.MotorRotateRequest, w =>
+            {
+                w.Write(corner.X);
+                w.Write(corner.Y);
+                w.Write((byte)wanted);
+            });
+        }
+
         // ---------------------------------------------------------------- server
 
         public static void HandleRequest(BinaryReader reader, int sender)

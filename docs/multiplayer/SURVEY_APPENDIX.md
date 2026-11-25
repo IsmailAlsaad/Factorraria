@@ -937,3 +937,9 @@ Not part of the ten survey steps; see the roadmap Progress entry 'Bug fixes (des
 - **Job end cases:** suit off (`MechSuitNet.HandleRequest`), death or disconnect (checked every tick), a new request, nothing placeable left (blocked, out of material, unsupported, all done) and a 30 s idle timeout. Cancel with Esc and an end report arrive in M4.
 - **Known limits:** objects skipped; an owner who moves inventory items at the moment a consumption packet arrives can end with a stack that differs by the consumed amount (the next `SyncEquipment` from the owner wins on the server); two arms can both pick the last item of a material (the second placement finds no item and the tile is skipped for a few seconds).
 
+### Side feature: motor placement facing (remembered rotation)
+- **Rule:** the server owns `MotorTileEntityBase.Facing`; the remembered facing is client-only (`LastPlacedFacing`, static, not saved, not synced) and only decides what a placing client asks for.
+- **Flow (multiplayer client):** place the tile -> `BaseMachine.Hook_AfterPlacement` sends the tile square, the entity request (87) and the biome -> `MotorTileEntityBase.Hook_AfterPlacement` then sends `MotorRotateRequest` with the remembered facing (`MotorRotate.RequestFacing`) unless it is Right -> the server validates it like a rotation, sets Facing, flags a rebuild and broadcasts `MotorFacingChanged`.
+- **Flow (single-player):** the hook sets Facing on the new entity, flags the liquid rebuild and calls `PipeTileBase.ReframeNeighbors`.
+- **Known limits:** a Robotic Arm placing a motor in single-player uses the player's remembered facing; the remembered facing resets when the game restarts; a `MotorFacingChanged` that reaches a client before that client has the replica is dropped (the entity snapshot carries the facing).
+

@@ -555,7 +555,7 @@ tModLoader/other bases -> project types:
     #Material:PipeMaterial[ab] #MotorDustId:int[v] #OverdrawTexturePath:string[v] +CanPlace(int,int)[ov] +KillTile(int,int,ref bool,ref bool,ref bool)[ov] +CreateDust(int,int,ref int)[ov] +Slope(int,int)[ov]
 **MotorTileEntityBase.cs** ns!=Factorraria.Common.Machines uses: Direction, ElectricConsumerMachine, Factorraria, LiquidNetworkSystem, MotorRotate, PipeTileBase
   abstract class MotorTileEntityBase : ElectricConsumerMachine
-    +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +FlowLiquidType:int +FlowIdleTicks:int +FlowIdleLimitTicks:int +FlowMovedThisTick:float +FlowRate:float +FlowRateSmoothing:float +FlowRateStep:float +FlowRateLevel:byte +FlowChunkCount:byte +FlowChunkAccum:float +FlowChunkUnits:float +Update()[ov] #UpdateMotor()[v] +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
+    +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +LastPlacedFacing:Direction[s] +FlowLiquidType:int +FlowIdleTicks:int +FlowIdleLimitTicks:int +FlowMovedThisTick:float +FlowRate:float +FlowRateSmoothing:float +FlowRateStep:float +FlowRateLevel:byte +FlowChunkCount:byte +FlowChunkAccum:float +FlowChunkUnits:float +Update()[ov] #UpdateMotor()[v] +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
 **PipeConnectionHelper.cs** uses: BaseMachine, Direction, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
   static class PipeConnectionHelper
     +CanConnect(int,int,Direction,int)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
@@ -1010,7 +1010,7 @@ tModLoader/other bases -> project types:
     +ReportState(bool)[s] +SendState(int,bool,int,int)[s] +HandleRequest(BinaryReader,int)[s] +HandleState(BinaryReader,int)[s]
 **MotorRotate.cs** uses: BaseMachine, Direction, FactorrariaNet, FactorrariaPacket, LiquidNetworkSystem, MachineRequest, MotorTileEntityBase, PacketDirection, PipeTileBase, RequestCheck
   static class MotorRotate
-    +ServerRotated:int[s] +ServerRefused:int[s] +ServerAlreadyThere:int[s] +ClientSent:int[s] +ClientApplied:int[s] +Request(MotorTileEntityBase)[s] +HandleRequest(BinaryReader,int)[s] +HandleChanged(BinaryReader,int)[s] +Update()[s] +Reset()[s] +Describe()[s]
+    +ServerRotated:int[s] +ServerRefused:int[s] +ServerAlreadyThere:int[s] +ClientSent:int[s] +ClientApplied:int[s] +Request(MotorTileEntityBase)[s] +RequestFacing(Point16,Direction)[s] +HandleRequest(BinaryReader,int)[s] +HandleChanged(BinaryReader,int)[s] +Update()[s] +Reset()[s] +Describe()[s]
     sealed class Change
       +Corner:Point16 +Facing:Direction
   class MotorRotateSystem : ModSystem
