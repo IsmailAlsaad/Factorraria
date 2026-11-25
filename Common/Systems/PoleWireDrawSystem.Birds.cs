@@ -36,7 +36,7 @@ namespace Factorraria.Common.Systems
         public int BirdFlyFrameCount = 4;
         public float BirdFootLift = -2f;               // pixels the bottom of the frame sits above the wire's centre (raise it if the feet sink into the wire)
         public int MaxBirds = 10;                      // alive at once, in the whole view
-        public float BirdSpawnSeconds = 10f;          // on average one new bird this often while a wire is on screen and there is room
+        public float BirdSpawnSeconds = 20f;          // on average one new bird this often while a wire is on screen and there is room
         public float BirdMaxSlope = 0.6f;             // a bird only lands where the wire is flatter than this (rise over run)
         public float BirdPoleMarginPixels = 24f;      // no perching this close to a pole
         public float BirdSpacingPixels = 20f;         // minimum distance between two birds on one wire
