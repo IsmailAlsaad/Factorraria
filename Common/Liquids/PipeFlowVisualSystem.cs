@@ -121,6 +121,22 @@ namespace Factorraria.Common.Liquids
         public float WindowScaleMultiplier => 0.75f;    // window drifters are the dust's art scaled by this (the window is small)
         public int MaxWindowParticles => 400;           // hard cap over all windows on screen
 
+        // ---- Particle look (hot reload friendly: all of it is code in these bodies) ----
+        public float TintedDustTransparency => 0.15f;   // 0 = solid, 1 = invisible: the dust every non-water liquid sprays (open end, leaks, windows)
+        public float WaterDustTransparency => 0f;       // EXTRA see-through on top of the water dust's own (water and biome waters); 0 = exactly vanilla
+
+        // The colour of each liquid's particles, by the liquid's registered name. Edit, add or remove lines and hot reload. A liquid not listed
+        // (default) uses its RenderColor. Only the RGB counts here: the see-through is TintedDustTransparency.
+        public Color DustColorFor(string liquidName) => liquidName switch
+        {
+            "Lava" => new Color(255, 110, 30),
+            "Honey" => new Color(255, 190, 40),
+            "Shimmer" => new Color(220, 100, 255),
+            "Oil" => new Color(70, 60, 80),
+            "Fuel" => new Color(180, 135, 80),
+            _ => default
+        };
+
         // Window rectangles in tile pixels (the 16x16 cell, 0,0 = top-left). Window particles appear inside these; match them to the hole in the art.
         public Rectangle WindowHorizontal => new Rectangle(3, 5, 10, 6);
         public Rectangle WindowVertical => new Rectangle(5, 3, 6, 10);
@@ -893,11 +909,22 @@ namespace Factorraria.Common.Liquids
             proxy.active = false;
         }
 
-        // The dust's own draw colour. The tintable dust already returns the liquid tint from GetAlpha (the tint went in as the dust's colour);
-        // multiplying it in again, or onto a blue water frame, is what turned the window particles black.
-        static Color WindowTint(Dust proxy, Color tint)
+        // The colour a window drifter is drawn in (before the tile light). Tinted dust: its art is white and the game's own tinting is not
+        // there for a hand-drawn particle, so the tint itself is the colour. Water dust: its own draw colour. Both fade by their transparency slider.
+        Color WindowTint(Dust proxy, Color tint)
         {
-            return proxy.GetAlpha(Color.White);
+            if (tint != default)
+                return new Color(tint.ToVector4() * (1f - Math.Clamp(TintedDustTransparency, 0f, 1f)));
+
+            Color own = proxy.GetAlpha(Color.White);
+            return new Color(own.ToVector4() * (1f - Math.Clamp(WaterDustTransparency, 0f, 1f)));
+        }
+
+        // Real dust: more see-through by adding to the dust's alpha (255 = invisible).
+        void ApplyTransparency(Dust dust, bool tinted)
+        {
+            float t = Math.Clamp(tinted ? TintedDustTransparency : WaterDustTransparency, 0f, 1f);
+            dust.alpha = Math.Clamp(dust.alpha + (int)(255f * t), 0, 255);
         }
 
         void UpdateWindowParticles()
@@ -1000,13 +1027,14 @@ namespace Factorraria.Common.Liquids
             int dustType = SplashDustFor(liquid, out Color tint);
             Dust dust = Dust.NewDustPerfect(position, dustType, velocity, 0, tint, Main.rand.NextFloat(ParticleScaleMin, Math.Max(ParticleScaleMin, ParticleScaleMax)));
             dust.noGravity = !gravity;
+            ApplyTransparency(dust, tint != default);
         }
 
         // The dust a liquid sprays. Water liquids keep their biome dust (plain water follows the player's biome, below).
         // Every other liquid (Lava, Honey, Shimmer, Oil, Fuel, later ones) sprays the tintable dust in its registered RenderColor. Not their own
         // vanilla dust: Lava/Honey dust (and the bubble dust) are made to live only inside liquid, so they died the tick they left a pipe.
         // Not the water dust either: it draws in its own blue and ignores the dust colour, so every liquid came out dark blue.
-        static int SplashDustFor(int liquid, out Color tint)
+        int SplashDustFor(int liquid, out Color tint)
         {
             tint = default;
 
@@ -1031,12 +1059,15 @@ namespace Factorraria.Common.Liquids
             return DustID.TintableDust;
         }
 
-        static Color LiquidColor(int liquid)
+        Color LiquidColor(int liquid)
         {
             if (liquid < 0 || liquid >= LiquidTypeRegistry.definitions.Count)
                 return Color.White;
 
-            Color c = LiquidTypeRegistry.Get(liquid).RenderColor;
+            Color c = DustColorFor(LiquidTypeRegistry.Get(liquid).Name);
+            if (c == default)
+                c = LiquidTypeRegistry.Get(liquid).RenderColor;
+
             return new Color(c.R, c.G, c.B, (byte)255);
         }
 
