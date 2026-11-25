@@ -2,6 +2,8 @@
 using Factorraria.Common.Systems;
 using Factorraria.Content.Items.Liquids.Motors;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
@@ -56,8 +58,9 @@ namespace Factorraria.Common.Liquids
             TileObjectData.addTile(Type);
 
             PipeTierRegistry.RegisterMotor(Type, Material);
+            if (!Main.dedServ)
+                ModContent.RequestIfExists(OverdrawTexturePath, out overdrawSheet);
 
-            // Art outside the 16px cell: 2 cells in a row (0 = Off, 1 = On), drawn facing Right and rotated with the motor. See TileOverdrawSystem.
             ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell, scaler: SelectOverdrawScale);
         }
 
@@ -75,8 +78,20 @@ namespace Factorraria.Common.Liquids
             return true;
         }
 
-        // Same state and rotation the motor's own visual uses (MachineVisualOverride.PreDraw). No entity on this client yet = draw nothing.
-        static bool SelectOverdrawCell(int i, int j, Tile tile, out int cell, out float rotation)
+        Asset<Texture2D> overdrawSheet;
+
+        // Cell 0 = Off, every cell after it is one ON frame (a sheet with a single ON cell does not animate).
+        int OnOverdrawFrames()
+        {
+            Texture2D sheet = overdrawSheet?.Value;
+            if (sheet == null)
+                return 1;
+
+            int cellSize = 16 + 2 * ModContent.GetInstance<TileOverdrawSystem>().DefaultMarginPx;
+            return System.Math.Max(1, sheet.Width / cellSize * (sheet.Height / cellSize) - 1);
+        }
+
+        bool SelectOverdrawCell(int i, int j, Tile tile, out int cell, out float rotation)
         {
             cell = 0;
             rotation = 0f;
@@ -87,7 +102,7 @@ namespace Factorraria.Common.Liquids
             if (entity == null)
                 return false;
 
-            cell = entity.IsRunning ? 1 : 0;
+            cell = entity.IsRunning ? 1 + TileEntityHelper.GetAnimationFrame(new Point16(i, j), OnOverdrawFrames()) : 0;
             if (entity is MotorTileEntityBase motor)
                 rotation = MachineVisualOverride.GetMotorRotation(motor.Facing);
             return true;
