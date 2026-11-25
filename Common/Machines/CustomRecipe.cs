@@ -27,6 +27,7 @@ namespace Factorraria.Common.Machines
         public LiquidIngredient(int liquidType, float amount) { LiquidType = liquidType; Amount = amount; }
 
         public bool IsAnyWater => LiquidType == LiquidTypeRegistry.AnyWater;
+        public bool IsBiomeWater => LiquidType == LiquidTypeRegistry.BiomeWater;
 
         // Does a tank holding `tankLiquidType` satisfy this ingredient?
         // Exact type match, or - for AnyWater - plain Water or any biome water.
@@ -131,6 +132,13 @@ namespace Factorraria.Common.Machines
 
         // Plain Water or any biome water.
         public CustomRecipe WithAnyWaterInput(float amt) => WithLiquidInput(LiquidTypeRegistry.AnyWater, amt);
+        // Output: the water of the biome the machine is in (see LiquidTypeRegistry.BiomeWater).
+        public CustomRecipe WithBiomeWaterOutput(float amt)
+        {
+            LiquidOutputs.Add(new LiquidIngredient(LiquidTypeRegistry.BiomeWater, amt));
+            return this;
+        }
+
         public CustomRecipe WithLiquidOutput(int liquidType, float amt)
         {
             if (liquidType == LiquidTypeRegistry.AnyWater)

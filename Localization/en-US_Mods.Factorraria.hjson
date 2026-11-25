@@ -1131,6 +1131,7 @@ RecipeBook: {
 	Inputs: Inputs
 	Outputs: Outputs
 	AnyWater: Any Water
+	BiomeWater: Biome Water
 	Time: Time: {0} s
 	Units: "{0} units"
 	Fuel: Fuel

@@ -13,6 +13,8 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator
         public override int ValidTileType => TileID.ImbuingStation;
         public override RecipeBook Recipes => LiquidDistillatorRecipeRegistry.Book;
 
+        protected override int OutputSlotCount => 1;
+
         protected override int InputLiquidCount => 1;
         protected override int OutputLiquidCount => 1;
 

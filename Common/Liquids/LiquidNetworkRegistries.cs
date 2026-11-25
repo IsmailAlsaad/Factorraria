@@ -57,6 +57,11 @@ namespace Factorraria.Common.Liquids
         // it never sits in a tank or a network, it is only ever used as a recipe INPUT.
         public const int AnyWater = -2;
 
+        // Recipe-only sentinel meaning "the water of the biome the machine stands in" (Snow Water in a snow biome, plain Water where
+        // no variant exists). Like AnyWater it is NOT a registered liquid and never sits in a tank; it is only a recipe OUTPUT, and
+        // BaseMachine swaps it for the real water type when the craft finishes.
+        public const int BiomeWater = -3;
+
         // Biome waters (ids are filled in by LiquidTypeRegistrationSystem)
         public static int SnowWater;
         public static int DesertWater;

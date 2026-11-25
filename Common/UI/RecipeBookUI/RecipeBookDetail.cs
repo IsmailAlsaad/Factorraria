@@ -409,13 +409,15 @@ namespace Factorraria.Common.UI.RecipeBookUI
             }
             foreach (LiquidIngredient l in liquids)
             {
-                // AnyWater (-2) is not in the registry: show plain water's icon and a generic name.
-                int iconId = l.IsAnyWater ? LiquidTypeRegistry.Water : l.LiquidType;
-                string name = l.IsAnyWater ? RecipeBookLayout.Text("AnyWater") : LiquidTypeRegistry.Get(l.LiquidType).Name;
+                // AnyWater (-2) and BiomeWater (-3) are not in the registry: show plain water's icon and a generic name.
+                int iconId = l.IsAnyWater || l.IsBiomeWater ? LiquidTypeRegistry.Water : l.LiquidType;
+                string name = l.IsAnyWater ? RecipeBookLayout.Text("AnyWater")
+                    : l.IsBiomeWater ? RecipeBookLayout.Text("BiomeWater")
+                    : LiquidTypeRegistry.Get(l.LiquidType).Name;
                 string amount = l.Amount.ToString("0.##");
                 // A specific liquid follows the liquid rule (biome visited or crafted) in EVERY non-crafted state, faded ones included.
                 // Only "any water" has no rule of its own, so it stays hidden in a faded recipe.
-                bool liquidShown = l.IsAnyWater ? !fadeLiquids : RecipeVisibility.IsLiquidRevealed(l.LiquidType);
+                bool liquidShown = l.IsAnyWater || l.IsBiomeWater ? !fadeLiquids : RecipeVisibility.IsLiquidRevealed(l.LiquidType);
                 bool liquidHidden = hidden || (isInput && (fadeLiquids || reveal) && !liquidShown);
                 cells.Add(new Cell
                 {

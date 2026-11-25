@@ -638,13 +638,18 @@ namespace Factorraria.Common.Machines
             return firstEmpty;
         }
 
+        // BiomeWater (recipe output sentinel) becomes the water of the biome this machine stands in; everything else is unchanged.
+        int ResolveOutputLiquid(int liquidType) =>
+            liquidType == LiquidTypeRegistry.BiomeWater ? LiquidTypeRegistry.WaterFor(InsideBiome) : liquidType;
+
         int FindLiquidOutputSlot(LiquidIngredient output, int claimed)
         {
+            int outputType = ResolveOutputLiquid(output.LiquidType);
             for (int i = 0; i < OutputLiquids.Length; i++)
             {
                 if ((claimed & (1 << i)) != 0) continue;
                 LiquidStack tank = OutputLiquids[i];
-                if (tank.IsEmpty || (tank.LiquidType == output.LiquidType && tank.Amount + output.Amount <= tank.Capacity))
+                if (tank.IsEmpty || (tank.LiquidType == outputType && tank.Amount + output.Amount <= tank.Capacity))
                     return i;
             }
             return -1;
@@ -695,7 +700,7 @@ namespace Factorraria.Common.Machines
                 if (slot == -1) continue;
                 LiquidStack tank = OutputLiquids[slot];
                 if (tank.IsEmpty) tank.Amount = 0f;
-                tank.LiquidType = o.LiquidType;
+                tank.LiquidType = ResolveOutputLiquid(o.LiquidType);
                 tank.Amount += o.Amount;
             }
         }

@@ -24,8 +24,9 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator
             var LiquidTank2 = new LiquidTankUIElement(() => Entity.OutputLiquids[0]);
             list.Add(new MachineUIElementEntry(LiquidTank2, new Vector2(60, -20), new Vector2(16, 84)));
 
-            // No item-ingredient recipes yet, so this adds nothing; it fills in by itself once a recipe has item inputs.
+            // Item input (left of the input tank) and item output (right of the output tank). Tweak the positions to taste.
             AddIngredientSlots(list, LiquidDistillatorRecipeRegistry.Book, 0, new Vector2(-90f, 0f));
+            list.Add(OutputSlotEntry(0, new Vector2(100f, 0f)));
 
             return list;
         }

@@ -528,7 +528,7 @@ tModLoader/other bases -> project types:
   class LiquidTypeDefinition
     +Name:string +RenderColor:Color +VanillaTileLiquidId:byte? +IsWaterVariant:bool +IconPath:string +SplashDust:int
   static class LiquidTypeRegistry
-    +definitions:List<LiquidTypeDefinition>[s] +Register(LiquidTypeDefinition)[s] +ToTileLiquidId(int)[s] +FromTileLiquidId(byte)[s] +Get(int)[s] +Water:int[s] +Lava:int[s] +Honey:int[s] +Shimmer:int[s] +Oil:int[s] +Fuel:int[s] +AnyWater:int[c] +SnowWater:int[s] +DesertWater:int[s] +JungleWater:int[s] +OceanWater:int[s] +UndergroundWater:int[s] +CavernWater:int[s] +CorruptionWater:int[s] +CrimsonWater:int[s] +HallowWater:int[s] +OasisWater:int[s] +WaterByBiome:Dictionary<MachineBiome, int>[s] +WaterFor(MachineBiome)[s] +IsWater(int)[s] +RegisterBiomeWater(MachineBiome,string,Color,string,int)[s]
+    +definitions:List<LiquidTypeDefinition>[s] +Register(LiquidTypeDefinition)[s] +ToTileLiquidId(int)[s] +FromTileLiquidId(byte)[s] +Get(int)[s] +Water:int[s] +Lava:int[s] +Honey:int[s] +Shimmer:int[s] +Oil:int[s] +Fuel:int[s] +AnyWater:int[c] +BiomeWater:int[c] +SnowWater:int[s] +DesertWater:int[s] +JungleWater:int[s] +OceanWater:int[s] +UndergroundWater:int[s] +CavernWater:int[s] +CorruptionWater:int[s] +CrimsonWater:int[s] +HallowWater:int[s] +OasisWater:int[s] +WaterByBiome:Dictionary<MachineBiome, int>[s] +WaterFor(MachineBiome)[s] +IsWater(int)[s] +RegisterBiomeWater(MachineBiome,string,Color,string,int)[s]
   enum PipeMaterial
     {Lead, Iron}
   static class PipeTierRegistry
@@ -598,13 +598,13 @@ tModLoader/other bases -> project types:
   struct RecipeIngredient
     +Type:int +Stack:int
   struct LiquidIngredient
-    +LiquidType:int +Amount:float +IsAnyWater:bool +Matches(int)
+    +LiquidType:int +Amount:float +IsAnyWater:bool +IsBiomeWater:bool +Matches(int)
   struct RecipeOutputKey : IEquatable<RecipeOutputKey>
     +IsLiquid:bool +Id:int +ForItem(int)[s] +ForLiquid(int)[s] +DisplayName:string +Equals(RecipeOutputKey) +Equals(object)[ov] +GetHashCode()[ov]
   class RecipeOutputGroup
     +Key:RecipeOutputKey +Recipes:List<CustomRecipe> +MaxInputCount:int +Add(CustomRecipe) +Build(IEnumerable<CustomRecipe>)[s]
   class CustomRecipe
-    +Inputs:List<RecipeIngredient> +Outputs:List<RecipeIngredient> +LiquidInputs:List<LiquidIngredient> +LiquidOutputs:List<LiquidIngredient> +DurationTicks:int? +Source:Recipe +Output:RecipeIngredient +WithInput(int,int) +WithOutput(int,int) +UsesAnyWater:bool +WithLiquidInput(int,float) +WithAnyWaterInput(float) +WithLiquidOutput(int,float) +TakesTicks(int) +TryGetRecipeFromList(List<CustomRecipe>,List<Item>,out CustomRecipe,LiquidStack)[s] +TryGetPrimaryOutput(out RecipeOutputKey)
+    +Inputs:List<RecipeIngredient> +Outputs:List<RecipeIngredient> +LiquidInputs:List<LiquidIngredient> +LiquidOutputs:List<LiquidIngredient> +DurationTicks:int? +Source:Recipe +Output:RecipeIngredient +WithInput(int,int) +WithOutput(int,int) +UsesAnyWater:bool +WithLiquidInput(int,float) +WithAnyWaterInput(float) +WithBiomeWaterOutput(float) +WithLiquidOutput(int,float) +TakesTicks(int) +TryGetRecipeFromList(List<CustomRecipe>,List<Item>,out CustomRecipe,LiquidStack)[s] +TryGetPrimaryOutput(out RecipeOutputKey)
   class FuelTable
     +StackLimitRule:Func<int, int> +Add(int,int) +Contains(int) +UnitsOf(int) +StackLimit(int) +ItemTypes:IEnumerable<int> +Clear()
   class FuelChannel
@@ -2183,7 +2183,7 @@ tModLoader/other bases -> project types:
     +Book:RecipeBook[s] +BuildRecipes()[s]
 **LiquidDistillatorTileEntity.cs** uses: BaseMachine, LiquidDistillatorRecipeRegistry, RecipeBook
   class LiquidDistillatorTileEntity : BaseMachine
-    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] #InputLiquidCount:int[ov] #OutputLiquidCount:int[ov] #OnAnimationFrameChanged(int,int)[ov]
+    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] #OutputSlotCount:int[ov] #InputLiquidCount:int[ov] #OutputLiquidCount:int[ov] #OnAnimationFrameChanged(int,int)[ov]
 **LiquidDistillatorUIState.cs** uses: LiquidDistillatorRecipeRegistry, LiquidDistillatorTileEntity, LiquidTankUIElement, MachineUIElementEntry, MachineUIStateBase
   class LiquidDistillatorUIState : MachineUIStateBase
     #BuildElements()[ov]
