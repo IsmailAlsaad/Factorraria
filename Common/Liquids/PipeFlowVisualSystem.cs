@@ -72,8 +72,8 @@ namespace Factorraria.Common.Liquids
     // scale 1 otherwise, so a pipe never switches between two ways of being drawn (that switch was the flicker). The art outside the
     // tile (TileOverdrawSystem) and the pump (MachineVisualOverride) ask GetTileScale so they swell in step.
     //
-    // Liquid itself uses the liquid's registered dust (LiquidTypeDefinition.SplashDust: the biome dust for biome waters, the ModLiquid's own
-    // splash dust for the custom liquids): a stream out of an open pipe end and now and then a leak from a pipe that touches air, both real dust,
+    // Liquid itself uses water dust (the biome dust for the water liquids, plain Water dust tinted to the liquid's RenderColor for every other
+    // liquid): a stream out of an open pipe end and now and then a leak from a pipe that touches air, both real dust,
     // plus the liquid drifting inside the window of a windowed pipe. The window particles are not dust: they are drawn under the pipe (see
     // DrawWindowParticles) so the pipe's frame covers them and they look like they are inside it.
     public class PipeFlowVisualSystem : ModSystem
@@ -870,12 +870,22 @@ namespace Factorraria.Common.Liquids
                 Velocity = velocity,
                 Texture = texture,
                 Frame = proxy.frame,
-                Tint = proxy.GetAlpha(Color.White),
+                Tint = WindowTint(proxy, tint),
                 Scale = proxy.scale,
                 Life = life
             });
 
             proxy.active = false;
+        }
+
+        // The dust's own draw colour, times the liquid tint for the tinted water dust (the game tints real dust itself; the window drifters are drawn by hand).
+        static Color WindowTint(Dust proxy, Color tint)
+        {
+            Color baseColor = proxy.GetAlpha(Color.White);
+            if (tint == default)
+                return baseColor;
+
+            return new Color(baseColor.ToVector4() * tint.ToVector4());
         }
 
         void UpdateWindowParticles()
@@ -980,8 +990,9 @@ namespace Factorraria.Common.Liquids
             dust.noGravity = !gravity;
         }
 
-        // The dust a liquid sprays: the one it registered (LiquidTypeDefinition.SplashDust), so biome waters match their biome and custom liquids
-        // use their own ModLiquid.SplashDustType; plain water follows the player's biome (below). Only a liquid with nothing registered (Shimmer) falls back to the tintable dust in its colour.
+        // The dust a liquid sprays. Water liquids keep their biome dust (plain water follows the player's biome, below).
+        // Every other liquid (Lava, Honey, Shimmer, Oil, Fuel, later ones) sprays plain water dust tinted to its registered RenderColor. Not their own
+        // vanilla dust: Lava/Honey dust (and the bubble dust) are made to live only inside liquid, so they died the tick they left a pipe.
         static int SplashDustFor(int liquid, out Color tint)
         {
             tint = default;
@@ -991,18 +1002,20 @@ namespace Factorraria.Common.Liquids
             if (liquid == LiquidTypeRegistry.Water)
                 return Dust.dustWater();
 
-            if (liquid >= 0 && liquid < LiquidTypeRegistry.definitions.Count)
+            if (LiquidTypeRegistry.IsWater(liquid))
             {
-                int registered = LiquidTypeRegistry.Get(liquid).SplashDust;
-                if (registered >= 0)
-                    return registered;
+                if (liquid >= 0 && liquid < LiquidTypeRegistry.definitions.Count)
+                {
+                    int registered = LiquidTypeRegistry.Get(liquid).SplashDust;
+                    if (registered >= 0)
+                        return registered;
+                }
+
+                return DustID.Water;
             }
 
-            if (LiquidTypeRegistry.IsWater(liquid))
-                return DustID.Water;
-
             tint = LiquidColor(liquid);
-            return DustID.RainbowMk2;
+            return DustID.Water;
         }
 
         static Color LiquidColor(int liquid)
