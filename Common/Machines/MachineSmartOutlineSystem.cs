@@ -253,6 +253,21 @@ namespace Factorraria.Common.Machines
         // vanilla tile, then that tile wins (you are clearly pointing at it).
         private void RedirectClickToTarget(On_Player.orig_TileInteractionsUse orig, Player self, int myX, int myY)
         {
+            // A right click on a cart (directly under the cursor, or the smart-cursor cart target) belongs to the cart alone: CartSystem
+            // opens / mounts / picks it up in PostUpdatePlayers, which runs AFTER vanilla's tile interaction, so without this the click
+            // also opened a nearby chest. Same consume pattern as MaterializerRightClickGuard. Same conditions CartSystem uses to act.
+            if (!Main.dedServ && self.whoAmI == Main.myPlayer && self.controlUseTile && !self.mouseInterface && !self.lastMouseInterface && !self.dead
+                && CartSystem.Carts.Count > 0 && CartSystem.FindCartForRightClick(self) != null)
+            {
+                self.tileInteractionHappened = true;
+                if (self.releaseUseTile)
+                {
+                    self.tileInteractAttempted = true;
+                    self.releaseUseTile = false;
+                }
+                return;
+            }
+
             if (!Main.dedServ && self.whoAmI == Main.myPlayer && hasTarget && smartCartTarget == null && Main.SmartCursorIsUsed && !self.mouseInterface)
             {
                 if (fallbackHandledTick == Main.GameUpdateCount)

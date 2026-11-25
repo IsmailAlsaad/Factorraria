@@ -747,9 +747,12 @@ namespace Factorraria.Common.Carts
                 return false;
             }
 
+            // Vanilla places blocks within tileRange of the player's body box (position..position+size), not of the centre, so measure from the
+            // body box too. Box to box: 0 when they overlap. The same rule runs on the server (with slack) and for the outline.
             Rectangle box = cart.Hitbox;
-            float dx = Math.Max(Math.Max(box.Left - player.Center.X, 0f), player.Center.X - box.Right) / 16f;
-            float dy = Math.Max(Math.Max(box.Top - player.Center.Y, 0f), player.Center.Y - box.Bottom) / 16f;
+            Rectangle body = player.Hitbox;
+            float dx = Math.Max(Math.Max(box.Left - body.Right, body.Left - box.Right), 0f) / 16f;
+            float dy = Math.Max(Math.Max(box.Top - body.Bottom, body.Top - box.Bottom), 0f) / 16f;
             float extra = slackPixels / 16f + player.blockRange + Math.Max(0, player.HeldItem?.tileBoost ?? 0);
 
             return dx <= Player.tileRangeX + extra && dy <= Player.tileRangeY + extra;
