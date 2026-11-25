@@ -262,13 +262,15 @@ namespace Factorraria.Common.Networks
                 amount = Withdraw(transfer.Src, transfer.Type, amount);
                 if (amount <= 0f) continue;
 
-                Deposit(transfer.Dst, transfer.Type, amount);
-                MarkRouteMotors(transfer.Route, transfer.Type, amount);
+                bool chunkDelivered = Deposit(transfer.Dst, transfer.Type, amount);
+                MarkRouteMotors(transfer.Route, transfer.Type, amount, Sinks[transfer.Dst].IsWorld, chunkDelivered);
             }
         }
 
         // Visual only: tell every ON pump on this route which liquid it just moved (see MotorTileEntityBase.FlowLiquidType).
-        void MarkRouteMotors(int routeIndex, int liquidType, float amount)
+        // worldSink + chunkDelivered: the sink is a world cell and it just received a whole chunk. A machine sink has no chunks, so FlowChunkUnits of
+        // flow count as one (visual only, see MotorTileEntityBase.FlowChunkCount).
+        void MarkRouteMotors(int routeIndex, int liquidType, float amount, bool worldSink, bool chunkDelivered)
         {
             if (routeIndex < 0 || routeIndex >= Routes.Count)
                 return;
@@ -283,6 +285,22 @@ namespace Factorraria.Common.Networks
                 motor.FlowLiquidType = liquidType;
                 motor.FlowIdleTicks = 0;
                 motor.FlowMovedThisTick += amount;   // every pump of a route pushes the whole stream through itself (visual only)
+
+                if (worldSink)
+                {
+                    if (chunkDelivered)
+                        motor.FlowChunkCount++;
+                }
+                else
+                {
+                    motor.FlowChunkAccum += amount;
+                    float unit = Math.Max(1f, motor.FlowChunkUnits);
+                    while (motor.FlowChunkAccum >= unit)
+                    {
+                        motor.FlowChunkAccum -= unit;
+                        motor.FlowChunkCount++;
+                    }
+                }
             }
         }
 
@@ -316,23 +334,22 @@ namespace Factorraria.Common.Networks
             return taken;
         }
 
-        void Deposit(int sinkIndex, int liquidType, float amount)
+        // True when a world cell received a whole chunk of liquid by this deposit (machine tanks have no chunks: always false).
+        bool Deposit(int sinkIndex, int liquidType, float amount)
         {
             FlowSink sink = Sinks[sinkIndex];
 
             if (sink.IsWorld)
-            {
-                banks.AddDeposit(sink.WorldPos, liquidType, amount);
-                return;
-            }
+                return banks.AddDeposit(sink.WorldPos, liquidType, amount);
 
             BaseMachine machine = sink.Machine;
             int resolved = machine.ResolveIncomingLiquid(liquidType);
             LiquidStack slot = LiquidTankRules.FindSinkSlot(machine.InputLiquids, resolved);
-            if (slot == null) return;
+            if (slot == null) return false;
 
             slot.LiquidType = resolved;
             slot.Amount = Math.Min(slot.Capacity, slot.Amount + amount);
+            return false;
         }
 
         float ComputeCap()

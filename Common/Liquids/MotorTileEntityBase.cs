@@ -32,6 +32,13 @@ namespace Factorraria.Common.Machines
         public float FlowRateStep = 0.25f;       // units per tick one FlowRateLevel stands for
         public byte FlowRateLevel;
 
+        // Visual only: counts the chunks this pump has moved (a world cell received liquid from it, or FlowChunkUnits went into a machine) and
+        // wraps at 256. It is sent in the light update, so every client can line the swell up with the moment the liquid arrives
+        // (PipeFlowVisualSystem). FlowChunkAccum / FlowChunkUnits only count the machine sinks; a world sink reports the real chunk.
+        public byte FlowChunkCount;
+        public float FlowChunkAccum;
+        public float FlowChunkUnits = 255f;   // a full vanilla liquid cell
+
         // Sealed so future motor tiers override UpdateMotor() instead. A power flip (grid, brownout, wire toggle) needs nothing here:
         // FlowNetwork.Tick reads isOn and PumpStrength of every motor each tick and refreshes its routes when one changed.
         public sealed override void Update()
@@ -95,6 +102,7 @@ namespace Factorraria.Common.Machines
             base.WriteLightExtra(writer);
             writer.Write7BitEncodedInt(FlowLiquidType + 1);
             writer.Write(FlowRateLevel);
+            writer.Write(FlowChunkCount);
         }
 
         protected override void ReadLightExtra(BinaryReader reader)
@@ -102,6 +110,7 @@ namespace Factorraria.Common.Machines
             base.ReadLightExtra(reader);
             FlowLiquidType = reader.Read7BitEncodedInt() - 1;
             FlowRateLevel = reader.ReadByte();
+            FlowChunkCount = reader.ReadByte();
         }
 
         public override void SaveData(TagCompound tag)

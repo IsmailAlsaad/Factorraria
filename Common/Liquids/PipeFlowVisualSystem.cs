@@ -12,6 +12,18 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Common.Liquids
 {
+    // One chain of pumps (a lone pump, or pumps that feed each other's backs) and the single ball of fluid travelling through all its pipes.
+    public sealed class PumpChain
+    {
+        public float Progress;       // 0..1: where the ball is between the first intake tile (0) and the last outlet tile (1) of the chain
+        public float Rate;           // liquid units per tick the chain moves (smoothed)
+        public float Min, Max;       // path coordinates S of the first and the last tile of the chain
+        public float NextMin, NextMax;   // being collected by the walk in progress
+        public float Center;         // the ball's S right now
+        public bool Synced;          // lined up with a real chunk at least once
+        public int Stamp;
+    }
+
     // What the visuals know about one pipe (or pump) tile that liquid is moving through right now.
     public sealed class PipeFlowCell
     {
@@ -24,16 +36,21 @@ namespace Factorraria.Common.Liquids
         public int EndMask;      // straight pipes only: bit (1 << Direction) for every end that opens onto empty space
         public float Intensity;  // 0..1, fades in and out so the animation never pops
         public int Stamp;        // the rebuild this cell was last seen in
+        public PumpChain Chain;  // the ball that passes through this cell
     }
 
     // CLIENT ONLY and purely cosmetic: nothing here is saved or sent. It reads what every client already has: the motor replicas
     // (isOn, Facing, FlowLiquidType and FlowRateLevel, which the server writes and sends in the motor's light update) and the pipe tiles.
     //
     // Every few ticks it walks the pipes from each running pump: downstream along its Facing (ON pumps are one-way) and upstream
-    // behind it, giving every pipe a path coordinate S. A wave then runs along S: a "ball" of fluid travels intake -> pump -> outlet,
-    // swelling the pipes and the pump it passes and squeezing them a little right behind it. A pump has its own S (its phase). Pumps in a
-    // chain (one feeding the back of the next) continue each other's S, so the ball travels through all of them one after another; the first
-    // pump of a chain gets a phase from its position, so unrelated pumps do not pulse in step.
+    // behind it, giving every pipe a path coordinate S. A pump that is switched OFF is a plain pipe, so the walk goes through it. Pumps in a
+    // chain (one feeding the back of the next) continue each other's S, and share one ball.
+    //
+    // The ball is a chunk of liquid: it travels from the first intake tile to the last outlet tile of its chain in exactly the time the
+    // pump needs to move a full world cell (ChunkUnits, 255) at the current rate. Its position is the integral of the rate, so a faster pump
+    // makes it faster and more frequent (one ball per chunk), and a rate change never makes it jump. When the network delivers a real chunk
+    // (MotorTileEntityBase.FlowChunkCount changes: a world cell received liquid, or 255 units went into a machine) the ball is lined up so it
+    // reaches the end pipe at that moment. The count travels in the motor's light update, so every client sees the same moments.
     //
     // Drawing: EVERY pipe is drawn here (PostDrawTiles; PipeTileBase.PreDraw always says no), scaled by the wave while liquid moves and at
     // scale 1 otherwise, so a pipe never switches between two ways of being drawn (that switch was the flicker). The art outside the
@@ -46,9 +63,10 @@ namespace Factorraria.Common.Liquids
     public class PipeFlowVisualSystem : ModSystem
     {
         // ---- Tuning (instance fields on purpose: hot reload can change them) ----
-        public float BallSpeedTilesPerSecond = 3.5f;
+        public float ChunkUnits = 255f;           // liquid units in a full world cell: one ball per this much liquid moved
+        public float SyncGain = 0.5f;             // 0..1: how much of its timing error the ball corrects at each real chunk (the first one lines it up fully)
         public float BallLengthTiles = 3f;        // the swelling lobe; the squeeze lobe right behind it is as long
-        public float BallSpacingTiles = 9f;       // distance between two balls (must be more than 2 * BallLengthTiles)
+
         public float SwellAmount = 0.15f;          // extra scale at the middle of the ball
         public float SqueezeAmount = 0f;       // scale lost just behind the ball
         public float MotorSwellMultiplier = 1f;   // the pump swells SwellAmount and squeezes SqueezeAmount times this (0 = the pump stays put)
@@ -95,6 +113,13 @@ namespace Factorraria.Common.Liquids
         readonly HashSet<MotorTileEntityBase> fedPumps = new HashSet<MotorTileEntityBase>();
         readonly Dictionary<MotorTileEntityBase, float> motorPhase = new Dictionary<MotorTileEntityBase, float>();
         readonly Queue<MotorTileEntityBase> phaseQueue = new Queue<MotorTileEntityBase>();
+        readonly Dictionary<MotorTileEntityBase, MotorTileEntityBase> motorRoot = new Dictionary<MotorTileEntityBase, MotorTileEntityBase>();   // pump -> first pump of its chain
+        readonly Dictionary<MotorTileEntityBase, PumpChain> chainByRoot = new Dictionary<MotorTileEntityBase, PumpChain>();   // lives across rebuilds: the ball keeps its place
+        readonly Dictionary<MotorTileEntityBase, PumpChain> chainOf = new Dictionary<MotorTileEntityBase, PumpChain>();
+        readonly Dictionary<MotorTileEntityBase, byte> lastChunkCount = new Dictionary<MotorTileEntityBase, byte>();
+        readonly List<PumpChain> activeChains = new List<PumpChain>();
+        readonly List<MotorTileEntityBase> staleRoots = new List<MotorTileEntityBase>();
+        PumpChain activeChain;   // the chain the walk in progress belongs to
 
         // One liquid drifter inside the window of a pipe. Client only, not saved. Drawn under the pipe (DrawWindowParticles).
         struct WindowParticle
@@ -141,6 +166,11 @@ namespace Factorraria.Common.Liquids
             fedPumps.Clear();
             motorPhase.Clear();
             phaseQueue.Clear();
+            motorRoot.Clear();
+            chainByRoot.Clear();
+            chainOf.Clear();
+            lastChunkCount.Clear();
+            activeChains.Clear();
         }
 
         /// <summary>The scale a tile is drawn at right now: Vector2.One when no liquid moves through it. Pipes swell across their axis only (corners and junctions evenly), the pump evenly.</summary>
@@ -149,7 +179,7 @@ namespace Factorraria.Common.Liquids
             if (cells.Count == 0 || !cells.TryGetValue(new Point(i, j), out PipeFlowCell cell))
                 return Vector2.One;
 
-            float s = ScaleAt(Phase(cell.S), cell.Intensity);
+            float s = ScaleAt(BallU(cell), cell.Intensity);
             if (cell.IsMotor)
                 return new Vector2(1f + (s - 1f) * MotorSwellMultiplier);
 
@@ -182,6 +212,7 @@ namespace Factorraria.Common.Liquids
                 Rebuild();
 
             FadeCells();
+            AdvanceChains();
             UpdateWindowParticles();
             SpawnParticles();
         }
@@ -209,14 +240,119 @@ namespace Factorraria.Common.Liquids
             }
 
             if (runningMotors.Count == 0)
+            {
+                activeChains.Clear();
+                chainByRoot.Clear();
+                chainOf.Clear();
                 return;
+            }
 
             AssignMotorPhases();
+            PrepareChains();
 
             for (int m = 0; m < runningMotors.Count; m++)
             {
                 Walk(runningMotors[m], true, false);
                 Walk(runningMotors[m], false, false);
+            }
+
+            FinishChains();
+        }
+
+        // One PumpChain per first pump (see AssignMotorPhases); the walk below collects the first and the last S of each.
+        void PrepareChains()
+        {
+            activeChains.Clear();
+            chainOf.Clear();
+
+            for (int m = 0; m < runningMotors.Count; m++)
+            {
+                MotorTileEntityBase motor = runningMotors[m];
+                MotorTileEntityBase root = motorRoot.TryGetValue(motor, out MotorTileEntityBase first) ? first : motor;
+                if (!chainByRoot.TryGetValue(root, out PumpChain chain))
+                {
+                    chain = new PumpChain();
+                    chainByRoot[root] = chain;
+                }
+
+                if (chain.Stamp != stamp)
+                {
+                    chain.Stamp = stamp;
+                    chain.NextMin = float.MaxValue;
+                    chain.NextMax = float.MinValue;
+                    chain.Rate = 0f;
+                    activeChains.Add(chain);
+                }
+
+                chainOf[motor] = chain;
+                chain.Rate = Math.Max(chain.Rate, motor.FlowRateLevel * motor.FlowRateStep);
+            }
+
+            staleRoots.Clear();
+            foreach (KeyValuePair<MotorTileEntityBase, PumpChain> pair in chainByRoot)
+            {
+                if (pair.Value.Stamp != stamp)
+                    staleRoots.Add(pair.Key);
+            }
+            for (int k = 0; k < staleRoots.Count; k++)
+                chainByRoot.Remove(staleRoots[k]);
+        }
+
+        void FinishChains()
+        {
+            for (int c = 0; c < activeChains.Count; c++)
+            {
+                PumpChain chain = activeChains[c];
+                if (chain.NextMax < chain.NextMin)
+                    continue;
+
+                chain.Min = chain.NextMin;
+                chain.Max = Math.Max(chain.NextMax, chain.NextMin + 1f);
+                chain.Center = chain.Min + (chain.Max - chain.Min) * chain.Progress;
+            }
+        }
+
+        // Every tick: the ball of each chain moves by the liquid the chain moved (rate / ChunkUnits of its way, so a full way = one chunk), and
+        // is lined up when the network reports a real chunk. After a chunk the ball is at the end pipe, the next one starts at the intake.
+        void AdvanceChains()
+        {
+            if (activeChains.Count == 0 || Main.gamePaused)
+                return;
+
+            for (int m = 0; m < runningMotors.Count; m++)
+            {
+                MotorTileEntityBase motor = runningMotors[m];
+                if (!chainOf.TryGetValue(motor, out PumpChain chain))
+                    continue;
+
+                byte count = motor.FlowChunkCount;
+                if (!lastChunkCount.TryGetValue(motor, out byte last))
+                {
+                    lastChunkCount[motor] = count;
+                    continue;
+                }
+                if (count == last)
+                    continue;
+
+                lastChunkCount[motor] = count;
+                if (!chain.Synced)
+                {
+                    chain.Progress = 0f;
+                    chain.Synced = true;
+                }
+                else
+                {
+                    float error = chain.Progress < 0.5f ? chain.Progress : chain.Progress - 1f;
+                    chain.Progress -= error * Math.Clamp(SyncGain, 0f, 1f);
+                }
+            }
+
+            for (int c = 0; c < activeChains.Count; c++)
+            {
+                PumpChain chain = activeChains[c];
+                chain.Progress += chain.Rate / Math.Max(1f, ChunkUnits);
+                chain.Progress -= MathF.Floor(chain.Progress);
+                chain.Center = chain.Min + (chain.Max - chain.Min) * chain.Progress;
             }
         }
 
@@ -230,6 +366,7 @@ namespace Factorraria.Common.Liquids
             fedPumps.Clear();
             motorPhase.Clear();
             phaseQueue.Clear();
+            motorRoot.Clear();
 
             for (int m = 0; m < runningMotors.Count; m++)
                 Walk(runningMotors[m], true, true);
@@ -241,6 +378,7 @@ namespace Factorraria.Common.Liquids
                     continue;
 
                 motorPhase[motor] = RootPhase(motor);
+                motorRoot[motor] = motor;
                 phaseQueue.Enqueue(motor);
             }
             PropagatePhases();
@@ -253,6 +391,7 @@ namespace Factorraria.Common.Liquids
                     continue;
 
                 motorPhase[motor] = RootPhase(motor);
+                motorRoot[motor] = motor;
                 phaseQueue.Enqueue(motor);
                 PropagatePhases();
             }
@@ -273,20 +412,14 @@ namespace Factorraria.Common.Liquids
                         continue;
 
                     motorPhase[fed[k].to] = phase + fed[k].dist;
+                    motorRoot[fed[k].to] = motorRoot.TryGetValue(from, out MotorTileEntityBase firstOfChain) ? firstOfChain : from;
                     phaseQueue.Enqueue(fed[k].to);
                 }
             }
         }
 
-        // A phase from the pump's position: the same on every client, nothing is saved or sent.
-        float RootPhase(MotorTileEntityBase motor)
-        {
-            uint h = (uint)(motor.Position.X * 73856093) ^ (uint)(motor.Position.Y * 19349663);
-            h ^= h >> 13;
-            h *= 0x5bd1e995u;
-            h ^= h >> 15;
-            return (h % 1000u) / 1000f * Math.Max(0.5f, BallSpacingTiles);
-        }
+        // Every chain has its own ball (PumpChain.Progress), so unrelated pumps already differ; a chain's first pump starts at S 0.
+        float RootPhase(MotorTileEntityBase motor) => 0f;
 
         void AddRelay(MotorTileEntityBase from, MotorTileEntityBase to, int dist)
         {
@@ -309,6 +442,7 @@ namespace Factorraria.Common.Liquids
             int motorType = Main.tile[motorPos.X, motorPos.Y].TileType;
             float rate = motor.FlowRateLevel * motor.FlowRateStep;
             float phase = !discoverOnly && motorPhase.TryGetValue(motor, out float p) ? p : 0f;
+            activeChain = !discoverOnly && chainOf.TryGetValue(motor, out PumpChain chain) ? chain : null;
 
             // The pump itself is the first cell of its wave, so it swells with its pipes.
             if (downstream && !discoverOnly)
@@ -337,12 +471,14 @@ namespace Factorraria.Common.Liquids
                     continue;
                 }
 
-                if (!PipeTierRegistry.IsPipeTile(tile.TileType) || !PipeTierRegistry.CanLink(motorType, tile.TileType))
+                // A pump that is switched OFF is a plain pipe (the network treats it so): the ball goes through it, and it swells like the pumps do.
+                bool switchedOffPump = PipeTierRegistry.IsMotorTile(tile.TileType) && IsSwitchedOffPump(pos);
+                if (!PipeTierRegistry.CanLink(motorType, tile.TileType) || (!switchedOffPump && !PipeTierRegistry.IsPipeTile(tile.TileType)))
                     continue;
 
                 budget--;
                 if (!discoverOnly)
-                    Record(pos, downstream ? phase + dist : phase - dist, dist, downstream ? stepHere : new Point(-stepHere.X, -stepHere.Y), motor.FlowLiquidType, rate, tile, false);
+                    Record(pos, downstream ? phase + dist : phase - dist, dist, downstream ? stepHere : new Point(-stepHere.X, -stepHere.Y), motor.FlowLiquidType, rate, tile, switchedOffPump);
 
                 for (int d = 0; d < 4; d++)
                 {
@@ -350,6 +486,11 @@ namespace Factorraria.Common.Liquids
                     queue.Enqueue((pos + offset, dist + 1, offset));
                 }
             }
+        }
+
+        static bool IsSwitchedOffPump(Point pos)
+        {
+            return TileEntity.ByPosition.TryGetValue(new Point16(pos.X, pos.Y), out TileEntity entity) && entity is MotorTileEntityBase pump && !pump.isOn;
         }
 
         void Record(Point pos, float s, float dist, Point travel, int liquid, float rate, Tile tile, bool isMotor)
@@ -371,6 +512,12 @@ namespace Factorraria.Common.Liquids
             cell.Rate = rate;
             cell.IsMotor = isMotor;
             cell.Stamp = stamp;
+            cell.Chain = activeChain;
+            if (activeChain != null)
+            {
+                activeChain.NextMin = Math.Min(activeChain.NextMin, s);
+                activeChain.NextMax = Math.Max(activeChain.NextMax, s);
+            }
             cell.EndMask = isMotor ? 0 : ComputeEndMask(pos.X, pos.Y, tile);
         }
 
@@ -423,14 +570,14 @@ namespace Factorraria.Common.Liquids
 
         // ------------------------------------------------------------------ the wave
 
-        float Time => Main.GameUpdateCount / 60f;
-
-        // Position inside one ball period for a pipe at path coordinate s: 0..BallSpacingTiles. The ball moves toward +s.
-        float Phase(float s)
+        // Where this tile is relative to its chain's ball: 0..BallLengthTiles while the ball is on it (the ball is centred on the chain's Center),
+        // negative before it. A tile with no chain is never on a ball.
+        float BallU(PipeFlowCell cell)
         {
-            float spacing = Math.Max(0.5f, BallSpacingTiles);
-            float u = (s - Time * BallSpeedTilesPerSecond) % spacing;
-            return u < 0f ? u + spacing : u;
+            if (cell.Chain == null)
+                return -1f;
+
+            return cell.S - cell.Chain.Center + Math.Max(0.5f, BallLengthTiles) * 0.5f;
         }
 
         // 0..1 smooth bump over the first BallLengthTiles of the period (the swelling part).
@@ -495,7 +642,7 @@ namespace Factorraria.Common.Liquids
                     continue;
 
                 // The open end and the leaks are strongest while the swell passes through this pipe.
-                float swell = Lobe(Phase(cell.S)) * cell.Intensity;
+                float swell = Lobe(BallU(cell)) * cell.Intensity;
                 float peak = swell * cell.Rate;
                 if (peak <= 0.001f)
                     continue;

@@ -93,13 +93,14 @@ namespace Factorraria.Common.Networks
         }
 
         // The network put `amount` of that liquid into this cell. Whole chunks are added to the tile now, the rest stays banked.
-        public void AddDeposit(Point cell, int liquidType, float amount)
+        // Returns true when the tile received liquid this call (a chunk arrived: the pipe animation syncs to that moment).
+        public bool AddDeposit(Point cell, int liquidType, float amount)
         {
-            if (amount <= 0f) return;
+            if (amount <= 0f) return false;
 
             Tile tile = Main.tile[cell.X, cell.Y];
             deposit.TryGetValue(cell, out DepositBank bank);
-            if (bank.Amount > 0f && bank.Type != liquidType) return;   // WorldSinkSpace refuses this beforehand
+            if (bank.Amount > 0f && bank.Type != liquidType) return false;   // WorldSinkSpace refuses this beforehand
 
             bank.Type = liquidType;
             bank.Amount += amount;
@@ -108,22 +109,26 @@ namespace Factorraria.Common.Networks
             if (target <= 0f)
             {
                 deposit.Remove(cell);
-                return;
+                return false;
             }
 
+            bool delivered = false;
             if (bank.Amount + epsilon >= target)
             {
                 int give = (int)Math.Min(Math.Floor(bank.Amount + epsilon), target);
                 if (!AddToTile(cell, liquidType, give))
                 {
                     deposit.Remove(cell);   // the cell changed under the bank (other liquid, rock): the bank is dropped
-                    return;
+                    return false;
                 }
                 bank.Amount -= give;
+                delivered = give > 0;
             }
 
             if (bank.Amount <= epsilon) deposit.Remove(cell);
             else deposit[cell] = bank;
+
+            return delivered;
         }
 
         // Applies every whole unit still banked and forgets the rest. Called before the networks are rebuilt.
