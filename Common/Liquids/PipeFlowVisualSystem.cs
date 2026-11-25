@@ -122,7 +122,7 @@ namespace Factorraria.Common.Liquids
         public int MaxWindowParticles => 400;           // hard cap over all windows on screen
 
         // ---- Particle look (hot reload friendly: all of it is code in these bodies) ----
-        public float TintedDustTransparency => 0.15f;   // 0 = solid, 1 = invisible: the dust every non-water liquid sprays (open end, leaks, windows)
+        public float TintedDustTransparency => 0.65f;   // 0 = solid, 1 = invisible: the dust every non-water liquid sprays (open end, leaks, windows)
         public float WaterDustTransparency => 0f;       // EXTRA see-through on top of the water dust's own (water and biome waters); 0 = exactly vanilla
 
         // The colour of each liquid's particles, by the liquid's registered name. Edit, add or remove lines and hot reload. A liquid not listed
@@ -923,7 +923,7 @@ namespace Factorraria.Common.Liquids
         // Real dust: more see-through by adding to the dust's alpha (255 = invisible).
         void ApplyTransparency(Dust dust, bool tinted)
         {
-            float t = Math.Clamp(tinted ? TintedDustTransparency : WaterDustTransparency, 0f, 1f);
+            float t = Math.Clamp(tinted ? Main.rand.NextFloat(TintedDustTransparency,1f) : WaterDustTransparency, 0f, 1f);
             dust.alpha = Math.Clamp(dust.alpha + (int)(255f * t), 0, 255);
         }
 
