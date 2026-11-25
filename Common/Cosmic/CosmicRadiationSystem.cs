@@ -118,6 +118,12 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("The longest the radiation debuff can last. Each hit adds seconds equal to the particle's multiplier, up to this.", "seconds")]
         public float RadiationMaxSeconds = 120f;
 
+        [CosmicParam("NPCs and enemies: life loss per radiation level, in lifeRegen units (2 = 1 HP/s). Their level, debuff time, radius and maximums use the same Radiation* numbers as the player (C12).", "lifeRegen/level")]
+        public float NpcRadiationLifeRegenPerLevel = 5f;
+
+        [CosmicParam("How often a multiplayer client sends the radiation hits it counted on NPCs to the server (single-player applies them every tick). Higher = fewer packets, slower reaction (C12).", "ticks")]
+        public int NpcRadiationReportTicks = 6;
+
         // ------------------------------------------------------------ strike and grid (C5)
 
         [CosmicParam("How far from the thunder a machine can be and still be struck. The nearest electric machine (poles count) inside this radius takes the strike.", "tiles")]
@@ -279,6 +285,8 @@ namespace Factorraria.Common.Cosmic
             RadiationClicksPerLevel = Fix(RadiationClicksPerLevel, 0f, 1000f);
             RadiationMaxLevel = Fix(RadiationMaxLevel, 0f, 100000f);
             RadiationMaxSeconds = Fix(RadiationMaxSeconds, 1f, 36000f);
+            NpcRadiationLifeRegenPerLevel = Fix(NpcRadiationLifeRegenPerLevel, 0f, 1000f);
+            NpcRadiationReportTicks = Math.Clamp(NpcRadiationReportTicks, 1, 600);
             StrikeRadiusTiles = Fix(StrikeRadiusTiles, 0f, 5000f);
             SurgePowerPerDecade = Fix(SurgePowerPerDecade, 0f, 1000000f);
             SurgeDurationTicks = Math.Clamp(SurgeDurationTicks, 1, 36000);

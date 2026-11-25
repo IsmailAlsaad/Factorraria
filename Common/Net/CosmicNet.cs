@@ -14,6 +14,7 @@ namespace Factorraria.Common.Net
             JoinSync.Register("cosmic-heatmap", CosmicNet.WriteHeatmap, CosmicNet.ReadHeatmap);
             FactorrariaNet.Register(FactorrariaPacket.CosmicRays, PacketDirection.ToClient, CosmicNet.HandleRays);
             FactorrariaNet.Register(FactorrariaPacket.CosmicEvent, PacketDirection.ToClient, CosmicNet.HandleEvents);
+            FactorrariaNet.Register(FactorrariaPacket.CosmicNpcRadiation, PacketDirection.ToServer, CosmicRadiationNpc.HandleReport);
         }
     }
 

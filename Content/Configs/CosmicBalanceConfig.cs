@@ -281,6 +281,14 @@ namespace Factorraria.Content.Configs
         [Range(1f, 36000f)]
         public float RadiationMaxSeconds = 30f;
 
+        [DefaultValue(5f)]
+        [Range(0f, 1000f)]
+        public float NpcRadiationLifeRegenPerLevel = 5f;
+
+        [DefaultValue(6)]
+        [Range(1, 600)]
+        public int NpcRadiationReportTicks = 6;
+
         [Header("Strike")]
         [DefaultValue(30f)]
         [Range(0f, 500f)]
@@ -351,6 +359,8 @@ namespace Factorraria.Content.Configs
             s.RadiationClicksPerLevel = RadiationClicksPerLevel;
             s.RadiationMaxLevel = RadiationMaxLevel;
             s.RadiationMaxSeconds = RadiationMaxSeconds;
+            s.NpcRadiationLifeRegenPerLevel = NpcRadiationLifeRegenPerLevel;
+            s.NpcRadiationReportTicks = NpcRadiationReportTicks;
             s.StrikeRadiusTiles = StrikeRadiusTiles;
             s.SurgePowerPerDecade = SurgePowerPerDecade;
             s.SurgeDurationTicks = SurgeDurationTicks;

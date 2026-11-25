@@ -437,6 +437,9 @@ namespace Factorraria.Common.Cosmic
 
             // C11: radiation hits on the local player (client only)
             CheckRadiation(now);
+
+            // C12: radiation hits on NPCs, reported to the server (client only)
+            CheckNpcRadiation(now);
         }
 
         // ------------------------------------------------------------ draw (client only)

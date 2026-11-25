@@ -681,6 +681,16 @@ Configs: {
 			Tooltip: The longest the radiation debuff can last Each hit adds seconds equal to the particle's multiplier, up to this Unit: seconds Default: 120
 		}
 
+		NpcRadiationLifeRegenPerLevel: {
+			Label: Npc Radiation Life Regen Per Level
+			Tooltip: NPCs and enemies: life loss per radiation level, in lifeRegen units (2 = 1 HP/s) Their level, debuff time, radius and maximums use the same Radiation numbers as the player Unit: lifeRegen/level Default: 5
+		}
+
+		NpcRadiationReportTicks: {
+			Label: Npc Radiation Report Ticks
+			Tooltip: How often a multiplayer client sends the radiation hits it counted on NPCs to the server (single-player applies them every tick) Higher means fewer packets and a slower reaction Unit: ticks Default: 6
+		}
+
 		StrikeRadiusTiles: {
 			Label: Strike Radius Tiles
 			Tooltip: How far from the thunder a machine can be and still be struck The nearest electric machine (poles count) inside this radius takes the strike Unit: tiles Default: 30
@@ -1059,29 +1069,15 @@ Configs: {
 
 Dialogue: {
 	Dryad: {
-		RescueMechanic: {
-			Text: oh {PlayerName} thank you for saving me, I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
-		}
-
-		RescueMechanicOther: {
-			Text: I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
-		}
-
-		PlanWithMechanic: {
-			Text: The Mechanic and I talked, {PlayerName} She has a plan for you Go and see her
-		}
-
+		RescueMechanic.Text: oh {PlayerName} thank you for saving me, I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
+		RescueMechanicOther.Text: I was trying to rescue someone proficient in machines, she was lost underground can you help rescue her?
+		PlanWithMechanic.Text: The Mechanic and I talked, {PlayerName} She has a plan for you Go and see her
 		RescueReminder: Did you find the lost mechanic?
 	}
 
 	Mechanic: {
-		RescuedEye: {
-			Text: Thanks! I was stuck down here for a long time trying to find where my backpack went
-		}
-
-		SuperWeaponIntro: {
-			Text: So you are the one the Dryad told me about, {PlayerName} I have come up with a plan to weaken the wall of flesh Here are the blueprints you need This would require a lot of parts, so I would recommend automating the process
-		}
+		RescuedEye.Text: Thanks! I was stuck down here for a long time trying to find where my backpack went
+		SuperWeaponIntro.Text: So you are the one the Dryad told me about, {PlayerName} I have come up with a plan to weaken the wall of flesh Here are the blueprints you need This would require a lot of parts, so I would recommend automating the process
 
 		Bag: {
 			Text: Have you found my bag?
