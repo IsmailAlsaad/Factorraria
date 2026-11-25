@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-25 | 458 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-25 | 459 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(91) BaseMachine(60) FactorrariaPacket(42) PacketDirection(36) LiquidTypeRegistry(35) RecipeBook(26) Factorraria(24) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) CartSystem(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartModule(15) RecipeKnowledgeSystem(14)
+FactorrariaNet(91) BaseMachine(60) FactorrariaPacket(42) PacketDirection(36) LiquidTypeRegistry(35) RecipeBook(26) Factorraria(26) Cart(23) MachineUIStateBase(20) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) TileEntityHelper(17) LiquidStack(17) CartSystem(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartModule(15) RecipeKnowledgeSystem(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -35,6 +35,7 @@ Project bases -> derived:
 - MotorTileBase: IronMotorTile, LeadMotorTile
 - MotorTileEntityBase: IronMotorTileEntity, LeadMotorTileEntity
 - Particle: PuffExplosion
+- PipeLiquidDust: FuelPipeDust, HoneyPipeDust, LavaPipeDust, OilPipeDust, ShimmerPipeDust
 - PipeTileBase: IronPipeTile, LeadPipeTile
 - PlanterBoxItemBase: EmptyPlanterBoxItem, HallowedPlanterBoxItem, MushroomPlanterBoxItem, StonePlanterBoxItem
 - PlanterBoxTileBase: EmptyPlanterBoxTile, HallowedPlanterBoxTile, MushroomPlanterBoxTile, StonePlanterBoxTile
@@ -67,6 +68,7 @@ tModLoader/other bases -> project types:
 - IEquatable (1): RecipeOutputKey
 - IItemDropRuleCondition (1): FirstKingSlimeKillCondition
 - Mod (1): Factorraria
+- ModDust (1): PipeLiquidDust
 - ModMapLayer (1): CartMapLayer
 - ModMount (1): MechSuitMount
 - ModNPC (1): HerBackpackNPC
@@ -557,7 +559,7 @@ tModLoader/other bases -> project types:
 **PipeConnectionHelper.cs** uses: BaseMachine, Direction, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
   static class PipeConnectionHelper
     +CanConnect(int,int,Direction,int)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
-**PipeFlowVisualSystem.cs** uses: Direction, LiquidTypeRegistry, MachineVisualOverride, MotorTileEntityBase, PipeTierRegistry, Record, VisibleTileScan
+**PipeFlowVisualSystem.cs** uses: Direction, FuelPipeDust, HoneyPipeDust, LavaPipeDust, LiquidTypeRegistry, MachineVisualOverride, MotorTileEntityBase, OilPipeDust, PipeLiquidDust, PipeTierRegistry, Record, ShimmerPipeDust, VisibleTileScan
   sealed class PumpChain
     +Balls:List<FlowBall> +EmitProgress:float +Rate:float +StableRate:float +Max:float Min, +NextMax:float NextMin, +Primed:bool +Synced:bool +Stamp:int
   sealed class FlowBall
@@ -565,7 +567,7 @@ tModLoader/other bases -> project types:
   sealed class PipeFlowCell
     +S:float +Dist:float +Travel:Point +Liquid:int +Rate:float +IsMotor:bool +EndMask:int +Intensity:float +Stamp:int +Chain:PumpChain +WaveStamp:int +WaveU:float
   class PipeFlowVisualSystem : ModSystem
-    +ChunkUnits:float +BallSpeedTilesPerSecond:float +BallMinSpacingTiles:float +SyncGain:float +SyncDeadbandTicks:float +SyncMaxStep:float +RateHoldFraction:float +BallLengthTiles:float +SwellAmount:float +SqueezeAmount:float +MotorSwellMultiplier:float +RebuildIntervalTicks:int +MaxWalkPipes:int +MaxRangeTiles:float +FadePerTick:float +OpenEndParticlesPerUnit:float +LeakChancePerTick:float +LeakBurstMin:int +LeakBurstMax:int +WindowParticlesPerUnit:float +MaxParticlesPerTick:int +ParticleScaleMin:float +ParticleScaleMax:float +OpenEndSpeedMin:float +OpenEndSpeedMax:float +LeakSpeedMin:float +LeakSpeedMax:float +WindowSpeedMin:float +WindowSpeedMax:float +WindowScaleMultiplier:float +MaxWindowParticles:int +TintedDustTransparency:float +WaterDustTransparency:float +DustColorFor(string) +WindowHorizontal:Rectangle +WindowVertical:Rectangle +Unload()[ov] +OnWorldUnload()[ov] +GetTileScale(int,int,Tile) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
+    +ChunkUnits:float +BallSpeedTilesPerSecond:float +BallMinSpacingTiles:float +SyncGain:float +SyncDeadbandTicks:float +SyncMaxStep:float +RateHoldFraction:float +BallLengthTiles:float +SwellAmount:float +SqueezeAmount:float +MotorSwellMultiplier:float +RebuildIntervalTicks:int +MaxWalkPipes:int +MaxRangeTiles:float +FadePerTick:float +OpenEndParticlesPerUnit:float +LeakChancePerTick:float +LeakBurstMin:int +LeakBurstMax:int +WindowParticlesPerUnit:float +MaxParticlesPerTick:int +ParticleScaleMin:float +ParticleScaleMax:float +OpenEndSpeedMin:float +OpenEndSpeedMax:float +LeakSpeedMin:float +LeakSpeedMax:float +WindowSpeedMin:float +WindowSpeedMax:float +WindowScaleMultiplier:float +MaxWindowParticles:int +TintedDustTransparency:float +WaterDustTransparency:float +DustColorFor(string) +CustomDustTransparency:float +PipeDustTypeFor(string) +WindowHorizontal:Rectangle +WindowVertical:Rectangle +Unload()[ov] +OnWorldUnload()[ov] +GetTileScale(int,int,Tile) +PostUpdateEverything()[ov] +PostDrawTiles()[ov]
     struct WindowParticle
       +Tile:Point +Position:Vector2 +Velocity:Vector2 +Texture:Texture2D +Frame:Rectangle +Tint:Color +Scale:float +Age:int +Life:int
 **PipeTileBase.cs** uses: LiquidNetworkSystem, PipeConnectionHelper, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileOverdrawSystem
@@ -574,6 +576,16 @@ tModLoader/other bases -> project types:
 **WorldLiquidSources.cs**
   class WorldLiquidSources : ModSystem
     +InfiniteThreshold:int[c] +IsInfiniteSource(Point)[s] +ComputeIsInfinite(Point)[s] +OnWorldUnload()[ov]
+
+### Common/Liquids/PipeDust/
+**PipeLiquidDusts.cs** ns!=Factorraria.Common.Liquids
+  abstract class PipeLiquidDust : ModDust
+    +Texture:string[ov]
+  class LavaPipeDust : PipeLiquidDust
+  class HoneyPipeDust : PipeLiquidDust
+  class ShimmerPipeDust : PipeLiquidDust
+  class OilPipeDust : PipeLiquidDust
+  class FuelPipeDust : PipeLiquidDust
 
 ### Common/Machines/
 **BaseMachine.cs** uses: CosmicStrikeMath, CustomRecipe, FactorrariaNet, FuelChannel, FuelModule, FuelTable, IElectricConsumer, IElectricProducer, LiquidFuelChannel, LiquidFuelModule, LiquidFuelTable, LiquidIngredient, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry, MachineBiome, MachineDetail, MachineDetailSystem, MachineLightSync, MachineLightSyncSystem, MachinePlacement, MachinePlacementInfo, MachineSlotKind, MachineSnapshot, MachineTransition, MachineUIRegistry, MachineUISystem, MachineVisualDefinition, MachineVisualRegistry, PowerGridSystem, RecipeBook, RecipeCatalog, RecipeIngredient, RecipeKnowledgeNet, RecipeOutputGroup, RecipeOutputKey, VItemStacking, VirtualItem, VirtualItemSystem
@@ -1794,13 +1806,13 @@ tModLoader/other bases -> project types:
     +SearchRadiusTiles:int +LockSmartTarget() +TryGetTarget(out int,out int) +PostUpdate()[ov]
 
 ### Content/Liquids/Fuel/
-**FuelLiquid.cs** uses: OilLiquid
+**FuelLiquid.cs** uses: Factorraria, FuelPipeDust, OilLiquid
   class FuelLiquid : ModLiquid
     +LiquidMerge(int,int,int)[ov] +ChooseWaterfallStyle(int,int)[ov] +OnPlayerSplash(Player,bool)[ov] +OnNPCSplash(NPC,bool)[ov] +OnProjectileSplash(Projectile,bool)[ov] +OnItemSplash(Item,bool)[ov]
   class FuelLiquidFall : ModLiquidFall
 
 ### Content/Liquids/Oil/
-**OilLiquid.cs** uses: FuelLiquid
+**OilLiquid.cs** uses: Factorraria, FuelLiquid, OilPipeDust
   class OilLiquid : ModLiquid
     +LiquidMerge(int,int,int)[ov] +ChooseWaterfallStyle(int,int)[ov] +OnPlayerSplash(Player,bool)[ov] +OnNPCSplash(NPC,bool)[ov] +OnProjectileSplash(Projectile,bool)[ov] +OnItemSplash(Item,bool)[ov]
   class OilLiquidFall : ModLiquidFall

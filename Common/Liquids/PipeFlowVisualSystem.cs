@@ -137,6 +137,20 @@ namespace Factorraria.Common.Liquids
             _ => default
         };
 
+        public float CustomDustTransparency => 0.1f;    // 0 = solid, 1 = invisible: the custom liquid dusts below (on top of whatever the art itself has)
+
+        // The custom dust each liquid sprays (the classes in Common/Liquids/PipeDust/PipeLiquidDusts.cs; their art is Common/Liquids/PipeDust/<ClassName>.png).
+        // -1 = none: that liquid sprays the tintable dust in DustColorFor's colour instead (so a new liquid works before it has art).
+        public int PipeDustTypeFor(string liquidName) => liquidName switch
+        {
+            "Lava" => ModContent.DustType<LavaPipeDust>(),
+            "Honey" => ModContent.DustType<HoneyPipeDust>(),
+            "Shimmer" => ModContent.DustType<ShimmerPipeDust>(),
+            "Oil" => ModContent.DustType<OilPipeDust>(),
+            "Fuel" => ModContent.DustType<FuelPipeDust>(),
+            _ => -1
+        };
+
         // Window rectangles in tile pixels (the 16x16 cell, 0,0 = top-left). Window particles appear inside these; match them to the hole in the art.
         public Rectangle WindowHorizontal => new Rectangle(3, 5, 10, 6);
         public Rectangle WindowVertical => new Rectangle(5, 3, 6, 10);
@@ -913,18 +927,28 @@ namespace Factorraria.Common.Liquids
         // there for a hand-drawn particle, so the tint itself is the colour. Water dust: its own draw colour. Both fade by their transparency slider.
         Color WindowTint(Dust proxy, Color tint)
         {
+            float fade = 1f - TransparencyFor(proxy.type, tint);
             if (tint != default)
-                return new Color(tint.ToVector4() * (1f - Math.Clamp(TintedDustTransparency, 0f, 1f)));
+                return new Color(tint.ToVector4() * fade);
 
             Color own = proxy.GetAlpha(Color.White);
-            return new Color(own.ToVector4() * (1f - Math.Clamp(WaterDustTransparency, 0f, 1f)));
+            return new Color(own.ToVector4() * fade);
+        }
+
+        // Which slider a dust follows: the tinted fallback dust, the custom liquid dusts (PipeLiquidDust), or the water dust.
+        float TransparencyFor(int dustType, Color tint)
+        {
+            float t = tint != default ? TintedDustTransparency
+                : DustLoader.GetDust(dustType) is PipeLiquidDust ? CustomDustTransparency
+                : WaterDustTransparency;
+            return Math.Clamp(t, 0f, 1f);
         }
 
         // Real dust: more see-through by adding to the dust's alpha (255 = invisible).
-        void ApplyTransparency(Dust dust, bool tinted)
+        void ApplyTransparency(Dust dust, Color tint)
         {
-            float t = Math.Clamp(tinted ? Main.rand.NextFloat(TintedDustTransparency,1f) : WaterDustTransparency, 0f, 1f);
-            dust.alpha = Math.Clamp(dust.alpha + (int)(255f * t), 0, 255);
+            float t = tint != default ? Main.rand.NextFloat(TintedDustTransparency, 1f) : TransparencyFor(dust.type, tint);
+            dust.alpha = Math.Clamp(dust.alpha + (int)(255f * Math.Clamp(t, 0f, 1f)), 0, 255);
         }
 
         void UpdateWindowParticles()
@@ -1027,7 +1051,7 @@ namespace Factorraria.Common.Liquids
             int dustType = SplashDustFor(liquid, out Color tint);
             Dust dust = Dust.NewDustPerfect(position, dustType, velocity, 0, tint, Main.rand.NextFloat(ParticleScaleMin, Math.Max(ParticleScaleMin, ParticleScaleMax)));
             dust.noGravity = !gravity;
-            ApplyTransparency(dust, tint != default);
+            ApplyTransparency(dust, tint);
         }
 
         // The dust a liquid sprays. Water liquids keep their biome dust (plain water follows the player's biome, below).
@@ -1053,6 +1077,13 @@ namespace Factorraria.Common.Liquids
                 }
 
                 return DustID.Water;
+            }
+
+            if (liquid >= 0 && liquid < LiquidTypeRegistry.definitions.Count)
+            {
+                int custom = PipeDustTypeFor(LiquidTypeRegistry.Get(liquid).Name);
+                if (custom >= 0)
+                    return custom;
             }
 
             tint = LiquidColor(liquid);

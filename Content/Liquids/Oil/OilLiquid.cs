@@ -24,7 +24,7 @@ namespace Factorraria.Content.Liquids.Oil
 
             WaterRippleMultiplier = 0.3f;
 
-            SplashDustType = DustID.Ash;
+            SplashDustType = (short)ModContent.DustType<global::Factorraria.Common.Liquids.OilPipeDust>();   // the same dust the pipes spray (art: Common/Liquids/PipeDust/OilPipeDust.png)
 
             SplashSound = SoundID.SplashWeak;
 
