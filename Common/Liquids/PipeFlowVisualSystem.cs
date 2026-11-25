@@ -85,6 +85,8 @@ namespace Factorraria.Common.Liquids
         public float BallMinSpacingTiles => 5f;       // the closest two balls may get (the swell is BallLengthTiles long); past that the balls go faster instead of more frequent
 
         public float SyncGain => 0.5f;             // 0..1: how much of the timing error the making of new balls corrects at each real chunk (the first one lines it up fully)
+        public float SyncDeadbandTicks => 1.5f;    // a chunk that arrives this many ticks off the expected moment is not corrected (the delivery itself jitters by a tick)
+        public float SyncMaxStep => 0.02f;         // the most the making of balls is shifted at one chunk, as a part of the gap between two balls
         public float BallLengthTiles => 3f;        // the swelling lobe; the squeeze lobe right behind it is as long
 
         public float SwellAmount => 0.15f;          // extra scale at the middle of the ball
@@ -104,7 +106,7 @@ namespace Factorraria.Common.Liquids
         public float LeakChancePerTick => 0.012f;       // a pipe that touches air leaks only now and then: this chance per tick at the swell's peak (scaled down toward its edges)
         public int LeakBurstMin => 1;                   // particles in one leak
         public int LeakBurstMax => 2;
-        public float WindowParticlesPerUnit => 0.12f;   // drifting inside the window of a windowed pipe, continuously
+        public float WindowParticlesPerUnit => 0.26f;   // drifting inside the window of a windowed pipe, continuously
         public int MaxParticlesPerTick => 24;           // a hard cap over all pipes on screen, so a huge network cannot flood the dust pool
         public float ParticleScaleMin => 0.8f;
         public float ParticleScaleMax => 1.1f;
@@ -376,17 +378,20 @@ namespace Factorraria.Common.Liquids
             return periods - MathF.Floor(periods);
         }
 
-        // A new ball at the source, with the speed this rate gives: one spacing in the time the chain needs to move one chunk.
-        void SpawnBall(PumpChain chain)
+        // A new ball at the source, with the speed this rate gives: one spacing in the time the chain needs to move one chunk. The ball was made
+        // elapsedTicks (0..1 of a tick) ago, somewhere inside this tick, so it has already travelled that long: this keeps the gaps between
+        // balls equal (made on whole ticks, the gap would jump between two whole numbers of ticks, which shows when the pump is fast).
+        void SpawnBall(PumpChain chain, float elapsedTicks)
         {
             if (chain.Rate <= 0f || chain.Balls.Count >= 1024)
                 return;
 
             float spacing = ComputeSpacing(chain.Rate);
+            float speed = spacing * chain.Rate / Math.Max(1f, ChunkUnits);
             chain.Balls.Add(new FlowBall
             {
-                Pos = chain.Min - Math.Max(0.5f, BallLengthTiles) * 0.5f,
-                Speed = spacing * chain.Rate / Math.Max(1f, ChunkUnits)
+                Pos = chain.Min - Math.Max(0.5f, BallLengthTiles) * 0.5f + speed * Math.Clamp(elapsedTicks, 0f, 2f),
+                Speed = speed
             });
         }
 
@@ -427,7 +432,12 @@ namespace Factorraria.Common.Liquids
                 {
                     float error = chain.EmitProgress - target;
                     error -= MathF.Round(error);
-                    chain.EmitProgress -= error * Math.Clamp(SyncGain, 0f, 1f);
+                    float deadband = chain.Rate / Math.Max(1f, ChunkUnits) * Math.Max(0f, SyncDeadbandTicks);
+                    if (MathF.Abs(error) > deadband)
+                    {
+                        float step = (MathF.Abs(error) - deadband) * Math.Clamp(SyncGain, 0f, 1f);
+                        chain.EmitProgress -= MathF.Sign(error) * Math.Min(step, Math.Max(0f, SyncMaxStep));
+                    }
                 }
             }
 
@@ -449,11 +459,12 @@ namespace Factorraria.Common.Liquids
                 if (chain.Rate <= 0f)
                     continue;
 
-                chain.EmitProgress += chain.Rate / Math.Max(1f, ChunkUnits);
+                float perTick = chain.Rate / Math.Max(1f, ChunkUnits);
+                chain.EmitProgress += perTick;
                 for (int guard = 0; guard < 4 && chain.EmitProgress >= 1f; guard++)
                 {
                     chain.EmitProgress -= 1f;
-                    SpawnBall(chain);
+                    SpawnBall(chain, chain.EmitProgress / perTick);   // the part of this tick that passed since the ball was made
                 }
                 chain.EmitProgress = Math.Clamp(chain.EmitProgress, -1f, 1f);
             }
