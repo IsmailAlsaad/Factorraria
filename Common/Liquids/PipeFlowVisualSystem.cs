@@ -15,11 +15,12 @@ namespace Factorraria.Common.Liquids
     // One chain of pumps (a lone pump, or pumps that feed each other's backs) and the single ball of fluid travelling through all its pipes.
     public sealed class PumpChain
     {
-        public float Progress;       // 0..1: where the ball is between the first intake tile (0) and the last outlet tile (1) of the chain
+        public float Progress;       // 0..1: how far every ball is on its way to the place of the next one (one spacing = one chunk moved)
         public float Rate;           // liquid units per tick the chain moves (smoothed)
         public float Min, Max;       // path coordinates S of the first and the last tile of the chain
         public float NextMin, NextMax;   // being collected by the walk in progress
-        public float Center;         // the ball's S right now
+        public int Balls = 1;        // how many balls travel along this chain at once (BallsPerSpan per BallSpanTiles of its length)
+        public float Spacing = 1f;   // tiles between two balls: the chain's length / Balls
         public bool Synced;          // lined up with a real chunk at least once
         public int Stamp;
     }
@@ -46,11 +47,13 @@ namespace Factorraria.Common.Liquids
     // behind it, giving every pipe a path coordinate S. A pump that is switched OFF is a plain pipe, so the walk goes through it. Pumps in a
     // chain (one feeding the back of the next) continue each other's S, and share one ball.
     //
-    // The ball is a chunk of liquid: it travels from the first intake tile to the last outlet tile of its chain in exactly the time the
-    // pump needs to move a full world cell (ChunkUnits, 255) at the current rate. Its position is the integral of the rate, so a faster pump
-    // makes it faster and more frequent (one ball per chunk), and a rate change never makes it jump. When the network delivers a real chunk
-    // (MotorTileEntityBase.FlowChunkCount changes: a world cell received liquid, or 255 units went into a machine) the ball is lined up so it
-    // reaches the end pipe at that moment. The count travels in the motor's light update, so every client sees the same moments.
+    // The balls: a chain has BallsPerSpan balls for every BallSpanTiles of its length (first intake tile to last outlet tile), evenly spaced,
+    // so a long network has many and a short one few (at least one). The pattern moves one spacing in exactly the time the pump needs to move a
+    // full world cell (ChunkUnits, 255) at the current rate: more balls = slower balls, and a faster pump = faster, more frequent balls. The
+    // position is the integral of the rate, so a rate change never makes it jump. Exactly one ball reaches the end pipe per chunk, and when the
+    // network delivers a real chunk (MotorTileEntityBase.FlowChunkCount changes: a world cell received liquid, or 255 units went into a machine)
+    // the pattern is lined up so that ball is at the end pipe at that moment. The count travels in the motor's light update, so every client
+    // sees the same moments.
     //
     // Drawing: EVERY pipe is drawn here (PostDrawTiles; PipeTileBase.PreDraw always says no), scaled by the wave while liquid moves and at
     // scale 1 otherwise, so a pipe never switches between two ways of being drawn (that switch was the flicker). The art outside the
@@ -64,6 +67,8 @@ namespace Factorraria.Common.Liquids
     {
         // ---- Tuning (instance fields on purpose: hot reload can change them) ----
         public float ChunkUnits = 255f;           // liquid units in a full world cell: one ball per this much liquid moved
+        public float BallsPerSpan = 1f;           // x: this many balls...
+        public float BallSpanTiles = 9f;          // y: ...for every this many tiles of pipe network (the chain's length from first intake to last outlet). 2 and 9 = two balls per 9 tiles
         public float SyncGain = 0.5f;             // 0..1: how much of its timing error the ball corrects at each real chunk (the first one lines it up fully)
         public float BallLengthTiles = 3f;        // the swelling lobe; the squeeze lobe right behind it is as long
 
@@ -308,12 +313,17 @@ namespace Factorraria.Common.Liquids
 
                 chain.Min = chain.NextMin;
                 chain.Max = Math.Max(chain.NextMax, chain.NextMin + 1f);
-                chain.Center = chain.Min + (chain.Max - chain.Min) * chain.Progress;
+
+                // At most as many as fit without their swells overlapping.
+                float length = chain.Max - chain.Min;
+                int fit = Math.Max(1, (int)MathF.Floor(length / Math.Max(0.5f, BallLengthTiles)));
+                chain.Balls = Math.Clamp((int)MathF.Round(length * Math.Max(0f, BallsPerSpan) / Math.Max(1f, BallSpanTiles)), 1, fit);
+                chain.Spacing = length / chain.Balls;
             }
         }
 
-        // Every tick: the ball of each chain moves by the liquid the chain moved (rate / ChunkUnits of its way, so a full way = one chunk), and
-        // is lined up when the network reports a real chunk. After a chunk the ball is at the end pipe, the next one starts at the intake.
+        // Every tick: the balls of each chain move by the liquid the chain moved (rate / ChunkUnits of one spacing, so one spacing = one chunk), and
+        // are lined up when the network reports a real chunk. After a chunk the last ball is at the end pipe and a new one starts at the intake.
         void AdvanceChains()
         {
             if (activeChains.Count == 0 || Main.gamePaused)
@@ -352,7 +362,6 @@ namespace Factorraria.Common.Liquids
                 PumpChain chain = activeChains[c];
                 chain.Progress += chain.Rate / Math.Max(1f, ChunkUnits);
                 chain.Progress -= MathF.Floor(chain.Progress);
-                chain.Center = chain.Min + (chain.Max - chain.Min) * chain.Progress;
             }
         }
 
@@ -570,14 +579,19 @@ namespace Factorraria.Common.Liquids
 
         // ------------------------------------------------------------------ the wave
 
-        // Where this tile is relative to its chain's ball: 0..BallLengthTiles while the ball is on it (the ball is centred on the chain's Center),
-        // negative before it. A tile with no chain is never on a ball.
+        // Where this tile is relative to the nearest ball of its chain: 0..BallLengthTiles while the ball is on it (the ball is centred on the tile
+        // at u = BallLengthTiles / 2), negative before it. The balls sit at Min + Spacing * (k + Progress) for k = 0..Balls-1. A tile with no chain
+        // is never on a ball.
         float BallU(PipeFlowCell cell)
         {
-            if (cell.Chain == null)
+            PumpChain chain = cell.Chain;
+            if (chain == null)
                 return -1f;
 
-            return cell.S - cell.Chain.Center + Math.Max(0.5f, BallLengthTiles) * 0.5f;
+            float q = (cell.S - chain.Min) / chain.Spacing - chain.Progress;
+            int k = Math.Clamp((int)MathF.Round(q), 0, chain.Balls - 1);
+            float center = chain.Min + chain.Spacing * (k + chain.Progress);
+            return cell.S - center + Math.Max(0.5f, BallLengthTiles) * 0.5f;
         }
 
         // 0..1 smooth bump over the first BallLengthTiles of the period (the swelling part).
