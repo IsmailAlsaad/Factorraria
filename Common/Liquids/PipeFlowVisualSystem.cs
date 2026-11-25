@@ -66,47 +66,48 @@ namespace Factorraria.Common.Liquids
     // DrawWindowParticles) so the pipe's frame covers them and they look like they are inside it.
     public class PipeFlowVisualSystem : ModSystem
     {
-        // ---- Tuning (instance fields on purpose: hot reload can change them) ----
-        public float ChunkUnits = 255f;           // liquid units in a full world cell: one ball per this much liquid moved
-        public float BallSpeedTilesPerSecond = 4f;   // how fast the balls travel while they are not crowded: slower = more balls, closer together
-        public float BallMinSpacingTiles = 3f;       // the closest two balls may get (the swell is BallLengthTiles long); past that the balls go faster instead of more frequent
-        public float SpacingEasing = 0.1f;           // 0..1 per tick: how quickly the gap between balls follows a change of the pump rate
-        public float SyncGain = 0.5f;             // 0..1: how much of its timing error the ball corrects at each real chunk (the first one lines it up fully)
-        public float BallLengthTiles = 3f;        // the swelling lobe; the squeeze lobe right behind it is as long
+        // ---- Tuning (expression-bodied properties on purpose: a field initializer only runs when the object is created, so hot reload never
+        //      changed it; a property body is code, and hot reload replaces it) ----
+        public float ChunkUnits => 255f;           // liquid units in a full world cell: one ball per this much liquid moved
+        public float BallSpeedTilesPerSecond => 4f;   // how fast the balls travel while they are not crowded: slower = more balls, closer together
+        public float BallMinSpacingTiles => 5f;       // the closest two balls may get (the swell is BallLengthTiles long); past that the balls go faster instead of more frequent
+        public float SpacingEasing => 0.1f;           // 0..1 per tick: how quickly the gap between balls follows a change of the pump rate
+        public float SyncGain => 0.5f;             // 0..1: how much of its timing error the ball corrects at each real chunk (the first one lines it up fully)
+        public float BallLengthTiles => 3f;        // the swelling lobe; the squeeze lobe right behind it is as long
 
-        public float SwellAmount = 0.15f;          // extra scale at the middle of the ball
-        public float SqueezeAmount = 0f;       // scale lost just behind the ball
-        public float MotorSwellMultiplier = 1f;   // the pump swells SwellAmount and squeezes SqueezeAmount times this (0 = the pump stays put)
-        public int RebuildIntervalTicks = 10;
-        public int MaxWalkPipes = 600;            // per pump and side
-        public float MaxRangeTiles = 90f;         // pumps farther than this from the player are not animated
-        public float FadePerTick = 0.1f;
+        public float SwellAmount => 0.15f;          // extra scale at the middle of the ball
+        public float SqueezeAmount => 0f;       // scale lost just behind the ball
+        public float MotorSwellMultiplier => 1f;   // the pump swells SwellAmount and squeezes SqueezeAmount times this (0 = the pump stays put)
+        public int RebuildIntervalTicks => 10;
+        public int MaxWalkPipes => 600;            // per pump and side
+        public float MaxRangeTiles => 90f;         // pumps farther than this from the player are not animated
+        public float FadePerTick => 0.1f;
 
         // ---- Particle amounts ----
         // The open end is "particles per tick, per liquid unit moved per tick, while the swell is at its peak" (the swell lobe scales it down toward
         // its edges and to 0 outside it). A lead pump moves up to 5 units per tick, an iron pump up to 10, so with the defaults an open
         // end of a full lead pump makes about 1 particle per tick at the swell's peak. Fractions are rolled (0.3 = one particle in three ticks).
         // The window drifters use the same unit but run the whole time the liquid moves (not tied to the swell).
-        public float OpenEndParticlesPerUnit = 0.2f;   // the stream out of the open end the liquid leaves through
-        public float LeakChancePerTick = 0.012f;       // a pipe that touches air leaks only now and then: this chance per tick at the swell's peak (scaled down toward its edges)
-        public int LeakBurstMin = 1;                   // particles in one leak
-        public int LeakBurstMax = 2;
-        public float WindowParticlesPerUnit = 0.12f;   // drifting inside the window of a windowed pipe, continuously
-        public int MaxParticlesPerTick = 24;           // a hard cap over all pipes on screen, so a huge network cannot flood the dust pool
-        public float ParticleScaleMin = 0.8f;
-        public float ParticleScaleMax = 1.1f;
-        public float OpenEndSpeedMin = 0.8f;           // pixels per tick
-        public float OpenEndSpeedMax = 2.2f;
-        public float LeakSpeedMin = 0.4f;
-        public float LeakSpeedMax = 1.4f;
-        public float WindowSpeedMin = 0.6f;
-        public float WindowSpeedMax = 1.4f;
-        public float WindowScaleMultiplier = 0.75f;    // window drifters are the dust's art scaled by this (the window is small)
-        public int MaxWindowParticles = 400;           // hard cap over all windows on screen
+        public float OpenEndParticlesPerUnit => 0.2f;   // the stream out of the open end the liquid leaves through
+        public float LeakChancePerTick => 0.012f;       // a pipe that touches air leaks only now and then: this chance per tick at the swell's peak (scaled down toward its edges)
+        public int LeakBurstMin => 1;                   // particles in one leak
+        public int LeakBurstMax => 2;
+        public float WindowParticlesPerUnit => 0.12f;   // drifting inside the window of a windowed pipe, continuously
+        public int MaxParticlesPerTick => 24;           // a hard cap over all pipes on screen, so a huge network cannot flood the dust pool
+        public float ParticleScaleMin => 0.8f;
+        public float ParticleScaleMax => 1.1f;
+        public float OpenEndSpeedMin => 0.8f;           // pixels per tick
+        public float OpenEndSpeedMax => 2.2f;
+        public float LeakSpeedMin => 0.4f;
+        public float LeakSpeedMax => 1.4f;
+        public float WindowSpeedMin => 0.6f;
+        public float WindowSpeedMax => 1.4f;
+        public float WindowScaleMultiplier => 0.75f;    // window drifters are the dust's art scaled by this (the window is small)
+        public int MaxWindowParticles => 400;           // hard cap over all windows on screen
 
         // Window rectangles in tile pixels (the 16x16 cell, 0,0 = top-left). Window particles appear inside these; match them to the hole in the art.
-        public Rectangle WindowHorizontal = new Rectangle(3, 5, 10, 6);
-        public Rectangle WindowVertical = new Rectangle(5, 3, 6, 10);
+        public Rectangle WindowHorizontal => new Rectangle(3, 5, 10, 6);
+        public Rectangle WindowVertical => new Rectangle(5, 3, 6, 10);
 
         readonly Dictionary<Point, PipeFlowCell> cells = new Dictionary<Point, PipeFlowCell>();
         readonly Queue<(Point pos, int dist, Point step)> queue = new Queue<(Point, int, Point)>();
