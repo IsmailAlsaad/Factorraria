@@ -80,24 +80,24 @@ namespace Factorraria.Common.Knowledge
             ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a factory.")
                 // Hellforge
                 .Add("Hellforge", ItemID.Meteorite)                                   // meteorite ore
-                .Add("Hellforge", ModContent.ItemType<SteelBarItem>())
-                .Add("Hellforge", ModContent.ItemType<ByriteAlloyItem>())
+                .Add("Hellforge", ModContent.ItemType<SteelBarItem>(), weight: 2f)
+                .Add("Hellforge", ModContent.ItemType<ByriteAlloyItem>(), weight: 2f)
 
                 // Autohammer
-                .Add("Autohammer", ModContent.ItemType<ClockwisePriorityConveyor>(), weight: 0.5f)         // the two priority conveyors
-                .Add("Autohammer", ModContent.ItemType<CounterClockwisePriorityConveyor>(), weight: 0.5f)  // share ONE normal slot (0.5 + 0.5)
-                .Add("Autohammer", ModContent.ItemType<CopperWireItem>(), weight: 0.5f)
-                .Add("Autohammer", ModContent.ItemType<TinWireItem>(), weight: 0.5f)
+                .Add("Autohammer", ModContent.ItemType<ClockwisePriorityConveyor>(), weight: 3f)         // the two priority conveyors
+                .Add("Autohammer", ModContent.ItemType<CounterClockwisePriorityConveyor>(), weight: 3f)  // share ONE normal slot (0.5 + 0.5)
+                .Add("Autohammer", ModContent.ItemType<CopperWireItem>(), weight: 3f)
+                .Add("Autohammer", ModContent.ItemType<TinWireItem>(), weight: 3f)
                 .Add("Autohammer", ModContent.ItemType<MechanicalArmItem>())
                 .Add("Autohammer", ItemID.SkeletronHand)
                 .Add("Autohammer", ItemID.Autohammer)
-                .Add("Autohammer", ItemID.Cog)
+                .Add("Autohammer", ItemID.Cog, weight: 7f)
                 .Add("Autohammer", ModContent.ItemType<MechanicalAssemblerItem>())
                 .Add("Autohammer", ItemID.Extractinator)
                 .Add("Autohammer", ItemID.Solidifier)
                 .Add("Autohammer", ItemID.IceMachine)
-                .Add("Autohammer", ItemID.SteampunkBoiler)
-                .Add("Autohammer", ModContent.ItemType<WoodenPowerPoleItem>())
+                .Add("Autohammer", ItemID.SteampunkBoiler, weight: 5f)
+                .Add("Autohammer", ModContent.ItemType<WoodenPowerPoleItem>(), weight: 3f)
                 .Add("Autohammer", ModContent.ItemType<PlatinumPowerPoleItem>())
                 .Add("Autohammer", ModContent.ItemType<BeeWheelItem>())
                 .Add("Autohammer", ModContent.ItemType<MeteoritePanelItem>())
@@ -107,12 +107,12 @@ namespace Factorraria.Common.Knowledge
                 .Add("Autohammer", ModContent.ItemType<BlinkrootHarvesterBoxItem>())
 
                 // Mechanical Assembler
-                .Add("MechanicalAssembler", ModContent.ItemType<SimpleCircuitItem>())
+                .Add("MechanicalAssembler", ModContent.ItemType<SimpleCircuitItem>(), weight: 5f)
                 .Add("MechanicalAssembler", ModContent.ItemType<GoldWireItem>())
-                .Add("MechanicalAssembler", ModContent.ItemType<LeadPipeItem>())      // lead pipe
-                .Add("MechanicalAssembler", ModContent.ItemType<IronPipeItem>())      // iron pipe
-                .Add("MechanicalAssembler", ModContent.ItemType<LeadMotorItem>())     // lead motor
-                .Add("MechanicalAssembler", ModContent.ItemType<IronMotorItem>())     // iron motor
+                .Add("MechanicalAssembler", ModContent.ItemType<LeadPipeItem>(), weight: 3f)      // lead pipe
+                .Add("MechanicalAssembler", ModContent.ItemType<IronPipeItem>(), weight: 3f)      // iron pipe
+                .Add("MechanicalAssembler", ModContent.ItemType<LeadMotorItem>(), weight: 3f)     // lead motor
+                .Add("MechanicalAssembler", ModContent.ItemType<IronMotorItem>(), weight: 3f)     // iron motor
                 .Add("MechanicalAssembler", ItemID.AmethystGemsparkBlock, weight: 1f / 7f)   // the seven gemspark blocks share ONE normal slot (7 x 1/7)
                 .Add("MechanicalAssembler", ItemID.TopazGemsparkBlock, weight: 1f / 7f)
                 .Add("MechanicalAssembler", ItemID.SapphireGemsparkBlock, weight: 1f / 7f)
@@ -122,16 +122,16 @@ namespace Factorraria.Common.Knowledge
                 .Add("MechanicalAssembler", ItemID.AmberGemsparkBlock, weight: 1f / 7f)
 
                 // Ice Machine / Liquid Distillator / Decay Chamber
-                .Add("IceMachine", ModContent.ItemType<CokeItem>())
-                .Add("IceMachine", ItemID.Obsidian)
+                .Add("IceMachine", ModContent.ItemType<CokeItem>(), weight: 3f)
+                .Add("IceMachine", ItemID.Obsidian, weight: 3f)
                 .AddLiquid("LiquidDistillator", LiquidTypeRegistry.Fuel)             // fuel liquid
-                .Add("DecayChamber", ItemID.CrimtaneBar)
-                .Add("DecayChamber", ItemID.DemoniteBar)
-                .Add("VanillaDemonAltar", ItemID.LesionStation)   // the Decay Chamber item itself
+                .Add("DecayChamber", ItemID.CrimtaneBar, weight: 3f)
+                .Add("DecayChamber", ItemID.DemoniteBar, weight: 3f)
+                .Add("VanillaDemonAltar", ItemID.LesionStation, weight: 1f)   // the Decay Chamber item itself
 
                 .AddArt("ShimmerStatue", weight: 1f)   // the Shimmer Statue art (registered in RecipeArtDefinitions)
-                .AddArt("Trains", weight: 1f)          // the Trains art (registered in RecipeArtDefinitions)
-                .AddArt("Power", weight: 10f);           // the Power art (registered in RecipeArtDefinitions)
+                .AddArt("Trains", weight: 2f)          // the Trains art (registered in RecipeArtDefinitions)
+                .AddArt("Power", weight: 4f);           // the Power art (registered in RecipeArtDefinitions)
             // The Decay Chamber item (Lesion Station) is a hand-craft at the Demon Altar (RecipeSystem.cs), so no machine book has it. It is in
             // the pool through the vanilla Demon Altar tab (VanillaStationBooks): "VanillaDemonAltar" is that tab's catalog name.
         }
