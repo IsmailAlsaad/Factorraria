@@ -358,9 +358,10 @@ namespace Factorraria.Common.UI.RecipeBookUI
         public void SetSearch(string text)
         {
             searchFilter = text ?? "";
-            filterDirty = true;
             searchBar?.SetText(searchFilter);
             ClearSelection();
+            if (scrollbar != null) scrollbar.ViewPosition = 0f;   // new search starts at the top (Update would have done this for filterDirty)
+            Rebuild();   // apply the filter now: Rebuild clears filterDirty, so no unfiltered frame can be drawn in between
         }
 
         /// <summary>
