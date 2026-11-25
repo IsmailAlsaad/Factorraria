@@ -5,18 +5,19 @@ It aims to incorporate factory building and resource management and automation t
 
 The mod is also designed to be played without an external wiki as it has knowledge based progression elements 
 
-and it has dependency on the **"Ismail's Weapon reworks"**
+and it has dependency on the [c/FFD700:"Ismail's Weapon reworks"]
 as at first the weapon reworks were supposed to be part of Factorraria
 but later I decided to make it a separate mod if you would like to play with the weapon reworks alone without the factory automation aspect :) 
 
-Both mods are currently in beta stage and cover only ***pre-hm*** content
+Both mods are currently in beta stage and cover only [c/FF6B6B:pre-hm] content
 
 reworked weapons list are in the description of the weapon reworks steampage
-#### Team credit:
 
-*Ismail Alsaad* - Lead developer 
+[c/66D9EF:--- Team credit: ---]
 
-#### Use of AI
+[c/A6E22E:Ismail Alsaad] - Lead developer 
+
+[c/66D9EF:--- Use of AI ---]
 - No artwork was made by AI
 - No music/sound was made by AI
 - No game mechanics/features were designed by AI
