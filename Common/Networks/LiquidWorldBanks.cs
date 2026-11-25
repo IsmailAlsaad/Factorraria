@@ -60,13 +60,27 @@ namespace Factorraria.Common.Networks
             if (tileLiquidId == null) return 0f;
 
             deposit.TryGetValue(cell, out DepositBank bank);
-            if (bank.Amount > 0f && bank.Type != liquidType) return 0f;
+            if (bank.Amount > 0f && bank.Type != liquidType)
+            {
+                // A leftover bank of another liquid (its source ran dry before the cell filled) must not block this liquid forever.
+                CommitDepositBank(cell);
+                deposit.TryGetValue(cell, out bank);
+            }
             if (tile.LiquidAmount > 0 && (byte)tile.LiquidType != tileLiquidId.Value) return 0f;
 
             return Math.Max(0f, fullTile - tile.LiquidAmount - bank.Amount);
         }
+        // Applies the whole units of one cell's deposit bank to the tile and forgets the rest (same rule as FlushAll, for one cell).
+        void CommitDepositBank(Point cell)
+        {
+            if (!deposit.TryGetValue(cell, out DepositBank bank)) return;
 
-        // The network took `amount` out of this cell. Whole chunks are removed from the tile now, the rest stays banked.
+            deposit.Remove(cell);
+            int units = (int)Math.Floor(bank.Amount + epsilon);
+            if (units > 0) AddToTile(cell, bank.Type, units);
+        }
+
+        // The network took `amount` out of this cell.
         public void AddWithdraw(Point cell, float amount)
         {
             if (amount <= 0f) return;
