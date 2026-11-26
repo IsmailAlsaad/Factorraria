@@ -62,6 +62,10 @@ namespace Factorraria.Common.Machines
             SpriteBatch spriteBatch = Main.spriteBatch;
             bool batchBegun = false;
 
+            // Backdrop pipes of machines drawn tile by tile go down before anything else of this pass (and so before every tile).
+            if (!front)
+                ModContent.GetInstance<global::Factorraria.Common.Liquids.PipeMachineBackdropSystem>().DrawBehind(spriteBatch);
+
             foreach (TileEntity entity in TileEntity.ByPosition.Values)
             {
                 if (entity is not BaseMachine machine)

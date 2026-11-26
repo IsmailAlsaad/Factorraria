@@ -26,9 +26,10 @@ namespace Factorraria.Common.Liquids
     // normal tile, not darkened. Swell: the wave of the pipe that touches the machine carries on into the backdrop pipes
     // (PipeFlowVisualSystem.TryGetBackdropScale), so the animation flows through them.
     //
-    // Drawing: never in a pass of its own. Whatever draws the machine draws its backdrop first, so the order between the two cannot go
-    // wrong: MachineOverhangSystem calls DrawMachine right before a canvas machine's art (behind or in front pass, wherever that art goes),
-    // and MachineVisualOverride.PreDraw calls DrawCell for every other machine, one tile at a time, right before that tile's art.
+    // Drawing: machines drawn as one canvas (MachineOverhangSystem) get DrawMachine right before their art, in the same pass and batch.
+    // Every other machine (drawn tile by tile in the tile pass) gets its whole backdrop from DrawBehind, called at the start of the
+    // behind-tiles pass: that pass runs before any tile, so no tile's art can ever be covered by a backdrop piece (drawing a piece in
+    // each tile's PreDraw put it over the art of tiles drawn earlier).
     //
     // The end of a path (the priority tile) is a cap: it is open only on the sides pipes arrive from, never onward.
     public class PipeMachineBackdropSystem : ModSystem
@@ -117,6 +118,29 @@ namespace Factorraria.Common.Liquids
 
             backdrop.Stamp = now;
             return backdrop;
+        }
+
+        /// <summary>The backdrops of every machine drawn tile by tile, for the behind-tiles pass (MachineOverhangSystem.DrawPass(false) calls this first, inside the SpriteBatch vanilla has open there). Canvas machines draw their own through DrawMachine.</summary>
+        public void DrawBehind(SpriteBatch spriteBatch)
+        {
+            if (Main.dedServ || Main.gameMenu)
+                return;
+
+            foreach (TileEntity entity in TileEntity.ByPosition.Values)
+            {
+                if (!(entity is BaseMachine machine) || machine is MotorTileEntityBase || !machine.HasLiquidPorts || !machine.InitializeGeometry())
+                    continue;
+
+                Tile corner = Framing.GetTileSafely(machine.Position.X, machine.Position.Y);
+                if (corner.HasTile && MachineVisualRegistry.Definitions.TryGetValue(corner.TileType, out MachineVisualDefinition def) && def.Canvas != null)
+                    continue;
+
+                float margin = Math.Max(machine.MachineWidth, machine.MachineHeight) * 16f + 48f;
+                if (!BaseMachine.IsOnScreen(machine.MachineCenter, margin))
+                    continue;
+
+                DrawMachine(machine, spriteBatch);
+            }
         }
 
         /// <summary>A machine's whole backdrop, for machines drawn as one canvas (MachineOverhangSystem calls this right before the canvas, in the same pass and batch). Same order as real pipes: the art outside the tile first, then the bodies.</summary>

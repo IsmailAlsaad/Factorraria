@@ -476,9 +476,6 @@ namespace Factorraria.Common.Machines
 
             if (def.DrawNormalTile)
             {
-                // Vanilla draws this tile, but the backdrop pipes behind it still go down first.
-                if (def.Canvas == null && def.ResolveEntity(i, j) is BaseMachine plainMachine)
-                    ModContent.GetInstance<global::Factorraria.Common.Liquids.PipeMachineBackdropSystem>().DrawCell(plainMachine, i, j, spriteBatch);
 
                 return true;
             }
@@ -491,10 +488,6 @@ namespace Factorraria.Common.Machines
 
             InitializeMachine(entity);
 
-            // Backdrop pipes (PipeMachineBackdropSystem) for a machine drawn tile by tile: this tile's piece goes down right before the tile's own
-            // art. Canvas machines get theirs from MachineOverhangSystem, pumps have none.
-            if (def.Canvas == null && entity is not MotorTileEntityBase)
-                ModContent.GetInstance<global::Factorraria.Common.Liquids.PipeMachineBackdropSystem>().DrawCell(entity, i, j, spriteBatch);
 
             // Pumps are drawn by PipeFlowVisualSystem (DrawDeferredMotor below), in the same point-sampled pass as the pipes. Drawn here, inside the
             // tile pass, a swollen pump was resampled with smoothing and came out blurry, and it switched between two ways of being drawn.
