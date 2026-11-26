@@ -319,8 +319,6 @@ namespace Factorraria.Common.Carts
     /// <summary>Owns the chest cart panel: opening, closing, following the cart on screen and drawing. Same pattern as MachineUISystem.</summary>
     public class CartChestUISystem : ModSystem
     {
-        private const float CloseRange = 10f * 16f; // the panel closes when the player walks this far from the cart
-
         private UserInterface chestInterface;
         private CartChestUIState state;
 
@@ -478,7 +476,7 @@ namespace Factorraria.Common.Carts
             }
 
             if (!Main.playerInventory || !cart.Active || !cart.HasPanel || player.dead
-                || Vector2.Distance(player.Center, cart.Position) > CloseRange)
+                || !CartSystem.IsInInteractRange(player, cart, ModContent.GetInstance<global::Factorraria.Common.Net.CartPanelSystem>().KeepReachExtraTiles * 16f))
             {
                 CloseInternal(false);
                 return;

@@ -62,7 +62,7 @@ namespace Factorraria.Common.Net
     // another player's edit). An unchanged cart and a cart nobody has open cost nothing. Slot edits (CartSlotEdit) call Push at once.
     //
     // The server ends a subscription, with a reason, when the cart is gone (picked up, removed, no longer the live cart), the player walks
-    // further than CloseRangeTiles + ReachSlackTiles + KeepReachExtraTiles away, dies or leaves. The client re-resolves the cart by id every
+    // further than the interact range + ReachSlackTiles + KeepReachExtraTiles away, dies or leaves. The client re-resolves the cart by id every
     // frame and closes its panel for every reason (and when the replica is gone or was replaced).
     //
     // Single-player (and the host) never subscribes: the cart is the state and the panel edits it directly.
@@ -71,7 +71,6 @@ namespace Factorraria.Common.Net
         // Tuning knobs. Instance fields on purpose, so hot reload can change them.
         public int ScanIntervalTicks = 3;            // how often subscribed carts are compared (3 = at most 20 detail packets per second per subscriber)
         public int MaxSubscribersPerCart = 8;
-        public float CloseRangeTiles = 10f;          // the client closes its panel at this distance (CartChestUISystem.CloseRange)
         public float KeepReachExtraTiles = 3f;       // an open subscription survives this much further than the client's own close range
         public int AnswerTimeoutTicks = 120;         // client: how long a slot edit waits for its answer
 
@@ -183,8 +182,7 @@ namespace Factorraria.Common.Net
             if (player == null || !player.active || player.dead || cart == null || !cart.Active)
                 return false;
 
-            float pixels = (CloseRangeTiles + FactorrariaNet.ReachSlackTiles + KeepReachExtraTiles) * 16f;
-            return Vector2.Distance(player.Center, cart.Position) <= pixels;
+            return CartSystem.IsInInteractRange(player, cart, (FactorrariaNet.ReachSlackTiles + KeepReachExtraTiles) * 16f);
         }
 
         /// <summary>Server only. Sends the current detail of this cart to every subscriber now (an accepted edit calls it instead of waiting for the next scan).</summary>

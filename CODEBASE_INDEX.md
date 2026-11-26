@@ -96,7 +96,7 @@ tModLoader/other bases -> project types:
     +Coupled:event Action<Cart, Cart>[s] +Motor:Cart +Carriages:List<Cart> +SaveId:int +Count:int +SetReplicaCarriages(List<Cart>) +Attach(Cart,bool) +Remove(Cart) +Dissolve() +Record(Vector2,float,bool) +MarkBump() +UpdateCarriages() +AutoAttach(List<Cart>)[s] +RebuildFromSave(List<Cart>)[s]
     struct TrailSample
       +Position:Vector2 +Rotation:float +Direction:int +Bump:bool +Air:bool
-**CartChestUI.cs** uses: Cart, CartModule, CartPanelNet, CartPhysics, CartSlotBinding, CartSlotEdit, CartSystem, Factorraria, FireUIElement, LiquidTankUIElement, MachineUISystem, RecipeBookSystem, UIItemSlotWrapper
+**CartChestUI.cs** uses: Cart, CartModule, CartPanelNet, CartPanelSystem, CartPhysics, CartSlotBinding, CartSlotEdit, CartSystem, Factorraria, FireUIElement, LiquidTankUIElement, MachineUISystem, RecipeBookSystem, UIItemSlotWrapper
   class CartChestUIState : UIState
     +Columns:int[c] +Rows:int[c] +Cart:Cart +Panel:UIElement +Zoom:float +PanelW:float +PanelH:float +GapAboveCart:float +OnInitialize()[ov] +SetZoomScale(float) +Update(GameTime)[ov]
     sealed class Entry
@@ -468,7 +468,7 @@ tModLoader/other bases -> project types:
 ### Common/Knowledge/
 **LiquidBiomeVisits.cs** uses: LiquidTypeRegistry, MachineBiome, RecipeKnowledgeNet, RecipeKnowledgeSystem
   static class LiquidBiomeVisits
-    +PollTicks:int[s] +Register()[s] +Set(int,MachineBiome)[s] +Clear()[s] +HasRule(int)[s] +IsValidMarker(int)[s] +Poll(Player)[s]
+    +PollTicks:int[s] +Register()[s] +Set(int,MachineBiome)[s] +Clear()[s] +HasRule(int)[s] +RuleLiquids:IEnumerable<int>[s] +IsValidMarker(int)[s] +Poll(Player)[s]
 **LiquidSeenCommand.cs** uses: LiquidBiomeVisits, LiquidTypeRegistry, RecipeKnowledgeSystem, RecipeOutputKey, RecipeVisibility
   class LiquidSeenCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
@@ -704,7 +704,7 @@ tModLoader/other bases -> project types:
   enum RecipeState
     {Hidden, DebugRevealed, FadedIngredient, FadedParchment, Crafted}
   static class RecipeVisibility
-    +HeldVersion:int[s] +IsIngredient(int)[s] +BuildIngredientIndex()[s] +ClearIndex()[s] +InvalidateHeld()[s] +GetState(string,RecipeOutputGroup)[s] +GetState(string)[s] +Poll()[s] +IsItemHeld(int)[s] +IsHeld(string)[s] +IsNameRevealedInBrowser(string,RecipeOutputGroup,RecipeState)[s] +TryGetItemProducers(int,out List<string>)[s] +IsProductCrafted(RecipeOutputKey)[s] +IsIngredientRevealed(int)[s] +IsLiquidRevealed(int)[s] +IsMachineCrafted(string)[s] +IsFuelRevealed(string,FuelEntry)[s] +FindBookRecipeFor(RecipeOutputKey,string)[s] +InBook(RecipeState)[s]
+    +HeldVersion:int[s] +IsIngredient(int)[s] +BuildIngredientIndex()[s] +ClearIndex()[s] +InvalidateHeld()[s] +GetState(string,RecipeOutputGroup)[s] +GetState(string)[s] +Poll()[s] +IsItemHeld(int)[s] +IsHeld(string)[s] +IsNameRevealedInBrowser(string,RecipeOutputGroup,RecipeState)[s] +TryGetItemProducers(int,out List<string>)[s] +TryGetProducers(RecipeOutputKey,out List<string>)[s] +IsProductCrafted(RecipeOutputKey)[s] +IsIngredientRevealed(int)[s] +IsLiquidRevealed(int)[s] +IsMachineCrafted(string)[s] +IsFuelRevealed(string,FuelEntry)[s] +FindBookRecipeFor(RecipeOutputKey,string)[s] +InBook(RecipeState)[s]
 **TileEntityHelper.cs** uses: Factorraria, FurnaceOffsetConfig, HarvesterBoxRows, IMotorTile, LiquidNetworkSystem, PowerGridSystem
   static class TileEntityHelper
     +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float,int,Vector2?,bool)[s] +GetAnimationFrame(Point16,int)[s]
@@ -825,7 +825,7 @@ tModLoader/other bases -> project types:
   sealed class CartSlotBinding
     +GetCart:Func<Cart> +Fuel:bool +Index:int
   class CartPanelSystem : ModSystem
-    +ScanIntervalTicks:int +MaxSubscribersPerCart:int +CloseRangeTiles:float +KeepReachExtraTiles:float +AnswerTimeoutTicks:int +Load()[ov] +OnOpenRequest(int,int) +OnCloseRequest(int,int) +IsSubscribed(int,Cart) +InKeepReach(Player,Cart) +Push(Cart) +PostUpdateEverything()[ov] +DescribeSubscriptions() +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Unload()[ov]
+    +ScanIntervalTicks:int +MaxSubscribersPerCart:int +KeepReachExtraTiles:float +AnswerTimeoutTicks:int +Load()[ov] +OnOpenRequest(int,int) +OnCloseRequest(int,int) +IsSubscribed(int,Cart) +InKeepReach(Player,Cart) +Push(Cart) +PostUpdateEverything()[ov] +DescribeSubscriptions() +OnWorldLoad()[ov] +OnWorldUnload()[ov] +Unload()[ov]
     sealed class Subscriber
       +Player:int +SentVersion:uint
     sealed class Record
@@ -1066,7 +1066,7 @@ tModLoader/other bases -> project types:
     +MaxJoinLinks:int[s] +MaxPolesPerPacket:int[s] +RefusalRepeatTicks:int[s] +AutoSlot:byte[s] +ResetClient()[s] +RequestLink(int,int,int,int,CustomWireType,int,int,int,int)[s] +RequestCut(int,int,int,int,int)[s] +HandleRequest(BinaryReader,int)[s] +OnMachineKilled(BaseMachine,Point16)[s] +HandleChanged(BinaryReader,int)[s] +ClientTick()[s] +CountWire(Player,int)[s] +ConsumeWire(Player,int,int)[s] +WriteAll(BinaryWriter)[s] +ReadAll(BinaryReader)[s]
     sealed class Incoming
       +Result:PoleLinkResult +ItemType:int +Count:int +States:List<KeyValuePair<Point16, List<SlotState>>> +ReplaceAll:List<PoleLink>
-**RecipeKnowledgeNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, LiquidBiomeVisits, PacketDirection, Pending, RecipeBookSystem, RecipeCatalog, RecipeKnowledgeSystem, RecipeParchmentItem, RecipeTabDiscovery, RecipeVisibility, ScrollPool, ScrollPools
+**RecipeKnowledgeNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, LiquidBiomeVisits, PacketDirection, Pending, RecipeBookSystem, RecipeCatalog, RecipeKnowledgeSystem, RecipeOutputKey, RecipeParchmentItem, RecipeTabDiscovery, RecipeVisibility, ScrollPool, ScrollPools
   class RecipeKnowledgeNetSystem : ModSystem
     +Load()[ov] +PostUpdateEverything()[ov] +OnWorldUnload()[ov]
   enum ParchmentReadResult

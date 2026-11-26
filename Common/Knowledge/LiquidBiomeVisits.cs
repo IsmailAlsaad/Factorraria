@@ -53,6 +53,9 @@ namespace Factorraria.Common.Knowledge
         /// <summary>True if this liquid is revealed by visiting a biome (so it is hidden until then).</summary>
         public static bool HasRule(int liquidType) => biomeOf.ContainsKey(liquidType);
 
+        /// <summary>Every liquid that has a biome rule (RecipeKnowledgeNet uses it to mark the recipes that make a discovered liquid as crafted).</summary>
+        public static IEnumerable<int> RuleLiquids => biomeOf.Keys;
+
         /// <summary>Server: is this negative seen marker a liquid that can really be revealed by a visit?</summary>
         public static bool IsValidMarker(int marker) => marker < 0 && biomeOf.ContainsKey(-marker - 1);
 

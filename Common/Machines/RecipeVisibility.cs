@@ -216,6 +216,10 @@ namespace Factorraria.Common.Machines
         public static bool TryGetItemProducers(int itemType, out List<string> keys) =>
             producerIndex.TryGetValue(RecipeOutputKey.ForItem(itemType), out keys);
 
+        /// <summary>Same as TryGetItemProducers for any product (item or liquid). Do not modify the list.</summary>
+        public static bool TryGetProducers(RecipeOutputKey product, out List<string> keys) =>
+            producerIndex.TryGetValue(product, out keys);
+
         /// <summary>True if some recipe that makes this product (item or liquid) has been crafted in this world.</summary>
         public static bool IsProductCrafted(RecipeOutputKey product)
         {

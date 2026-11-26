@@ -644,9 +644,11 @@ namespace Factorraria.Common.Cosmic
                 // Whole-particle fade: trail, head and halo all dim together over the last (1 - lifeFadeStart) of the lifetime. The visible life ends
                 // 2 ticks before p.Life (the trail has drained by then, see the tail >= Length skip above), so the fade is timed to that.
                 float lifeFade = 1f;
-                float lifeFrac = age / Math.Max(1f, p.Life - 2f);
-                if (lifeFrac > lifeFadeStart)
-                    lifeFade = 1f - Smooth01((lifeFrac - lifeFadeStart) / (1f - lifeFadeStart));
+                float visibleLife = Math.Max(1f, p.Life - 2f);
+                float fadeTicks = Math.Max(visibleLife * (1f - lifeFadeStart), 20f);
+                float lifeFadeAt = visibleLife - fadeTicks;
+                if (age > lifeFadeAt)
+                    lifeFade = 1f - Smooth01((age - lifeFadeAt) / fadeTicks);
                 fade *= lifeFade;
 
                 Color baseColor = CosmicColors.DrawColor((CosmicColor)p.Color);

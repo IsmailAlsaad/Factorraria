@@ -139,6 +139,8 @@ namespace Factorraria.Common.Net
 
             int budget = System.Math.Max(1, MaxObtainedMarksPerScan);
 
+            budget -= MarkSeenLiquidProducers(budget);
+
             for (int p = 0; p < Main.maxPlayers && budget > 0; p++)
             {
                 Player player = Main.player[p];
@@ -154,6 +156,38 @@ namespace Factorraria.Common.Net
                 if (!Main.dedServ && p == Main.myPlayer && budget > 0)
                     budget -= MarkObtained(player, Main.mouseItem);
             }
+        }
+
+        // A liquid counts as discovered once its biome was visited (LiquidBiomeVisits, a seen marker that is already saved and synced), so
+        // every recipe that MAKES it counts as crafted, the same as holding the item does for an item product. Runs on the server and in
+        // single-player (the marks travel through the existing KnowledgeDelta, no new packet) and also covers worlds whose biome was
+        // visited before this rule existed. Returns how many recipes were newly marked, counted against the scan budget.
+        static int MarkSeenLiquidProducers(int budget)
+        {
+            int marked = 0;
+
+            foreach (int liquid in LiquidBiomeVisits.RuleLiquids)
+            {
+                if (marked >= budget)
+                    break;
+
+                if (!RecipeKnowledgeSystem.IsLiquidSeen(liquid) || !RecipeVisibility.TryGetProducers(RecipeOutputKey.ForLiquid(liquid), out List<string> keys))
+                    continue;
+
+                foreach (string key in keys)
+                {
+                    if (RecipeKnowledgeSystem.IsCrafted(key))
+                        continue;
+
+                    ServerMarkCrafted(key);
+                    marked++;
+                }
+            }
+
+            if (marked > 0)
+                FactorrariaNet.Log("[Knowledge] a discovered liquid: " + marked + " recipe(s) that make it now count as crafted");
+
+            return marked;
         }
 
         // Marks every not-yet-crafted recipe that makes this item. Returns how many recipes were newly marked (0 for most items).
