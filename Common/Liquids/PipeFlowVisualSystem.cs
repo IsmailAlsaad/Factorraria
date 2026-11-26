@@ -772,7 +772,7 @@ namespace Factorraria.Common.Liquids
         public bool TryGetBackdropScale(Point pipe, Point towardMachine, int stepsIn, int mask, out Vector2 scale)
         {
             scale = Vector2.One;
-            if (cells.Count == 0 || !cells.TryGetValue(pipe, out PipeFlowCell cell) || cell.IsMotor)
+            if (cells.Count == 0 || !cells.TryGetValue(pipe, out PipeFlowCell cell))
                 return false;
 
             // The liquid runs along cell.Travel: into the machine (+1 per tile), out of it (-1 per tile), or sideways (the wave stands still).

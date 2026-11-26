@@ -15,6 +15,11 @@ namespace Factorraria.Common.Systems
     // The scale a placed tile's overdraw cell is drawn at, around the cell's centre (Vector2.One = as drawn). Pipes and pumps use it to swell with the flow.
     public delegate Vector2 TileOverdrawScaler(int i, int j, Tile tile);
 
+    // Optional: draw only half of a placed tile's overdraw cell. Return true to crop; keepSide is the step IN THE WORLD (-1/0/1 on each axis,
+    // one of them 0) toward the half to KEEP (e.g. (-1, 0) keeps the left half on screen). A rotated cell is cropped in its own art, so the
+    // system turns that step back by the cell's rotation. The cut is at the cell's centre; the tile stays anchored to its own position.
+    public delegate bool TileOverdrawCropper(int i, int j, Tile tile, out Point keepSide);
+
     public class TileOverdrawEntry
     {
         public int TileType;
@@ -24,6 +29,7 @@ namespace Factorraria.Common.Systems
         public TileOverdrawSelector Select;
         public TileOverdrawSelector PreviewSelect;   // cell for the placement hologram (the tile is not placed yet); null = Select
         public TileOverdrawScaler Scale;             // optional: per-tile draw scale (the hologram always draws at 1)
+        public TileOverdrawCropper Crop;             // optional: per-tile half-cell crop (the hologram never crops)
         public bool Warned;
     }
 
@@ -73,7 +79,7 @@ namespace Factorraria.Common.Systems
         }
 
         /// <summary>Call from the tile's SetStaticDefaults. Does nothing on a dedicated server (no screen). marginPx 0 = DefaultMarginPx. inFront false = draw behind tiles.</summary>
-        public void Register(int tileType, string texturePath, TileOverdrawSelector selector, int marginPx = 0, bool inFront = true, TileOverdrawSelector previewSelector = null, TileOverdrawScaler scaler = null)
+        public void Register(int tileType, string texturePath, TileOverdrawSelector selector, int marginPx = 0, bool inFront = true, TileOverdrawSelector previewSelector = null, TileOverdrawScaler scaler = null, TileOverdrawCropper cropper = null)
         {
             if (Main.dedServ)
                 return;
@@ -88,7 +94,8 @@ namespace Factorraria.Common.Systems
                 InFront = inFront,
                 Select = selector,
                 PreviewSelect = previewSelector,
-                Scale = scaler
+                Scale = scaler,
+                Crop = cropper
             };
         }
 
@@ -153,7 +160,11 @@ namespace Factorraria.Common.Systems
 
                     BeginBatchIfNeeded();
                     Vector2 scale = entry.Scale != null ? entry.Scale(x, y, tile) : Vector2.One;
-                    DrawCell(spriteBatch, texture, source, x, y, rotation, Lighting.GetColor(x, y), scale);
+                    Vector2? origin = null;
+                    if (entry.Crop != null && entry.Crop(x, y, tile, out Point keepSide))
+                        CropToHalf(ref source, keepSide, rotation, out origin);
+
+                    DrawCell(spriteBatch, texture, source, x, y, rotation, Lighting.GetColor(x, y), scale, default, origin);
                 }
             }
 
@@ -191,11 +202,52 @@ namespace Factorraria.Common.Systems
         }
 
         // The cell is centred on tile (x, y), scaled and rotated around that centre.
-        static void DrawCell(SpriteBatch spriteBatch, Texture2D texture, Rectangle source, int x, int y, float rotation, Color color, Vector2 scale, Vector2 offset = default)
+        // origin = where the tile's centre sits inside source (null = the source's middle, i.e. an uncropped cell).
+        static void DrawCell(SpriteBatch spriteBatch, Texture2D texture, Rectangle source, int x, int y, float rotation, Color color, Vector2 scale, Vector2 offset = default, Vector2? origin = null)
         {
             Vector2 center = new Vector2(x * 16 + 8, y * 16 + 8) - Main.screenPosition + offset;
-            Vector2 origin = new Vector2(source.Width * 0.5f, source.Height * 0.5f);
-            spriteBatch.Draw(texture, center, source, color, rotation, origin, scale, SpriteEffects.None, 0f);
+            Vector2 o = origin ?? new Vector2(source.Width * 0.5f, source.Height * 0.5f);
+            spriteBatch.Draw(texture, center, source, color, rotation, o, scale, SpriteEffects.None, 0f);
+        }
+
+        // Keeps the half of the cell on the keepSide (a world step: it is turned back by the cell's rotation first, so a rotated pump keeps the
+        // right half of its art), and says where the tile's centre (the cell's middle) is inside what is left.
+        static void CropToHalf(ref Rectangle source, Point keepSide, float rotation, out Vector2? origin)
+        {
+            int cos = (int)Math.Round(Math.Cos(-rotation));
+            int sin = (int)Math.Round(Math.Sin(-rotation));
+            Point keep = new Point(keepSide.X * cos - keepSide.Y * sin, keepSide.X * sin + keepSide.Y * cos);
+
+            int halfW = source.Width / 2;
+            int halfH = source.Height / 2;
+            float ox = halfW;
+            float oy = halfH;
+
+            if (keep.X < 0)
+            {
+                source.Width = halfW;          // left half: the centre is its right edge
+                ox = halfW;
+            }
+            else if (keep.X > 0)
+            {
+                source.X += halfW;             // right half: the centre is its left edge
+                source.Width = halfW;
+                ox = 0f;
+            }
+
+            if (keep.Y < 0)
+            {
+                source.Height = halfH;         // top half
+                oy = halfH;
+            }
+            else if (keep.Y > 0)
+            {
+                source.Y += halfH;             // bottom half
+                source.Height = halfH;
+                oy = 0f;
+            }
+
+            origin = new Vector2(ox, oy);
         }
 
         // Placement hologram: the held item places a registered tile of this pass. valid = in reach and placeable there.
