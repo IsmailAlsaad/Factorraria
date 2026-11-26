@@ -35,7 +35,6 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
-            tooltips.RemoveAll(line => line.Mod == "Terraria" && line.Name.StartsWith("Tooltip"));
             tooltips.Add(new TooltipLine(Mod, "FactorrariaIceMachineCold", "Requires a cold environment to operate"));
         }
     }
