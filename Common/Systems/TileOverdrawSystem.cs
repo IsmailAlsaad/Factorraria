@@ -93,7 +93,7 @@ namespace Factorraria.Common.Systems
         }
 
         /// <summary>Draws one overdraw cell of a registered tile type at a tile position (used for decorative copies of a pipe, see PipeMachineBackdropSystem). Call inside an open SpriteBatch. False when the type has no sheet or the cell does not fit it.</summary>
-        public bool TryDrawCell(SpriteBatch spriteBatch, int tileType, int cell, int x, int y, Color color, Vector2 scale)
+        public bool TryDrawCell(SpriteBatch spriteBatch, int tileType, int cell, int x, int y, Color color, Vector2 scale, Vector2 offset = default)
         {
             if (Main.dedServ || !entries.TryGetValue(tileType, out TileOverdrawEntry entry) || entry.Texture == null)
                 return false;
@@ -101,7 +101,7 @@ namespace Factorraria.Common.Systems
             if (!TryGetSource(entry, cell, out Texture2D texture, out Rectangle source))
                 return false;
 
-            DrawCell(spriteBatch, texture, source, x, y, 0f, color, scale);
+            DrawCell(spriteBatch, texture, source, x, y, 0f, color, scale, offset);
             return true;
         }
 
@@ -191,9 +191,9 @@ namespace Factorraria.Common.Systems
         }
 
         // The cell is centred on tile (x, y), scaled and rotated around that centre.
-        static void DrawCell(SpriteBatch spriteBatch, Texture2D texture, Rectangle source, int x, int y, float rotation, Color color, Vector2 scale)
+        static void DrawCell(SpriteBatch spriteBatch, Texture2D texture, Rectangle source, int x, int y, float rotation, Color color, Vector2 scale, Vector2 offset = default)
         {
-            Vector2 center = new Vector2(x * 16 + 8, y * 16 + 8) - Main.screenPosition;
+            Vector2 center = new Vector2(x * 16 + 8, y * 16 + 8) - Main.screenPosition + offset;
             Vector2 origin = new Vector2(source.Width * 0.5f, source.Height * 0.5f);
             spriteBatch.Draw(texture, center, source, color, rotation, origin, scale, SpriteEffects.None, 0f);
         }

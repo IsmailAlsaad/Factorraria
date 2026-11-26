@@ -572,11 +572,11 @@ tModLoader/other bases -> project types:
       +Tile:Point +Position:Vector2 +Velocity:Vector2 +Texture:Texture2D +Frame:Rectangle +Tint:Color +Scale:float +Age:int +Life:int
 **PipeMachineBackdropSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, MotorTileEntityBase, PipeFlowVisualSystem, PipeTierRegistry, TileOverdrawSystem
   class PipeMachineBackdropSystem : ModSystem
-    +TurnPenalty:int +PruneIntervalTicks:int +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawBackdrops(SpriteBatch)
+    +TurnPenalty:int +PruneIntervalTicks:int +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawMachine(BaseMachine,SpriteBatch) +DrawCell(BaseMachine,int,int,SpriteBatch)
     sealed class BackdropTile
       +X:int +Y:int +Mask:int +PipeType:int +Pipe:Point +Toward:Point +Steps:int +Scale:Vector2
     sealed class Backdrop
-      +Signature:int +Tiles:List<BackdropTile>
+      +Signature:int +Stamp:uint +Tiles:List<BackdropTile> +ByCell:Dictionary<Point, BackdropTile>
     struct Attachment
       +Pipe:Point +Dir:Direction +Foot:Point +Type:int
 **PipeTileBase.cs** uses: LiquidNetworkSystem, PipeConnectionHelper, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileOverdrawSystem
@@ -678,7 +678,7 @@ tModLoader/other bases -> project types:
 **MachineTransitionSystem.cs** uses: BaseMachine, MachineVisualDefinition, MachineVisualRegistry
   class MachineTransitionSystem : ModSystem
     +PostUpdateEverything()[ov]
-**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, FactorrariaNet, FurnaceOffsetConfig, IMachineTileUnderlay, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, PipeFlowVisualSystem, TileEntityHelper
+**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, FactorrariaNet, FurnaceOffsetConfig, IMachineTileUnderlay, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, PipeFlowVisualSystem, PipeMachineBackdropSystem, TileEntityHelper
   enum MachineTransition : byte
     {None, Startup, Shutdown}
   class LiquidOverlayLayer
@@ -1472,7 +1472,7 @@ tModLoader/other bases -> project types:
   class TileOverdrawEntry
     +TileType:int +Texture:Asset<Texture2D> +MarginPx:int +InFront:bool +Select:TileOverdrawSelector +PreviewSelect:TileOverdrawSelector +Scale:TileOverdrawScaler +Warned:bool
   class TileOverdrawSystem : ModSystem
-    +ScanPaddingTiles:int +DefaultMarginPx:int +Load()[ov] +Unload()[ov] +Register(int,string,TileOverdrawSelector,int,bool,TileOverdrawSelector,TileOverdrawScaler) +TryDrawCell(SpriteBatch,int,int,int,int,Color,Vector2) +PostDrawTiles()[ov]
+    +ScanPaddingTiles:int +DefaultMarginPx:int +Load()[ov] +Unload()[ov] +Register(int,string,TileOverdrawSelector,int,bool,TileOverdrawSelector,TileOverdrawScaler) +TryDrawCell(SpriteBatch,int,int,int,int,Color,Vector2,Vector2) +PostDrawTiles()[ov]
 **VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, Factorraria, FurnaceOffsetConfig, GhostDiagnostics, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem
   class VirtualItemSystem : ModSystem
     +tileItemMap:Dictionary<Point, VirtualItem>[s] +vItemsById:Dictionary<int, VirtualItem>[s] +WorldItemsConverted:int[s] +PlayerPickups:int[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +RepairsMade:int[s] +VerifyVItems()[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +AddReplica(VirtualItem)[s] +TryGetById(int,out VirtualItem)[s] +ForgetId(VirtualItem)[s] +Describe()[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +SyncWorldItem(int,string)[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +ReplaceFilterNetworks(List<KeyValuePair<int, List<Point>>>)[s] +TryGetConveyorFilter(int,int,out int)[s]
