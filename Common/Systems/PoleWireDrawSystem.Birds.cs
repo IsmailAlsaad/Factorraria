@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
@@ -12,14 +13,16 @@ using Terraria.ModLoader;
 
 namespace Factorraria.Common.Systems
 {
-    // Client only (power poles patch P11). Little birds that now and then fly in, land on a hanging wire, look around, and fly off
-    // again when something moves close, when the wire flashes (a pole powering up), or when night or rain comes (wind does not matter).
-    // P11b: a bird fades out instead of vanishing, picks any wire on screen at random, and dies in one hit (see IsBirdHit / KillBird).
-    // Purely cosmetic: nothing here is saved, sent or read by any gameplay code, the server never runs it, and every client rolls its own
-    // birds (like the sparks). A bird only exists while its link is on screen (the same visibility test as the rope), so an off-screen wire
-    // costs nothing. A perched bird is stored as a fractional node index 'U' of the live rope and re-read every tick, so it rides the wire
-    // as it swings, and its landing and take-off give the rope a small kick. The rest of the class is in PoleWireDrawSystem.cs and
-    // PoleWireDrawSystem.Sparks.cs.
+    // Power poles patch P11 (little birds on the hanging wires), made multiplayer in P11c. A bird flies in, lands on a hanging wire, looks
+    // around, chirps now and then, and flies off again when something moves close or the wire flashes (a pole powering up or down). It fades out
+    // instead of vanishing, and it has 1 health: a weapon that touches it kills it (the vanilla bird NPC of its kind is spawned and killed).
+    // Birds spawn day and night, in rain and in wind, but never underground.
+    // Cosmetic only, nothing is saved. THE SERVER OWNS THE BIRDS (Common/Net/WireBirdNet.cs: spawning, which wire, how long they stay, who
+    // scares them, death), so every player sees the same birds. This file is the client side: it receives the server's events, animates the
+    // birds (arrival flight, idle turning, chirps, fade-out), draws them and asks the server about hits and flashes. A bird sits at a fraction
+    // 'T' of its wire (WireKey names the wire), which a live rope turns into a fractional node index 'U' every tick, so it rides the wire as
+    // it swings, and its landing and take-off give the rope a small kick. A bird whose wire is off screen is simply not drawn. The rest of
+    // the class is in PoleWireDrawSystem.cs and PoleWireDrawSystem.Sparks.cs.
     //
     // Art: no new texture. The birds use the vanilla bird NPC sheets (Bird 74, Blue Jay 297, Cardinal 298), one picked at random per bird.
     // Layout (told by Ismail, not read from the game files): each sheet is one column of BirdFrameCount = 5 frames of 30x24, top to bottom:
@@ -36,7 +39,7 @@ namespace Factorraria.Common.Systems
         public int BirdFlyFrameCount = 4;
         public float BirdFootLift = -2f;               // pixels the bottom of the frame sits above the wire's centre (raise it if the feet sink into the wire)
         public int MaxBirds = 10;                      // alive at once, in the whole view
-        public float BirdSpawnSeconds = 20f;          // on average one new bird this often while a wire is on screen and there is room
+        public float BirdSpawnSeconds = 10f;          // on average one new bird this often while a wire is on screen and there is room
         public float BirdMaxSlope = 0.6f;             // a bird only lands where the wire is flatter than this (rise over run)
         public float BirdPoleMarginPixels = 24f;      // no perching this close to a pole
         public float BirdSpacingPixels = 20f;         // minimum distance between two birds on one wire
@@ -49,6 +52,13 @@ namespace Factorraria.Common.Systems
         public float TakeoffKick = 0.9f;              // how hard a take-off pulls it back up
         public int BirdLeaveMaxTicks = 300;           // a bird that is leaving starts to fade out after this long even if it is still on screen
         public int BirdFadeTicks = 30;                // how long a fade-out takes
+        public int BirdArriveTicks = 360;             // the server treats a new bird as flying in for this long (not scared or retired yet); the client lands it sooner
+        public int BirdSpawnRangeTilesX = 55;         // the server spawns birds on wires inside a box of this half size around a player (about a screen)
+        public int BirdSpawnRangeTilesY = 32;
+        public int BirdChirpMinTicks = 400;           // a perched bird chirps (SoundID.Bird) every so often, a random time in this range
+        public int BirdChirpMaxTicks = 1600;
+        public float BirdChirpVolume = 0.7f;
+        public int BirdHitRangeTiles = 150;           // the server ignores a hit request from a player farther than this from the bird
         public int BirdHitWidth = 20;                 // pixels: the box a weapon has to touch to kill a bird (its feet are at the bottom centre)
         public int BirdHitHeight = 16;
 
@@ -57,21 +67,23 @@ namespace Factorraria.Common.Systems
         class WireBird
         {
             public BirdState State;
-            public PoleLink Link;       // the wire it flies to or sits on (null once it is leaving for good)
-            public float U;             // fractional node index on that wire's rope
+            public int Id;              // the server's id for this bird
+            public WireKey Key;         // the wire it flies to or sits on
+            public float T;             // where on that wire: 0 = end A, 1 = end B
+            public float U;             // T as a fractional node index on the wire's live rope (only while that wire is on screen)
             public Vector2 Pos;         // world position (kept up to date in every state, so a take-off starts from the right place)
             public Vector2 Vel;
             public int Dir = 1;         // 1 faces right, -1 faces left
             public int Age;             // ticks in the current state
             public int Timer;           // ticks until the next idle action
-            public int Life;            // ticks until a perched bird leaves on its own
+            public int ChirpTimer;      // ticks until the next chirp
+            public int HitCooldown;     // ticks until a hit on this bird may be sent to the server again
             public int Variant;
             public float Alpha = 1f;    // 1 solid, fades to 0 and the bird is then removed
             public bool Fading;         // set once it is leaving the world for good (off screen, wire off screen, leave time up)
         }
 
         readonly List<WireBird> birds = new List<WireBird>();
-        readonly List<CachedLink> spawnCandidates = new List<CachedLink>();   // scratch for TrySpawnBird
         readonly List<Rectangle> meleeHitboxes = new List<Rectangle>();       // melee swing boxes of this tick, filled by WireBirdMeleeHits
         // The vanilla texture of a bird variant (loaded on demand) and the size of one frame of it.
         bool TryGetBirdTexture(int variant, out Texture2D texture, out int frameWidth, out int frameHeight)
@@ -98,48 +110,136 @@ namespace Factorraria.Common.Systems
             return frameHeight > 0;
         }
 
+        // ---------------------------------------------------------------- client side: the server's events, animation, chirps, hit requests
+
+        // Multiplayer (P11c): the SERVER owns the birds (Common/Net/WireBirdNet.cs): which exist, which wire and where on it (a fraction T of
+        // the wire), when they take off and when they die. A client only shows them. The packet handlers may run off the main thread, so
+        // they only queue work here and UpdateBirds runs it. In single player the same server code runs in the same process.
+        readonly ConcurrentQueue<Action> birdEvents = new ConcurrentQueue<Action>();
+
+        // "Bird <id> lands on wire <key> at fraction <t>." fresh = it just spawned (fly in from off screen), not fresh = it was already
+        // sitting there (join sync): it just appears on its wire.
+        public void ClientBirdSpawn(int id, WireKey key, float t, int variant, int side, bool fresh)
+        {
+            birdEvents.Enqueue(() => ApplyBirdSpawn(id, key, t, variant, side, fresh));
+        }
+
+        public void ClientBirdLeave(int id, int side)
+        {
+            birdEvents.Enqueue(() =>
+            {
+                foreach (WireBird bird in birds)
+                {
+                    if (bird.Id != id)
+                        continue;
+
+                    if (bird.State != BirdState.Leaving)
+                        TakeOff(bird, bird.Pos - new Vector2(side * 10f, 0f));
+
+                    return;
+                }
+            });
+        }
+
+        // The bird is dead: only the sprite goes (the server spawned and killed the vanilla bird NPC, which brings its own gore and sound).
+        public void ClientBirdDie(int id)
+        {
+            birdEvents.Enqueue(() => birds.RemoveAll(bird => bird.Id == id));
+        }
+
+        // Join sync: these are all the birds that exist now.
+        public void ClientBirdsReplaceAll(List<WireBirdInfo> infos)
+        {
+            birdEvents.Enqueue(() =>
+            {
+                birds.Clear();
+                foreach (WireBirdInfo info in infos)
+                    ApplyBirdSpawn(info.Id, info.Key, info.T, info.Variant, 1, false);
+            });
+        }
+
+        void ApplyBirdSpawn(int id, WireKey key, float t, int variant, int side, bool fresh)
+        {
+            birds.RemoveAll(other => other.Id == id);
+
+            var bird = new WireBird
+            {
+                Id = id,
+                Key = key,
+                T = t,
+                Variant = variant,
+                State = BirdState.Perched,
+                Dir = side > 0 ? -1 : 1,
+                Timer = Main.rand.Next(40, 120),
+                ChirpTimer = Main.rand.Next(Math.Min(BirdChirpMinTicks, BirdChirpMaxTicks), Math.Max(BirdChirpMinTicks, BirdChirpMaxTicks) + 1)
+            };
+
+            PoleLinkSystem links = PoleLinkSystem.Instance;
+            EnsureCache(links);
+            if (byKey.TryGetValue(key, out CachedLink entry))
+            {
+                if (entry.Resolved)
+                {
+                    RestPoint(entry.RestA, entry.RestB, t, out Vector2 rest, out _);
+                    bird.Pos = rest;
+                }
+
+                // A new bird on a wire that is on screen flies in from just outside the screen, a little above its spot.
+                if (fresh && entry.Rope != null)
+                {
+                    GetVisibleRect(out Rectangle visible);
+                    Vector2 perch = PointAlong(entry.Rope, ClampU(entry.Rope, t * (entry.Rope.Count - 1)));
+                    bird.State = BirdState.Arriving;
+                    bird.Pos = new Vector2(side > 0 ? visible.Right + 48f : visible.Left - 48f, perch.Y - (40f + 100f * Main.rand.NextFloat()));
+                }
+            }
+
+            birds.Add(bird);
+        }
+
         // ---------------------------------------------------------------- update (called from PostUpdateEverything, after UpdateSparks)
 
         void UpdateBirds()
         {
-            PoleLinkSystem links = PoleLinkSystem.Instance;
-            if (!Birds || links.Links.Count == 0)
+            // The server's events first (not skipped when the wire view is empty: a join sync may arrive before the links do).
+            while (birdEvents.TryDequeue(out Action action))
+                action();
+
+            if (!Birds)
             {
                 birds.Clear();
+                meleeHitboxes.Clear();
                 return;
             }
 
+            PoleLinkSystem links = PoleLinkSystem.Instance;
             EnsureCache(links);
             GetVisibleRect(out Rectangle visible);
-            bool allowed = BirdsAllowed();
 
             for (int i = birds.Count - 1; i >= 0; i--)
             {
-                if (IsBirdHit(birds[i]))
+                WireBird bird = birds[i];
+
+                // Any hit is only a request: the server decides, kills the bird and tells everyone (ClientBirdDie).
+                if (bird.HitCooldown > 0)
                 {
-                    KillBird(birds[i]);
-                    birds.RemoveAt(i);
-                    continue;
+                    bird.HitCooldown--;
+                }
+                else if (IsBirdHit(bird))
+                {
+                    bird.HitCooldown = 20;
+                    global::Factorraria.Common.Net.WireBirdNetSystem.RequestHit(bird.Id);
                 }
 
-                if (!UpdateBird(birds[i], visible, allowed))
+                if (!UpdateBird(bird, visible))
                     birds.RemoveAt(i);
             }
 
             meleeHitboxes.Clear();
-
-            if (allowed && quietTicks >= StartupQuietTicks && birds.Count < MaxBirds && Main.rand.NextFloat() < 1f / Math.Max(1f, BirdSpawnSeconds * 60f))
-                TrySpawnBird(visible);
-        }
-
-        // Day and no rain (wind is ignored). Cheap, so it is asked once per tick.
-        bool BirdsAllowed()
-        {
-            return Main.dayTime && !Main.raining;
         }
 
         // False: remove the bird.
-        bool UpdateBird(WireBird bird, Rectangle visible, bool allowed)
+        bool UpdateBird(WireBird bird, Rectangle visible)
         {
             bird.Age++;
 
@@ -148,14 +248,6 @@ namespace Factorraria.Common.Systems
                 bird.Alpha -= 1f / Math.Max(1, BirdFadeTicks);
                 if (bird.Alpha <= 0f)
                     return false;
-            }
-            else
-            {
-                // Far outside the screen (the player ran away from it): fade out where it is instead of popping away.
-                Rectangle screen = visible;
-                screen.Inflate(160, 160);
-                if (!screen.Contains((int)bird.Pos.X, (int)bird.Pos.Y))
-                    StartFade(bird);
             }
 
             if (bird.State == BirdState.Leaving)
@@ -173,34 +265,40 @@ namespace Factorraria.Common.Systems
                 return true;
             }
 
-            // Its wire: gone (cut, or the poles are missing) means it takes off where it is; off screen means it is simply dropped.
-            if (bird.Link == null || !byLink.TryGetValue(bird.Link, out CachedLink entry))
+            // Its wire. Not known here (yet), or off screen so no rope is kept for it: the bird stays where it is, unseen, and waits for the
+            // server (a cut wire makes the server send it off). Its position is kept up to date from the resting curve so a take-off starts right.
+            if (!byKey.TryGetValue(bird.Key, out CachedLink entry) || entry.Rope == null)
             {
-                TakeOff(bird, null);
+                if (bird.State == BirdState.Arriving)
+                {
+                    bird.State = BirdState.Perched;
+                    bird.Age = 0;
+                }
+
+                if (entry != null && entry.Resolved)
+                {
+                    RestPoint(entry.RestA, entry.RestB, bird.T, out Vector2 rest, out _);
+                    bird.Pos = rest;
+                }
+
                 return true;
             }
 
             PoleRope rope = entry.Rope;
-            if (rope == null)
-            {
-                // The wire is off screen (no rope is kept for it): the bird stays where it last was and fades out.
-                StartFade(bird);
-                return true;
-            }
+            bird.U = ClampU(rope, bird.T * (rope.Count - 1));
+            Vector2 target = PointAlong(rope, bird.U);
 
             if (bird.State == BirdState.Arriving)
             {
-                Vector2 target = PointAlong(rope, ClampU(rope, bird.U));
                 Vector2 delta = target - bird.Pos;
                 float distance = delta.Length();
 
-                if (distance <= 3f)
+                if (distance <= 3f || bird.Age > 900)
                 {
                     bird.State = BirdState.Perched;
                     bird.Age = 0;
                     bird.Pos = target;
                     bird.Timer = Main.rand.Next(40, 120);
-                    bird.Life = Main.rand.Next(Math.Min(BirdMinPerchTicks, BirdMaxPerchTicks), Math.Max(BirdMinPerchTicks, BirdMaxPerchTicks) + 1);
                     Kick(rope, bird.U, LandKick);
                     return true;
                 }
@@ -212,29 +310,11 @@ namespace Factorraria.Common.Systems
                 if (Math.Abs(delta.X) > 2f)
                     bird.Dir = delta.X >= 0f ? 1 : -1;
 
-                if (!allowed || bird.Age > 900)
-                    TakeOff(bird, null);
-
                 return true;
             }
 
             // Perched: ride the wire.
-            bird.U = ClampU(rope, bird.U);
-            bird.Pos = PointAlong(rope, bird.U);
-
-            Vector2 tangent = Tangent(rope, bird.U);
-            bool tooSteep = Math.Abs(tangent.X) < 0.001f || Math.Abs(tangent.Y / tangent.X) > BirdMaxSlope * 2f;
-            if (tooSteep || bird.Age >= bird.Life || (!allowed && Main.rand.NextBool(120)))
-            {
-                TakeOff(bird, null);
-                return true;
-            }
-
-            if (FindScare(bird.Pos, out Vector2 from))
-            {
-                TakeOff(bird, from);
-                return true;
-            }
+            bird.Pos = target;
 
             if (--bird.Timer <= 0)
             {
@@ -250,51 +330,20 @@ namespace Factorraria.Common.Systems
                 }
             }
 
+            // Every client chirps on its own (a sound is no shared state).
+            if (--bird.ChirpTimer <= 0)
+            {
+                bird.ChirpTimer = Main.rand.Next(Math.Min(BirdChirpMinTicks, BirdChirpMaxTicks), Math.Max(BirdChirpMinTicks, BirdChirpMaxTicks) + 1);
+                SoundEngine.PlaySound(SoundID.Bird.WithVolumeScale(BirdChirpVolume), bird.Pos);
+            }
+
             return true;
-        }
-
-        // A moving player or NPC close enough to scare a bird at 'position'. 'from' is where it is, so the bird flees the other way.
-        bool FindScare(Vector2 position, out Vector2 from)
-        {
-            float radiusSquared = BirdScareRadius * BirdScareRadius;
-            float speedSquared = BirdScareSpeed * BirdScareSpeed;
-            float closeSquared = radiusSquared * 0.35f * 0.35f;
-
-            for (int i = 0; i < Main.maxPlayers; i++)
-            {
-                Player player = Main.player[i];
-                if (!player.active || player.dead || player.ghost)
-                    continue;
-
-                float distanceSquared = Vector2.DistanceSquared(player.Center, position);
-                if (distanceSquared <= closeSquared || (distanceSquared <= radiusSquared && player.velocity.LengthSquared() >= speedSquared))
-                {
-                    from = player.Center;
-                    return true;
-                }
-            }
-
-            for (int i = 0; i < Main.maxNPCs; i++)
-            {
-                NPC npc = Main.npc[i];
-                if (!npc.active || npc.lifeMax <= 5 || npc.velocity.LengthSquared() < speedSquared)
-                    continue;
-
-                if (Vector2.DistanceSquared(npc.Center, position) <= radiusSquared)
-                {
-                    from = npc.Center;
-                    return true;
-                }
-            }
-
-            from = default;
-            return false;
         }
 
         // Starts a take-off from the bird's current spot. 'from' (may be null) is what scared it.
         void TakeOff(WireBird bird, Vector2? from)
         {
-            if (bird.Link != null && byLink.TryGetValue(bird.Link, out CachedLink entry) && entry.Rope != null && bird.State == BirdState.Perched)
+            if (bird.State == BirdState.Perched && byKey.TryGetValue(bird.Key, out CachedLink entry) && entry.Rope != null)
                 Kick(entry.Rope, bird.U, -TakeoffKick);
 
             float side = from.HasValue ? Math.Sign(bird.Pos.X - from.Value.X) : 0f;
@@ -302,20 +351,24 @@ namespace Factorraria.Common.Systems
                 side = Main.rand.NextBool() ? 1f : -1f;
 
             bird.State = BirdState.Leaving;
-            bird.Link = null;
             bird.Age = 0;
             bird.Vel = new Vector2(side * (1.4f + 0.8f * Main.rand.NextFloat()), -(1.6f + 0.8f * Main.rand.NextFloat()));
             bird.Dir = side > 0f ? 1 : -1;
         }
 
-        // Every bird on this link takes off (the wire just flashed). Called from the Sparks partial.
+        // The wire just flashed (called from the Sparks partial, on the client that saw it). The server decides who is scared, so this only
+        // asks, and only when a bird of this client sits on that wire.
         void ScareBirds(PoleLink link)
         {
+            var key = new WireKey(link);
             for (int i = 0; i < birds.Count; i++)
             {
                 WireBird bird = birds[i];
-                if (bird.State != BirdState.Leaving && ReferenceEquals(bird.Link, link))
-                    TakeOff(bird, null);
+                if (bird.State != BirdState.Leaving && bird.Key.Equals(key))
+                {
+                    global::Factorraria.Common.Net.WireBirdNetSystem.RequestScare(key);
+                    return;
+                }
             }
         }
 
@@ -334,12 +387,6 @@ namespace Factorraria.Common.Systems
             }
         }
 
-        // The margin keeps a bird off the pole ends (in whole nodes, at least 2).
-        int BirdMarginNodes(PoleRope rope)
-        {
-            return Math.Max(2, (int)Math.Ceiling(BirdPoleMarginPixels / Math.Max(1f, rope.SegmentLength)));
-        }
-
         float ClampU(PoleRope rope, float u)
         {
             return Math.Clamp(u, 0f, rope.Count - 1.001f);
@@ -352,81 +399,20 @@ namespace Factorraria.Common.Systems
             return rope.Pos[i0 + 1] - rope.Pos[i0];
         }
 
-        // ---------------------------------------------------------------- spawning
-
-        void TrySpawnBird(Rectangle visible)
+        // The point at fraction t (0 = end A, 1 = end B) of the RESTING curve of a wire from a to b, and its direction. The same parabola
+        // PoleRope.FillRestCurve draws, so the server (which has no ropes) and every client agree on where a bird sits: a fraction t is node
+        // index t * (Count - 1) on a live rope.
+        public static void RestPoint(Vector2 a, Vector2 b, float t, out Vector2 point, out Vector2 tangent)
         {
-            if (cache.Count == 0)
-                return;
+            float chord = Vector2.Distance(a, b);
+            float sag = (float)Math.Sqrt(0.375f * chord * PoleLinkSystem.Instance.SlackExtra(chord));
 
-            // Every link that is on screen and has its rope is a candidate. They are tried in a uniformly random order (the old way, a random
-            // start and then the next one along, kept sending birds to whichever wire came after the steep ones), so any wire can be picked.
-            spawnCandidates.Clear();
-            for (int n = 0; n < cache.Count; n++)
-            {
-                if (cache[n].Rope != null && cache[n].Resolved)
-                    spawnCandidates.Add(cache[n]);
-            }
-
-            while (spawnCandidates.Count > 0)
-            {
-                int pick = Main.rand.Next(spawnCandidates.Count);
-                CachedLink entry = spawnCandidates[pick];
-                spawnCandidates[pick] = spawnCandidates[spawnCandidates.Count - 1];
-                spawnCandidates.RemoveAt(spawnCandidates.Count - 1);
-
-                PoleRope rope = entry.Rope;
-                int margin = BirdMarginNodes(rope);
-                int lastNode = rope.Count - 1;
-                if (lastNode - 2 * margin < 1)
-                    continue;
-
-                for (int attempt = 0; attempt < 6; attempt++)
-                {
-                    float u = margin + Main.rand.NextFloat() * (lastNode - 2 * margin);
-                    Vector2 perch = PointAlong(rope, u);
-                    Vector2 tangent = Tangent(rope, u);
-
-                    if (Math.Abs(tangent.X) < 0.001f || Math.Abs(tangent.Y / tangent.X) > BirdMaxSlope)
-                        continue;
-
-                    if (!visible.Contains((int)perch.X, (int)perch.Y) || perch.Y / 16f >= Main.worldSurface)
-                        continue;
-
-                    if (IsSpotTaken(entry.Link, u, rope.SegmentLength))
-                        continue;
-
-                    // Fly in from just outside the screen on a random side, a little above the perch.
-                    float side = Main.rand.NextBool() ? 1f : -1f;
-                    Vector2 origin = new Vector2(side > 0f ? visible.Right + 48f : visible.Left - 48f, perch.Y - (40f + 100f * Main.rand.NextFloat()));
-                    birds.Add(new WireBird
-                    {
-                        State = BirdState.Arriving,
-                        Link = entry.Link,
-                        U = u,
-                        Pos = origin,
-                        Dir = side > 0f ? -1 : 1,
-                        Variant = Main.rand.Next(Math.Max(1, BirdNpcIds == null ? 1 : BirdNpcIds.Length))
-                    });
-                    return;
-                }
-            }
+            point = Vector2.Lerp(a, b, t);
+            point.Y += 4f * sag * t * (1f - t);
+            tangent = (b - a) + new Vector2(0f, 4f * sag * (1f - 2f * t));
         }
 
-        bool IsSpotTaken(PoleLink link, float u, float segmentLength)
-        {
-            float minNodes = BirdSpacingPixels / Math.Max(1f, segmentLength);
-            for (int i = 0; i < birds.Count; i++)
-            {
-                WireBird other = birds[i];
-                if (other.State != BirdState.Leaving && ReferenceEquals(other.Link, link) && Math.Abs(other.U - u) < minNodes)
-                    return true;
-            }
-
-            return false;
-        }
-
-        // ---------------------------------------------------------------- fading, getting hit, dying
+        // ---------------------------------------------------------------- fading and getting hit
 
         // Starts the fade-out (once). The bird keeps doing what it was doing while it fades.
         void StartFade(WireBird bird)
@@ -434,14 +420,15 @@ namespace Factorraria.Common.Systems
             bird.Fading = true;
         }
 
-        // Called by WireBirdMeleeHits for every swing box this tick (world pixels).
+        // Called by WireBirdMeleeHits for every swing box of the local player this tick (world pixels).
         public void AddBirdMeleeHitbox(Rectangle hitbox)
         {
             if (Birds && birds.Count > 0)
                 meleeHitboxes.Add(hitbox);
         }
 
-        // A bird has 1 health: any melee swing box or friendly damaging projectile touching its box kills it.
+        // Has the local player's weapon touched the bird? (Only the local player's swings and projectiles: every client asks about its own,
+        // so the server gets one request, not one per client.)
         bool IsBirdHit(WireBird bird)
         {
             var box = new Rectangle((int)(bird.Pos.X - BirdHitWidth / 2f), (int)(bird.Pos.Y - BirdHitHeight), BirdHitWidth, BirdHitHeight);
@@ -455,7 +442,7 @@ namespace Factorraria.Common.Systems
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile projectile = Main.projectile[i];
-                if (!projectile.active || !projectile.friendly || projectile.hostile || projectile.npcProj || projectile.damage <= 0)
+                if (!projectile.active || projectile.owner != Main.myPlayer || !projectile.friendly || projectile.hostile || projectile.damage <= 0)
                     continue;
 
                 if (projectile.Hitbox.Intersects(box))
@@ -468,42 +455,6 @@ namespace Factorraria.Common.Systems
             }
 
             return false;
-        }
-
-        // The bird's death: the matching vanilla bird NPC is spawned and killed in the same frame (so the vanilla gore, blood and sound play).
-        // The caller removes the custom bird. A multiplayer client cannot spawn an NPC (the server owns them and the birds are cosmetic and
-        // local), so there the same NPC is only built as a throwaway object and put through its death effect, which gives the same gore.
-        void KillBird(WireBird bird)
-        {
-            if (BirdNpcIds == null || BirdNpcIds.Length == 0)
-                return;
-
-            int type = BirdNpcIds[Math.Clamp(bird.Variant, 0, BirdNpcIds.Length - 1)];
-            if (type <= 0)
-                return;
-
-            if (Main.netMode == NetmodeID.SinglePlayer)
-            {
-                int index = NPC.NewNPC(new EntitySource_Misc("FactorrariaWireBird"), (int)bird.Pos.X, (int)bird.Pos.Y, type);
-                if (index >= 0 && index < Main.maxNPCs)
-                {
-                    NPC npc = Main.npc[index];
-                    npc.direction = bird.Dir;
-                    npc.spriteDirection = bird.Dir;
-                    npc.StrikeInstantKill();
-                }
-
-                return;
-            }
-
-            var temp = new NPC();
-            temp.SetDefaults(type);
-            temp.position = bird.Pos - new Vector2(temp.width / 2f, temp.height);
-            temp.direction = bird.Dir;
-            temp.spriteDirection = bird.Dir;
-            temp.life = 0;
-            temp.HitEffect(new NPC.HitInfo { InstantKill = true, Damage = 9999, HitDirection = bird.Dir });
-            SoundEngine.PlaySound(SoundID.NPCDeath1, bird.Pos);
         }
 
         // ---------------------------------------------------------------- drawing (inside DrawLinks' batch, so the birds sit on the wire and behind the crossboards)
@@ -520,7 +471,11 @@ namespace Factorraria.Common.Systems
                 float rotation;
                 int frame;
 
-                if (bird.State == BirdState.Perched && bird.Link != null && byLink.TryGetValue(bird.Link, out CachedLink entry) && entry.Rope != null)
+                CachedLink entry = null;
+                if (bird.State == BirdState.Perched && (!byKey.TryGetValue(bird.Key, out entry) || entry.Rope == null))
+                    continue;   // its wire is off screen (or not known here yet): nothing to draw
+
+                if (bird.State == BirdState.Perched)
                 {
                     position = PointAlong(entry.Rope, ClampU(entry.Rope, bird.U));
                     Vector2 tangent = Tangent(entry.Rope, bird.U);
@@ -549,15 +504,73 @@ namespace Factorraria.Common.Systems
         }
     }
 
-    // P11b: hands every melee swing box to the wire birds (they have 1 health, a swing that touches one kills it).
+    // P11b: hands every melee swing box of the local player to the wire birds (they have 1 health, a swing that touches one asks the server to kill it).
     public class WireBirdMeleeHits : GlobalItem
     {
         public override void MeleeEffects(Item item, Player player, Rectangle hitbox)
         {
-            if (Main.dedServ)
+            if (Main.dedServ || player.whoAmI != Main.myPlayer)
                 return;
 
             ModContent.GetInstance<PoleWireDrawSystem>().AddBirdMeleeHitbox(hitbox);
         }
+    }
+
+    // P11c: names a wire by value (its two poles and the connection points), the same on the server and every client (the PoleLink objects are
+    // not shared between them, and a resynced link is a new object).
+    public readonly struct WireKey : IEquatable<WireKey>
+    {
+        public readonly Point16 A;
+        public readonly byte SlotA;
+        public readonly Point16 B;
+        public readonly byte SlotB;
+
+        public WireKey(Point16 a, byte slotA, Point16 b, byte slotB)
+        {
+            A = a;
+            SlotA = slotA;
+            B = b;
+            SlotB = slotB;
+        }
+
+        public WireKey(PoleLink link) : this(link.A, link.SlotA, link.B, link.SlotB)
+        {
+        }
+
+        public bool Matches(PoleLink link) => link.A == A && link.SlotA == SlotA && link.B == B && link.SlotB == SlotB;
+
+        public bool Equals(WireKey other) => A == other.A && SlotA == other.SlotA && B == other.B && SlotB == other.SlotB;
+
+        public override bool Equals(object obj) => obj is WireKey other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(A.X, A.Y, SlotA, B.X, B.Y, SlotB);
+
+        public void Write(System.IO.BinaryWriter writer)
+        {
+            writer.Write(A.X);
+            writer.Write(A.Y);
+            writer.Write(SlotA);
+            writer.Write(B.X);
+            writer.Write(B.Y);
+            writer.Write(SlotB);
+        }
+
+        public static WireKey Read(System.IO.BinaryReader reader)
+        {
+            var a = new Point16(reader.ReadInt16(), reader.ReadInt16());
+            byte slotA = reader.ReadByte();
+            var b = new Point16(reader.ReadInt16(), reader.ReadInt16());
+            byte slotB = reader.ReadByte();
+            return new WireKey(a, slotA, b, slotB);
+        }
+    }
+
+    // P11c: one bird as the join sync sends it.
+    public struct WireBirdInfo
+    {
+        public int Id;
+        public WireKey Key;
+        public float T;
+        public int Variant;
     }
 }

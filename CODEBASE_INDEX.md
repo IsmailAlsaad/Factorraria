@@ -1,10 +1,10 @@
 # CODEBASE INDEX - Factorraria
-generated 2026-11-26 | 462 .cs files | regenerate: `python index_codebase.py` (project root)
+generated 2026-11-26 | 463 .cs files | regenerate: `python index_codebase.py` (project root)
 
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(91) BaseMachine(61) FactorrariaPacket(42) PacketDirection(36) LiquidTypeRegistry(35) Factorraria(28) RecipeBook(26) Cart(23) MachineUIStateBase(20) TileEntityHelper(19) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) LiquidStack(17) CartSystem(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartModule(15) RecipeKnowledgeSystem(14)
+FactorrariaNet(92) BaseMachine(61) FactorrariaPacket(43) PacketDirection(37) LiquidTypeRegistry(36) Factorraria(29) RecipeBook(26) Cart(23) MachineUIStateBase(20) TileEntityHelper(19) JoinSync(19) MachineUIElementEntry(18) CustomRecipe(18) LiquidStack(17) CartSystem(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartModule(15) RecipeKnowledgeSystem(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -43,7 +43,7 @@ Project bases -> derived:
 - PowerPoleTileEntityBase: PlatinumPowerPoleTileEntity, WoodenPowerPoleTileEntity
 - RecipeBookEntry: RecipeBookGridCell
 tModLoader/other bases -> project types:
-- ModSystem (130): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, HarvesterBoxHerbHooks, HarvesterBoxItemFall, HarvesterBoxNetSystem, HarvesterBoxPlacementPreview, HarvesterBoxRowSystem, HarvesterBoxTreeHooks, HarvesterBoxTreeNetSystem, HellstoneGrowNetSystem, HellstoneGrowthSystem, HerbGrowthHooks, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineSmartOutlineSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitBlueprint, MechSuitBuildNetSystem, MechSuitBuildSystem, MechSuitBuilderArms, MechSuitBuilderSystem, MechSuitDebugSystem, MechSuitHologramSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, MushroomGrowthHooks, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PipeFlowVisualSystem, PipeMachineBackdropSystem, PlanterBoxSeedNetSystem, PlanterBoxSmartCursor, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, PriorityConveyorCursorSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RecipeTabDiscoverySystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WorldLiquidSources
+- ModSystem (131): AwakenedSpawnSystem, AwakenedStatueDrawSystem, AwakenedStatueNetSystem, AwakenedStatueRegistry, AwakenedStatueSystem, BeeWheelDrawSystem, BeeWheelSystem, BucketPourSystem, CartChestUISystem, CartInputNetSystem, CartMapHeadHider, CartMapHoverSystem, CartMapNetSystem, CartMapSystem, CartMountBlocker, CartNetSystem, CartPanelSystem, CartSoundSystem, CartSystem, CartTestFeed, CartWorldGen, ChestConveyorModeUI, ChestConveyorNetSystem, ChestConveyorSystem, ChestLootSystem, ConveyorFilterNetSystem, ConveyorPhysicsSystem, CosmicNetSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicParticleSystem, CosmicRadiationSystem, CosmicReceiverSystem, CustomWireNetSystem, CustomWireSystem, ElectricityHoverTip, GhostDiagnosticsSystem, HarvesterBoxHerbHooks, HarvesterBoxItemFall, HarvesterBoxNetSystem, HarvesterBoxPlacementPreview, HarvesterBoxRowSystem, HarvesterBoxTreeHooks, HarvesterBoxTreeNetSystem, HellstoneGrowNetSystem, HellstoneGrowthSystem, HerbGrowthHooks, ImportantDialogueSystem, JoinSyncSystem, LiquidBroadcastSystem, LiquidNetworkDebugSystem, LiquidNetworkSystem, LiquidTypeRegistrationSystem, MachineBootstrapSystem, MachineDetailSystem, MachineDynamicDrawSystem, MachineLightSyncSystem, MachineOverhangSystem, MachinePlacementInfoSystem, MachineRecipeSelectSystem, MachineRegisterationSystem, MachineSlotEditSystem, MachineSmartOutlineSystem, MachineTransitionSystem, MachineUISystem, MaterializerRightClickGuard, MaterializerToggleSystem, MechSuitBlueprint, MechSuitBuildNetSystem, MechSuitBuildSystem, MechSuitBuilderArms, MechSuitBuilderSystem, MechSuitDebugSystem, MechSuitHologramSystem, MechSuitNetSystem, MechanicRescueSystem, MechanicWrenchSystem, MeteorHeadHardmodeLootSystem, MotorRotateSystem, MultiplayerBootProbeSystem, MushroomGrowthHooks, NetCoreSystem, NetRateLimiterSystem, OilWorldGen, OverhangDrawSystem, PipeFlowVisualSystem, PipeMachineBackdropSystem, PlanterBoxSeedNetSystem, PlanterBoxSmartCursor, PoleLinkInputSystem, PoleLinkNetSystem, PoleLinkSystem, PoleWireDrawSystem, PostWorldGenEdits, PowerGridDebugSystem, PowerGridSystem, PowerPoleCrossboardSystem, PriorityConveyorCursorSystem, RareNpcSystem, RecipeBookKeybindSystem, RecipeBookSystem, RecipeKnowledgeNetSystem, RecipeKnowledgeSystem, RecipeSystem, RecipeTabDiscoverySystem, RoboticArmAreaEditorSystem, RoboticArmAreaNetSystem, RoboticArmDeferredEditSystem, RoboticArmDropCaptureSystem, RoboticArmGhostSystem, RoboticArmNet, SiliconOreWorldGen, StoryEventsSystem, StoryNetSystem, StorySystem, SuperWeaponDebugSystem, SuperWeaponExplosionFxSystem, SuperWeaponIgnitionFxSystem, SuperWeaponNetSystem, SuperWeaponSystem, TileOverdrawSystem, TilePlacedConsumersSystem, TilePlacedSystem, TimedCraftingSystem, VItemNetSystem, VirtualItemSystem, WallShieldBreakFxSystem, WallShieldDrawSystem, WireBirdNetSystem, WorldLiquidSources
 - ModItem (47): BeeWheelItem, BucketBase, ByriteAlloyItem, ByriteAlloySlabItem, CartItem, ClockwisePriorityConveyor, ClosedScrollItem, CokeItem, CopperWireItem, CounterClockwisePriorityConveyor, CrimtaneSheetItem, CsharpLogoItem, DemoniteSheetItem, GoldPlateItem, GoldWireItem, HarvesterBoxItemBase, IronCutterItem, IronMotorItem, IronPipeItem, IsmailsCaneItem, LeadCutterItem, LeadMotorItem, LeadPipeItem, MechSuitItem, MechanicalArmItem, MechanicalAssemblerItem, MechanicsBagItem, MeteorHeadStatueItem, MeteoritePanelItem, MissileDrillItem, MissileTankItem, MissileThrusterItem, PlanterBoxItemBase, PlatinumPowerPoleItem, PureSiliconItem, RecipeParchmentItem, RoyalHoneyItem, SiliconOreItem, SimpleCircuitItem, SteelBarItem, SteelScrewItem, SunCapsuleItem, TerrariaLogoItem, TinWireItem, TmodloaderLogoItem, WoodenMinecartItem, WoodenPowerPoleItem
 - byte (37): AssemblyIssue, BirdState, BlockState, BoxCycle, CartAction, CartMapMode, CartPanelAction, CartPanelCloseReason, CartSoundKind, CosmicColor, CosmicHitResult, CosmicQueuedKind, CosmicRayEnd, CosmicRayEndKind, CosmicTileKind, CustomWireType, DetailCloseReason, EditFlags, EditFlags, FactorrariaPacket, FlowDir, KnowledgeKind, MachineSlotKind, MachineTransition, PacketDirection, ParchmentFailure, PendingKind, Phase, PoleLinkRequestKind, PoleLinkResult, RequestCheck, StoryActionFailure, StoryActionKind, SuperWeaponEffectKind, SuperWeaponPartKind, SuperWeaponState, UnitState
 - ModCommand (18): ArmSendCommand, CartDiagnosticsCommand, CosmicCommand, DialogueSeenCommand, FlowNetworkCommand, GhostCheckCommand, LiquidBroadcastCommand, LiquidPipeCommand, LiquidSeenCommand, MachineSnapshotCommand, NetFloodCommand, NetJoinCommand, NetPingCommand, RecipeDebugCommand, SlotEditTestCommand, StoryCommand, VItemTestCommand, WireCountCommand
@@ -56,6 +56,7 @@ tModLoader/other bases -> project types:
 - ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - ModProjectile (3): MechSuitArmProjectile, MechanicalArmProjectile, SuperWeaponMissile
+- IEquatable (2): RecipeOutputKey, WireKey
 - ModBuff (2): MechSuitBuff, RadiationBuff
 - ModLiquid (2): FuelLiquid, OilLiquid
 - ModLiquidFall (2): FuelLiquidFall, OilLiquidFall
@@ -65,7 +66,6 @@ tModLoader/other bases -> project types:
 - GlobalLiquid (1): LiquidInteractionEdits
 - GlobalProjectile (1): CartTrackHookBlocker
 - GlobalWall (1): GlobalWallOverride
-- IEquatable (1): RecipeOutputKey
 - IItemDropRuleCondition (1): FirstKingSlimeKillCondition
 - Mod (1): Factorraria
 - ModDust (1): PipeLiquidDust
@@ -1150,6 +1150,11 @@ tModLoader/other bases -> project types:
 **VItemTestCommand.cs** uses: FactorrariaNet, VirtualItemSystem
   class VItemTestCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
+**WireBirdNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, PoleLink, PoleLinkSystem, PoleWireDrawSystem, PowerPoleTileEntityBase, WireBirdInfo, WireKey
+  class WireBirdNetSystem : ModSystem
+    +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RequestHit(int)[s] +RequestScare(WireKey)[s] +PostUpdateEverything()[ov]
+    class ServerBird
+      +Id:int +Key:WireKey +T:float +Variant:int +Age:int +Life:int +Leaving:bool +LeaveAge:int
 
 ### Common/Networks/
 **FlowNetwork.cs** uses: BaseMachine, Direction, FlowDir, FlowNode, FlowPort, FlowRoute, FlowRouteFinder, FlowRouteMerger, FlowSolver, FlowTransfer, LiquidStack, LiquidTankRules, LiquidTypeRegistry, LiquidWorldBanks, MotorTileEntityBase, PipeConnectionHelper, PipeMaterial, PipeTierRegistry, Route, TileEntityHelper, WorldLiquidSources
@@ -1431,21 +1436,25 @@ tModLoader/other bases -> project types:
     +Box:Rectangle +Velocity:Vector2
   class PoleRope
     +Pos:Vector2 +Old:Vector2 +Count:int +Length:float +SegmentLength:float +NodeCount(float,float,int)[s] +FillRestCurve(Vector2,int,Vector2,Vector2,float)[s] +Rest(Vector2,Vector2) +Pin(Vector2,Vector2) +Step(PoleWireDrawSystem,Vector2,Vector2,List<PoleDisturber>) +DistanceToPolyline(Vector2,int,Vector2)[s]
-**PoleWireDrawSystem.Birds.cs** uses: CachedLink, PoleLink, PoleLinkSystem, PoleRope, State
+**PoleWireDrawSystem.Birds.cs** uses: CachedLink, Factorraria, PoleLink, PoleLinkSystem, PoleRope, State, WireBirdNetSystem
   partial class PoleWireDrawSystem
-    +Birds:bool +BirdNpcIds:int +BirdArtFacesLeft:bool +BirdFrameCount:int +BirdPerchFrame:int +BirdFlyFirstFrame:int +BirdFlyFrameCount:int +BirdFootLift:float +MaxBirds:int +BirdSpawnSeconds:float +BirdMaxSlope:float +BirdPoleMarginPixels:float +BirdSpacingPixels:float +BirdFlySpeed:float +BirdMinPerchTicks:int +BirdMaxPerchTicks:int +BirdScareRadius:float +BirdScareSpeed:float +LandKick:float +TakeoffKick:float +BirdLeaveMaxTicks:int +BirdFadeTicks:int +BirdHitWidth:int +BirdHitHeight:int +AddBirdMeleeHitbox(Rectangle)
+    +Birds:bool +BirdNpcIds:int +BirdArtFacesLeft:bool +BirdFrameCount:int +BirdPerchFrame:int +BirdFlyFirstFrame:int +BirdFlyFrameCount:int +BirdFootLift:float +MaxBirds:int +BirdSpawnSeconds:float +BirdMaxSlope:float +BirdPoleMarginPixels:float +BirdSpacingPixels:float +BirdFlySpeed:float +BirdMinPerchTicks:int +BirdMaxPerchTicks:int +BirdScareRadius:float +BirdScareSpeed:float +LandKick:float +TakeoffKick:float +BirdLeaveMaxTicks:int +BirdFadeTicks:int +BirdArriveTicks:int +BirdSpawnRangeTilesX:int +BirdSpawnRangeTilesY:int +BirdChirpMinTicks:int +BirdChirpMaxTicks:int +BirdChirpVolume:float +BirdHitRangeTiles:int +BirdHitWidth:int +BirdHitHeight:int +ClientBirdSpawn(int,WireKey,float,int,int,bool) +ClientBirdLeave(int,int) +ClientBirdDie(int) +ClientBirdsReplaceAll(List<WireBirdInfo>) +RestPoint(Vector2,Vector2,float,out Vector2,out Vector2)[s] +AddBirdMeleeHitbox(Rectangle)
     enum BirdState : byte
       {Arriving, Perched, Leaving}
     class WireBird
-      +State:BirdState +Link:PoleLink +U:float +Pos:Vector2 +Vel:Vector2 +Dir:int +Age:int +Timer:int +Life:int +Variant:int +Alpha:float +Fading:bool
+      +State:BirdState +Id:int +Key:WireKey +T:float +U:float +Pos:Vector2 +Vel:Vector2 +Dir:int +Age:int +Timer:int +ChirpTimer:int +HitCooldown:int +Variant:int +Alpha:float +Fading:bool
   class WireBirdMeleeHits : GlobalItem
     +MeleeEffects(Item,Player,Rectangle)[ov]
+  struct WireKey : IEquatable<WireKey>
+    +A:Point16 +SlotA:byte +B:Point16 +SlotB:byte +Matches(PoleLink) +Equals(WireKey) +Equals(object)[ov] +GetHashCode()[ov] +Write(BinaryWriter) +Read(BinaryReader)[s]
+  struct WireBirdInfo
+    +Id:int +Key:WireKey +T:float +Variant:int
 **PoleWireDrawSystem.Sparks.cs** uses: CachedLink, PoleLink, PoleLinkSystem, PoleRope, PowerPoleTileEntityBase
   partial class PoleWireDrawSystem
     +Sparks:bool +StartupQuietTicks:int +SweepPixelsPerTick:float +MinSweepTicks:int +SparksPerTick:int +StraySparksPerTick:int +SparkDustType:int +SparkScale:float +MaxPulses:int +MaxZapSoundsPerTick:int +FlashPixelsPerSpark:float +FlashSparkScale:float +FlashSparkSpeed:float +FlashCooldownTicks:int +FirstPointSound:SoundStyle +ConnectSound:SoundStyle +ZapSound:SoundStyle +OnWorldLoad()[ov] +PlayFirstPointSound(Vector2) +PlayConnectSound(Vector2)
     class Pulse
       +Link:PoleLink +Age:int +Ticks:int
-**PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleDisturber, PoleLink, PoleLinkInputSystem, PoleLinkSystem, PoleRope, PowerPoleCrossboardSystem, PowerPoleTileEntityBase
+**PoleWireDrawSystem.cs** uses: CustomWireSystem, CustomWireType, PoleBoard, PoleDisturber, PoleLink, PoleLinkInputSystem, PoleLinkSystem, PoleRope, PowerPoleCrossboardSystem, PowerPoleTileEntityBase, WireKey
   partial class PoleWireDrawSystem : ModSystem
     +WireThickness:float +CullMarginPixels:float +CopperColor:Color +TinColor:Color +GoldColor:Color +InvalidColor:Color +Simulate:bool +Disturbance:bool +NodeSpacing:float +MaxNodes:int +Gravity:float +Damping:float +WindForce:float +GustAmount:float +GustSpeed:float +FlutterAmount:float +ConstraintIterations:int +DisturbRadius:float +DisturbStrength:float +MaxNodeSpeed:float +Unload()[ov] +OnWorldUnload()[ov] +DrawWire(SpriteBatch,Vector2,Vector2,CustomWireType,bool) +GetWireColor(CustomWireType) +BeginBatch(SpriteBatch)[s] +DrawLinks(SpriteBatch) +PostUpdateEverything()[ov] +SegmentIntersectsRect(Vector2,Vector2,Rectangle)[s] +DistanceToWire(PoleLink,Vector2,Vector2,Vector2) +GetSwayedPoint(PowerPoleCrossboardSystem,PowerPoleTileEntityBase,int)[s]
     class CachedLink
@@ -2179,9 +2188,9 @@ tModLoader/other bases -> project types:
 **IceMachineRecipeRegistry.cs** ns!=Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine uses: CokeItem, CustomRecipe, LiquidTypeRegistry, RecipeBook
   static class IceMachineRecipeRegistry
     +Book:RecipeBook[s] +BuildRecipes()[s]
-**IceMachineTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine uses: BaseMachine, CustomRecipe, IceMachineRecipeRegistry, MachineBiome, RecipeBook
+**IceMachineTileEntity.cs** ns!=Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine uses: BaseMachine, CustomRecipe, IceMachineRecipeRegistry, LiquidTypeRegistry, MachineBiome, RecipeBook
   class IceMachineTileEntity : BaseMachine
-    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] #InputLiquidCount:int[ov] #OutputSlotCount:int[ov] #CanStartCraft(CustomRecipe)[ov] #OnAnimationFrameChanged(int,int)[ov]
+    +ValidTileType:int[ov] +Recipes:RecipeBook[ov] #InputLiquidCount:int[ov] #OutputSlotCount:int[ov] #AcceptsInputLiquid(int,int)[ov] #CanStartCraft(CustomRecipe)[ov] #OnAnimationFrameChanged(int,int)[ov]
   class IceMachineItemTooltip : GlobalItem
     +AppliesToEntity(Item,bool)[ov] +ModifyTooltips(Item,List<TooltipLine>)[ov]
 **IceMachineUIState.cs** ns!=Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine uses: IceMachineRecipeRegistry, IceMachineTileEntity, LiquidTankUIElement, MachineUIElementEntry, MachineUIStateBase

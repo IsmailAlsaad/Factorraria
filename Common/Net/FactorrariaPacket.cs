@@ -76,6 +76,11 @@ namespace Factorraria.Common.Net
         HarvesterBoxPlantAcorn = 66,  // client -> server: "plant an acorn on the Harvester Box at tile (x, y)": the server checks reach, the held acorn and the free tiles, then writes the sapling and takes the acorn (Harvester Box patch P5; payload int x, int y)
         CosmicNpcRadiation = 69,      // client -> server: "these NPCs (index, summed particle multiplier) came within the radiation radius of cosmic particles I see": batched; the server checks the NPC and the reporter's distance, then adds the radiation level and debuff (cosmic radiation patch C12)
         PlanterBoxSeed = 68,          // client -> server: "use the seed I hold on the Blinkroot box at tile (x, y)": the server checks reach, the held seed and the box, turns the box into the seed's box and takes one seed (planter box seeds patch)
+        WireBirdSpawn = 70,           // server -> all clients: "bird <id> of variant <v> sits on wire <key> at fraction <t> (arriving from side <s>, fresh flag)": cosmetic (power poles patch P11c; payload int id, WireKey (short x, short y, byte slot, twice), float t, byte variant, sbyte side, bool fresh)
+        WireBirdLeave = 71,           // server -> all clients: "bird <id> takes off, away from side <s>" (P11c; payload int id, sbyte side)
+        WireBirdDie = 72,             // server -> all clients: "bird <id> is dead, remove its sprite" (the server spawned and killed the vanilla bird NPC, which syncs on its own; P11c; payload int id)
+        WireBirdHitRequest = 73,      // client -> server: "my weapon hit bird <id>": the server checks the bird and the distance, then kills it (P11c; payload int id)
+        WireBirdScareRequest = 74,    // client -> server: "the wire <key> flashed, scare the birds on it" (P11c; payload WireKey)
     }
 
     // Which side a packet type is meant to be handled on. The router drops a packet that arrives on the wrong side.

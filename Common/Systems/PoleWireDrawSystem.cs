@@ -70,6 +70,7 @@ namespace Factorraria.Common.Systems
 
         readonly List<CachedLink> cache = new List<CachedLink>();
         readonly Dictionary<PoleLink, CachedLink> byLink = new Dictionary<PoleLink, CachedLink>();
+        readonly Dictionary<WireKey, CachedLink> byKey = new Dictionary<WireKey, CachedLink>();   // P11c: the same links by value (birds name their wire that way)
         readonly List<PoleDisturber> disturbers = new List<PoleDisturber>();
         Vector2[] scratch = new Vector2[0];
         int cachedVersion = -1;
@@ -80,6 +81,7 @@ namespace Factorraria.Common.Systems
             byLink.Clear();
             disturbers.Clear();
             birds.Clear();
+            byKey.Clear();
             scratch = new Vector2[0];
             cachedVersion = -1;
         }
@@ -88,6 +90,7 @@ namespace Factorraria.Common.Systems
         {
             cache.Clear();
             byLink.Clear();
+            byKey.Clear();
             birds.Clear();
             cachedVersion = -1;
         }
@@ -475,6 +478,7 @@ namespace Factorraria.Common.Systems
 
             cache.Clear();
             byLink.Clear();
+            byKey.Clear();
             foreach (PoleLink link in links.Links)
             {
                 var entry = new CachedLink { Link = link };
@@ -499,6 +503,7 @@ namespace Factorraria.Common.Systems
                 Resolve(entry);
                 cache.Add(entry);
                 byLink[link] = entry;
+                byKey[new WireKey(link)] = entry;
             }
 
             cachedVersion = links.Version;
