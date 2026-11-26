@@ -40,7 +40,7 @@ namespace Factorraria.Common.Crafting
 
         // Machine recipe times: the manual craft time of the same ingredients (above), times machineTimeMultiplier, rounded UP to a multiple of
         // machineStepTicks, then clamped. Filled into every machine recipe at load by MachineRegisterationSystem (see GetMachineDurationTicks).
-        public float machineTimeMultiplier = 0.5f;      // machines take half the manual time
+        public float machineTimeMultiplier = 1f;
         public int machineStepTicks = 30;               // 0.5 s chunks
         public int machineMinTicks = 30;                // 0.5 s
         public int machineMaxTicks = 1200;              // 20 s
