@@ -78,12 +78,12 @@ namespace Factorraria.Common.Knowledge
                 .AddArt("Cascade", weight: 1f);
 
             ScrollPools.Define("SnowChests", "Frost covers the notes on the paper")
-                // Solidifier
-                .Add("Solidifier", ItemID.SlushBlock);
+                // Ice Machine
+                .Add("IceMachine", ItemID.SlushBlock);
 
             ScrollPools.Define("DesertChests", "The words are covered in sand and dust")
                 // Solidifier
-                .Add("Solidifier", ItemID.FossilOre);
+                .Add("Solidifier", ItemID.DesertFossil);
 
             ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a factory")
                 // Hellforge
