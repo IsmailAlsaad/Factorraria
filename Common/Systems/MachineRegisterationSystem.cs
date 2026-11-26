@@ -78,6 +78,8 @@ namespace Factorraria.Common.Machines
             MachineVisualRegistry.RegisterLiquidOverlay(TileID.IceMachine,
                 basePath + "GeneralMachines/IceMachine/IceMachine_On_FirstLiquid",
                 entity => entity.InputLiquids[0]);
+            // Backdrop pipes (PipeMachineBackdropSystem): the Ice Machine's pipes run to its bottom middle tile instead of the size rule's pick.
+            ModContent.GetInstance<global::Factorraria.Common.Liquids.PipeMachineBackdropSystem>().RegisterPriorityTile(TileID.IceMachine, 1, -1);
 
 
             MachineVisualRegistry.Register<LiquidDistillatorTileEntity>(TileID.ImbuingStation,

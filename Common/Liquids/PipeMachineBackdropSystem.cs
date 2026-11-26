@@ -14,8 +14,9 @@ namespace Factorraria.Common.Liquids
     // can be bigger than what its sprite shows, so a pipe that touches the footprint looks like it floats with a gap before the sprite
     // even though it really is connected. For every pipe touching a machine that has liquid ports, this draws extra pipe tiles BEHIND the
     // machine: the footprint tile right next to the pipe (so the pipe carries on one tile in the direction it came from), then a path
-    // through the footprint (4 directions only, straight runs preferred) to the machine's centre tile. The machine's own sprite is drawn
-    // over them, so they only show in the gap.
+    // through the footprint (4 directions only, straight runs preferred) to the machine's PRIORITY tile (see PickGoal: a manual tile per
+    // machine through RegisterPriorityTile, else a rule by footprint size). The machine's own sprite is drawn over them, so they only
+    // show in the gap.
     //
     // Multiplayer: no packets, no authority. Every client works it out from the tiles and the machine entity it already has (the pipe
     // tiles, the entity's footprint size) and from PipeFlowVisualSystem's own client-side wave, so single player and multiplayer are the same.
@@ -24,8 +25,9 @@ namespace Factorraria.Common.Liquids
     // normal tile, not darkened. Swell: the wave of the pipe that touches the machine carries on into the backdrop pipes
     // (PipeFlowVisualSystem.TryGetBackdropScale), so the animation flows through them.
     //
-    // Drawing rides on the DrawNPCs(behindTiles: true) call vanilla makes before any tile is drawn (same ride as TileOverdrawSystem), into
-    // the SpriteBatch vanilla already has open there.
+    // Drawing: MachineOverhangSystem's behind-tiles pass calls DrawBackdrops right before it draws the machines' canvases (the machines
+    // are drawn in that same pass, so the order has to be fixed: a second DrawNPCs hook of its own ran in an order nobody controls, and the
+    // pipes came out over the machine). It draws into the SpriteBatch vanilla already has open there.
     public class PipeMachineBackdropSystem : ModSystem
     {
         // ---- Tuning (expression-bodied properties on purpose: hot reload replaces a body, not a field initializer) ----
@@ -63,17 +65,18 @@ namespace Factorraria.Common.Liquids
         readonly List<Attachment> attachments = new List<Attachment>();
         int lastPruneTick;
 
-        public override void Load()
-        {
-            if (Main.dedServ) return; // no screen on a dedicated server
-            On_Main.DrawNPCs += DrawBehindTilesPass;
-        }
+        readonly Dictionary<int, Point> priorityTiles = new Dictionary<int, Point>();
 
         public override void Unload()
         {
             backdrops.Clear();
-            if (Main.dedServ) return; // matches Load()
-            On_Main.DrawNPCs -= DrawBehindTilesPass;
+            priorityTiles.Clear();
+        }
+
+        /// <summary>Manual priority tile for one machine type (its ValidTileType): the backdrop pipes run to this footprint tile instead of the size rule. col/row count from the footprint's top-left tile; a negative number counts from the far side (-1 = last column / bottom row), so (1, -1) is the bottom middle of a 3-wide machine. Call from MachineRegisterationSystem.PostSetupContent.</summary>
+        public void RegisterPriorityTile(int tileType, int col, int row)
+        {
+            priorityTiles[tileType] = new Point(col, row);
         }
 
         public override void OnWorldUnload()
@@ -82,17 +85,11 @@ namespace Factorraria.Common.Liquids
             visible.Clear();
         }
 
-        void DrawBehindTilesPass(On_Main.orig_DrawNPCs orig, Main self, bool behindTiles)
-        {
-            if (behindTiles)
-                DrawBackdrops(Main.spriteBatch);
-
-            orig(self, behindTiles);
-        }
+        // Called by MachineOverhangSystem.DrawPass(false), inside the behind-tiles pass, right before the machines are drawn.
 
         // ------------------------------------------------------------------ work out
 
-        void DrawBackdrops(SpriteBatch spriteBatch)
+        public void DrawBackdrops(SpriteBatch spriteBatch)
         {
             if (Main.dedServ || Main.gameMenu)
                 return;
@@ -226,13 +223,14 @@ namespace Factorraria.Common.Liquids
             int top = machine.cornerPosition.Y;
             int width = machine.MachineWidth;
             int height = machine.MachineHeight;
-            Point goal = new Point(left + (width - 1) / 2, top + (height - 1) / 2);   // the machine's centre tile
+            // The goal (priority tile) is picked per pipe below, see PickGoal.
 
             Dictionary<Point, BackdropTile> byPos = new Dictionary<Point, BackdropTile>();
 
             for (int n = 0; n < attachments.Count; n++)
             {
                 Attachment a = attachments[n];
+                Point goal = PickGoal(machine.ValidTileType, a.Foot, left, top, width, height);
                 List<Point> path = FindPath(a.Foot, a.Dir, left, top, width, height, goal);
                 Point toward = a.Dir.ToOffset();
 
@@ -285,6 +283,66 @@ namespace Factorraria.Common.Liquids
             }
 
             return backdrop;
+        }
+
+        // Where the backdrop pipes of one pipe end: the machine's registered priority tile if it has one, else by footprint size (bottom
+        // tiles first): 2x2 = only the tile the pipe came into; 3x2 = bottom middle; 3x3 = middle; 4x4 = the middle tile (of the middle 2x2)
+        // nearest to where the pipe came in. In general, per axis: odd size = the middle; 2 wide = either column (nearest the entry), 2 high =
+        // the bottom row; 4 or more even = the two middle ones (nearest the entry). Ties go to the lower, then the left tile.
+        Point PickGoal(int tileType, Point foot, int left, int top, int width, int height)
+        {
+            if (priorityTiles.TryGetValue(tileType, out Point manual))
+            {
+                int col = manual.X < 0 ? width + manual.X : manual.X;
+                int row = manual.Y < 0 ? height + manual.Y : manual.Y;
+                return new Point(left + Math.Clamp(col, 0, width - 1), top + Math.Clamp(row, 0, height - 1));
+            }
+
+            if (width == 2 && height == 2)
+                return foot;
+
+            AxisCandidates(width, false, out int colFirst, out int colLast);
+            AxisCandidates(height, true, out int rowFirst, out int rowLast);
+
+            int footCol = foot.X - left;
+            int footRow = foot.Y - top;
+            Point best = new Point(colFirst, rowLast);
+            int bestDistance = int.MaxValue;
+            for (int row = rowLast; row >= rowFirst; row--)
+            {
+                for (int col = colFirst; col <= colLast; col++)
+                {
+                    int distance = Math.Abs(col - footCol) + Math.Abs(row - footRow);
+                    if (distance < bestDistance)
+                    {
+                        bestDistance = distance;
+                        best = new Point(col, row);
+                    }
+                }
+            }
+
+            return new Point(left + best.X, top + best.Y);
+        }
+
+        // The tiles of one axis a pipe may run to: size 1 or odd = the middle; 2 = the bottom one (bottomBias, the vertical axis) or both;
+        // 4 or more even = the two middle ones.
+        static void AxisCandidates(int size, bool bottomBias, out int first, out int last)
+        {
+            if (size % 2 == 1)
+            {
+                first = size / 2;
+                last = size / 2;
+            }
+            else if (size == 2)
+            {
+                first = bottomBias ? 1 : 0;
+                last = 1;
+            }
+            else
+            {
+                first = size / 2 - 1;
+                last = size / 2;
+            }
         }
 
         // Cheapest route inside the footprint rectangle from start to goal, 4 directions, every tile costs 1 and every change of direction
