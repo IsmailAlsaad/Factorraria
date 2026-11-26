@@ -131,7 +131,8 @@ namespace Factorraria.Common.Knowledge
 
                 .AddArt("ShimmerStatue", weight: 1f)   // the Shimmer Statue art (registered in RecipeArtDefinitions)
                 .AddArt("Trains", weight: 2f)          // the Trains art (registered in RecipeArtDefinitions)
-                .AddArt("Power", weight: 4f);           // the Power art (registered in RecipeArtDefinitions)
+                .AddArt("Power", weight: 4f)           // the Power art (registered in RecipeArtDefinitions)
+                .AddArt("Extraction", weight: 3f);       // the Extraction art (registered in RecipeArtDefinitions)
             // The Decay Chamber item (Lesion Station) is a hand-craft at the Demon Altar (RecipeSystem.cs), so no machine book has it. It is in
             // the pool through the vanilla Demon Altar tab (VanillaStationBooks): "VanillaDemonAltar" is that tab's catalog name.
         }

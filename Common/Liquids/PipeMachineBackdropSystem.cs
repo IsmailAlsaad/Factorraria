@@ -25,9 +25,11 @@ namespace Factorraria.Common.Liquids
     // normal tile, not darkened. Swell: the wave of the pipe that touches the machine carries on into the backdrop pipes
     // (PipeFlowVisualSystem.TryGetBackdropScale), so the animation flows through them.
     //
-    // Drawing: MachineOverhangSystem's behind-tiles pass calls DrawBackdrops right before it draws the machines' canvases (the machines
-    // are drawn in that same pass, so the order has to be fixed: a second DrawNPCs hook of its own ran in an order nobody controls, and the
-    // pipes came out over the machine). It draws into the SpriteBatch vanilla already has open there.
+    // Drawing: never in a pass of its own. Whatever draws the machine draws its backdrop first, so the order between the two cannot go
+    // wrong: MachineOverhangSystem calls DrawMachine right before a canvas machine's art (behind or in front pass, wherever that art goes),
+    // and MachineVisualOverride.PreDraw calls DrawCell for every other machine, one tile at a time, right before that tile's art.
+    //
+    // The end of a path (the priority tile) is a cap: it is open only on the sides pipes arrive from, never onward.
     public class PipeMachineBackdropSystem : ModSystem
     {
         // ---- Tuning (expression-bodied properties on purpose: hot reload replaces a body, not a field initializer) ----
@@ -49,7 +51,9 @@ namespace Factorraria.Common.Liquids
         sealed class Backdrop
         {
             public int Signature;
+            public uint Stamp;   // the tick it was last checked against the pipes around the machine
             public readonly List<BackdropTile> Tiles = new List<BackdropTile>();
+            public Dictionary<Point, BackdropTile> ByCell = new Dictionary<Point, BackdropTile>();
         }
 
         struct Attachment
@@ -61,7 +65,6 @@ namespace Factorraria.Common.Liquids
         }
 
         readonly Dictionary<Point16, Backdrop> backdrops = new Dictionary<Point16, Backdrop>();
-        readonly List<Backdrop> visible = new List<Backdrop>();
         readonly List<Attachment> attachments = new List<Attachment>();
         int lastPruneTick;
 
@@ -82,83 +85,90 @@ namespace Factorraria.Common.Liquids
         public override void OnWorldUnload()
         {
             backdrops.Clear();
-            visible.Clear();
         }
 
-        // Called by MachineOverhangSystem.DrawPass(false), inside the behind-tiles pass, right before the machines are drawn.
-
-        // ------------------------------------------------------------------ work out
-
-        public void DrawBackdrops(SpriteBatch spriteBatch)
+        // The cached backdrop of a machine, checked against the pipes around it once per tick. Null when it has nothing to draw for.
+        Backdrop GetBackdrop(BaseMachine machine)
         {
-            if (Main.dedServ || Main.gameMenu)
-                return;
+            if (Main.dedServ || Main.gameMenu || machine is MotorTileEntityBase || !machine.HasLiquidPorts || !machine.InitializeGeometry())
+                return null;
 
-            if ((int)Main.GameUpdateCount - lastPruneTick > PruneIntervalTicks || (int)Main.GameUpdateCount < lastPruneTick)
+            uint now = Main.GameUpdateCount;
+            if ((int)now - lastPruneTick > PruneIntervalTicks || (int)now < lastPruneTick)
             {
-                lastPruneTick = (int)Main.GameUpdateCount;
+                lastPruneTick = (int)now;
                 backdrops.Clear();
             }
 
-            visible.Clear();
-            foreach (TileEntity entity in TileEntity.ByPosition.Values)
+            if (backdrops.TryGetValue(machine.Position, out Backdrop backdrop) && backdrop.Stamp == now)
+                return backdrop;
+
+            CollectAttachments(machine, out int signature);
+            if (backdrop == null || backdrop.Signature != signature)
             {
-                if (entity is not BaseMachine machine || entity is MotorTileEntityBase || !machine.HasLiquidPorts || !machine.InitializeGeometry())
-                    continue;
-
-                float margin = Math.Max(machine.MachineWidth, machine.MachineHeight) * 16f + 48f;
-                if (!BaseMachine.IsOnScreen(machine.MachineCenter, margin))
-                    continue;
-
-                CollectAttachments(machine, out int signature);
-
-                if (!backdrops.TryGetValue(machine.Position, out Backdrop backdrop) || backdrop.Signature != signature)
-                {
-                    backdrop = Build(machine, signature);
-                    backdrops[machine.Position] = backdrop;
-                }
-
-                if (backdrop.Tiles.Count > 0)
-                    visible.Add(backdrop);
+                backdrop = Build(machine, signature);
+                backdrops[machine.Position] = backdrop;
             }
 
-            if (visible.Count == 0)
+            backdrop.Stamp = now;
+            return backdrop;
+        }
+
+        /// <summary>A machine's whole backdrop, for machines drawn as one canvas (MachineOverhangSystem calls this right before the canvas, in the same pass and batch). Same order as real pipes: the art outside the tile first, then the bodies.</summary>
+        public void DrawMachine(BaseMachine machine, SpriteBatch spriteBatch)
+        {
+            Backdrop backdrop = GetBackdrop(machine);
+            if (backdrop == null || backdrop.Tiles.Count == 0)
                 return;
 
             PipeFlowVisualSystem flow = ModContent.GetInstance<PipeFlowVisualSystem>();
-            TileOverdrawSystem overdraw = ModContent.GetInstance<TileOverdrawSystem>();
-
-            // Same order as real pipes: the art outside the tile first (it sits behind every pipe body), then the bodies.
-            for (int b = 0; b < visible.Count; b++)
+            for (int n = 0; n < backdrop.Tiles.Count; n++)
             {
-                List<BackdropTile> tiles = visible[b].Tiles;
-                for (int n = 0; n < tiles.Count; n++)
-                {
-                    BackdropTile t = tiles[n];
-                    t.Scale = flow.TryGetBackdropScale(t.Pipe, t.Toward, t.Steps, t.Mask, out Vector2 scale) ? scale : Vector2.One;
-                    overdraw.TryDrawCell(spriteBatch, t.PipeType, t.Mask, t.X, t.Y, Lighting.GetColor(t.X, t.Y), t.Scale);
-                }
+                BackdropTile t = backdrop.Tiles[n];
+                PrepareScale(t, flow);
+                DrawOverdraw(t, spriteBatch, Vector2.Zero);
             }
 
-            for (int b = 0; b < visible.Count; b++)
-            {
-                List<BackdropTile> tiles = visible[b].Tiles;
-                for (int n = 0; n < tiles.Count; n++)
-                {
-                    BackdropTile t = tiles[n];
-                    Tile pipeTile = Main.tile[t.Pipe.X, t.Pipe.Y];
-                    if (!pipeTile.HasTile)
-                        continue;
+            for (int n = 0; n < backdrop.Tiles.Count; n++)
+                DrawBody(backdrop.Tiles[n], spriteBatch, Vector2.Zero);
+        }
 
-                    Texture2D texture = Main.instance.TilesRenderer.GetTileDrawTexture(pipeTile, t.Pipe.X, t.Pipe.Y);
-                    if (texture == null)
-                        continue;
+        /// <summary>One tile of a machine's backdrop, for machines drawn tile by tile (MachineVisualOverride.PreDraw calls this for each footprint tile right before that tile's own art). The tile pass draws with vanilla's off-screen offset.</summary>
+        public void DrawCell(BaseMachine machine, int i, int j, SpriteBatch spriteBatch)
+        {
+            Backdrop backdrop = GetBackdrop(machine);
+            if (backdrop == null || backdrop.Tiles.Count == 0 || !backdrop.ByCell.TryGetValue(new Point(i, j), out BackdropTile t))
+                return;
 
-                    Vector2 center = new Vector2(t.X * 16f + 8f, t.Y * 16f + 8f) - Main.screenPosition;
-                    Rectangle source = new Rectangle(t.Mask * 18, 0, 16, 16);   // row 0 = never the windowed art
-                    spriteBatch.Draw(texture, center, source, Lighting.GetColor(t.X, t.Y), 0f, new Vector2(8f, 8f), t.Scale, SpriteEffects.None, 0f);
-                }
-            }
+            Vector2 offset = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
+            PrepareScale(t, ModContent.GetInstance<PipeFlowVisualSystem>());
+            DrawOverdraw(t, spriteBatch, offset);
+            DrawBody(t, spriteBatch, offset);
+        }
+
+        static void PrepareScale(BackdropTile t, PipeFlowVisualSystem flow)
+        {
+            t.Scale = flow.TryGetBackdropScale(t.Pipe, t.Toward, t.Steps, t.Mask, out Vector2 scale) ? scale : Vector2.One;
+        }
+
+        static void DrawOverdraw(BackdropTile t, SpriteBatch spriteBatch, Vector2 offset)
+        {
+            ModContent.GetInstance<TileOverdrawSystem>().TryDrawCell(spriteBatch, t.PipeType, t.Mask, t.X, t.Y, Lighting.GetColor(t.X, t.Y), t.Scale, offset);
+        }
+
+        static void DrawBody(BackdropTile t, SpriteBatch spriteBatch, Vector2 offset)
+        {
+            Tile pipeTile = Main.tile[t.Pipe.X, t.Pipe.Y];
+            if (!pipeTile.HasTile)
+                return;
+
+            Texture2D texture = Main.instance.TilesRenderer.GetTileDrawTexture(pipeTile, t.Pipe.X, t.Pipe.Y);
+            if (texture == null)
+                return;
+
+            Vector2 center = new Vector2(t.X * 16f + 8f, t.Y * 16f + 8f) - Main.screenPosition + offset;
+            Rectangle source = new Rectangle(t.Mask * 18, 0, 16, 16);   // row 0 = never the windowed art
+            spriteBatch.Draw(texture, center, source, Lighting.GetColor(t.X, t.Y), 0f, new Vector2(8f, 8f), t.Scale, SpriteEffects.None, 0f);
         }
 
         // Every pipe tile touching the machine's footprint, plus a signature of them so the paths are only rebuilt when something changed.
@@ -225,7 +235,7 @@ namespace Factorraria.Common.Liquids
             int height = machine.MachineHeight;
             // The goal (priority tile) is picked per pipe below, see PickGoal.
 
-            Dictionary<Point, BackdropTile> byPos = new Dictionary<Point, BackdropTile>();
+            Dictionary<Point, BackdropTile> byPos = backdrop.ByCell;
 
             for (int n = 0; n < attachments.Count; n++)
             {
@@ -268,19 +278,9 @@ namespace Factorraria.Common.Liquids
                 }
             }
 
-            // A dead end opens on its opposite side, exactly like a real pipe with one connection (PipeConnectionHelper.GetOpenSides).
-            for (int n = 0; n < backdrop.Tiles.Count; n++)
-            {
-                BackdropTile t = backdrop.Tiles[n];
-                int bits = (t.Mask & 1) + ((t.Mask >> 1) & 1) + ((t.Mask >> 2) & 1) + ((t.Mask >> 3) & 1);
-                if (bits != 1)
-                    continue;
+            // The last tile of a path keeps only the sides pipes arrive from: nothing continues past it, so it is a cap (one arriving pipe =
+            // a single open side, several = those sides). No auto-opening of the opposite side like a real pipe's dead end.
 
-                if ((t.Mask & 1) != 0) t.Mask |= 2;
-                else if ((t.Mask & 2) != 0) t.Mask |= 1;
-                else if ((t.Mask & 4) != 0) t.Mask |= 8;
-                else t.Mask |= 4;
-            }
 
             return backdrop;
         }
