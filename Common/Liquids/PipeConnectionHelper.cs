@@ -46,9 +46,6 @@ namespace Factorraria.Common.Liquids
         // texture, Half = only the half of the overhang on the side away from the machine (see ClassifyOverdraw).
         public enum OverdrawStyle { Full, None, Half }
 
-        // false = a lone pipe or pump touching a machine draws no overhang at all instead of the far half (switch for finding a drawing bug).
-        public static bool HalfOverhangEnabled => true;
-
         // The rule shared by pipes and pumps. A pump only looks along its axis (front and back, like the flow network); a pipe looks at all 4 sides.
         // pipes = linked pipes (same material) on those sides, machines = BaseMachines with liquid ports on those sides (motors never count).
         //  - 2 or more linked pipes: None.
@@ -100,7 +97,7 @@ namespace Factorraria.Common.Liquids
             if (machines == 1 && pipes == 0)
             {
                 awaySide = new Point(-machineStep.X, -machineStep.Y);
-                return HalfOverhangEnabled ? OverdrawStyle.Half : OverdrawStyle.None;
+                return OverdrawStyle.Half;
             }
 
             return OverdrawStyle.None;

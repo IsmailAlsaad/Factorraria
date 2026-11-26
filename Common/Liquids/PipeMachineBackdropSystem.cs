@@ -37,8 +37,6 @@ namespace Factorraria.Common.Liquids
         // ---- Tuning (expression-bodied properties on purpose: hot reload replaces a body, not a field initializer) ----
         public int TurnPenalty => 2;               // path cost of a corner, on top of 1 per tile: higher = straighter paths
         public int PruneIntervalTicks => 3600;     // cached backdrops of removed machines are dropped this often
-        public bool PumpBackdrops => true;         // false = pumps facing a machine start no bg pipes (patch 5 feature, switch for finding a drawing bug)
-        public bool ClampTileSwell => false;        // tile-by-tile machines: a bg pipe never grows past its own 16x16 cell (a bigger one is drawn over tiles that were already drawn); false = swell fully
 
         sealed class BackdropTile
         {
@@ -58,7 +56,6 @@ namespace Factorraria.Common.Liquids
             public int Signature;
             public uint Stamp;   // the tick it was last checked against the pipes around the machine
             public readonly List<BackdropTile> Tiles = new List<BackdropTile>();
-            public Dictionary<Point, BackdropTile> ByCell = new Dictionary<Point, BackdropTile>();
         }
 
         struct Attachment
@@ -154,24 +151,6 @@ namespace Factorraria.Common.Liquids
                 DrawBody(backdrop.Tiles[n], spriteBatch, Vector2.Zero);
         }
 
-        /// <summary>One tile of a machine's backdrop, for machines drawn tile by tile (MachineVisualOverride.PreDraw calls this for each footprint tile right before that tile's own art). The tile pass draws with vanilla's off-screen offset.</summary>
-        public void DrawCell(BaseMachine machine, int i, int j, SpriteBatch spriteBatch)
-        {
-            Backdrop backdrop = GetBackdrop(machine);
-            if (backdrop == null || backdrop.Tiles.Count == 0 || !backdrop.ByCell.TryGetValue(new Point(i, j), out BackdropTile t))
-                return;
-
-            Vector2 offset = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
-            PrepareScale(t, ModContent.GetInstance<PipeFlowVisualSystem>());
-
-            // This tile's piece goes down before its own art but AFTER the tiles drawn earlier, so a swollen piece (bigger than 16x16) would
-            // be painted over the neighbours' art as lines. Canvas machines draw the whole backdrop before their art, they are not affected.
-            if (ClampTileSwell)
-                t.Scale = new Vector2(Math.Min(t.Scale.X, 1f), Math.Min(t.Scale.Y, 1f));
-
-            DrawBody(t, spriteBatch, offset);
-        }
-
         static void PrepareScale(BackdropTile t, PipeFlowVisualSystem flow)
         {
             t.Scale = flow.TryGetBackdropScale(t.Pipe, t.Toward, t.Steps, t.Mask, out Vector2 scale) ? scale : Vector2.One;
@@ -258,7 +237,7 @@ namespace Factorraria.Common.Liquids
             {
                 // A pump directly facing the machine (its front or back, no pipe between) starts backdrop pipes too, drawn with the pipe of
                 // the pump's material. A pump touching the machine with its side does not (it is not connected there either).
-                if (!PumpBackdrops || !PipeTierRegistry.IsMotorTile(type)
+                if (!PipeTierRegistry.IsMotorTile(type)
                     || !TileEntityHelper.TryGetEntityFromTile(pipe.X, pipe.Y, out TileEntity entity, out _)
                     || !(entity is MotorTileEntityBase pump)
                     || (dir != pump.Facing && dir != pump.Facing.Opposite())
@@ -299,7 +278,7 @@ namespace Factorraria.Common.Liquids
             int height = machine.MachineHeight;
             // The goal (priority tile) is picked per pipe below, see PickGoal.
 
-            Dictionary<Point, BackdropTile> byPos = backdrop.ByCell;
+            Dictionary<Point, BackdropTile> byPos = new Dictionary<Point, BackdropTile>();
 
             for (int n = 0; n < attachments.Count; n++)
             {
