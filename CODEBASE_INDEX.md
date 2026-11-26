@@ -558,7 +558,7 @@ tModLoader/other bases -> project types:
     +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +LastPlacedFacing:Direction[s] +FlowLiquidType:int +FlowIdleTicks:int +FlowIdleLimitTicks:int +FlowMovedThisTick:float +FlowRate:float +FlowRateSmoothing:float +FlowRateStep:float +FlowRateLevel:byte +FlowChunkCount:byte +FlowChunkAccum:float +FlowChunkUnits:float +Update()[ov] #UpdateMotor()[v] +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
 **PipeConnectionHelper.cs** uses: BaseMachine, Direction, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
   static class PipeConnectionHelper
-    +CanConnect(int,int,Direction,int)[s] +HalfOverhangEnabled:bool[s] +ClassifyOverdraw(int,int,int,bool,Direction,out Point)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
+    +CanConnect(int,int,Direction,int)[s] +ClassifyOverdraw(int,int,int,bool,Direction,out Point)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
     enum OverdrawStyle
       {Full, None, Half}
 **PipeFlowVisualSystem.cs** uses: Direction, FuelPipeDust, HoneyPipeDust, LavaPipeDust, LiquidTypeRegistry, MachineVisualOverride, MotorTileEntityBase, OilPipeDust, PipeLiquidDust, PipeTierRegistry, Record, ShimmerPipeDust, VisibleTileScan
@@ -574,11 +574,11 @@ tModLoader/other bases -> project types:
       +Tile:Point +Position:Vector2 +Velocity:Vector2 +Texture:Texture2D +Frame:Rectangle +Tint:Color +Scale:float +Age:int +Life:int
 **PipeMachineBackdropSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, MotorTileEntityBase, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileEntityHelper
   class PipeMachineBackdropSystem : ModSystem
-    +TurnPenalty:int +PruneIntervalTicks:int +PumpBackdrops:bool +ClampTileSwell:bool +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawFromCorner(BaseMachine,int,int,SpriteBatch) +DrawMachine(BaseMachine,SpriteBatch) +DrawCell(BaseMachine,int,int,SpriteBatch)
+    +TurnPenalty:int +PruneIntervalTicks:int +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawFromCorner(BaseMachine,int,int,SpriteBatch) +DrawMachine(BaseMachine,SpriteBatch)
     sealed class BackdropTile
       +X:int +Y:int +Mask:int +PipeType:int +FromMotor:bool +Pipe:Point +Toward:Point +Steps:int +Scale:Vector2
     sealed class Backdrop
-      +Signature:int +Stamp:uint +Tiles:List<BackdropTile> +ByCell:Dictionary<Point, BackdropTile>
+      +Signature:int +Stamp:uint +Tiles:List<BackdropTile>
     struct Attachment
       +Pipe:Point +Dir:Direction +Foot:Point +Type:int +Motor:bool
 **PipeTileBase.cs** uses: Direction, LiquidNetworkSystem, OverdrawStyle, PipeConnectionHelper, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileOverdrawSystem
@@ -1474,7 +1474,7 @@ tModLoader/other bases -> project types:
   class TileOverdrawEntry
     +TileType:int +Texture:Asset<Texture2D> +MarginPx:int +InFront:bool +Select:TileOverdrawSelector +PreviewSelect:TileOverdrawSelector +Scale:TileOverdrawScaler +Crop:TileOverdrawCropper +Warned:bool
   class TileOverdrawSystem : ModSystem
-    +ScanPaddingTiles:int +DefaultMarginPx:int +Load()[ov] +Unload()[ov] +Register(int,string,TileOverdrawSelector,int,bool,TileOverdrawSelector,TileOverdrawScaler,TileOverdrawCropper) +TryDrawCell(SpriteBatch,int,int,int,int,Color,Vector2,Vector2) +PostDrawTiles()[ov]
+    +ScanPaddingTiles:int +DefaultMarginPx:int +Load()[ov] +Unload()[ov] +Register(int,string,TileOverdrawSelector,int,bool,TileOverdrawSelector,TileOverdrawScaler,TileOverdrawCropper) +PostDrawTiles()[ov]
 **VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, Factorraria, FurnaceOffsetConfig, GhostDiagnostics, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem
   class VirtualItemSystem : ModSystem
     +tileItemMap:Dictionary<Point, VirtualItem>[s] +vItemsById:Dictionary<int, VirtualItem>[s] +WorldItemsConverted:int[s] +PlayerPickups:int[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +RepairsMade:int[s] +VerifyVItems()[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +AddReplica(VirtualItem)[s] +TryGetById(int,out VirtualItem)[s] +ForgetId(VirtualItem)[s] +Describe()[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +SyncWorldItem(int,string)[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +ReplaceFilterNetworks(List<KeyValuePair<int, List<Point>>>)[s] +TryGetConveyorFilter(int,int,out int)[s]
