@@ -1,3 +1,4 @@
+using Factorraria.Common.Liquids;
 using Factorraria.Common.Machines;
 using System.Collections.Generic;
 using Terraria;
@@ -13,6 +14,11 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.IceMachine
 
         protected override int InputLiquidCount => 1;
         protected override int OutputSlotCount => 1;
+
+        // The tank takes any water (plain water and every biome variant), on top of whatever the recipes consume.
+        // Only Snow Water matches a recipe (Snow Water -> Slush), so any other water just sits in the tank and nothing crafts.
+        protected override bool AcceptsInputLiquid(int tankIndex, int liquidType) =>
+            LiquidTypeRegistry.IsWater(liquidType) || base.AcceptsInputLiquid(tankIndex, liquidType);
 
         protected override bool CanStartCraft(CustomRecipe recipe)
         {
