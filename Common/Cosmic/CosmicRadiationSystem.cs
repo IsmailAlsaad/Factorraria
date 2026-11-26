@@ -183,7 +183,7 @@ namespace Factorraria.Common.Cosmic
         public float ClientFadeOutStart = 0.8f;
 
         [CosmicParam("When the WHOLE particle (trail, head and halo together) starts to fade out, as a fraction of its lifetime. 0.9 = it fades smoothly over the last tenth of its life and is gone when the trail has drained. 1 = no whole-particle fade (client only).", "fraction")]
-        public float ClientLifeFadeStart = 0.9f;
+        public float ClientLifeFadeStart = 0.7f;
 
         [CosmicParam("Brightness multiplier of the particles and their trails (client only, used from C6).", "x")]
         public float ClientBrightness = 1f;

@@ -24,9 +24,20 @@ namespace Factorraria.Common.UI.RecipeBookUI
             set => Main.LocalPlayer.GetModPlayer<RecipeBookPlayer>().ButtonOffset = value;
         }
 
-        // Used until the player drags the button: captured the first time the inventory draws (per game session), so the button starts at
-        // the fixed reference spot (ButtonX/ButtonY) and follows the defense icon from then on. RecipeBookLayout.ReferenceDefenseY is not used.
-        static Vector2? sessionAnchor;
+        /// <summary>
+        /// Default placement, as an offset from the anchor (the defense icon point). tModLoader puts that point at the LAST drawn accessory
+        /// row, in the equipment column's x. The button goes one row up (the equipment slot before the last one), just left of that row's
+        /// dye slot, and is centered vertically on the slot. Everything is computed from the anchor each frame, so it follows resolution,
+        /// UI scale and the number of accessory slots, and nothing is captured once and kept.
+        /// </summary>
+        static Vector2 DefaultOffset()
+        {
+            float rowPitch = 56f * 0.85f;      // vertical step between accessory rows (tModLoader draws the column at inventoryScale 0.85)
+            float slotSize = 52f * 0.85f;      // one slot's square
+            float rowLeft = 47f * 2f;          // vanity slot is 47px left of the equipment slot, the dye slot 94px (hardcoded in AccessorySlotLoader)
+            float gap = 6f;                    // space between the button and the dye slot
+            return new Vector2(-(rowLeft + gap + RecipeBookLayout.ButtonSize), -rowPitch + (slotSize - RecipeBookLayout.ButtonSize) / 2f);
+        }
 
         bool dragging;
         Vector2 grab;     // mouse position minus the button's top-left when the drag started
@@ -36,17 +47,16 @@ namespace Factorraria.Common.UI.RecipeBookUI
         static uint lastPollTick;
 
         /// <summary>
-        /// Reference point for the button: tModLoader's defense icon. It sits below the LAST DRAWN accessory slot, so it moves down
-        /// when an extra slot appears (Expert/Master worlds, mod slots) and the button moves with it. It also follows window size,
-        /// UI scale and the minimap.
+        /// Reference point for the button: tModLoader's defense icon point. Its Y is the row of the LAST DRAWN accessory slot, so it moves
+        /// down when an extra slot appears (Expert/Master worlds, mod slots) and the button moves with it. It is computed from the
+        /// current window size and UI scale every draw, so it follows them too.
         /// </summary>
         static Vector2 AnchorPoint(Vector2 defense) => defense;
 
-        /// <summary>Forget the dragged position and the session anchor (back to the default placement).</summary>
+        /// <summary>Forget the dragged position (back to the default placement).</summary>
         public static void ResetPosition()
         {
             UserOffset = null;
-            sessionAnchor = null;
         }
 
         public override void Update(GameTime gameTime)
@@ -69,12 +79,9 @@ namespace Factorraria.Common.UI.RecipeBookUI
 
             Vector2 anchor = AnchorPoint(defense);
 
-            if (sessionAnchor == null)
-                sessionAnchor = new Vector2(RecipeBookLayout.ButtonX, RecipeBookLayout.ButtonY) - anchor;
-
             UpdateDrag(anchor);
 
-            Vector2 offset = UserOffset ?? sessionAnchor.Value;
+            Vector2 offset = UserOffset ?? DefaultOffset();
             Button.Left.Set(anchor.X + offset.X, 0f);
             Button.Top.Set(anchor.Y + offset.Y, 0f);
             Button.Recalculate();
