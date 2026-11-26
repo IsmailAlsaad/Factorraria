@@ -558,7 +558,7 @@ tModLoader/other bases -> project types:
     +PumpStrength:float[ab] +PipeEquivalentMaxFlowRate:float[ab] +Facing:Direction +LastPlacedFacing:Direction[s] +FlowLiquidType:int +FlowIdleTicks:int +FlowIdleLimitTicks:int +FlowMovedThisTick:float +FlowRate:float +FlowRateSmoothing:float +FlowRateStep:float +FlowRateLevel:byte +FlowChunkCount:byte +FlowChunkAccum:float +FlowChunkUnits:float +Update()[ov] #UpdateMotor()[v] +Hook_AfterPlacement(int,int,int,int,int,int)[ov] +OnRightClick(int,int)[ov] #WriteSnapshotExtra(BinaryWriter)[ov] #ReadSnapshotExtra(BinaryReader)[ov] #DescribeSnapshotExtra()[ov] #WriteLightExtra(BinaryWriter)[ov] #ReadLightExtra(BinaryReader)[ov] +SaveData(TagCompound)[ov] +LoadData(TagCompound)[ov]
 **PipeConnectionHelper.cs** uses: BaseMachine, Direction, MotorTileEntityBase, PipeTierRegistry, TileEntityHelper
   static class PipeConnectionHelper
-    +CanConnect(int,int,Direction,int)[s] +HalfOverhangEnabled:bool[s] +ClassifyOverdraw(int,int,int,bool,Direction,out Point)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
+    +CanConnect(int,int,Direction,int)[s] +ClassifyOverdraw(int,int,int,bool,Direction,out Point)[s] +GetOpenSides(int,int,out bool,out bool,out bool,out bool,int)[s]
     enum OverdrawStyle
       {Full, None, Half}
 **PipeFlowVisualSystem.cs** uses: Direction, FuelPipeDust, HoneyPipeDust, LavaPipeDust, LiquidTypeRegistry, MachineVisualOverride, MotorTileEntityBase, OilPipeDust, PipeLiquidDust, PipeTierRegistry, Record, ShimmerPipeDust, VisibleTileScan
@@ -574,7 +574,7 @@ tModLoader/other bases -> project types:
       +Tile:Point +Position:Vector2 +Velocity:Vector2 +Texture:Texture2D +Frame:Rectangle +Tint:Color +Scale:float +Age:int +Life:int
 **PipeMachineBackdropSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, MotorTileEntityBase, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileEntityHelper
   class PipeMachineBackdropSystem : ModSystem
-    +TurnPenalty:int +PruneIntervalTicks:int +PumpBackdrops:bool +ClampTileSwell:bool +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawMachine(BaseMachine,SpriteBatch) +DrawCell(BaseMachine,int,int,SpriteBatch)
+    +TurnPenalty:int +PruneIntervalTicks:int +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawMachine(BaseMachine,SpriteBatch) +DrawCell(BaseMachine,int,int,SpriteBatch)
     sealed class BackdropTile
       +X:int +Y:int +Mask:int +PipeType:int +FromMotor:bool +Pipe:Point +Toward:Point +Steps:int +Scale:Vector2
     sealed class Backdrop
