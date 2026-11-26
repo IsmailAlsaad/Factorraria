@@ -65,7 +65,13 @@ namespace Factorraria.Content.Items.Discovery
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string hint = ScrollPools.HintFor(PoolName);
-            if (hint != null) tooltips.Add(new TooltipLine(Mod, "PoolHint", hint));
+            if (hint == null) return;
+
+            // Same order as the Sealed Scroll: the pool notes go right before the item's own "Right click..." line (Tooltip0).
+            var line = new TooltipLine(Mod, "PoolHint", hint);
+            int at = tooltips.FindIndex(t => t.Name == "Tooltip0");
+            if (at >= 0) tooltips.Insert(at, line);
+            else tooltips.Add(line);
         }
 
         // Older Phase 2 parchments saved a "Key" tag; it is ignored, so they become ordinary whole-book parchments.

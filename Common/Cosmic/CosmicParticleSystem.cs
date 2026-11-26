@@ -616,14 +616,15 @@ namespace Factorraria.Common.Cosmic
 
                 float flight = p.Length / p.Speed;
 
-                // Whole-particle fade timing. visibleLife is when the trail would have drained completely (2 ticks before p.Life). The fade lasts
-                // the last (1 - lifeFadeStart) of it, but never less than 20 ticks. From fadeStartAge on, the shape stops moving (geoAge is held) and
-                // only the brightness drops, so the head AND the trail fade all at once instead of the trail still draining. A head that has not
-                // arrived yet keeps flying until it does, then holds.
+                // Whole-particle fade (ClientLifeFadeStart < 1). It REPLACES the trail drain and the old head fade: the head flies to the end of
+                // the ray and stays there with the trail frozen at its full gradient, then head, trail and halo all dim together over the last
+                // fadeTicks of visibleLife (the last (1 - lifeFadeStart) of it, never under 20 ticks). visibleLife is when the trail would have
+                // drained completely (2 ticks before p.Life). ClientLifeFadeStart = 1 gives the old drain + head fade back.
+                bool wholeFade = lifeFadeStart < 1f;
                 float visibleLife = Math.Max(1f, p.Life - 2f);
                 float fadeTicks = Math.Min(visibleLife, Math.Max(visibleLife * (1f - lifeFadeStart), 20f));
-                float fadeStartAge = lifeFadeStart >= 1f ? float.MaxValue : visibleLife - fadeTicks;
-                float geoAge = age > fadeStartAge ? Math.Max(fadeStartAge, Math.Min(age, flight)) : age;
+                float fadeStartAge = wholeFade ? visibleLife - fadeTicks : float.MaxValue;
+                float geoAge = wholeFade ? Math.Min(age, flight) : age;
                 float travelled = geoAge * p.Speed;
                 float head = Math.Min(travelled, p.Length);
                 float tail = Math.Min(Math.Max(0f, travelled - trail), p.Length);
@@ -645,7 +646,9 @@ namespace Factorraria.Common.Cosmic
 
                 // The head's fade: 1 while flying, down to 0 over the end of the flight, 0 once it has arrived. The trail does not use it.
                 float fade = 1f;
-                if (geoAge >= flight)
+                if (wholeFade)
+                    fade = 1f;
+                else if (geoAge >= flight)
                     fade = 0f;
                 else if (geoAge > flight * fadeStart)
                     fade = 1f - Smooth01((geoAge - flight * fadeStart) / (flight - flight * fadeStart));
