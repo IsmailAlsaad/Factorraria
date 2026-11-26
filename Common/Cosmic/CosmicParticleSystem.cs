@@ -621,9 +621,10 @@ namespace Factorraria.Common.Cosmic
                 // fadeTicks of visibleLife (the last (1 - lifeFadeStart) of it, never under 20 ticks). visibleLife is when the trail would have
                 // drained completely (2 ticks before p.Life). ClientLifeFadeStart = 1 gives the old drain + head fade back.
                 bool wholeFade = lifeFadeStart < 1f;
-                float visibleLife = Math.Max(1f, p.Life - 2f);
-                float fadeTicks = Math.Min(visibleLife, Math.Max(visibleLife * (1f - lifeFadeStart), 20f));
-                float fadeStartAge = wholeFade ? visibleLife - fadeTicks : float.MaxValue;
+                float fadeTicks = Math.Max(0.01f, flight * (1f - lifeFadeStart));
+                float fadeStartAge = wholeFade ? flight - fadeTicks : float.MaxValue;
+                if (wholeFade && age >= flight)
+                    continue;   // fully faded on arrival, nothing left to draw
                 float geoAge = wholeFade ? Math.Min(age, flight) : age;
                 float travelled = geoAge * p.Speed;
                 float head = Math.Min(travelled, p.Length);
