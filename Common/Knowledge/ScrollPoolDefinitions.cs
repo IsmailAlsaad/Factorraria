@@ -77,7 +77,15 @@ namespace Factorraria.Common.Knowledge
                 .AddArt("Thunder cloud", weight: 1f)
                 .AddArt("Cascade", weight: 1f);
 
-            ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a factory.")
+            ScrollPools.Define("SnowChests", "Frost covers the notes on the paper")
+                // Solidifier
+                .Add("Solidifier", ItemID.SlushBlock);
+
+            ScrollPools.Define("DesertChests", "The words are covered in sand and dust")
+                // Solidifier
+                .Add("Solidifier", ItemID.FossilOre);
+
+            ScrollPools.Define("Default", "Notes scribbled by someone who knew their way around a factory")
                 // Hellforge
                 .Add("Hellforge", ItemID.Meteorite)                                   // meteorite ore
                 .Add("Hellforge", ModContent.ItemType<SteelBarItem>(), weight: 2f)
@@ -105,6 +113,9 @@ namespace Factorraria.Common.Knowledge
 
                 // Harvester box
                 .Add("Autohammer", ModContent.ItemType<BlinkrootHarvesterBoxItem>())
+                
+                // Solidifier
+                .Add("Solidifier", ItemID.SiltBlock)
 
                 // Mechanical Assembler
                 .Add("MechanicalAssembler", ModContent.ItemType<SimpleCircuitItem>(), weight: 5f)
