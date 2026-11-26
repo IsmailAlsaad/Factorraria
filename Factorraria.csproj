@@ -13,9 +13,6 @@
 		<Reference Include="ModLiquidLib">
 			<HintPath>..\ModAssemblies\ModLiquidLib_v2026.10.0.0.dll</HintPath>
 		</Reference>
-		<Reference Include="Luminance">
-			<HintPath>..\ModAssemblies\Luminance_v1.0.14.dll</HintPath>
-		</Reference>
 		<Reference Include="IsmailsWeaponReworks">
 			<HintPath>..\ModAssemblies\IsmailsWeaponReworks_v0.1.dll</HintPath>
 		</Reference>

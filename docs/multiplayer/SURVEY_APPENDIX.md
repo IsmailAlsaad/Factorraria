@@ -602,10 +602,10 @@ Decisions carried over: world-shared recipe knowledge; server-authoritative cart
 ## Findings
 
 ### S1 (L) `build.txt` and dependencies
-`build.txt` sets no `side`, so the default (`Both`) applies: server and every client must have the mod, which is what this design needs. `modReferences = ModLiquidLib, Luminance` means both must also be present on a dedicated server. The `.csproj` reference paths (`..\ModAssemblies\...`) are local build paths and are not a runtime concern. `buildIgnore` already excludes `tools\*`, the indexer, the index and patch scripts from the `.tmod`.
+`build.txt` sets no `side`, so the default (`Both`) applies: server and every client must have the mod, which is what this design needs. `modReferences = ModLiquidLib, IsmailsWeaponReworks` means both must also be present on a dedicated server. The `.csproj` reference paths (`..\ModAssemblies\...`) are local build paths and are not a runtime concern. `buildIgnore` already excludes `tools\*`, the indexer, the index and patch scripts from the `.tmod`.
 
 ### S2 (M) Third-party mod compatibility in MP
-Two things to confirm in the roadmap's verification phase: (1) ModLiquidLib synchronizes custom liquid types in tile/section data and in `NetMessage.sendWater`, which pipe and cart liquid broadcasts (steps 6, 7) depend on; (2) Luminance is only used as a library (no netcode of the mod relies on it). If ModLiquidLib needs extra calls for custom liquid sync, they belong in the liquid phase.
+One thing to confirm in the roadmap's verification phase: ModLiquidLib synchronizes custom liquid types in tile/section data and in `NetMessage.sendWater`, which pipe and cart liquid broadcasts (steps 6, 7) depend on. If ModLiquidLib needs extra calls for custom liquid sync, they belong in the liquid phase.
 
 ### S3 (L) Testing setup already exists
 `Properties/launchSettings.json` already has a **TerrariaServer** profile next to the normal Terraria one, so a dedicated server can be launched straight from Visual Studio for testing. A realistic test needs a server plus two clients; I could not verify the exact flags for running a second local tModLoader instance (a separate save directory is needed), so that is a "verify" item for the first test session.
