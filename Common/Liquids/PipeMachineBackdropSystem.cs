@@ -139,9 +139,20 @@ namespace Factorraria.Common.Liquids
                 if (!BaseMachine.IsOnScreen(machine.MachineCenter, margin))
                     continue;
 
+                if (DebugMarker)
+                {
+                    Rectangle area = new Rectangle(machine.cornerPosition.X * 16 - (int)Main.screenPosition.X, machine.cornerPosition.Y * 16 - (int)Main.screenPosition.Y, machine.MachineWidth * 16, machine.MachineHeight * 16);
+                    spriteBatch.Draw(TextureAssets.MagicPixel.Value, area, new Rectangle(0, 0, 1, 1), Color.Red);
+                }
+
                 DrawMachine(machine, spriteBatch);
             }
         }
+
+        // DIAGNOSTIC: true = a red rectangle over the whole footprint of every per-tile machine with liquid ports, drawn in DrawBehind right before the
+        // backdrop pipes. Red ON TOP of a machine's sprite = the behind-tiles pass runs after that machine's tile; red only in the transparent
+        // parts (or hidden) = the pass is really before the tiles. Set to false (or remove) once the draw order is understood.
+        public bool DebugMarker => true;
 
         /// <summary>A machine's whole backdrop, for machines drawn as one canvas (MachineOverhangSystem calls this right before the canvas, in the same pass and batch). Same order as real pipes: the art outside the tile first, then the bodies.</summary>
         public void DrawMachine(BaseMachine machine, SpriteBatch spriteBatch)

@@ -574,7 +574,7 @@ tModLoader/other bases -> project types:
       +Tile:Point +Position:Vector2 +Velocity:Vector2 +Texture:Texture2D +Frame:Rectangle +Tint:Color +Scale:float +Age:int +Life:int
 **PipeMachineBackdropSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, MachineVisualDefinition, MachineVisualRegistry, MotorTileEntityBase, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileEntityHelper
   class PipeMachineBackdropSystem : ModSystem
-    +TurnPenalty:int +PruneIntervalTicks:int +PumpBackdrops:bool +ClampTileSwell:bool +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawBehind(SpriteBatch) +DrawMachine(BaseMachine,SpriteBatch) +DrawCell(BaseMachine,int,int,SpriteBatch)
+    +TurnPenalty:int +PruneIntervalTicks:int +PumpBackdrops:bool +ClampTileSwell:bool +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawBehind(SpriteBatch) +DebugMarker:bool +DrawMachine(BaseMachine,SpriteBatch) +DrawCell(BaseMachine,int,int,SpriteBatch)
     sealed class BackdropTile
       +X:int +Y:int +Mask:int +PipeType:int +FromMotor:bool +Pipe:Point +Toward:Point +Steps:int +Scale:Vector2
     sealed class Backdrop
