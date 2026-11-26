@@ -26,7 +26,6 @@
             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Thunder cloud");
             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Trains");
             RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Power");
-            RecipeArtRegistry.Register("Factorraria/Content/RecipeArt/Extraction");
         }
     }
 }

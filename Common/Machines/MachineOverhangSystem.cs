@@ -62,6 +62,10 @@ namespace Factorraria.Common.Machines
             SpriteBatch spriteBatch = Main.spriteBatch;
             bool batchBegun = false;
 
+            // The pipes that fill the gap between a pipe and a machine's sprite go first, so the machine canvases below are drawn over them.
+            if (!front)
+                ModContent.GetInstance<global::Factorraria.Common.Liquids.PipeMachineBackdropSystem>().DrawBackdrops(spriteBatch);
+
             foreach (TileEntity entity in TileEntity.ByPosition.Values)
             {
                 if (entity is not BaseMachine machine)
@@ -126,9 +130,6 @@ namespace Factorraria.Common.Machines
                         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
                     batchBegun = true;
                 }
-
-                // The pipes that fill the gap between a pipe and this machine's sprite go down right before the sprite, in the same batch.
-                ModContent.GetInstance<global::Factorraria.Common.Liquids.PipeMachineBackdropSystem>().DrawMachine(machine, spriteBatch);
 
                 DrawCanvasCells(spriteBatch, texture, canvas, worldTopLeft, frameY, color, machine.VisualStyle);
                 if (drawLiquid)
