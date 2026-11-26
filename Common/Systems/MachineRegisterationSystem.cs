@@ -24,6 +24,7 @@ using Factorraria.Content.Tiles.Machines.ElectricalConsumers.PowerPoles;
 using Factorraria.Content.Tiles.SuperWeapons.MissileTank;
 using Factorraria.Common.Harvester;
 using Factorraria.Content.Tiles.Machines.ElectricalConsumers.HarvesterBox;
+using Factorraria.Common.Crafting;
 
 namespace Factorraria.Common.Machines
 {
@@ -253,7 +254,7 @@ namespace Factorraria.Common.Machines
             // halved and rounded up to 0.5 s (TimedCraftingSystem.GetMachineDurationTicks), so the recipe book always has a time to show.
             // Runs on every load on every peer, nothing is saved or synced. If two machines ever share one book, the first machine found wins
             // (none do today).
-            Factorraria.Common.Crafting.TimedCraftingSystem timedCrafting = ModContent.GetInstance<Factorraria.Common.Crafting.TimedCraftingSystem>();
+            TimedCraftingSystem timedCrafting = ModContent.GetInstance<TimedCraftingSystem>();
             int machinesWithRecipes = 0;
             foreach (BaseMachine machine in ModContent.GetContent<BaseMachine>())
             {
