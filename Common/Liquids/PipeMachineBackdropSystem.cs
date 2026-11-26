@@ -27,9 +27,9 @@ namespace Factorraria.Common.Liquids
     // (PipeFlowVisualSystem.TryGetBackdropScale), so the animation flows through them.
     //
     // Drawing: machines drawn as one canvas (MachineOverhangSystem) get DrawMachine right before their art, in the same pass and batch.
-    // Every other machine (drawn tile by tile in the tile pass) gets its whole backdrop from DrawBehind, called at the start of the
-    // behind-tiles pass: that pass runs before any tile, so no tile's art can ever be covered by a backdrop piece (drawing a piece in
-    // each tile's PreDraw put it over the art of tiles drawn earlier).
+    // Every other machine (drawn tile by tile in the tile pass) gets its whole backdrop from DrawFromCorner, called by PreDraw of the
+    // machine's top-left tile: every draw order reaches that tile first, so the pipes sit under all of the machine's art. (The behind-tiles
+    // pass is NOT before non-solid tiles like machines, and a piece per tile went over the art of tiles drawn before it.)
     //
     // The end of a path (the priority tile) is a cap: it is open only on the sides pipes arrive from, never onward.
     public class PipeMachineBackdropSystem : ModSystem
@@ -120,39 +120,21 @@ namespace Factorraria.Common.Liquids
             return backdrop;
         }
 
-        /// <summary>The backdrops of every machine drawn tile by tile, for the behind-tiles pass (MachineOverhangSystem.DrawPass(false) calls this first, inside the SpriteBatch vanilla has open there). Canvas machines draw their own through DrawMachine.</summary>
-        public void DrawBehind(SpriteBatch spriteBatch)
+        /// <summary>The whole backdrop of a machine drawn tile by tile, for MachineVisualOverride.PreDraw. It draws only when called for the machine's top-left tile, which every tile draw order reaches before the machine's other tiles, so the pipes end up under all of the machine's art. (One piece per tile went over the art of tiles drawn before it, and the behind-tiles pass runs after non-solid tiles such as machines.) The tile pass draws with vanilla's off-screen offset.</summary>
+        public void DrawFromCorner(BaseMachine machine, int i, int j, SpriteBatch spriteBatch)
         {
-            if (Main.dedServ || Main.gameMenu)
+            Backdrop backdrop = GetBackdrop(machine);
+            if (backdrop == null || backdrop.Tiles.Count == 0 || i != machine.cornerPosition.X || j != machine.cornerPosition.Y)
                 return;
 
-            foreach (TileEntity entity in TileEntity.ByPosition.Values)
-            {
-                if (!(entity is BaseMachine machine) || machine is MotorTileEntityBase || !machine.HasLiquidPorts || !machine.InitializeGeometry())
-                    continue;
+            Vector2 offset = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
+            PipeFlowVisualSystem flow = ModContent.GetInstance<PipeFlowVisualSystem>();
+            for (int n = 0; n < backdrop.Tiles.Count; n++)
+                PrepareScale(backdrop.Tiles[n], flow);
 
-                Tile corner = Framing.GetTileSafely(machine.Position.X, machine.Position.Y);
-                if (corner.HasTile && MachineVisualRegistry.Definitions.TryGetValue(corner.TileType, out MachineVisualDefinition def) && def.Canvas != null)
-                    continue;
-
-                float margin = Math.Max(machine.MachineWidth, machine.MachineHeight) * 16f + 48f;
-                if (!BaseMachine.IsOnScreen(machine.MachineCenter, margin))
-                    continue;
-
-                if (DebugMarker)
-                {
-                    Rectangle area = new Rectangle(machine.cornerPosition.X * 16 - (int)Main.screenPosition.X, machine.cornerPosition.Y * 16 - (int)Main.screenPosition.Y, machine.MachineWidth * 16, machine.MachineHeight * 16);
-                    spriteBatch.Draw(TextureAssets.MagicPixel.Value, area, new Rectangle(0, 0, 1, 1), Color.Red);
-                }
-
-                DrawMachine(machine, spriteBatch);
-            }
+            for (int n = 0; n < backdrop.Tiles.Count; n++)
+                DrawBody(backdrop.Tiles[n], spriteBatch, offset);
         }
-
-        // DIAGNOSTIC: true = a red rectangle over the whole footprint of every per-tile machine with liquid ports, drawn in DrawBehind right before the
-        // backdrop pipes. Red ON TOP of a machine's sprite = the behind-tiles pass runs after that machine's tile; red only in the transparent
-        // parts (or hidden) = the pass is really before the tiles. Set to false (or remove) once the draw order is understood.
-        public bool DebugMarker => true;
 
         /// <summary>A machine's whole backdrop, for machines drawn as one canvas (MachineOverhangSystem calls this right before the canvas, in the same pass and batch). Same order as real pipes: the art outside the tile first, then the bodies.</summary>
         public void DrawMachine(BaseMachine machine, SpriteBatch spriteBatch)

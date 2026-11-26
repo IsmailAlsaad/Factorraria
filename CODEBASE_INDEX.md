@@ -4,7 +4,7 @@ generated 2026-11-26 | 462 .cs files | regenerate: `python index_codebase.py` (p
 Legend: `+` public `#` protected `~` internal | s=static ab=abstract v=virtual ov=override c=const | `Name(Types)` method, `Name:Type` field/prop | `uses:` other project types used in file | `ns!=X` namespace differs from folder path (matters for `using`) | no line numbers: grep the name | private members and SetDefaults/SetStaticDefaults omitted
 
 ## Most-referenced types (files referencing them)
-FactorrariaNet(91) BaseMachine(61) FactorrariaPacket(42) PacketDirection(36) LiquidTypeRegistry(35) Factorraria(28) RecipeBook(26) Cart(23) MachineUIStateBase(20) TileEntityHelper(19) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) LiquidStack(17) CartSystem(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) MachineVisualRegistry(15) CartModule(15)
+FactorrariaNet(91) BaseMachine(61) FactorrariaPacket(42) PacketDirection(36) LiquidTypeRegistry(35) Factorraria(28) RecipeBook(26) Cart(23) MachineUIStateBase(20) TileEntityHelper(19) MachineUIElementEntry(18) JoinSync(18) CustomRecipe(18) LiquidStack(17) CartSystem(17) VirtualItemSystem(16) RecipeCatalog(16) Entry(16) CartModule(15) RecipeKnowledgeSystem(14)
 
 ## Inheritance
 Project bases -> derived:
@@ -572,9 +572,9 @@ tModLoader/other bases -> project types:
     +ChunkUnits:float +BallSpeedTilesPerSecond:float +BallMinSpacingTiles:float +SyncGain:float +SyncDeadbandTicks:float +SyncMaxStep:float +RateHoldFraction:float +BallLengthTiles:float +SwellAmount:float +SqueezeAmount:float +MotorSwellMultiplier:float +RebuildIntervalTicks:int +MaxWalkPipes:int +MaxRangeTiles:float +FadePerTick:float +OpenEndParticlesPerUnit:float +LeakChancePerTick:float +LeakBurstMin:int +LeakBurstMax:int +WindowParticlesPerUnit:float +MaxParticlesPerTick:int +ParticleScaleMin:float +ParticleScaleMax:float +OpenEndSpeedMin:float +OpenEndSpeedMax:float +LeakSpeedMin:float +LeakSpeedMax:float +WindowSpeedMin:float +WindowSpeedMax:float +WindowScaleMultiplier:float +MaxWindowParticles:int +TintedDustTransparency:float +WaterDustTransparency:float +DustColorFor(string) +CustomDustTransparency:float +PipeDustTypeFor(string) +WindowHorizontal:Rectangle +WindowVertical:Rectangle +Unload()[ov] +OnWorldUnload()[ov] +GetTileScale(int,int,Tile) +PostUpdateEverything()[ov] +TryGetBackdropScale(Point,Point,int,int,out Vector2) +PostDrawTiles()[ov]
     struct WindowParticle
       +Tile:Point +Position:Vector2 +Velocity:Vector2 +Texture:Texture2D +Frame:Rectangle +Tint:Color +Scale:float +Age:int +Life:int
-**PipeMachineBackdropSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, MachineVisualDefinition, MachineVisualRegistry, MotorTileEntityBase, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileEntityHelper
+**PipeMachineBackdropSystem.cs** uses: BaseMachine, Direction, DirectionExtensions, MotorTileEntityBase, PipeFlowVisualSystem, PipeMaterial, PipeTierRegistry, TileEntityHelper
   class PipeMachineBackdropSystem : ModSystem
-    +TurnPenalty:int +PruneIntervalTicks:int +PumpBackdrops:bool +ClampTileSwell:bool +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawBehind(SpriteBatch) +DebugMarker:bool +DrawMachine(BaseMachine,SpriteBatch) +DrawCell(BaseMachine,int,int,SpriteBatch)
+    +TurnPenalty:int +PruneIntervalTicks:int +PumpBackdrops:bool +ClampTileSwell:bool +Unload()[ov] +RegisterPriorityTile(int,int,int) +OnWorldUnload()[ov] +DrawFromCorner(BaseMachine,int,int,SpriteBatch) +DrawMachine(BaseMachine,SpriteBatch) +DrawCell(BaseMachine,int,int,SpriteBatch)
     sealed class BackdropTile
       +X:int +Y:int +Mask:int +PipeType:int +FromMotor:bool +Pipe:Point +Toward:Point +Steps:int +Scale:Vector2
     sealed class Backdrop
@@ -680,7 +680,7 @@ tModLoader/other bases -> project types:
 **MachineTransitionSystem.cs** uses: BaseMachine, MachineVisualDefinition, MachineVisualRegistry
   class MachineTransitionSystem : ModSystem
     +PostUpdateEverything()[ov]
-**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, FactorrariaNet, FurnaceOffsetConfig, IMachineTileUnderlay, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, PipeFlowVisualSystem, TileEntityHelper
+**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, FactorrariaNet, FurnaceOffsetConfig, IMachineTileUnderlay, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, PipeFlowVisualSystem, PipeMachineBackdropSystem, TileEntityHelper
   enum MachineTransition : byte
     {None, Startup, Shutdown}
   class LiquidOverlayLayer
