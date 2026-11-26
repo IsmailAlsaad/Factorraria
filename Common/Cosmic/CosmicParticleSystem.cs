@@ -594,7 +594,7 @@ namespace Factorraria.Common.Cosmic
             float sizeMax = Math.Max(0.5f, system.ClientHeadSizeMaxPx);
             float growTicks = Math.Max(0f, system.ClientHeadGrowTicks);
             float fadeStart = Math.Clamp(system.ClientFadeOutStart, 0f, 1f);
-            float lifeFadeStart = Math.Clamp(system.ClientLifeFadeStart, 0f, 0.999f);
+            float lifeFadeStart = Math.Clamp(system.ClientLifeFadeStart, 0f, 1f);
             float colorSteps = Math.Max(1, CosmicColors.Count - 1);
 
             // C10: the halo. One soft additive quad behind each head; its size follows the head's (so it grows in with the spawn), its brightness
@@ -615,7 +615,16 @@ namespace Factorraria.Common.Cosmic
                     continue;   // C10: an ambient child of a split starts at a tick that has not come yet
 
                 float flight = p.Length / p.Speed;
-                float travelled = age * p.Speed;
+
+                // Whole-particle fade timing. visibleLife is when the trail would have drained completely (2 ticks before p.Life). The fade lasts
+                // the last (1 - lifeFadeStart) of it, but never less than 20 ticks. From fadeStartAge on, the shape stops moving (geoAge is held) and
+                // only the brightness drops, so the head AND the trail fade all at once instead of the trail still draining. A head that has not
+                // arrived yet keeps flying until it does, then holds.
+                float visibleLife = Math.Max(1f, p.Life - 2f);
+                float fadeTicks = Math.Min(visibleLife, Math.Max(visibleLife * (1f - lifeFadeStart), 20f));
+                float fadeStartAge = lifeFadeStart >= 1f ? float.MaxValue : visibleLife - fadeTicks;
+                float geoAge = age > fadeStartAge ? Math.Max(fadeStartAge, Math.Min(age, flight)) : age;
+                float travelled = geoAge * p.Speed;
                 float head = Math.Min(travelled, p.Length);
                 float tail = Math.Min(Math.Max(0f, travelled - trail), p.Length);
                 if (tail >= p.Length)
@@ -636,19 +645,16 @@ namespace Factorraria.Common.Cosmic
 
                 // The head's fade: 1 while flying, down to 0 over the end of the flight, 0 once it has arrived. The trail does not use it.
                 float fade = 1f;
-                if (age >= flight)
+                if (geoAge >= flight)
                     fade = 0f;
-                else if (age > flight * fadeStart)
-                    fade = 1f - Smooth01((age - flight * fadeStart) / (flight - flight * fadeStart));
+                else if (geoAge > flight * fadeStart)
+                    fade = 1f - Smooth01((geoAge - flight * fadeStart) / (flight - flight * fadeStart));
 
                 // Whole-particle fade: trail, head and halo all dim together over the last (1 - lifeFadeStart) of the lifetime. The visible life ends
                 // 2 ticks before p.Life (the trail has drained by then, see the tail >= Length skip above), so the fade is timed to that.
                 float lifeFade = 1f;
-                float visibleLife = Math.Max(1f, p.Life - 2f);
-                float fadeTicks = Math.Max(visibleLife * (1f - lifeFadeStart), 20f);
-                float lifeFadeAt = visibleLife - fadeTicks;
-                if (age > lifeFadeAt)
-                    lifeFade = 1f - Smooth01((age - lifeFadeAt) / fadeTicks);
+                if (age > fadeStartAge)
+                    lifeFade = 1f - Smooth01((age - fadeStartAge) / fadeTicks);
                 fade *= lifeFade;
 
                 Color baseColor = CosmicColors.DrawColor((CosmicColor)p.Color);
