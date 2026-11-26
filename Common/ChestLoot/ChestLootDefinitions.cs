@@ -1,9 +1,12 @@
-﻿using Terraria;
-using Terraria.ID;
-using Terraria.Utilities;
-using Terraria.ModLoader;
+﻿using Factorraria.Content.Items.Discovery;
 using Factorraria.Content.Items.Materials;
-using Factorraria.Content.Items.Discovery;
+using System.Threading.Channels;
+using Terraria;
+using Terraria.GameContent.Events;
+using Terraria.ID;
+using Terraria.ModLoader;
+using Terraria.UI;
+using Terraria.Utilities;
 
 namespace Factorraria.Common.ChestLoot
 {
@@ -76,7 +79,12 @@ namespace Factorraria.Common.ChestLoot
             // Change the chance here. Change WHAT the scroll can teach in ScrollPoolDefinitions.DefaultPool().
             // Later, themed rules (e.g. "dungeon chest holding weapon X -> swap it for a scroll of pool Z") go below this line
             // as extra rules: ChestLootRegistry.For(...).Where(...).Remove(item).Custom((chest, rand) => AddScroll(chest, rand, 1f, "Z"));
-            ChestLootRegistry.ForAll().Custom((chest, rand) => AddScroll(chest, rand, 0.8f, "Default"));
+            // Snow(Frozen) and desert(Sandstone) chests get their own themed scroll INSTEAD of the Default one(same chance).
+            // Those pools fall back to "Default" once used up, so nothing is lost. Desert chest = Containers2 style 10 (check with LogFoundChests).
+            ChestLootRegistry.ForMatching((tile, style) => !IsSnowChest(tile, style) && !IsDesertChest(tile, style))
+                .Custom((chest, rand) => AddScroll(chest, rand, 0.8f, "Default"));
+            ChestLootRegistry.For(TileID.Containers, (int)VanillaChest.Frozen).Custom((chest, rand) => AddScroll(chest, rand, 0.8f, "SnowChests"));
+            ChestLootRegistry.For(TileID.Containers2, DesertChestStyle).Custom((chest, rand) => AddScroll(chest, rand, 0.8f, "DesertChests"));
 
             // RECIPE DISCOVERY: sealed scrolls. Chances are first-pass numbers, tune them in the polish phase.
             // Only NEW worlds get these (loot rules run after worldgen). Existing worlds: use "/recipes scroll".
@@ -89,6 +97,11 @@ namespace Factorraria.Common.ChestLoot
             //ChestLootRegistry.For(VanillaChest.GoldLocked).Custom((chest, rand) => AddScroll(chest, rand, 0.35f, "Dungeon"));
             // Register pools in ScrollPoolDefinitions.cs
         }
+
+        private static int DesertChestStyle = 10;   // Sandstone Chest = TileID.Containers2 style 10
+
+        private static bool IsSnowChest(int tile, int style) => tile == TileID.Containers && style == (int)VanillaChest.Frozen;
+        private static bool IsDesertChest(int tile, int style) => tile == TileID.Containers2 && style == DesertChestStyle;
 
         /// <summary>
         /// Adds one Sealed Scroll of the given pool (null = whole book) to the chest's first empty slot with the given chance.
