@@ -182,6 +182,9 @@ namespace Factorraria.Common.Cosmic
         [CosmicParam("When the head of a particle starts to fade out, as a fraction of its flight time (ray length / speed). 0.8 = the head fades smoothly over the last fifth of the flight and is invisible on arrival. The trail does not fade: it stays where it is and drains away from its rear end until it has caught up with the spot where the head died. 1 = the head vanishes on arrival (client only, C9e).", "fraction")]
         public float ClientFadeOutStart = 0.8f;
 
+        [CosmicParam("When the WHOLE particle (trail, head and halo together) starts to fade out, as a fraction of its lifetime. 0.9 = it fades smoothly over the last tenth of its life and is gone when the trail has drained. 1 = no whole-particle fade (client only).", "fraction")]
+        public float ClientLifeFadeStart = 0.9f;
+
         [CosmicParam("Brightness multiplier of the particles and their trails (client only, used from C6).", "x")]
         public float ClientBrightness = 1f;
 

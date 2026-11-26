@@ -594,6 +594,7 @@ namespace Factorraria.Common.Cosmic
             float sizeMax = Math.Max(0.5f, system.ClientHeadSizeMaxPx);
             float growTicks = Math.Max(0f, system.ClientHeadGrowTicks);
             float fadeStart = Math.Clamp(system.ClientFadeOutStart, 0f, 1f);
+            float lifeFadeStart = Math.Clamp(system.ClientLifeFadeStart, 0f, 0.999f);
             float colorSteps = Math.Max(1, CosmicColors.Count - 1);
 
             // C10: the halo. One soft additive quad behind each head; its size follows the head's (so it grows in with the spawn), its brightness
@@ -640,8 +641,16 @@ namespace Factorraria.Common.Cosmic
                 else if (age > flight * fadeStart)
                     fade = 1f - Smooth01((age - flight * fadeStart) / (flight - flight * fadeStart));
 
+                // Whole-particle fade: trail, head and halo all dim together over the last (1 - lifeFadeStart) of the lifetime. The visible life ends
+                // 2 ticks before p.Life (the trail has drained by then, see the tail >= Length skip above), so the fade is timed to that.
+                float lifeFade = 1f;
+                float lifeFrac = age / Math.Max(1f, p.Life - 2f);
+                if (lifeFrac > lifeFadeStart)
+                    lifeFade = 1f - Smooth01((lifeFrac - lifeFadeStart) / (1f - lifeFadeStart));
+                fade *= lifeFade;
+
                 Color baseColor = CosmicColors.DrawColor((CosmicColor)p.Color);
-                Color color = baseColor * bright;
+                Color color = baseColor * (bright * lifeFade);
                 float trailLength = head - tail;
                 float diameter = MathHelper.Lerp(sizeMin, sizeMax, frequency) * grow;
 

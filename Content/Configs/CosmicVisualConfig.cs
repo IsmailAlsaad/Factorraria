@@ -49,6 +49,10 @@ namespace Factorraria.Content.Configs
         [Range(0f, 1f)]
         public float ClientFadeOutStart = 0.8f;
 
+        [DefaultValue(0.9f)]
+        [Range(0f, 1f)]
+        public float ClientLifeFadeStart = 0.9f;
+
         [DefaultValue(1f)]
         [Range(0f, 4f)]
         public float ClientBrightness = 1f;
@@ -150,6 +154,7 @@ namespace Factorraria.Content.Configs
             s.ClientHaloScale = ClientHaloScale;
             s.ClientHaloBrightness = ClientHaloBrightness;
             s.ClientFadeOutStart = ClientFadeOutStart;
+            s.ClientLifeFadeStart = ClientLifeFadeStart;
             s.ClientBrightness = ClientBrightness;
             s.ClientTrailTiles = ClientTrailTiles;
             s.ClientTrailPixelPx = ClientTrailPixelPx;
