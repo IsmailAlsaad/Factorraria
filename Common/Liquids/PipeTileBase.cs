@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.Systems;
+﻿using Factorraria.Common.Machines;
+using Factorraria.Common.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -79,10 +80,43 @@ namespace Factorraria.Common.Liquids
             if (cell < 0 || cell >= 16)
                 return false;
 
+            // Tile texture only (no overhang art) where the overhang would show as seams, see SkipsOverdraw.
+            if (SkipsOverdraw(i, j, tile.TileType))
+                return false;
+
             // TileFrameY 18 = the windowed style: second row of the sheet (TileOverdrawSystem wraps cell 16+ onto the next row).
             if (tile.TileFrameY >= 18)
                 cell += 16;
             return true;
+        }
+
+        // A real pipe draws only its 16x16 tile texture (no overhang art) when it is linked to 2 or more other pipes, or when it touches a
+        // machine with liquid ports (the pipe the backdrop pipes start from, see PipeMachineBackdropSystem; same machine rule as its
+        // CollectAttachments: a BaseMachine with HasLiquidPorts, motors excluded). The pipe-count check runs first and is cheap.
+        static bool SkipsOverdraw(int i, int j, int type)
+        {
+            int pipes = 0;
+            for (int n = 0; n < 4; n++)
+            {
+                int x = i + (n == 2 ? -1 : n == 3 ? 1 : 0);
+                int y = j + (n == 0 ? -1 : n == 1 ? 1 : 0);
+                if (PipeTierRegistry.IsPipeTile(Main.tile[x, y].TileType) && PipeTierRegistry.CanLink(type, Main.tile[x, y].TileType))
+                    pipes++;
+            }
+
+            if (pipes >= 2)
+                return true;
+
+            for (int n = 0; n < 4; n++)
+            {
+                int x = i + (n == 2 ? -1 : n == 3 ? 1 : 0);
+                int y = j + (n == 0 ? -1 : n == 1 ? 1 : 0);
+                if (Main.tile[x, y].HasTile && TileEntityHelper.TryGetEntityFromTile(x, y, out TileEntity entity, out _)
+                    && entity is BaseMachine machine && !(entity is MotorTileEntityBase) && machine.HasLiquidPorts)
+                    return true;
+            }
+
+            return false;
         }
 
         // Up-down (up 1 + down 2) and left-right (left 4 + right 8): the only shapes that can be windowed.

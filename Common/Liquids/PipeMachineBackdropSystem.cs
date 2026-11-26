@@ -21,7 +21,7 @@ namespace Factorraria.Common.Liquids
     // Multiplayer: no packets, no authority. Every client works it out from the tiles and the machine entity it already has (the pipe
     // tiles, the entity's footprint size) and from PipeFlowVisualSystem's own client-side wave, so single player and multiplayer are the same.
     //
-    // Look: the sprite (and overdraw art) of the pipe that touches the machine, always the non-windowed frame (TileFrameY 0), lit like a
+    // Look: the 16x16 tile sprite only (no overdraw art, it left seams) of the pipe that touches the machine, always the non-windowed frame (TileFrameY 0), lit like a
     // normal tile, not darkened. Swell: the wave of the pipe that touches the machine carries on into the backdrop pipes
     // (PipeFlowVisualSystem.TryGetBackdropScale), so the animation flows through them.
     //
@@ -126,7 +126,6 @@ namespace Factorraria.Common.Liquids
             {
                 BackdropTile t = backdrop.Tiles[n];
                 PrepareScale(t, flow);
-                DrawOverdraw(t, spriteBatch, Vector2.Zero);
             }
 
             for (int n = 0; n < backdrop.Tiles.Count; n++)
@@ -142,7 +141,6 @@ namespace Factorraria.Common.Liquids
 
             Vector2 offset = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
             PrepareScale(t, ModContent.GetInstance<PipeFlowVisualSystem>());
-            DrawOverdraw(t, spriteBatch, offset);
             DrawBody(t, spriteBatch, offset);
         }
 
@@ -151,10 +149,6 @@ namespace Factorraria.Common.Liquids
             t.Scale = flow.TryGetBackdropScale(t.Pipe, t.Toward, t.Steps, t.Mask, out Vector2 scale) ? scale : Vector2.One;
         }
 
-        static void DrawOverdraw(BackdropTile t, SpriteBatch spriteBatch, Vector2 offset)
-        {
-            ModContent.GetInstance<TileOverdrawSystem>().TryDrawCell(spriteBatch, t.PipeType, t.Mask, t.X, t.Y, Lighting.GetColor(t.X, t.Y), t.Scale, offset);
-        }
 
         static void DrawBody(BackdropTile t, SpriteBatch spriteBatch, Vector2 offset)
         {
