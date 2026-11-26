@@ -892,6 +892,11 @@ Configs: {
 			Label: Thunder Big Tier
 			Tooltip: Thunder at or above this energy tier (log10 of the energy x 4, the number that also sets the bolt width) plays the big SoundIDThunder, weaker thunder plays the small bug zap Tiers are whole numbers; /fcosmic stats shows the biggest energy, tier = log10(energy) x 4 (client only, C7b) Unit: tier Default: 20
 		}
+
+		ClientLifeFadeStart: {
+			Label: Client Life Fade Start
+			Tooltip: ""
+		}
 	}
 
 	FurnaceOffsetConfig: {
