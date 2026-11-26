@@ -11,6 +11,13 @@ namespace Factorraria.Common.Net
         public override void OnEnterWorld()
         {
             JoinSync.RequestFullState();
+
+            // Welcome message (local client only, so it needs no syncing).
+            Microsoft.Xna.Framework.Color welcomeColor = new Microsoft.Xna.Framework.Color(255, 140, 0);
+            Terraria.Main.NewText("Hello!", welcomeColor);
+            Terraria.Main.NewText("Thank you for trying out Factorraria :D", welcomeColor);
+            Terraria.Main.NewText("The mod is currently in its beta stage so if you find any bugs or have some recommendations don't be shy to let me know over at discord, my username: ismail643 <3", welcomeColor);
+            Terraria.Main.NewText("P.S. I didn't make a wiki for this mod on purpose so you could explore and figure things out yourself ;)", welcomeColor);
         }
 
         // Server and remote clients. Clears this player's pending join job and runs the registered cleanup hooks.
