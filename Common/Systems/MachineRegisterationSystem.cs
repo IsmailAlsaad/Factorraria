@@ -249,9 +249,11 @@ namespace Factorraria.Common.Machines
                 new RecipeCatalog.FuelGroup("AnyWood", ItemID.Wood, woodItems));
             RecipeCatalog.RegisterFuels("Hellforge", null, HellforgeRecipeRegistry.LiquidFuels);
 
-            // Auto-fill recipe times: any recipe without its own TakesTicks gets the time of the machine that owns its book,
-            // so the recipe book always has a time to show. Runs on every load, nothing is saved. If two machines ever
-            // share one book, the first machine found wins (none do today).
+            // Auto-fill recipe times: any recipe without its own TakesTicks gets the manual crafting time of its item ingredients,
+            // halved and rounded up to 0.5 s (TimedCraftingSystem.GetMachineDurationTicks), so the recipe book always has a time to show.
+            // Runs on every load on every peer, nothing is saved or synced. If two machines ever share one book, the first machine found wins
+            // (none do today).
+            Factorraria.Common.Crafting.TimedCraftingSystem timedCrafting = ModContent.GetInstance<Factorraria.Common.Crafting.TimedCraftingSystem>();
             int machinesWithRecipes = 0;
             foreach (BaseMachine machine in ModContent.GetContent<BaseMachine>())
             {
@@ -259,7 +261,7 @@ namespace Factorraria.Common.Machines
                 if (machineBook == null) continue;      // motors, burners, ... have no recipe book
                 machinesWithRecipes++;
                 foreach (CustomRecipe recipe in machineBook.All)
-                    recipe.DurationTicks ??= machine.ResolveRecipeDuration(recipe);
+                    recipe.DurationTicks ??= timedCrafting.GetMachineDurationTicks(recipe);
             }
             if (machinesWithRecipes == 0)
                 Mod.Logger.Warn("Recipe time auto-fill found no machine templates; recipe times will be missing in the book.");

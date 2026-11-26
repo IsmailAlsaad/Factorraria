@@ -21,22 +21,19 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.LiquidDistillator
 
             Book.Add(new CustomRecipe()
                 .WithLiquidInput(LiquidTypeRegistry.Oil, 100f)
-                .WithLiquidOutput(LiquidTypeRegistry.Fuel, 75f)
-                .TakesTicks(60));
+                .WithLiquidOutput(LiquidTypeRegistry.Fuel, 75f));
 
             // 3 Fireblossom + 100 of any water -> 50 lava
             Book.Add(new CustomRecipe()
                 .WithInput(ItemID.Fireblossom, 3)
                 .WithAnyWaterInput(100f)
-                .WithLiquidOutput(LiquidTypeRegistry.Lava, 50f)
-                .TakesTicks(60));
+                .WithLiquidOutput(LiquidTypeRegistry.Lava, 50f));
 
             // 3 Waterleaf -> 100 of the water of the biome the machine is in + 5 grass seeds
             Book.Add(new CustomRecipe()
                 .WithInput(ItemID.Waterleaf, 3)
                 .WithBiomeWaterOutput(100f)
-                .WithOutput(ItemID.GrassSeeds, 5)
-                .TakesTicks(60));
+                .WithOutput(ItemID.GrassSeeds, 5));
 
             Book.Rebuild();
         }

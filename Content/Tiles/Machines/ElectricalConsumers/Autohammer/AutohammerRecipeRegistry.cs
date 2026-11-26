@@ -40,28 +40,23 @@ namespace Factorraria.Content.Tiles.Machines.ElectricalConsumers.Autohammer
         {
             Book.Add(new CustomRecipe()
                 .WithInput(ItemID.GoldBar, 1)
-                .WithOutput(ModContent.ItemType<GoldPlateItem>(), 1)
-                .TakesTicks(60));
+                .WithOutput(ModContent.ItemType<GoldPlateItem>(), 1));
 
             Book.Add(new CustomRecipe()
                 .WithInput(ItemID.CrimtaneBar, 1)
-                .WithOutput(ModContent.ItemType<CrimtaneSheetItem>(), 1)
-                .TakesTicks(60));
+                .WithOutput(ModContent.ItemType<CrimtaneSheetItem>(), 1));
 
             Book.Add(new CustomRecipe()
                 .WithInput(ItemID.DemoniteBar, 1)
-                .WithOutput(ModContent.ItemType<DemoniteSheetItem>(), 1)
-                .TakesTicks(60));
+                .WithOutput(ModContent.ItemType<DemoniteSheetItem>(), 1));
 
             Book.Add(new CustomRecipe()
                 .WithInput(ItemID.MeteoriteBar, 1)
-                .WithOutput(ModContent.ItemType<MeteoritePanelItem>(), 1)
-                .TakesTicks(60));
+                .WithOutput(ModContent.ItemType<MeteoritePanelItem>(), 1));
 
             Book.Add(new CustomRecipe()
                 .WithInput(ModContent.ItemType<ByriteAlloyItem>(), 1)
-                .WithOutput(ModContent.ItemType<ByriteAlloySlabItem>(), 1)
-                .TakesTicks(60));
+                .WithOutput(ModContent.ItemType<ByriteAlloySlabItem>(), 1));
 
             Book.Add(new CustomRecipe()
                 .WithInput(ModContent.ItemType<ByriteAlloyItem>(), 5)

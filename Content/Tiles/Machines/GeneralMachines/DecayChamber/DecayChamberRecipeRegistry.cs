@@ -11,7 +11,6 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.DecayChamber
         public static readonly RecipeBook Book = new();
 
         const float LiquidPerCraft = 50f;
-        const int CraftTicks = 120;
 
         public static void BuildRecipes()
         {
@@ -47,8 +46,7 @@ namespace Factorraria.Content.Tiles.Machines.GeneralMachines.DecayChamber
             Book.Add(new CustomRecipe()
                 .WithInput(inputBar, count)
                 .WithLiquidInput(liquidType, LiquidPerCraft)
-                .WithOutput(outputBar, 1)
-                .TakesTicks(CraftTicks));
+                .WithOutput(outputBar, 1));
         }
     }
 }

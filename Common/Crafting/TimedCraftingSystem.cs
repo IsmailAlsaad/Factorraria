@@ -1,4 +1,5 @@
-﻿using Factorraria.Common.UI.CustomUIElements;
+﻿using Factorraria.Common.Machines;
+using Factorraria.Common.UI.CustomUIElements;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -36,6 +37,13 @@ namespace Factorraria.Common.Crafting
 
         // Hammer hits: a craft is split into chunks of hitTicks; every hammer hit lands one chunk of progress.
         public int hitTicks = 30;                        // 0.5 s per hit; every craft time is rounded to a multiple of this
+
+        // Machine recipe times: the manual craft time of the same ingredients (above), times machineTimeMultiplier, rounded UP to a multiple of
+        // machineStepTicks, then clamped. Filled into every machine recipe at load by MachineRegisterationSystem (see GetMachineDurationTicks).
+        public float machineTimeMultiplier = 0.5f;      // machines take half the manual time
+        public int machineStepTicks = 30;               // 0.5 s chunks
+        public int machineMinTicks = 30;                // 0.5 s
+        public int machineMaxTicks = 1200;              // 20 s
 
         // Hammer sprite. Pivot = bottom-left corner of the texture moved toward the top-right by hammerPivotNudge pixels.
         // Angles are radians relative to the texture as drawn; positive = clockwise on screen.
@@ -144,14 +152,40 @@ namespace Factorraria.Common.Crafting
         /// then rounded to the closest multiple of hitTicks (at least one hit).</summary>
         public int GetDurationTicks(Recipe recipe)
         {
-            float units = 0f;
-            int distinct = 0;
+            var ingredients = new List<(int rare, int stack)>();
             foreach (Item ingredient in recipe.requiredItem)
             {
                 if (ingredient == null || ingredient.IsAir) continue;
-                distinct++;
-                units += ingredient.stack * RarityMultiplier(ingredient.rare);
+                ingredients.Add((ingredient.rare, ingredient.stack));
             }
+            return ComputeManualTicks(ingredients);
+        }
+
+        /// <summary>Time a machine takes for a recipe: the manual craft time of the same item ingredients x machineTimeMultiplier,
+        /// rounded UP to the next machineStepTicks, clamped to machineMinTicks..machineMaxTicks. Liquids do not count (manual crafting has none).
+        /// Pure function of static data, so the server and every client compute the same number.</summary>
+        public int GetMachineDurationTicks(CustomRecipe recipe)
+        {
+            var ingredients = new List<(int rare, int stack)>();
+            foreach (RecipeIngredient input in recipe.Inputs)
+            {
+                if (input.Stack <= 0) continue;
+                int rare = ContentSamples.ItemsByType.TryGetValue(input.Type, out Item sample) ? sample.rare : 0;
+                ingredients.Add((rare, input.Stack));
+            }
+
+            float ticks = ComputeManualTicks(ingredients) * machineTimeMultiplier;
+            int step = Math.Max(1, machineStepTicks);
+            int chunks = Math.Max(1, (int)MathF.Ceiling(ticks / step - 0.0001f));
+            return Math.Clamp(chunks * step, machineMinTicks, Math.Max(machineMinTicks, machineMaxTicks));
+        }
+
+        int ComputeManualTicks(List<(int rare, int stack)> ingredients)
+        {
+            float units = 0f;
+            int distinct = ingredients.Count;
+            foreach ((int rare, int stack) in ingredients)
+                units += stack * RarityMultiplier(rare);
 
             float countMult = 1f + countBonus * Math.Max(0, distinct - 1);
             float ticks = baseTicks + units * ticksPerUnit * countMult;
