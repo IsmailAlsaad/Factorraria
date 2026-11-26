@@ -1158,7 +1158,7 @@ tModLoader/other bases -> project types:
   class WireBirdNetSystem : ModSystem
     +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RequestHit(int,Vector2,int)[s] +RequestScare(WireKey)[s] +PostUpdateEverything()[ov]
     class ServerBird
-      +Id:int +Key:WireKey +T:float +Variant:int +Age:int +Life:int +Leaving:bool +LeaveAge:int
+      +Id:int +Key:WireKey +T:float +Variant:int +Age:int +ArriveTicks:int +Life:int +Leaving:bool +LeaveAge:int
 
 ### Common/Networks/
 **FlowNetwork.cs** uses: BaseMachine, Direction, FlowDir, FlowNode, FlowPort, FlowRoute, FlowRouteFinder, FlowRouteMerger, FlowSolver, FlowTransfer, LiquidStack, LiquidTankRules, LiquidTypeRegistry, LiquidWorldBanks, MotorTileEntityBase, PipeConnectionHelper, PipeMaterial, PipeTierRegistry, Route, TileEntityHelper, WorldLiquidSources
@@ -1442,11 +1442,11 @@ tModLoader/other bases -> project types:
     +Pos:Vector2 +Old:Vector2 +Count:int +Length:float +SegmentLength:float +NodeCount(float,float,int)[s] +FillRestCurve(Vector2,int,Vector2,Vector2,float)[s] +Rest(Vector2,Vector2) +Pin(Vector2,Vector2) +Step(PoleWireDrawSystem,Vector2,Vector2,List<PoleDisturber>) +DistanceToPolyline(Vector2,int,Vector2)[s]
 **PoleWireDrawSystem.Birds.cs** uses: CachedLink, Factorraria, PoleLink, PoleLinkSystem, PoleRope, State, WireBirdNetSystem
   partial class PoleWireDrawSystem
-    +Birds:bool +BirdNpcIds:int +BirdArtFacesLeft:bool +BirdFrameCount:int +BirdPerchFrame:int +BirdFlyFirstFrame:int +BirdFlyFrameCount:int +BirdFootLift:float +MaxBirds:int +BirdSpawnSeconds:float +BirdMaxSlope:float +BirdPoleMarginPixels:float +BirdSpacingPixels:float +BirdFlySpeed:float +BirdMinPerchTicks:int +BirdMaxPerchTicks:int +BirdScareRadius:float +BirdScareSpeed:float +LandKick:float +TakeoffKick:float +BirdLeaveMaxTicks:int +BirdFadeTicks:int +BirdArriveTicks:int +BirdSpawnRangeTilesX:int +BirdSpawnRangeTilesY:int +BirdChirpMinTicks:int +BirdChirpMaxTicks:int +BirdChirpVolume:float +BirdHitRangeTiles:int +BirdHitWidth:int +BirdHitHeight:int +ClientBirdSpawn(int,WireKey,float,int,int,bool) +ClientBirdLeave(int,int) +ClientBirdDie(int) +ClientBirdsReplaceAll(List<WireBirdInfo>) +RestPoint(Vector2,Vector2,float,out Vector2,out Vector2)[s] +AddBirdMeleeHitbox(Rectangle)
+    +Birds:bool +BirdNpcIds:int +BirdArtFacesLeft:bool +BirdFrameCount:int +BirdPerchFrame:int +BirdFlyFirstFrame:int +BirdFlyFrameCount:int +BirdFootLift:float +MaxBirds:int +BirdSpawnSeconds:float +BirdMaxSlope:float +BirdPoleMarginPixels:float +BirdSpacingPixels:float +BirdFlySpeed:float +BirdMinPerchTicks:int +BirdMaxPerchTicks:int +BirdScareRadius:float +BirdScareSpeed:float +LandKick:float +TakeoffKick:float +BirdLeaveMaxTicks:int +BirdFadeTicks:int +BirdArriveSlack:float +BirdPreperchedChance:float +BirdPreperchRangeFactor:float +BirdSpawnRangeTilesX:int +BirdSpawnRangeTilesY:int +BirdChirpMinTicks:int +BirdChirpMaxTicks:int +BirdChirpVolume:float +BirdHitRangeTiles:int +BirdHitWidth:int +BirdHitHeight:int +ClientBirdSpawn(int,WireKey,float,int,int,bool) +ClientBirdLeave(int,int) +ClientBirdDie(int) +ClientBirdsReplaceAll(List<WireBirdInfo>) +RestPoint(Vector2,Vector2,float,out Vector2,out Vector2)[s] +AddBirdMeleeHitbox(Rectangle)
     enum BirdState : byte
       {Arriving, Perched, Leaving}
     class WireBird
-      +State:BirdState +Id:int +Key:WireKey +T:float +U:float +Pos:Vector2 +Vel:Vector2 +Start:Vector2 +Flight:int +Dir:int +Age:int +Timer:int +ChirpTimer:int +HitCooldown:int +Variant:int +Alpha:float +Fading:bool
+      +State:BirdState +Id:int +Key:WireKey +T:float +U:float +Pos:Vector2 +Vel:Vector2 +Dir:int +Age:int +Timer:int +ChirpTimer:int +HitCooldown:int +Variant:int +Alpha:float +Fading:bool
   class WireBirdMeleeHits : GlobalItem
     +MeleeEffects(Item,Player,Rectangle)[ov]
   struct WireKey : IEquatable<WireKey>
