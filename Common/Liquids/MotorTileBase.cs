@@ -61,7 +61,7 @@ namespace Factorraria.Common.Liquids
             if (!Main.dedServ)
                 ModContent.RequestIfExists(OverdrawTexturePath, out overdrawSheet);
 
-            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell, scaler: SelectOverdrawScale, cropper: SelectOverdrawCrop);
+            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell, scaler: SelectOverdrawScale);
         }
 
         // LeadMotorTile -> .../LeadMotorOverdraw (PNG optional: a missing sheet just draws nothing).
@@ -104,26 +104,8 @@ namespace Factorraria.Common.Liquids
 
             cell = entity.IsRunning ? 1 + TileEntityHelper.GetAnimationFrame(new Point16(i, j), OnOverdrawFrames()) : 0;
             if (entity is MotorTileEntityBase motor)
-            {
                 rotation = MachineVisualOverride.GetMotorRotation(motor.Facing);
-
-                // Same rule as the pipes: tile art only where the overhang would show as seams.
-                if (PipeConnectionHelper.ClassifyOverdraw(i, j, tile.TileType, true, motor.Facing, out _) == PipeConnectionHelper.OverdrawStyle.None)
-                    return false;
-            }
-
             return true;
-        }
-
-        // Lone pump touching a machine on its front or back: only the half of the overhang away from the machine. The step is a world
-        // step; TileOverdrawSystem turns it back by the pump's rotation.
-        static bool SelectOverdrawCrop(int i, int j, Tile tile, out Point keepSide)
-        {
-            keepSide = Point.Zero;
-            if (!TileEntityHelper.TryGetEntityFromTile(i, j, out TileEntity entity, out _) || !(entity is MotorTileEntityBase motor))
-                return false;
-
-            return PipeConnectionHelper.ClassifyOverdraw(i, j, tile.TileType, true, motor.Facing, out keepSide) == PipeConnectionHelper.OverdrawStyle.Half;
         }
 
         public override bool CanPlace(int i, int j)

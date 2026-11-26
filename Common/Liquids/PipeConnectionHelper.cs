@@ -1,5 +1,4 @@
 ﻿using Factorraria.Common.Machines;
-using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 
@@ -40,67 +39,6 @@ namespace Factorraria.Common.Liquids
             }
 
             return false;
-        }
-
-        // What a pipe or a pump draws of its overhang art (client-only drawing, nothing synced). Full = all of it, None = only the 16x16 tile
-        // texture, Half = only the half of the overhang on the side away from the machine (see ClassifyOverdraw).
-        public enum OverdrawStyle { Full, None, Half }
-
-        // The rule shared by pipes and pumps. A pump only looks along its axis (front and back, like the flow network); a pipe looks at all 4 sides.
-        // pipes = linked pipes (same material) on those sides, machines = BaseMachines with liquid ports on those sides (motors never count).
-        //  - 2 or more linked pipes: None.
-        //  - exactly 1 machine and no linked pipe (alone): Half, awaySide = the step from the machine away from it (the half to keep).
-        //  - a machine and a linked pipe, or 2 or more machines: None.
-        //  - no machine: Full.
-        // For a pump, facing says which two sides count; a pipe ignores it.
-        public static OverdrawStyle ClassifyOverdraw(int i, int j, int type, bool isMotor, Direction facing, out Point awaySide)
-        {
-            awaySide = Point.Zero;
-            int pipes = 0;
-            for (int d = 0; d < 4; d++)
-            {
-                Direction dir = (Direction)d;
-                if (isMotor && dir != facing && dir != facing.Opposite())
-                    continue;
-
-                Point step = dir.ToOffset();
-                int neighborType = Main.tile[i + step.X, j + step.Y].TileType;
-                if (PipeTierRegistry.IsPipeTile(neighborType) && PipeTierRegistry.CanLink(type, neighborType))
-                    pipes++;
-            }
-
-            if (pipes >= 2)
-                return OverdrawStyle.None;
-
-            int machines = 0;
-            Point machineStep = Point.Zero;
-            for (int d = 0; d < 4; d++)
-            {
-                Direction dir = (Direction)d;
-                if (isMotor && dir != facing && dir != facing.Opposite())
-                    continue;
-
-                Point step = dir.ToOffset();
-                int x = i + step.X;
-                int y = j + step.Y;
-                if (Main.tile[x, y].HasTile && TileEntityHelper.TryGetEntityFromTile(x, y, out TileEntity entity, out _)
-                    && entity is BaseMachine machine && !(entity is MotorTileEntityBase) && machine.HasLiquidPorts)
-                {
-                    machines++;
-                    machineStep = step;
-                }
-            }
-
-            if (machines == 0)
-                return OverdrawStyle.Full;
-
-            if (machines == 1 && pipes == 0)
-            {
-                awaySide = new Point(-machineStep.X, -machineStep.Y);
-                return OverdrawStyle.Half;
-            }
-
-            return OverdrawStyle.None;
         }
 
         // Which of a pipe's 4 sides count as active "mouths" — real connections (via CanConnect)

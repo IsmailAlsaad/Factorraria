@@ -53,7 +53,7 @@ namespace Factorraria.Common.Liquids
             PipeTierRegistry.Register(Type, MaxFlowRate, Material);
 
             // Art outside the 16px cell: one cell per connection mask (16 cells in a row), see TileOverdrawSystem.
-            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell, scaler: SelectOverdrawScale, cropper: SelectOverdrawCrop);
+            ModContent.GetInstance<TileOverdrawSystem>().Register(Type, OverdrawTexturePath, SelectOverdrawCell, inFront: false, previewSelector: SelectPreviewCell, scaler: SelectOverdrawScale);
         }
 
         // LeadPipeTile -> .../LeadPipeOverdraw (PNG optional: a missing sheet just draws nothing).
@@ -80,8 +80,8 @@ namespace Factorraria.Common.Liquids
             if (cell < 0 || cell >= 16)
                 return false;
 
-            // Tile texture only (no overhang art) where the overhang would show as seams, see PipeConnectionHelper.ClassifyOverdraw.
-            if (PipeConnectionHelper.ClassifyOverdraw(i, j, tile.TileType, false, Direction.Right, out _) == PipeConnectionHelper.OverdrawStyle.None)
+            // Tile texture only (no overhang art) where the overhang would show as seams, see SkipsOverdraw.
+            if (SkipsOverdraw(i, j, tile.TileType))
                 return false;
 
             // TileFrameY 18 = the windowed style: second row of the sheet (TileOverdrawSystem wraps cell 16+ onto the next row).
@@ -90,10 +90,33 @@ namespace Factorraria.Common.Liquids
             return true;
         }
 
-        // Lone pipe touching a machine: only the half of the overhang away from the machine (PipeConnectionHelper.ClassifyOverdraw).
-        static bool SelectOverdrawCrop(int i, int j, Tile tile, out Point keepSide)
+        // A real pipe draws only its 16x16 tile texture (no overhang art) when it is linked to 2 or more other pipes, or when it touches a
+        // machine with liquid ports (the pipe the backdrop pipes start from, see PipeMachineBackdropSystem; same machine rule as its
+        // CollectAttachments: a BaseMachine with HasLiquidPorts, motors excluded). The pipe-count check runs first and is cheap.
+        static bool SkipsOverdraw(int i, int j, int type)
         {
-            return PipeConnectionHelper.ClassifyOverdraw(i, j, tile.TileType, false, Direction.Right, out keepSide) == PipeConnectionHelper.OverdrawStyle.Half;
+            int pipes = 0;
+            for (int n = 0; n < 4; n++)
+            {
+                int x = i + (n == 2 ? -1 : n == 3 ? 1 : 0);
+                int y = j + (n == 0 ? -1 : n == 1 ? 1 : 0);
+                if (PipeTierRegistry.IsPipeTile(Main.tile[x, y].TileType) && PipeTierRegistry.CanLink(type, Main.tile[x, y].TileType))
+                    pipes++;
+            }
+
+            if (pipes >= 2)
+                return true;
+
+            for (int n = 0; n < 4; n++)
+            {
+                int x = i + (n == 2 ? -1 : n == 3 ? 1 : 0);
+                int y = j + (n == 0 ? -1 : n == 1 ? 1 : 0);
+                if (Main.tile[x, y].HasTile && TileEntityHelper.TryGetEntityFromTile(x, y, out TileEntity entity, out _)
+                    && entity is BaseMachine machine && !(entity is MotorTileEntityBase) && machine.HasLiquidPorts)
+                    return true;
+            }
+
+            return false;
         }
 
         // Up-down (up 1 + down 2) and left-right (left 4 + right 8): the only shapes that can be windowed.
