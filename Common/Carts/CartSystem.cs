@@ -124,13 +124,18 @@ namespace Factorraria.Common.Carts
         /// <summary>
         /// Customisable hook: runs every tick a motor cart has power (accelerating or cruising at its top speed).
         /// Fuel carts, the liquid carts and the mechanical cart all call it: switch on cart.FuelLiquid (LiquidTypeRegistry.Lava / Honey / Water), cart.AlwaysRuns or cart.SkinType.
-        /// Put particles and sounds here. Currently does nothing.
+        /// Put particles and sounds here. Currently the mechanical cart leaves TheDestroyer dust (see MechCartDustSystem for the tuning).
         /// </summary>
         private static void OnCartDriving(Cart cart)
         {
             if (Main.dedServ)
             {
                 return;
+            }
+
+            if (cart.AlwaysRuns)
+            {
+                MechCartDustSystem.Spawn(cart);
             }
         }
 
@@ -321,6 +326,12 @@ namespace Factorraria.Common.Carts
             for (int i = 0; i < Carts.Count; i++)
             {
                 Carts[i].ClientStep();
+
+                // Cart.Driving never fires on a client (the server owns the simulation), so the mechanical cart's dust is driven from here.
+                if (Carts[i].Active && Carts[i].Module == CartModule.Motor && Carts[i].AlwaysRuns)
+                {
+                    MechCartDustSystem.Spawn(Carts[i]);
+                }
             }
         }
 
