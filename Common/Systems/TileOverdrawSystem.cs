@@ -92,6 +92,19 @@ namespace Factorraria.Common.Systems
             };
         }
 
+        /// <summary>Draws one overdraw cell of a registered tile type at a tile position (used for decorative copies of a pipe, see PipeMachineBackdropSystem). Call inside an open SpriteBatch. False when the type has no sheet or the cell does not fit it.</summary>
+        public bool TryDrawCell(SpriteBatch spriteBatch, int tileType, int cell, int x, int y, Color color, Vector2 scale)
+        {
+            if (Main.dedServ || !entries.TryGetValue(tileType, out TileOverdrawEntry entry) || entry.Texture == null)
+                return false;
+
+            if (!TryGetSource(entry, cell, out Texture2D texture, out Rectangle source))
+                return false;
+
+            DrawCell(spriteBatch, texture, source, x, y, 0f, color, scale);
+            return true;
+        }
+
         public override void PostDrawTiles()
         {
             DrawPass(true);

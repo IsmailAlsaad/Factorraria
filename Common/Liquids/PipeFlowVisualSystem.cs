@@ -738,27 +738,55 @@ namespace Factorraria.Common.Liquids
             if (cell.WaveStamp == waveStamp)
                 return cell.WaveU;
 
+            float u = BallUAt(cell.Chain, cell.S);
+
+            cell.WaveU = u;
+            cell.WaveStamp = waveStamp;
+            return u;
+        }
+
+        // The same lookup for any path coordinate of a chain (BallU for a real cell; the backdrop pipes behind machines ask with their own S).
+        float BallUAt(PumpChain chain, float s)
+        {
             float u = -1f;
-            PumpChain chain = cell.Chain;
             if (chain != null && chain.Balls.Count > 0)
             {
                 float nearest = chain.Balls[0].Pos;
-                float best = Math.Abs(cell.S - nearest);
+                float best = Math.Abs(s - nearest);
                 for (int b = 1; b < chain.Balls.Count; b++)
                 {
-                    float distance = Math.Abs(cell.S - chain.Balls[b].Pos);
+                    float distance = Math.Abs(s - chain.Balls[b].Pos);
                     if (distance < best)
                     {
                         best = distance;
                         nearest = chain.Balls[b].Pos;
                     }
                 }
-                u = cell.S - nearest + Math.Max(0.5f, BallLengthTiles) * 0.5f;
+                u = s - nearest + Math.Max(0.5f, BallLengthTiles) * 0.5f;
             }
 
-            cell.WaveU = u;
-            cell.WaveStamp = waveStamp;
             return u;
+        }
+
+        /// <summary>The swell scale for a decorative pipe tile that carries on a real pipe's wave (PipeMachineBackdropSystem). pipe = the real pipe touching the machine, towardMachine = the step from it into the machine, stepsIn = how many tiles further this tile is along the backdrop path, mask = this tile's pipe frame (swells across its axis like GetTileScale). False when no liquid moves through that pipe (the tile is drawn at scale 1).</summary>
+        public bool TryGetBackdropScale(Point pipe, Point towardMachine, int stepsIn, int mask, out Vector2 scale)
+        {
+            scale = Vector2.One;
+            if (cells.Count == 0 || !cells.TryGetValue(pipe, out PipeFlowCell cell) || cell.IsMotor)
+                return false;
+
+            // The liquid runs along cell.Travel: into the machine (+1 per tile), out of it (-1 per tile), or sideways (the wave stands still).
+            int direction = towardMachine.X * cell.Travel.X + towardMachine.Y * cell.Travel.Y;
+            float s = ScaleAt(BallUAt(cell.Chain, cell.S + direction * stepsIn), cell.Intensity);
+
+            if (mask == 12)
+                scale = new Vector2(1f, s);
+            else if (mask == 3)
+                scale = new Vector2(s, 1f);
+            else
+                scale = new Vector2(s);
+
+            return true;
         }
 
         // 0..1 smooth bump over the first BallLengthTiles of the period (the swelling part).
