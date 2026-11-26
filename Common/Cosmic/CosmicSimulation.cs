@@ -499,7 +499,7 @@ namespace Factorraria.Common.Cosmic
                 DirX = ev.DirX,
                 DirY = ev.DirY,
                 Length = r.End == CosmicRayEnd.Range ? range : r.Distance,
-                End = r.End == CosmicRayEnd.Absorb ? CosmicRayEndKind.Absorb : r.End == CosmicRayEnd.Ionize ? CosmicRayEndKind.Ionize : CosmicRayEndKind.None,
+                End = r.End == CosmicRayEnd.Absorb ? CosmicRayEndKind.Absorb : r.End == CosmicRayEnd.Ionize ? CosmicRayEndKind.Ionize : r.End == CosmicRayEnd.Range ? CosmicRayEndKind.Expire : CosmicRayEndKind.None,
                 SpeedMul = speedMul
             });
 

@@ -259,7 +259,7 @@ namespace Factorraria.Common.Cosmic
             ref Particle p = ref ambient[slot];
             p.Active = true;
             p.Color = (byte)color;
-            p.End = 0;
+            p.End = r.End == CosmicRayEnd.Range ? (byte)CosmicRayEndKind.Expire : (byte)CosmicRayEndKind.None;   // Range = it will live out its whole range
             p.Born = now - (uint)age;
             p.X = x;
             p.Y = y;
@@ -277,6 +277,7 @@ namespace Factorraria.Common.Cosmic
                 && CosmicRayTracer.TrySplitDistance(s.SpontaneousSplitChance, s.ParticleRange, length, ambientRng.NextDouble(), ambientRng.NextDouble(), out float splitAt))
             {
                 p.Length = splitAt;
+                p.End = (byte)CosmicRayEndKind.None;   // it splits instead of expiring: no whole-particle fade
                 p.Life = (splitAt + trail) / speed + 2f;
                 AmbientSplitChildren(s, color, x + dirX * splitAt, y + dirY * splitAt, dirX, dirY, p.Born + (uint)Math.Ceiling(splitAt / speed), 1);
             }
@@ -343,7 +344,7 @@ namespace Factorraria.Common.Cosmic
                 ref Particle c = ref ambient[slot];
                 c.Active = true;
                 c.Color = (byte)next;
-                c.End = 0;
+                c.End = r.End == CosmicRayEnd.Range ? (byte)CosmicRayEndKind.Expire : (byte)CosmicRayEndKind.None;
                 c.Born = born;
                 c.X = x;
                 c.Y = y;
@@ -360,6 +361,7 @@ namespace Factorraria.Common.Cosmic
                     && CosmicRayTracer.TrySplitDistance(s.SpontaneousSplitChance, s.ParticleRange, length, ambientRng.NextDouble(), ambientRng.NextDouble(), out float splitAt))
                 {
                     c.Length = splitAt;
+                    c.End = (byte)CosmicRayEndKind.None;
                     c.Life = (splitAt + trail) / speed + 2f;
                     AmbientSplitChildren(s, next, x + dirX * splitAt, y + dirY * splitAt, dirX, dirY, born + (uint)Math.Ceiling(splitAt / speed), depth + 1);
                 }

@@ -237,7 +237,7 @@ tModLoader/other bases -> project types:
 **CosmicParamAttribute.cs**
   sealed class CosmicParamAttribute : Attribute
     +Description:string +Unit:string
-**CosmicParticleSystem.Ambient.cs** uses: Bolt, CosmicColor, CosmicColors, CosmicHeatmap, CosmicRadiationSystem, CosmicRayEnd, CosmicRayResult, CosmicRayTracer, CosmicReceiverIndex, CosmicSampling, CosmicSamplingStrip, CosmicSimulation, CosmicTileCodes, CosmicTileProbe, FurnaceOffsetConfig, Particle, Phase, Strip
+**CosmicParticleSystem.Ambient.cs** uses: Bolt, CosmicColor, CosmicColors, CosmicHeatmap, CosmicRadiationSystem, CosmicRayEnd, CosmicRayEndKind, CosmicRayResult, CosmicRayTracer, CosmicReceiverIndex, CosmicSampling, CosmicSamplingStrip, CosmicSimulation, CosmicTileCodes, CosmicTileProbe, FurnaceOffsetConfig, Particle, Phase, Strip
   partial class CosmicParticleSystem : ModSystem
     +AmbientOn:bool +AmbientOffReason:string +AmbientSkippedFull:long AmbientSpawned, AmbientDropped, +Unload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **CosmicParticleSystem.Radiation.cs** uses: CosmicRadiationPlayer, CosmicRadiationSystem, Particle
@@ -248,7 +248,7 @@ tModLoader/other bases -> project types:
     +NpcRadiationHits:long
     struct NpcTarget
       +Index:int +Y1:float X0, Y0, X1,
-**CosmicParticleSystem.cs** uses: CosmicAudioHooks, CosmicColor, CosmicColors, CosmicRadiationSystem, Phase
+**CosmicParticleSystem.cs** uses: CosmicAudioHooks, CosmicColor, CosmicColors, CosmicRadiationSystem, CosmicRayEndKind, Phase
   struct CosmicClientRay
     +Color:byte +End:byte +Speed:float X, Y, DirX, DirY, Length,
   static class CosmicEventKind
@@ -322,7 +322,7 @@ tModLoader/other bases -> project types:
   struct CosmicSpitEvent
     +Tick:long +DirY:float FromX, FromY, DirX, +Energy:double
   enum CosmicRayEndKind : byte
-    {None, Absorb, Ionize}
+    {None, Absorb, Ionize, Expire}
   struct CosmicRayEvent
     +Tick:long +Color:CosmicColor +Length:float StartX, StartY, DirX, DirY, +End:CosmicRayEndKind +SpeedMul:float
   struct CosmicAbsorbEvent

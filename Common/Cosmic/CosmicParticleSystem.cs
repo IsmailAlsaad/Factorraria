@@ -616,11 +616,12 @@ namespace Factorraria.Common.Cosmic
 
                 float flight = p.Length / p.Speed;
 
-                // Whole-particle fade (ClientLifeFadeStart < 1). It REPLACES the trail drain and the old head fade: the head flies to the end of
-                // the ray and stays there with the trail frozen at its full gradient, then head, trail and halo all dim together over the last
-                // fadeTicks of visibleLife (the last (1 - lifeFadeStart) of it, never under 20 ticks). visibleLife is when the trail would have
-                // drained completely (2 ticks before p.Life). ClientLifeFadeStart = 1 gives the old drain + head fade back.
-                bool wholeFade = lifeFadeStart < 1f;
+                // Whole-particle fade (ClientLifeFadeStart < 1), ONLY for a particle whose lifetime runs out (it flew its whole range, End = Expire).
+                // For that one it REPLACES the trail drain and the old head fade: the head flies to the end of the ray and stays there with the trail
+                // frozen at its full gradient, then head, trail and halo all dim together over the last (1 - lifeFadeStart) of its flight time.
+                // A particle that was absorbed, ionized, split or stopped by a lead brick keeps the old look: the head fades from ClientFadeOutStart
+                // and the trail drains away from its rear end. ClientLifeFadeStart = 1 turns the whole-particle fade off for everyone.
+                bool wholeFade = lifeFadeStart < 1f && p.End == (byte)CosmicRayEndKind.Expire;
                 float fadeTicks = Math.Max(0.01f, flight * (1f - lifeFadeStart));
                 float fadeStartAge = wholeFade ? flight - fadeTicks : float.MaxValue;
                 if (wholeFade && age >= flight)

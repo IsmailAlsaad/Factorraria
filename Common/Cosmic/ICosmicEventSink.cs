@@ -24,9 +24,10 @@
     // C6: how a ray's path ends, for the picture only (the server already decided what happens).
     public enum CosmicRayEndKind : byte
     {
-        None = 0,     // it flew its whole range or hit a lead brick
+        None = 0,     // it stopped early: a lead brick (or the world edge), or a spontaneous split
         Absorb = 1,   // a gemspark of its own color
-        Ionize = 2    // a cloud block
+        Ionize = 2,   // a cloud block
+        Expire = 3    // it flew its whole range and its lifetime ran out (the only end that fades the whole particle, ClientLifeFadeStart)
     }
 
     // A ray was traced. Length = tiles it flies (to the tile it enters, or the full range). Flying at ParticleSpeed from Tick on.
