@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ModLoader;
 
 namespace Factorraria.Common.Liquids
@@ -41,7 +42,8 @@ namespace Factorraria.Common.Liquids
             public int X;
             public int Y;
             public int Mask;          // connection mask like a real pipe's frame: up 1, down 2, left 4, right 8
-            public int PipeType;      // tile type of the pipe this tile copies
+            public int PipeType;      // tile type of the pipe this tile copies (for a pump: the pipe of the pump's material)
+            public bool FromMotor;    // the tile at Pipe is a pump (the texture comes from PipeType, not from the tile there)
             public Point Pipe;        // the real pipe that touches the machine (its wave is carried on)
             public Point Toward;      // the step from that pipe into the machine
             public int Steps;         // tiles between that pipe and this tile along the path (the first footprint tile is 1)
@@ -62,6 +64,7 @@ namespace Factorraria.Common.Liquids
             public Direction Dir;     // from the pipe into the machine
             public Point Foot;        // the footprint tile next to the pipe
             public int Type;
+            public bool Motor;        // Pipe is a pump directly facing the machine (Type is then the pipe of its material)
         }
 
         readonly Dictionary<Point16, Backdrop> backdrops = new Dictionary<Point16, Backdrop>();
@@ -156,7 +159,17 @@ namespace Factorraria.Common.Liquids
             if (!pipeTile.HasTile)
                 return;
 
-            Texture2D texture = Main.instance.TilesRenderer.GetTileDrawTexture(pipeTile, t.Pipe.X, t.Pipe.Y);
+            Texture2D texture;
+            if (t.FromMotor)
+            {
+                Main.instance.LoadTiles(t.PipeType);
+                texture = TextureAssets.Tile[t.PipeType].Value;
+            }
+            else
+            {
+                texture = Main.instance.TilesRenderer.GetTileDrawTexture(pipeTile, t.Pipe.X, t.Pipe.Y);
+            }
+
             if (texture == null)
                 return;
 
@@ -211,10 +224,42 @@ namespace Factorraria.Common.Liquids
                 return;
 
             Tile tile = Main.tile[pipe.X, pipe.Y];
-            if (!tile.HasTile || !PipeTierRegistry.IsPipeTile(tile.TileType))
+            if (!tile.HasTile)
                 return;
 
-            attachments.Add(new Attachment { Pipe = pipe, Dir = dir, Foot = foot, Type = tile.TileType });
+            int type = tile.TileType;
+            bool motor = false;
+            if (!PipeTierRegistry.IsPipeTile(type))
+            {
+                // A pump directly facing the machine (its front or back, no pipe between) starts backdrop pipes too, drawn with the pipe of
+                // the pump's material. A pump touching the machine with its side does not (it is not connected there either).
+                if (!PipeTierRegistry.IsMotorTile(type)
+                    || !TileEntityHelper.TryGetEntityFromTile(pipe.X, pipe.Y, out TileEntity entity, out _)
+                    || !(entity is MotorTileEntityBase pump)
+                    || (dir != pump.Facing && dir != pump.Facing.Opposite())
+                    || !TryGetPipeTypeOfMaterial(type, out type))
+                    return;
+
+                motor = true;
+            }
+
+            attachments.Add(new Attachment { Pipe = pipe, Dir = dir, Foot = foot, Type = type, Motor = motor });
+        }
+
+        // The lowest-numbered pipe tile type that has the same material as a pump tile.
+        static bool TryGetPipeTypeOfMaterial(int motorTileType, out int pipeType)
+        {
+            pipeType = -1;
+            if (!PipeTierRegistry.TryGetMaterial(motorTileType, out PipeMaterial material))
+                return false;
+
+            foreach (int candidate in PipeTierRegistry.MaxFlowRateByTileType.Keys)
+            {
+                if (PipeTierRegistry.TryGetMaterial(candidate, out PipeMaterial other) && other == material && (pipeType < 0 || candidate < pipeType))
+                    pipeType = candidate;
+            }
+
+            return pipeType >= 0;
         }
 
         Backdrop Build(BaseMachine machine, int signature)
@@ -244,7 +289,7 @@ namespace Factorraria.Common.Liquids
                     Point p = path[k];
                     if (!byPos.TryGetValue(p, out BackdropTile tile))
                     {
-                        tile = new BackdropTile { X = p.X, Y = p.Y, PipeType = a.Type, Pipe = a.Pipe, Toward = toward, Steps = k + 1 };
+                        tile = new BackdropTile { X = p.X, Y = p.Y, PipeType = a.Type, Pipe = a.Pipe, FromMotor = a.Motor, Toward = toward, Steps = k + 1 };
                         byPos[p] = tile;
                         backdrop.Tiles.Add(tile);
                     }
@@ -253,6 +298,7 @@ namespace Factorraria.Common.Liquids
                         // Two pipes share this tile: it follows the nearer one.
                         tile.PipeType = a.Type;
                         tile.Pipe = a.Pipe;
+                        tile.FromMotor = a.Motor;
                         tile.Toward = toward;
                         tile.Steps = k + 1;
                     }
