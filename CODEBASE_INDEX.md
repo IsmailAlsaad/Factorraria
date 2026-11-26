@@ -1152,7 +1152,7 @@ tModLoader/other bases -> project types:
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **WireBirdNet.cs** uses: FactorrariaNet, FactorrariaPacket, JoinSync, PacketDirection, PoleLink, PoleLinkSystem, PoleWireDrawSystem, PowerPoleTileEntityBase, WireBirdInfo, WireKey
   class WireBirdNetSystem : ModSystem
-    +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RequestHit(int)[s] +RequestScare(WireKey)[s] +PostUpdateEverything()[ov]
+    +Load()[ov] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +RequestHit(int,Vector2,int)[s] +RequestScare(WireKey)[s] +PostUpdateEverything()[ov]
     class ServerBird
       +Id:int +Key:WireKey +T:float +Variant:int +Age:int +Life:int +Leaving:bool +LeaveAge:int
 
@@ -1442,7 +1442,7 @@ tModLoader/other bases -> project types:
     enum BirdState : byte
       {Arriving, Perched, Leaving}
     class WireBird
-      +State:BirdState +Id:int +Key:WireKey +T:float +U:float +Pos:Vector2 +Vel:Vector2 +Dir:int +Age:int +Timer:int +ChirpTimer:int +HitCooldown:int +Variant:int +Alpha:float +Fading:bool
+      +State:BirdState +Id:int +Key:WireKey +T:float +U:float +Pos:Vector2 +Vel:Vector2 +Start:Vector2 +Flight:int +Dir:int +Age:int +Timer:int +ChirpTimer:int +HitCooldown:int +Variant:int +Alpha:float +Fading:bool
   class WireBirdMeleeHits : GlobalItem
     +MeleeEffects(Item,Player,Rectangle)[ov]
   struct WireKey : IEquatable<WireKey>

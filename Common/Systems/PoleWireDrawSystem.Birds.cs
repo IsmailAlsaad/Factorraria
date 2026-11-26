@@ -73,6 +73,8 @@ namespace Factorraria.Common.Systems
             public float U;             // T as a fractional node index on the wire's live rope (only while that wire is on screen)
             public Vector2 Pos;         // world position (kept up to date in every state, so a take-off starts from the right place)
             public Vector2 Vel;
+            public Vector2 Start;       // where its arrival flight began
+            public int Flight;          // how many ticks that flight takes (set when it spawns, fixed, so it always lands)
             public int Dir = 1;         // 1 faces right, -1 faces left
             public int Age;             // ticks in the current state
             public int Timer;           // ticks until the next idle action
@@ -189,8 +191,11 @@ namespace Factorraria.Common.Systems
                 {
                     GetVisibleRect(out Rectangle visible);
                     Vector2 perch = PointAlong(entry.Rope, ClampU(entry.Rope, t * (entry.Rope.Count - 1)));
+                    var origin = new Vector2(side > 0 ? visible.Right + 48f : visible.Left - 48f, perch.Y - (40f + 100f * Main.rand.NextFloat()));
                     bird.State = BirdState.Arriving;
-                    bird.Pos = new Vector2(side > 0 ? visible.Right + 48f : visible.Left - 48f, perch.Y - (40f + 100f * Main.rand.NextFloat()));
+                    bird.Pos = origin;
+                    bird.Start = origin;
+                    bird.Flight = Math.Clamp((int)(Vector2.Distance(origin, perch) / Math.Max(0.5f, BirdFlySpeed)), 60, Math.Max(60, BirdArriveTicks - 60));
                 }
             }
 
@@ -225,10 +230,10 @@ namespace Factorraria.Common.Systems
                 {
                     bird.HitCooldown--;
                 }
-                else if (IsBirdHit(bird))
+                else if (!IsBirdHidden(bird) && IsBirdHit(bird))
                 {
                     bird.HitCooldown = 20;
-                    global::Factorraria.Common.Net.WireBirdNetSystem.RequestHit(bird.Id);
+                    global::Factorraria.Common.Net.WireBirdNetSystem.RequestHit(bird.Id, bird.Pos, bird.Dir);   // where it was hit, so the gore lands there
                 }
 
                 if (!UpdateBird(bird, visible))
@@ -265,17 +270,57 @@ namespace Factorraria.Common.Systems
                 return true;
             }
 
-            // Its wire. Not known here (yet), or off screen so no rope is kept for it: the bird stays where it is, unseen, and waits for the
-            // server (a cut wire makes the server send it off). Its position is kept up to date from the resting curve so a take-off starts right.
-            if (!byKey.TryGetValue(bird.Key, out CachedLink entry) || entry.Rope == null)
+            // Its wire. Not known here (yet), or off screen so no rope is kept for it (a perched bird then stays where it is, unseen, and
+            // waits for the server: a cut wire makes the server send it off).
+            bool hasEntry = byKey.TryGetValue(bird.Key, out CachedLink entry);
+            PoleRope rope = hasEntry ? entry.Rope : null;
+
+            if (bird.State == BirdState.Arriving)
             {
-                if (bird.State == BirdState.Arriving)
+                // A flight of a fixed length (bird.Flight ticks, set when it spawned) from where it came in to its spot, slowing down toward the
+                // end. The spot is the live rope point, or the resting curve when the wire has left the screen meanwhile: the bird keeps flying
+                // and lands, it never pops away or teleports (the old speed-based flight could take very long and then snapped to the wire).
+                Vector2 spot;
+                if (rope != null)
+                {
+                    bird.U = ClampU(rope, bird.T * (rope.Count - 1));
+                    spot = PointAlong(rope, bird.U);
+                }
+                else if (hasEntry && entry.Resolved)
+                {
+                    RestPoint(entry.RestA, entry.RestB, bird.T, out spot, out _);
+                }
+                else
+                {
+                    bird.State = BirdState.Perched;   // the wire is not known here: wait for it, unseen
+                    bird.Age = 0;
+                    return true;
+                }
+
+                float progress = Math.Clamp(bird.Age / (float)Math.Max(1, bird.Flight), 0f, 1f);
+                float eased = 1f - (1f - progress) * (1f - progress);
+                Vector2 before = bird.Pos;
+                bird.Pos = Vector2.Lerp(bird.Start, spot, eased);
+                bird.Vel = bird.Pos - before;
+                if (Math.Abs(spot.X - bird.Start.X) > 2f)
+                    bird.Dir = spot.X >= bird.Start.X ? 1 : -1;
+
+                if (progress >= 1f)
                 {
                     bird.State = BirdState.Perched;
                     bird.Age = 0;
+                    bird.Pos = spot;
+                    bird.Timer = Main.rand.Next(40, 120);
+                    if (rope != null)
+                        Kick(rope, bird.U, LandKick);
                 }
 
-                if (entry != null && entry.Resolved)
+                return true;
+            }
+
+            if (rope == null)
+            {
+                if (hasEntry && entry.Resolved)
                 {
                     RestPoint(entry.RestA, entry.RestB, bird.T, out Vector2 rest, out _);
                     bird.Pos = rest;
@@ -284,34 +329,8 @@ namespace Factorraria.Common.Systems
                 return true;
             }
 
-            PoleRope rope = entry.Rope;
             bird.U = ClampU(rope, bird.T * (rope.Count - 1));
             Vector2 target = PointAlong(rope, bird.U);
-
-            if (bird.State == BirdState.Arriving)
-            {
-                Vector2 delta = target - bird.Pos;
-                float distance = delta.Length();
-
-                if (distance <= 3f || bird.Age > 900)
-                {
-                    bird.State = BirdState.Perched;
-                    bird.Age = 0;
-                    bird.Pos = target;
-                    bird.Timer = Main.rand.Next(40, 120);
-                    Kick(rope, bird.U, LandKick);
-                    return true;
-                }
-
-                // Slow down for the last stretch so it lands instead of overshooting.
-                float speed = Math.Clamp(distance * 0.05f, 0.7f, Math.Max(0.8f, BirdFlySpeed));
-                bird.Vel = delta / distance * speed;
-                bird.Pos += bird.Vel;
-                if (Math.Abs(delta.X) > 2f)
-                    bird.Dir = delta.X >= 0f ? 1 : -1;
-
-                return true;
-            }
 
             // Perched: ride the wire.
             bird.Pos = target;
@@ -413,6 +432,12 @@ namespace Factorraria.Common.Systems
         }
 
         // ---------------------------------------------------------------- fading and getting hit
+
+        // A perched bird whose wire is off screen (or not known here) is not drawn, so it cannot be hit either.
+        bool IsBirdHidden(WireBird bird)
+        {
+            return bird.State == BirdState.Perched && (!byKey.TryGetValue(bird.Key, out CachedLink entry) || entry.Rope == null);
+        }
 
         // Starts the fade-out (once). The bird keeps doing what it was doing while it fades.
         void StartFade(WireBird bird)

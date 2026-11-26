@@ -66,10 +66,16 @@ namespace Factorraria.Common.Net
 
         // ---------------------------------------------------------------- requests (client side, or single player)
 
-        // "My weapon hit bird <id>." In single player the server handler runs right here.
-        public static void RequestHit(int id)
+        // "My weapon hit bird <id> while it was at <position> facing <dir>." In single player the server handler runs right here.
+        public static void RequestHit(int id, Vector2 position, int dir)
         {
-            FactorrariaNet.SendRequest(FactorrariaPacket.WireBirdHitRequest, writer => writer.Write(id));
+            FactorrariaNet.SendRequest(FactorrariaPacket.WireBirdHitRequest, writer =>
+            {
+                writer.Write(id);
+                writer.Write(position.X);
+                writer.Write(position.Y);
+                writer.Write((sbyte)(dir >= 0 ? 1 : -1));
+            });
         }
 
         // "This wire flashed (a pole powered up or down): scare its birds."
@@ -345,9 +351,17 @@ namespace Factorraria.Common.Net
         void HandleHitRequest(BinaryReader reader, int sender)
         {
             int id = reader.ReadInt32();
+            float x = reader.ReadSingle();
+            float y = reader.ReadSingle();
+            int dir = reader.ReadSByte() >= 0 ? 1 : -1;
+
             ServerBird bird = birds.Find(other => other.Id == id);
-            if (bird == null || !TryGetPosition(bird, out Vector2 position))
+            if (bird == null || float.IsNaN(x) || float.IsNaN(y) || float.IsInfinity(x) || float.IsInfinity(y))
                 return;
+
+            // Where the client saw the bird when it was hit (it may be flying in or away, far from its spot on the wire). Kept inside the
+            // world, and the asker must be near it.
+            var position = new Vector2(Math.Clamp(x, 16f, Main.maxTilesX * 16f - 16f), Math.Clamp(y, 16f, Main.maxTilesY * 16f - 16f));
 
             PoleWireDrawSystem config = Config;
             if (sender >= 0 && sender < Main.maxPlayers && Vector2.Distance(Main.player[sender].Center, position) > config.BirdHitRangeTiles * 16f)
@@ -362,7 +376,12 @@ namespace Factorraria.Common.Net
             int type = config.BirdNpcIds[Math.Clamp(bird.Variant, 0, config.BirdNpcIds.Length - 1)];
             int index = NPC.NewNPC(new EntitySource_Misc("FactorrariaWireBird"), (int)position.X, (int)position.Y, type);
             if (index >= 0 && index < Main.maxNPCs)
-                Main.npc[index].StrikeInstantKill();
+            {
+                NPC npc = Main.npc[index];
+                npc.direction = dir;
+                npc.spriteDirection = dir;
+                npc.StrikeInstantKill();
+            }
         }
 
         // A client saw the wire flash: every bird sitting on it takes off.

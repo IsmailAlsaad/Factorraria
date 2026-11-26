@@ -79,7 +79,7 @@ namespace Factorraria.Common.Net
         WireBirdSpawn = 70,           // server -> all clients: "bird <id> of variant <v> sits on wire <key> at fraction <t> (arriving from side <s>, fresh flag)": cosmetic (power poles patch P11c; payload int id, WireKey (short x, short y, byte slot, twice), float t, byte variant, sbyte side, bool fresh)
         WireBirdLeave = 71,           // server -> all clients: "bird <id> takes off, away from side <s>" (P11c; payload int id, sbyte side)
         WireBirdDie = 72,             // server -> all clients: "bird <id> is dead, remove its sprite" (the server spawned and killed the vanilla bird NPC, which syncs on its own; P11c; payload int id)
-        WireBirdHitRequest = 73,      // client -> server: "my weapon hit bird <id>": the server checks the bird and the distance, then kills it (P11c; payload int id)
+        WireBirdHitRequest = 73,      // client -> server: "my weapon hit bird <id>": the server checks the bird and the distance, then kills it, and spawns the bird NPC where it was hit (P11c, P11d; payload int id, float x, float y, sbyte dir)
         WireBirdScareRequest = 74,    // client -> server: "the wire <key> flashed, scare the birds on it" (P11c; payload WireKey)
     }
 
