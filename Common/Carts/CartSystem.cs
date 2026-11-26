@@ -346,7 +346,7 @@ namespace Factorraria.Common.Carts
             // Free carts and motors move on their own. Carriages are placed by their chain just below.
             for (int i = 0; i < Carts.Count; i++)
             {
-                if (!Carts[i].IsCarriage)
+                if (!Carts[i].IsCarriage && !Carts[i].Sleeping)
                 {
                     Carts[i].Update();
                 }
@@ -368,6 +368,11 @@ namespace Factorraria.Common.Carts
                     continue;
                 }
 
+                if (motor.Sleeping)
+                {
+                    continue; // Wake() wakes a whole chain at once, so a sleeping motor means sleeping carriages
+                }
+
                 motor.Chain.UpdateCarriages();
             }
 
@@ -375,7 +380,7 @@ namespace Factorraria.Common.Carts
             {
                 Cart cart = Carts[i];
 
-                if (cart.Active)
+                if (cart.Active && !cart.Sleeping)
                 {
                     CartCargo.Update(cart);
                 }
@@ -397,11 +402,32 @@ namespace Factorraria.Common.Carts
             CartChain.AutoAttach(Carts);
 
             // Cart-vs-cart collisions (after everyone has moved this tick)
+            // Only awake carts are searched (cost is awake x all, not all x all). A sleeping cart is only ever the "other" cart of a pair:
+            // an awake cart that really hits it (TryCollide true) wakes it and its chain, and the impact moves it from the next tick.
             for (int i = 0; i < Carts.Count; i++)
             {
-                for (int j = i + 1; j < Carts.Count; j++)
+                Cart a = Carts[i];
+
+                if (a.Sleeping)
                 {
-                    Cart.TryCollide(Carts[i], Carts[j]);
+                    continue;
+                }
+
+                for (int j = 0; j < Carts.Count; j++)
+                {
+                    Cart b = Carts[j];
+
+                    if (j == i || (j < i && !b.Sleeping))
+                    {
+                        continue; // an awake pair is handled once, from its lower index
+                    }
+
+                    bool wasSleeping = b.Sleeping;
+
+                    if (Cart.TryCollide(a, b) && wasSleeping)
+                    {
+                        b.Wake();
+                    }
                 }
             }
         }
@@ -586,6 +612,7 @@ namespace Factorraria.Common.Carts
                 {
                     if (target.HasPanel)
                     {
+                        target.Wake(); // opening the panel counts as touching it (a client returns at once; the server wakes in CartPanelNet.OnOpenRequest)
                         CartChestUISystem.Toggle(target); // patch 9.5: a client opens it too (CartChestUISystem subscribes)
                     }
                     else if (CartRide.CanMount(target) && CartRide.CanPlayerRide(player))
@@ -700,6 +727,7 @@ namespace Factorraria.Common.Carts
             }
 
             cart.SetModule(module, held.type);
+            cart.Wake();
 
             held.stack--;
             if (held.stack <= 0)

@@ -696,8 +696,47 @@ namespace Factorraria.Common.Carts
         /// <summary>
         /// False for a cart made by world generation (CartWorldGen). Only player-placed carts show on the map. Default true, so a cart that is
         /// placed, or picked up and placed again, is always player-placed. Saved only when false (key "worldgen").
+        /// A cart with this false also SLEEPS (see Sleeping) until a player touches it (see Wake).
         /// </summary>
         public bool PlacedByPlayer = true;
+
+        /// <summary>
+        /// A world-generated cart nobody has touched yet sleeps: CartSystem.ServerSimulate skips its physics, cargo, chain update, collision
+        /// search and coupling search, so hundreds of generated carts cost almost nothing. It is the same flag as PlacedByPlayer, so it is
+        /// saved, and a cart that was woken stays awake after a reload. Clients never use this: the server simulates, and a replica always reads as awake.
+        /// </summary>
+        public bool Sleeping
+        {
+            get { return !PlacedByPlayer; }
+        }
+
+        /// <summary>
+        /// Server / single-player only (a client returns at once). A player touched this cart (shove, module, bucket, panel) or an awake cart
+        /// hit or coupled it. From now on it counts as player-placed (so it also shows on the map) and its whole chain wakes with it,
+        /// because carriages only follow their motor. Safe to call any number of times.
+        /// </summary>
+        public void Wake()
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                return;
+            }
+
+            PlacedByPlayer = true;
+
+            if (Chain != null)
+            {
+                if (Chain.Motor != null)
+                {
+                    Chain.Motor.PlacedByPlayer = true;
+                }
+
+                for (int i = 0; i < Chain.Carriages.Count; i++)
+                {
+                    Chain.Carriages[i].PlacedByPlayer = true;
+                }
+            }
+        }
 
         /// <summary>The chain this cart belongs to (as the motor or as a carriage). Null for a free cart.</summary>
         public CartChain Chain;
@@ -1036,6 +1075,8 @@ namespace Factorraria.Common.Carts
         /// <summary>Gives the cart a push along X. Works on and off the track.</summary>
         public void Shove(float deltaSpeed)
         {
+            Wake(); // a sleeping cart that is pushed must run (also wakes its chain)
+
             if (IsCarriage)
             {
                 Chain.Motor.Shove(deltaSpeed); // a carriage just follows: pushing it pushes the whole chain

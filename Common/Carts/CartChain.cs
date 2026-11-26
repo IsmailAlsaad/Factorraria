@@ -442,7 +442,7 @@ namespace Factorraria.Common.Carts
             {
                 Cart motor = carts[i];
 
-                if (!motor.Active || motor.Module != CartModule.Motor || !motor.OnTrack || motor.IsCarriage)
+                if (!motor.Active || motor.Module != CartModule.Motor || !motor.OnTrack || motor.IsCarriage || motor.Sleeping)
                 {
                     continue;
                 }
@@ -468,6 +468,7 @@ namespace Factorraria.Common.Carts
 
                     CartChain chain = motor.Chain != null ? motor.Chain : new CartChain(motor);
                     chain.Attach(candidate, true);
+                    candidate.Wake(); // coupled to an awake motor: it moves now, so it must not sleep
                     break;
                 }
             }

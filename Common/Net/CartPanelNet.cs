@@ -124,6 +124,8 @@ namespace Factorraria.Common.Net
                 return;
             }
 
+            cart.Wake(); // the request passed every check: the player is using this cart
+
             // Subscribing again to the cart the player already has open just refreshes their copy.
             if (playerCart[player] != 0 && playerCart[player] != cartId)
                 Unsubscribe(player, "switched cart");

@@ -385,6 +385,7 @@ namespace Factorraria.Common.Net
             }
 
             cart.SetModule(module, held.type);
+            cart.Wake();
 
             ServerInstalled++;
             FactorrariaNet.Log("[Carts] " + player.name + " installed " + module + " in cart " + cart.Id);

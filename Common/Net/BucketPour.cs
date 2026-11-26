@@ -244,6 +244,11 @@ namespace Factorraria.Common.Net
 
             // Single-player: the real tank is right here.
             nextPourTick = Main.GameUpdateCount + 15;
+            if (cart != null)
+            {
+                cart.Wake();
+            }
+
             Deposit(tank, cart != null ? liquid : resolved);
             ConsumeBucket(player, itemType);
             SoundEngine.PlaySound(SoundID.SplashWeak, player.Center);
@@ -336,6 +341,7 @@ namespace Factorraria.Common.Net
                 }
 
                 Deposit(cart.Tank, liquid);
+                cart.Wake();
                 lastPourTick[sender] = Main.GameUpdateCount;
                 FactorrariaNet.Log("[BucketPour] " + player.name + " poured into cart " + cart.Id);
                 return true;

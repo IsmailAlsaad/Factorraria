@@ -53,7 +53,7 @@ namespace Factorraria.Common.Net
                 Cart cart = CartSystem.Carts[i];
                 string role = cart.Chain == null ? "free" : cart.Chain.Motor == cart ? "chain motor" : "carriage";
                 string line = "  id " + cart.Id + " " + cart.Skin + " " + cart.Module + " at tile (" + (int)(cart.Position.X / 16f) + ", " + (int)(cart.Position.Y / 16f) + ") " + role
-                    + (cart.Active ? "" : " (inactive)");
+                    + (cart.Active ? "" : " (inactive)") + (cart.Sleeping ? " (asleep)" : "");
                 caller.Reply(line, Color.LightGreen);
                 FactorrariaNet.Log("[Carts] " + line.Trim());
             }
