@@ -43,7 +43,7 @@ namespace Factorraria.Common.Systems
         public float BirdMaxSlope = 0.6f;             // a bird only lands where the wire is flatter than this (rise over run)
         public float BirdPoleMarginPixels = 24f;      // no perching this close to a pole
         public float BirdSpacingPixels = 20f;         // minimum distance between two birds on one wire
-        public float BirdFlySpeed = 2.6f;             // pixels per tick when flying in
+        public float BirdFlySpeed = 3f;               // MAX pixels per tick when flying in (it slows down for the last stretch so it lands softly)
         public int BirdMinPerchTicks = 600;           // how long a bird stays if nothing scares it
         public int BirdMaxPerchTicks = 2400;
         public float BirdScareRadius = 96f;           // pixels: a moving player or NPC this close scares a bird
@@ -52,7 +52,9 @@ namespace Factorraria.Common.Systems
         public float TakeoffKick = 0.9f;              // how hard a take-off pulls it back up
         public int BirdLeaveMaxTicks = 300;           // a bird that is leaving starts to fade out after this long even if it is still on screen
         public int BirdFadeTicks = 30;                // how long a fade-out takes
-        public int BirdArriveTicks = 360;             // the server treats a new bird as flying in for this long (not scared or retired yet); the client lands it sooner
+        public float BirdArriveSlack = 1.25f;         // the server works out how long a new bird takes to fly in (distance / BirdFlySpeed) and waits this much longer (x) before it can be scared or retire
+        public float BirdPreperchedChance = 0.3f;     // chance a new bird is one that is "already there": it sits on a wire OUTSIDE the near box (but inside the far box), no flight
+        public float BirdPreperchRangeFactor = 2f;    // the far box is the spawn box (BirdSpawnRangeTilesX/Y) times this, about two screens
         public int BirdSpawnRangeTilesX = 55;         // the server spawns birds on wires inside a box of this half size around a player (about a screen)
         public int BirdSpawnRangeTilesY = 32;
         public int BirdChirpMinTicks = 400;           // a perched bird chirps (SoundID.Bird) every so often, a random time in this range
@@ -73,8 +75,6 @@ namespace Factorraria.Common.Systems
             public float U;             // T as a fractional node index on the wire's live rope (only while that wire is on screen)
             public Vector2 Pos;         // world position (kept up to date in every state, so a take-off starts from the right place)
             public Vector2 Vel;
-            public Vector2 Start;       // where its arrival flight began
-            public int Flight;          // how many ticks that flight takes (set when it spawns, fixed, so it always lands)
             public int Dir = 1;         // 1 faces right, -1 faces left
             public int Age;             // ticks in the current state
             public int Timer;           // ticks until the next idle action
@@ -194,8 +194,6 @@ namespace Factorraria.Common.Systems
                     var origin = new Vector2(side > 0 ? visible.Right + 48f : visible.Left - 48f, perch.Y - (40f + 100f * Main.rand.NextFloat()));
                     bird.State = BirdState.Arriving;
                     bird.Pos = origin;
-                    bird.Start = origin;
-                    bird.Flight = Math.Clamp((int)(Vector2.Distance(origin, perch) / Math.Max(0.5f, BirdFlySpeed)), 60, Math.Max(60, BirdArriveTicks - 60));
                 }
             }
 
@@ -277,9 +275,10 @@ namespace Factorraria.Common.Systems
 
             if (bird.State == BirdState.Arriving)
             {
-                // A flight of a fixed length (bird.Flight ticks, set when it spawned) from where it came in to its spot, slowing down toward the
-                // end. The spot is the live rope point, or the resting curve when the wire has left the screen meanwhile: the bird keeps flying
-                // and lands, it never pops away or teleports (the old speed-based flight could take very long and then snapped to the wire).
+                // Flies straight to its spot at no more than BirdFlySpeed pixels per tick (slower for the last stretch, so it lands softly).
+                // The spot is the live rope point, or the resting curve when the wire has left the screen meanwhile: the bird keeps flying
+                // and lands, it never pops away or teleports. How long that takes depends on the distance; the server allows for it
+                // (ServerBird.ArriveTicks) before it can scare or retire the bird.
                 Vector2 spot;
                 if (rope != null)
                 {
@@ -297,15 +296,10 @@ namespace Factorraria.Common.Systems
                     return true;
                 }
 
-                float progress = Math.Clamp(bird.Age / (float)Math.Max(1, bird.Flight), 0f, 1f);
-                float eased = 1f - (1f - progress) * (1f - progress);
-                Vector2 before = bird.Pos;
-                bird.Pos = Vector2.Lerp(bird.Start, spot, eased);
-                bird.Vel = bird.Pos - before;
-                if (Math.Abs(spot.X - bird.Start.X) > 2f)
-                    bird.Dir = spot.X >= bird.Start.X ? 1 : -1;
+                Vector2 delta = spot - bird.Pos;
+                float distance = delta.Length();
 
-                if (progress >= 1f)
+                if (distance <= 3f)
                 {
                     bird.State = BirdState.Perched;
                     bird.Age = 0;
@@ -313,7 +307,15 @@ namespace Factorraria.Common.Systems
                     bird.Timer = Main.rand.Next(40, 120);
                     if (rope != null)
                         Kick(rope, bird.U, LandKick);
+
+                    return true;
                 }
+
+                float speed = Math.Min(BirdFlySpeed, Math.Max(0.6f, distance * 0.05f));
+                bird.Vel = delta / distance * speed;
+                bird.Pos += bird.Vel;
+                if (Math.Abs(delta.X) > 2f)
+                    bird.Dir = delta.X >= 0f ? 1 : -1;
 
                 return true;
             }

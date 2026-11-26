@@ -28,7 +28,8 @@ namespace Factorraria.Common.Net
             public WireKey Key;
             public float T;
             public int Variant;
-            public int Age;            // ticks since it spawned (its arrival flight counts: BirdArriveTicks)
+            public int Age;            // ticks since it spawned (its arrival flight counts: ArriveTicks)
+            public int ArriveTicks;    // how long it is treated as flying in (0 = it was already sitting there); not scared or retired before that
             public int Life;           // age at which it takes off on its own
             public bool Leaving;
             public int LeaveAge;       // ticks since it took off; it stays hittable for a while, then it is forgotten
@@ -131,7 +132,7 @@ namespace Factorraria.Common.Net
                 }
 
                 // Still flying in (the clients animate that): nothing scares or retires it yet.
-                if (bird.Age < config.BirdArriveTicks)
+                if (bird.Age < bird.ArriveTicks)
                     continue;
 
                 if (bird.Age >= bird.Life)
@@ -254,9 +255,22 @@ namespace Factorraria.Common.Net
             Player player = Main.player[chosen];
             int halfWidth = (int)(config.BirdSpawnRangeTilesX * 16f);
             int halfHeight = (int)(config.BirdSpawnRangeTilesY * 16f);
-            var box = new Rectangle((int)player.Center.X - halfWidth, (int)player.Center.Y - halfHeight, halfWidth * 2, halfHeight * 2);
+            var nearBox = new Rectangle((int)player.Center.X - halfWidth, (int)player.Center.Y - halfHeight, halfWidth * 2, halfHeight * 2);
 
-            // Room for another bird around this player?
+            // Sometimes the bird is one that "was already there": it sits on a wire outside the near box (about the screen) but inside the
+            // far box (about two screens), with no flight, so it looks like it flew in before the player came. A client that happens to have
+            // that wire on screen (zoomed out) still shows the flight, a client that does not just has it sitting there (ApplyBirdSpawn).
+            bool preperched = Main.rand.NextFloat() < config.BirdPreperchedChance;
+            Rectangle box = nearBox;
+            if (preperched)
+            {
+                float factor = Math.Max(1f, config.BirdPreperchRangeFactor);
+                int farWidth = (int)(halfWidth * factor);
+                int farHeight = (int)(halfHeight * factor);
+                box = new Rectangle((int)player.Center.X - farWidth, (int)player.Center.Y - farHeight, farWidth * 2, farHeight * 2);
+            }
+
+            // Room for another bird in that area?
             int near = 0;
             foreach (ServerBird other in birds)
             {
@@ -307,8 +321,23 @@ namespace Factorraria.Common.Net
                     if (!box.Contains((int)point.X, (int)point.Y) || point.Y / 16f >= Main.worldSurface)
                         continue;
 
+                    if (preperched && nearBox.Contains((int)point.X, (int)point.Y))
+                        continue;
+
                     if (IsSpotTaken(key, t, length, config.BirdSpacingPixels))
                         continue;
+
+                    // A new bird comes in from just outside the screen on a random side. The server does not know the client's screen, so it
+                    // takes the spawn box edge as that point, and gives the bird the time that distance needs at BirdFlySpeed (plus slack).
+                    int side = Main.rand.NextBool() ? 1 : -1;
+                    int arriveTicks = 0;
+                    if (!preperched)
+                    {
+                        float dx = Math.Abs(player.Center.X + side * (halfWidth + 80f) - point.X);
+                        float distance = (float)Math.Sqrt(dx * dx + 90f * 90f);
+                        float speed = Math.Max(0.5f, config.BirdFlySpeed);
+                        arriveTicks = (int)(((Math.Max(0f, distance - 20f * speed) / speed) + 20f * speed) * Math.Max(1f, config.BirdArriveSlack)) + 30;
+                    }
 
                     var bird = new ServerBird
                     {
@@ -316,11 +345,12 @@ namespace Factorraria.Common.Net
                         Key = key,
                         T = t,
                         Variant = Main.rand.Next(Math.Max(1, config.BirdNpcIds == null ? 1 : config.BirdNpcIds.Length)),
-                        Life = config.BirdArriveTicks + Main.rand.Next(Math.Min(config.BirdMinPerchTicks, config.BirdMaxPerchTicks), Math.Max(config.BirdMinPerchTicks, config.BirdMaxPerchTicks) + 1)
+                        ArriveTicks = arriveTicks,
+                        Life = arriveTicks + Main.rand.Next(Math.Min(config.BirdMinPerchTicks, config.BirdMaxPerchTicks), Math.Max(config.BirdMinPerchTicks, config.BirdMaxPerchTicks) + 1)
                     };
 
                     birds.Add(bird);
-                    EmitSpawn(bird, Main.rand.NextBool() ? 1 : -1);
+                    EmitSpawn(bird, side);
                     return;
                 }
             }
