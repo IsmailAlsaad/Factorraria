@@ -904,22 +904,22 @@ Configs: {
 
 		EnableDebugs: {
 			Label: Enable Debugs
-			Tooltip: "Shows the debug overlays and debug chat lines (cosmic radiation, liquid network, power grid, conveyors, carts, mech suit, super weapon, recipe book)."
+			Tooltip: Shows the debug overlays and debug chat lines (cosmic radiation, liquid network, power grid, conveyors, carts, mech suit, super weapon, recipe book).
 		}
 
 		RevealAllRecipes: {
 			Label: Reveal All Recipes
-			Tooltip: "Recipe Discovery debug: show EVERY recipe in machine browsers instead of only learned ones."
+			Tooltip: Recipe Discovery debug: show EVERY recipe in machine browsers instead of only learned ones.
 		}
 
 		fireCropOffset: {
 			Label: Fire Icon Start Fill
-			Tooltip: "How full the fire icon already looks at 0% progress (0 = empty, 1 = full)."
+			Tooltip: How full the fire icon already looks at 0% progress (0 = empty, 1 = full).
 		}
 
 		animationSpeedDivider: {
 			Label: Machine Animation Divider
-			Tooltip: "Machine animations advance one frame every this many ticks (bigger = slower)."
+			Tooltip: Machine animations advance one frame every this many ticks (bigger = slower).
 		}
 	}
 
@@ -1002,37 +1002,37 @@ Configs: {
 
 		IconSize: {
 			Label: Icon Size
-			Tooltip: "Size of a cart icon on the map (1 = the item sprite at normal size). The icon grows a little under the mouse."
+			Tooltip: Size of a cart icon on the map (1 = the item sprite at normal size). The icon grows a little under the mouse.
 		}
 
 		OutlineThickness: {
 			Label: Outline Thickness
-			Tooltip: "Pixels of white then black around each icon. 0 = no outline. Fractions work."
+			Tooltip: Pixels of white then black around each icon. 0 = no outline. Fractions work.
 		}
 
 		ButtonX: {
 			Label: Button X
-			Tooltip: "Gap in pixels between the none / all / motor button and the right edge of the fullscreen map."
+			Tooltip: Gap in pixels between the none / all / motor button and the right edge of the fullscreen map.
 		}
 
 		ButtonY: {
 			Label: Button Y
-			Tooltip: "Gap in pixels between the none / all / motor button and the bottom edge of the fullscreen map."
+			Tooltip: Gap in pixels between the none / all / motor button and the bottom edge of the fullscreen map.
 		}
 
 		InvertIconDirection: {
 			Label: Invert Icon Direction
-			Tooltip: "Tick this if the icons face the wrong way."
+			Tooltip: Tick this if the icons face the wrong way.
 		}
 
 		FlipLeftFacingSkins: {
 			Label: Flip Left Facing Skins
-			Tooltip: "The Minecart and Mechanical Cart sprites face left, so their icon is flipped. Untick to draw them like the rest."
+			Tooltip: The Minecart and Mechanical Cart sprites face left, so their icon is flipped. Untick to draw them like the rest.
 		}
 
 		HideCarriedNpcHead: {
 			Label: Hide Carried Npc Head
-			Tooltip: "A town NPC riding in a cart is shown in the cart icon, so its normal map head is hidden while it is carried."
+			Tooltip: A town NPC riding in a cart is shown in the cart icon, so its normal map head is hidden while it is carried.
 		}
 	}
 }
