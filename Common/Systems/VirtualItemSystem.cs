@@ -500,7 +500,7 @@ namespace Factorraria.Content.VirtualItems
 
                 CheckVirtualItemHover(item);
 
-                FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+                DevConfig config = ModContent.GetInstance<DevConfig>();
                 if (config != null && config.EnableDebugs)
                 {
                     DrawItemDebug(Main.spriteBatch, item);

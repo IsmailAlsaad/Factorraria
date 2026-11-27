@@ -36,7 +36,7 @@ namespace Factorraria.Common.Systems
         {
             // Reusing the same config flag PowerGridDebugSystem uses — one debug
             // toggle for both systems, since they're both "internal dev overlay" tools.
-            FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            DevConfig config = ModContent.GetInstance<DevConfig>();
             EnableDebugView = config.EnableDebugs;
 
             if (!EnableDebugView)

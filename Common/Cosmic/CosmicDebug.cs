@@ -71,7 +71,7 @@ namespace Factorraria.Common.Cosmic
         // C8: the test commands only work while EnableDebugs is on in the Factorraria mod config.
         static bool TestCommandsOn(CommandCaller caller, string what)
         {
-            FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            DevConfig config = ModContent.GetInstance<DevConfig>();
             if (config != null && config.EnableDebugs)
                 return true;
 

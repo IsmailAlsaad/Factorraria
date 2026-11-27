@@ -103,7 +103,7 @@ namespace Factorraria.Common.UI.RecipeBookUI
                 {
                     dragging = true;
                     grab = UserInterface.ActiveInstance.MousePosition - new Vector2(Button.Left.Pixels, Button.Top.Pixels);
-                    if (ModContent.GetInstance<FurnaceOffsetConfig>().EnableDebugs) Main.NewText("[RecipeBook] button drag started");
+                    if (ModContent.GetInstance<DevConfig>().EnableDebugs) Main.NewText("[RecipeBook] button drag started");
                 }
                 return;
             }

@@ -641,7 +641,7 @@ namespace Factorraria.Common.Cosmic
         {
             get
             {
-                FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+                DevConfig config = ModContent.GetInstance<DevConfig>();
                 return config != null && config.EnableDebugs;
             }
         }

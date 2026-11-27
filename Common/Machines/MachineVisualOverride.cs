@@ -245,7 +245,7 @@ namespace Factorraria.Common.Machines
         }
 
         public int GetTransitionTicksPerFrame(MachineTransition kind) =>
-            Math.Max(1, ModContent.GetInstance<FurnaceOffsetConfig>().animationSpeedDivider);
+            Math.Max(1, ModContent.GetInstance<DevConfig>().animationSpeedDivider);
 
         // Total length of the animation in ticks, 0 when there is no usable art (the OnStartup / OnShutdown hooks still fire).
         public int GetTransitionDuration(MachineTransition kind)

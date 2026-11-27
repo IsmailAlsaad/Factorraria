@@ -13,7 +13,7 @@ namespace Factorraria.Content.Configs
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
         // Size of a cart icon on the map, 1 = the item sprite at its normal size. The icon grows a little when the mouse is over it.
-        [DefaultValue(0.85f)]
+        [DefaultValue(0.6f)]
         [Range(0.2f, 2f)]
         [Increment(0.05f)]
         [Slider]
@@ -21,7 +21,7 @@ namespace Factorraria.Content.Configs
 
         // Pixels of white, then the same number of black, around each icon. 0 = no outline.
         // Fractions work: the outermost ring of each colour is drawn partly transparent (1.5 = one full pixel plus a half-strength one).
-        [DefaultValue(1.6f)]
+        [DefaultValue(1f)]
         [Range(0f, 4f)]
         [Increment(0.05f)]
         [Slider]

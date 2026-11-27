@@ -899,62 +899,27 @@ Configs: {
 		}
 	}
 
-	FurnaceOffsetConfig: {
-		DisplayName: Furnace Offset Config
-
-		OffsetX: {
-			Label: Offset X
-			Tooltip: ""
-		}
-
-		OffsetY: {
-			Label: Offset Y
-			Tooltip: ""
-		}
-
-		Offset: {
-			Tooltip: ""
-			Label: Offset
-		}
-
-		animationOffset: {
-			Label: animation Offset
-			Tooltip: ""
-		}
-
-		fireCropOffset: {
-			Label: fire Crop Offset
-			Tooltip: ""
-		}
-
-		animationSpeedDivider: {
-			Label: animation Speed Divider
-			Tooltip: ""
-		}
+	DevConfig: {
+		DisplayName: Developer / Debug
 
 		EnableDebugs: {
 			Label: Enable Debugs
-			Tooltip: ""
-		}
-
-		VItemOffset: {
-			Label: V Item Offset
-			Tooltip: ""
-		}
-
-		AngleOffset: {
-			Label: Angle Offset
-			Tooltip: ""
-		}
-
-		AngleOffset2: {
-			Label: Angle Offset2
-			Tooltip: ""
+			Tooltip: "Shows the debug overlays and debug chat lines (cosmic radiation, liquid network, power grid, conveyors, carts, mech suit, super weapon, recipe book)."
 		}
 
 		RevealAllRecipes: {
 			Label: Reveal All Recipes
-			Tooltip: Recipe Discovery debug: show EVERY recipe in machine browsers instead of only learned ones
+			Tooltip: "Recipe Discovery debug: show EVERY recipe in machine browsers instead of only learned ones."
+		}
+
+		fireCropOffset: {
+			Label: Fire Icon Start Fill
+			Tooltip: "How full the fire icon already looks at 0% progress (0 = empty, 1 = full)."
+		}
+
+		animationSpeedDivider: {
+			Label: Machine Animation Divider
+			Tooltip: "Machine animations advance one frame every this many ticks (bigger = slower)."
 		}
 	}
 
@@ -1037,37 +1002,37 @@ Configs: {
 
 		IconSize: {
 			Label: Icon Size
-			Tooltip: ""
+			Tooltip: "Size of a cart icon on the map (1 = the item sprite at normal size). The icon grows a little under the mouse."
 		}
 
 		OutlineThickness: {
 			Label: Outline Thickness
-			Tooltip: ""
+			Tooltip: "Pixels of white then black around each icon. 0 = no outline. Fractions work."
 		}
 
 		ButtonX: {
 			Label: Button X
-			Tooltip: ""
+			Tooltip: "Gap in pixels between the none / all / motor button and the right edge of the fullscreen map."
 		}
 
 		ButtonY: {
 			Label: Button Y
-			Tooltip: ""
+			Tooltip: "Gap in pixels between the none / all / motor button and the bottom edge of the fullscreen map."
 		}
 
 		InvertIconDirection: {
 			Label: Invert Icon Direction
-			Tooltip: ""
+			Tooltip: "Tick this if the icons face the wrong way."
 		}
 
 		FlipLeftFacingSkins: {
 			Label: Flip Left Facing Skins
-			Tooltip: ""
+			Tooltip: "The Minecart and Mechanical Cart sprites face left, so their icon is flipped. Untick to draw them like the rest."
 		}
 
 		HideCarriedNpcHead: {
 			Label: Hide Carried Npc Head
-			Tooltip: ""
+			Tooltip: "A town NPC riding in a cart is shown in the cart icon, so its normal map head is hidden while it is carried."
 		}
 	}
 }

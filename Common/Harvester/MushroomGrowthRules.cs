@@ -65,7 +65,7 @@ namespace Factorraria.Common.Harvester
                 grew = HarvesterBoxTrees.TryGrowMushroomTree(x, y);
             }
 
-            global::Factorraria.Content.Configs.FurnaceOffsetConfig cfg = ModContent.GetInstance<global::Factorraria.Content.Configs.FurnaceOffsetConfig>();
+            global::Factorraria.Content.Configs.DevConfig cfg = ModContent.GetInstance<global::Factorraria.Content.Configs.DevConfig>();
             if (cfg != null && cfg.EnableDebugs)
                 ModContent.GetInstance<MushroomGrowthHooks>().Mod.Logger.Info($"[MushroomGrowth] tree attempt on the box at ({x},{y}): grew={grew}, mushroomsCleared={cleared}");
 

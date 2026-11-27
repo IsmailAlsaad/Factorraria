@@ -23,7 +23,7 @@ namespace Factorraria.Common.SuperWeapons
             if (Main.dedServ || Main.gameMenu)
                 return;
 
-            FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            DevConfig config = ModContent.GetInstance<DevConfig>();
             if (config == null || !config.EnableDebugs)
                 return;
 

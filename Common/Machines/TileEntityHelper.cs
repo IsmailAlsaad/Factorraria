@@ -162,7 +162,7 @@ namespace Factorraria.Common.Machines
         {
             if (frameCount <= 1) return 0;
 
-            int animationSpeed = Math.Max(1, ModContent.GetInstance<FurnaceOffsetConfig>().animationSpeedDivider);
+            int animationSpeed = Math.Max(1, ModContent.GetInstance<DevConfig>().animationSpeedDivider);
             // Motors are the exception: every motor shows the same frame at the same time, wherever it is placed.
             bool isMotor = ModContent.GetModTile(Main.tile[topLeft.X, topLeft.Y].TileType) is IMotorTile;
             long spatialOffset = isMotor ? 0 : (topLeft.X * 3) + (topLeft.Y * 7);

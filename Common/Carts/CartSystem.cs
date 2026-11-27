@@ -842,7 +842,7 @@ namespace Factorraria.Common.Carts
                 return;
             }
 
-            FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            DevConfig config = ModContent.GetInstance<DevConfig>();
             bool debug = config != null && config.EnableDebugs;
 
             Main.spriteBatch.Begin(

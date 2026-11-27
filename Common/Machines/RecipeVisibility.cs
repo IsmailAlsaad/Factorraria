@@ -170,7 +170,7 @@ namespace Factorraria.Common.Machines
             if (heldKeys.Contains(catalogKey)) return RecipeState.FadedIngredient;
 
             // Debug reveal: at least faded in the browser. It never touches the saved sets and never reaches the book (see InBook).
-            if (ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes) return RecipeState.DebugRevealed;
+            if (ModContent.GetInstance<DevConfig>().RevealAllRecipes) return RecipeState.DebugRevealed;
             return RecipeState.Hidden;
         }
 
@@ -202,7 +202,7 @@ namespace Factorraria.Common.Machines
         public static bool IsNameRevealedInBrowser(string machineName, RecipeOutputGroup group, RecipeState state)
         {
             if (state == RecipeState.Crafted) return true;
-            return ModContent.GetInstance<FurnaceOffsetConfig>().RevealAllRecipes;
+            return ModContent.GetInstance<DevConfig>().RevealAllRecipes;
         }
 
         // ------------------------------------------------------------------------------------------

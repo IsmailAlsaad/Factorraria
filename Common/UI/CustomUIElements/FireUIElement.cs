@@ -43,7 +43,7 @@ namespace Factorraria.Common.UI.CustomUIElements
 
             spriteBatch.Draw(fireEmptyTexture.Value, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 
-            FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            DevConfig config = ModContent.GetInstance<DevConfig>();
 
             float drawPercent = GetProgress();
             drawPercent = drawPercent == -1 ? 0f : Remap(drawPercent, 0f, 1f, config.fireCropOffset, 1f);

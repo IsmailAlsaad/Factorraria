@@ -110,13 +110,13 @@ namespace Factorraria.Common.Cosmic
         public float RadiationLifeRegenPerLevel = 5f;
 
         [CosmicParam("Geiger counter clicks per second for each radiation level (a click is at most every other tick).", "clicks/s per level")]
-        public float RadiationClicksPerLevel = 1.5f;
+        public float RadiationClicksPerLevel = 3f;
 
         [CosmicParam("The highest radiation level a player can reach.", "level")]
         public float RadiationMaxLevel = 30f;
 
         [CosmicParam("The longest the radiation debuff can last. Each hit adds seconds equal to the particle's multiplier, up to this.", "seconds")]
-        public float RadiationMaxSeconds = 120f;
+        public float RadiationMaxSeconds = 30f;
 
         [CosmicParam("NPCs and enemies: life loss per radiation level, in lifeRegen units (2 = 1 HP/s). Their level, debuff time, radius and maximums use the same Radiation* numbers as the player (C12).", "lifeRegen/level")]
         public float NpcRadiationLifeRegenPerLevel = 5f;
@@ -183,7 +183,7 @@ namespace Factorraria.Common.Cosmic
         public float ClientFadeOutStart = 0.8f;
 
         [CosmicParam("Only for a particle whose lifetime runs out (it flew its whole range without being absorbed, split or blocked): when the WHOLE particle (trail, head and halo together) starts to fade out, as a fraction of its flight time. 0.9 = it flies to the end with the trail intact, then fades smoothly over the last tenth of its flight. A particle that was absorbed, split or blocked ignores this and keeps the head fade (ClientFadeOutStart) with the trail draining away. 1 = no whole-particle fade for anyone (client only).", "fraction")]
-        public float ClientLifeFadeStart = 0.7f;
+        public float ClientLifeFadeStart = 0.9f;
 
         [CosmicParam("Brightness multiplier of the particles and their trails (client only, used from C6).", "x")]
         public float ClientBrightness = 1f;

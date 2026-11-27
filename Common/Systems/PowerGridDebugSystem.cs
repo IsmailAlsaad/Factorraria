@@ -31,7 +31,7 @@ public class PowerGridDebugSystem : ModSystem
 
     public override void PostDrawTiles()
     {
-        FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+        DevConfig config = ModContent.GetInstance<DevConfig>();
 
         EnableDebugView = config.EnableDebugs;
 

@@ -52,7 +52,7 @@ tModLoader/other bases -> project types:
 - UIElement (15): ElectricityUIIcon, FireUIElement, LiquidTankUIElement, RecipeBookButton, RecipeBookCloseButton, RecipeBookDetail, RecipeBookDragHandle, RecipeBookEntry, RecipeBookHeaderRow, RecipeBookModeButton, RecipeBookPanel, RecipeBookTabTipOverlay, RecipeSearchBar, RecipeSelectHammerIcon, UIItemSlotWrapper
 - ModPlayer (14): CartEquipPlayer, CartInteractionPlayer, CartRiderPlayer, CosmicRadiationPlayer, ExtractinatorBlockPlayer, FactorrariaPlayerSync, ImportantDialoguePlayer, MechSuitPlayer, MechanicalArmPlayer, MechanicsBagPlayer, RecipeBookKeybindPlayer, RecipeBookPlayer, TimedCraftingPlayer, WireCutterSmartCursorPlayer
 - GlobalNPC (13): AwakenedSpawnGlobalNPC, BossLootGlobal, BoundMechanicGlobalNPC, CartPassengerGlobalNPC, CosmicRadiationNpc, DryadShopGlobalNPC, ImportantDialogueGlobalNPC, MechanicShopGlobalNPC, MechanicWrenchGlobalNPC, MeteorHeadStatueGlobalNPC, RareNpcGlobalNPC, StoryEventsGlobalNPC, WallShieldGlobalNPC
-- ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, FurnaceOffsetConfig, NetworkConfig
+- ModConfig (5): CartMapConfig, CosmicBalanceConfig, CosmicVisualConfig, DevConfig, NetworkConfig
 - UIState (4): CartChestUIState, MachineUIStateBase, RecipeBookButtonState, RecipeBookState
 - ModProjectile (3): MechSuitArmProjectile, MechanicalArmProjectile, SuperWeaponMissile
 - IEquatable (2): RecipeOutputKey, WireKey
@@ -159,7 +159,7 @@ tModLoader/other bases -> project types:
 **CartSkins.cs**
   static class CartSkins
     +VanillaPrefix:string[c] +DefaultKey:string[c] +KeyOf(int)[s] +TryTypeOf(string,out int)[s]
-**CartSystem.cs** uses: BucketPour, Cart, CartCargo, CartChain, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartNet, CartPassengers, CartPhysics, CartRide, CartSkinTable, CartSkins, CartSound, CartSoundKind, FurnaceOffsetConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineSmartOutlineSystem, MechCartDustSystem, PlacedSprite, TrackData, TrackSample
+**CartSystem.cs** uses: BucketPour, Cart, CartCargo, CartChain, CartChestUISystem, CartGeometry, CartInputNet, CartModule, CartNet, CartPassengers, CartPhysics, CartRide, CartSkinTable, CartSkins, CartSound, CartSoundKind, DevConfig, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineSmartOutlineSystem, MechCartDustSystem, PlacedSprite, TrackData, TrackSample
   class CartSystem : ModSystem
     +Carts:List<Cart>[s] +NextCartId:int[s] +AssignId(Cart)[s] +FindById(int)[s] +Unload()[ov] +OnWorldLoad()[ov] +ClearWorld()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +ClientInterpolate()[s] +CheckPlacement(Player,int,int,out Vector2,out bool)[s] +SpawnCart(Vector2,int,CartModule)[s] +FindCartAtCursor(Player)[s] +FindCartForRightClick(Player)[s] +GetInstallModule(Item,Cart,out CartModule)[s] +IsInInteractRange(Player,Cart,float)[s] +PickUp(Player,Cart)[s] +GetZoomCorrectedMouseWorld()[s] +TryGetModuleSprite(Cart,PlacedSprite,out Texture2D,out float,out float)[s]
 **MechCartDustSystem.cs** uses: BaseMachine, Cart, CartGeometry
@@ -206,7 +206,7 @@ tModLoader/other bases -> project types:
     {White, Violet, Blue, Green, Yellow, Orange, Red, Grey}
   static class CosmicColors
     +Count:int[s] +Lowest:CosmicColor[s] +HasNext(CosmicColor)[s] +Next(CosmicColor)[s] +HasGemspark(CosmicColor)[s] +GemsparkTile(CosmicColor)[s] +TryFromGemspark(int,out CosmicColor)[s] +IsCloudTile(int)[s] +DrawColor(CosmicColor)[s] +TileTint(CosmicColor)[s]
-**CosmicDebug.cs** uses: CosmicBalanceConfig, CosmicColor, CosmicColors, CosmicDischarge, CosmicEventRouter, CosmicHeatmap, CosmicParamAttribute, CosmicParticleSystem, CosmicQueuedEvent, CosmicRadiationSystem, CosmicReceiverIndex, CosmicSimulation, CosmicVisualConfig, FurnaceOffsetConfig, StrikeResult
+**CosmicDebug.cs** uses: CosmicBalanceConfig, CosmicColor, CosmicColors, CosmicDischarge, CosmicEventRouter, CosmicHeatmap, CosmicParamAttribute, CosmicParticleSystem, CosmicQueuedEvent, CosmicRadiationSystem, CosmicReceiverIndex, CosmicSimulation, CosmicVisualConfig, DevConfig, StrikeResult
   class CosmicCommand : ModCommand
     +Command:string[ov] +Type:CommandType[ov] +Usage:string[ov] +Description:string[ov] +Action(CommandCaller,string,string)[ov]
 **CosmicEventHeap.cs** uses: CosmicColor
@@ -237,7 +237,7 @@ tModLoader/other bases -> project types:
 **CosmicParamAttribute.cs**
   sealed class CosmicParamAttribute : Attribute
     +Description:string +Unit:string
-**CosmicParticleSystem.Ambient.cs** uses: Bolt, CosmicColor, CosmicColors, CosmicHeatmap, CosmicRadiationSystem, CosmicRayEnd, CosmicRayEndKind, CosmicRayResult, CosmicRayTracer, CosmicReceiverIndex, CosmicSampling, CosmicSamplingStrip, CosmicSimulation, CosmicTileCodes, CosmicTileProbe, FurnaceOffsetConfig, Particle, Phase, Strip
+**CosmicParticleSystem.Ambient.cs** uses: Bolt, CosmicColor, CosmicColors, CosmicHeatmap, CosmicRadiationSystem, CosmicRayEnd, CosmicRayEndKind, CosmicRayResult, CosmicRayTracer, CosmicReceiverIndex, CosmicSampling, CosmicSamplingStrip, CosmicSimulation, CosmicTileCodes, CosmicTileProbe, DevConfig, Particle, Phase, Strip
   partial class CosmicParticleSystem : ModSystem
     +AmbientOn:bool +AmbientOffReason:string +AmbientSkippedFull:long AmbientSpawned, AmbientDropped, +Unload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
 **CosmicParticleSystem.Radiation.cs** uses: CosmicRadiationPlayer, CosmicRadiationSystem, Particle
@@ -432,7 +432,7 @@ tModLoader/other bases -> project types:
 **IHarvesterBoxRow.cs**
   interface IHarvesterBoxRow
     +BeginClientStrike(int)
-**MushroomGrowthRules.cs** uses: Disguise, Factorraria, FurnaceOffsetConfig, HarvesterBoxRegistry, HarvesterBoxTrees
+**MushroomGrowthRules.cs** uses: DevConfig, Disguise, Factorraria, HarvesterBoxRegistry, HarvesterBoxTrees
   static class MushroomGrowthRules
     +MushroomChance:float[s] +TreeChance:float[s] +ClearHalfWidth:int[s] +IsMushroomBox(int,int)[s] +Step(int,int)[s]
   class MushroomBoxGlobalTile : GlobalTile
@@ -684,7 +684,7 @@ tModLoader/other bases -> project types:
 **MachineTransitionSystem.cs** uses: BaseMachine, MachineVisualDefinition, MachineVisualRegistry
   class MachineTransitionSystem : ModSystem
     +PostUpdateEverything()[ov]
-**MachineVisualOverride.cs** uses: BaseMachine, Direction, Factorraria, FactorrariaNet, FurnaceOffsetConfig, IMachineTileUnderlay, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, PipeFlowVisualSystem, PipeMachineBackdropSystem, TileEntityHelper
+**MachineVisualOverride.cs** uses: BaseMachine, DevConfig, Direction, Factorraria, FactorrariaNet, IMachineTileUnderlay, LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry, MachineDetailSystem, MachinePlacement, MachineRemoval, MachineUIRegistry, MachineUISystem, MotorTileEntityBase, PipeFlowVisualSystem, PipeMachineBackdropSystem, TileEntityHelper
   enum MachineTransition : byte
     {None, Startup, Shutdown}
   class LiquidOverlayLayer
@@ -700,12 +700,12 @@ tModLoader/other bases -> project types:
 **MachineWireGlobalTile.cs** uses: BaseMachine, TileEntityHelper
   class MachineWireGlobalTile : GlobalTile
     +PreHitWire(int,int,int)[ov]
-**RecipeVisibility.cs** uses: CustomRecipe, Entry, FuelEntry, FurnaceOffsetConfig, LiquidBiomeVisits, LiquidIngredient, RecipeCatalog, RecipeIngredient, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeTabDiscovery
+**RecipeVisibility.cs** uses: CustomRecipe, DevConfig, Entry, FuelEntry, LiquidBiomeVisits, LiquidIngredient, RecipeCatalog, RecipeIngredient, RecipeKnowledgeNet, RecipeKnowledgeSystem, RecipeOutputGroup, RecipeOutputKey, RecipeTabDiscovery
   enum RecipeState
     {Hidden, DebugRevealed, FadedIngredient, FadedParchment, Crafted}
   static class RecipeVisibility
     +HeldVersion:int[s] +IsIngredient(int)[s] +BuildIngredientIndex()[s] +ClearIndex()[s] +InvalidateHeld()[s] +GetState(string,RecipeOutputGroup)[s] +GetState(string)[s] +Poll()[s] +IsItemHeld(int)[s] +IsHeld(string)[s] +IsNameRevealedInBrowser(string,RecipeOutputGroup,RecipeState)[s] +TryGetItemProducers(int,out List<string>)[s] +TryGetProducers(RecipeOutputKey,out List<string>)[s] +IsProductCrafted(RecipeOutputKey)[s] +IsIngredientRevealed(int)[s] +IsLiquidRevealed(int)[s] +IsMachineCrafted(string)[s] +IsFuelRevealed(string,FuelEntry)[s] +FindBookRecipeFor(RecipeOutputKey,string)[s] +InBook(RecipeState)[s]
-**TileEntityHelper.cs** uses: Factorraria, FurnaceOffsetConfig, HarvesterBoxRows, IMotorTile, LiquidNetworkSystem, PowerGridSystem
+**TileEntityHelper.cs** uses: DevConfig, Factorraria, HarvesterBoxRows, IMotorTile, LiquidNetworkSystem, PowerGridSystem
   static class TileEntityHelper
     +TryGetEntityFromTile(int,int,out TileEntity,out Point16)[s] +GetOrCreateEntity<T>(int,int)[s] +AnimateTileEntity(SpriteBatch,Texture2D,int,int,float,int,Vector2?,bool)[s] +GetAnimationFrame(Point16,int)[s]
 
@@ -738,7 +738,7 @@ tModLoader/other bases -> project types:
 **MechSuitBuilderSystem.cs** uses: MechSuitBuildNet, MechSuitHologramSystem, MechSuitPlayer, RoboticArmAreaEditorSystem
   class MechSuitBuilderSystem : ModSystem
     +MaxSelectionWidth:int +MaxSelectionHeight:int +CancelKey:Keys +TexturePath:string +Selection:Rectangle? +SelectionVersion:int +PlaceOrigin:Point? +IsDragging:bool +OriginFor(Rectangle,Point)[s] ~ShiftHeld:bool[s] ~Ready(out Player)[s] +OnWorldUnload()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov]
-**MechSuitDebugSystem.cs** uses: BaseMachine, FurnaceOffsetConfig, MechSuitArmProjectile, MechSuitPlayer
+**MechSuitDebugSystem.cs** uses: BaseMachine, DevConfig, MechSuitArmProjectile, MechSuitPlayer
   class MechSuitDebugSystem : ModSystem
     +PostDrawTiles()[ov]
 **MechSuitHologramSystem.cs** uses: Block, MechSuitBlueprint, MechSuitBuilderSystem, MechSuitPlayer, RoboticArmAreaEditorSystem, UnitState
@@ -1342,7 +1342,7 @@ tModLoader/other bases -> project types:
     +Assembled:bool +Facing:int +Issue:AssemblyIssue +IssueRow:int +IssueX:int +IssueY:int
   static class SuperWeaponAssembly
     +TankWidth:int[c] +TankHeight:int[c] +DrillWidth:int[c] +DrillHeight:int[c] +Evaluate(int,int,Func<int, int, PartCell>)[s] +Describe(bool,int,AssemblyIssue,int)[s]
-**SuperWeaponDebugSystem.cs** uses: AssemblyIssue, BaseMachine, FurnaceOffsetConfig, MissileTankTileEntity, SuperWeaponAssembly
+**SuperWeaponDebugSystem.cs** uses: AssemblyIssue, BaseMachine, DevConfig, MissileTankTileEntity, SuperWeaponAssembly
   class SuperWeaponDebugSystem : ModSystem
     +PostDrawTiles()[ov]
 **SuperWeaponDropGuard.cs** uses: SuperWeaponSystem
@@ -1409,7 +1409,7 @@ tModLoader/other bases -> project types:
 **HellstoneGrowthSystem.cs** uses: BaseMachine, HellstoneGrowNetSystem
   class HellstoneGrowthSystem : ModSystem
     +Enabled:bool +MaxDistance:int +BaseSecondsToConvert:float +DistanceSlowdown:float +MinLavaAmount:int +AshLayerDepth:int +AshSecondsToConvert:float +AshDustCount:int +AshSoundVolume:float +AshSoundPitchVariance:float +SamplesPerTick:int +ScanColumnsPerTick:int +RescanDelayTicks:int +MaxCandidates:int +MaxExtraConversionsPerPick:int +SoundVariants:int +SoundVolume:float +SoundPitchVariance:float +SoundMaxInstances:int +LavaDustCount:int +EmberDustCount:int +SmokeDustCount:int +DustCullMargin:float +ClearWorld()[ov] +PostUpdateWorld()[ov] +PlayEffect(int,int,bool)
-**LiquidNetworkDebugSystem.cs** uses: BaseMachine, Direction, FlowDir, FlowNetwork, FlowPort, FlowRoute, FlowSink, FlowSource, FlowTransfer, FurnaceOffsetConfig, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry
+**LiquidNetworkDebugSystem.cs** uses: BaseMachine, DevConfig, Direction, FlowDir, FlowNetwork, FlowPort, FlowRoute, FlowSink, FlowSource, FlowTransfer, LiquidNetworkSystem, LiquidStack, LiquidTypeRegistry
   class LiquidNetworkDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
 **LiquidNetworkSystem.cs** uses: Factorraria, FlowNetwork, FlowNetworkBuilder, LiquidPipeDiagnostics, LiquidTextureCache, LiquidWorldBanks, PipeTierRegistry
@@ -1463,7 +1463,7 @@ tModLoader/other bases -> project types:
     +WireThickness:float +CullMarginPixels:float +CopperColor:Color +TinColor:Color +GoldColor:Color +InvalidColor:Color +Simulate:bool +Disturbance:bool +NodeSpacing:float +MaxNodes:int +Gravity:float +Damping:float +WindForce:float +GustAmount:float +GustSpeed:float +FlutterAmount:float +ConstraintIterations:int +DisturbRadius:float +DisturbStrength:float +MaxNodeSpeed:float +Unload()[ov] +OnWorldUnload()[ov] +DrawWire(SpriteBatch,Vector2,Vector2,CustomWireType,bool) +GetWireColor(CustomWireType) +BeginBatch(SpriteBatch)[s] +DrawLinks(SpriteBatch) +PostUpdateEverything()[ov] +SegmentIntersectsRect(Vector2,Vector2,Rectangle)[s] +DistanceToWire(PoleLink,Vector2,Vector2,Vector2) +GetSwayedPoint(PowerPoleCrossboardSystem,PowerPoleTileEntityBase,int)[s]
     class CachedLink
       +Link:PoleLink +Bounds:Rectangle +Resolved:bool +RestA:Vector2 +RestB:Vector2 +RestChord:float +Reach:float +Rope:PoleRope +BothOn:bool +OnA:bool +OnB:bool +Primed:bool +JustPlaced:bool +FlashCooldown:int
-**PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, FurnaceOffsetConfig, LiquidStack, PowerGridSystem
+**PowerGridDebugSystem.cs** ns!=(global) uses: BaseMachine, DevConfig, LiquidStack, PowerGridSystem
   class PowerGridDebugSystem : ModSystem
     +EnableDebugView:bool[s] +PostDrawTiles()[ov]
 **PowerGridSystem.cs** uses: CustomWireSystem, CustomWireType, FactorrariaNet, IElectricConsumer, IElectricProducer, IRowMachine, PoleLinkSystem, PowerNetwork, PowerPoleTileEntityBase, TileEntityHelper
@@ -1488,7 +1488,7 @@ tModLoader/other bases -> project types:
     +TileType:int +Texture:Asset<Texture2D> +MarginPx:int +InFront:bool +Select:TileOverdrawSelector +PreviewSelect:TileOverdrawSelector +Scale:TileOverdrawScaler +Crop:TileOverdrawCropper +Warned:bool
   class TileOverdrawSystem : ModSystem
     +ScanPaddingTiles:int +DefaultMarginPx:int +Load()[ov] +Unload()[ov] +Register(int,string,TileOverdrawSelector,int,bool,TileOverdrawSelector,TileOverdrawScaler,TileOverdrawCropper) +PostDrawTiles()[ov]
-**VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, Factorraria, FurnaceOffsetConfig, GhostDiagnostics, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem
+**VirtualItemSystem.cs** ns!=Factorraria.Content.VirtualItems uses: ClockwisePriorityConveyorTile, ConveyorFilterNet, CounterClockwisePriorityConveyorTile, DevConfig, Factorraria, GhostDiagnostics, PriorityConveyorNetwork, VItemGlobalItem, VItemNet, VirtualItem
   class VirtualItemSystem : ModSystem
     +tileItemMap:Dictionary<Point, VirtualItem>[s] +vItemsById:Dictionary<int, VirtualItem>[s] +SplitCounters:Dictionary<Point, int>[s] +WorldItemsConverted:int[s] +PlayerPickups:int[s] +ConveyorNetworkMap:Dictionary<Point, PriorityConveyorNetwork>[s] +RepairsMade:int[s] +VerifyVItems()[s] +IsValidItemID(int)[s] +RegisterItemTile(Point,VirtualItem)[s] +UnregisterItemTile(Point,VirtualItem)[s] +AddReplica(VirtualItem)[s] +TryGetById(int,out VirtualItem)[s] +ForgetId(VirtualItem)[s] +Describe()[s] +OnWorldLoad()[ov] +OnWorldUnload()[ov] +SaveWorldData(TagCompound)[ov] +LoadWorldData(TagCompound)[ov] +PostDrawTiles()[ov] +ModifyInterfaceLayers(List<GameInterfaceLayer>)[ov] +SpawnVirtualItem(int,int,int,int)[s] +SpawnVirtualItem(Item,int,int)[s] +GetVirtualItemAtTile(int,int,VirtualItem)[s] +IsTileOccupied(int,int,VirtualItem)[s] +GetVItemsInRect(Rectangle,List<VirtualItem>)[s] +ConvertItemsToVItems()[s] +SyncWorldItem(int,string)[s] +ConvertVItemsToItems(VirtualItem)[s] +CheckPlayerPickups()[s] +IsConveyorTile(int,int,out bool,out int)[s] +IsPriorityConveyorTile(int,int)[s] +RebuildNetworkAt(int,int,Point?)[s] +OnPriorityConveyorPlaced(int,int)[s] +OnPriorityConveyorKilled(int,int)[s] +SetConveyorFilter(int,int,int)[s] +ReplaceFilterNetworks(List<KeyValuePair<int, List<Point>>>)[s] +TryGetConveyorFilter(int,int,out int)[s]
 **VisibleTileScan.cs**
@@ -1529,7 +1529,7 @@ tModLoader/other bases -> project types:
 **ElectricityUIIcon.cs** uses: BaseMachine, ElectricityHoverTip, IElectricProducer
   class ElectricityUIIcon : UIElement
     +PulseWhen:Func<bool> +EmptyAtZero:bool #DrawSelf(SpriteBatch)[ov]
-**FireUIElement.cs** uses: FurnaceOffsetConfig
+**FireUIElement.cs** uses: DevConfig
   class FireUIElement : UIElement
     #DrawSelf(SpriteBatch)[ov]
 **LiquidTankUIElement.cs** uses: LiquidStack, LiquidTextureCache, LiquidTypeDefinition, LiquidTypeRegistry
@@ -1558,7 +1558,7 @@ tModLoader/other bases -> project types:
 **BookScrollbar.cs** uses: BookDraw, RecipeBookLayout
   class BookScrollbar : UIScrollbar
     +Needed:bool +SetBookView(float,float) +LeftMouseDown(UIMouseEvent)[ov] +Update(GameTime)[ov] #DrawSelf(SpriteBatch)[ov]
-**RecipeBookButtonState.cs** uses: FurnaceOffsetConfig, RecipeBookButton, RecipeBookLayout, RecipeBookPlayer
+**RecipeBookButtonState.cs** uses: DevConfig, RecipeBookButton, RecipeBookLayout, RecipeBookPlayer
   class RecipeBookButtonState : UIState
     +Button:RecipeBookButton +OnInitialize()[ov] +ResetPosition()[s] +Update(GameTime)[ov]
 **RecipeBookCloseButton.cs** uses: BookDraw, RecipeBookArt, RecipeBookLayout, RecipeBookSystem
@@ -1670,8 +1670,8 @@ tModLoader/other bases -> project types:
   class CosmicVisualConfig : ModConfig
     +Mode:ConfigScope[ov] +OnChanged()[ov] +ClientParticlePool:int +ClientDrawBudget:int +ClientHeadSizeMinPx:float +ClientHeadSizeMaxPx:float +ClientHeadGrowTicks:float +ClientHaloScale:float +ClientHaloBrightness:float +ClientFadeOutStart:float +ClientLifeFadeStart:float +ClientBrightness:float +ClientTrailTiles:float +ClientTrailPixelPx:float +ClientWaveAmplitudePx:float +ClientWaveLengthTiles:float +BoltLifeTicks:int +BoltBaseWidthPx:float +BoltWidthPerDecadePx:float +BoltMaxWidthPx:float +BoltLightIntensity:float +StrikeFlashSizePx:float +IonizedLightIntensity:float +LocalSimEnabled:bool +LocalSimDensityBoost:float +LocalSimHalfWidthTiles:float +LocalSimHalfHeightTiles:float +LocalSimMaxParticles:int +LocalSimOffRadiusTiles:float +LocalSimBrightness:float +LocalSimFadeSeconds:float +ThunderBigTier:float +Apply(CosmicRadiationSystem)
 **FurnaceOffsetConfig.cs**
-  class FurnaceOffsetConfig : ModConfig
-    +Mode:ConfigScope[ov] +OffsetX:float +OffsetY:float +AngleOffset:float +AngleOffset2:float +animationOffset:int +fireCropOffset:float +animationSpeedDivider:int +EnableDebugs:bool +RevealAllRecipes:bool +VItemOffset:float
+  class DevConfig : ModConfig
+    +Mode:ConfigScope[ov] +EnableDebugs:bool +RevealAllRecipes:bool +fireCropOffset:float +animationSpeedDivider:int
 **NetworkConfig.cs**
   class NetworkConfig : ModConfig
     +Current:NetworkConfig[s] +Mode:ConfigScope[ov] +ReachSlackTiles:float +RequestsPerSecond:int +RequestBurst:int +JoinChunkSize:int +JoinMaxProviderBytes:int +JoinRequestCooldownTicks:int +CartUpdatesPerSecond:int +CartInterestRadiusTiles:int +CartInterpolationBufferMs:int +MachineStateUpdatesPerSecond:int +LiquidBroadcastsPerTick:int +VItemInterestHalfWidthTiles:int +VItemInterestHalfHeightTiles:int +VItemMaxEntriesPerPacket:int

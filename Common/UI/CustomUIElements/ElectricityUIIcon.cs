@@ -94,7 +94,7 @@ namespace Factorraria.Common.UI.CustomUIElements
             spriteBatch.Draw(ElectricityEmptyIcon.Value, drawPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 
             //
-            //FurnaceOffsetConfig config = ModContent.GetInstance<FurnaceOffsetConfig>();
+            //DevConfig config = ModContent.GetInstance<DevConfig>();
             //
 
             float drawPercent = FillAmount();
