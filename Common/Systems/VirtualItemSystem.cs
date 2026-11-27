@@ -31,6 +31,10 @@ namespace Factorraria.Content.VirtualItems
         public static Dictionary<int, VirtualItem> vItemsById = new Dictionary<int, VirtualItem>();
         static int nextVItemId = 1;
 
+        // Per-tile round-robin memory for conveyor splits (tile -> where the last split decision stopped, 0..11). Server / single-player only, never saved or synced:
+        // clients only see the resulting vItems. A stale entry is harmless (it is only a starting offset).
+        public static Dictionary<Point, int> SplitCounters = new Dictionary<Point, int>();
+
         // Temporary test counters for patch 7.1 (remove in Phase 10)
         public static int WorldItemsConverted;
         public static int PlayerPickups;
@@ -224,6 +228,7 @@ namespace Factorraria.Content.VirtualItems
             virtualItems.Clear();
             tileItemMap.Clear();
             vItemsById.Clear();
+            SplitCounters.Clear();
             nextVItemId = 1;
             WorldItemsConverted = 0;
             PlayerPickups = 0;
@@ -234,6 +239,7 @@ namespace Factorraria.Content.VirtualItems
             virtualItems.Clear();
             tileItemMap.Clear();
             vItemsById.Clear();
+            SplitCounters.Clear();
         }
 
         // --- SAVE DATA TO WORLD ---
@@ -1044,6 +1050,7 @@ namespace Factorraria.Content.VirtualItems
 
             // Completely erase destroyed tile from map lookup
             ConveyorNetworkMap.Remove(removedPoint);
+            SplitCounters.Remove(removedPoint);
 
             // Re-evaluate 4 cardinal neighbors while explicitly ignoring the mined tile
             foreach (Point offset in CardinalOffsets)

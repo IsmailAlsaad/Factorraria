@@ -577,22 +577,55 @@ namespace Factorraria.Content.VirtualItems
                 return;
             }
 
-            // Can't split a stack into more parts than it has items. A stack of 1 just takes the first available path.
-            int pathsUsed = Math.Min(availableCount, stackSize);
-            int total = stackSize;
-            int baseShare = total / pathsUsed;
-            int remainder = total % pathsUsed;
-
-            // Children first (paths 1..n-1); this vItem keeps whatever is left and takes path 0
-            for (int i = 1; i < pathsUsed; i++)
+            // Round-robin split: item k of this stack goes to rotated path (k % availableCount). The tile remembers where its last
+            // decision stopped (SplitCounters), so a stack of 1 and the odd leftover item cycle through the paths instead of always taking the same one.
+            Point decisionTile = new Point(currentTileX, currentTileY);
+            int counter = 0;
+            if (availableCount > 1)
             {
-                int d = available[i];
-                int amount = baseShare + (i < remainder ? 1 : 0);
-                SendPartTo(currentTileX + DirX(d), currentTileY + DirY(d), amount);
+                VirtualItemSystem.SplitCounters.TryGetValue(decisionTile, out counter);
             }
 
-            int firstX = currentTileX + DirX(available[0]);
-            int firstY = currentTileY + DirY(available[0]);
+            int rotation = counter % availableCount;
+            int total = stackSize;
+            int baseShare = total / availableCount;
+            int remainder = total % availableCount;
+
+            Span<int> order = stackalloc int[4];
+            Span<int> shares = stackalloc int[4];
+            for (int i = 0; i < availableCount; i++)
+            {
+                order[i] = available[(rotation + i) % availableCount];
+                shares[i] = baseShare + (i < remainder ? 1 : 0);
+            }
+
+            if (availableCount > 1)
+            {
+                // Mod 12 so the cycle stays fair whether 2, 3 or 4 paths are open (12 is divisible by all of them)
+                VirtualItemSystem.SplitCounters[decisionTile] = (counter + total) % 12;
+            }
+
+            // This vItem keeps the first non-empty share; every other non-empty share becomes (or merges into) a vItem on its path
+            int keeper = -1;
+            for (int i = 0; i < availableCount; i++)
+            {
+                if (shares[i] <= 0)
+                {
+                    continue;
+                }
+
+                if (keeper < 0)
+                {
+                    keeper = i;
+                    continue;
+                }
+
+                int d = order[i];
+                SendPartTo(currentTileX + DirX(d), currentTileY + DirY(d), shares[i]);
+            }
+
+            int firstX = currentTileX + DirX(order[keeper]);
+            int firstY = currentTileY + DirY(order[keeper]);
             VirtualItem firstOccupant = VirtualItemSystem.GetVirtualItemAtTile(firstX, firstY, this);
 
             if (firstOccupant != null)
